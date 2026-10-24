@@ -25,6 +25,13 @@ CATEGORY_TITLE = {
     "知识库": "知识库 · 全部学习对话",
     "资料库": "资料库 · 审计与清单",
 }
+CATEGORY_ID = {
+    "研究": "research",
+    "学习笔记": "notes",
+    "随笔": "essays",
+    "知识库": "kb",
+    "资料库": "archive",
+}
 
 
 def extract_meta(html: str) -> dict | None:
@@ -81,8 +88,10 @@ def render_list(items: list[dict]) -> str:
 
 def render_section(cat: str, items: list[dict]) -> str:
     title = CATEGORY_TITLE.get(cat, cat)
+    anchor = CATEGORY_ID.get(cat, "")
+    idattr = f' id="{anchor}"' if anchor else ""
     return (
-        f'<section class="block">\n'
+        f'<section class="block"{idattr}>\n'
         f'  <h2>{title}</h2>\n'
         f'  {render_list(items)}\n'
         f'</section>'

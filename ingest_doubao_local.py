@@ -136,8 +136,8 @@ def agent_sessions():
             f'<div class="notes">{esc}</div>'
         )
         write_page(
-            slug, title, "研究", ["豆包", "agent会话"], title,
-            "研究 · 豆包 agent 会话", body,
+            slug, title, "资料库", ["豆包", "agent会话"], title,
+            "资料库 · 豆包 agent 会话", body,
         )
         index_items.append((title, slug))
     # 汇总说明

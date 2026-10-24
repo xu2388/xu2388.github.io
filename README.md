@@ -60,3 +60,22 @@ python3 build_index.py
 python3 build_knowledge_base.py   # 重建 articles/kb/ 和 knowledge-index.html
 python3 build_index.py            # 刷新首页
 ```
+
+## 部署到 GitHub Pages
+
+仓库已配好自动部署（`.github/workflows/deploy.yml` + `.nojekyll`）。推送到 GitHub 后自动上线：
+
+```bash
+# 1. 在 GitHub 上新建一个空仓库（不要勾选 README），例如 my-research-blog
+# 2. 绑定远程并推送
+git remote add origin https://github.com/<你的用户名>/<仓库名>.git
+git branch -M main
+git push -u origin main
+
+# 3.  GitHub 仓库页面 → Settings → Pages → Source 选 "GitHub Actions"
+#     推送后 Actions 自动跑完，站点上线在：
+#     https://<你的用户名>.github.io/<仓库名>/
+```
+
+之后每次改完内容，`git push` 一次就会自动重新部署。所有链接都是相对路径，放在仓库子目录下也能正常跳转。
+
