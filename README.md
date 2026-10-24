@@ -66,16 +66,29 @@ python3 build_index.py            # 刷新首页
 仓库已配好自动部署（`.github/workflows/deploy.yml` + `.nojekyll`）。推送到 GitHub 后自动上线：
 
 ```bash
-# 1. 在 GitHub 上新建一个空仓库（不要勾选 README），例如 my-research-blog
-# 2. 绑定远程并推送
+# 1. 在 GitHub 上新建一个空仓库（不要勾选 README / .gitignore / License）
+#    命名小技巧：
+#      · 想用根域名 https://<你的用户名>.github.io/  → 仓库名必须叫 "<你的用户名>.github.io"
+#      · 随便起名（如 research-blog）                → 站点在 https://<你的用户名>.github.io/research-blog/
+#    （两种都行，本站全是相对链接，子目录也不会断链）
+
+# 2. 绑定远程并推送（把 <你的用户名> <仓库名> 换成你的）
+cd 科研博客
 git remote add origin https://github.com/<你的用户名>/<仓库名>.git
 git branch -M main
 git push -u origin main
+```
 
-# 3.  GitHub 仓库页面 → Settings → Pages → Source 选 "GitHub Actions"
-#     推送后 Actions 自动跑完，站点上线在：
-#     https://<你的用户名>.github.io/<仓库名>/
+> **推送时卡在密码？** GitHub 早已不支持用登录密码推送。用户名填你的 GitHub 用户名，"密码"要填一个 **Personal Access Token（PAT）**：GitHub → 右上头像 → Settings → Developer settings → Tokens (classic) → Generate new token → 勾选 `repo` 权限 → 复制那串 `ghp_...` 当密码用。嫌麻烦也可以装个 **GitHub Desktop**，图形界面点几下就推送，不用碰命令行和 token。
+
+```bash
+# 3. GitHub 仓库页面 → Settings → Pages → Source 选 "GitHub Actions"（保存）
+#    然后到 Actions 标签页，看 "Deploy to GitHub Pages" 跑完（约 1 分钟），
+#    站点就上线在：
+#      https://<你的用户名>.github.io/<仓库名>/
 ```
 
 之后每次改完内容，`git push` 一次就会自动重新部署。所有链接都是相对路径，放在仓库子目录下也能正常跳转。
+
+> **关于 `raw_exports/`（17M 原始对话存档）**：它会随仓库一起被推上去，技术上能通过直接猜 URL 访问到，但网站里没有任何链接指向它。如果你不想让它公开，告诉我，我可以把它从发布内容里摘掉（本地仍保留）。
 
