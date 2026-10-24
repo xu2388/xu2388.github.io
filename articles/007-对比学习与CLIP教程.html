@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>对比学习和 CLIP 到底在干什么：从"拉近推开"到"给染色换文本编码器"</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <script id="meta" type="application/json">
+  {
+    "title": "对比学习和 CLIP 到底在干什么：从\"拉近推开\"到\"给染色换文本编码器\"",
+    "date": "2026-10-24",
+    "tags": ["教程", "对比学习", "CLIP", "Contrastive", "文本编码器", "CUT", "学习笔记"],
+    "summary": "对比学习是我最晚搞懂、却回头发现到处都在用的东西：一半是我 SD 里把文字变成条件的 CLIP，一半是我 001/002 里保住结构的 CUT/PatchNCE。这篇从'把相似的拉近、把不相似的推开'这个最朴素的本质讲起，讲清 CLIP 怎么当文本编码器、为什么原生 CLIP 不懂病理、我为什么拍板换 CONCH，以及同一个思想怎么同时管住了'风格'和'结构'。",
+    "category": "学习笔记",
+    "source_ids": ["074", "233", "082", "137"]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">科研博客</h1>
+      <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
+      <nav class="site-nav">
+        <a href="../index.html#threads">研究方向</a>
+        <a href="../index.html#articles">文章</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <article class="article">
+    <h1>对比学习和 CLIP 到底在干什么：从"拉近推开"到"给染色换文本编码器"</h1>
+    <div class="meta">
+      写于 2026-10-24 · 教程篇 · 原始来源：DeepSeek 对话 [074][233][082][137]
+    </div>
+
+    <p class="lead">
+      对比学习是我最晚搞懂、回头看却发现"到处都在用"的一块。有意思的是，它在我项目里以两个完全不同的身份出现：一半是我 Stable Diffusion 里<strong>把文字变成条件的 CLIP</strong>，另一半是我 001/002 里<strong>保住结构的 CUT/PatchNCE</strong>。一个是管"生成什么风格"，一个是管"别把结构改崩"，根子上却是同一个特别朴素的思想——<strong>把相似的拉近，把不相似的推开。</strong> 这篇就从这个思想讲起，一路讲到我自己拍板"把 CLIP 换成 CONCH"的那个决定。
+    </p>
+
+    <h2>一、对比学习：把相似的拉近，把不相似的推远</h2>
+    <p>
+      我第一次问"什么是对比学习"时，得到的答案用一个比喻我就记住了：教小孩认苹果——给他看同一个苹果切成两半（告诉他"这是同一个"），再给他看个橘子（"这不是苹果"），慢慢他就抓住了苹果的本质，忽略了光照、角度。对比学习就是这个思路的数学版：让<strong>相似的样本在特征空间里靠得更近，不相似的离得更远。</strong>
+    </p>
+
+    <div class="record">
+      <span class="tag">核心机制 · 锚点、正样本、负样本 + InfoNCE</span>
+      <p>它需要三种样本：<strong>锚点</strong>（当前关注的样本）、<strong>正样本</strong>（和锚点同类的，比如同一张图的两种增强）、<strong>负样本</strong>（不同类的）。目标是让锚点和正样本相似度最大、和负样本最小，相似度一般用余弦相似度。最常用的损失叫 <strong>InfoNCE</strong>：</p>
+      <p style="text-align:center"><code>L = −log [ exp(sim(zᵢ,zⱼ)/τ) / Σₖ exp(sim(zᵢ,zₖ)/τ) ]</code></p>
+      <p>翻译成人话：在一堆候选里，<strong>能不能准确地把正样本挑出来</strong>——这是个分类题。挑得越准，锚点和正样本越近、和负样本越远。τ 是温度，控制"推开/拉近"的力度。</p>
+      <p>正样本靠<strong>数据增强</strong>造（同一张图裁剪/变色成两版），负样本就是同一批次里的其他样本——所以对比学习很吃<strong>大批量</strong>（SimCLR 用到 4096，负样本越多题目越难、学得越好；MoCo 则用动量记忆库绕开大显存）。它最大的好处是<strong>不需要人工标签</strong>，是自监督表征学习的主力。</p>
+    </div>
+
+    <h2>二、CLIP：把"对比"用在图和文字之间</h2>
+    <p>
+      CLIP 是把这个思想从"同一张图的两种增强"搬到<strong>图文之间</strong>：一张图和它的文字描述算<strong>正样本</strong>，同一个批次里其他图文都算<strong>负样本</strong>。它训两个编码器——一个把图编码成向量，一个把文字编码成向量——逼着<strong>匹配的图文在同一个空间里贴近，不匹配的推远</strong>。训好后，图和文字就落在了一个可互相比对的空间里，于是能做零样本分类、图文检索。
+    </p>
+
+    <div class="note">
+      <span class="tag">接回上一篇 · CLIP 就是 SD 的"文本编码器"</span>
+      在 Stable Diffusion 里，CLIP 的角色特别具体：你输入的 prompt 经过 CLIP 文本编码器，变成一个 <code>[77, 768]</code> 的嵌入（77 是 CLIP 的 token 上限，768 是维度），这个嵌入就是上一篇讲的 <code>z_text</code>——它作为 <strong>K/V 被灌进 U-Net 的交叉注意力层</strong>，Q 则是正在去噪的图像特征。所以 006 里"文本怎么变成条件"这个问题，答案的下半段就在这：<strong>CLIP 负责把一句话变成一个能被查询的向量，交叉注意力负责让图像每一步去查它。</strong>
+    </div>
+
+    <h2>三、可是原生 CLIP 不懂病理——我那句"真的能行吗"</h2>
+    <p>
+      我当时的算盘是：用文本引导染色风格、又想让结构别崩，于是很怀疑——就一句话，<strong>真能靠一个原生 CLIP 就让模型精准认知吗？</strong> 我原话是："因为我的文本主要是用于风格的引导……但是还是要保持结构的一致性，所以我就好奇，就这一段话，真的用一个原生的 CLIP 就能实现让模型精准的认知？然后就能生成？" 答案是干脆的<strong>「不能」</strong>。
+    </p>
+
+    <div class="record">
+      <span class="tag">让我清醒的认识 · CLIP 只知道"有什么"，不知道"在哪"</span>
+      <p>原生 CLIP 是在<strong>自然图片</strong>上训的，它的强项是<strong>全局风格识别</strong>（"这张是粉色系""那张偏紫"），但<strong>细粒度结构（基底膜钉突、系膜增生）很弱、空间关系很弱</strong>。一句话概括：它给出的是<strong>全局的、统计性的表示，而不是空间布局的蓝图</strong>——"只知道有什么，不知道在哪里"。</p>
+      <p>这解释了一个我早就纳闷的现象：<strong>SD 生成的病理图，远看像那么回事，近看结构全是错的。</strong> 因为 SD 结构好，并不是因为 CLIP 懂结构，而是 U-Net 自己学到了统计规律，CLIP 只是"提示"了一下风格。想让文本真正管住染色的细部，就得换一个<strong>见过病理的文本/图像编码器</strong>。</p>
+    </div>
+
+    <h2>四、换编码器：CONCH / UNI / Phikon，我拍板用 CONCH</h2>
+    <p>
+      对症下药就是换成<strong>在病理数据上预训练</strong>的编码器。我当时拉了张对比表，核心是"谁见过 PAS/Masson 这种特殊染色"：
+    </p>
+
+    <div class="record">
+      <span class="tag">整理归纳 · 几个病理编码器（按我当时掌握的信息）</span>
+      <table>
+        <tr><th>编码器</th><th>是什么</th><th>对我的价值</th></tr>
+        <tr><td><strong>CONCH</strong></td><td>MahmoodLab，CoCa 架构，117 万对病理图文训练，其中<strong>超 71 万对来自 IHC 和特殊染色（含 PAS/Masson/PASM）</strong>，输出 512 维</td><td><strong>最对路</strong>——它专门对比学过"病理图+它的文字描述"，正好是我的"文本引导染色"</td></tr>
+        <tr><td><strong>UNI</strong></td><td>哈佛，ViT-L，超 1 亿张病理图块自监督预训练，输出 1024 维</td><td>主要在 H&amp;E 上强，偏图像特征而非图文对齐</td></tr>
+        <tr><td><strong>Phikon</strong></td><td>ViT + iBOT/DINOv2，千万级病理图块，输出 768/1024 维</td><td>HistDiST 拿它<strong>替掉 CLIP 当条件源</strong>（见下）</td></tr>
+      </table>
+      <p>我的结论原话："<strong>我觉的还是要用 CONCH。</strong>" 因为它见过 PAS/Masson 的图文对，最可能听懂"生成 PAS 染色"这种话。</p>
+    </div>
+
+    <div class="note">
+      <span class="tag">一个工程细节 · 维度对不上，加个适配层</span>
+      CONCH 输出 512 维、CLIP(ViT-L) 是 768 维、UNI 是 1024 维——直接替换会维度不匹配。解决办法是加一个<strong>可训练的线性适配层</strong>（比如 <code>nn.Linear(512, 768)</code>）把维度对齐，而且因为语义空间也对不上，这个适配层通常还要<strong>微调</strong>。这跟我 006 里"HistDiST 用 Phikon 代替 CLIP，处理后的维度跟 CLIP 一样"是同一个操作——换个条件源，维度对齐后照样喂交叉注意力。
+    </div>
+
+    <h2>五、结构化 prompt：把每种染色的特点说明白</h2>
+    <p>
+      换了 CONCH 还不够，<strong>喂什么文本</strong>同样关键。我当时的主张是："我觉得这个文本最好可以是结构化的吧，我感觉是格式化会更加的有效，另外需要都是英文的"，而且要"不同的染色突出的不同特征……每种染色特点都说明白，因为我要微调 SD v1.5 需要让 UNET 去学习这个部分的"。落地成<strong>按染色定制的键值对模板</strong>——每种染色只强调它该强调的特征：
+    </p>
+
+    <div class="record">
+      <span class="tag">我的结构化 prompt 思路 · 一染色一模板</span>
+      <p>· <strong>PASM</strong>（重点看基底膜）：<code>stain: pasm / gbm_thickness: [...] / gbm_spike: [...] / gbm_tram_track / mesangial_interposition / quality: highly_detailed, sharp_focus</code></p>
+      <p>· <strong>Masson</strong>（重点看胶原纤维/纤维化/硬化）；· <strong>PAS</strong>（重点看糖原/系膜基质/K-W 结节）。</p>
+      <p>可以借 LLaVA 这类模型批量生成，再人工抽样检查。<strong>但有个硬约束</strong>：CLIP/CONCH 都有 <strong>77 token 上限</strong>，键值对写太长会被截断——所以策略是<strong>把最重要的信息（染色类型、主要病变）放前面</strong>，别去改 <code>max_position_embeddings</code>（有风险）。</p>
+    </div>
+
+    <h2>六、另一条暗线：同一个思想，也是你保住结构的武器</h2>
+    <p>
+      最有意思的在这儿：我一开始学对比学习是为了文本编码器，回头一看，<strong>我 001/002 里保住结构的 CUT，用的也是对比学习</strong>——只不过正负样本的定义换了地方。CUT（Contrastive Unpaired Translation）干的是无配对染色迁移：要改外观、又不能动结构，它的 <strong>PatchNCE 损失</strong>把对比做到了<strong>块（patch）级</strong>：
+    </p>
+
+    <div class="record">
+      <span class="tag">PatchNCE · 用对比锁住结构</span>
+      <p>· <strong>锚点</strong>：输出图里的某一个小块（比如一块细胞边缘）；<br />
+         · <strong>正样本</strong>：输入图里<strong>相同位置</strong>的小块（内容一致、外观不同）；<br />
+         · <strong>负样本</strong>：输入图里<strong>其他位置</strong>的小块（内容不同）。</p>
+      <p>拉近同位置、推远别处——于是<strong>输出的每一块都被钉回输入的对应位置</strong>，只让染色变、不让结构跑。妙在它<strong>不需要跨图找负样本</strong>，一张图内部就能算，训练稳、结构保得好。这比我 002 里纠结的循环一致性更细粒度。<strong>CUT 就是我"只改染色不改结构"的那个方法，而它的内核是对比学习。</strong></p>
+    </div>
+
+    <p>
+      顺带说，我还琢磨过把对比学习用在<strong>染色-结构解耦</strong>上：用<strong>局部对比（PatchNCE）</strong>锁结构，再用<strong>全局对比（监督对比，SupCon）</strong>约束染色特征——让同一染色域的图（都 H&E）染色向量聚拢、不同域（Masson）推远，这样染色编码器就只学颜色统计、不碰结构。当时摸到的范本是 <strong>DCLGAN</strong>（PatchNCE 保结构 + 判别器侧全局对比分离风格）和 <strong>MUNIT</strong>（内容/风格双编码器，可把风格损失换成对比）。这个"一个管结构、一个管染色、各司其职"的思路，我记到现在。
+    </p>
+
+    <div class="note">
+      <span class="tag">当前结论</span>
+      对比学习剥到底就一句话：<strong>构造正负样本，把正的拉近、负的推远</strong>，逼模型学到"不随无关变换改变的、有区分性的本质特征"。它在我的世界里有两副面孔：<strong>CLIP</strong> 把图文对齐，充当 SD 的文本编码器（prompt → z_text → 交叉注意力，接 006）；<strong>CUT/PatchNCE</strong> 把同位置块对齐，充当无配对染色的结构保持器（接 001/002）。而原生 CLIP 不懂病理（只知道"有什么"不知道"在哪"），所以我拍板换 <strong>CONCH</strong>（见过 PAS/Masson 图文对），再配<strong>按染色定制的结构化英文 prompt</strong>，并处理 77 token 截断和维度适配。<strong>一个"拉近推开"，同时管住了我的"风格"和"结构"——这是我最得意的一次融会贯通。</strong>
+    </div>
+
+    <div class="note">
+      <span class="tag">未解决问题 / 待核实</span>
+      <ul>
+        <li>CONCH <strong>要申请权限</strong>、且是 512 维，适配层 + 微调的具体效果我没实测过。</li>
+        <li>结构化键值对 prompt 到底多少个 token、会不会被 77 截断，我只做了估算，<strong>没真跑过 tokenizer</strong>。</li>
+        <li>Phikon 提的特征<strong>偏结构还是偏染色</strong>我设计了实验（同组织不同染色 + 算距离）但没做——它只在 H&amp;E 上训练，换到 PAS/IHC 可能只是域偏移，未必说明它编码了"染色美学"。</li>
+        <li>"全局对比分离染色特征"的解耦方案停在设计层，<strong>没落地训练</strong>。</li>
+        <li>CONCH/UNI/Phikon/PathGen-1.6M 的参数、训练数据量都来自对话引述，<strong>动手前回原论文/官方核对</strong>（这些数字更新很快）。</li>
+      </ul>
+    </div>
+
+    <div class="note">
+      <span class="tag">溯源 · 全部原始对话</span>
+      <p style="margin:.3em 0">
+        <a href="kb/074_对比学习概念解析.html">[074] 对比学习概念解析（InfoNCE / CUT / DCLGAN / 解耦）</a> ·
+        <a href="kb/233_肾脏病理分割SOTA模型推荐.html">[233] 肾脏病理分割 SOTA（换 CONCH / 结构化 prompt / PathGen）</a> ·
+        <a href="kb/082_HistDiST基于SD改进.html">[082] HistDiST 基于 SD 改进（Phikon 替换 CLIP）</a> ·
+        <a href="kb/137_扩散模型虚拟染色机制.html">[137] 扩散模型虚拟染色机制（StainExpert 的 CLIP 文本编码器）</a>
+      </p>
+    </div>
+
+    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+  </article>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
+    </div>
+  </footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>
