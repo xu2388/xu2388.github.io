@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>对比学习与 CUT：无配对染色翻译的结构保持 · 研究笔记</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"对比学习与 CUT：无配对染色翻译的结构保持 · 研究笔记","date":"2026-10-24","tags":["研究","虚拟染色/科研"],"category":"研究","summary":"从 InfoNCE 出发梳理 PatchNCE 与 CUT 的单侧无配对翻译框架，说明其在病理 H&E→IHC 任务中如何以块级对比约束组织结构，并讨论 ASP 自适应监督、DAB 浓度与梯度边界三类互补监督，以及由 GAN 迁移至光密度域扩散的可行路径。"}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav">
+<a href="../../index.html#threads">研究方向</a>
+<a href="../../index.html#articles">文章</a>
+<a href="../notes-index.html">笔记索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>对比学习与 CUT：无配对染色翻译的结构保持 · 研究笔记</h1>
+<div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 048_对比学习思路.md</div>
+<h1>对比学习与 CUT：无配对染色翻译的结构保持 · 研究笔记</h1>
+<h2>一、研究背景与问题</h2>
+<p>虚拟染色（virtual staining）的目标是以计算方式把一张 H&amp;E 染色切片映射为对应的 IHC 染色切片，从而绕开抗体试剂成本、24–48 小时周转时间与连续切片带来的组织消耗。该任务的监督条件天然残缺：同一块组织的 H&amp;E 与 IHC 取自相邻切片，经过独立染色、独立扫描，二者既非同一物理切片，也无法做到像素级配准。因此主流方案把它建模为无配对图像翻译（unpaired image-to-image translation），而非像素回归。</p>
+<p>无配对翻译的核心矛盾在于&quot;内容保持&quot;如何定义。CycleGAN 一系以循环一致性约束双向映射，要求 $F(G(x))\approx x$、$G(F(y))\approx y$，等价于强制域间映射为双射。该约束在纹理迁移上有效，却几乎不允许物体几何形变，且为保证重建保真会牺牲生成多样性。CUT（Contrastive Unpaired Translation, ECCV 2020）给出另一条路径：放弃反向生成器与循环损失，改用块级对比学习（PatchNCE）在特征空间约束&quot;输入块与其生成结果对应块&quot;的互信息，约束粒度由全局像素降为局部语义块，因而同时容纳纹理变换与几何形变。</p>
+<p>病理场景使这一取舍更为尖锐。H&amp;E 由苏木素（染核，蓝紫）与伊红（染胞质、间质，粉红）双主染构成；DAB-IHC 则由 DAB 显色（棕褐，标记目标蛋白）与极浅的苏木素复染（仅作核定位参考）构成，不含伊红。二者的染料组分并不对应，H&amp;E 的粉红胞质不应被复制到 IHC 输出中。更关键的是信息不对称：以 HER2 这类膜蛋白标志物为例，DAB 阳性信号应呈沿细胞膜的一圈棕褐色，而细胞膜在 H&amp;E 中几乎不可见，模型只能由核的排布与形态推断膜轮廓。这意味着&quot;结构保持&quot;在病理任务中必须区分两类信息：一类是 H&amp;E 可直接观测、应当严格保持的低频组织架构（核位置、腺体排布、肿瘤巢团）；另一类是 H&amp;E 未提供直接观测、需要被生成的高频膜边界。若不加区分地把源图全部频率成分强行拷贝，反而生成不出 DAB 膜。</p>
+<p>由此形成本笔记关注的问题：在无配对条件下，块级对比学习能以何种机制约束结构，其约束边界在哪里，以及当生成骨架由 GAN 换为扩散模型时，这套监督信号是否仍然成立。</p>
+<h2>二、方法/核心思想</h2>
+<h3>2.1 InfoNCE：对比损失的统一形式</h3>
+<p>对比学习的损失骨架是噪声对比估计（InfoNCE）。给定查询嵌入 $z_{\hat y}$、正样本嵌入 $z_y$ 与 $N$ 个负样本嵌入 $z_n^-$，</p>
+<p>$$ \mathcal{L}_{\mathrm{SP}}=-\log\frac{\exp\left(z_{\hat y}\cdot z_y/\tau\right)}{\exp\left(z_{\hat y}\cdot z_y/\tau\right)+\sum_{n=1}^{N}\exp\left(z_{\hat y}\cdot z_n^{-}/\tau\right)}, $$</p>
+<p>其中 $\tau$ 为温度系数。嵌入通常做 L2 归一化，此时内积即余弦相似度 $\cos\theta=\dfrac{z_{\hat y}\cdot z_y}{\|z_{\hat y}\|\,\|z_y\|}\in[-1,1]$，度量的是向量方向一致性而非欧氏距离，这与&quot;关注块的结构语义而非绝对幅值&quot;的需求一致。</p>
+<p>该式的优化目标并非单纯最小化正样本距离，而是最大化正样本相似度相对于全部负样本相似度的比值。若正样本相似度很高但某个负样本同样很高，分式仍会变小、损失上升；因此它同时施加两个方向的力：拉近正样本对，推开正样本与所有负样本。当分式趋近 1 时 $\log 1=0$，损失趋零。温度 $\tau$ 控制分布的锐度：$\tau$ 越小，模型越集中于最难区分的负样本。</p>
+<h3>2.2 PatchNCE 与 CUT 框架</h3>
+<p>CUT 将上述形式落到图像翻译。生成器 $G:X\to Y$ 采用编码器—解码器结构，$G(x)=G_{dec}(G_{enc}(x))$；判别器为 PatchGAN，仅在局部感受野上判断真伪，因而只约束局部纹理统计而不强制全局布局。关键组件是接在编码器各层之后的投影头 $H$（两层 MLP）：编码器输出面向图像重建，维度和分布并不适合直接算余弦相似度，投影头将其映射到低维标准化嵌入空间，使正样本更聚集、负样本更分散。</p>
+<p>对输入 $x$ 的第 $l$ 层、第 $s$ 个空间位置，取查询向量 $z_{\hat y}=H_l(G_{enc}^l(G(x)))_s$，正样本为 $z_y=H_l(G_{enc}^l(x))_s$，负样本为同一特征图上其他所有位置。多层、多位置的 InfoNCE 求和即 PatchNCE：</p>
+<p>$$ \mathcal{L}_{\mathrm{PatchNCE}}=\mathbb{E}_{x}\sum_{l=1}^{L}\sum_{s=1}^{S_l}\ell\left(z_{\hat y}^{l,s},\,z_y^{l,s},\,z^{-}\right). $$</p>
+<p>这一设计有三点结构性后果。其一，负样本取自同一张图的其余位置而非其他样本，等价于在单图内部做&quot;这块组织与其他组织&quot;的判别，无需大 batch，也不依赖外部负样本池；实践表明引入外部负样本虽可轻微改善 FID，却容易造成物体粘连。其二，正样本只要求&quot;同位置对应&quot;而非&quot;像素相等&quot;，因此允许小范围空间偏移，这恰好匹配相邻切片间的配准误差。其三，由于没有反向生成器与循环损失，模型不再被迫维持双射，几何形变能力得以保留；实验亦显示加入循环损失反而降低性能。</p>
+<p>CUT 在病理工作中的典型配置可直接引用：生成器 ResNet-6Blocks，判别器 PatchGAN，输入输出为 512×512 的 H&amp;E/IHC patch，Adam 优化器、学习率 $1\times10^{-4}$、batch size 4、训练 80 epochs；总损失为</p>
+<p>$$ \mathcal{L}_{total}=\mathcal{L}_{adv}+\mathcal{L}_{NCE}+\lambda_m\mathcal{L}_{SSIM}+\lambda_g\mathcal{L}_{GP}, $$</p>
+<p>其中 $\lambda_m=0.05$、$\lambda_g=10$。此类配置说明：CUT 在病理虚拟染色中通常不是被改进的对象，而是被当作骨架，后续工作的贡献集中在损失函数一侧。</p>
+<h3>2.3 ASP：把 PatchNCE 改为监督式并加权</h3>
+<p>原始 PatchNCE 是无监督的：正样本来自同一图像的不同视图或同位置特征，不需要真值配对。ASP（Adaptive Supervised PatchNCE, MICCAI 2023）改变正样本定义，直接以&quot;生成 IHC patch 与其同位置 GT IHC patch&quot;构成正样本对，负样本取同图内其他不匹配位置的 IHC patch。这使对比学习由自监督转为监督，但立即引入配准噪声：若某位置的两张切片本就错位，该正样本对是脏样本。</p>
+<p>ASP 的应对是自适应权重 $w_t$：按生成 patch 与 GT patch 的当前特征相似度动态赋权，相似度高（配准较好、匹配可信）的 patch 权重高，相似度低的 patch 降权，从而抑制错位样本对结构学习的干扰。同时在骨干网络多个层（不同语义尺度）分别计算 patch 对比损失再加权汇总——浅层小感受野对应细胞边界等细粒度结构，深层大感受野对应腺体与组织区域排布。结构阶段的损失写作</p>
+<p>$$ \mathcal{L}_{struct}=\mathcal{L}_{adv}+\lambda_{PatchNCE}\mathcal{L}_{PatchNCE}+\lambda_{ASP}\mathcal{L}_{ASP}+\lambda_{GP}\mathcal{L}_{GP}. $$</p>
+<p>必须明确其约束边界：ASP 工作在特征嵌入空间，只约束 patch 层面的组织形态与空间拓扑，对染色颜色、DAB 浓度、显色强度不作任何约束。原始工作亦明确声明该阶段&quot;仅关注结构保真，不施加染色质量约束&quot;，因此第一阶段输出常出现染色不足、强度不准、边界模糊，这些缺陷需由后续阶段补足。</p>
+<h3>2.4 互补监督：DAB 浓度与梯度边界</h3>
+<p>染色侧由 DAB-CF（DAB-Guided Color Fidelity）承担。先按比尔-朗伯定律把 RGB 转到光密度域，</p>
+<p>$$ OD(x,y)=-\log_{10}\!\left(\frac{I(x,y)+\epsilon}{I_0}\right), $$</p>
+<p>再用 Ruifrok 染色矩阵求逆完成解混，$c(x,y)=M^{-1}OD(x,y)$，得到 $c_H$、$c_E$、$c_{DAB}$ 三个浓度通道。IHC 一侧的分解矩阵为 $[\text{苏木素},\text{DAB},\text{背景}]$，不含伊红。DAB-CF 在 DAB 浓度单通道上做逐像素均方误差：</p>
+<p>$$ \mathcal{L}_{DAB\text{-}CF}=\frac{1}{N}\sum_{x,y}\left(c_{DAB}^{real}(x,y)-c_{DAB}^{gen}(x,y)\right)^2 . $$</p>
+<p>注意其计算对象不是 RGB 三通道像素，而是解混后的浓度图；像素损失会被颜色变化干扰，浓度图只与结构及染料量相关，因而物理含义更清晰。</p>
+<p>边界侧由 GCBR（Gradient-Guided Cell Boundary Refinement）承担。以 Sobel 近似一阶偏导得到梯度幅值图 $D=\|\nabla I\|$，并以真实 DAB 浓度归一化生成空间权重 $\eta(x,y)=\mathrm{norm}(c_{DAB}^{real}(x,y))\in[0,1]$，使损失集中于 DAB 阳性区域（多为细胞膜）：</p>
+<p>$$ \mathcal{L}_{GCBR}=\frac{1}{\sum_{x,y}\eta(x,y)}\sum_{x=1}^{H}\sum_{y=1}^{W}\eta(x,y)\left(D_{gen}(x,y)-D_{real}(x,y)\right)^2 . $$</p>
+<p>三者分工明确：ASP 管大尺度组织形态，DAB-CF 管蛋白表达浓度，GCBR 管细胞膜边界锐度。这一分工也解释了为何单一对比损失不足以完成虚拟染色——它从定义上就不约束&quot;染成什么颜色、染多深&quot;。</p>
+<h3>2.5 由 GAN 迁移至光密度域扩散</h3>
+<p>上述三项监督在原始工作中被置于渐进式 GAN：阶段一以 $\mathcal{L}_{struct}$ 训练结构生成；阶段二冻结编码器、只更新解码器以优化 DAB-CF；阶段三继续冻结前序权重、以 GCBR 细化边界。该策略的动机是回避多损失联合优化时的梯度冲突——结构损失偏好低频一致、DAB 损失偏好浓度一致、梯度损失偏好高频锐利，三者方向并不总是一致。</p>
+<p>监督信号本身不绑定生成骨架，可整体迁入扩散框架，但有两条实现路径。其一为单阶段联合训练：总损失为噪声预测损失加各项辅助损失，$\mathcal{L}=\mathcal{L}_{diff}+\lambda_{ASP}\mathcal{L}_{ASP}+\lambda_{DAB}\mathcal{L}_{DAB\text{-}CF}+\lambda_{grad}\mathcal{L}_{GCBR}$，端到端优化，无需分阶段冻结；扩散本身由粗到细的去噪轨迹与&quot;先结构、后染色、再边界&quot;的监督顺序天然契合。其二为渐进采样：训练仍为单一模型，仅在反向采样的不同阶段施加不同正则，前期强化结构约束、中期校正 DAB 浓度、后期锐化边界，与在光密度域施加测试时投影的思路一致。</p>
+<h2>三、实验与结论</h2>
+<p>以 ASP 为结构基线的代表性工作（ProgASP, arXiv:2511.01698）在 MIST 乳腺癌数据集（HER2、ER 配对 patch）上验证，对比基线为原始 ASP 与 Stable Diffusion，评价指标包括 PSNR、SSIM、Gradient-MSE（边界质量）与 FID/KID（分布距离）。结果显示 FID 由原始 ASP 的 57.8 降至 49.6，边界梯度 MSE 下降，染色浓度与膜边界表现改善。该工作的局限亦明确：属 GAN 架构而非扩散；DAB 解混依赖染色矩阵，对扫描仪与染色批次敏感；仅在单一癌种、单一标志物集合上验证。</p>
+<p>光密度域建模已有独立先例。Jeong 等（<em>Computers in Biology and Medicine</em>, 2023）以 SNMF 分离 H/E 分量后，在染色分量上使用 score-based 扩散做染色归一化，并配合重叠滑动窗口抑制全切片网格伪影；ECCV 2024 的 TT-SaD 在光密度空间构造扩散逆问题，于采样阶段施加 OD 域一致性约束，只改染色矩阵、保留组织结构，实现测试时染色适配；Kang 等（arXiv:2511.01698）则在 OD 空间做渐进式 H&amp;E→IHC 翻译并引入 DAB 浓度损失与梯度损失。三者的定位分别是染色归一化、分类前的域适配、图像翻译加物理正则，均未把 OD 域扩散与 ASP 结构对比、DAB 浓度正则合并为单一生成框架。</p>
+<p>由此可得出两条结论。第一，块级对比学习在无配对翻译中的价值是&quot;以局部语义块替代全局像素&quot;来定义内容保持，其收益在配准不完美时尤为明显；但它的约束面严格限于结构，染色正确性必须由独立的光密度或浓度监督补足。第二，渐进式训练与联合训练所解决的并非不同问题，而是同一组损失冲突的两种调度方式：前者以时间换稳定，后者以门控或加权换效率。</p>
+<h2>四、要点小结与可借鉴之处</h2>
+<ol><li><strong>正样本定义决定监督性质</strong>。同图异视图为正样本 → 自监督；生成块与 GT 同位置块为正样本 → 监督。后者精度更高，但把配准误差直接引入损失，必须配套自适应加权。</li><li><strong>负样本来源决定成本结构</strong>。图内负样本无需大 batch，也不引入外部负样本的粘连副作用，是病理小样本场景的务实选择。</li><li><strong>对比损失的适用边界应写进方法陈述</strong>。ASP 只保证结构保真，不约束染色质量；把它与 DAB 浓度损失混为一谈，会在方法描述上产生实质错误。</li><li><strong>物理量优于像素量</strong>。DAB-CF 在解混后的浓度通道上做 MSE，比在 RGB 上做 MSE 更不易被颜色漂移干扰，且与比尔-朗伯定律一致，可解释性更强。</li><li><strong>H&amp;E 与 IHC 的染料组分不对应</strong>。IHC 不含伊红，输出不应出现 H&amp;E 式粉红胞质；IHC 苏木素仅作浅复染，核应为淡灰蓝而非浓蓝紫。这条生物学事实同时可作为生成伪影的判据。</li><li><strong>膜结构属于&quot;待生成&quot;而非&quot;待保持&quot;</strong>。H&amp;E 中细胞膜不可见，高频膜边界不能由源图直接拷贝，只能由核排布推断，故高频约束应按 DAB 阳性区域加权，而非全图统一施加。</li><li><strong>监督与骨架可分离</strong>。同一组结构/浓度/边界监督既可置于渐进 GAN，也可置于 OD 域扩散；后者可省去分阶段冻结，但需处理辅助损失与扩散损失的梯度冲突。</li></ol>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/048_对比学习思路.html">048_对比学习思路.md</a></p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>多尺度注意力机制 · 论文论述与整理</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"多尺度注意力机制 · 论文论述与整理","date":"2026-10-24","tags":["研究","虚拟染色/科研"],"category":"研究","summary":"梳理多尺度注意力的综述与理论文献脉络，逐层推导 Haar 小波变换的卷积化实现（正/逆变换与正交性），并以 SegNeXt 的 MSCA 为例说明多分支带状深度卷积如何在 O(n) 复杂度下同时获得多尺度感受野与空间注意力。"}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav">
+<a href="../../index.html#threads">研究方向</a>
+<a href="../../index.html#articles">文章</a>
+<a href="../notes-index.html">笔记索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>多尺度注意力机制 · 论文论述与整理</h1>
+<div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 004_多尺度注意力论文论述001.md</div>
+<h1>多尺度注意力机制 · 论文论述与整理</h1>
+<h2>一、研究背景与问题</h2>
+<p>多尺度注意力（multi-scale attention）指在同一模块内自适应融合空间、时序或语义上不同粒度的特征，同时建模局部细节与全局上下文。围绕这一主题的文献可分为三类。</p>
+<p>第一类是专题综述。2025 年出现的 <em>Multi-Scale Attention Mechanisms</em> 是目前首篇完全以多尺度注意力为唯一主题的独立综述，其内容覆盖定义、架构分类、跨领域应用、复杂度分析与轻量化方案，并把现有方法归为四大范式：多分支尺度融合型、并行多内核注意力型、层级深度聚合型、级联窗口多尺度注意力。中文期刊亦有《多尺度注意力机制研究综述》一类文章，梳理 CNN 时代到 Transformer 时代的演化，罗列 MSA、HAM、MSWA、Hierarchical Attention 等变体，便于中文写作引用。</p>
+<p>第二类是理论奠基长文。NeurIPS 2025 的 <em>Hierarchical Self-Attention: Generalizing Neural Attention Mechanics to Multi-Scale Problems</em>（微软）从熵最小化出发，把标准自注意力推广为通用的层级多尺度注意力公式，统一图像、文本与图数据的建模，并给出跨尺度融合的求解算法。AAAI 2020 的 <em>Multi-Scale Self-Attention for Text Classification</em> 则首次系统提出多头多尺度自注意力（MSMSA），论证&quot;不同注意力头配置不同感受野尺度&quot;的设计逻辑，并总结浅层小尺度、深层大尺度的分层规律。</p>
+<p>第三类是细分领域专项梳理。视觉方向的语义分割、目标检测综述常设完整章节讨论 HRViT、SegFormer、Swin 变体、MSWA、HAM、PSA 等模块的演进；大模型与长文本方向有 <em>MAHA: Multiscale Aggregated Hierarchical Attention</em>（arXiv 2025）讨论层级聚合与跨尺度压缩，以及 Fast Multipole Attention（2023）以多层级多尺度注意力缓解长序列的二次复杂度；医学图像方向则针对病灶大小多变问题，论证各类多尺度注意力的适配性。</p>
+<p>就检索结论而言：以多尺度注意力为唯一研究对象的独立综述确实存在（2025 年英文专题综述为首选），从数学底层完整推导的理论长文亦存在，但 IEEE TPAMI、ACM Computing Surveys 级别的顶格长综述尚未出现。多数注意力综述仅包含多尺度注意力章节，而非通篇围绕该方向。</p>
+<p>在此背景下，两个具体技术路线值得展开：一是以 Haar 小波变换实现无损多尺度分解的卷积化方案，二是以多分支带状深度卷积实现多尺度空间注意力的 SegNeXt。</p>
+<h2>二、方法/核心思想</h2>
+<h3>2.1 为何选择 Haar 小波</h3>
+<p>把传统小波变换改写为&quot;卷积 + 下采样&quot;，可直接复用深度学习框架的卷积算子，获得 GPU 加速并嵌入任意网络。选择 Haar 小波的理由是其核最短：二维核仅 $2\times2$，计算量极小；若换用 Daubechies 系列，核变长、成本上升。</p>
+<h3>2.2 一维 Haar 变换</h3>
+<p>一维情形下，一层 Haar 变换由两个核为 $[1,1]/\sqrt{2}$ 与 $[1,-1]/\sqrt{2}$ 的深度卷积构成，随后是缩放因子为 2 的标准下采样：</p>
+<p>$$ h_L=\frac{1}{\sqrt{2}}[1,\ 1],\qquad h_H=\frac{1}{\sqrt{2}}[1,\ -1]. $$</p>
+<p>低通核 $h_L$ 对相邻像素取平均，抹平细节、保留整体趋势；高通核 $h_H$ 对相邻像素做差，捕捉突变与边缘。除以 $\sqrt{2}$ 是为正交归一化，保证变换前后能量守恒，逆变换方可完美还原。深度卷积指每个输入通道独立与核卷积、通道间不混合；步长为 2 则等价于卷积后下采样两倍。</p>
+<p>以四元素信号 $[a,b,c,d]$ 为例，低通输出为 $\frac{a+b}{\sqrt{2}},\frac{c+d}{\sqrt{2}}$，高通输出为 $\frac{a-b}{\sqrt{2}},\frac{c-d}{\sqrt{2}}$，长度均由 4 降为 2。</p>
+<h3>2.3 二维 Haar 变换与四个核</h3>
+<p>图像为二维信号，二维 Haar 变换即&quot;先在行方向做一维小波，再在列方向做一维小波&quot;。两个方向的低通/高通两两组合得到四个二维核，命名规则为 $f_{xy}$：首字母表示行方向滤波（L 低通、H 高通），次字母表示列方向滤波。二维核等于两个一维核的外积，系数为 $\frac{1}{\sqrt{2}}\times\frac{1}{\sqrt{2}}=\frac{1}{2}$：</p>
+<p>$$ f_{LL}=\frac{1}{2}\begin{bmatrix}1&amp;1\\1&amp;1\end{bmatrix},\quad f_{LH}=\frac{1}{2}\begin{bmatrix}1&amp;-1\\1&amp;-1\end{bmatrix},\quad f_{HL}=\frac{1}{2}\begin{bmatrix}1&amp;1\\-1&amp;-1\end{bmatrix},\quad f_{HH}=\frac{1}{2}\begin{bmatrix}1&amp;-1\\-1&amp;1\end{bmatrix}. $$</p>
+<p>四者的物理含义分别是：$f_{LL}$ 为纯低通，保留整体亮度与大轮廓，输出 $X_{LL}$ 是原图缩小一半的模糊版本；$f_{LH}$ 在列方向做差，捕捉左右方向变化即垂直边缘，输出 $X_{LH}$ 为水平高频；$f_{HL}$ 在行方向做差，捕捉上下方向变化即水平边缘，输出 $X_{HL}$ 为垂直高频；$f_{HH}$ 两个方向均做差，捕捉斜向突变，输出 $X_{HH}$ 对应对角边缘、纹理与噪声。</p>
+<p>正变换写作</p>
+<p>$$ [X_{LL},X_{LH},X_{HL},X_{HH}]=\mathrm{Conv}\big([f_{LL},f_{LH},f_{HL},f_{HH}],\ X\big), $$</p>
+<p>对 $H\times W\times C$ 的输入做步长为 2 的深度卷积，输出四个 $\frac{H}{2}\times\frac{W}{2}\times C$ 的特征图：空间分辨率减半、通道数变为四倍。</p>
+<h3>2.4 逆变换与正交性</h3>
+<p>逆变换用同样的四个核做转置卷积：</p>
+<p>$$ X=\mathrm{Conv\text{-}transposed}\big([f_{LL},f_{LH},f_{HL},f_{HH}],\ [X_{LL},X_{LH},X_{HL},X_{HH}]\big). $$</p>
+<p>之所以能复用同一组核，是因为 Haar 滤波器构成标准正交基，正交矩阵的逆等于其转置；对应到卷积，正变换是&quot;卷积 + 下采样&quot;，逆变换即&quot;转置卷积 + 上采样&quot;。</p>
+<p>以 $2\times2$ 块 $X=\begin{bmatrix}a&amp;b\\c&amp;d\end{bmatrix}$ 手算可验证：正变换给出 $X_{LL}=\frac{1}{2}(a+b+c+d)$、$X_{LH}=\frac{1}{2}(a-b+c-d)$、$X_{HL}=\frac{1}{2}(a+b-c-d)$、$X_{HH}=\frac{1}{2}(a-b-c+d)$；逆变换为四个系数各乘对应核后相加，$\text{还原块}=X_{LL}f_{LL}+X_{LH}f_{LH}+X_{HL}f_{HL}+X_{HH}f_{HH}$。取左上角位置，四个系数之和为 $4a$，乘 $\frac{1}{2}$ 后再除以 2 得 $a$，其余位置同理得 $b,c,d$，实现无损还原。</p>
+<p>关于&quot;是否对整图卷积&quot;的疑问，结论是：核 $2\times2$、步长 2、无填充时，卷积窗口互不重叠且恰好铺满全图，数学上等价于把图切成互不重叠的 $2\times2$ 块逐块计算。$4\times4$ 输入经此操作输出 $2\times2$，每个输出像素对应原图一个独立块。工程实现用整图卷积，原理讲解用分块视角，二者结果完全一致。逆变换亦对四张完整特征图一次性操作：先插零上采样，再用同组核卷积，四通道对应位置相加。</p>
+<h3>2.5 SegNeXt 的 MSCA 模块</h3>
+<p>SegNeXt（NeurIPS 2022）的出发点是复盘成功分割模型的四个特质：强骨干编码器、多尺度信息交互、空间注意力、线性复杂度 $O(n)$。传统 CNN 具备多尺度与低复杂度但缺高效空间注意力；Transformer 分割模型具备空间注意力但自注意力为平方复杂度，高分辨率下计算量爆炸。因此可设计纯卷积实现的多尺度空间注意力。</p>
+<p>MSCA（multi-scale convolutional attention）分三步：</p>
+<p>$$ Att=\mathrm{Conv}_{1\times1}\left(\sum_{i=0}^{3}Scale_i\big(\mathrm{DW\text{-}Conv}(F)\big)\right),\qquad Out=Att\otimes F . $$</p>
+<p>第一步用 $5\times5$ 深度卷积聚合局部邻域；第二步用四个并行分支捕获不同尺度上下文——一个恒等分支保留原始特征，三个带状深度卷积分支核大小分别为 7、11、21，每个大核拆为&quot;水平 $1\times k$ + 垂直 $k\times1$&quot;；第三步用 $1\times1$ 卷积做通道混合，输出直接作为注意力权重，与原特征逐元素相乘。</p>
+<p>带状分解的计算量收益可直接推导。设输入输出分辨率均为 $H\times W$、单通道，完整 $k\times k$ 卷积成本为 $H\cdot W\cdot k^2$，拆分为 $1\times k$ 与 $k\times1$ 后总成本为 $2H\cdot W\cdot k$，比值为</p>
+<p>$$ \frac{Cost_{split}}{Cost_{full}}=\frac{2k}{k^2}=\frac{2}{k}. $$</p>
+<p>$k=7$ 时压缩至约 28.6%，$k=11$ 约 18.2%，$k=21$ 约 9.5%。核越大，节省越显著，这正是&quot;超大感受野、极低算力&quot;的实现方式。此外，带状核沿长轴延伸感受野，与行人、电线杆、车道线一类细长目标的形状匹配，避免正方形核引入大量无关邻域像素。恒等分支的作用是保留细粒度原始特征，防止大核卷积过度平滑；四分支相加即天然形成多尺度聚合。</p>
+<p>网络层面，编码器 MSCAN 为四级金字塔，空间分辨率依次为 $H/4$、$H/8$、$H/16$、$H/32$，每级堆叠 MSCA 模块；解码器为轻量设计，仅融合后三级特征，并配 Hamburger（Ham）模块以矩阵分解方式做线性复杂度的全局上下文建模。基础单元沿用 Transformer 的双残差 Pre-Norm 骨架，但归一化由 LayerNorm 换为 BatchNorm，注意力由自注意力换为 MSCA，前馈网络换为含 $3\times3$ 深度卷积的卷积 FFN（$1\times1$ 升维 → $3\times3$ DWConv → GELU → $1\times1$ 降维）。</p>
+<p>关于归一化的选择需澄清一个常见误解：BN 并非&quot;通道归一化&quot;。对形状 $[B,C,H,W]$ 的张量，BN 对每个通道 $c$ 统计该批次所有样本、所有空间位置的像素，计算 $\mu_c,\sigma_c^2$ 后做 $\hat x=\frac{x-\mu_c}{\sqrt{\sigma_c^2+\varepsilon}}\gamma_c+\beta_c$，即&quot;以通道为单位的批次 + 空间全局归一化&quot;；LN 则对单样本的全部通道与全部空间位置统一统计。分割任务选 BN 的理由是：同通道特征的物理含义一致（边缘通道、纹理通道），按通道统计更贴合视觉特征分布，且密集预测任务上收敛更快、泛化更好。</p>
+<h2>三、实验与结论</h2>
+<p>SegNeXt 在 ADE20K、Cityscapes、Pascal VOC、COCO-Stuff、iSAID 等七个主流分割数据集上验证。核心结果包括：Pascal VOC 2012 测试集达 90.6% mIoU，参数量仅为同期 SOTA 模型 EfficientNet-L2 的约 1/10；Cityscapes 上 SegNeXt-B 比 SegFormer-B2 高 1.6 mIoU，计算量仅为后者的 40%；SegNeXt-T 在 $768\times1536$ 分辨率下单张 RTX 3090 可达 25 FPS，刷新实时语义分割 SOTA。与 VAN 的对比说明：VAN 仅用单一尺寸大核，MSCA 的多分支多尺度设计更适配目标尺度不一的场景。</p>
+<p>小波路线并无统一的定量结论可比，其价值在于结构性：以固定正交核实现无损下采样，替代池化或跨步卷积，避免下采样过程中的高频信息丢失；以多级分解形成层级化多尺度特征，作用类似特征金字塔但计算量更低；分解出的低频与高频可分别送入不同分支或施加不同注意力权重，为&quot;结构—细节&quot;分离提供显式接口。</p>
+<h2>四、要点小结与可借鉴之处</h2>
+<ol><li><strong>多尺度注意力的四类范式可作为综述骨架</strong>：多分支尺度融合、并行多内核、层级深度聚合、级联窗口。写作时按此分类比按时间罗列更清晰。</li><li><strong>小波卷积的本质是&quot;正交基投影 + 转置重构&quot;</strong>。正逆变换共用同一组核，是因为 Haar 基正交；这一性质使无损下采样在网络中可实现，且无需学习参数。</li><li><strong>整图卷积与分块计算等价</strong>，前提是核尺寸等于步长且无填充。理解这一点可避免在实现时误写循环分块。</li><li><strong>带状分解的收益是 $2/k$ 量级</strong>。核越大收益越高，这是大核卷积在密集预测中可用的关键前提；同时带状核天然适配细长目标。</li><li><strong>恒等分支不可省</strong>。多尺度大核叠加会过度平滑，恒等分支提供细粒度残差，是多尺度聚合的必要组成。</li><li><strong>归一化选择应与任务统计特性匹配</strong>。BN 按通道统计，适合通道语义一致的视觉密集预测；LN 跨通道统计，适合序列建模。此处不应照搬 Transformer 默认配置。</li><li><strong>对虚拟染色的迁移思路</strong>：小波分解可把 H&amp;E 的低频（核位置、组织架构）与高频（边界、纹理）显式分离，从而对二者施加不同强度的约束；但须注意 IHC 的膜结构在 H&amp;E 中不可见，高频不能无条件由源图拷贝，而应按蛋白阳性区域加权。</li></ol>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/004_多尺度注意力论文论述001.html">004_多尺度注意力论文论述001.md</a></p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

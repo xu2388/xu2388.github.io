@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>服务器、训练与实验 · 长对话整理</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"服务器、训练与实验 · 长对话整理","date":"2026-10-24","tags":["研究","虚拟染色/科研"],"category":"研究","summary":"记录 HE→IHC 虚拟染色浓度域扩散模型的服务器训练与诊断过程，梳理噪声调度的四类问题及代表性文献，报告时间步损失诊断的实测结果（早期损失仅为晚期的 0.28 倍）、Beta(2,2) 重采样实验的损失轨迹，并据此修正研究假设、确定 M0→M1→M2 的分阶段路线与论文叙事。"}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav">
+<a href="../../index.html#threads">研究方向</a>
+<a href="../../index.html#articles">文章</a>
+<a href="../notes-index.html">笔记索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>服务器、训练与实验 · 长对话整理</h1>
+<div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 029_你记得刚才我给你的服务器吗.md</div>
+<h1>服务器、训练与实验 · 长对话整理</h1>
+<h2>一、背景与目标</h2>
+<p>本对话（500 条）围绕 HE→IHC 虚拟染色的浓度域扩散模型展开，兼含大量远程服务器训练运维记录。研究目标是以苏木素（H）、伊红（E）、二氨基联苯胺（DAB）的浓度图替代 RGB 图像作为扩散建模对象，由 HE 浓度图条件生成 IHC 的 DAB 浓度图，再经物理染色矩阵渲染为 IHC 的 RGB 图像。</p>
+<p>核心研究问题被反复表述为一句可检验的命题：对于空间对应关系不完美的虚拟染色任务，通用扩散训练所采用的噪声水平分配是否仍然合适。该问题由一项前置观察驱动——HE 与连续切片 IHC 之间存在明显空间错位与组织形变，像素级跨图对应基本不可学，而 patch 级聚合统计量（均值、标准差、高浓度占比）仍保持中等强度相关。若&quot;目标粒度上移&quot;成立，则通用图像生成中&quot;高噪声学结构、低噪声学细节&quot;的分工假设在本任务上未必成立。</p>
+<p>对话同时承担两项工程目标：在按小时计费的临时 GPU 实例上完成 4000 步训练与多轮诊断；在单卡 12 GB 显存的约束下，判断浓度域路线是否值得继续，以及能否支撑一篇贡献明确的论文。</p>
+<h2>二、主要内容</h2>
+<h3>（一）模型结构：两条并行路线</h3>
+<p><strong>M0：浓度域 DAB 扩散（主线）</strong></p>
+<ul><li>扩散状态为单通道 DAB 浓度，条件为 HE 的 H、E 两个浓度通道；训练输入按通道拼接为 <code>[z_t(DAB), C_H^HE, C_E^HE]</code>（3 通道），输出 1 通道 <code>v_DAB</code>。</li><li>网络为自建小型 UNet：<code>UNet2DModel(in_channels=3, out_channels=1)</code>，不依赖 Stable Diffusion 的 VAE，也不迁就其 RGB 三通道接口。</li><li>推理自 <code>z_T ~ N(0,1)</code> 出发，每步重新拼接当前 DAB 状态与两个 HE 条件，迭代得到 <code>C_DAB</code>；渲染时将 H 通道与生成的 DAB 组合为 <code>[C_H^HE, C_DAB]</code>，经 <code>M_IHC</code> 渲染为 RGB。此即 H-copy 基线，其前提 <code>C_H^HE ≈ C_H^IHC</code> 属待验证假设而非物理事实。</li></ul>
+<p><strong>Phikon-patch 条件扩散（对照与诊断对象）</strong></p>
+<ul><li>扩散状态为 IHC 的两个浓度通道 <code>[C_H^IHC, C_DAB^IHC]</code>；HE 信息不经通道拼接，而由 Phikon（ViT-B/16 病理特征提取器）提取后经 cross-attention 注入。</li><li>网络为 <code>UNet2DConditionModel</code>：<code>sample_size=128</code>、<code>in_channels=2</code>、<code>out_channels=2</code>、<code>layers_per_block=2</code>、<code>block_out_channels=(64,128,256,256)</code>、三层 CrossAttnDownBlock2D 加一层 DownBlock2D、<code>cross_attention_dim=768</code>、<code>attention_head_dim=8</code>、<code>norm_num_groups=32</code>，参数量 37.52 M。</li><li>训练目标为 v-prediction：<code>target_v = √ᾱ_t · ε − √(1−ᾱ_t) · C_0</code>。</li><li>数据由 <code>Stage1PatchDataset</code> 提供，返回 <code>cond = [C_H^HE, C_E^HE]</code> 与 <code>tgt = [C_H^IHC, C_DAB^IHC]</code>；训练集 217 166 个 patch，验证集 24 011 个。为复用 Phikon，需由 HE 浓度反推近似 RGB：<code>rgb = exp(−stack([c_h_he, c_e_he, 0]))</code>。</li></ul>
+<h3>（二）噪声调度的四类问题</h3>
+<p>对话首先完成概念澄清：文献中笼统称为&quot;优化噪声调度&quot;的做法实际分属四个层面，混为一谈会导致实验设计失效。</p>
+<table>
+<tr><th>类别</th><th>变量</th><th>控制对象</th><th>典型方法</th></tr>
+<tr><td>正向噪声调度</td><td><code>ᾱ_t</code>、<code>β_t</code></td><td>每步信号与噪声的比例</td><td>线性、余弦、sigmoid</td></tr>
+<tr><td>训练时间步采样</td><td><code>p(t)</code></td><td>各噪声水平被训练的频率</td><td>重要性采样、非均匀采样</td></tr>
+<tr><td>损失加权</td><td><code>w(t)</code></td><td>各噪声水平对梯度的贡献</td><td>P2、Min-SNR</td></tr>
+<tr><td>反向采样调度</td><td>步数、跳步、求解器</td><td>生成时如何遍历噪声水平</td><td>DDIM、快速采样器、SDEdit</td></tr>
+</table>
+<p>两个关键区分被特别强调：时间步占比不等于噪声占比，第 700 步不意味着已加入 70% 的噪声，不同调度在同一时间步对应的信噪比可能相差一个数量级；改变 <code>p(t)</code> 若不作重要性权重修正，实际上是在改变优化目标而非提高采样效率。信噪比定义为 <code>SNR(t) = ᾱ_t / (1 − ᾱ_t)</code>，<code>log SNR = 0</code>（即 <code>SNR = 1</code>）为信号与噪声方差贡献相等的临界区。</p>
+<h3>（三）代表性研究及其结论</h3>
+<ul><li><strong>余弦调度</strong>（Improved DDPM，ICML 2021）：原始 DDPM 的 <code>β_t</code> 线性变化，但累计保留率 <code>ᾱ_t</code> 并非线性，后半段过早退化为近似纯噪声，大量时间步提供的信息很少。余弦调度直接设计 <code>ᾱ_t = f(t)/f(0)</code>、<code>f(t) = cos²((t/T+s)/(1+s)·π/2)</code>，使首尾平缓、中间衰减；启示是调度应依据信号实际被破坏的程度，而非均匀划分时间步。</li><li><strong>P2 加权</strong>（CVPR 2022）：不改正向过程，只重分配损失权重，<code>w_P2(t) = 1/(k + SNR(t))^γ</code>；出发点是低噪声阶段集中于细小的局部细节，其他噪声水平更能促使模型学习丰富的视觉内容与上下文。</li><li><strong>Min-SNR</strong>（ICCV 2023）：将不同时间步的去噪视为相互关联的多个优化任务，指出梯度可能冲突并拖慢收敛，据此按信噪比限制各时间步的有效权重，论文报告收敛速度最多提升约 3.4 倍（限于其特定实验条件）。</li><li><strong>Improved Noise Schedule</strong>（ICCV 2025）：主张提高 <code>log SNR ≈ 0</code> 区域的采样频率——此时数据既非近乎干净，也非近乎纯噪声，模型须同时利用残余信号并处理强扰动。此外，EDM（NeurIPS 2022）主张把噪声参数化、训练分布、预条件与采样拆为独立选择，自适应时间步（UAI 2024）则优化离散时间步位置以降低采样离散化误差。</li></ul>
+<h3>（四）DDIM 反演与&quot;只加到 70%&quot;的辨析</h3>
+<p>DDIM（ICLR 2021）构造了一类与 DDPM 训练目标相同、但可采用不同反向轨迹的过程，确定性采样下可逐步不重新注入随机噪声。反演则沿该轨迹的近似逆方向把已有图像映射到某个噪声状态，以支持后续编辑或重建。反演本身并不意味着选择了最优调度，也不证明必须反演到最高噪声水平；若改变了调度却沿用旧的反演轨迹，需格外谨慎。</p>
+<p>&quot;只加到 70%&quot;有两种含义：<strong>情况 A（推理／编辑）</strong>指先加噪到中间时间步再从此去噪，如 SDEdit 与图生图流程，此处的 0.7 通常是 strength 参数，实际起始时间步取决于采样步数与调度；<strong>情况 B（训练）</strong>指把最大时间步限制在 <code>0.7T</code>，模型几乎未学习最低信噪比区间的去噪任务，若推理仍从纯噪声起步将出现训练—推理不匹配。截断噪声范围可作为独立实验，但须保证训练时见过的噪声水平与生成起点匹配；相较之下，保持完整信噪比覆盖、只调整采样概率是更干净的比较方式。</p>
+<h3>（五）统一目标函数与三个设计变量</h3>
+<p>对话给出统一的训练目标：</p>
+<pre><code>L = E_{t~p(t), ε~N(0,I)} [ w(t) · ‖ ε − ε_θ(C_t, t, F_HE) ‖² ]</code></pre>
+<p>其中 <code>F_HE</code> 为 HE 图像提取的条件特征，<code>C_t</code> 为加噪后的目标浓度图，<code>p(t)</code> 为时间步抽样概率，<code>w(t)</code> 为损失权重。三个变量与三类研究思路一一对应：<code>ᾱ_t</code> 对应调度设计，<code>p(t)</code> 对应重要性采样，<code>w(t)</code> 对应损失加权，相互关联但不可随意互换。</p>
+<h3>（六）实验环境与运维方式</h3>
+<ul><li>平台为按小时计费的临时 GPU 实例（AutoDL／SeetaCloud），显存 12 288 MiB，经跳板域名 <code>connect.nmb2.seetacloud.com</code> 加非标准端口接入，密码认证。</li><li>实例特性：单次会话约 1 小时，到期自动关机；重启后端口与密码均变化，需从控制台重新获取。</li><li>本地未安装 <code>sshpass</code>，认证改由 <code>expect</code> 脚本完成，封装上传、启动、日志抓取与 scp 下载四类操作。</li><li>长任务以 <code>nohup ... &gt; log 2&gt;&amp;1 &amp;</code> 后台启动以避免 SSH 超时，但由此产生 stdout 缓冲问题，日志长时间为空，需用 <code>python3 -u</code> 或 <code>sys.stdout.reconfigure(line_buffering=True)</code> 解决。</li><li>明确的操作约束：不得使用 timeout 与 sleep 等待，命令须立即返回或后台运行，该约束在对话中被多次重申。</li></ul>
+<h3>（七）时间步损失诊断</h3>
+<p>诊断目的为验证线性（或余弦）调度是否在早期时间步（<code>t &lt; 200</code>）过于激进，导致低噪声水平下预测能力不足。脚本迭代五版，问题依次为：输出重定向失效；Phikon 从 Hugging Face 在线加载（实例无外网，报 <code>[Errno 101] Network is unreachable</code>）；UNet 从 Hub 下载（同样失败）；验证集目录 <code>val_he_patches</code>／<code>val_ihc_patches</code> 不存在。最终修正为：Phikon 改用本地路径 <code>/root/autodl-tmp/phikon_model</code> 并设 <code>local_files_only=True</code>；UNet 按训练脚本构造参数从头实例化，再以 <code>safetensors.load_file</code> 载入 EMA 权重；数据改用 <code>Stage1PatchDataset(&quot;val&quot;)</code> 而非直接读图。</p>
+<p>诊断在 11 个时间步上计算 v-prediction 的 MSE，结果如下：</p>
+<table>
+<tr><th>t</th><th>loss</th><th>SNR</th><th>log SNR</th></tr>
+<tr><td>0</td><td>0.023437</td><td>1175.44</td><td>+7.069</td></tr>
+<tr><td>20</td><td>0.003565</td><td>48.99</td><td>+3.892</td></tr>
+<tr><td>50</td><td>0.002186</td><td>16.86</td><td>+2.825</td></tr>
+<tr><td>100</td><td>0.002345</td><td>6.54</td><td>+1.878</td></tr>
+<tr><td>150</td><td>0.004491</td><td>3.44</td><td>+1.236</td></tr>
+<tr><td>200</td><td>0.007745</td><td>2.06</td><td>+0.723</td></tr>
+<tr><td>300</td><td>0.022673</td><td>0.88</td><td>−0.131</td></tr>
+<tr><td>500</td><td>0.068987</td><td>0.19</td><td>−1.652</td></tr>
+<tr><td>700</td><td>0.066597</td><td>0.04</td><td>−3.308</td></tr>
+<tr><td>900</td><td>0.008799</td><td>0.005</td><td>−5.306</td></tr>
+<tr><td>980</td><td>0.002045</td><td>0.002</td><td>−6.222</td></tr>
+</table>
+<p>汇总：早期（<code>t ≤ 200</code>）平均损失 0.007295，晚期（<code>t ≥ 700</code>）平均损失 0.025814，比值 0.28；损失峰值出现在 <code>t = 500–700</code>（约 0.07），并非早期时间步。</p>
+<h3>（八）诊断结果的解读与假设修正</h3>
+<p>初版解读认为&quot;模型在高噪声区学习困难，应改用线性调度以抬高 <code>t ≥ 700</code> 处的信噪比&quot;。该解读随即被推翻：低噪声区损失低，部分源于像素级目标本身不可学（前置实验测得像素级跨图相关 <code>r ≈ 0</code>），损失下降并不代表学到有意义的结构；高噪声区损失高是扩散训练的常态，信号被噪声淹没时预测误差必然上升；更关键的是生成结果几乎退化为均值图，若高噪声区负责学习全局均值，则该区任务实际已完成。</p>
+<p>修正后的判断是：真正承载条件信息学习的是 <code>log SNR ≈ 0</code> 的中等噪声区（本调度下约 <code>t = 300–600</code>），此区间模型需同时利用残余信号与强扰动，才能建立 HE 结构与 IHC 聚合统计之间的对应关系，故实验重点应从&quot;改调度&quot;转向&quot;提高中等噪声区的采样概率或损失权重&quot;。这一修正同时厘清了两类不同问题：不同时间步去噪任务之间的优化冲突（Min-SNR 所处理），与蛋白表达约束和去噪目标之间的冲突（前置工作中担忧的问题），二者不可混为同一命题。</p>
+<h3>（九）Beta(2,2) 重采样实验</h3>
+<p>按上述判断，训练脚本第 156 行的时间步采样由均匀分布改为 Beta(2,2)：</p>
+<pre><code>from torch.distributions import Beta
+beta_dist = Beta(2.0, 2.0)
+t_normalized = beta_dist.sample((b,)).to(dev)
+t = (t_normalized * scheduler.config.num_train_timesteps).long().clamp(
+    0, scheduler.config.num_train_timesteps - 1)</code></pre>
+<p>新脚本为 <code>train_phikon_patch_v1_snr1_focus.py</code>，启动命令：</p>
+<pre><code>nohup python3 train_phikon_patch_v1_snr1_focus.py \
+  --phikon_path /root/autodl-tmp/phikon_model \
+  --steps 4000 --save_every 1000 \
+  --out runs/phikon_patch_v1_snr1 &gt; train_v1_snr1.log 2&gt;&amp;1 &amp;</code></pre>
+<p>基线设置不变：正向调度仍为 <code>squaredcos_cap_v2</code>（余弦），网络结构、数据与训练预算均保持，仅采样分布一项改动，以保证单因素对照。损失轨迹为：50 步 0.148 → 100 步 0.052 → 300 步 0.024 → 500–1000 步稳定于 0.013–0.016 → 1350 步 0.010；训练速度约每 50 步 45 秒，GPU 占用 9146 MiB，功耗由 232 W 升至 322–328 W，温度 71–73 ℃，利用率接近 100%。</p>
+<p>值得注意的是，基线（均匀采样）4000 步终值约 0.015，而 Beta(2,2) 版本在 1000 步即达 0.0153、1350 步降至 0.010。损失下降更快符合预期——集中于中等噪声区意味着训练目标更&quot;集中&quot;，但这本身不能证明生成质量提升，须以聚合级指标与条件置换实验判定。</p>
+<h3>（十）可视化产物与拼接方式</h3>
+<p>验证样本按固定格式横向三联：<code>np.concatenate([rgb_he, rgb_pred, rgb_gt], axis=1)</code>，从左至右为 HE 输入、生成的 IHC、真实 IHC，分别经 <code>M_HE</code> 与 <code>M_IHC</code> 染色矩阵渲染。已产出并下载的批次为 <code>val_step_0001000</code>（4 张，sample_00888／02814／07423／16232）与 <code>val_step_0002000</code>（4 张）。一次&quot;更换样本&quot;的额外生成请求因 checkpoint 键名不匹配（脚本读取 <code>unet_ema</code>，实际为 <code>ema</code>）失败，未产出独立批次；此后服务器失联，该批次始终未补。</p>
+<h3>（十一）故障记录</h3>
+<p>对话后段约三分之二的消息为连接失败与重试，构成一份完整的运维清单：<code>Connection closed by 127.0.0.1 port 7890</code>（本地代理在认证前切断连接）、<code>port 18075: Connection refused</code>（实例关机或端口变更）、<code>[Errno 101] Network is unreachable</code>（实例无外网）、<code>KeyError: &#x27;unet_ema&#x27;</code>（checkpoint 键名不符）、<code>unrecognized arguments</code>（实际参数为 <code>--steps</code> 与 <code>--out</code>），以及 <code>ENOTFOUND</code>、<code>Error 524</code>、<code>gpt-6-luna</code> 模型不可用等客户端故障。该阶段实质产出接近于零，暴露的问题是结构性的：临时实例的凭据轮换与长任务相冲突，1 小时的窗口不足以支撑 4000 步训练、诊断与样本回传的完整闭环。</p>
+<h3>（十二）研究路线与论文定位</h3>
+<p><strong>浓度域是否值得继续</strong>：值得，但&quot;把 RGB 换成浓度图&quot;本身不构成创新。浓度域虚拟染色已有邻近工作——MICCAI 2026 的 CFM-HES 在浓度空间保留已知 H/E 浓度、只生成缺失的 Saffron 浓度，再以 Beer–Lambert 定律重建；HistDiST 已将 SD1.5 latent diffusion、病理形态特征条件与专门采样策略用于 H&amp;E→IHC。因此论文不能停留在&quot;提出一种浓度域扩散&quot;，须回答&quot;相比已有浓度域方法解决了什么不同问题&quot;。</p>
+<p><strong>是否改造 SD 的 VAE</strong>：不改造。方案 A（自建小型 UNet 直接预测 DAB 浓度）为主线；方案 B（复用 HistDiST／SD1.5 的 RGB latent 流程）作对照；方案 C（改 VAE 输入输出卷积以接受两个浓度通道）需解决预训练编解码能力的迁移问题，在现有时间与算力下不建议。关键事实是 M0 只生成单通道 DAB，三通道适配问题对它并不存在。</p>
+<p><strong>分阶段路线</strong>：P0 跑通 M0 最小管线，同时设四个基线（常量平均 DAB、无条件扩散、条件扩散、条件扩散＋H-copy 渲染），回答&quot;H&amp;E 条件是否比无条件模型提供可测量信息&quot;；P0.5 将评价从逐像素转向聚合级（DAB 均值、标准差、<code>p_high</code>、高浓度区域比例、局部空间自相关），若逐像素相关性低而聚合级相关性稳定存在，应视为任务本质的反映而非实验失败；M1 加入多尺度结构条件（保留 H/E 拼接，增加低分辨率全局条件与局部高分辨率条件，或用轻量 skip injection），目标是改善核结构保持与局部纹理合理性，而非继续压低扩散损失；M2 引入 PSPStain 伪 IHC 提取的 DAB／FOD 蛋白统计作为条件，须防范循环论证（模型可能只学到 PSPStain 的偏差），故伪标签仅作条件、不替代真实目标，并须做有／无消融与外部验证；M3 的真实 IHC 分布先验引导工程风险最高，非首篇论文必选。</p>
+<p><strong>条件有效性的硬门槛</strong>：固定噪声只换 H&amp;E，输出 DAB 的空间或统计特征应发生系统变化；固定 H&amp;E 只换噪声，输出应有合理随机性但表达统计不失控；配对与打乱条件相比，打乱后聚合级指标应明显变差；有条件模型应优于无条件模型，后者应优于常量均值基线。该不等式须体现在 <code>mean</code>、<code>std</code>、<code>p_high</code>、HER2 分级条件下的表达分布与多次采样多样性上——v-prediction 损失本身不能证明模型学会了条件，无条件模型同样可以把边际分布学得很好。</p>
+<p><strong>论文叙事</strong>：主张定为&quot;面向弱配准 H&amp;E–IHC 对的蛋白感知浓度域生成&quot;。论证链条为：HE 与 IHC 非严格像素对齐；H 通道提供可共享的组织结构；DAB 是需生成的蛋白表达通道；像素级映射不可靠但 patch 级表达分布存在条件信号；故模型应在浓度空间中分离可共享的 H 结构、需生成的 DAB 与 patch 级表达分布。评价因连续切片错位而不能只用 RGB 的 PSNR／SSIM，须结合 patch 级 DAB 统计、蛋白表达指标与条件置换实验。</p>
+<h2>三、结论与关键决策</h2>
+<ol><li><strong>概念与实测</strong>：噪声调度被拆为正向调度、时间步采样、损失加权与反向采样四类，分别对应 <code>ᾱ_t</code>、<code>p(t)</code>、<code>w(t)</code> 与推理轨迹，&quot;只加到 70%&quot;须区分 strength 参数与训练截断两种含义；诊断结果则否证了&quot;早期时间步是瓶颈&quot;的原假设——<code>t ≤ 200</code> 的平均损失仅为 <code>t ≥ 700</code> 的 0.28 倍，峰值位于 <code>t = 500–700</code>。</li><li><strong>假设修正</strong>：高噪声区损失高属训练常态，且该区主要负责全局均值，与&quot;生成图退化为均值&quot;一致；真正瓶颈在 <code>log SNR ≈ 0</code> 的中等噪声区。</li><li><strong>实验决策</strong>：在保持正向调度、网络结构与训练预算不变的前提下，仅将时间步采样由均匀分布改为 Beta(2,2)，聚焦 <code>t ≈ 300–600</code>，作为单因素对照。</li><li><strong>路线决策</strong>：浓度域 DAB 扩散为唯一主线，RGB／latent 路线降为对照；不改造 SD VAE；按 P0→P0.5→M1→M2 顺序推进，未通过条件有效性检验前不进入 M1／M2。</li><li><strong>评价与叙事</strong>：以聚合级 DAB 统计与条件置换实验替代单纯像素指标与训练损失，作为判断模型是否利用 H&amp;E 条件的主要依据；论文问题定位为&quot;弱配准条件下的蛋白感知浓度域生成&quot;，而非&quot;浓度域扩散&quot;本身。</li></ol>
+<h2>四、遗留问题与下一步</h2>
+<ol><li><strong>条件有效性尚未验证</strong>。四项硬门槛测试均未执行，故&quot;M0 是否成功&quot;目前无法判定，为最高优先级。</li><li><strong>诊断指标不完整</strong>。现有诊断仅算 MSE，未纳入 SSIM 与 Pearson 相关系数；配准误差存在时 MSE 会因位移急剧放大，而相关系数可能仍保持较好水平。此外仅测试 1 个样本，需扩展为多样本统计与按 SNR 区间分组的误差分布。</li><li><strong>Beta(2,2) 缺少对照结论</strong>。损失下降更快，但未与基线在同一评价体系下比较，需在相同验证集上比较聚合级指标、采样多样性与条件置换后的性能跌落幅度。</li><li><strong>额外样本批次未补</strong>。因键名不匹配与服务器失联，指定批次始终未生成；重新获得实例后须按 <code>ema</code> 键修正生成脚本并单独存放。</li><li><strong>训练—推理的调度一致性待核查</strong>。<code>squaredcos_cap_v2</code> 在 <code>t ≥ 700</code> 处 SNR 已降至 0.04 以下，若推理仍按 1000 步从纯噪声起步，需确认该区间的采样质量是否影响最终图像。</li><li><strong>创新性与工程可持续性</strong>。&quot;浓度域&quot;本身不构成新颖性（CFM-HES 与 HistDiST 已在该空间工作），需调研确认弱配准下的噪声水平分配、以及 patch 级聚合统计作为训练目标是否已有先例；临时实例的 1 小时窗口与凭据轮换亦使长周期实验难以推进，需改用长期实例或建立断点续训与自动回传流程。</li></ol>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/029_你记得刚才我给你的服务器吗.html">029_你记得刚才我给你的服务器吗.md</a></p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>
