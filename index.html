@@ -87,6 +87,21 @@
     <span class="desc">一开始我只是想复现个 SOTA 模型把 Masson/PAS/PASM 三染色的病灶分割结果交上去，结果这条线一路带我摸过 nnU-Net、GloPath、Swin-UNETR，又为扩数据拐进了文本驱动风格迁移，最后自己绕回起点，卡在边界模糊这个真问题上。本文按时间顺序留下完整的思路演变、我引用的每个模型的指标、我实测的那组 Dice/IoU，和一路的自我推翻。</span>
   </li>
   <li>
+    <a href="articles/008-浓度空间Diffusion.html">从 RGB 到染料浓度域：H&E→IHC 虚拟染色的物理可解释路线研究</a><span class="date">2026-10-24</span><br />
+    <span class="tag">虚拟染色</span> <span class="tag">浓度域</span> <span class="tag">扩散模型</span> <span class="tag">比尔-朗伯</span> <span class="tag">H&E→IHC</span>
+    <span class="desc">本文论证虚拟染色的建模坐标应由 RGB 转向染料浓度域，提出仅在 DAB 浓度通道上做条件扩散、以 H/E 浓度为干净条件、经比尔-朗伯回投重建 IHC 的解耦路线，并给出可判定该路线成立与否的最小基线 M0 及其门禁式判据。</span>
+  </li>
+  <li>
+    <a href="articles/009-对比学习与CUT.html">对比学习与 CUT：无配对染色翻译中的结构保持机制研究</a><span class="date">2026-10-24</span><br />
+    <span class="tag">对比学习</span> <span class="tag">CUT</span> <span class="tag">无配对翻译</span> <span class="tag">结构保持</span> <span class="tag">PatchNCE</span>
+    <span class="desc">本文从 InfoNCE 的互信息下界出发，将 CUT 的 PatchNCE 还原为"以局部语义块替代全局像素"的内容保持判据，论证其能容纳配准误差与几何形变却不约束染色量，故须由光密度域浓度监督与梯度边界监督补足。</span>
+  </li>
+  <li>
+    <a href="articles/010-虚拟染色精读.html">虚拟染色关键工作精读：语义保持、扩散与对比学习三条路线</a><span class="date">2026-10-24</span><br />
+    <span class="tag">虚拟染色</span> <span class="tag">论文精读</span> <span class="tag">PSPStain</span> <span class="tag">扩散模型</span> <span class="tag">对比学习</span>
+    <span class="desc">以 PSPStain、MisalignResistantVS（DGR）与 StainBridge 三篇工作为锚点，论证虚拟染色的核心矛盾并非生成逼真度而是语义可判读性，并指出语义保持、生成式解耦与对比/解耦三条路线在错位条件下共同收敛于"放弃逐点对应、转向集合级约束"这一方法论内核。</span>
+  </li>
+  <li>
     <a href="articles/doubao-mbti-pipeline.html">MBTI 连续人格空间研究管线（阶段总览）</a><span class="date">2026-10-24</span><br />
     <span class="tag">MBTI</span> <span class="tag">人格建模</span> <span class="tag">VAE</span> <span class="tag">研究设计</span> <span class="tag">豆包</span>
     <span class="desc">我设计的一个研究项目：把 MBTI 从 16 类离散类型扩展成连续人格空间，X→Z→P(Z|M)→P(A|S,Z) 六道阶段闸门。这是阶段总览图，从豆包上传记录恢复。</span>
