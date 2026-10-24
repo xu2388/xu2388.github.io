@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JavaWeb · 学习笔记</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"JavaWeb · 学习笔记","date":"2026-10-24","tags":["课程笔记","JavaWeb"],"category":"课程笔记","summary":"按“页面结构—样式—脚本—数据描述—通信协议—服务器”的顺序，系统整理 HTML/CSS/JavaScript 基础、XML 的 DTD 与 XSD 约束、C/S 与 B/S 架构、HTTP 请求响应报文及 Tomcat 与 Servlet 的运行流程。"}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav">
+<a href="../../index.html#threads">研究方向</a>
+<a href="../../index.html#articles">文章</a>
+<a href="../notes-index.html">笔记索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>JavaWeb · 学习笔记</h1>
+<div class="meta">课程笔记 · JavaWeb · 整理自豆包对话 007_javaweb自学.md</div>
+<h1>JavaWeb · 学习笔记</h1>
+<h2>一、概述</h2>
+<p>JavaWeb 指以 Java 技术构建、通过浏览器访问的 Web 应用。其运行基础是 <strong>B/S（Browser/Server，浏览器/服务器）架构</strong>：客户端只需浏览器，业务逻辑与数据集中在服务器端，浏览器与服务器之间通过 <strong>HTTP 协议</strong>通信。</p>
+<p>一个 JavaWeb 项目由三类资源构成：</p>
+<table>
+<tr><th>类别</th><th>内容</th><th>职责</th></tr>
+<tr><td>静态资源</td><td>HTML、CSS、JavaScript、图片</td><td>页面结构与展现，内容固定</td></tr>
+<tr><td>动态资源</td><td>Servlet、JSP</td><td>执行 Java 代码，处理业务逻辑</td></tr>
+<tr><td>数据库</td><td>MySQL 等</td><td>持久化存储数据</td></tr>
+</table>
+<p>整体知识链条为：<strong>HTML 搭结构 → CSS 做样式 → JavaScript 加交互 → XML 描述配置与数据 → HTTP 规定通信格式 → Tomcat 作为 Web 容器运行 Servlet/JSP</strong>。其中 XML 的 DTD、XSD 约束与 HTTP 报文结构是笔试与面试的高频考点。</p>
+<h2>二、核心知识点</h2>
+<h3>2.1 HTML 文档结构与标签分类</h3>
+<p>HTML（HyperText Markup Language，超文本标记语言）不是编程语言，没有变量与逻辑，只负责描述页面结构，文件后缀为 <code>.html</code> 或 <code>.htm</code>。</p>
+<p>标准骨架如下：</p>
+<pre><code>&lt;!DOCTYPE html&gt;          &lt;!-- 文档声明：告诉浏览器使用 HTML5 标准，不是标签 --&gt;
+&lt;html&gt;                   &lt;!-- 根标签，整份文档唯一的根节点 --&gt;
+  &lt;head&gt;                 &lt;!-- 头部：配置信息，页面不直接显示 --&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;   &lt;!-- 设置编码，防止中文乱码 --&gt;
+    &lt;title&gt;网页标题&lt;/title&gt;   &lt;!-- 浏览器标签页文字 --&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;
+  &lt;/head&gt;
+  &lt;body&gt;                 &lt;!-- 主体：所有可见内容 --&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>标签分两类：</p>
+<ul><li><strong>单标签（自闭合）</strong>：<code>&lt;br&gt;</code>、<code>&lt;hr&gt;</code>、<code>&lt;img&gt;</code>、<code>&lt;input&gt;</code>、<code>&lt;link&gt;</code>；</li><li><strong>双标签（容器）</strong>：<code>&lt;p&gt;…&lt;/p&gt;</code>、<code>&lt;div&gt;…&lt;/div&gt;</code>，成对出现。</li></ul>
+<p>注释写法为 <code>&lt;!-- 注释内容 --&gt;</code>。浏览器会忽略无法识别的标签，若要在页面上显示 <code>&lt;abc&gt;</code> 这样的字面文本，必须使用转义字符：<code>&amp;lt;</code> 表示 <code>&lt;</code>，<code>&amp;gt;</code> 表示 <code>&gt;</code>，<code>&amp;nbsp;</code> 表示不间断空格。</p>
+<h3>2.2 常用标签</h3>
+<p><strong>段落与文本</strong>：<code>&lt;p&gt;</code> 为块级元素，独占一行并自带上下间距；<code>&lt;span&gt;</code> 为行内元素，不换行，用于给局部文字单独设置样式；<code>&lt;br&gt;</code> 强制换行；<code>&lt;font face=&quot;微软雅黑&quot; size=&quot;5&quot; color=&quot;blue&quot;&gt;</code> 为旧版文本样式标签，多个属性以空格分隔。</p>
+<p><strong>表格</strong>：</p>
+<pre><code>&lt;table border=&quot;1px&quot; cellspacing=&quot;0&quot; cellpadding=&quot;3&quot; align=&quot;center&quot;&gt;
+  &lt;tr&gt;                    &lt;!-- table row：一行 --&gt;
+    &lt;td&gt;单元格内容&lt;/td&gt;    &lt;!-- table data：一个单元格 --&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+<ul><li><code>border</code>：边框粗细；<code>cellspacing</code>：单元格之间的间距；<code>cellpadding</code>：文字与单元格边框的内边距；<code>align</code>：表格整体水平对齐。</li><li>跨列合并用 <code>colspan=&quot;2&quot;</code>，跨行合并用 <code>rowspan=&quot;2&quot;</code>；合并后须删除被合并位置多余的 <code>&lt;td&gt;</code>。</li><li><code>&lt;td&gt;</code> 必须嵌套在 <code>&lt;tr&gt;</code> 内，<code>&lt;tr&gt;</code> 必须嵌套在 <code>&lt;table&gt;</code> 内。</li></ul>
+<p><strong>表单</strong>：用于收集用户输入并提交给服务器。</p>
+<pre><code>&lt;form action=&quot;后端接口地址&quot; method=&quot;post&quot; name=&quot;loginForm&quot;&gt;
+  &lt;input type=&quot;text&quot; name=&quot;username&quot;&gt;
+  &lt;input type=&quot;password&quot; name=&quot;password&quot;&gt;
+  &lt;input type=&quot;radio&quot; name=&quot;gender&quot; value=&quot;male&quot;&gt;男
+  &lt;input type=&quot;radio&quot; name=&quot;gender&quot; value=&quot;female&quot;&gt;女
+  &lt;input type=&quot;checkbox&quot; name=&quot;hobby&quot; value=&quot;read&quot;&gt;阅读
+  &lt;input type=&quot;file&quot; name=&quot;avatar&quot;&gt;
+  &lt;input type=&quot;submit&quot; value=&quot;提交&quot;&gt;
+  &lt;input type=&quot;reset&quot; value=&quot;重置&quot;&gt;
+&lt;/form&gt;</code></pre>
+<p><code>action</code> 指定接收数据的 URL，<code>method</code> 只有 GET 与 POST 两种。<code>type</code> 常用值包括 <code>text</code>、<code>password</code>、<code>radio</code>、<code>checkbox</code>、<code>file</code>、<code>submit</code>、<code>reset</code>。<strong>同一组单选按钮或多选框的 <code>name</code> 必须完全相同</strong>，否则无法实现互斥或分组提交。</p>
+<p><strong>多行文本框与下拉框</strong>（同属表单元素）：</p>
+<pre><code>&lt;textarea cols=&quot;25&quot; rows=&quot;25&quot;&gt;默认内容&lt;/textarea&gt;
+
+&lt;select name=&quot;country&quot;&gt;
+  &lt;option value=&quot;China&quot;&gt;中国&lt;/option&gt;
+  &lt;option value=&quot;Korea&quot;&gt;韩国&lt;/option&gt;
+&lt;/select&gt;</code></pre>
+<p><code>cols</code> 与 <code>rows</code> 分别控制列数与行数；<code>option</code> 的 <code>value</code> 是提交给服务器的值，标签之间的文字是页面显示值。<code>&lt;fieldset&gt;</code> 用于给一组表单加边框分组，<code>&lt;legend&gt;</code> 为该组加标题。</p>
+<p><strong>列表</strong>：</p>
+<pre><code>&lt;ul type=&quot;disc&quot;&gt;&lt;li&gt;条目&lt;/li&gt;&lt;/ul&gt;   &lt;!-- 无序：disc 实心圆、square 方块、circle 空心圆 --&gt;
+&lt;ol type=&quot;a&quot;&gt;&lt;li&gt;条目&lt;/li&gt;&lt;/ol&gt;      &lt;!-- 有序：可指定数字、字母、罗马数字 --&gt;
+&lt;dl&gt;
+  &lt;dt&gt;红色&lt;/dt&gt;&lt;dd&gt;代表热情&lt;/dd&gt;       &lt;!-- dt 为术语，dd 为解释 --&gt;
+&lt;/dl&gt;</code></pre>
+<p><strong>超链接与图片</strong>：</p>
+<pre><code>&lt;a href=&quot;https://www.example.com&quot; target=&quot;_blank&quot;&gt;链接文字&lt;/a&gt;
+&lt;img src=&quot;images/logo.png&quot; width=&quot;160&quot; height=&quot;130&quot; border=&quot;0&quot;&gt;</code></pre>
+<p><code>target</code> 取值：<code>_self</code>（当前窗口，默认）、<code>_blank</code>（新标签页）、<code>_parent</code>（父窗口）、<code>_top</code>（顶层窗口）。<code>img</code> 为单标签，<code>src</code> 支持绝对路径与相对路径；只设置宽或高其中之一时按比例缩放。</p>
+<h3>2.3 CSS 语法与四种引入方式</h3>
+<p>CSS（Cascading Style Sheets，层叠样式表）负责颜色、字号、边框、布局等表现层设置。基本语法为“选择器 + 声明块”：</p>
+<pre><code>div {
+  border: 1px solid red;
+  width: 600px;
+  height: 400px;
+}</code></pre>
+<p>声明块内是若干“属性: 值”键值对，以分号结尾。四种引入方式：</p>
+<table>
+<tr><th>方式</th><th>写法</th><th>作用范围</th><th>特点</th></tr>
+<tr><td>行内式</td><td><code>&lt;p style=&quot;color:red;font-size:20px;&quot;&gt;</code></td><td>单个标签</td><td>结构与样式完全耦合，优先级最高，仅用于临时调试</td></tr>
+<tr><td>内嵌式</td><td><code>&lt;head&gt;</code> 内 <code>&lt;style&gt;…&lt;/style&gt;</code></td><td>当前 HTML 文件</td><td>实现简单分离，但多页面无法复用</td></tr>
+<tr><td>外链式（链入式）</td><td><code>&lt;link href=&quot;style.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;</code></td><td>所有引用该文件的页面</td><td>结构与样式彻底分离，可复用、可缓存，企业开发标准写法</td></tr>
+<tr><td>导入式</td><td><code>&lt;style&gt;</code> 内 <code>@import url(style.css);</code></td><td>当前文件</td><td>先加载完 HTML 再下载 CSS，页面会短暂无样式；JS 无法动态控制，已淘汰</td></tr>
+</table>
+<pre><code>&lt;head&gt;
+  &lt;link href=&quot;css/style.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;
+&lt;/head&gt;</code></pre>
+<p><code>href</code> 为 CSS 文件路径；<code>rel=&quot;stylesheet&quot;</code> 声明所引入文件为样式表，必须书写；<code>type=&quot;text/css&quot;</code> 在 HTML5 中可省略。优先级由高到低为：<strong>行内式 &gt; 内嵌式 &gt; 外链式</strong>（同权重时后定义者覆盖先定义者）。</p>
+<h3>2.4 CSS 选择器</h3>
+<ul><li><strong>标签选择器</strong>：<code>p { color: green; }</code>，批量作用于所有同名标签；</li><li><strong>类选择器</strong>：<code>.box { font-size: 14px; }</code>，HTML 中以 <code>class=&quot;box&quot;</code> 引用，同一个类可被多个标签使用，开发中最常用；</li><li><strong>id 选择器</strong>：<code>#box { background: pink; }</code>，HTML 中以 <code>id=&quot;box&quot;</code> 引用，<strong>同一页面内 id 必须唯一</strong>，多用于 JavaScript 定位元素；</li><li><strong>通配符选择器</strong>：<code>* { margin: 0; padding: 0; }</code>，选中全部标签，常用于全局样式初始化。</li></ul>
+<h3>2.5 JavaScript 的组成与引入</h3>
+<p>JavaScript 由三部分组成：</p>
+<ol><li><strong>ECMAScript</strong>：语法核心，包括变量、运算符、数据类型、函数、流程控制；</li><li><strong>DOM（Document Object Model，文档对象模型）</strong>：把 HTML 解析为树形结构，供脚本操作标签；</li><li><strong>BOM（Browser Object Model，浏览器对象模型）</strong>：以 <code>window</code> 为核心，操作浏览器窗口。</li></ol>
+<p>引入方式有三种：行内式（写在标签的事件属性中，如 <code>onclick=&quot;fn()&quot;</code>）、内嵌式（<code>&lt;script&gt;…&lt;/script&gt;</code>）、外链式（<code>&lt;script src=&quot;app.js&quot;&gt;&lt;/script&gt;</code>）。</p>
+<p>运算符优先级由高到低大致为：括号与成员访问 <code>.</code> <code>[]</code> <code>()</code> → 自增自减与 <code>!</code>、<code>new</code>、<code>typeof</code> → 乘除取余 → 加减 → 移位 → 关系运算 → 相等运算 → 按位与、异或、或 → 逻辑与、逻辑或 → 三元运算符 → 赋值。</p>
+<h3>2.6 DOM、BOM 与内置对象</h3>
+<p>DOM 将文档解析为一棵树：<code>document → html → head/body → 各标签</code>。节点之间存在父子关系，<code>parentNode</code> 返回父节点。获取元素的常用方法：</p>
+<pre><code>// 通过 id 获取，返回单个元素
+var el = document.getElementById(&quot;userId&quot;);
+
+// 通过 name 获取，返回类数组，多个同名元素时需用下标取用
+var first = document.getElementsByName(&quot;userName&quot;)[0];</code></pre>
+<p>BOM 的顶层对象是 <code>window</code>，其他对象均作为其属性存在，全局作用域中声明的变量也挂载在 <code>window</code> 上。常用属性：</p>
+<table>
+<tr><th>属性</th><th>含义</th></tr>
+<tr><td><code>innerWidth</code> / <code>innerHeight</code></td><td>文档显示区域（可视区）的宽高</td></tr>
+<tr><td><code>outerWidth</code> / <code>outerHeight</code></td><td>整个浏览器窗口的宽高</td></tr>
+<tr><td><code>document</code></td><td>当前文档对象</td></tr>
+<tr><td><code>history</code></td><td>浏览历史，用于前进后退</td></tr>
+<tr><td><code>location</code></td><td>地址栏信息，可用于跳转</td></tr>
+<tr><td><code>parent</code> / <code>self</code> / <code>top</code></td><td>父窗口、当前窗口、顶层窗口</td></tr>
+</table>
+<p>常用方法：<code>open()</code> / <code>close()</code> 打开或关闭窗口；<code>alert()</code> / <code>confirm()</code> / <code>prompt()</code> 分别弹出警告框、确认框、输入框；<code>setTimeout()</code> / <code>clearTimeout()</code> 设置或清除定时器。</p>
+<p>页面加载事件有两个，区别必须掌握：</p>
+<pre><code>// 页面全部资源（图片、样式、视频）加载完成后执行，只执行一次
+window.onload = function () {};
+
+// 仅 DOM 结构解析完成后执行，不等待图片与样式，触发更早
+document.addEventListener(&quot;DOMContentLoaded&quot;, function () {});</code></pre>
+<p>内置对象方面，<code>Date</code> 必须先 <code>new</code> 才能使用：</p>
+<pre><code>var d = new Date();
+d.getFullYear();  // 四位年份
+d.getMonth();     // 月份 0~11，0 表示一月
+d.getDate();      // 日期 1~31
+d.getDay();       // 星期 0~6，0 表示周日
+d.getHours();     // 小时 0~23
+d.getMinutes();   // 分钟 0~59
+d.getSeconds();   // 秒 0~59
+d.getTime();      // 1970-01-01 至今的毫秒数（时间戳）</code></pre>
+<p>对应的 <code>setFullYear()</code>、<code>setMonth()</code>、<code>setDate()</code>、<code>setHours()</code>、<code>setMinutes()</code>、<code>setSeconds()</code>、<code>setTime()</code> 用于设置时间。<code>String</code> 对象提供字符串截取、替换、大小写转换等方法，同样需要创建实例后调用。</p>
+<h3>2.7 函数与事件</h3>
+<pre><code>function functionName(parameter1, parameter2) {
+  // 函数体
+  return expression;   // 可选，未写 return 时返回 undefined
+}
+functionName(actualArg1, actualArg2);</code></pre>
+<p>规则：函数名区分大小写（<code>Test</code> 与 <code>test</code> 是两个不同函数）；参数列表最多 255 个；<code>return</code> 既返回值也终止函数执行。</p>
+<p>事件是用户或浏览器触发的动作，常用三类：</p>
+<ul><li><strong>焦点事件</strong>：<code>onfocus</code> 获得焦点、<code>onblur</code> 失去焦点、<code>onchange</code> 内容改变，常用于输入校验；</li><li><strong>表单事件</strong>：<code>onsubmit</code> 表单提交、<code>onreset</code> 表单重置；</li><li><strong>页面事件</strong>：<code>onload</code> 页面加载完成。</li></ul>
+<p>事件绑定有两种方式：HTML 内联绑定（<code>&lt;button onclick=&quot;fn()&quot;&gt;</code>）与 DOM 绑定（<code>btn.onclick = function () {}</code>）。前者写法直观但结构与行为耦合，后者是正式项目的主流做法。</p>
+<h3>2.8 Bootstrap</h3>
+<p>Bootstrap 是一套开源的 HTML + CSS + JS 前端框架，提供样式库、组件（按钮、导航栏、弹窗）与插件，核心特性是<strong>响应式布局</strong>：同一套页面可自动适配电脑、平板与手机屏幕。使用时引入其 CSS 与 JS 文件，在标签上添加预定义类名即可获得样式，适合快速搭建后台界面与课程设计页面。</p>
+<h3>2.9 XML 语法</h3>
+<p>XML（Extensible Markup Language，可扩展标记语言）用于<strong>存储与传输结构化数据</strong>，也是 Java 项目（Spring、MyBatis、Tomcat）配置文件的主要格式。</p>
+<p>三个特点：标签成对出现且必须正确嵌套；标签名可自定义（可扩展）；整份文档只能有一个根标签。</p>
+<p>XML 与 HTML 的区别：</p>
+<table>
+<tr><th>维度</th><th>HTML</th><th>XML</th></tr>
+<tr><td>目的</td><td>展示数据、排版页面</td><td>存储与传输数据</td></tr>
+<tr><td>大小写</td><td>不区分</td><td>严格区分</td></tr>
+<tr><td>空格</td><td>自动合并</td><td>原样保留</td></tr>
+<tr><td>标签</td><td>预定义</td><td>自定义、可扩展</td></tr>
+<tr><td>闭合</td><td>较宽松</td><td>必须闭合、严格嵌套</td></tr>
+</table>
+<p>文档声明必须位于第一行，其前不得有空格或注释：</p>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;</code></pre>
+<p><code>version</code> 一般写 1.0；<code>encoding</code> 常用 UTF-8 以防止中文乱码；<code>standalone</code> 表示是否依赖外部约束文件，<code>yes</code> 为独立文档，<code>no</code> 表示引用外部 DTD 或 Schema。</p>
+<p>文档由四部分组成：文档声明、元素、属性、注释。</p>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;书架&gt;
+    &lt;书 版本=&quot;第2版&quot;&gt;
+        &lt;书名&gt;JavaWeb入门&lt;/书名&gt;
+        &lt;售价 单位=&quot;元&quot;&gt;68&lt;/售价&gt;
+    &lt;/书&gt;
+&lt;/书架&gt;</code></pre>
+<p><code>&lt;</code>、<code>&gt;</code>、<code>&amp;</code> 等符号需转义为 <code>&amp;lt;</code>、<code>&amp;gt;</code>、<code>&amp;amp;</code>；若大段内容含大量特殊符号，可用 CDATA 段避免逐个转义：</p>
+<pre><code>&lt;![CDATA[ 这里可以自由书写 &lt; &gt; &amp; 而不报错 ]]&gt;</code></pre>
+<h3>2.10 DTD 约束</h3>
+<p>DTD（Document Type Definition）用于规定 XML 中可出现哪些标签、嵌套顺序与出现次数，文件后缀为 <code>.dtd</code>。使用流程为三步：编写 <code>.dtd</code> 约束文件 → 在 XML 中引入 → 按约束书写，违反即报错。</p>
+<p>元素定义格式为 <code>&lt;!ELEMENT 元素名 内容类型&gt;</code>：</p>
+<pre><code>&lt;!ELEMENT 书架 (书+)&gt;
+&lt;!ELEMENT 书 (书名,作者,售价)&gt;
+&lt;!ELEMENT 书名 (#PCDATA)&gt;
+&lt;!ELEMENT 作者 (#PCDATA)&gt;
+&lt;!ELEMENT 售价 (#PCDATA)&gt;</code></pre>
+<ul><li><code>#PCDATA</code>：元素内为普通文本（Parsed Character Data）；</li><li><code>(子元素1,子元素2)</code>：嵌套子元素，逗号表示<strong>顺序固定</strong>；</li><li><code>EMPTY</code>：空元素，如 <code>&lt;img/&gt;</code>；</li><li><code>ANY</code>：任意内容，约束力最弱，实际不用。</li></ul>
+<p>频次与组合符号：<code>+</code> 表示 1 次或多次，<code>*</code> 表示 0 次或多次，<code>?</code> 表示 0 次或 1 次，<code>,</code> 表示顺序出现，<code>|</code> 表示多选一，<code>()</code> 用于分组。</p>
+<p>属性定义格式为 <code>&lt;!ATTLIST 元素名 属性名 类型 设置说明&gt;</code>：</p>
+<pre><code>&lt;!ATTLIST 书 版本 CDATA #REQUIRED&gt;</code></pre>
+<p>四种设置说明：</p>
+<table>
+<tr><th>关键字</th><th>含义</th></tr>
+<tr><td><code>#REQUIRED</code></td><td>必须填写，缺失即报错</td></tr>
+<tr><td><code>#IMPLIED</code></td><td>可选，可写可不写</td></tr>
+<tr><td><code>#FIXED &quot;值&quot;</code></td><td>固定值，不写时自动填充，写了也只能是该值</td></tr>
+<tr><td><code>&quot;默认值&quot;</code></td><td>不写时取默认值，写了可覆盖</td></tr>
+</table>
+<p>属性类型常用三种：<code>CDATA</code>（字符串）、枚举（如 <code>(男|女)</code>，只能取其中之一）、<code>ID</code>（全文档唯一，类似主键，且不能设默认值，必须 <code>#REQUIRED</code>）。</p>
+<p>引入方式有三种：内嵌式（直接写在 <code>&lt;!DOCTYPE 根标签 [ … ]&gt;</code> 内，仅供当前文件使用）、外部本地引入（<code>&lt;!DOCTYPE 书架 SYSTEM &quot;book.dtd&quot;&gt;</code>）、公共引入（<code>&lt;!DOCTYPE 书架 PUBLIC &quot;DTD名称&quot; &quot;URL&quot;&gt;</code>）。</p>
+<h3>2.11 XSD（Schema）约束</h3>
+<p>XSD（XML Schema Definition）文件后缀为 <code>.xsd</code>，本身即是一份合法的 XML 文档，用以替代 DTD。相较 DTD 有五点优势：语法即 XML，易读易写；与 XML 共享同一套合法性校验机制；完整支持命名空间；内置丰富数据类型；约束粒度更细（可限定数值范围、字符串长度、正则格式）。</p>
+<p>固定根结构：</p>
+<pre><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;xs:schema xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
+&lt;/xs:schema&gt;</code></pre>
+<p><strong>元素与属性定义</strong>：</p>
+<pre><code>&lt;xs:element name=&quot;lastname&quot; type=&quot;xs:string&quot;/&gt;
+&lt;xs:element name=&quot;age&quot; type=&quot;xs:integer&quot;/&gt;
+&lt;xs:element name=&quot;dateborn&quot; type=&quot;xs:date&quot;/&gt;
+&lt;xs:attribute name=&quot;price&quot; type=&quot;xs:decimal&quot;/&gt;</code></pre>
+<p>内置类型常用六种：<code>xs:string</code> 字符串、<code>xs:integer</code> 整数、<code>xs:decimal</code> 小数、<code>xs:boolean</code> 布尔、<code>xs:date</code> 日期（<code>yyyy-MM-dd</code>）、<code>xs:time</code> 时间。<code>element</code> 约束标签内部内容，<code>attribute</code> 约束标签上属性的值。</p>
+<p><strong>简单类型</strong>用于在基础类型上追加限制，结构固定为 <code>simpleType → restriction → 具体规则</code>：</p>
+<pre><code>&lt;!-- 数值区间：年龄 18~58 --&gt;
+&lt;xs:element name=&quot;age&quot;&gt;
+  &lt;xs:simpleType&gt;
+    &lt;xs:restriction base=&quot;xs:integer&quot;&gt;
+      &lt;xs:minInclusive value=&quot;18&quot;/&gt;
+      &lt;xs:maxInclusive value=&quot;58&quot;/&gt;
+    &lt;/xs:restriction&gt;
+  &lt;/xs:simpleType&gt;
+&lt;/xs:element&gt;
+
+&lt;!-- 枚举：只能取三个值之一 --&gt;
+&lt;xs:element name=&quot;car&quot;&gt;
+  &lt;xs:simpleType&gt;
+    &lt;xs:restriction base=&quot;xs:string&quot;&gt;
+      &lt;xs:enumeration value=&quot;Audi&quot;/&gt;
+      &lt;xs:enumeration value=&quot;Golf&quot;/&gt;
+      &lt;xs:enumeration value=&quot;BMW&quot;/&gt;
+    &lt;/xs:restriction&gt;
+  &lt;/xs:simpleType&gt;
+&lt;/xs:element&gt;
+
+&lt;!-- 正则：仅允许单个小写字母 --&gt;
+&lt;xs:element name=&quot;letter&quot;&gt;
+  &lt;xs:simpleType&gt;
+    &lt;xs:restriction base=&quot;xs:string&quot;&gt;
+      &lt;xs:pattern value=&quot;[a-z]&quot;/&gt;
+    &lt;/xs:restriction&gt;
+  &lt;/xs:simpleType&gt;
+&lt;/xs:element&gt;</code></pre>
+<p>空白字符处理用 <code>xs:whiteSpace</code>，取值 <code>preserve</code>（原样保留）、<code>replace</code>（换行与制表符替换为空格）、<code>collapse</code>（连续空白合并为一个并删除首尾空白）。</p>
+<p><strong>复杂类型</strong> <code>xs:complexType</code> 用于含属性或含子元素的标签，分四种场景：</p>
+<ol><li><strong>空元素</strong>（只有属性，无内容）：<code>&lt;product proid=&quot;1345&quot;/&gt;</code> 对应在 <code>complexType</code> 内仅声明 <code>xs:attribute</code>；</li><li><strong>仅含文本</strong>（文本 + 属性，无子元素）：结构为 <code>complexType → simpleContent → extension</code>，用 <code>extension</code> 在基础类型上追加属性；</li><li><strong>仅含子元素</strong>：用 <code>xs:sequence</code> 规定子元素顺序，作用等同 DTD 的逗号；另有 <code>xs:choice</code> 表示多选一、<code>xs:all</code> 表示顺序任意；</li><li><strong>文本与子元素混合</strong>：必须设置 <code>mixed=&quot;true&quot;</code>，默认值为 <code>false</code>，即不允许游离文本出现。</li></ol>
+<pre><code>&lt;!-- 场景 2：文本 + 属性 --&gt;
+&lt;xs:element name=&quot;shoesize&quot;&gt;
+  &lt;xs:complexType&gt;
+    &lt;xs:simpleContent&gt;
+      &lt;xs:extension base=&quot;xs:integer&quot;&gt;
+        &lt;xs:attribute name=&quot;country&quot; type=&quot;xs:string&quot;/&gt;
+      &lt;/xs:extension&gt;
+    &lt;/xs:simpleContent&gt;
+  &lt;/xs:complexType&gt;
+&lt;/xs:element&gt;
+
+&lt;!-- 场景 3：仅含子元素 --&gt;
+&lt;xs:element name=&quot;person&quot;&gt;
+  &lt;xs:complexType&gt;
+    &lt;xs:sequence&gt;
+      &lt;xs:element name=&quot;firstname&quot; type=&quot;xs:string&quot;/&gt;
+      &lt;xs:element name=&quot;lastname&quot; type=&quot;xs:string&quot;/&gt;
+    &lt;/xs:sequence&gt;
+  &lt;/xs:complexType&gt;
+&lt;/xs:element&gt;</code></pre>
+<p>区分要点：<code>simpleType</code> 内部只有纯文本，不能有子元素与属性；<code>complexType</code> 可含属性、可嵌套子元素；<code>simpleContent</code> 是 <code>complexType</code> 的分支，表示“只有文本与属性”；<code>mixed=&quot;true&quot;</code> 表示文本与子元素混排。</p>
+<p><strong>命名空间</strong>用于区分不同约束文件中的同名标签，声明格式为 <code>xmlns:前缀=&quot;唯一URI&quot;</code>：</p>
+<pre><code>&lt;ns315:书架 xmlns:ns315=&quot;http://www.ns315.org/xmlbook/schema&quot;&gt;
+    &lt;ns315:书&gt;
+        &lt;ns315:书名&gt;Java基础案例教程&lt;/ns315:书名&gt;
+    &lt;/ns315:书&gt;
+&lt;/ns315:书架&gt;</code></pre>
+<p><code>xmlns</code> 为固定关键字；前缀可自定义；URI 仅作唯一标识，无需可访问。作用域为声明该属性的元素及其全部后代元素。保留前缀 <code>xml</code> 与 <code>xmlns</code> 不得用作自定义前缀。</p>
+<p>XML 引入 XSD 有两种方式：带命名空间时用 <code>xsi:schemaLocation=&quot;命名空间URI xsd文件路径&quot;</code>（两个 URI 以空白分隔）；无命名空间时用 <code>xsi:noNamespaceSchemaLocation=&quot;book.xsd&quot;</code>。</p>
+<h3>2.12 C/S 与 B/S 架构</h3>
+<p><strong>C/S（Client/Server）</strong> 需安装专用客户端，如 QQ、桌面网游。三点固有缺陷：每台机器都需安装，部署工作量大；业务逻辑在客户端，升级须逐台更新；客户端直连数据库，受数据库最大连接数限制，并发能力有限。</p>
+<p><strong>B/S（Browser/Server）</strong> 只需浏览器，业务逻辑与数据均在服务器端，典型三层结构为：</p>
+<pre><code>浏览器 ←HTTP 请求/响应→ Web 服务器（Tomcat：Servlet、JSP、静态资源） ←JDBC→ 数据库服务器</code></pre>
+<p>优点：免安装、跨设备；服务器升级后客户端无需任何部署即用到新版本；浏览器不直接连接数据库，由 Web 服务器作为中间层访问，缓解了 C/S 的并发瓶颈。信息管理系统普遍采用 B/S 架构。</p>
+<h3>2.13 HTTP 协议</h3>
+<p>HTTP（HyperText Transfer Protocol，超文本传输协议）规定浏览器与服务器之间数据传输的规则。三个特点：基于 TCP，面向连接、可靠传输；采用请求—响应模型，一次请求对应一次响应，服务器不会主动推送；<strong>无状态</strong>，服务器不记忆此前的请求，优点是速度快、负担小，缺点是无法复用会话数据，由此引出 Cookie 与 Session。</p>
+<p>版本差异：HTTP/1.0 使用短连接，一次 TCP 连接只处理一个请求，页面含多个资源时需反复建立与断开连接，开销大；HTTP/1.1 支持持久连接（<code>Connection: keep-alive</code>），一次连接可发送多个请求，服务器按请求顺序返回响应，显著降低延迟。</p>
+<p><strong>请求消息</strong>由请求行、请求头、（可选的）请求体组成：</p>
+<pre><code>GET /index.html HTTP/1.1
+Host: www.itcast.cn
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0
+Accept: text/html,image/png
+Accept-Language: zh-CN,zh
+Accept-Encoding: gzip, deflate</code></pre>
+<p>请求行由“请求方式 + 资源路径 + 协议版本”构成，三者以空格分隔，以回车换行结束。常用请求方式：</p>
+<table>
+<tr><th>方法</th><th>含义</th></tr>
+<tr><td>GET</td><td>获取 URI 标识的资源</td></tr>
+<tr><td>POST</td><td>向指定资源提交数据，如提交表单、上传文件</td></tr>
+<tr><td>HEAD</td><td>只获取响应头，不返回实体内容</td></tr>
+<tr><td>PUT</td><td>将资源放置到指定 URI 位置</td></tr>
+<tr><td>DELETE</td><td>删除指定资源</td></tr>
+<tr><td>TRACE</td><td>回送请求信息，用于诊断</td></tr>
+<tr><td>CONNECT</td><td>建立隧道，多用于 HTTPS 代理</td></tr>
+</table>
+<p>GET 与 POST 的核心区别：</p>
+<table>
+<tr><th>维度</th><th>GET</th><th>POST</th></tr>
+<tr><td>参数位置</td><td>拼在 URL 的 <code>?</code> 之后（请求行内），无请求体</td><td>放在请求体中</td></tr>
+<tr><td>数据大小</td><td>受 URL 长度限制</td><td>理论上无限制</td></tr>
+<tr><td>可见性</td><td>地址栏明文可见</td><td>不在地址栏显示，相对隐蔽</td></tr>
+<tr><td>缓存</td><td>浏览器可能缓存</td><td>默认不缓存</td></tr>
+</table>
+<p>必须澄清的误区：<strong>POST 不是加密</strong>，只是参数不在地址栏显示，使用抓包工具仍可看到请求体内容；真正的加密依赖 HTTPS。</p>
+<p>请求头用于向服务器传递附加信息。常见字段：<code>Host</code> 指定目标主机（一台服务器可承载多个站点，依靠 Host 区分）；<code>User-Agent</code> 标识浏览器与操作系统；<code>Accept</code> 声明可接收的 MIME 类型；<code>Accept-Language</code> 声明语言偏好；<code>Accept-Encoding</code> 声明支持的压缩格式（gzip、deflate）；<code>Referer</code> 记录来源页面，可用于访问统计与<strong>防盗链</strong>（校验来源非本站则拒绝返回图片资源）；<code>If-Modified-Since</code> 携带上次获取资源的 GMT 时间，资源未变更时服务器返回 304，否则返回 200 与新资源；<code>If-None-Match</code> 与 <code>ETag</code> 配合，按内容标识判断是否变更；<code>Range</code> 与 <code>If-Range</code> 用于断点续传，前者指定字节区间，后者判断文件在断点期间是否被修改；<code>Authorization</code> 携带身份凭证，与 401 响应配合；<code>Cookie</code> 携带会话标识。</p>
+<p><strong>响应消息</strong>由响应状态行、响应头、空行、响应体组成：</p>
+<pre><code>HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Content-Type: text/html;charset=utf-8
+Content-Length: 1024
+Content-Encoding: gzip
+Cache-Control: max-age=300
+
+&lt;html&gt;...&lt;/html&gt;</code></pre>
+<p>响应状态行由“协议版本 + 状态码 + 状态描述”构成。状态码为三位数字，首位决定类别：</p>
+<table>
+<tr><th>类别</th><th>含义</th><th>代表状态码</th></tr>
+<tr><td>1XX</td><td>信息，请求已接收，需继续处理</td><td>100</td></tr>
+<tr><td>2XX</td><td>成功，请求已被接收、理解并处理</td><td>200 OK</td></tr>
+<tr><td>3XX</td><td>重定向，需进一步操作或使用缓存</td><td>302 Found、304 Not Modified</td></tr>
+<tr><td>4XX</td><td>客户端错误</td><td>400 Bad Request、404 Not Found</td></tr>
+<tr><td>5XX</td><td>服务器端错误</td><td>500 Internal Server Error</td></tr>
+</table>
+<ul><li><strong>200</strong>：请求成功，返回正常结果；</li><li><strong>302</strong>：资源临时由另一 URI 响应，后续仍使用原地址，配合 <code>Location</code> 头实现跳转；</li><li><strong>304</strong>：资源未修改，客户端应继续使用本地缓存，响应无实体内容；</li><li><strong>400</strong>：请求语法错误，参数格式不合法；</li><li><strong>404</strong>：服务器找不到请求的资源，地址写错或被删除；</li><li><strong>500</strong>：服务器内部程序异常，需查看日志排查。</li></ul>
+<p>常用响应头：<code>Content-Type</code> 声明响应内容的类型与字符集；<code>Content-Length</code> 声明响应体字节数；<code>Content-Encoding</code> 声明压缩算法；<code>Cache-Control</code> 控制缓存策略（如 <code>max-age=300</code> 表示可缓存 300 秒）；<code>Last-Modified</code> 与 <code>ETag</code> 供缓存校验；<code>Location</code> 配合 3xx 指定新地址，此时不应同时出现 <code>Content-Type</code>；<code>Server</code> 暴露服务器软件与版本（生产环境通常隐藏）；<code>Set-Cookie</code> 下发会话标识；<code>Content-Disposition</code> 控制浏览器是内联打开（<code>inline</code>）还是下载保存（<code>attachment; filename=&quot;a.zip&quot;</code>）；<code>Refresh</code> 指定若干秒后自动刷新或跳转；<code>WWW-Authenticate</code> 配合 401 指示认证方式，<code>Proxy-Authenticate</code> 则针对代理服务器认证；<code>Retry-After</code> 配合 503 或 3xx 告知客户端何时重试。</p>
+<p>一条响应中，状态行恒为一行，响应头可有零至多行（每调用一次 <code>setHeader()</code> 即新增一行），头部与实体之间必须以空行分隔，响应体长度不受行数限制。</p>
+<h3>2.14 Tomcat 与 Servlet 执行流程</h3>
+<p>Web 服务器的作用有两点：封装 HTTP 协议、简化开发；承载 Web 项目并对外提供浏览服务。Tomcat 是轻量级 Web 服务器，支持 Servlet/JSP 等少量 Java EE 规范，也称为 Web 容器或 Servlet 容器。</p>
+<p>基本使用：启动执行 <code>bin\startup.bat</code>；正常关闭执行 <code>bin\shutdown.bat</code> 或按 <code>Ctrl+C</code>，直接关闭窗口属于强制关闭。控制台中文乱码时，修改 <code>conf/logging.properties</code>，将 <code>java.util.logging.ConsoleHandler.encoding</code> 设为 <code>UTF-8</code>。</p>
+<p>一次请求的完整流程为：浏览器组装 HTTP 请求报文 → Tomcat 解析并定位对应 Servlet → 调用 <code>service(request, response)</code> → Servlet 从 <code>request</code> 取参数、向 <code>response</code> 写数据 → Tomcat 将 <code>response</code> 封装为 HTTP 响应报文返回浏览器。</p>
+<pre><code>@WebServlet(&quot;/demo3&quot;)
+public class ServletDemo3 extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // 1. 读取 URL 参数，如 /demo3?name=zhangsan
+        String name = request.getParameter(&quot;name&quot;);
+
+        // 2. 设置响应头，声明内容类型与字符集，防止中文乱码
+        response.setHeader(&quot;Content-Type&quot;, &quot;text/html;charset=utf-8&quot;);
+
+        // 3. 获取字符输出流，向浏览器写出内容
+        response.getWriter().write(&quot;&lt;h1&gt;&quot; + name + &quot;，欢迎您！&lt;/h1&gt;&quot;);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        System.out.println(&quot;Post...&quot;);
+    }
+}</code></pre>
+<p>要点：<code>@WebServlet</code> 配置访问路径；自定义 Servlet 必须继承 <code>HttpServlet</code>；GET 请求进入 <code>doGet</code>，POST 请求进入 <code>doPost</code>，二者由父类 <code>service()</code> 自动分派；<code>request.getParameter()</code> 用于获取请求参数；<code>response.setHeader()</code> 可多次调用以设置多条响应头，<code>setStatus()</code> 用于设置状态码；<code>getWriter()</code> 输出文本，<code>getOutputStream()</code> 输出二进制，二者在同一响应中不可同时使用。</p>
+<h2>三、典型例题 / 关键问答</h2>
+<p><strong>例 1</strong> 判断：调用事件处理程序主要分为在 JavaScript 中调用和在 HTML 中调用两种。</p>
+<p>答：正确。HTML 内联绑定写在标签事件属性中（<code>&lt;button onclick=&quot;fn()&quot;&gt;</code>），DOM 绑定在脚本中进行（<code>btn.onclick = function () {}</code>），题干归纳成立。</p>
+<p><strong>例 2</strong> 判断：链入式是使用频率最高、最实用的 CSS 样式表，它将 HTML 与 CSS 分离为两个或多个文件，实现了结构与表现的完全分离。</p>
+<p>答：正确。外链式通过 <code>&lt;link&gt;</code> 引入独立 <code>.css</code> 文件，多页面可共用，改一处即全站生效，且可被浏览器缓存，是企业开发的标准做法。</p>
+<p><strong>例 3</strong> 判断：在 JavaScript 中，函数名不区分大小写。</p>
+<p>答：错误。JavaScript 严格区分大小写，<code>function Test(){}</code> 定义后调用 <code>test()</code> 会报未定义错误，变量名、函数名、关键字均大小写敏感。</p>
+<p><strong>例 4</strong> 判断：通过对 <code>&lt;tr&gt;</code> 标记应用属性，可以对表格中的某一个单元格进行控制。</p>
+<p>答：错误。<code>&lt;tr&gt;</code> 表示整行，属性作用于该行全部单元格；控制单个单元格应使用 <code>&lt;td&gt;</code>。</p>
+<p><strong>例 5</strong> 判断：<code>&lt;td&gt;</code> 用于定义单元格，且必须嵌套在 <code>&lt;tr&gt;&lt;/tr&gt;</code> 中。</p>
+<p>答：正确。标准嵌套为 <code>table &gt; tr &gt; td</code>，<code>&lt;td&gt;</code> 不能直接置于 <code>&lt;table&gt;</code> 之下。</p>
+<p><strong>例 6</strong> 说明 GET 与 POST 的区别，并指出常见误解。</p>
+<p>答：GET 参数拼在 URL 上、无请求体、受长度限制、可能被缓存，适合查询；POST 参数置于请求体、理论无大小限制、默认不缓存，适合登录、注册与文件上传。常见误解是“POST 更安全”，实际上 POST 仅是不在地址栏显示，报文仍为明文，抓包可见，安全性须由 HTTPS 提供。</p>
+<p><strong>例 7</strong> 访问一个需要登录的页面，服务器返回 302 并带有 <code>Location</code> 头；浏览器再次请求时带上 <code>If-Modified-Since</code>，服务器返回 304。分别解释这两个状态码的作用。</p>
+<p>答：302 表示资源临时迁移，浏览器应依据 <code>Location</code> 自动向新地址发起请求，原地址后续仍然有效；304 表示资源自 <code>If-Modified-Since</code> 指定时间以来未修改，服务器不返回实体内容，浏览器直接使用本地缓存，从而节省带宽、加快加载。</p>
+<p><strong>例 8</strong> 页面显示中文乱码，从 HTTP 与 Servlet 角度应如何排查？</p>
+<p>答：首先确认响应头 <code>Content-Type</code> 是否声明了 <code>charset=utf-8</code>，Servlet 中需在获取输出流之前调用 <code>setHeader</code> 或 <code>setContentType</code>；其次确认 HTML 中 <code>&lt;meta charset=&quot;UTF-8&quot;&gt;</code> 与文件实际保存编码一致；再次检查数据库连接与页面传参是否统一使用 UTF-8。三处编码一致方可消除乱码。</p>
+<p><strong>例 9</strong> 简述 <code>simpleType</code>、<code>complexType</code>、<code>simpleContent</code>、<code>mixed=&quot;true&quot;</code> 的区别。</p>
+<p>答：<code>simpleType</code> 表示元素内部只有纯文本，不能嵌套子元素；<code>complexType</code> 表示元素可拥有属性或嵌套子元素；<code>simpleContent</code> 是复杂类型的分支，表示“只有文本与属性、没有子元素”，需配合 <code>extension</code> 追加属性；<code>mixed=&quot;true&quot;</code> 表示复杂类型内部文本与子元素可以混排，默认为 <code>false</code>。</p>
+<p><strong>例 10</strong> 一份 XML 同时引入两个 XSD，二者都定义了 <code>&lt;book&gt;</code> 标签，如何避免冲突？</p>
+<p>答：为两套约束分别声明不同的命名空间前缀（<code>xmlns:a=&quot;URI1&quot;</code>、<code>xmlns:b=&quot;URI2&quot;</code>），XML 中使用 <code>a:book</code> 与 <code>b:book</code> 加以区分，并通过 <code>xsi:schemaLocation</code> 依次声明命名空间与对应 XSD 文件位置。DTD 几乎不支持命名空间，无法解决此类冲突，这也是 XSD 取代 DTD 的重要原因。</p>
+<p><strong>例 11</strong> 为什么一条 HTTP 响应中响应头可以有很多行，而状态行只有一行？</p>
+<p>答：状态行描述本次请求的整体处理结果，一次请求只对应一个结果，故恒为一行；响应头是若干独立的“键: 值”附加指令（内容类型、长度、缓存、跳转地址等），彼此正交，可任意增减。Servlet 中每调用一次 <code>setHeader()</code> 就新增一行，故行数取决于业务需要。</p>
+<p><strong>例 12</strong> C/S 架构有哪三点缺陷？B/S 如何化解？</p>
+<p>答：C/S 需逐台安装客户端、升级须重新部署全部客户端、客户端直连数据库受连接数限制。B/S 以浏览器为统一客户端，免安装；业务集中在服务器，升级只需更新服务端；浏览器经 Web 服务器中转访问数据库，中间层可连接池化与横向扩展，从而缓解并发瓶颈。</p>
+<h2>四、小结</h2>
+<ol><li>HTML 负责结构，由文档声明、<code>head</code>、<code>body</code> 构成；标签分单标签与双标签，表格依靠 <code>tr</code>/<code>td</code> 与 <code>colspan</code>、<code>rowspan</code> 完成布局，表单依靠 <code>form</code> 与各类 <code>input</code> 收集数据，其中同组单选与多选的 <code>name</code> 必须一致。</li><li>CSS 负责表现，语法为“选择器 + 声明块”；四种引入方式中，外链式因彻底分离、可复用、可缓存而成为工程标准，导入式因加载顺序缺陷被淘汰；常用选择器为标签、类、id 与通配符。</li><li>JavaScript 由 ECMAScript、DOM、BOM 组成；DOM 提供 <code>getElementById</code>、<code>getElementsByName</code> 等定位方法，BOM 以 <code>window</code> 为核心提供弹窗、定时器与加载事件；函数名区分大小写，事件绑定分内联与 DOM 两种。</li><li>XML 用于存储与传输数据，声明必须在首行，标签自定义且严格闭合，全文档唯一根元素；DTD 以元素、属性、频次符号约束结构，XSD 以 XML 语法描述约束，支持丰富数据类型、正则与命名空间，是当前主流。</li><li>C/S 与 B/S 的根本差异在于客户端形态与业务部署位置；B/S 以免安装、易升级、中间层访问数据库的优势成为 Web 应用的标准架构。</li><li>HTTP 基于 TCP、请求—响应、无状态；1.1 以持久连接解决 1.0 的短连接开销；请求消息为“请求行 + 请求头 + 请求体”，响应消息为“状态行 + 响应头 + 空行 + 响应体”；GET 与 POST 的差异在参数位置与长度限制，而非加密与否。</li><li>Tomcat 是 Servlet 容器，负责解析 HTTP 并调度 Servlet；<code>request</code> 承载请求数据，<code>response</code> 承载响应数据，<code>service()</code> 按请求方式分派到 <code>doGet</code> 或 <code>doPost</code>，输出前设置字符集是避免乱码的关键。</li></ol>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/007_javaweb自学.html">007_javaweb自学.md</a></p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

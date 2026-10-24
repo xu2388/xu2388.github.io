@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>大数据技术原理与应用 · 复习笔记</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"大数据技术原理与应用 · 复习笔记","date":"2026-10-24","tags":["课程笔记","大数据技术"],"category":"课程笔记","summary":"系统梳理 Hadoop 的起源与五大特点、HDFS 主从架构与读写流程、MapReduce 1.x 四组件与 Shuffle 全流程，并附教材填空题、判断题、简答题的标准答案。"}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav">
+<a href="../../index.html#threads">研究方向</a>
+<a href="../../index.html#articles">文章</a>
+<a href="../notes-index.html">笔记索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>大数据技术原理与应用 · 复习笔记</h1>
+<div class="meta">课程笔记 · 大数据技术 · 整理自豆包对话 008_大数据技术原理与应用和信号与系统.md</div>
+<h1>大数据技术原理与应用 · 复习笔记</h1>
+<h2>一、概述</h2>
+<p>Hadoop 是面向海量数据的开源分布式计算平台，其技术体系由<strong>分布式存储</strong>与<strong>分布式计算</strong>两条主线构成：HDFS 负责把大文件切块后分散存放在集群各节点，MapReduce 负责把大计算任务拆分为小任务并在多节点并行执行后汇总结果。二者共同支撑起&quot;分而治之&quot;的大数据处理范式，其余组件（Hive、HBase、Pig、Mahout、ZooKeeper、Flume、Sqoop、Ambari）均建立在这两大基石之上。</p>
+<p>本笔记按&quot;平台总体—存储层—计算层—运行环境&quot;的顺序组织，重点掌握三类内容：HDFS 的角色分工与副本机制、MapReduce 的组件层级与调度关系、Shuffle 的分区排序归并过程。</p>
+<h2>二、核心知识点</h2>
+<h3>2.1 Hadoop 的起源与特点</h3>
+<p>Hadoop 起源于全文检索工具 Lucene 面临的海量数据扩展难题。Doug Cutting 借鉴 Google 的 GFS（分布式文件系统）与 MapReduce（分布式计算模型）的设计思想，开发出开源分布式框架；2006 年他加入 Yahoo 后正式主导 Hadoop 的研发与迭代。核心框架以 Java 编写，同时支持其他语言调用。</p>
+<p>五大核心特点：</p>
+<ol><li><strong>高可靠性</strong>：默认假设节点会故障，通过多份数据副本在节点失效时自动切换数据、重新分配任务，保证服务不中断。</li><li><strong>高扩展性</strong>：支持动态新增数千台普通服务器，存储与算力近似线性扩展。</li><li><strong>高效性</strong>：并行计算加节点间动态负载均衡。</li><li><strong>高容错性</strong>：副本丢失可自动重新复制，任务失败可自动重跑。</li><li><strong>低成本</strong>：完全开源，仅依赖普通商用服务器，软硬件门槛低。</li></ol>
+<h3>2.2 Hadoop 体系结构</h3>
+<p>自下而上分为四层：</p>
+<table>
+<tr><th>层次</th><th>组件</th><th>职责</th></tr>
+<tr><td>存储层</td><td>HDFS</td><td>分布式存储底座</td></tr>
+<tr><td>计算引擎层</td><td>MapReduce</td><td>任务拆分、分发、并行执行（JobTracker + TaskTracker）</td></tr>
+<tr><td>生态工具层</td><td>Hive / Pig / Mahout / HBase / ZooKeeper</td><td>数据仓库、数据流、数据挖掘、列式数据库、分布式协调</td></tr>
+<tr><td>管理与接入层</td><td>Ambari / Flume / Sqoop</td><td>集群安装配置、日志采集、数据同步 ETL</td></tr>
+</table>
+<h3>2.3 HDFS 体系结构</h3>
+<p>HDFS（Hadoop Distributed File System）采用<strong>主从（Master/Slave）架构</strong>，集群包含 NameNode 与 DataNode 两类节点。</p>
+<p><strong>NameNode（主节点，默认 1 个）</strong>：元数据管家。管理文件系统命名空间（目录树、层级结构），处理客户端的创建、删除、查找等请求，维护&quot;文件→数据块&quot;&quot;数据块→DataNode&quot;两类映射。<strong>只存元数据，不参与实际数据传输</strong>。早期 HDFS 只有单个 NameNode，存在<strong>单点故障</strong>：NameNode 宕机则整个 HDFS 不可用。</p>
+<p><strong>DataNode（从节点，多个）</strong>：数据仓库。实际存储数据块，直接响应客户端读写，执行 NameNode 下发的块创建、删除、复制指令。</p>
+<p><strong>三副本存放策略</strong>（默认 3 副本）：</p>
+<ol><li>第一副本：发起写入的客户端所在节点（客户端不在集群内则随机选择）；</li><li>第二副本：与第一副本<strong>不同机架</strong>的节点；</li><li>第三副本：与第二副本<strong>同机架、不同节点</strong>。</li></ol>
+<p>跨机架避免单机架故障导致副本全失，同机架利用机架内更高的传输带宽，兼顾可靠性与写入性能。该设计的前提假设是：机架内传输速度远快于跨机架传输。</p>
+<p><strong>心跳与块报告</strong>：DataNode 每 <strong>3 秒</strong>向 NameNode 发送一次心跳；每 <strong>10 次</strong>心跳（约 30 秒）上报一次本地全部数据块清单（块报告）。NameNode 据此更新元数据、核对副本数；长时间收不到心跳即判定节点故障，调度其他节点重新复制该节点上的块。</p>
+<p><strong>写数据流程</strong>：</p>
+<ol><li>客户端调用 <code>open()</code> 发起写入；</li><li>向 NameNode 申请创建文件，NameNode 校验路径重复与权限后建立元数据条目；</li><li>数据先写入客户端本地缓冲区，向 NameNode 申请首块存放节点，得到按副本策略排好的 DataNode 列表；</li><li>建立<strong>数据流管道（pipeline）</strong>：客户端把数据包发给第一个 DataNode，该节点落盘后转发给下一个，逐级复制；</li><li>确认（ack）由最后一个 DataNode 沿管道逐级回传，客户端收到全部副本确认后才发送下一个数据包；</li><li>全部块写完后调用 <code>close()</code>，NameNode 持久化块映射元数据，流程结束。</li></ol>
+<p><strong>读数据流程</strong>：客户端 <code>open()</code> → 向 NameNode 请求块位置 → NameNode 返回按&quot;距客户端由近到远&quot;排序的 DataNode 列表 → 客户端直连最近的 DataNode 读取，逐块拼接 → 关闭数据流。</p>
+<p>补充：默认块大小 <strong>64MB</strong>，块大小与副本数均可配置；节点间通信基于标准 TCP/IP；与 RAID 相比，HDFS 的副本跨节点、跨机架存放，容错能力远高于单机磁盘阵列。</p>
+<h3>2.4 MapReduce 体系结构（1.x）</h3>
+<p>采用主从架构，四个核心组件构成<strong>严格单向的三层结构</strong>：</p>
+<pre><code>Client → JobTracker → TaskTracker → Task</code></pre>
+<ul><li><strong>Client</strong>：作业提交入口。把用户代码与配置打包为 JAR 提交给 JobTracker，JAR 同时存入 HDFS 供各节点下载；可查询状态、终止作业。只与 JobTracker 交互。</li><li><strong>JobTracker（Master，全集群唯一）</strong>：资源监控与作业调度中心。拆分 Job 为若干 Map Task 与 Reduce Task；接收 TaskTracker 心跳；通过可插拔的任务调度器（Task Scheduler）按空闲资源与优先级派发任务；任务失败或节点宕机时重新调度。</li><li><strong>TaskTracker（Slave，每台工作节点 1 个）</strong>：单节点管理者。周期性心跳上报资源使用率与任务进度，接收指令启动或杀死任务。用 <strong>slot（槽位）</strong> 量化计算资源，分 Map slot 与 Reduce slot，互不通用，一个 Task 占用一个 slot，slot 总数决定单节点并行上限。</li><li><strong>Task</strong>：最小执行单元，分 Map Task 与 Reduce Task，由本节点 TaskTracker 直接管理。</li></ul>
+<p>关键区分：<strong>block 是 HDFS 的物理存储单位</strong>（定长切块），<strong>split 是 MapReduce 的逻辑切分单位</strong>（只记录起始位置、长度、节点信息，不存数据），<strong>一个 split 对应一个 Map Task</strong>，<strong>一个分区对应一个 Reduce Task</strong>。</p>
+<h3>2.5 Map Task 与 Reduce Task 执行过程</h3>
+<p>Map Task：<code>InputFormat</code> 读取 split 并解析为 <code>&lt;k1,v1&gt;</code> → 调用 <code>map()</code> 输出 <code>&lt;k2,v2&gt;</code> → <code>partition</code> 按 key 分区 → 写入本地磁盘（不写 HDFS）。</p>
+<p>Reduce Task：Shuffle（拉取各自分区的数据）→ Sort（按 key 归并排序，聚成 <code>&lt;k2, Iterable&lt;v2&gt;&gt;</code>）→ <code>reduce()</code> 聚合 → <code>OutputFormat</code> 写入 HDFS，每个 Reduce Task 产生一个 <code>part-r-xxxxx</code> 文件。</p>
+<h3>2.6 Shuffle 全流程</h3>
+<p>Shuffle 的范围是 <strong>map 输出结束到 reduce 函数开始之前</strong>，包含 Map 端本地处理、跨节点拷贝、Reduce 端归并三部分，并非只有网络传输。</p>
+<p>Map 端：</p>
+<ol><li><code>map()</code> 输出先写入<strong>内存环形缓冲区</strong>（默认 100MB），减少磁盘 I/O；</li><li>达到阈值（默认 80%）触发<strong>溢写（spill）</strong>，溢写前先<strong>分区</strong>（按 key 与 Reduce 数计算分区号，保证同 key 进同一 Reduce）再<strong>排序</strong>（分区内按 key 字典序）；</li><li>多次溢写产生多个临时文件，Map Task 结束前<strong>归并（merge）</strong>为一个按分区划分、分区内全局有序的大文件，存于 Map 节点本地磁盘。</li></ol>
+<p>中间环节：Reduce Task 启动 fetch 线程，从所有 Map 节点拉取属于自己分区的数据，这是 Shuffle 中网络开销最大的步骤。</p>
+<p>Reduce 端：</p>
+<ol><li>Copy：拉取的数据优先放内存，放不下则溢写磁盘；</li><li>Sort：边拉取边归并，把多个有序小文件合并为全局有序的大文件，相同 key 的 value 自然连续，形成 <code>&lt;key, value 列表&gt;</code>；</li><li>Reduce：把 <code>&lt;key, Iterable&lt;value&gt;&gt;</code> 交给 <code>reduce()</code> 聚合，结果写入 HDFS。</li></ol>
+<p>Shuffle 解决四个问题：分区决定&quot;数据去哪个 Reduce&quot;，拷贝解决&quot;跨节点汇聚&quot;，排序归并解决&quot;全局有序&quot;，分组解决&quot;同 key 的 value 聚在一起&quot;。</p>
+<h3>2.7 完整作业流程</h3>
+<ol><li>提交：Client 打包 JAR 提交 JobTracker，原始数据已在 HDFS；</li><li>拆分：JobTracker 将作业拆为若干 Map/Reduce Task；</li><li>心跳：各 TaskTracker 周期上报空闲 slot 与任务进度；</li><li>分配：JobTracker 按空闲资源派发任务；</li><li>执行：TaskTracker 下载 JAR，在本机启动 Task 进程并监控；</li><li>同步：进度随心跳上报，JobTracker 更新作业状态；</li><li>容错：任务失败或 TaskTracker 宕机，JobTracker 重新分配；</li><li>完成：全部任务成功，标记作业完成，结果已在 HDFS，Client 可查询。</li></ol>
+<p>特殊情况：<code>job.setNumReduceTasks(0)</code> 时跳过 Shuffle 与 Reduce，Map 输出直接写 HDFS，适用于纯过滤、无需聚合的场景；但 Map 输出格式仍必须是键值对（无 value 时可用 <code>NullWritable</code>）。</p>
+<h3>2.8 WordCount 示例</h3>
+<p>输入三行文本：</p>
+<pre><code>Deer Bear River
+Car Car River
+Deer Car Bear</code></pre>
+<p>流程为 <code>Input → Split → Map → Shuffle → Reduce → Output</code>：每个 split 启动一个 Map Task，逐词输出 <code>&lt;单词,1&gt;</code>；Shuffle 把相同单词汇聚到同一 Reduce 并整理为 <code>&lt;单词,[1,1,...]&gt;</code>；Reduce 累加得到 <code>&lt;Car,3&gt;</code>、<code>&lt;Deer,2&gt;</code>、<code>&lt;Bear,2&gt;</code>、<code>&lt;River,2&gt;</code>，写回 HDFS。</p>
+<p>WordCount 的业务规模很小，选用它是因为逻辑极简，可让学习者专注分布式运行机制；它是 MapReduce 的&quot;HelloWorld&quot;，真实场景的输入是几十 GB 至 TB 级日志。</p>
+<h3>2.9 运行环境与常用命令</h3>
+<p>大数据技术栈基于 Linux 部署，原因是服务器场景下的高稳定性、高性能、开源免费，以及完善的命令行与脚本生态、对分布式框架的原生支持。</p>
+<pre><code># 列出 HDFS 根目录
+hdfs dfs -ls /
+# 递归列出全部目录与文件
+hdfs dfs -ls -R /
+# 查看 HAR 归档包内部文件
+hdfs dfs -ls -har hdfs:///path/xxx.har</code></pre>
+<p>修改 NameNode 访问地址（<code>core-site.xml</code>）：</p>
+<pre><code>&lt;property&gt;
+    &lt;name&gt;fs.defaultFS&lt;/name&gt;
+    &lt;value&gt;hdfs://Master:8088&lt;/value&gt;
+&lt;/property&gt;</code></pre>
+<p>若题目要求修改的是 Web UI 端口，应改 <code>dfs.http.address</code>；注意 8088 本是 YARN ResourceManager 的默认端口。</p>
+<h3>2.10 易错点</h3>
+<ol><li>Shuffle 不等于网络拷贝，Map 端分区、排序、溢写、合并与 Reduce 端归并都属于 Shuffle。</li><li>NameNode 只传元数据，真实数据由客户端与 DataNode 直接传输。</li><li>block 是物理存储单位，split 是逻辑划分单位，二者不要混用。</li><li>副本 2 与副本 3 同机架但不同节点，不是同一节点。</li><li>Map 输出必须是 <code>&lt;key,value&gt;</code>，因为分区、排序、分组全部依赖 key。</li><li>HDFS 适合一次写入多次读取的大文件，不适合大量小文件与低延迟随机写。</li></ol>
+<h2>三、典型例题或关键问答</h2>
+<p><strong>例 1（填空）</strong> Hadoop 最核心的两大组件是 ______ 和 ______。 答：HDFS、MapReduce。</p>
+<p><strong>例 2（填空）</strong> HBase 是 ______ 式列数据库。 答：分布式。</p>
+<p><strong>例 3（填空）</strong> MapReduce 体系结构由 ______、______、______、______ 四部分组成。 答：Client、JobTracker、TaskTracker、Task。</p>
+<p><strong>例 4（判断）</strong> HDFS 可以在廉价服务器频繁故障的条件下可靠存储数据。（√） 解析：多副本机制正是为此设计。</p>
+<p><strong>例 5（判断）</strong> HFile 由不定长数据块组成。（×） 解析：HFile 由固定大小的数据块与块索引组成。</p>
+<p><strong>例 6（判断）</strong> Hive 有专属的数据存储格式。（×） 解析：Hive 支持 TextFile、SequenceFile、ORC、Parquet 等通用格式，本身不定义专属格式。</p>
+<p><strong>例 7（填空）</strong> HDFS 全集群共享 ______ 的文件命名空间；数据具有 ______ 特性；大文件被 ______ 分散存储。 答：唯一；冗余（多副本）；切分为固定大小 block。</p>
+<p><strong>例 8（填空）</strong> Master 节点上运行的两个核心进程是 ______ 与 ______，可用 <code>jps</code> 查看。 答：NameNode、SecondaryNameNode（后者辅助完成元数据检查点，合并 fsimage 与 edits）。</p>
+<p><strong>例 9（简答）</strong> 简述 HDFS 复制文件块的管道流程。 答：客户端向 NameNode 申请写入并创建元数据 → NameNode 返回副本节点列表 → 客户端建立管道，把数据包发给第一个 DataNode → 该节点落盘并转发下一节点，逐级复制 → ack 由末节点逐级回传 → 客户端收到全部确认后发送下一包 → 全部写完 <code>close()</code>，NameNode 持久化元数据。三副本分别位于客户端节点、不同机架节点、与副本 2 同机架的不同节点。</p>
+<p><strong>例 10（简答）</strong> 简述 MapReduce 的完整运行流程。 答：作业提交（Client 打包 JAR 至 HDFS 并提交 JobTracker）→ 全局调度（拆分 Map/Reduce Task，按心跳上报的空闲 slot 派发）→ Map 并行计算（InputFormat 解析 → <code>map()</code> → partition → 溢写排序 → 本地有序文件）→ Shuffle（Copy 拉取 + Sort 归并分组）→ Reduce 聚合（<code>reduce()</code> → OutputFormat 写 HDFS）→ JobTracker 标记作业完成。</p>
+<h2>四、小结</h2>
+<p>Hadoop 以&quot;廉价机器 + 多副本 + 并行计算&quot;实现高可靠、高扩展、高容错、低成本的大数据处理。HDFS 用 NameNode 管元数据、DataNode 存数据块、三副本跨机架保可靠、心跳与块报告保可运维；MapReduce 用 JobTracker 统一调度、TaskTracker 分节点执行、slot 量化资源，并以 Shuffle 完成&quot;按 key 分拣、汇聚、排序、分组&quot;的关键衔接。理解&quot;谁是主、谁是从、数据在哪、按什么规则流动&quot;这四条线索，即可串起全部考点。</p>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/008_大数据技术原理与应用和信号与系统.html">008_大数据技术原理与应用和信号与系统.md</a></p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Java 数组·字符串·正则 · 自测题整理</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"Java 数组·字符串·正则 · 自测题整理","date":"2026-10-24","tags":["课程笔记","JavaWeb"],"category":"课程笔记","summary":"原始对话标题为「物理帮帮棒」，实际内容为 Java 数组、字符串与正则表达式单元自测的完整题目提取、答案订正与逐题解析。"}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav">
+<a href="../../index.html#threads">研究方向</a>
+<a href="../../index.html#articles">文章</a>
+<a href="../notes-index.html">笔记索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>Java 数组·字符串·正则 · 自测题整理</h1>
+<div class="meta">课程笔记 · JavaWeb · 整理自豆包对话 016_物理帮帮棒.md</div>
+<h1>Java 数组·字符串·正则 · 自测题整理</h1>
+<h2>一、概述</h2>
+<p>本笔记原始对话标题为「物理帮帮棒」，但对话实际内容为 <strong>Java 程序设计&quot;数组、字符串与正则表达式&quot;单元自测</strong>的题目提取、答案核对与逐题解析，并不涉及物理学科知识。为保持归档结构一致，仍按既定文件名与学科标签存放，正文按原始对话内容如实整理。</p>
+<p>该套自测共 20 题：单项选择题 10 道、填空题 6 道、判断题 4 道，覆盖数组的存储特性与初始化语法、数组与对象的内存分布、<code>String</code> 与 <code>StringBuffer</code> 的不可变性差异、正则表达式的适用场景与常用方法。原始答案中仅第 5 题有误（误选 B），其余全部正确。</p>
+<h2>二、核心知识点</h2>
+<h3>2.1 数组的基本特性</h3>
+<ul><li><strong>同类型</strong>：一个数组只能存放同一种数据类型的数据，元素类型由声明时的分量类型决定。</li><li><strong>定长</strong>：数组长度在创建时确定，运行期间不可增删，<code>length</code> 是只读属性。</li><li><strong>连续存储</strong>：数组元素在内存中连续排列，因而支持 $O(1)$ 随机访问。</li><li><strong>下标从 0 开始</strong>：长度为 $n$ 的数组合法下标为 $0\sim n-1$。</li></ul>
+<h3>2.2 数组的初始化语法</h3>
+<pre><code>int[] a = {1, 2, 3};            // 静态初始化（声明同时赋值，可省略 new）
+int[] b = new int[]{1, 2, 3};   // 静态初始化的完整写法，new 后必须有 []
+int[] c = new int[3];           // 动态初始化，元素取默认值 0
+int[][] d = {{1, 2}, {3}};      // 二维数组，各行长度可不同</code></pre>
+<p>错误写法辨析：</p>
+<ul><li><code>int a = {1,2,3};</code>：缺少 <code>[]</code>，<code>a</code> 被声明为 <code>int</code> 而非数组；</li><li><code>int[] a = new int{1,2,3};</code>：<code>new</code> 后必须写 <code>[]</code>，正确形式为 <code>new int[]{...}</code>；</li><li><code>int a[] = new int(3);</code>：长度用 <code>[]</code> 指定，<code>()</code> 是构造方法语法，不适用于数组。</li></ul>
+<h3>2.3 数组与对象的内存分布</h3>
+<p>Java 的内存模型中与本题相关的部分：</p>
+<ul><li><strong>栈（stack）</strong>：存放局部变量、方法参数、引用变量，随方法调用入栈、返回出栈，自动释放；</li><li><strong>堆（heap）</strong>：存放 <code>new</code> 创建的对象与数组实体，由垃圾回收器管理；</li><li><strong>方法区/常量池</strong>：存放类元信息与字符串字面量等。</li></ul>
+<p>因此&quot;数组对象在堆、数组引用变量在栈&quot;是标准结论：<code>int[] a = new int[3];</code> 中，<code>new int[3]</code> 的实体在堆，变量 <code>a</code> 本身（保存地址）在栈。</p>
+<h3>2.4 多维数组的本质</h3>
+<p>Java 的多维数组是<strong>数组的数组</strong>：<code>int[][] a</code> 的类型是&quot;元素为 <code>int[]</code> 的数组&quot;。因此：</p>
+<ul><li>各行的长度<strong>不必相同</strong>，即允许不规则（锯齿）数组；</li><li>可以逐行单独创建：<code>a[0] = new int[2]; a[1] = new int[5];</code></li><li>可以使用增强 <code>for</code> 循环遍历，外层取行、内层取元素。</li></ul>
+<h3>2.5 String、StringBuffer 与 StringBuilder</h3>
+<table>
+<tr><th>类型</th><th>可变性</th><th>线程安全</th><th>适用场景</th></tr>
+<tr><td><code>String</code></td><td>不可变，任何&quot;修改&quot;都产生新对象</td><td>安全（因不可变）</td><td>常量、少量拼接、作为 map 的 key</td></tr>
+<tr><td><code>StringBuffer</code></td><td>可变，原地修改</td><td>安全（方法加锁）</td><td>多线程频繁修改</td></tr>
+<tr><td><code>StringBuilder</code></td><td>可变，原地修改</td><td>不安全</td><td>单线程频繁修改，效率最高</td></tr>
+</table>
+<p><code>String</code> 的对象一旦创建内容不可改变；字面量存放在字符串常量池，<code>new String(...)</code> 创建的对象在堆中。由于不可变，循环内大量拼接会产生大量临时对象，此时应改用 <code>StringBuffer</code>/<code>StringBuilder</code>。</p>
+<h3>2.6 正则表达式</h3>
+<p>正则表达式是描述字符串模式的规则，核心用途是<strong>匹配、查找、替换、分割</strong>：</p>
+<pre><code>String s = &quot;a1b22c333&quot;;
+boolean ok = s.matches(&quot;\\d+&quot;);        // 整个字符串是否匹配
+String t  = s.replaceAll(&quot;\\d+&quot;, &quot;#&quot;); // 替换
+String[] parts = s.split(&quot;\\d+&quot;);      // 分割</code></pre>
+<p>常用方法辨析：</p>
+<ul><li><code>matches()</code>：判断<strong>整个字符串</strong>是否完全匹配给定正则；</li><li><code>find()</code>：在字符串中查找是否存在匹配的子串（<code>Matcher</code> 的方法）；</li><li><code>group()</code>：取出捕获组的内容；</li><li><code>split()</code>：按正则分割字符串。</li></ul>
+<p>适用边界：正则擅长格式验证（邮箱、手机号、身份证号）、文本抽取与替换；不适用于数值排序、求和、计数等数值计算任务。</p>
+<h3>2.7 常见易错点</h3>
+<ol><li>认为数组长度可动态改变——Java 数组定长，扩容需新建数组并复制。</li><li>混淆 <code>length</code> 属性与 <code>length()</code> 方法：数组用 <code>length</code>，字符串用 <code>length()</code>，集合用 <code>size()</code>。</li><li>认为多维数组必须是规则矩阵——Java 允许各行不等长。</li><li>认为 <code>String</code> 是基本类型——它是引用类型，只是使用频繁、有字面量优化。</li><li>认为 <code>StringBuffer</code> 线程不安全——<code>StringBuffer</code> 安全，<code>StringBuilder</code> 才不安全。</li><li>认为 <code>matches()</code> 是&quot;包含匹配&quot;——它要求整个字符串匹配，部分匹配应使用 <code>find()</code>。</li></ol>
+<h2>三、典型例题或关键问答</h2>
+<h3>3.1 单项选择题（含答案与解析）</h3>
+<table>
+<tr><th>题号</th><th>题目要点</th><th>答案</th><th>解析</th></tr>
+<tr><td>1</td><td>关于数组的描述</td><td>C</td><td>数组只能存同类型数据；长度创建后固定；元素内存连续；下标从 0 开始</td></tr>
+<tr><td>2</td><td>数组下标起始值</td><td>A</td><td>Java 数组下标从 0 开始</td></tr>
+<tr><td>3</td><td><code>new</code> 创建的数组对象存放位置</td><td>B</td><td>对象实体在堆内存</td></tr>
+<tr><td>4</td><td>局部变量存放位置</td><td>B</td><td>局部变量在栈内存，方法结束自动释放</td></tr>
+<tr><td>5</td><td>一维数组初始化正确写法</td><td>C</td><td>A 缺 <code>[]</code>；B 的 <code>new</code> 后缺 <code>[]</code>；C 为标准静态初始化；D 用 <code>()</code> 指定长度错误</td></tr>
+<tr><td>6</td><td>多维数组的说法</td><td>C</td><td>Java 多维数组是不规则数组，本质是&quot;数组的数组&quot;，可用 <code>foreach</code> 遍历</td></tr>
+<tr><td>7</td><td>关于 <code>String</code> 的说法</td><td>B</td><td><code>String</code> 不可变；字面量在常量池；它是引用类型</td></tr>
+<tr><td>8</td><td>关于 <code>StringBuffer</code> 的说法</td><td>D</td><td>可变、线程安全，可在原对象上修改</td></tr>
+<tr><td>9</td><td>最适合用正则的场景</td><td>B</td><td>邮箱格式验证属模式匹配；排序、求和、计数不适合</td></tr>
+<tr><td>10</td><td>判断整个字符串是否匹配正则</td><td>C</td><td><code>matches()</code> 全串匹配；<code>find()</code> 查找；<code>group()</code> 取组；<code>split()</code> 分割</td></tr>
+</table>
+<p><strong>第 5 题专项说明</strong>（原始答案唯一错误处）：</p>
+<p>题目要求选出正确的一维数组初始化写法，选项为</p>
+<ul><li>A. <code>int a = {1,2,3};</code></li><li>B. <code>int[] a = new int{1,2,3};</code></li><li>C. <code>int[] a = {1,2,3};</code></li><li>D. <code>int a[] = new int(3);</code></li></ul>
+<p>正确答案为 <strong>C</strong>。A 把 <code>a</code> 声明为 <code>int</code>，语法不成立；B 中 <code>new</code> 之后必须显式写出 <code>[]</code>，应写作 <code>new int[]{1,2,3}</code>；D 中数组长度必须用 <code>[]</code> 而非 <code>()</code>。原答案选 B，属于对 <code>new</code> 语法记忆偏差。</p>
+<h3>3.2 填空题</h3>
+<table>
+<tr><th>题号</th><th>题目</th><th>答案</th></tr>
+<tr><td>11</td><td>Java 数组用于存储多个 ______ 类型数据</td><td>相同</td></tr>
+<tr><td>12</td><td>数组长度通过 ______ 属性获取</td><td><code>length</code></td></tr>
+<tr><td>13</td><td>数组对象存放在 ______ 内存，引用变量存放在 ______ 内存</td><td>堆；栈</td></tr>
+<tr><td>14</td><td><code>String</code> 属于 ______ 字符串</td><td>不可变</td></tr>
+<tr><td>15</td><td><code>StringBuffer</code> 属于 ______ 字符串</td><td>可变</td></tr>
+<tr><td>16</td><td>正则表达式是用于 ______ 和 ______ 文本的规则</td><td>匹配；替换（亦可填&quot;查找&quot;）</td></tr>
+</table>
+<h3>3.3 判断题</h3>
+<table>
+<tr><th>题号</th><th>题目</th><th>答案</th><th>解析</th></tr>
+<tr><td>17</td><td>数组长度创建后可动态改变</td><td>×</td><td>定长，扩容需新建数组</td></tr>
+<tr><td>18</td><td>多维数组每行长度必须相同</td><td>×</td><td>本质是数组的数组，允许不规则</td></tr>
+<tr><td>19</td><td><code>StringBuffer</code> 比 <code>String</code> 更适合频繁修改</td><td>√</td><td>前者原地修改，后者每次生成新对象</td></tr>
+<tr><td>20</td><td>正则只能匹配，不能替换</td><td>×</td><td>支持 <code>replaceAll()</code>、<code>split()</code> 等操作</td></tr>
+</table>
+<h3>3.4 综合问答</h3>
+<p><strong>问</strong> 为什么 <code>String</code> 频繁拼接效率低，而 <code>StringBuffer</code> 高？ 答：<code>String</code> 不可变，每次拼接都创建新对象并复制原内容，时间复杂度随拼接次数呈平方增长，同时产生大量待回收对象；<code>StringBuffer</code> 内部维护可变字符数组，追加时按容量扩容，原地修改，均摊代价接近 $O(1)$。</p>
+<p><strong>问</strong> 数组与 <code>ArrayList</code> 的主要区别是什么？ 答：数组定长、可存基本类型、内存连续、访问最快；<code>ArrayList</code> 基于数组封装，可动态扩容，只能存对象（基本类型需装箱），提供更丰富的 API，但扩容时存在复制开销。</p>
+<h2>四、小结</h2>
+<p>本套自测围绕 Java 语言的三组基础概念：数组的&quot;同类型、定长、连续存储、下标从 0 起&quot;四项特征与三种初始化写法；对象实体在堆、引用变量在栈的内存分布；<code>String</code> 不可变而 <code>StringBuffer</code>/<code>StringBuilder</code> 可变的差异及其线程安全取舍；正则表达式&quot;匹配、查找、替换、分割&quot;的用途边界与 <code>matches()</code> 的全串匹配语义。全部 20 题中仅第 5 题原答案有误，正确选项为 C。</p>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/016_物理帮帮棒.html">016_物理帮帮棒.md</a></p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

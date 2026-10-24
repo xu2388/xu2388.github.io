@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>信号与系统 · 复习笔记</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"信号与系统 · 复习笔记","date":"2026-10-24","tags":["课程笔记","信号与系统"],"category":"课程笔记","summary":"以单位阶跃与单位冲激为主线，整理基本奇异信号的定义、微积分关系、筛选与尺度性质、复合阶跃化简及典型计算，并给出易错点与规范例题。"}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav">
+<a href="../../index.html#threads">研究方向</a>
+<a href="../../index.html#articles">文章</a>
+<a href="../notes-index.html">笔记索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>信号与系统 · 复习笔记</h1>
+<div class="meta">课程笔记 · 信号与系统 · 整理自豆包对话 008_大数据技术原理与应用和信号与系统.md</div>
+<h1>信号与系统 · 复习笔记</h1>
+<h2>一、概述</h2>
+<p>连续时间信号分析建立在若干&quot;基本信号&quot;之上。单位阶跃信号 $u(t)$ 用于描述开关动作与信号截断，单位冲激信号 $\delta(t)$ 用于描述瞬时作用与系统固有特性，单边指数信号 $e^{-t}u(t)$ 则是一阶 RC 电路零输入响应的标准波形。三者构成后续卷积、傅里叶变换、拉普拉斯变换的共同基础。</p>
+<p>本笔记围绕三条主线展开：阶跃与冲激的<strong>微积分互逆关系</strong>、冲激函数的<strong>运算性质</strong>（筛选、偶对称、尺度变换、复合函数展开）、以及<strong>分段信号与复合阶跃的化简方法</strong>。掌握这三条主线，绝大多数基础计算题可化为&quot;化简表达式 + 套用性质&quot;两步。</p>
+<h2>二、核心知识点</h2>
+<h3>2.1 单位阶跃信号</h3>
+<p>严格定义（跳变点取 $\tfrac12$）：</p>
+<p>$$ u(t)= \begin{cases} 1, &amp; t&gt;0\\[2pt] \dfrac12, &amp; t=0\\[4pt] 0, &amp; t&lt;0 \end{cases} $$</p>
+<p>工程教材常简写为 $u(t)=1\ (t\ge 0)$，$u(t)=0\ (t&lt;0)$。</p>
+<p><strong>几何由来</strong>：取一个从 $-\tau/2$ 到 $\tau/2$ 线性上升至 1 的斜升（梯形）脉冲，令 $\tau\to 0$，上升段被压缩为原点处的垂直跳变，即得理想阶跃。</p>
+<p><strong>两个核心作用</strong>：</p>
+<ol><li><strong>截断</strong>：$f(t)u(t)$ 把 $t&lt;0$ 部分全部置零，只保留 $t\ge 0$ 部分，相当于时间闸门；</li><li><strong>描述开关与分段</strong>：电源在 $t=0$ 接通、电压由 0 跳至 1 V，即用 $u(t)$ 表示。</li></ol>
+<p>由截断可直接写出矩形脉冲：$u(t)-u(t-T)$ 表示 $0&lt;t&lt;T$ 区间为 1 的门信号。</p>
+<h3>2.2 单边指数衰减信号</h3>
+<p>$$ e^{-t}u(t)= \begin{cases} e^{-t}, &amp; t&gt;0\\ 0, &amp; t&lt;0 \end{cases} $$</p>
+<p>注意 $e^{-t}$ 本身在 $t&lt;0$ 时是随时间反向增长的函数（$t=-1$ 时约为 2.718），必须依靠 $u(t)$ 截断，才能得到物理上可实现的单边衰减波形。$t=0^{+}$ 处值为 1，随后单调衰减并趋于 0；按严格定义 $t=0$ 处取 $\tfrac12$。</p>
+<p>物理意义：一阶 RC 电路电容放电的零输入响应，也是求拉普拉斯变换与卷积的经典对象。</p>
+<h3>2.3 阶跃与冲激的微积分关系</h3>
+<p>$$ \frac{d}{dt}u(t)=\delta(t),\qquad \int_{-\infty}^{t}\delta(\tau)\,d\tau=u(t) $$</p>
+<p>推导：$t&lt;0$ 时 $u(t)\equiv 0$，$t&gt;0$ 时 $u(t)\equiv 1$，两段导数均为 0；仅在 $t=0$ 的垂直跳变处导数奇异，定义为 $\delta(t)$。</p>
+<p><strong>几何解释</strong>：对上述斜升脉冲求导，得到宽度 $\tau$、高度 $1/\tau$ 的矩形脉冲，面积恒为 $\tau\cdot\frac{1}{\tau}=1$；令 $\tau\to0$，宽度压为一条竖线而面积保持 1，即 $\delta(t)$。</p>
+<p>$\delta(t)$ 的两条定义性约束：</p>
+<p>$$ \delta(t)= \begin{cases} \infty, &amp; t=0\\ 0, &amp; t\neq 0 \end{cases} \qquad \int_{-\infty}^{+\infty}\delta(t)\,dt=1 $$</p>
+<p>物理含义：$u(t)$ 是 $t=0$ 合闸、电压由 0 跳至 1；$\delta(t)$ 是合闸瞬间的冲击电流，仅在跳变刹那起作用。</p>
+<h3>2.4 冲激函数的运算性质</h3>
+<p><strong>（1）筛选（取样）性质</strong></p>
+<p>$$ f(t)\delta(t)=f(0)\delta(t),\qquad f(t)\delta(t-t_0)=f(t_0)\delta(t-t_0) $$</p>
+<p>积分形式更常用：</p>
+<p>$$ \int_{-\infty}^{+\infty}f(t)\delta(t-t_0)\,dt=f(t_0) $$</p>
+<p>含义：冲激把函数在冲激处的取值&quot;筛&quot;出来，其余点被置零。</p>
+<p><strong>（2）偶函数性</strong></p>
+<p>$$ \delta(t)=\delta(-t) $$</p>
+<p><strong>（3）尺度变换</strong></p>
+<p>$$ \delta(at)=\frac{1}{|a|}\delta(t) $$</p>
+<p>系数必须取绝对值，结果恒为正。</p>
+<p><strong>（4）时移与尺度合并</strong></p>
+<p>$$ \delta(at+b)=\frac{1}{|a|}\delta\!\left(t+\frac{b}{a}\right) $$</p>
+<p>口诀：括号内提出系数 $a$，系数取绝对值倒数提到外面，解 $at+b=0$ 得零点作为时移量。</p>
+<p>例：$\delta(2t+4)=\delta[2(t+2)]=\tfrac12\delta(t+2)$；$\delta(-3t+6)=\delta[-3(t-2)]=\tfrac13\delta(t-2)$。</p>
+<p><strong>（5）复合函数冲激</strong></p>
+<p>$$ \delta[f(t)]=\sum_{i}\frac{1}{|f&#x27;(t_i)|}\,\delta(t-t_i) $$</p>
+<p>其中 $t_i$ 为 $f(t)=0$ 的全部<strong>单根</strong>。步骤为：解方程求零点 → 求导并代入各零点取绝对值 → 每个零点对应一项 $\frac{1}{|f&#x27;(t_i)|}\delta(t-t_i)$，全部相加。</p>
+<p>例：$\delta(t^2-4)$，零点 $t=\pm2$，$f&#x27;(t)=2t$，$|f&#x27;(\pm2)|=4$，故</p>
+<p>$$ \delta(t^2-4)=\frac14\delta(t-2)+\frac14\delta(t+2) $$</p>
+<p>若 $f(t)=0$ 有重根（如 $(t-1)^2=0$），$\delta[f(t)]$ 无定义，公式失效。</p>
+<h3>2.5 复合阶跃信号的化简</h3>
+<p>依据 $u(x)=1\iff x&gt;0$，把复合阶跃化为分段常数信号。</p>
+<p>例：$u(t^2+3t+2)$。</p>
+<p>因式分解：$t^2+3t+2=(t+1)(t+2)$，解 $(t+1)(t+2)&gt;0$ 得 $t&lt;-2$ 或 $t&gt;-1$，故</p>
+<p>$$ u(t^2+3t+2)= \begin{cases} 1, &amp; t&lt;-2\ \text{或}\ t&gt;-1\\ 0, &amp; -2&lt;t&lt;-1 \end{cases} $$</p>
+<p>波形为在 $(-2,-1)$ 之间凹陷为 0、其余为 1 的门形。</p>
+<p><strong>求导</strong>：$g(t)=t^2+3t+2$，零点 $t=-2,-1$，$g&#x27;(t)=2t+3$，$|g&#x27;(-2)|=|g&#x27;(-1)|=1$，故</p>
+<p>$$ \delta(t^2+3t+2)=\delta(t+2)+\delta(t+1) $$</p>
+<p>再按跳变方向定符号：$t=-2$ 处函数值由 1 降为 0（向下跳变），贡献 $-\delta(t+2)$；$t=-1$ 处由 0 升为 1（向上跳变），贡献 $+\delta(t+1)$。因此</p>
+<p>$$ \frac{d}{dt}u(t^2+3t+2)=\delta(t+1)-\delta(t+2) $$</p>
+<p><strong>通用规则</strong>：若分段信号在某点 $t_0$ 有幅度为 $A$ 的跳变，则求导结果在该点出现 $A\,\delta(t-t_0)$；$A$ 的符号由&quot;跳后值减跳前值&quot;决定。</p>
+<p>同理，$u(t^2-3t+2)=u[(t-1)(t-2)]$ 在 $1&lt;t&lt;2$ 为 0、其余为 1，求导得 $-\delta(t-1)+\delta(t-2)$。</p>
+<h3>2.6 与线性时不变系统的联系</h3>
+<p>线性时不变（LTI）系统由冲激响应 $h(t)$ 完全刻画：</p>
+<p>$$ y(t)=x(t)*h(t)=\int_{-\infty}^{\infty}x(\tau)h(t-\tau)\,d\tau $$</p>
+<p>阶跃响应是冲激响应的积分：</p>
+<p>$$ g(t)=u(t)*h(t)=\int_{-\infty}^{t}h(\tau)\,d\tau,\qquad h(t)=\frac{d}{dt}g(t) $$</p>
+<p>由此，前述&quot;阶跃求导得冲激、冲激积分得阶跃&quot;的关系在系统层面同样成立：输入积分则输出积分，输入求导则输出求导（零初始状态前提下）。单位冲激的筛选性质使 $f(t)<em>\delta(t)=f(t)$、$f(t)</em>\delta(t-t_0)=f(t-t_0)$，是卷积计算中最常用的化简依据。</p>
+<h3>2.7 冲激偶与常用变换对</h3>
+<p>冲激偶 $\delta&#x27;(t)$ 是 $\delta(t)$ 的广义导数，其筛选性质为</p>
+<p>$$ f(t)\delta&#x27;(t)=f(0)\delta&#x27;(t)-f&#x27;(0)\delta(t) $$</p>
+<p>更常用的是积分形式（分部积分可得）：</p>
+<p>$$ \int_{-\infty}^{+\infty}f(t)\delta&#x27;(t-t_0)\,dt=-f&#x27;(t_0) $$</p>
+<p>注意结果带负号，这是 $\delta&#x27;(t)$ 为奇函数（$\delta&#x27;(-t)=-\delta&#x27;(t)$）的直接体现。由定义可算得</p>
+<p>$$ \delta&#x27;(t)\longleftrightarrow j\omega,\qquad \delta(t-t_0)\longleftrightarrow e^{-j\omega t_0} $$</p>
+<p>即&quot;时域移位对应频域乘复指数&quot;，这是傅里叶变换时移性质的冲激特例。掌握这两条，可在不展开积分的情况下快速写出含冲激、冲激偶信号的频谱。</p>
+<h3>2.8 易错点</h3>
+<ol><li>阶跃在 $t=0$ 处的取值：严格定义为 $\tfrac12$，工程简写为 1，两种写法不可混用于同一题。</li><li>尺度变换必须加绝对值：$\delta(-3t)=\tfrac13\delta(t)$，不能写成 $-\tfrac13\delta(t)$。</li><li>复合冲激公式仅对单根成立，重根时无定义。</li><li>复合阶跃求导的<strong>符号由跳变方向决定</strong>，只写 $\delta(t-t_i)$ 相加而不判断正负是常见错误。</li><li>$e^{-t}u(t)$ 不可省略 $u(t)$：缺少截断则 $t&lt;0$ 段发散，不再是物理可实现的单边信号。</li><li>$\delta(t)$ 是广义函数，不能按普通函数理解其&quot;取值&quot;，应以其积分效果与筛选性质参与运算。</li></ol>
+<h2>三、典型例题或关键问答</h2>
+<p><strong>例 1</strong> 写出 $u(t)$ 的严格定义，并说明 $t=0$ 处为何取 $\tfrac12$。 解：$t&gt;0$ 为 1，$t&lt;0$ 为 0，$t=0$ 为 $\tfrac12$。取 $\tfrac12$ 使函数在跳变点满足偶对称分解 $u(t)=\tfrac12+\tfrac12\operatorname{sgn}(t)$，便于傅里叶变换等运算保持一致。</p>
+<p><strong>例 2</strong> 化简 $e^{-t}u(t)$ 并说明其物理背景。 解：$t&gt;0$ 时为 $e^{-t}$，$t&lt;0$ 时为 0，$t=0$ 处为 $\tfrac12$。它是一阶 RC 电路电容放电的零输入响应，从 1 开始单调衰减趋于 0。</p>
+<p><strong>例 3</strong> 求 $\delta(2t+4)$ 与 $\delta(-3t+6)$。 解：$\delta(2t+4)=\tfrac12\delta(t+2)$；$\delta(-3t+6)=\tfrac13\delta(t-2)$。</p>
+<p><strong>例 4</strong> 求 $\delta(t^2-4)$。 解：零点 $t=\pm2$，$f&#x27;(t)=2t$，$|f&#x27;(\pm2)|=4$，故 $\delta(t^2-4)=\tfrac14\delta(t-2)+\tfrac14\delta(t+2)$。</p>
+<p><strong>例 5</strong> 化简 $u(t^2+3t+2)$ 并求其导数。 解：$(t+1)(t+2)&gt;0\Rightarrow t&lt;-2$ 或 $t&gt;-1$，故该信号在 $(-2,-1)$ 为 0、其余为 1。求导得 $\delta(t+1)-\delta(t+2)$（$-2$ 处向下跳变取负，$-1$ 处向上跳变取正）。</p>
+<p><strong>例 6</strong> 计算 $\displaystyle\int_{-\infty}^{+\infty}(t^2+1)\delta(t-2)\,dt$。 解：由筛选性质，结果等于被积函数在 $t=2$ 的值，即 $4+1=5$。</p>
+<p><strong>例 7</strong> 已知某 LTI 系统冲激响应 $h(t)=e^{-t}u(t)$，求阶跃响应。 解：$g(t)=\int_{-\infty}^{t}h(\tau)d\tau=\int_{0}^{t}e^{-\tau}d\tau=1-e^{-t}$（$t\ge0$），即 $g(t)=(1-e^{-t})u(t)$，与 RC 电路充电响应一致。</p>
+<h2>四、小结</h2>
+<p>单位阶跃与单位冲激是一对微积分互逆的奇异信号：$u&#x27;(t)=\delta(t)$，$\int\delta=u$。冲激的筛选性质把&quot;函数与冲激相乘/积分&quot;化为&quot;取单点值&quot;，尺度变换与时移合并公式把 $\delta(at+b)$ 化为标准形式，复合函数公式把 $\delta[f(t)]$ 拆为各单根冲激的加权和。复合阶跃 $u[g(t)]$ 则先解不等式化分段，再按跳变方向求导。把这些变换练成固定流程，后续卷积与傅里叶变换的计算即可大幅简化。</p>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/008_大数据技术原理与应用和信号与系统.html">008_大数据技术原理与应用和信号与系统.md</a></p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>
