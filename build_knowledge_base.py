@@ -240,6 +240,7 @@ PAGE = """<!DOCTYPE html>
 <a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
 </body>
 </html>
 """
@@ -333,6 +334,7 @@ def write_index(entries):
 {''.join(sections)}
 </main>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
 </body>
 </html>
 """

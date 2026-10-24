@@ -52,6 +52,7 @@ TEMPLATE = """<!DOCTYPE html>
       <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
     </div>
   </footer>
+  <script src="../assets/blog.js" defer></script>
 </body>
 </html>
 """
