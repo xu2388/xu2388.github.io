@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>扩散模型和 Flow Matching 到底在干什么：从一句"我不懂"到手推速度场</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <script id="meta" type="application/json">
+  {
+    "title": "扩散模型和 Flow Matching 到底在干什么：从一句\"我不懂\"到手推速度场",
+    "date": "2026-10-24",
+    "tags": ["教程", "扩散模型", "Flow Matching", "生成模型", "学习笔记"],
+    "summary": "这不是公式搬运，是我自己从'学习一个分布是什么意思呢我不懂'开始，一路问到能手推 Flow Matching 的完整记录。用狗图宇宙、开车导航、做汤这些我当初听懂的比喻，把生成模型到底在学什么、扩散和 Flow Matching 差在哪、以及它怎么接到我的虚拟染色任务上，从头讲明白。",
+    "category": "学习笔记",
+    "source_ids": ["040", "137", "204", "200", "070"]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">科研博客</h1>
+      <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
+      <nav class="site-nav">
+        <a href="../index.html#threads">研究方向</a>
+        <a href="../index.html#articles">文章</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <article class="article">
+    <h1>扩散模型和 Flow Matching 到底在干什么：从一句"我不懂"到手推速度场</h1>
+    <div class="meta">
+      写于 2026-10-24 · 教程篇 · 原始来源：DeepSeek 对话 [040][137][204][200][070]
+    </div>
+
+    <p class="lead">
+      我学扩散模型和 Flow Matching，起点不是公式，是一句特别朴素的困惑。当时我盯着"生成模型要学习数据分布"这句话，怎么都想不通，憋出一句："李说如果去学习这个分布，那他怎么去学习这个分布是什么意思呢，我不懂。" 这篇教程就从这句"我不懂"开始，把我后来一路问清楚的东西，按我当初理解的顺序重讲一遍。我不敢说讲得多严谨，但每一个比喻、每一次"哦原来是这样"，都是我当初真正卡住又在真正想通的地方——比起抄一遍标准答案，这些可能对同样卡住的人更有用。
+    </p>
+
+    <h2>一、先解决最原始的困惑：生成模型到底在"学"什么</h2>
+    <p>
+      一切的根子在这儿。我当时知道一个大致说法——数据是从某个分布里采样出来的，采一个样就是一张图——但我不知道怎么"学"这个分布，也不知道这个采样到底是随机的还是模型规定的。帮我捅破这层纸的是一个比喻，我现在都觉得妙：
+    </p>
+
+    <div class="record">
+      <span class="tag">让我想通的比喻 · 狗图宇宙</span>
+      想象有一个<strong>神秘的骰子</strong>，它就是"完整的、无限的数据分布"。你不知道它灌没灌铅，不知道每个面的概率。但是你扔了 100 万次，记下每次结果——这 100 万条记录，就是你硬盘里的 100 万张图。<strong>生成模型要做的，不是背下这 100 万张，而是反推出那个骰子的规律</strong>，好让它能掷出第 100 万零 1 张、从没见过但"味儿对"的新图。
+    </div>
+
+    <p>
+      想通这个之后，我那个"采样到底随不随机"的纠结也散了——因为我发现自己把两件事混成了一件事。得分清楚：
+    </p>
+
+    <div class="record">
+      <span class="tag">关键澄清 · 有两种"采样"，别混</span>
+      <p><strong>现实世界的采样</strong>（你硬盘里的图怎么来的）：摄影师按下快门，图就诞生了。对模型来说这就是从分布里"掉"出来的一个结果，它到底是随机偶遇还是专门摆拍，<strong>模型根本不关心</strong>。</p>
+      <p><strong>模型生成时的采样</strong>（你让模型画图时）：这时候模型已经学好了，你丢给它一个<strong>随机噪声</strong>，它<strong>严格按照学好的固定规律</strong>，一步步把这个噪声"推"成一张图。</p>
+      <p>所以"学习分布"的本质，不是让模型去背 <code>P(狗图)=?</code> 这个公式，而是让它学会<strong>一套"把简单噪声变成复杂图"的固定操作流程</strong>。这套流程学会了，随便给个随机起点，它都能稳定变出图来。</p>
+    </div>
+
+    <div class="note">
+      <span class="tag">一句话本质</span>
+      生成模型学的不是"图长什么样"，而是<strong>"怎么把一团噪声，一步步变成一个像样的图"</strong>。扩散模型和 Flow Matching，区别只在于这"一步步"具体怎么走。
+    </div>
+
+    <h2>二、扩散模型的赌注：把"变出一张图"拆成"一步步去噪"</h2>
+    <p>
+      "一步步变出图"听起来很虚，扩散模型把它落到了一个特别笨、也特别靠谱的点子上：<strong>每一步只做一件事——猜噪声，然后减掉它。</strong> 我当时是在读 RePaint 那篇论文时真正理解这套训练的，那个解释我现在还记得：
+    </p>
+
+    <div class="record">
+      <span class="tag">让我想通的比喻 · 复原游戏</span>
+      <p>把一张清晰的图 <code>x₀</code> 加噪，得到 <code>x_t</code>（越来越糊）。然后让模型干三件事：</p>
+      <p>1. <strong>加噪破坏</strong>：给模型看一张糊图 <code>x_t</code>；<br />
+         2. <strong>预测噪声</strong>：模型猜"你刚才往 <code>x₀</code> 里加了什么噪声 <code>ε</code>"；<br />
+         3. <strong>MSE 挨批</strong>：拿它猜的和真加进去的比，算 <code>‖ε − ε_θ(x_t, t)‖²</code>，错了就反向传播纠偏。</p>
+      <p>所谓"无条件训练"，说穿了就是<strong>一个不断让模型猜噪声、然后挨批纠正的过程</strong>。诀窍在噪声加得越多（t 越大），模型越只能靠全局语义去猜（"这团糊大概是只狗"）；噪声加得越少，它越能抠局部纹理（"这里是毛发"）。所以高噪声逼出大局观，低噪声学细节。</p>
+    </div>
+
+    <p>
+      训练好了，生成就是反过来：从一团<strong>纯高斯噪声</strong>出发，模型每步猜一点噪声、减掉一点，走几百步，噪声慢慢褪去，一张图就浮出来了。这里有个我当初没注意、后来很重要的点：<strong>扩散模型训练时学的是"预测噪声"，这是它唯一直接优化的东西。</strong> 后面讲结构保持时会发现，这个认知是解开我一个心结的钥匙。
+    </p>
+
+    <h2>三、Flow Matching：把弯弯绕的去噪，掰成一条直线</h2>
+    <p>
+      扩散模型能生成，但它走的路径是弯的——噪声一点点随机褪去，轨迹曲曲弯弯，所以要用很多步（几百步）才走到一张清晰的图。Flow Matching 的想法特别直接：<strong>我为什么不让这条路径变成直线呢？</strong>
+    </p>
+
+    <div class="record">
+      <span class="tag">核心思想 · 速度场和直线路径</span>
+      <p>取一个起点 <code>x₀</code>（噪声/笔画）和一个终点 <code>x₁</code>（目标图），我<strong>定义</strong>一条直线把两者连起来：</p>
+      <p style="text-align:center;font-size:1.1em"><code>x_t = (1−t)·x₀ + t·x₁</code> ，t 从 0 到 1</p>
+      <p>这条直线每一步的速度是恒定的，就是终点减起点：<strong><code>dx_t/dt = x₁ − x₀</code></strong>。Flow Matching 要训练的神经网络 <code>v_θ</code>，输入是"当前位置 <code>x_t</code> 和时间 <code>t</code>"，输出是"这个位置该往哪个方向走多快"——也就是<strong>速度场（向量场）</strong>。</p>
+      <p><strong>损失简单到可爱：</strong>让网络预测的速度，去逼近直线速度 <code>x₁ − x₀</code>，即 <code>Loss = MSE( v_θ(x_t, t), x₁ − x₀ )</code>。</p>
+    </div>
+
+    <p>
+      我第一次看到这个损失时愣了一下：这也算训练？不用像扩散那样解什么 SDE、算什么噪声调度，就是回归一个"终点减起点"？<strong>这正是 Flow Matching 最漂亮的地方，它叫 simulation-free 训练</strong>——训练时根本不需要真的把 ODE 积分跑一遍，只要随便采两个点、连成直线、让网络学这条直线的速度就行。因为目标是解析的、明确的，网络能在任意中间时刻都知道该往哪加速。
+    </p>
+
+    <div class="note">
+      <span class="tag">关键对比 · 扩散 vs Flow Matching</span>
+      <table>
+        <tr><th></th><th>扩散模型</th><th>Flow Matching</th></tr>
+        <tr><td>学什么</td><td>预测加进去的噪声 ε</td><td>预测直线路径的速度 x₁−x₀</td></tr>
+        <tr><td>路径</td><td>弯（噪声随机逐步褪去）</td><td>直（人为定义的直线/OT 直线）</td></tr>
+        <tr><td>生成步数</td><td>多（几百步）</td><td><strong>少</strong>（十步甚至更少，路径直就不怕走丢）</td></tr>
+        <tr><td>训练</td><td>按噪声调度加噪</td><td>Simulation-free，直接回归</td></tr>
+      </table>
+      一句话：扩散是"摸着噪声一步步退潮"，Flow Matching 是"瞄准终点直线冲刺"，所以后者能省步数。
+    </div>
+
+    <h2>四、这条路为什么"一定通"：ODE 的保证，和条件生成</h2>
+    <p>
+      学到这儿我冒出一个担心：网络学出来的这个"导航箭头"（速度场 <code>u_t</code>），万一路是断的、或者同一个起点能走到两个不同终点，那生成不就乱套了？这时候讲义里那张"存在唯一性定理"（Picard-Lindelöf）的幻灯片，就是来给我吃定心丸的。
+    </p>
+
+    <div class="record">
+      <span class="tag">让我想通的比喻 · 开车导航</span>
+      <p>把 <code>u_t(x)</code> 想成路面上每个点、每个时刻的导航箭头，<code>X_t</code> 是你的车，整个公式 <code>d/dt·X_t = u_t</code> 就是一句命令："车速和方向，必须严格跟着当前路标走。"</p>
+      <p>Picard-Lindelöf 定理说：<strong>只要这些箭头平滑、不突变（利普希茨连续），那么——</strong></p>
+      <p>· <strong>存在性</strong>：从起点出发绝对能开到终点，不会"开着开着路断了"；<br />
+         · <strong>唯一性</strong>：同一个起点，永远只能开出同一条轨迹，不会精神分裂。</p>
+      <p>对 Flow Matching 来说这就是"绝对靠谱的通行证"：训练时目标明确不分裂，生成时给个固定的噪声种子，每次出来的图一模一样（可复现）。讲义底部那句"我们可以放心地假设任何 ODE 都有解"，是典型的<strong>机器学习实用主义</strong>——纯数学家会较真有哪些怪胎方程不满足条件，搞 AI 的工程师会说：我们的 U-Net 激活函数本来就光滑，现实中放心踩油门就行。</p>
+    </div>
+
+    <p>
+      但我在这里又栽了一个跟头，而且这个跟头特别有价值。我当时的理解是："速度场训练好了，那生成的图像一定是唯一类别吧？" 结果被纠正了一个非常关键的细节——
+    </p>
+
+    <div class="note">
+      <span class="tag">我踩的坑 · "轨迹唯一" ≠ "类别唯一"</span>
+      数学唯一性保证的是<strong>"这条路只有一条"</strong>，但不保证<strong>"这条路通向狗"</strong>。用导航的话说：定理保证你从 A 入口进去只有一条确定的路，但这条路到底通往"狗乐园"还是"猫乐园"，取决于<strong>训练数据</strong>和<strong>有没有加条件</strong>。<br />
+      · <strong>无条件</strong>：换一个随机种子（换个入口），可能就从哈士奇拐到了布偶猫——路径唯一，但类别不唯一；<br />
+      · <strong>有条件</strong>（提示词 <code>y="Dog"</code>）：导航地图被强制切到"只有狗"的高速，任何入口进去都通向狗园，但具体金毛还是柯基仍看种子。<br />
+      <strong>只有加了条件，生成的类别才被真正锁定。</strong>这一句直接把我引到了"条件生成"。
+    </div>
+
+    <p>
+      条件生成其实特好懂，还是用狗图宇宙：<code>p_data</code> 是"全宇宙"（狗猫风景全混一起），<code>p_data(·|y)</code> 就是"全宇宙里符合标签 <code>y</code> 的专属次元"，那个竖线 <code>|</code> 读作"在……条件下"。<code>y="Dog"</code> 时，这个小宇宙里全是狗。<strong>条件生成 = 专门在这个专属次元里抽卡。</strong> 而代码里，这个 <code>y</code>（提示词/条件）就是直接塞进 U-Net 的一个额外输入，告诉模型"往这个方向推"。这也是为什么 Stable Diffusion 能靠一句话控制画什么——它不是听懂了话，是训练时就被教会了"给定这句话，就去对应的次元抽卡"。
+    </p>
+
+    <h2>五、电脑怎么真的把这条路走完：欧拉方法，和我自己的玩具实验</h2>
+    <p>
+      数学上那条光滑的直线，电脑其实"不认识"——电脑只认 0 和 1，所以得把这条连续曲线切成一小段一小段的直线，一步一步蹦过去。这个"切段蹦跶"的方法就是<strong>欧拉方法</strong>，公式朴素到一句话：
+    </p>
+
+    <div class="record">
+      <span class="tag">核心公式 · 欧拉一步</span>
+      <p style="text-align:center;font-size:1.1em"><code>X_(t+h) = X_t + h · u_t(X_t)</code></p>
+      <p>翻译成人话：<strong>新位置 = 当前位置 + 步长 × 当前箭头方向</strong>。比如你在 100 米处，箭头说速度 10 米/秒，步长 0.1 秒，下一步就是 100 + 0.1×10 = 101 米。重复这个动作 n 次，就走完了全程。</p>
+      <p>这里的 <strong>n（步数）就是 NFE（函数评估次数）</strong>——模型要被调用几次。n=100 就走 100 步，n=10 就走 10 步。<strong>为什么 Flow Matching 能省步数？</strong> 因为它学的箭头指向更直（OT 直线路径），哪怕 n 很小，顺着箭头也能走到终点，图还清晰；扩散路径弯，n 一小就走到半路偏了。</p>
+    </div>
+
+    <p>
+      讲真，前面这些"狗图宇宙""开车导航"听得再爽，都不如自己动手跑一遍。我当时就设计了一个"三步走"的玩具实验，现在回头看，这几乎是最快把 Flow Matching 从"懂了"变成"通了"的途径：
+    </p>
+
+    <div class="record">
+      <span class="tag">我的动手实验 · 点云变形三步走</span>
+      <p>用一个几千参数的 MLP 当速度场，CPU 就能跑，把二维点云从一个形状"流"成另一个形状，每步画出来能肉眼看到点怎么流动：</p>
+      <p><strong>第一步（验证代码）：圆环 → 月牙。</strong> 这是论文标配玩具题，随机配对效果就好，先确保训练代码没错。</p>
+      <p><strong>第二步（看结构变化）：十字笔画 → 单个字母 C。</strong> 观察离散笔画怎么"融化"成连续曲线。</p>
+      <p><strong>第三步（上 OT）：十字 → IMBR，换成 OT 配对。</strong> 这里有个关键坑——标准 CFM 是<strong>随机</strong>把起点和终点配对，模型学成"平均速度"，出来的字母会发虚、有毛刺；换成 <strong>OT-CFM（最优传输配对，匈牙利算法）</strong>，每个点走最短直线，横线整整齐齐平移去组成 I 和 M，竖线滑去组成 B 和 R，路径几乎笔直。</p>
+      <p>这个实验把我问过的所有概念——速度场、步长 NFE、条件生成、simulation-free——全串起来了。跑通"圆环变月牙"那一刻，比看十遍公式都管用。</p>
+    </div>
+
+    <div class="note">
+      <span class="tag">补充 · 想动手可以看的开源</span>
+      入门首选 <code>keishihara/flow-matching</code>、<code>dbalaram/flow-matching</code>（极简 2D 玩具题）；对照 <code>lebellig/flow-matching</code>（带详细注释的 OT 实现）读论文；进阶用 Meta 官方 <code>facebookresearch/flow_matching</code> 和 <code>atong01/conditional-flow-matching</code>（TorchCFM）。这些是当时帮我整理的，真要用记得去核对现在的最新状态。
+    </div>
+
+    <h2>六、接回我的老本行：这套东西怎么落到虚拟染色上</h2>
+    <p>
+      我学这些不是纯好奇，全是为了我那条 H&amp;E→IHC / 多染色迁移的主线。把前面的概念接过来，正好回答我项目里几个最具体的痛点。
+    </p>
+
+    <h3>条件扩散，就是我染色任务的标准骨架</h3>
+    <p>
+      我读 StainExpert 那篇（多目标病理虚拟染色）时，一下子就把"条件生成"落到了实处。它输入是<strong>源染色图（如 H&amp;E）</strong>，输出是<strong>目标虚拟染色（MAS/PAS/PASM/IHC）</strong>，条件是 <code>c = (z_s, z_text)</code>：源图过 VAE 拿结构特征 <code>z_s</code>，文本描述过 CLIP 拿语义特征 <code>z_text</code>，两者在 U-Net 里用<strong>交叉注意力</strong>融合。源图特征在去噪每一步都当"底图轮廓"约束，所以颜色怎么变、结构不动——这正好接上了我 001、002 里那个"结构不能崩"的核心诉求。
+    </p>
+
+    <h3>DDIM 反演：给一张真图，倒推出它的初始噪声</h3>
+    <div class="record">
+      <span class="tag">我当时的真实目的 · 反演是为风格迁移找创新点</span>
+      <p>DDIM 反演说白了就是给扩散模型找个"逆操作"：<strong>给定一张真实图，能不能倒推出生成它的那个初始噪声？</strong> DDIM 的采样是确定性 ODE，理论上能沿原路返回（<code>x₀ → x_T</code>）。用途是<strong>精准图像编辑</strong>：反演到噪声 → 在噪声/潜空间里改 → 再生成回来，这样能"只改想改的，别的不动"。</p>
+      <p>我当时卡在一个点上："这个反演的公式难道不是固定下来的吗？" 得到的答案很有启发：<strong>理论上连续时间的公式唯一固定，但实践中是离散时间 + 神经网络近似，前向加噪用预定义调度、逆向用网络预测的噪声，俩不是同一个"方程"</strong>——所以反演有好多实现版本（原始 DDIM、EDICT、Null-text 等）。更关键的一句：<strong>经典 DDIM 反演重建效果不佳，但这恰恰是现成的创新点。</strong> 我心想那不就是给我这种"要发论文想不出新点"的人准备的吗。</p>
+    </div>
+
+    <div class="note">
+      <span class="tag">解开我心结的一个 aha · 结构保持不用改训练</span>
+      我曾很纠结："扩散模型训练就是学预测噪声，那'保持结构'这个监督到底怎么加进去？" 后来想通了：<strong>结构保持可以靠推理时引导来'后校正'，根本不用动训练。</strong> 具体是用 <strong>MINE（互信息神经估计）</strong>：去噪每一步，算一下当前潜变量和源图之间共享了多少结构互信息，然后 <code>x ← x − lr·grad(LMI, x)</code> 把它往"多保留结构"的方向推一步（MIDiffusion 就是这么做的零样本跨模态翻译）。这一下把"怎么监督结构"这个我从 001 就拧巴到现在的问题，从训练侧解放到了推理侧。
+    </div>
+
+    <div class="record">
+      <span class="tag">频域 · 结构/风格解耦的天然钥匙</span>
+      <p>我最后摸到、也最想赌的一招，是<strong>用频域把"结构"和"风格"拆开</strong>。核心事实特别干净：</p>
+      <p>· <strong>傅里叶：相位谱 ≈ 结构/内容，幅度谱 ≈ 风格/纹理。</strong> 有个经典实验——把人脸的相位和风景的幅度拼起来逆变换，重建出来几乎还是人脸，足见相位才扛结构；<br />
+         · <strong>小波：LL 子带 = 结构（模糊缩略图），LH/HL/HH = 各方向的纹理细节。</strong></p>
+      <p>这意味着：换染色风格，主要在动"幅度/高频"；而结构不变，就是死死按住"相位/LL"。我当时的原话是"<strong>用频域提取结构特征，风格用 CLIP 引导生成，这部分我已经有思路了</strong>"——这条线一路通到我 003 里用 HWD 小波下采样去磕边界，其实是同一个念头。</p>
+    </div>
+
+    <div class="note">
+      <span class="tag">当前结论</span>
+      绕这么大一圈，我对"扩散和 Flow Matching 到底在干什么"的最终理解是：<strong>它们都不直接学"图长什么样"，而是学一个把简单分布（噪声）搬运成复杂分布（数据）的变换过程</strong>。扩散是猜噪声、沿弯路径一步步退潮；Flow Matching 是回归速度、沿直线冲刺，所以更省步数；而条件、反演、互信息引导、频域解耦，都是在这个"搬运过程"上做文章的外挂——分别管"生成什么（类别锁定）""怎么改一张真图""怎么在推理时后校正结构""怎么把结构和风格拆开"。这些外挂，恰好一个不少地对着我虚拟染色任务里的每一个痛点。
+    </div>
+
+    <div class="note">
+      <span class="tag">未解决问题 / 待核实</span>
+      <ul>
+        <li>DDIM 反演我还没真正调过，重建误差累积（长路径越走越偏）到底多严重、EDICT/Null-text 值不值得上，是<strong>待动手</strong>。</li>
+        <li>文本条件（风格引导）和结构保持仍有冲突——"想加文本控制生成，但不知道怎么和不破坏结构平衡"，我只做到"把文本定位成风格引导"来缓解，没根治。</li>
+        <li>结构和风格在 U-Net 去噪里"纠缠"，我想要的解耦还不彻底，单靠结构约束会出问题。</li>
+        <li>频域那套（相位=结构、LL=结构）我认定了方向，但"往 SD 的 U-Net 里到底怎么插频域模块、插哪层"还没定。</li>
+        <li>这篇里的开源仓库、论文指标都是当时对话引述，<strong>真要动手前得核对最新版</strong>。</li>
+      </ul>
+    </div>
+
+    <div class="note">
+      <span class="tag">溯源 · 全部原始对话</span>
+      <p style="margin:.3em 0">
+        <a href="kb/040_FlowMatching起源与理解.html">[040] Flow Matching 起源与理解（36 条，本教程主线）</a> ·
+        <a href="kb/137_扩散模型虚拟染色机制.html">[137] 扩散模型虚拟染色机制（StainExpert）</a> ·
+        <a href="kb/204_DDIM反演用途介绍.html">[204] DDIM 反演用途介绍（163 条）</a> ·
+        <a href="kb/200_频域扩散模型概念解释.html">[200] 频域扩散模型概念解释</a> ·
+        <a href="kb/070_RePaint扩散模型修复.html">[070] RePaint 扩散模型修复（复原游戏比喻）</a>
+      </p>
+    </div>
+
+    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+  </article>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
+    </div>
+  </footer>
+</body>
+</html>
