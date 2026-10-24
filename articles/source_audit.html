@@ -15,7 +15,7 @@
     "覆盖率"
   ],
   "category": "资料库",
-  "summary": "记录本项目实际能访问的资料来源及其读取状态：DeepSeek 已全量、豆包 agent 部分、网页主聊天待导出、本地数据库不可解析。明确区分已读/部分读/读不到。"
+  "summary": "记录本项目实际能访问的资料来源及其读取状态：DeepSeek 已全量、豆包本地资料已纳入、网页主聊天待导出。明确区分已读/部分读/读不到。"
 }
   </script>
 </head>
@@ -60,6 +60,15 @@
 <ul><li>这是你历史对话量最大的来源。你提到"历史对话那么多，一个个导出不现实"——已为你确认批量方案：<strong>AI导出鸭</strong>（Chrome 扩展/小程序），一键滚动加载全量并导出 Markdown/ZIP。</li><li><strong>动作待你完成</strong>：用 AI导出鸭 把豆包主聊天导出，丢进 <code>raw_exports/</code>，我即可纳入。</li></ul>
 <h3>S5 / S6 / S7（待纳入）</h3>
 <ul><li>S5 的 <code>Javaweb手写笔记全文本.txt</code> 是你的手写课程笔记，属"课程-编程"真源，待转录保全。</li><li>S6 的论文 PDF 与方法代码用于和 S1 的论文调研对话互证（例如 S1 里提到的 HistDiST、PSPStain、StainExpert 等都能在桌面 PDF 中找到原文）。</li><li>S7 若找到「深度学习到底在干什么」等随笔，应作为"科普长文"栏目直接收录。</li></ul>
+<h2>二·补、豆包本地资料已纳入（2026-10-24 更新）</h2>
+<p>以下豆包本地内容已整理进博客（脚本 <code>ingest_doubao_local.py</code>）：</p>
+<table>
+<tr><th>内容</th><th>位置</th><th>博客页</th></tr>
+<tr><td>JavaWeb 手写笔记全文本（1732 行，HTML 代码已转义）</td><td><code>/Users/hua/Doubao/chats/2026-09-13/new-chat/Javaweb手写笔记全文本.txt</code></td><td><code>articles/doubao-javaweb-notes.html</code>（学习笔记）</td></tr>
+<tr><td>MBTI 连续人格空间研究管线总览图（HTML，自包含）</td><td><code>/Users/hua/Doubao/chats/2026-09-14/new-chat/mbti_pipeline_overview.html</code></td><td><code>articles/doubao-mbti-pipeline.html</code>（研究）</td></tr>
+<tr><td>豆包 agent 会话（2 个 trajectory 还原，含 MBTI v0.2 完整方案）</td><td><code>raw_exports/doubao_agent_raw/*.md</code></td><td><code>articles/doubao-agent-sessions.html</code> + 各会话页（资料库/研究）</td></tr>
+</table>
+<ul><li>JavaWeb 笔记页里的 <code><table></code>、<code><form></code> 等 HTML 代码已做转义显示，不会被浏览器当成真标签渲染。</li><li>仍未纳入：豆包 45 页 PNG 截图（page_01–45，JavaWeb 笔记配图）与 <code>JavaWeb(2).pdf</code>——如需图/公式要补 OCR。</li></ul>
 <h2>三、已知覆盖缺口与风险</h2>
 <ol><li><strong>豆包主聊天是最大缺口</strong>：若其中的科研讨论未导出，则"虚拟染色主线"的完整时间线会缺一大块。优先级最高。</li><li><strong>时间戳不完整</strong>：S1 多数对话有 <code>inserted_at</code>/<code>updated_at</code>，但部分消息级时间缺失，时间线重建以对话级日期为主。</li><li><strong>跨平台去重</strong>：DeepSeek 与豆包可能讨论同一主题，精读时需标注来源，不错误合并。</li><li><strong>附件/图片未提取</strong>：S1 中的图片、S5 的 PDF 页截图，目前仅记录未 OCR，后续如需纳入公式/图需补做。</li></ol>
 <h2>四、下一步</h2>

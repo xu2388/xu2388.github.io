@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JavaWeb 手写笔记（课程学习存档）</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{
+  "title": "JavaWeb 手写笔记（课程学习存档）",
+  "date": "2026-10-24",
+  "tags": [
+    "JavaWeb",
+    "HTML",
+    "课程笔记",
+    "豆包"
+  ],
+  "category": "学习笔记",
+  "summary": "我上传到豆包的 JavaWeb 手写笔记全文本，从 HTML 基础、标签、表单到后面的 Web 开发，是我课程学习的原始存档，一条未删。"
+}
+</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客</h1>
+<p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 学习记录与知识库</p>
+<nav class="site-nav"><a href="../index.html#articles">文章</a><a href="../index.html#threads">研究方向</a></nav>
+</div></header>
+<article class="article">
+<h1>JavaWeb 手写笔记（课程学习存档）</h1>
+<div class="meta">学习笔记 · 豆包上传 · 2026-09-13 · 1732 行</div>
+<div class="note"><span class="tag">来源</span>这是我上传到豆包的 <b>JavaWeb 手写笔记全文本</b>（2026-09-13），原样保留、未删改。笔记里的 HTML 代码已做转义显示，方便直接读。原始文件：<code>/Users/hua/Doubao/chats/2026-09-13/new-chat/</code>。</div><div class="notes">============================================================
+                    JavaWeb 手写笔记全文本
+============================================================
+
+第1章 网页开发基础
+
+C/S 架构          B/S 架构
+客户端 服务器      浏览器 服务器
+
+第1节 HTML
+1. HTML：超文本标记语言
+   后缀为.html 或 .htm 的文件。
+
+第2节 HTML常用标签
+超文本标记语言
+.html 和 .htm
+
+&lt;!DOCTYPE html&gt; 声明，不是HTML标签，是一条指令。
+&lt;html&gt; 根标签，用于告知浏览器该文档是一个HTML文档。
+    &lt;head&gt; 头部标签。
+        &lt;title&gt;&lt;/title&gt;，meta，link，style等标签
+    &lt;/head&gt;
+    &lt;body&gt; 主体标签。
+    &lt;/body&gt;
+&lt;/html&gt;
+
+2. 标签的分类。
+   单标签：也称自标签。    &lt;br&gt; 换行。还有什么单标签。&lt;hr/&gt;定义一条水平线。
+       &lt;标签名/&gt;                            &lt;img/&gt; &lt;input/&gt; &lt;link/&gt;。
+   双标签：也称体标签
+       &lt;标签名&gt; 内容 &lt;/标签名&gt;
+   注释标签：&lt;!--注释语句--&gt;
+
+3. 段落、行内和换行标签。
+   &lt;p&gt; 内容1
+   &lt;span style=&quot;color:red&quot;&gt; 内容2 &lt;/span&gt; 内容3 &lt;br&gt; 换行效果。
+   &lt;/p&gt; 段落标签可以自动换行。
+
+   &lt;span style=&quot;css code&quot;&gt;&lt;/span&gt; → 代替
+文本样式标签：&lt;font 属性=&quot;属性值&quot;&gt;文本内容&lt;/font&gt;
+              多个属性用空格隔开。        → face, size, color
+
+不存在的标签会直接忽略。若想展示&lt;abc&gt;应写成 &amp;lt;abc&amp;gt;
+                                  使用转义字符。
+
+4. 表格标签。  表格边框的宽度。          空格的转义字符 &amp;nbsp;
+              ↑          → 像素。
+   &lt;table border=&quot;1px&quot; cellspacing=&quot;0&quot; cellpadding=&quot;3&quot; align=&quot;center&quot;&gt;
+       &lt;tr&gt;行
+           &lt;td&gt;内容&lt;/td&gt;列。
+       &lt;/tr&gt;
+   &lt;/table&gt;
+
+※ 行和列的合并。
+   &lt;td colspan=&quot;2&quot;&gt; 95 &lt;/td&gt;   合并某行中的两列。
+   &lt;td rowspan=&quot;2&quot;&gt; 姓名 &lt;/td&gt;  合并两行。
+
+5. 表单标签。
+   表单控件、提示信息、表单域。
+   &lt;form action=&quot;url地址&quot; method=&quot;提交方式&quot; name=&quot;表单名称&quot;&gt;
+       指定表单提交地址。
+       &lt;input type=&quot;控件类型&quot;/&gt;
+       type=&quot;text | password | radio | checkbox | file | submit | reset&quot;
+       的name必须一样。
+   &lt;/form&gt;
+   提交的数据将显示在浏览器的地址栏中，保密性差。
+   GET：(默认值) 浏览器的地址栏中，保密性差。
+   POST：保密性好，可提交大量数据。
+
+6. 多文本标签。(属于表单标签)
+   &lt;textarea cols=&quot;25&quot; rows=&quot;25&quot;&gt; 填内容 &lt;/textarea&gt;
+
+7. 下拉标签。(属于表单标签)
+   &lt;select name=&quot;country&quot;&gt;
+       &lt;option value=&quot;China&quot;&gt; 中国 &lt;/option&gt;
+       &lt;option value=&quot;Korea&quot;&gt; 韩国 &lt;/option&gt;
+       &lt;option value=&quot;Japan&quot;&gt; 日本 &lt;/option&gt;
+   &lt;/select&gt;
+   &lt;fieldset&gt; 将表单内元素分组。
+   &lt;legend&gt; 为&lt;fieldset&gt;定义标题。
+
+8. 列表标签。
+   无序列表。(不分排序的列表)
+   &lt;ul type=&quot;disc&quot;&gt; → disc ●
+       &lt;li&gt; 内容 &lt;/li&gt;   square ■
+   &lt;/ul&gt;                 circle ○
+
+   有序列表。
+   &lt;ol type=&quot;a&quot;&gt;
+       &lt;li&gt; 内容 &lt;/li&gt;
+   &lt;/ol&gt;
+
+   定义列表。
+   &lt;dl&gt;
+       &lt;dt&gt; 红色 &lt;/dt&gt;
+           &lt;dd&gt; 内容 &lt;/dd&gt;
+       &lt;dt&gt; 绿色 &lt;/dt&gt;
+           &lt;dd&gt; 内容 &lt;/dd&gt;
+   &lt;/dl&gt;
+
+9. 超链接标签。  指定链接指向的页面的URL
+   &lt;a href=&quot;跳转目标&quot; target=&quot;目标窗口的弹出方式&quot;&gt; 内容 &lt;/a&gt;
+   _self, _blank, _parent, _top
+
+10. 图像标签。
+    &lt;img src=&quot;图像URL&quot; width=&quot;160px&quot; height=&quot;130px&quot; border=&quot;0&quot;/&gt;
+    可以是绝对路径，也可以是相对路径。
+
+第3节 CSS技术
+HTML标签只用于搭建网页的基础结构。
+CSS为标签属性设置显示样式。
+
+1. CSS定义的规则具体如下：
+   选择器 {属性1:属性值1;属性2:属性值2;...}
+   CSS中颜色的取值：预定义颜色值，十六进制，RGB代码
+   例：div {border:1px solid red; width:600px; height:400px;}
+   表示CSS样式作用的HTML 属性1:属性值1; 属性2:属性值2;... }
+
+2. CSS样式的引用方式：
+   行内式(内联式)：指通过style属性设置标签样式。标签内的style属性。
+       → 只对其所在的标签及嵌套在其中的子标签起作用。
+       → 通过标签的属性来控制样式的，这样并没有做到结构与样式分离。
+       &lt;标签名 style=&quot;属性1:属性值1;属性2:属性值2;属性3:属性值3;&quot;&gt;内容&lt;/标签名&gt;
+       例：&lt;h1 style=&quot;font-size:20px; color:blue;&quot;&gt;使用行内式CSS修饰一级标题的字体大小和颜色&lt;/h1&gt;
+
+   内嵌式：将CSS代码集中写在HTML文档的&lt;head&gt;头部标签中，并用&lt;style&gt;标签定义。
+       → 只对其所在的HTML页面有效。
+       → &lt;style&gt;标签一般位于&lt;head&gt;标签中的&lt;title&gt;标签之后，因为浏览器是从上到下解析代码的，为便于CSS代码提前被加载和解析应把其放在头部，以避免网页内容加载后没有样式修饰的问题。
+       &lt;head&gt;
+           &lt;style type=&quot;text/css&quot;&gt;
+               选择器{属性1:属性值1;属性2:属性值2;属性3:属性值3;}
+           &lt;/style&gt;
+       &lt;/head&gt;
+
+   外链式(链入式)：是将所有的样式放在一个或多个以.css为扩展名的外部样式表文件中，通过&lt;link&gt;标签将外部样式表文件链接到HTML文件中。
+       &lt;head&gt;
+           &lt;link href=&quot;CSS文件的路径&quot; type=&quot;text/css&quot; rel=&quot;stylesheet&quot;/&gt;
+       &lt;/head&gt;
+       → 上述语法中，&lt;link&gt;标签需要放在&lt;head&gt;头部标签中，并且必须指定&lt;link&gt;标签的3个属性。
+           href：定义所链接外部样式表文件的地址，可以是相对路径，也可以是绝对路径。
+           type：定义所链接文档的类型，这里需指定为&quot;text/css&quot;，表示链接的外部文件为CSS。
+           rel：定义当前文档与被链接文档之间的关系。&quot;stylesheet&quot;表示被链接文档是样式表文件。
+
+   导入式：与外链式相同，都是通过引入外部样式表文件来实现。导入式CSS对HTML头部文档应用&lt;style&gt;标签，并在&lt;style&gt;标签内的开头处使用@import语句。
+       &lt;style type=&quot;text/css&quot;&gt;
+           @import url(CSS文件路径); 或 @import &quot;CSS文件路径&quot;;
+       &lt;/style&gt;
+
+   注意：虽然导入式CSS与外链式CSS功能基本相同，但是大多数网站采用外链式CSS引入外部样式表，主要原因是两者的加载时间和顺序不同。当一个页面被加载时，&lt;link&gt;标签引用的CSS样式表将同时被加载，而@import引用的CSS样式表会等页面全部下载完才被加载。因此用户的网速较慢时，会先显示没有CSS修饰的网页，这样会造成不好的用户体验，所以大多数网站采用外链式CSS。
+
+3. CSS选择器和常用属性。
+   范围越小的优先级越高。
+   通配符选择器    标签选择器    类选择器    id选择器
+   * {}            标签名{}      .类名{}      #ID名{}
+                 范围变小
+                 优先级变高 →
+
+   标签选择器：指用HTML标签名称作为选择器，按标签名称分类，为页面中某一类标签指定统一的样式。
+       → 所有的HTML标签都可以作为标签选择器的标签名。
+       → 所有同名称标签均会被选中。
+       标签名{属性1:属性值1;属性2:属性值2;属性3:属性值3;}
+
+   类选择器：类选择器使用&quot;.&quot;进行标识，后面紧跟类名。
+       → 不同标签可有相同的类名，类名即为HTML页面中的元素的class属性值。
+       → 类选择器最大的优势是可以为元素对象定义单独或相同的样式。
+       .类名{属性1:属性值1;属性2:属性值2;属性3:属性值3;}
+
+   id选择器：使用&quot;#&quot;进行标识，后面紧跟id名，其基本语法格式如下：
+       → 元素的id值是唯一的，只能对应文档中某一个具体的元素。
+       #id名{属性1:属性值1;属性2:属性值2;属性3:属性值3;}
+
+   通配符选择器：使用&quot;*&quot;表示。
+       → 样式对整个HTML文档均有效。(对所有HTML标签都失效)
+       → 是所有选择器中作用范围最广的，能匹配页面中所有的元素。
+       *{属性1:属性值1;属性2:属性值2;属性3:属性值3;}
+
+   CSS常用属性。
+   属性名称          功能描述
+   margin            用于指定对象的外边距，也就是对象与对象之间的距离。该属性可指定1~4个属性值，各属性值以空格分隔
+   padding           用于指定对象的内边距，也就是对象的内容与对象边框之间的距离。该属性可指定1~4个属性值，各属性值以空格分隔
+   background        用于设置背景颜色、背景图片、背景图片的排列方式、是否固定背景图片和背景图片的位置。该属性可指定多个属性值，各属性值以空格分隔，没有先后顺序
+   font-family       规定元素的字体系列
+   border            用于设置边框的宽度、边框的样式和边框的颜色。该属性可以指定多个属性值，各属性值以空格分隔，没有先后顺序
+   font              用于设置字体样式、小型的大写字体、字体粗细、文字的大小、行高和文字的字体
+   height            用于指定对象的高度
+   line-height       用于设置行间距，所谓行间距就是行与行之间的距离，即字符的垂直间距，一般称为行高
+   color             用于指定文本的颜色
+   text-align        用于指定文本的对齐方式
+   text-decoration   用于指定文本的显示样式，其属性值包括line-through(删除线)、overline(上划线)、underline(下划线)、blink(闪烁效果，Firefox和Opera可以看到效果)和none(无效果)等
+   vertical-align    用于设置元素的垂直对齐方式
+   display           用于指定对象的显示形式
+
+第4节 JavaScript基础
+HTML→内容    CSS→样式    JavaScript→行为
+为网页添加各式各样的动态功能。
+不需要进行编译。
+
+1. JavaScript概述。
+   ① 组成。
+   ECMAScript：是JS的核心，其规定了JS的编程语法和基础核心内容。
+   DOM：文档对象模型，把文档转化为内存中的对象。
+       是W3C组织推荐的处理可扩展置标语言的标准编程接口。本质把文档通过DOM提供的接口，可以对页面上的各种元素进行操作。化为内存中对象。
+       DOM把HTML标签树转化为对象树。
+   BOM：浏览器对象模型。它提供了独立于内容的，可以与浏览器窗口进行互动的对象结构。
+       BOM包含DOM。
+
+   ② JavaScript代码引入方式。
+   &lt;input type=&quot;button&quot; value=&quot;点击&quot; onclick=&quot;alert(&#x27;行内式&#x27;)&quot;/&gt;
+   JS代码
+   行内式：指将单行或少量的JavaScript代码写在HTML标签的事件属性中。
+       注意：
+       i&gt; HTML中推荐使用双引号，而JavaScript推荐使用单引号。
+       ii&gt; 行内式可读性差。
+       iii&gt; 遇到多层引号嵌套的情况时，非常容易混淆，导致代码出错。
+       iv&gt; 行内式只有在临时测试或者特殊情况下才使用，一般情况下不推荐用行内式。
+
+   内嵌式：在HTML文档中，可以通过&lt;script&gt;标签及其相关属性引入JavaScript代码，当浏览器读取到&lt;script&gt;标签时，就会解释执行其中的脚本。
+       type属性用于指定HTML文档引用的脚本语言类型。习惯放在&lt;head&gt;标签内。
+       格式：
+       &lt;script type=&quot;text/javascript&quot;&gt;
+           // 此处为JavaScript代码
+       &lt;/script&gt;
+
+   外链式：指将JavaScript代码写在一个单独的文件中，一般使用&quot;.js&quot;作为文件的扩展名。在HTML文件中使用&lt;script&gt;标签进行引入JavaScript文件。外链式适合JavaScript代码量比较多的情况。
+       外链式有利于HTML页面代码结构化。外链式&lt;script&gt;标签内不可以编写JavaScript代码。
+       格式：&lt;script type=&quot;text/javascript&quot; src=&quot;JS文件的路径&quot;&gt;&lt;/script&gt;
+
+   示例：
+   &lt;!DOCTYPE&gt;                    &lt;!DOCTYPE&gt;
+   &lt;html&gt;                        &lt;html&gt;
+   &lt;head&gt;                        &lt;head&gt;
+   &lt;title&gt;JavaScript内嵌式&lt;/title&gt;  &lt;title&gt;JavaScript外链式&lt;/title&gt;
+       &lt;script type=&quot;text/javascript&quot;&gt;      &lt;script type=&quot;text/javascript&quot; src=&quot;jsDemo.js&quot;&gt;&lt;/script&gt;
+           alert(&#x27;内嵌式&#x27;);              &lt;/head&gt;
+       &lt;/script&gt;                         &lt;body&gt;
+   &lt;/head&gt;                                &lt;/body&gt;
+   &lt;body&gt;                                &lt;/html&gt;
+   &lt;/body&gt;
+   &lt;/html&gt;
+
+   ③ 数据类型。
+   Number(数值型)：数值型数据不区分整型和浮点型，数值型数据不要引号括起来。
+   String(字符串类型)：字符串是用单引号或双引号括起来的一个或多个字符。
+   Boolean(布尔类型)：只有true和false两个值。
+   Object(对象类型)：一组数据和功能的键值对集合，属性+方法。
+   Null(空类型)：没有任何值。
+   Undefined(未定义类型)：指变量被创建，但未赋值时所具有的值。变量本身有值，但未给赋值。
+
+   ④ 变量。
+   在JS中，使用关键字var声明变量。因为JS是一种弱类型语言，所以在声明变量时，不需要指定变量的类型，变量的类型将根据变量的赋值确定。
+   var number=27;    var str=&quot;abcd&quot;;
+   JS关键字。
+   变量命名规则：变量名可以由字母，下划线(_)，美元符号($)组成，不能有空格，加号，减号，不能使用
+
+   ⑤ 运算符。
+   括号优于算术运算符 优于比较运算符 优于逻辑运算符 优于三元运算符 优于赋值运算符。
+
+2. DOM的相关知识。(文档对象模型)
+   DOM可以以一种独立于平台和语言的方式访问和修改一个文档的内容和结构。
+   W3C中将DOM标准分为3个不同的部分：
+       核心DOM。(任何结构化文档的标准模型)
+       XML DOM。(针对XML文档的标准模型)
+       HTML DOM。(针对HTML文档的标准模型)
+
+   HTML DOM模型被构造为对象的树，该树的根节点是文档对象...该对象有一个documentElement的属性引用，表示文档根元素的Element对象。
+   HTML文档中表示文档根元素的是&lt;html&gt;元素，&lt;head&gt;和&lt;body&gt;元素可以看作树的枝干。
+
+   ※ 程序操作文档不易，而DOM树在内存中，操作对象很容易。
+   ※ 根节点是文档对象，叶子节点是元素的属性或内容。
+   ※ 一个页面就是一个文档，一个元素就是一个节点。
+
+   在开发中，想要操作页面上的某部分，例如控制一个div的显示或隐藏等，需要先获取该部分对应的元素，再对其进行操作，如下是获取元素的两种方式：
+
+   (1) 节点的访问。
+   在DOM中，HTML文档的各节点被视为各种类型的Node对象，通过某个节点的子节点可以找到该元素，如下：
+   父节点对象 = 子节点对象.parentNode;
+
+   Node对象的常用属性。
+   表1-8 Node对象的常用属性
+   属性          类型        描述
+   parentNode    Node        返回节点的父节点，没有父节点时为null
+   childNodes    NodeList    返回节点到子节点的节点列表
+   firstChild    Node        返回节点的首个子节点，没有则为null
+   lastChild     Node        返回节点的最后一个子节点，没有则为null
+
+   (2) 获取文档中的指定元素。
+   → 直接搜索文档中指定元素的方法，不需要通过遍历节点找到文档中指定元素：
+   ① 通过元素id属性获取元素。
+   Document的getElementById()方法通过元素id属性获取元素。
+   例：document.getElementById(&quot;userId&quot;);
+   ② 通过元素的name属性获取元素。
+   Document的getElementsByName()方法通过元素的name属性获取元素。
+   多个元素可能有相同Name，因此返回一个数组，可使用数组索引获得具体的元素。
+   例：document.getElementsByName(&quot;userName&quot;)[0];
+
+3. BOM相关知识。
+   BOM提供了独立于内容且可与浏览器窗口进行交互的对象，其核心对象是Window。
+   Window下又提供了许多对象，这些对象用于访问浏览器，被称浏览器对象。Windows各内置对象之间按照某种层次组织起来的模型统称为浏览器对象模型。
+   树状结构。    即是JavaScript访问浏览器窗口的一个接口。
+   Window → 浏览器顶级对象，又是一个全局对象，全局作用域中的变量，函数。
+   Document  Location  Navigator  Screen  History
+
+   ※ BOM包含了DOM。BOM的核心对象是Window，其他对象称为Window的子对象，子对象是以属性的方式添加到Window对象中的。
+
+   (1) window.onload加载事件。
+   → 实现窗口(页面)加载事件，当文档内容(包括图像，脚本文件，CSS文件等)完全加载完成会触发该事件，调用该事件对应的事件处理函数。onload页面加载事件有两种注册方式，如下：
+       方式1：window.onload = function() {};
+       方式2：window.addEventListener(&#x27;load&#x27;, function() {});
+   ※ window.onload注册事件的方式只能写一次，如果有多个window.onload注册事件，会以最后一个为准；如果使用window.addEventListener注册事件，则不受注册次数的限制。
+
+   (2) document.DOMContentLoaded加载事件。(兼容性：浏览器IE9以上版本)
+   在DOM加载完成时触发。
+   (不包括CSS样式表，图片和Flash动画等额外内容的加载)
+   该事件的优点在于执行的速度更快，适用于页面中图片很多的情况。
+
+4. JavaScript的使用。
+   (1) 函数的定义及调用。
+   function functionName(parameter1, parameter2, ...) {
+       statements;
+       return expression;
+   }
+   ※ functionName是必选项，用于标识函数名，在同一个页面中函数名必须是唯一的，并且区分大小写。
+   statements是必选项。
+   parameter是可选项，一个函数最多有255个参数。    return expression也是可选项。
+   为任意表达式，变量或常量。
+
+   (2) 事件处理。
+   采用事件驱动是JavaScript语言的一个最基本的特征。事件是指用户在访问页面时执行的操作。
+   事件处理的过程通常分为三步：发生事件，启动事件处理程序和事件处理程序作出反应。
+   事件处理程序可以是任意JavaScript语句，但通常使用特定的自定义函数来对事件进行处理。
+
+   JavaScript常用事件类型。
+   类别      事件        事件说明
+   表单事件  onblur      当前元素失去焦点时触发此事件
+             onchange    当前元素失去焦点并且元素内容发生改变时触发此事件
+             onfocus     当某个元素获得焦点时触发此事件
+             onreset     当表单被重置时触发此事件
+             onsubmit    当表单被提交时触发此事件
+   页面事件  onload      当页面加载完成时触发此事件
+
+   (3) 常用对象。
+   在JavaScript中，对象是一种数据类型，它是由属性和方法组合的一个集合，属性指事物的特征，方法是指事物的行为。
+
+   ① Window对象。
+   Window对象表示整个浏览器窗口，它处于对象层的顶端，可用于获得浏览器窗口的大小，位置，或设置定时器等。在使用时，JavaScript允许省略Window对象的名称。
+
+   window对象的属性和方法
+   类型  名称                                          说明
+   属性  document、history、location、navigator、screen  返回相应对象的引用。例如document属性返回document对象的引用
+         parent、self、top                              分别返回父窗口、当前窗口和最顶层窗口的对象引用
+         innerWidth、innerHeight                        分别返回窗口文档显示区域的宽度和高度
+         outerWidth、outerHeight                        分别返回窗口的外部宽度和高度
+   方法  open()、close()                                打开或关闭浏览器窗口
+         alert()、confirm()、prompt()                   分别表示弹出警告框、确认框、用户输入框
+         setTimeout()、clearTimeout()                   设置或清除普通定时器
+
+   ② Date对象。
+   用于处理日期和时间，具有动态性，必须使用new关键字创建一个实例才能使用。
+   var Mydate = new Date();
+
+   没有提供直接访问日期和时间的属性，只有获取和设置日期和时间的方法。
+
+   Data对象的常用方法
+   获取方法          说明                          设置方法          说明
+   getFullYear()     返回4位数年份                 setFullYear()     设置年用4位数的年份
+   getMonth()        返回月份值(0~11)             setMonth()        设置月份值(0~11)
+   getDate()         返回日期值(1~31)             setDate()         设置日期值(1~31)
+   getDay()          返回值星期(0~6)              setDay()          设置值星期(0~6)
+   getHours()        返回小时值(0~23)             setHours()        设置小时值(0~23)
+   getMinutes()      返回分钟值(0~59)             setMinutes()      设置分钟值(0~59)
+   getSeconds()      返回秒数值(0~59)             setSeconds()      设置秒数值(0~59)
+   getTime()         返回从1970年1月1日至今的毫秒数  setTime()       使用毫秒形式设置Date对象
+
+   ③ String对象。
+   字符串处理对象，创建对象实例后才能使用，提供了处理字符串的属性和方法。
+
+   常用对象—String对象处理字符串的属性和方法
+   类型  名称                              说明
+   属性  length                            返回字符串中字符的个数。注：一个汉字也是一个字符
+   方法  indexOf(str[,startIndex])        从前向后检索字符串
+         lastIndexOf(search[,startIndex]) 从后向前搜索字符串
+         substr(startIndex[, length])     返回从起始索引号提取字符串中指定数目的字符
+         substring(startIndex [,endIndex])返回字符串中两个指定的索引号之间的字符
+         split(separator [,limitInteger]) 把字符串分割为字符串数组
+         search(substr)                    检索字符串中指定子字符串或与正则表达式相匹配的值
+         replace(substr,replacement)       替换与正则表达式匹配的子串
+         toLowerCase()                     把字符串转换为小写
+         toUpperCase()                     把字符串转换为大写
+         localeCompare()                   用本地特定的顺序来比较两个字符串
+
+第5节 Bootstrap框架基础
+Bootstrap是由Twitter公司的设计师Mark Otto(马克奥托)和Jacob Thornton(雅各布·桑顿)合作开发的开源框架，该框架基于HTML、CSS和JavaScript语言编写，于2011年8月在GitHub上发布，一经推出就颇受欢迎。Bootstrap具有简单、灵活的特性，能够帮助开发者快速搭建前端页面，常用于开发响应式布局和移动设备优先的Web项目。
+自动布局    默认移动设备。
+
+Bootstrap框架的特点：
+① 响应式设计。    ② 移动设备优先。
+③ 浏览器支持。    ④ 低成本，易上手。
+⑤ CSS预编译。    ⑥ 框架成熟。
+⑦ 丰富的组件库。
+
+第2章 Java Web概述
+静态web资源开发技术：HTML, CSS, JavaScript, XML
+动态web资源开发技术：JSP, Servlet.
+
+第1节 XML基础
+XML：一种通用的数据交换格式。
+
+1. XML概述。(保存信息)
+   标记用于自定义。
+   XML是一种类似于HTML的置标(标记)语言，称为可扩展置标语言。
+   XML用于提供数据描述格式，适用于不同应用程序之间的数据交换，而且这种交换不以预先定义的一组数据结构为前提，可扩展性强。
+   在XML文档中，通过元素的嵌套关系可以很准确地描述具有树状层次结构的复杂信息，因此越来越多的应用程序采用XML格式存放相关配置。
+
+2. XML和HTML的比较。
+        HTML                          XML
+相同  基于文本的标记语言，结构上大致相同，树形结构    作用不同。
+      以标签的形式描述信息。                        语法不同。
+不同  显示数据                      传输和存储数据    标签应用范围不同。
+      不区分大小写。                严格区分大小写。
+      可以有多个根元素。            只能有一个根元素。
+      空格自动过滤。                空格不会自动过滤。
+      预定义的标签。                标签需要自己定义，且可扩展。
+
+3. XML语法。
+   文档声明：
+       完整的XML文档必须包含一个XML文档的声明，且声明必须位于文档第一行。
+       &lt;?xml version=&quot;version&quot; encoding=&quot;value&quot; standalone=&quot;value&quot;?&gt;
+       不能有空格    版本信息。    编码信息。    文档独立信息，默认是no，不独立。
+       必须包含，且在首位。    编码集，可选。    是否与一个外部文档嵌套使用。
+
+   元素定义：
+       ① XML文档中的主体内容都是由元素组成的，元素是以树状分层结构排列的。一个元素可以嵌套在另一个元素中，元素是XML文档的基本组成部分。
+       ② XML文档中有且仅有一个顶层元素，称为文档元素/根元素。元素一般由开始标签、属性、元素内容和结束标签构成：&lt;城市&gt;北京&lt;/城市&gt;
+       ③ 一个元素可以嵌套若干个子元素，若一个元素没有嵌套在其他元素内，则这个元素就是根元素；如果一个元素中没有嵌套子元素，也没有包含文本内容，则这样的元素称为空元素，如：&lt;img&gt;&lt;/img&gt;可以简写成&lt;img/&gt;。
+
+   属性定义：
+       在一个元素中，可以自定义多个属性，属性是依附元素存在的，并且每个属性都有自己的名称和取值。
+       例：&lt;售价 单位=&quot;元&quot;&gt;68&lt;/售价&gt;
+           元素  属性 属性值
+       在HTML中属性的命名规范与元素相同，属性值必须要加上双引号或单引号。
+
+   注释：
+       注释是对文档结构或文档内容的解释，不属于XML文档的内容，因此XML解析器不会处理注释内容。
+       &lt;!--注释信息--&gt;
+
+4. DTD约束。
+   之前均为对文档结构的要求，DTD约束是在语法语义上对文档进行约束。
+
+   什么是XML约束？
+   XML文档中的标签是可以随意定义的，同一本书出现了两种售价，如果仅根据标签名称区分哪个是原价，哪个是会员价，这是很难实现的。为此，在XML文档中，定义了一套规则对文档中的内容进行约束，这套规则称为XML约束。对XML文档进行约束时，同样需要遵守一定的语法规则，这种语法规则就形成了XML约束语言。
+
+   什么是DTD约束？
+   DTD约束是早期出现的一种XML约束模式语言，根据它的语法创建的文件称为DTD文件。在一个DTD文件中，可以包含元素的定义、元素之间关系的定义、元素属性的定义以及实体和符号的定义。
+
+   示例：
+   &lt;?xml version=&quot;1.1&quot; encoding=&quot;UTF-8&quot;?&gt;
+   &lt;书架&gt;
+       &lt;书&gt;
+           &lt;书名&gt;Java基础案例教程&lt;/书名&gt;
+           &lt;作者&gt;黑马程序员&lt;/作者&gt;
+           &lt;售价&gt;54.00元&lt;/售价&gt;
+       &lt;/书&gt;
+       &lt;书&gt;
+           &lt;书名&gt;Java基础入门&lt;/书名&gt;
+           &lt;作者&gt;黑马程序员&lt;/作者&gt;
+           &lt;售价&gt;59.00元&lt;/售价&gt;
+       &lt;/书&gt;
+   &lt;/书架&gt;
+
+   &lt;!ELEMENT 书架 (书+)&gt;
+   &lt;!ELEMENT 书 (书名,作者,售价)&gt;
+   &lt;!ELEMENT 书名 (#PCDATA)&gt;
+   &lt;!ELEMENT 作者 (#PCDATA)&gt;
+   &lt;!ELEMENT 售价 (#PCDATA)&gt;
+
+   (1) &lt;!ELEMENT ...&gt;语句定义了一个元素，其中&quot;书架&quot;是元素的名称，&quot;(书+)&quot;表示书架元素中有一个或者多个名称为&quot;书&quot;的元素，其中字符&quot;+&quot;表示它所修饰的元素必须出现一次或者多次。
+   (2) &quot;书&quot;是元素名称，&quot;(书名,作者,售价)&quot;表示元素书包含书名、作者、售价这三个子元素，并且这些子元素要按照顺序依次出现。
+   (3) &quot;书名&quot;、&quot;作者&quot;和&quot;售价&quot;都是元素名称，&quot;(#PCDATA)&quot;表示元素中嵌套的内容是普通的文本字符串。
+
+5. DTD的引入。(在XML文档中引入DTD文件)。
+   (1) 外部引入(两种方式)
+   相对路径/绝对路径
+   第一种：&lt;!DOCTYPE 根元素名称 SYSTEM &quot;外部DTD文件的URI&quot;&gt; 用于引用本地DTD文件。
+   常用 → 多个XML文档共享一个DTD文件。
+   第二种：&lt;!DOCTYPE 根元素名称 PUBLIC &quot;DTD名称&quot; &quot;外部DTD文件的URI&quot;&gt;
+           只能是绝对路径。用于引用公共的DTD文件。
+
+   (2) 内部直接嵌入
+   &lt;?xml version=&quot;1.1&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?&gt;
+   &lt;!DOCTYPE 根元素名 [
+       DTD定义语句
+       ......
+   ]&gt;
+
+   示例：
+   &lt;?xml version=&quot;1.1&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?&gt;
+   &lt;!DOCTYPE 书架 [
+       &lt;!ELEMENT 书架 (书+)&gt;
+       &lt;!ELEMENT 书 (书名,作者,售价)&gt;
+       &lt;!ELEMENT 书名 (#PCDATA)&gt;
+       &lt;!ELEMENT 作者 (#PCDATA)&gt;
+       &lt;!ELEMENT 售价 (#PCDATA)&gt;
+   ]&gt;
+   &lt;书架&gt;
+       &lt;书&gt;
+           &lt;书名&gt;Java基础案例教程&lt;/书名&gt;
+           &lt;作者&gt;黑马程序员&lt;/作者&gt;
+           &lt;售价&gt;54.00元&lt;/售价&gt;
+       &lt;/书&gt;
+       &lt;书&gt;
+           &lt;书名&gt;Java基础入门&lt;/书名&gt;
+           &lt;作者&gt;黑马程序员&lt;/作者&gt;
+           &lt;售价&gt;59.00元&lt;/售价&gt;
+       &lt;/书&gt;
+   &lt;/书架&gt;
+
+6. DTD约束语法。
+   DTD的结构一般由元素定义，属性定义，实体定义，记号定义等构成。
+
+   (1) 元素定义。
+   在DTD定义中每一条&lt;!ELEMENT...&gt;语句用于定义一个元素。
+   &lt;!ELEMENT 元素名称 元素内容&gt;
+               元素    包括数据类型和符号两个部分。
+
+   元素内容：
+   1) #PCDATA：表示元素中嵌套的内容是普通文本字符串，其中关键字PCDATA是Parsed Character Data的简写。
+   2) 子元素：说明元素包含其他元素。通常用一对小括号( )将元素中要嵌套的一组子元素括起来。
+   3) 混合内容：表示元素既可以包含字符数据，也可以包含子元素。混合内容必须被定义零个或多个。
+   4) EMPTY：表示该元素既不包含字符数据，也不包含子元素，是一个空元素。相当于单标签。如果在文档中元素本身已经表明了明确的含义，就可以在DTD中用关键字EMPTY表明空元素。
+   5) ANY：表示该元素可以包含任何字符数据和子元素。
+
+   注意事项：在定义元素时，元素内容可以包含一些符号，不同的符号具有不同的作用，下面介绍一些常见的符号。
+   问号[?]：表示该对象可以出现0次或1次。
+   星号[*]：表示该对象可以出现0次或多次。
+   加号[+]：表示该对象可以出现1次或多次。
+   竖线[|]：表示列出的对象中选择1个。
+   逗号[,]：表示对象必须按照指定的顺序出现。
+   括号[()]：用于给元素进行分组。
+
+   (2) 属性定义。
+   在定义元素的同时，还可以为元素定义属性。
+   &lt;!ATTLIST 元素名 (属性所属元素的名字)
+   属性的名称 &lt; 属性名1 属性类型 设置说明 → 用于说明该属性是否必须出现。
+               属性名2 属性类型 设置说明
+               ......
+               → 指定该属性属于哪种类型。
+   &gt;
+
+   设置说明：
+   设置说明        含义
+   #REQUIRED       表示元素的该属性是必须的，例如，当定义联系人信息的DTD时，我们希望每一个联系人都有一个联系电话属性，这时，可以在属性声明时，使用REQUIRED
+   #IMPLIED        表示元素可以包含该属性，也可以不包含该属性。例如，当定义一本书的信息时，发现书的页数属性对读者无关紧要，这时，在属性声明时，可以使用IMPLIED
+   #FIXED          表示一个固定的属性默认值，在XML文档中不能将该属性设置为其他值。使用#FIXED关键字时，还需要为该属性提供一个默认值。当XML文档中没有定义该属性时，其值将被自动设置为DTD中定义的默认值
+   默认值          和FIXED一样，如果元素不包含该属性，该属性将被自动设置为DTD中定义的默认值。不同的是，该属性的值是可以改变的，如果XML文件中设置了该属性，新的属性值会覆盖DTD中定义的默认值
+
+   常用属性类型：
+   ① CDATA  表明属性类型是字符数据，与#PCDATA相同。
+            在属性设置值中出现的特殊字符，也需要使用其转义字符序列表示。
+   ② Enumerated(枚举类型)  在声明属性时，可以限制属性的取值只能从一个列表中选择，这类属性属于Enumerated。
+   ③ ID：一个ID类型的属性用于唯一标识XML文档中的某个元素。ID类型的属性值必须遵守XML名称定义的规则。一个元素只能有一个ID类型的属性，而且ID类型的属性必须设置为#IMPLIED或#REQUIRED。
+       因为ID类型属性的每一个取值都用于标识一个特定的元素，所以为ID类型的属性提供默认值，特别是固定的默认值，是毫无意义的。
+   ④ IDREF和IDREFS → 使两个元素建立一对多的关系。
+       → 使两个元素建立一对一的关系。
+
+7. Schema约束。
+   (1) 什么是Schema约束    文件后缀 .xsd.
+   同DTD一样，XML Schema也是一种用于定义和描述XML文档结构与内容的模式语言，它的出现克服了DTD的局限性。
+
+   Schema约束的优点：
+   (1) DTD采用的是非XML语法格式，缺乏对文档结构、元素、数据类型等全面的描述。XML Schema采用的是XML语法格式，而且它本身也是一种XML文档，因此，XML Schema语法格式比DTD更好理解。
+   (2) XML有非常高的合法性要求，XML DTD对XML的描述，往往也被用作验证XML合法性的一个基础，但是XML DTD本身的合法性却缺少较好的验证机制，必需独立处理。XML Schema则不同，它与XML有着同样的合法性验证机制。
+   (3) XML Schema对名称空间支持得非常好，而DTD几乎不支持名称空间。
+   (4) DTD支持的数据类型非常有限。
+   (5) DTD定义约束的能力非常有限，无法对XML实例文档作出更细致的语义限制。
+
+   XML Schema的功能比DTD强大很多，但相应的语法也比DTD复杂很多。接下来看一个简单的Schema文档。
+
+   &lt;?xml version=&quot;1.0&quot;?&gt; → 根元素
+   &lt;xs:schema
+   xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt; → 名称空间，防止不同厂商定义相同名称带来混淆。
+       &lt;xs:element name=&quot;root&quot; type=&quot;xs:string&quot;/&gt;
+   &lt;/xs:schema&gt;
+
+   Schema文档，以xsd作为后缀名，以xs:schema作为根元素，表示模式定义的开始。
+
+   (2) 名称空间。
+   一个XML文档可引入多个Schema约束。但是，因为约束文档中的元素或属性都是自定义的，所以在XML文档中极有可能出现代表不同含义的同名元素或属性，导致名称发生冲突。
+   因此，在XML文档中提供了名称空间，可以唯一标识一个元素或者属性。
+   在使用名称空间时，首先必须声明名称空间。→ 就是在XML文档中为某个模式文档的名称空间指定一个临时名称。它通过一系列的保留属性来声明，这种属性名必须是以&quot;xmlns&quot;或者&quot;xmlns:&quot;作为前缀。
+   语法格式：&lt;元素名 xmlns:prefixname=&quot;URI&quot;&gt;
+   URI保证名称空间唯一性。
+   在声明名称空间时，有两个前缀是不允许使用的，它们是xml和xmlns。
+   标准名称空间：不需要引入名称空间对应的文档，只需声明。
+
+   (3) 引入Schema文档。
+   XML文档中引入Schema文件有以下两种方法：
+   ① 使用名称空间引入XML Schema文档。
+   通过属性 xsi:schemaLocation 来表明名称空间的文档。
+       是在标准名称空间中定义的。该属性中包含了两个URI，这两个URI之间用空白符分隔，其中，第一个URI是名称空间的名称，第二个URI文档的位置。
+       → 该属性用于指定名称空间所对应的XML Schema文档。
+   ② 通过 xsi:noNamespaceSchemaLocation 属性直接指定
+       也是在标准名称空间中定义的。用于定义指定文档的位置，通过该属性直接指定。
+
+   (4) Schema语法。
+   ① 元素定义
+   &lt;xs:element name=&quot;名称&quot; type=&quot;类型&quot;/&gt;
+               用于声明一个元素  是指元素的名称。  → 指元素的数据类型。
+   在XML Schema中有很多内置的数据类型，最常用的几种如下：
+       xs:string    表示字符串类型。
+       xs:decimal   表示小数类型。
+       xs:integer   表示整数类型。
+       xs:boolean   表示布尔类型。
+       xs:date      表示日期类型。
+       xs:time      表示时间类型。
+
+   ② 属性的定义。
+   &lt;xs:attribute name=&quot;xxx&quot; type=&quot;yyy&quot;/&gt;
+                   属性名称    属性的数据类型。(属性常用数据类型与元素相同)
+
+   ③ 简单类型。
+   在XML Schema文档中，只包含字符数据的元素都是简单类型，使用xs:simpleType元素来定义。如果想对现有元素内容的类型进行限制，需要使用xs:restriction元素。
+   下面通过以下几种情况详细介绍如何对简单类型元素的内容进行限定：
+   i&gt; xs:minInclusive和xs:maxInclusive元素对值的限定。限制数字范围，如年龄范围。
+   ii&gt; xs:enumeration元素对一组值的限定。(类似于枚举)
+   iii&gt; xs:pattern元素对一系列值的限定。(模式匹配—正则表达式)
+   iv&gt; xs:restriction元素对空白符的限定。
+       使用whiteSpace元素对空白符进行处理，有三个属性值可以设定：
+       preserve：表示不对元素中的任何空白字符进行处理。
+       replace：表示移除所有的空白字符。
+       collapse：表示将所有的空白字符缩减为单一字符。
+
+   ④ 复杂类型。
+   在定义复杂类型时，需使用xs:complexContent元素来定义。
+   复杂类型的元素可以包含子元素和属性，这样的元素称为复合元素。
+   如果元素的开始标签和结束标签之间只包含字符数据内容，则使用xs:simpleContent来定义。
+   如果元素的开始标签和结束标签之间都是复杂内容，则使用xs:complexContent来定义。
+
+   复合类型元素有4种基本类型：
+   i&gt; 空元素。
+       指不包含内容，只包含属性的元素。
+   ii&gt; 包含其他元素的元素。
+       只包含元素。
+   iii&gt; 仅包含文本的元素。
+       只包含文本内容，必须有属性。对于仅包含文本的复合元素，要用simpleContent元素添加内容，必须在simpleContent元素内定义扩展或限定，这时需要使用extension或retriction元素来扩展或限制元素的基本简易类型。
+   iv&gt; 包含元素和文本的元素。
+       为了使字符数据可以出现在letter元素的子元素之间，使用了mixed属性，该属性用于规定是否允许字符数据出现在复杂类型的子元素之间，默认情况下mixed的值为false。
+
+第2节 程序开发体系架构
+网络应用开发体系架构分为两种：
+C/S：基于客户端/服务器。    B/S和C/S本质变化就是将
+B/S：基于浏览器/服务器。    逻辑计算移到服务器。
+
+1. C/S体系架构
+   指在开发过程中，客户端需要安装相应的软件才能连接服务器，并且客户端软件承担所有的逻辑运算和界面显示，服务器只提供数据交互。
+
+   C/S架构的致命缺点。
+   (1) C/S架构的客户端程序安装在客户机上，如果有很多人使用，则安装的工作量非常巨大。
+   (2) C/S架构的客户端程序负责整个业务逻辑和界面显示，一旦对其进行修改，则必须对整个客户端程序进行修改，不利于软件的升级与维护。
+   (3) C/S架构的客户端程序直接与数据库服务器端建立连接，而数据库服务器支持的并发连接数量有限，这样就限制了客户端程序可以同时运行的数量。
+
+2. B/S体系架构。
+   指在开发过程中，客户端只需要一个浏览器，就可以实现与服务器交互，服务器承担所有的逻辑和计算，浏览器只负责将结果显示在屏幕上。
+   B/S架构最大的优点是客户机上无须安装专门的客户端程序，程序中的业务逻辑处理都集中到了Web服务器上，客户机只要安装一个浏览器就能通过Web服务器与数据库进行交互，并将交互的结果以网页的形式展现在浏览器中。
+   B/S：浏览器并不是直接与数据库服务器建立连接的，而是通过Web服务器与数据库服务器建立连接。B/S架构能有效解决数据库并发数有限的问题。
+
+   B/S架构的优点：
+   与C/S架构相比，B/S架构中用户操作的界面是由Web服务器创建的，当要修改系统提供的用户操作界面时，只需要在Web服务器端修改相应的网页文档即可。由于B/S架构有诸多优点，所以B/S架构是目前各类信息管理系统的首选体系架构，它基本上全面取代了C/S架构。
+
+第3节 Tomcat
+Tomcat是Apache组织的Jakarta项目中的一个重要项目。
+Tomcat不仅具有Web服务器的基本功能，还提供了数据库连接池等许多通用组件功能。
+
+第3章 HTTP协议
+在浏览器与服务器的交互过程中要遵循一定的规则，这个规则就是HTTP(超文本传输协议)。HTTP专门用于定义浏览器与服务器之间交换数据的过程以及数据本身的格式。
+主要用来传输超文本。
+
+第1节 HTTP概述
+HTTP是一种客户端(用户)请求和服务器(网站)应答的标准，它作为一种应用层协议，应用于分布式、协作式和超媒体信息系统。
+HTTP是万维网数据通信的基础。
+
+1. HTTP概念。
+   HTTP是一种请求/响应式的协议(必须先有request，才有response)。客户端与服务器建立连接后，就可以向服务器发送请求，这种请求被称作HTTP请求。服务器接收到请求后会做出响应，称为HTTP响应。
+   客户端→服务器。
+
+   HTTP协议的特点：
+   ① HTTP协议支持客户端(浏览器就是一种Web客户端)/服务器模式。
+   ② 简单快速。客户端向服务器请求服务时，只需传送请求方式和路径，常用的请求方式有GET，POST等。
+       HTTP比较简单，使得HTTP服务器的程序规模小，因而通信速度很快。
+   ③ 灵活。HTTP允许传输任意类型的数据，正在传输的数据类型由Content-Type加以标记。
+   ④ 无状态。HTTP是无状态协议，无状态是指协议对事务处理没有记忆能力，如果后续处理需要前面的信息，则必须重新传输，这样可能导致每次连接传送的数据量增大。
+
+2. HTTP1.0和HTTP1.1.
+   (1) HTTP 1.0
+   基于HTTP1.0协议的客户端与服务器在交互过程中需要经过建立连接，发送请求信息，回送响应信息，关闭连接4个步骤。
+   HTTP1.0的缺点：    一个TCP连接只能处理一个HTTP请求。
+       客户端与服务器建立连接后，每次只能处理一个HTTP请求，对于内容丰富的网页来说，这样的通信方式明显有缺陷，必然会导致客户端与服务器交互耗时，影响网页的访问速度。
+
+   (2) HTTP 1.1
+   为了克服上述HTTP 1.0客户端与服务器交互耗时的缺陷，HTTP 1.1版本应运而生，它支持持久连接，也就是说在一个TCP连接上可以传送多个HTTP请求和响应，从而减少了建立和关闭连接的消耗和延时。
+
+   当客户端与服务器建立连接后，客户端可以向服务器发送多个请求，并且在发送下个请求时，无需等待上次请求的返回结果，服务器会按照客户端发送的请求先后顺序依次返回响应结果，以保证客户端能够区分出每次请求的响应内容。HTTP 1.1不仅继承了HTTP 1.0的优点，而且有效解决了HTTP 1.0的性能问题，显著地减少了浏览器与服务器交互所需要的时间。
+
+3. HTTP消息。    这三种默认方式是GET。
+   当用户在浏览器中访问某个URL地址，单击网页的某个超链接或者提交网页上的form表单时，浏览器都会向服务器发送请求数据，即HTTP请求消息；服务器接收到请求数据后，会将处理后的数据发送给客户端，即HTTP响应消息。HTTP请求消息和HTTP响应消息统称为HTTP消息。
+
+第2节 HTTP请求消息
+分为：请求行、请求头、实体内容。
+
+1. HTTP请求行。
+   HTTP请求行位于请求消息的第1行，它包括3个部分，分别是请求方式，资源路径和所使用的HTTP版本。具体示例如下：
+   GET /index.html HTTP/1.1
+   请求方式  资源路径  所使用的HTTP版本。
+
+   (1) 请求方式。
+   HTTP的8种请求方式：
+   请求方式    含义
+   GET         请求获取请求行的URI所标识的资源
+   POST        向指定资源提交数据，请求服务器进行处理(如提交表单或者上传文件)
+   HEAD        请求获取由URI所标识资源的响应消息头
+   PUT         将网页放置到指定URL位置(上传/移动)
+   DELETE      请求服务器删除URI所标识的资源
+   TRACE       请求服务器回送收到的请求信息，主要用于测试或诊断
+   CONNECT     保留将来使用
+   OPTIONS     请求查询服务器的性能，或者查询与资源相关的选项和需求
+
+   ① GET请求。
+   当用户在浏览器地址栏中直接输入某个URL地址或单击网页上的一个超链接时，浏览器将使用GET方式发送请求。如果将网页上的form表单的method属性设置为GET或者不设置method属性，当用户提交表单时，浏览器也将使用GET方式发送请求。如果浏览器请求的URL中有参数部分，在浏览器生成的请求消息中，参数部分将附加在请求行中的资源路径后面。
+   如：http://www.itcast.cn/javaForum?name=Lee&amp;psd=hnxy
+   &quot;?&quot;后面的内容为参数信息。参数是由参数名和参数值组成的，并且中间使用等号(=)进行连接。如果URL地址中有多个参数，参数中间用&amp;分隔。
+   当浏览器向服务器发送请求消息时，参数部分会附加在要访问的URI资源后面，如下：
+   GET /javaForum?name=Lee&amp;psd=hnxy HTTP/1.1
+   ※ 使用GET方式传送的数据量有限，最多不能超过2KB。
+
+   ② POST请求。
+   如果将网页上的form表单的method属性设置为&quot;POST&quot;，当用户提交表单时，浏览器也将使用POST方式提交表单内容，并把form表单的元素和数据作为HTTP消息的实体内容发送给服务器，而不是作为URL地址的参数传递。
+   另外，在使用POST方式向服务器传递数据时，Context-Type消息头会自动设置为&quot;application/x-www-form-urlencoded&quot;，Content-Length消息头会自动设置为实体内容的长度。
+
+   POST /javaForum HTTP/1.1
+   Host: www.itcast.cn
+   Content-Type: application/x-www-form-urlencoded
+   Content-Length: 17
+   name=lee&amp;psd=hnxy
+
+   ※ 实际开发中，通常会使用POST方式发送请求，原因主要有以下两个：
+   i&gt; POST传输数据大小无限制。
+       GET请求方式是通过请求参数传递数据的，因此最多可传递2KB的数据。而POST请求方式是通过实体内容传递数据的，因此可以传递数据大小没有限制。
+   ii&gt; POST比GET请求方式更安全。
+       由于GET请求方式的参数信息都会在URL地址栏明文显示，而POST请求方式传递的参数隐藏在实体内容中，用户是看不到的，因此POST比GET请求更安全。
+
+   (2) 资源路径。
+   URL = 协议 + 主机标识 + 资源在主机中的路径。
+        ↓      ↓          ↓
+        http://www.tyut.edu.cn/jsj/index
+        ①      ②            ③
+   ①②③都写：绝对路径。    只有③：相对路径。
+
+2. HTTP请求头。
+   在HTTP请求消息中，请求行之后便是若干请求头。请求头主要用于向服务器传递附加消息，例如客户端可以接收的数据类型、压缩方法、语言以及发送请求的超链接所属页面的URL地址等信息，具体示例如下：
+
+   Host: localhost:8080
+   Accept: image/gif, image/x-xbitmap, */*
+   Referer: http://localhost:8080/itcast/
+   Accept-Language: zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3
+   Accept-Encoding: gzip, deflate
+   Content-Type: application/x-www-form-urlencoded
+   User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; GTB6.5; CIBA)
+   Connection: Keep-Alive
+   Cache-Control: no-cache
+
+   请求头中可以看出，每个请求头都是由头字段名称和值构成，头字段名称和值之间用冒号(:)和空格分隔，每个请求头之后使用一个回车换行符标志结束，需要注意的是，头字段名称不区分大小写，但习惯上将单词的第一个字母大写。
+
+   HTTP请求头的字段。
+   头字段              说明
+   Accept              Accept头字段用于指出客户端程序(通常是浏览器)能够处理的MIME(Multipurpose Internet Mail Extension)类型
+   Accept-Charset      Accept-Charset头字段用于告知服务器客户端所使用的字符集
+   Accept-Encoding     Accept-Encoding头字段用于指定客户端能够进行解码的数据编码方式，这里的编码方式通常指的是某种压缩方式
+   Accept-Language     Accept-Language头字段用于指定客户端期望服务器返回哪个国家语言的文档
+   Authorization       当客户端访问受口令保护的网页时，Web服务器会发送401响应状态码和WWW-Authenticate响应头，要求客户端使用Authorization请求头来应答
+   Proxy-Authorization Proxy-Authorization请求头的作用与用法与Authorization头字段基本相同，只不过Proxy-Authorization请求头是服务器向代理服务器发送的验证信息
+   Host                Host头字段用于指定资源所在的主机名和端口号
+   If-Match            当客户机再次向服务器请求这个网页文件时，可以使用If-Match头字段附带以前缓存的实体标签内容，这个请求被视为一个条件请求
+   If-Modified-Since   If-Modified-Since请求头的作用和If-Mach类似，只不过它的值为GMT格式的时间
+   Range               用于指定服务器只需返回文档中的部分内容及内容范围，这对较大文档的断点续传非常有用
+   If-Range            If-Range头字段只能伴随着Range头字段一起使用，其值可以是实体标签或GMT格式的时间
+   Max-Forward         指定当前请求可以途经的代理服务器数量，每经过一个代理服务器，此数值就减1
+   Referer             Referer头字段非常有用，常被网站管理人员用来追踪网站的访问者是如何导航进入网站的。同时Referer头字段还可以用于网站的防盗链
+   User-Agent          User-Agent中文名为用户代理，简称UA，它用于指定浏览器或者其他客户端程序使用的操作系统及版本、浏览器及版本、浏览器渲染引擎、浏览器语言等，以便服务器针对不同类型的浏览器而返回不同的内容
+
+   (1) Accept。
+   Accept头字段用于指出客户端程序(通常是浏览器)能够处理的MIME(Multipurpose Internet Mail Extensions，多用途互联网邮件扩展)类型。例如，如果浏览器和服务器同时支持png类型的图片，则浏览器可以发送包含image/png的Accept头字段，服务器检查到Accept头中包含image/png这种MIME类型，可能在网页中的img元素中使用png类型的文件。MIME类型有很多种，例如，下面的这些MIME类型都可以作为Accept头字段的值。
+
+   Accept: text/html, 表明客户端希望接受HTML文本。
+   Accept: image/gif, 表明客户端希望接受GIF图像格式的资源。
+   Accept: image/*, 表明客户端可以接受所有image格式的子类型。
+   Accept: */*, 表明客户端可以接受所有格式的内容。
+
+   (2) Accept-Encoding。
+   Accept-Encoding头字段用于指定客户端能够进行解码的数据编码方式，这里的编码方式通常指的是某种压缩方式。在Accept-Encoding头字段中，可以指定多个数据编码方式，它们之间以逗号分隔，具体示例如下：
+   Accept-Encoding: gzip,compress
+
+   gzip和compress这两种格式是最常见的数据编码方式。在传输较大的实体内容之前，对其进行压缩编码，可以节省网络带宽和传输时间。服务器接收到这个请求头后，使用其中指定的一种格式对原始文档内容进行压缩编码，然后再将其作为响应消息的实体内容发送给客户端，并且在Content-Encoding响应头中指出实体内容所使用的压缩编码格式。浏览器在接收到这样的实体内容之后，需要对其进行反向解压缩。
+
+   (3) Host。
+   Host头字段用于指定资源所在的主机名和端口号，格式与资源完整URL中的主机名和端口号部分相同，具体示例如下所示：
+   Host: www.itcast.cn : 80
+
+   由于浏览器连接服务器时默认使用的端口号为80，所以&quot;www.itcast.cn&quot;后面的端口号信息&quot;:80&quot;可以省略。需要注意的是，在HTTP1.1中，浏览器和其他客户端发送的每个请求消息中必须包含Host请求头字段，以便Web服务器能够根据Host头字段中的主机名区分客户端所要访问的虚拟Web站点。当浏览器访问Web站点时，会根据地址栏中的URL地址自动生成相应的Host请求头。
+
+   (4) If-Modified-Since。
+   If-Modified-Since请求头的作用和If-Mach类似，只不过它的值为GMT格式的时间。If-Modified-Since请求头被视作一个请求条件，只有服务器中文档的修改时间比If-Modified-Since请求头指定的时间新，服务器才会返回文档内容。否则，服务器将返回一个304(Not Modified)状态码来表示浏览器缓存的文档是最新的，而不向浏览器返回文档内容，这时，浏览器仍然使用以前缓存的文档。通过这种方式，可以在一定程度上减少浏览器与服务器之间的通信数据量，从而提高了通信效率。
+
+   (5) Referer。
+   浏览器向服务器发出的请求，可能是直接在浏览器中输入URL地址而发出的，也可能是单击一个网页上的超链接而发出的。对于第一种直接在浏览器地址栏中输入URL地址的情况，浏览器不会发送Referer请求头。而对于第二种情况，例如在一个页面中包含一个指向远程服务器的超链接，当单击这个超链接向服务器发送GET请求时，浏览器会在发送的请求消息中包含Referer头字段，如下所示：
+   Referer: http://www.tyut.edu.cn
+
+   Referer头字段非常有用，常被网站管理人员用来追踪网站的访问者是如何导航进入网站的。同时Referer头字段还可以用于网站的防盗链。
+
+   什么是盗链？
+   假设一个网站的首页中想显示一些图片信息，而在该网站的服务器中并没有这些图片资源，它通过在Html文件中使用&lt;img&gt;标签链接到其他网站的图片资源，将其展示给浏览者，这就是盗链。盗链的网站提高了自己网站的访问量，却加重了被链接网站服务器的负担，损害了其合法利益。所以，一个网站为了保护自己的资源，可以通过Referer头检测出从哪里链接到当前的网页或资源，一旦检测到不是通过本站的链接进行的访问，可以阻止访问或者跳转到指定的页面。
+
+   (6) User-Agent。
+   User-Agent中文名为用户代理，简称UA，它用于指定浏览器或者其他客户端程序使用的操作系统及版本、浏览器及版本、浏览器渲染引擎、浏览器语言等，以便服务器针对不同类型的浏览器而返回不同的内容。IE浏览器生成的User-Agent请求信息示例如下：
+   User-Agent: Mozilla/4.0 (compatible; MSIE 11.0; Windows NT 10.0; Trident/4.0)
+
+   在上面的请求头中，User-Agent头字段首先列出了Mozilla版本，然后列出了浏览器的版本(MSIE 11.0表示Microsoft IE 11.0)、操作系统的版本(Windows NT 10.0表示Windows 10)以及浏览器的引擎名称(Trident/4.0)。
+
+第3节 HTTP响应消息
+分为：响应状态行、响应头、实体内容。
+
+1. HTTP响应状态行。
+   → 位于响应消息的第一行，它包括3个部分，分别是HTTP版本，一个表示成功或错误的整数代码(状态码)和对状态码进行描述的文本信息。
+   HTTP响应状态行具体示例如下：HTTP/1.1 200 OK.
+   HTTP版本  状态码  对状态码进行描述的文本信息。
+   ※ 注意：请求行中的每个部分需要用空格分隔，最后要以回车换行结束。
+   状态代码由3位数字组成，表示请求是否被理解或被满足，HTTP响应状态码的第一个数字定义了响应的类别，后面两位没有具体的分类，第一个数字有5种可能的取值。
+
+   HTTP的状态码：
+   1XX 表示请求已接收，需要继续处理。
+   2XX 表示请求已成功被服务器接收、理解并接受。
+   3XX 为完成请求，客户端需进一步细化请求。
+   4XX 客户端的请求有错误。
+   5XX 服务器出现错误。
+
+   Web开发中常见状态码。
+   状态码  说明
+   200     表示服务器成功处理了客户端的请求。客户端的请求成功，响应消息返回正常的请求结果
+   302     表示请求的资源临时从不同的URI响应请求，但请求者应继续使用原有位置来进行以后的请求。例如，在请求重定向中，临时URI应该是响应的Location头字段所指向的资源
+   304     如果客户端有缓存的文档，它会在发送的请求消息中附加一个If-Modified-Since请求头，表示只有请求的文档在If-Modified-Since指定的时间之后发生过更改，服务器才需要返回新文档。状态码304表示客户端缓存的版本是最新的，客户端应该继续使用它。否则，服务器将使用状态码200返回所请求的文档
+   404     表示服务器找不到请求的资源。例如，访问服务器不存在的网页经常返回此状态码
+   500     表示服务器发生错误，无法处理客户端的请求。大部分情况下，是服务器的CGI、ASP、JSP等程序发生了错误，一般服务器会在相应消息中提供具体的错误信息
+
+2. HTTP响应头。
+   在HTTP响应消息中，第一行为响应状态行，紧接着是若干响应头，服务器通过响应头向客户端传递附加信息，包括服务程序名，被请求资源需要的认证方式，客户端请求资源的最后修改时间，重定向地址等信息。HTTP响应头的具体示例如下所示：
+
+   Server: Apache-Coyote/1.1
+   Content-Encoding: gzip
+   Content-Length: 80
+   Content-Language: zh-cn
+   Content-Type: text/html; charset=GB2312
+   Last-Modified: Mon, 06 Jul 2020 07:47:47 GMT
+   Expires: -1
+   Cache-Control: no-cache
+   Pragma: no-cache
+
+   HTTP响应头字段。
+   头字段              说明
+   Accept-Range        用于说明服务器是否接收客户端使用Range请求头字段请求资源
+   Age                 用于指出当前网页文档可以在客户端或代理服务器中缓存的有效时间，设置值为一个以秒为单位的时间数
+   Etag                用于向客户端传送代表实体内容特征的标记信息，这些标记信息称为实体标签，每个版本的资源的实体标签是不同的，通过实体标签可以判断在不同时间获得的同一资源路径下的实体内容是否相同
+   Location            用于通知客户端获取请求文档的新地址，其值为一个使用绝对路径的URL地址
+   Retry-After         可以与503状态码配合使用，告诉客户端在什么时间可以重新发送请求。也可以与任何一个3xx状态码配合使用，告诉客户端处理重定向的最小延时时间。Retry-After头字段的值可以是GMT格式的时间，也可是一个以秒为单位的时间数
+   Server              用于指定服务器软件产品的名称
+   Vary                用于指定影响了服务器所生成的响应内容的那些请求头字段名
+   WWW-Authenticate    当客户端访问受口令保护的网页文件时，服务器会在响应消息中回送01(Unauthorized)响应状态码和WWW-Authoricate响应头，指示客户端应该在Authorization请求头中使用WWW-Authoricate响应头指定的认证方式提供用户名和密码信息
+   Proxy-Authenticate  Proxy-Authenticate头字段是针对代理服务器的用户信息验证，用法与WWW-Authenticate头字段类似
+   Refresh             用于告诉浏览器自动刷新页面的时间，它的值是一个以秒为单位的时间数
+   Content-Disposition 如果服务器希望浏览器不是直接处理响应的实体内容，而是让用户选择将响应的实体内容保存到一个文件中，这需要使用Content-Disposition头字段
+
+   (1) Location。
+   Location头字段用于通知客户端获取请求文档的新地址，其值为一个使用绝对路径的URL地址。Location响应头字段示例如下所示：
+   Location: http://www.itcast.org
+
+   Location头字段和大多数3xx状态码配合使用，以便通知客户端自动重新连接到新的地址请求文档。由于当前响应并没有直接返回内容给客户端，所以使用Location头的HTTP消息不应该有实体内容，由此可见，在HTTP消息头中不能同时出现Location和Content-Type这两个头字段。
+
+   (2) Server。
+   Server头字段用于指定服务器软件产品的名称，具体如下：Server: Apache-Coyote/1.1
+
+   (3) Refresh。
+   Refresh头字段用于告诉浏览器自动刷新页面的时间，它的值是一个以秒为单位的时间数，具体示例如下：Refresh: 3
+   在Refresh头字段的时间值后面还可以增加一个URL参数，时间值与URL之间用分号(;)分隔，用于告诉浏览器在指定的时间值后跳转到其他网页。例如，告诉浏览器3秒后跳转到www.itcast.cn网站，具体示例如下：
+   Refresh: 3; url=http://www.itcast.cn
+
+   (4) Content-Disposition。
+   Content-Disposition头字段没有在HTTP的标准规范中定义，它是从RFC2183中借鉴过来的。在RFC2183中，Content-Disposition指定了接收程序处理数据内容的方式，有inline和attachment两种标准方式，inline表示直接处理，而attachment则要求用户干预并控制接收程序处理数据内容的方式。而在HTTP应用中，只有attachment是Content-Disposition的标准方式。attachment后面还可以指定filename参数。filename参数值是服务器建议浏览器保存实体内容的文件名称，浏览器应该忽略filename参数值中的目录部分，只取参数中的最后部分作为文件名。在设置Content-Disposition之前，一定要设置Content-Type头字段，具体示例如下：
+   Content-Type: application/octet-stream
+   Content-Disposition: attachment; filename=lee.zip
+
+第4章 Servlet技术
+第1节 Servlet基础
+
+1. Servlet概述。
+   Servlet运行在Web服务器端的应用程序，使用Java编写。Servlet对象主要封装了对HTTP请求的处理，并且它的运行需要Servlet容器的支持。
+   Servlet由Servlet容器(Tomcat)进行管理，Servlet容器将Servlet动态加载到服务器上，与HTTP协议相关的Servlet使用HTTP请求和HTTP响应与客户端进行交互，因此，Servlet容器支持所有HTTP协议的请求和响应。
+
+   Servlet应用程序的体系结构：
+   Servlet的请求首先会被HTTP服务器(如Apache)接收，HTTP服务器只负责静态HTML页面的解析，对于Servlet的请求转交给Servlet容器，Servlet容器会根据web.xml文件中的映射关系，调用相应的Servlet，Servlet将处理的结果返回给Servlet容器，并通过HTTP服务器将响应传输给客户端。
+
+2. Servlet的特点。
+   ① 功能强大。Servlet采用Java编写，可调用JavaAPI中的对象及方法。此外Servlet对象对Web应用进行了封装，提供了Servlet对Web应用的编程接口，还可以对HTTP请求进行相应处理，例如处理提交的数据，会话跟踪，读取和设置HTTP头信息等。
+       Servlet不仅拥有Java提供的API，而且可以使用Servlet封装的ServletAPI编程接口。
+   ② 可移植。Java语言是跨平台的，即程序的运行不依赖于操作系统平台，可以运行到多个系统平台。
+   ③ 性能高效。Servlet对象在Servlet容器启动时被初始化，当Servlet对象第一次被请求时，Servlet容器将Servlet对象实例化，此时Servlet对象常驻内存，如果存在多个请求，Servlet不会再被实例化，仍然由第一次被实例化的Servlet对象处理其他请求。
+       每一个请求是一个线程，而不是一个进程。
+   ④ 安全性高。Servlet使用了Java的安全框架，同时Servlet容器还可以为Servlet提供额外的安全功能，它的安全性是非常高的。
+   ⑤ 可扩展。Java语言是面向对象的编程语言，Servlet由Java语言编写，所以它具有面向对象的优点。
+
+3. Servlet接口。(javax.servlet.Servlet接口)。
+   Servlet就是一种实现了Servlet接口的类，它由Web容器负责创建并调用，用于接收和响应用户请求。
+
+   Servlet接口方法：
+   方法声明                                    功能描述
+   void init(ServletConfig config)             Servlet实例化后，Servlet容器调用该方法完成初始化工作(Web服务器)
+   ServletConfig getServletConfig()            用于获取Servlet对象的配置信息，返回Servlet的ServletConfig对象
+   String getServletInfo()                     返回一个字符串，其中包含关于Servlet的信息，例如，作者、版本和版权等信息
+   void service(ServletRequest request, ServletResponse response)  负责响应用户的请求，当容器接收到客户端访问Servlet对象的请求时，就会调用此方法。容器会构造一个表示客户端请求信息的ServletRequest对象和一个用于响应客户端的ServletResponse对象作为参数传递给service()方法。在service()方法中，可以通过ServletRequest对象得到客户端的相关信息和请求信息，在对请求进行处理后，调用ServletResponse对象的方法设置响应信息
+   void destroy()                              负责释放Servlet对象占用的资源。当服务器关闭或者Servlet对象被移除时，Servlet对象会被销毁，容器会调用此方法
+
+   init()，service()，destroy()这三个方法可以表现Servlet的生命周期，它们会在某个特定的时刻被调用，由容器自己调用。
+
+   Servlet接口的实现类：
+   Servlet → GenericServlet → HttpServlet → 自定义Servlet。
+   一个抽象类，为Servlet接口提供了部分实现，并没有实现HTTP请求处理。
+   是GenericServlet的一个子类，继承了GenericServlet的所有方法，为HTTP请求中的POST、GET等方式提供了具体的操作方法。
+   一般情况下，编写的Servlet类都继承自HttpServlet。
+
+   方法声明                                    功能描述
+   protected void doGet(HttpServletRequest req, HttpServletResponse resp)  用于处理GET类型的Http请求的方法
+   protected void doPost(HttpServletRequest req, HttpServletResponse resp) 用于处理POST类型的Http请求的方法
+   protected void doPut(HttpServletRequest req, HttpServletResponse resp)  用于处理PUT类型的Http请求的方法
+
+第2节 Servlet开发入门
+
+1. Servlet的配置。
+   两种方式：
+   通过Web应用的配置文件web.xml来。
+   通过@WebServlet注解来完成Servlet的配置。
+
+   (1) 使用web.xml配置Servlet。
+   在web.xml文件中，通过&lt;servlet&gt;标签进行注册，在&lt;servlet&gt;标签下包含若干个子元素。
+   属性名            类型    描述
+   &lt;servlet-name&gt;    String  指定该Servlet的名称，一般与Servlet类名相同，要求唯一
+   &lt;servlet-class&gt;   String  指定该Servlet类的位置，包括包名与类名
+   &lt;description&gt;     String  指定该Servlet的描述信息
+   &lt;display-name&gt;    String  指定该Servlet的显示名
+
+   把Servlet映射到URL地址，使用&lt;servlet-mapping&gt;标签进行映射，使用&lt;servlet-name&gt;子标签指定要映射的Servlet名称，名称要和之前在&lt;servlet&gt;标签下注册的相同；使用&lt;url-pattern&gt;子标签映射URL地址，地址前必须加&quot;/&quot;，否则访问不到。
+
+   &lt;servlet&gt;
+       &lt;servlet-name&gt;HelloServlet&lt;/servlet-name&gt;
+       &lt;servlet-class&gt;web.controller.HelloServlet&lt;/servlet-class&gt;
+   &lt;/servlet&gt;
+   &lt;servlet-mapping&gt;
+       &lt;servlet-name&gt;HelloServlet&lt;/servlet-name&gt;
+       &lt;url-pattern&gt;/servlet/HelloServlet&lt;/url-pattern&gt;
+   &lt;/servlet-mapping&gt;
+
+   (2) WebServlet注解属性。
+   @WebServlet注解用于代替web.xml文件中的&lt;servlet&gt;等标签，该注解将会在项目部署时被容器处理，容器将根据具体的属性配置将相应的类部署为Servlet。为此，@WebServlet注解提供了一些属性。
+
+   属性声明              功能描述
+   String name           指定Servlet的name属性，等价于&lt;servlet-name&gt;。如果没有显式指定，则该Servlet的取值即为类的全限定名。
+   String[] value        该属性等价于urlPatterns属性。urlPatterns和value属性不能同时使用。
+   String[] urlPatterns  指定一组Servlet的URL匹配模式。等价于&lt;url-pattern&gt;标签。
+   int loadOnStartup     指定Servlet的加载顺序，等价于&lt;load-on-startup&gt;标签。
+   WebInitParam[]        指定一组Servlet初始化参数，等价于&lt;init-param&gt;标签。
+   boolean asyncSupported 声明Servlet是否支持异步操作模式，等价于&lt;async-supported&gt;标签。
+   String description    Servlet的描述信息，等价于&lt;description&gt;标签。
+   String displayName    Servlet的显示名，通常配合工具使用，等价于&lt;display-name&gt;标签。
+
+   @WebServlet注解可以标注在任意一个继承了HttpServlet类的类之上，属于类级别的注解。下面使用@WebServlet注解标注ActionServlet类。
+
+   @WebServlet(name = &quot;HelloServlet&quot;,urlPatterns = &quot;/HelloServlet&quot;)
+   public class HelloServlet extends HttpServlet{
+       //处理GET方法请求的方法
+       public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
+       //处理POST方法请求的方法
+       protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
+   }
+
+   使用@WebServlet注解将HelloServlet类标注为一个Servlet。@WebServlet注解中的name属性用于指定servlet的name属性，等价于&lt;servlet-name&gt;，如果没有设置@WebServlet的name属性，其默认值是Servlet的类完整名称。urlPatterns属性值用于指定一组servlet的url的匹配模式，等价于&lt;url-pattern&gt;标签。如果需要在@WebServlet注解中设置多个属性，属性之间用逗号隔开。通过@WebServlet注解能极大地简化了Servlet的配置步骤，降低了开发人员的开发难度。
+
+2. Servlet的生命周期。
+   → 3个阶段：初始化阶段，运行阶段，销毁阶段。
+
+   ① 初始化阶段：当客户端向Servlet容器发出HTTP请求访问Servlet时，Servlet容器首先会解析请求，检查内存中是否已经有了该Servlet对象，如果有，直接使用该Servlet对象；如果没有，就创建Servlet实例对象，然后通过调用init()方法完成Servlet的初始化，需要注意的是，在Servlet的整个生命周期，它的init()方法只能被调用一次。
+
+   ② 运行阶段：(最重要的阶段)在这个阶段，Servlet容器会为客户端请求创建代表HTTP请求的ServletRequest对象和代表HTTP响应的ServletResponse对象，然后将它们作为参数传递给Servlet的service()方法。service()方法从ServletRequest对象中获得客户端请求信息并处理该请求，通过ServletResponse对象生成响应结果，在Servlet的整个生命周期内，对于Servlet的每一次访问请求，Servlet容器都会调用一次Servlet的service()方法，并且创建新的ServletRequest和ServletResponse对象，也就是说，service()方法在Servlet的整个生命周期中会被调用多次。
+
+   ③ 销毁阶段：当服务器关闭或web应用被移出容器时，Servlet随着web应用的销毁而销毁，在销毁Servlet之前，Servlet容器会调用Servlet的destroy()方法，以便让Servlet对象释放它所占用的资源，在Servlet的整个生命周期中，destroy()方法也只被调用一次。
+
+   ※ Servlet对象一旦创建就会驻留在内存中等待客户端的访问，直到服务器关闭，或web应用被移除出容器时Servlet对象才会销毁。
+
+第3节 ServletConfig和ServletContext
+
+1. ServletConfig接口。(定义了一系列获取配置信息的方法)。
+   Servlet运行期间的配置信息都在@WebServlet注解中配置，当Tomcat初始化Servlet时，将配置信息封装到ServletConfig对象中，调用init()方法传给Servlet。
+
+   方法说明                                    功能描述
+   String getInitParameter(String name)        根据初始化参数名返回对应的初始化参数值
+   Enumeration getInitParameterNames()         返回一个Enumeration对象，其中包含了所有的初始化参数名
+   ServletContext getServletContext()          返回一个代表当前Web应用的ServletContext对象
+   String getServletName()                      返回Servlet的名字
+
+2. ServletContext接口。
+   当Servlet容器启动时，会为每个Web应用创建一个唯一的ServletContext对象代表当前web应用。ServletContext对象不仅封装了当前web应用的所有信息，而且实现了多个Servlet之间数据的共享。
+
+   (1) 获取Web应用程序的初始化参数。
+   在web.xml文件中，可以配置Servlet的初始化信息，还可以配置整个Web应用的初始化信息。Web应用初始化参数的配置方式具体如下所示。
+   → 位于根元素&lt;web-app&gt;中。
+   &lt;context-param&gt;
+       &lt;param-name&gt;参数名&lt;/param-name&gt; 指定参数名。
+       &lt;param-value&gt;参数值&lt;/param-value&gt; 指定参数值。
+   &lt;/context-param&gt;
+   &lt;context-param&gt;
+       &lt;param-name&gt;参数名&lt;/param-name&gt;
+       &lt;param-value&gt;参数值&lt;/param-value&gt;
+   &lt;/context-param&gt;
+
+   可通过调用ServletContext接口的定义的getInitParameterNames()和getInitParameter(String Name)方法，分别获取参数名和参数值。
+
+   (2) 实现多个Servlet对象共享数据。
+   由于一个web应用中的所有Servlet共享同一个ServletContext对象，所以ServletContext对象域属性可以被该Web应用中的所有Servlet访问，ServletContext接口中定义了用于增加，删除，设置ServletContext域属性的四个方法。
+
+   方法说明                                    功能描述
+   Enumeration getAttributeNames()             返回一个Enumeration对象，该对象包含了所有存放在ServletContext中的所有域属性名
+   Object getAttribute(String name)            根据参数指定的属性名返回一个与之匹配的域属性值
+   void removeAttribute(String name)           根据参数指定的域属性名，从ServletContext中删除匹配的域属性
+   void setAttribute(String name,Object obj)   设置ServletContext的域属性，其中name是域属性名，obj是域属性值
+
+   (3) 读取web应用下的资源文件。
+   ServletContext接口定义了一些读取Web资源的方法，这些方法是依靠Servlet容器来实现的。Servlet容器根据资源文件相对于Web应用的路径，返回关联资源文件的IO流、资源文件在文件系统的绝对路径等。
+
+   方法说明                                    功能描述
+   Set getResourcePaths(String path)            返回一个Set集合，集合中包含资源目录中子目录和文件的路径名称。参数path必须以正斜线(/)开始，指定匹配资源的部分路径
+   String getRealPath(String path)              返回资源文件在服务器文件系统上的真实路径(文件的绝对路径)。参数path代表资源文件的虚拟路径，它应该以正斜线(/)开始，&quot;/&quot;表示当前Web应用的根目录，如果Servlet容器不能将虚拟路径转换为文件系统的真实路径，则返回null
+   URL getResource(String path)                 返回映射到某个资源文件的URL对象。参数path必须以正斜线(/)开始，&quot;/&quot;表示当前Web应用的根目录
+   InputStream getResourceAsStream(String path) 返回映射到某个资源文件的InputStream输入流对象。参数path传递规则和getResource()方法完全一致
+
+第4节 HttpServletResponse对象
+在JavaAPI中，定义了一个HttpServletResponse接口，它继承自ServletResponse接口，专门用于封装HTTP响应消息，因为HTTP响应消息分为响应状态行，响应消息头，响应消息体三部分，因此在HttpServletResponse接口中定义了向客户端发送响应状态码，响应消息头，响应消息体的方法。
+
+1. 发送状态码相关方法。
+   当Servlet向客户端回送响应消息时，需要在响应消息中设置状态码，状态码代表着客户端请求服务器的结果。
+   HttpServletResponse接口定义了发送状态码方法：
+
+   (1) setStatus(int status)方法。
+   setStatus(int status)方法用于设置HTTP响应消息的状态码，并生成响应状态行。由于响应状态行中的状态描述信息直接与状态码相关，而HTTP版本由服务器确定，所以，只要通过setStatus(int status)方法设置了状态码，即可实现状态行的发送。例如，正常情况下，Web服务器会默认产生一个状态码为200的状态行。
+
+   (2) sendError(int sc)方法。
+   → 用于发送表示错误信息的状态码，例如404状态码表示找不到客户端请求的资源。
+
+   (3) sendError(int code, String message)方法。
+   sendError(int code, String message)方法除了设置状态码，还会向客户端发出一条错误信息。服务器默认会创建一个HTML格式的错误服务页面作为响应结果，其中包含参数message指定的文本信息，这个HTML页面的内容类型为&quot;text/html&quot;，保留cookies和其他未修改的响应头信息。如果一个对应于传入的错误码的错误页面已经在web.xml中声明，那么这个声明的错误页面将会优先建议的message参数服务于客户端。
+
+2. 发送响应头相关的方法。
+   HttpServletResponse接口设置HTTP响应头字段的方法。
+
+   用于设置各种头字段。
+   方法说明                                    功能描述
+   void addHeader(String name, String value)    这两个方法都是用来设置HTTP协议的响应头字段，其中，参数name用于指定响应头字段的名称，参数value用于指定响应头字段的值。不同的是，addHeader()方法可以增加同名的响应头字段，而setHeader()方法则会覆盖同名的头字段
+   void setHeader(String name, String value)
+   void addIntHeader(String name, int value)    这两个方法专门用于设置包含整数值的响应头。避免了调用addHeader()与setHeader()方法时，需要将int类型的设置值转换为String类型的麻烦
+   void setIntHeader(String name, int value)
+   void setContentLength(int len)                该方法用于设置响应消息的实体内容的大小，单位为字节。对于HTTP协议来说，这个方法就是设置Content-Length响应头字段的值
+
+   用于设置生成Type头字段，同时设置编码环。
+   该方法用于设置Servlet输出内容的MIME类型，对于HTTP协议来说，就是设置Content-Type响应头字段的值。例如，如果发送到客户端的内容是jpeg格式的图像数据，就需要将响应头字段的类型设置为&quot;image/jpeg&quot;。需要注意的是，如果响应的内容为文本，setContentType()方法的还可以设置字符编码，如：text/html;charset=UTF-8
+   void setContentType(String type)
+
+   该方法用于设置响应消息的本地化信息。对HTTP来说，就是设置Content-Language响应头字段和Content-Type头字段中的字符集编码部分。需要注意的是，如果HTTP消息没有设置Content-Type头字段，setLocale()方法设置的字符集编码不会出现在HTTP消息的响应头中，如果调用setCharacterEncoding()或setContentType()方法指定了响应内容的字符集编码，setLocale()方法将不再具有指定字符集编码的功能
+   void setLocale(Locale loc)
+
+   优先级高。
+   该方法用于设置输出内容使用的字符编码，对HTTP协议来说，就是设置Content-Type头字段中的字符集编码部分。如果没有设置Content-Type头字段，setCharacterEncoding方法设置的字符集编码不会出现在HTTP消息的响应头中。setCharacterEncoding方法比setContentType()和setLocale()方法的优先权高，setCharacterEncoding()方法的设置结果将覆盖setContentType()和setLocale()方法所设置的字符码表
+   void setCharacterEncoding(String charset)
+
+   有效解决中文乱码问题。
+
+3. 发送响应消息体相关的方法。
+   由于在HTTP响应消息中，大量的数据都是通过响应消息体传递的，ServletResponse遵循IO流传递大量数据的设计理念，在发送响应消息体时，定义了两个与输出流相关的方法。
+
+   (1) getOutputStream()方法。
+   getOutputStream()方法所获取的字节输出流对象为ServletOutputStream类型。由于ServletOutputStream是OutputStream的子类，它可以直接输出字节数组中的二进制数据。所以，要想输出二进制格式的响应正文，就需要调用getOutputStream()方法。
+
+   (2) getWriter()方法。
+   getWriter()方法所获取的字符输出流对象为PrintWriter类型。由于PrintWriter类型的对象可以直接输出字符文本内容，所以，要想输出内容为字符文本的网页文档，需要调用getWriter()方法。
+
+第5节 HttpServletResponse应用
+
+1. 实现请求重定向。302.
+   → Web服务器接收到客户端的请求后，可能由于某些限制，不能访问当前URL所指向的Web资源，而是指定了一个新的资源路径，让客户端重新发送请求。
+   ※ HttpServletResponse接口——sendRedirect()方法。
+   该方法用于生成302响应码和Location响应头，从而通知客户端重新访问Location响应头中指定的URL。
+   该方法的完整声明：public void sendRedirect(java.lang.String location) throws java.io.IOException
+   ※ 参数location可以使用相对URL，Web服务器会自动将相对URL翻译成绝对URL，再生成Location头字段。
+
+   工作原理：
+   浏览器 → 1.请求Servlet1 → Web服务器(Servlet容器)
+           → 2.Servlet1通知浏览器重定向到Servlet2 → Servlet1(sendRedirect())
+           → 3.请求Servlet2 → Servlet2
+           → 4.Servlet2回送响应消息 → 浏览器
+
+2. 解决中文输出乱码问题。
+   计算机中的数据都是以二进制形式存储，所以，当传输文本时，就会发生字符和字节之间的转换，字符和字节之间的转换是通过查码表完成，字符→字节为编码，字节→字符为解码，如果编码和解码表不一致，就会导致乱码。
+   浏览器输出采用ISO-8859-1字符码表。
+
+   浏览器的显示内容没有出现乱码，说明通过修改浏览器的编码方式可以解决乱码。但是，这样的做法仍然是不可取的，因为不能让用户每次都设置浏览器编码。为此，HttpServletResponse接口提供了两种解决乱码的方案，具体如下。
+
+   第一种：
+   //设置HttpServletResponse使用utf-8编码
+   response.setCharacterEncoding(&quot;utf-8&quot;);
+   //通知浏览器使用utf-8解码
+   response.setHeader(&quot;Content-Type&quot;,&quot;text/html;charset=utf-8&quot;);
+
+   第二种：
+   //包含第一种方式的两个功能
+   response.setContentType(&quot;text/html;charset=utf-8&quot;);
+
+第6节 HttpServletRequest对象
+
+1. 获取请求行信息的相关方法。
+   方法声明                          功能描述
+   String getMethod()                 该方法用于获取HTTP请求消息中的请求方式(如GET、POST等)
+   String getRequestURI()             该方法用于获取请求行中资源名称部分，即位于URL的主机和端口之后、参数部分之前的数据
+   String getQueryString()            该方法用于获取请求行中的参数部分，也就是资源路径后面问号(?)以后的所有内容
+   String getProtocol()               该方法用于获取请求行中的协议名和版本，例如HTTP/1.0或HTTP/1.1
+   String getContextPath()            该方法用于获取请求URL中属于Web应用程序的路径，这个路径以&quot;/&quot;开头，表示相对于整个Web站点的根目录，路径结尾不含&quot;/&quot;。如果请求URL属于Web站点的根目录，那么返回结果为空字符串(&quot;&quot;)
+   String getServletPath()            该方法用于获取Servlet的名称或Servlet所映射的路径
+   String getRemoteAddr()             该方法用于获取请求客户端的IP地址，其格式类似于&quot;192.168.0.3&quot;
+   String getRemoteHost()             该方法用于获取请求客户端的完整主机名，其格式类似于&quot;pcl.itcast.cn&quot;。需要注意的是，如果无法解析出客户机的完整主机名，该方法将会返回客户端的IP地址
+   int getRemotePort()                该方法用于获取请求客户端网络连接的端口号
+   String getLocalAddr()              该方法用于获取Web服务器上接收当前请求网络连接的IP地址
+   String getLocalName()              该方法用于获取Web服务器上接收当前网络连接IP所对应的主机名
+   int getLocalPort()                 该方法用于获取Web服务器上接收当前网络连接的端口号
+   String getServerName()             该方法用于获取当前请求所指向的主机名，即HTTP请求消息中Host头字段所对应的主机名部分
+   int getServerPort()                该方法用于获取当前请求所连接的服务器端口号，即如果HTTP请求消息中Host头字段所对应的端口号部分
+   String getScheme()                 该方法用于获取请求的协议名，例如http、https或ftp
+   StringBuffer getRequestURL()       该方法用于获取客户端发出请求时的完整URL，包括协议、服务器名、端口号、资源路径等信息，但不包括后面的查询参数部分。注意，getRequestURL()方法返回的结果是StringBuffer类型，而不是String类型，这样更便于对结果进行修改
+
+2. 获取请求头相关方法。
+   方法声明                                  功能描述
+   String getHeader(String name)             该方法用于获取一个指定头字段的值，如果请求消息中没有包含指定的头字段，getHeader()方法返回null；如果请求消息中包含有多个指定名称的头字段，getHeader()方法返回其中第一个头字段的值
+   Enumeration getHeaders(String name)       该方法返回一个Enumeration集合对象，该集合对象由请求消息中出现的某个指定名称的所有头字段值组成。在多数情况下，一个头字段名在请求消息中只出现一次，但有时候可能会出现多次
+   Enumeration getHeaderNames()              该方法用于获取一个包含所有请求头字段的Enumeration对象
+   int getIntHeader(String name)             该方法用于获取指定名称的头字段，并且将其值转为int类型。需要注意的是，如果指定名称的头字段不存在，返回值为-1；如果获取到的头字段的值不能转为int类型，将发生NumberFormatException异常
+   long getDateHeader(String name)           该方法用于获取指定头字段的值，并将其按GMT时间格式转换成一个代表日期/时间的长整数，这个长整数是自1970年1月1日0点0分0秒算起的以毫秒为单位的时间值
+   String getContentType()                    该方法用于获取Content-Type头字段的值，结果为String类型
+   int getContentLength()                     该方法用于获取Content-Length头字段的值，结果为int类型
+   String getCharacterEncoding()              该方法用于返回请求消息的实体部分的字符集编码，通常是从Content-Type头字段中进行提取，结果为String类型
+
+3. 请求转发。
+   (1) getRequestDispatcher()方法。
+   用于获取RequestDispatcher对象：RequestDispatcher getRequestDispatcher(String path)
+   getRequestDispatcher()方法返回封装了某条路径所指定资源的RequestDispatcher对象。其中，参数path必须以&quot;/&quot;开头，用于表示当前Web应用的根目录。需要注意的是，WEB-INF目录中的内容对RequestDispatcher对象也是可见的。因此，传递给getRequestDispatcher(String path)方法的资源可以是WEB-INF目录中的文件。
+
+   (2) forward()方法。
+   获取到RequestDispatcher对象后，如果当前Web资源不想处理请求，RequestDispatcher接口提供了一个forward()方法，该方法可以将当前请求传递给其他Web资源对这些信息进行处理并响应给客户端，这种方式称为请求转发。forward()方法的具体格式如下所示。
+   forward(ServletRequest request, ServletResponse response)
+   forward()方法用于将请求从一个Servlet传递给另一个Web资源。在Servlet中，可以对请求做一个初步处理，然后通过调用forward()方法，将请求传递给其他资源进行响应。需要注意的是，该方法必须在响应提交给客户端之前被调用，否则将抛出IllegalStateException异常。
+
+   当浏览器访问Servlet1时，可以通过forward()方法将请求转发给其他Web资源，其他Web资源处理完请求后，直接将响应结果返回到浏览器。
+
+4. 获取请求参数。
+   方法声明                                  功能描述
+   String getParameter(String name)           该方法用于获取某个指定名称的参数值，如果请求消息中没有包含指定名称的参数，getParameter()方法返回null；如果指定名称的参数存在但没有设置值，则返回一个空串；如果请求消息中包含有多个该指定名称的参数，getParameter()方法返回第一个出现的参数值
+   String[] getParameterValues(String name)   该方法用于返回一个String类型的数组，HTTP请求消息中可以有多个相同名称的参数(通常由一个包含有多个同名字段元素的form表单生成)，如果要获得HTTP请求消息中的同一个参数名所对应的所有参数值，那么就应该使用getParameterValues()方法
+   Enumeration getParameterNames()            该方法用于返回一个包含请求消息中所有参数名的Enumeration对象，在此基础上，可以对请求消息中的所有参数进行遍历处理
+   Map getParameterMap()                      该方法用于将请求消息中的所有参数名和值装入进一个Map对象中返回
+
+5. 通过Request对象传递参数。
+   ① setAttribute()方法。
+   用于将一个对象与一个name关联后存储进ServletRequest对象中。其完整声明如下：
+   public void setAttribute(String name, Object o);
+   setAttribute()方法的参数列表的第一个参数接收的是一个String类型的name，第二个参数接收的是一个Object类型的对象o。需要注意的是，如果ServletRequest对象中已经存在指定名称的属性，setAttribute()方法将会先删除原来的属性，然后再添加新的属性。如果传递给setAttribute()方法的属性值对象为null，则删除指定名称的属性，这时的效果等同于removeAttribute()方法。
+
+   ② getAttribute()方法。
+   用于从ServletRequest对象中返回指定名称的属性对象，其完整声明如下：
+   public Object getAttribute(String name);
+
+   ③ removeAttribute()方法。
+   用于从ServletRequest对象中删除指定名称的属性，其完整声明如下：
+   public void removeAttribute(String name);
+
+   ④ getAttributeNames()方法。
+   用于返回一个包含ServletRequest对象中所有属性名的Enumeration对象，在此基础上，可以对ServletRequest对象中所有属性进行遍历：
+   public Enumeration getAttributeNames();
+
+   ※ 只有属于同一个请求中的数据才可以通过ServletRequest对象传递数据。
+
+第5章 会话技术
+在web开发中，服务器跟踪用户信息的技术称为会话技术。
+Cookie对象(把信息保存在浏览器端)
+Session对象(把信息保存在服务器端)
+
+第1节 会话的概念
+在客户端与服务器交互过程中，产生的数据需要保存。为了保存会话过程中产生的数据，Servlet提供了两个用于保存会话数据的对象，分别是Cookie和Session。
+会话技术：跟踪和保存用户历史记录数据。
+
+第2节 Cookie对象
+
+1. Cookie的概念。
+   在web应用中，Cookie的功能类似于会员卡，当用户通过浏览器访问web服务器时，服务器会向客户端发送一些信息，如用户信息和商品信息，这些信息都保存在Cookie中，这样，当浏览器再次访问服务器时，会在请求头中将Cookie发送给服务器，方便服务器对浏览器做出正确响应。
+
+   Cookie工作原理。
+   简单。                              用户
+   Cookie是服务器创建的，发给浏览器保存的，浏览器一旦接收cookie，在后续所有请求中浏览器都会自动地把Cookie发送给服务器。
+
+   服务器向客户端发送cookie时，会在HTTP响应头字段中增加Set-Cookie响应头字段。Set-Cookie头字段中设置的Cookie的具体示例如下：
+   Set-Cookie: user=itcast; Path=/;
+   user表示Cookie的名称，itcast表示Cookie的值，Path表示Cookie的属性。Cookie必须以键值对的形式存在，Cookie属性可以有多个，属性之间用分号&quot;;&quot;和空格分隔。
+
+   当用户第一次访问服务器时，服务器会在响应消息中增加Set-Cookie头字段，将用户信息以Cookie的形式发送给浏览器。一旦用户浏览器接受了服务器发送的Cookie信息，就会将它保存在浏览器的缓冲区中，这样，当浏览器后续访问该服务器时，都会在请求消息中将用户信息以Cookie的形式发送给服务器，从而使服务器分辨出当前请求是由哪个用户发出的。
+
+2. Cookie API
+   我们一共学6个，只有cookie需要自己构造。
+   构造方法。                          → 基本方法。
+   public Cookie(java.lang.String name, java.lang.String value);
+   在Cookie构造方法中，参数name用于指定Cookie的名称，value用于指定Cookie的值。需要注意的是，Cookie一旦创建，名称不能更改，Cookie的值可以为任何值，创建后允许修改。
+
+   ServletConfig    4个
+   ServletContext   3种
+   HttpServletResponse 3种
+   HttpServletRequest 3种
+   Cookie
+   HttpSession
+
+   Cookie类的常用方法。
+   方法声明                          功能描述
+   String getName()                  用于返回Cookie的名称。一旦创建就不能更改，所以只有get，没有set。
+   void setValue(String newValue)    用于为Cookie设置一个新的值
+   String getValue()                 用于返回Cookie的值
+   void setMaxAge(int expiry)        用于设置Cookie在浏览器客户机上保持有效的秒数
+   int getMaxAge()                   用于返回Cookie在浏览器客户机上保持有效的秒数
+   void setPath(String uri)          用于设置该Cookie项的有效目录路径
+   String getPath()                  用于返回该Cookie项的有效目录路径
+   void setDomain(String pattern)    用于设置该Cookie项的有效域
+   String getDomain()                用于返回该Cookie项的有效域
+   void setVersion(int v)            用于设置该Cookie项采用的协议版本
+   int getVersion()                  用于返回该Cookie项采用的协议版本
+   void setComment(String purpose)   用于设置该Cookie项的注解部分
+   String getComment()               用于返回该Cookie项的注解部分
+   void setSecure(boolean flag)      用于设置该Cookie项是否只能使用安全的协议传送
+   boolean getSecure()               用于返回该Cookie项是否只能使用安全的协议传送
+
+   ① setMaxAge(int expiry)方法和getMaxAge()方法。    Cookie最长可以保存3-4年。
+   浏览器关闭，Cookie就失效。
+   这两个方法分别用于设置和返回Cookie在浏览器上保持有效的秒数。
+   i&gt; 设置值为正整数：浏览器会将Cookie信息保存在本地硬盘中，从当前时间开始，在没有超过指定的秒数前，这个Cookie都保持有效，并且同一台计算机上运行的该浏览器都可以使用这个Cookie信息。
+   ii&gt; 设置值为负整数：浏览器会将Cookie信息保存在浏览器缓存中，当浏览器关闭时，Cookie信息会被删除。(相当于不设置)
+   iii&gt; 设置值为0：浏览器会立即删除这个Cookie信息。
+
+   ② setPath(String uri)方法和getPath()方法。
+   这两个方法是针对Cookie的Path属性的。
+   如果创建的某个Cookie对象没有设置Path属性，那么该Cookie只对当前访问路径所属目录及其子目录有效。
+   如果想让某个Cookie项对站点的所有目录下的访问路径都有效，应调用Cookie对象的setPath()方法将其Path属性设置为&quot;/&quot;。
+
+   ※ request.getCookies()：得到所有的cookie。
+   Cookie[] cookies = request.getCookies();
+   for (Cookie cookie : cookies) {
+       String name = cookie.getName();
+       if(name.equals(&quot;xxx&quot;)) {
+           String value = cookie.getValue();
+       }
+   }
+
+第3节 Session对象
+HttpSession.
+
+1. Session的概念。
+   Session技术类似于医院办就诊卡和医院为每个病人保留病历档案的过程。当浏览器访问web服务器时，Servlet容器就会创建一个Session对象和ID属性，Session对象就相当于病历档案，ID就相当于就诊卡号，当客户端访问服务器时，只要将ID传递给服务器，服务器就能判断出该请求是哪个客户端发送的，从而选择与之对应的Session对象为其服务。
+
+   Session对象不能独立工作，Session对象的Session ID通过Cookie对象由服务器送到客户端。
+   Session ID是客户端进行保存的。
+   购物车是保存在Session对象中。
+   Session对象是服务器创建的，为每一个客户端/浏览器创建的。
+
+   Session的好处：主要用于在Session范围内共享数据。
+
+   Session的工作原理。(三个步骤)
+   ① 第一次请求，服务器会创建一个Session对象，给用户分配一个Session ID。
+   ② 第一次响应，服务器把请求页面和Session ID发给用户。
+   ③ 后续请求：用户端使用Session ID把各种请求返回给服务器。
+
+   Session对象的好处(与Cookie对比)。
+   ① 更加安全。
+   ② 减少数据交互，减少对网络带宽资源的需求。
+
+2. Session API。
+   Session对象的getSession()方法。如果没有参数默认为True。
+   Session是与每个请求消息紧密相关的。为此，HttpServletRequest定义了用于获取Session对象的getSession()方法。该方法有两种重载形式，具体如下：
+   public HttpSession getSession(boolean create) //第一个
+   public HttpSession getSession() //第二个
+
+   第一个getSession()方法根据传递的参数判断是否创建新的HttpSession对象，如果参数为true，则在相关的HttpSession对象不存在时创建并返回新的HttpSession对象，否则不创建新的Session对象，而是返回null。
+
+   HTTP Session接口中常用方法。
+   方法声明                                  功能描述
+   String getId()                             用于返回与当前HttpSession对象关联的会话标识号
+   long getCreationTime()                     用于返回Session创建的时间，这个时间是创建Session的时间与1970年1月1日00:00:00之间时间差的毫秒表示形式
+   long getLastAccessedTime()                 用于返回客户端最后一次发送与Session相关请求的时间，这个时间是发送请求的时间与1970年1月1日00:00:00之间时间差的毫秒表示形式
+   void setMaxInactiveInterval(int interval)  用于设置当前HttpSession对象可空闲的以秒为单位的最长时间，也就是修改当前会话的默认超时间隔
+   boolean isNew()                            判断当前HttpSession对象是否是新创建的
+   void invalidate()                          用于强制使Session对象无效
+   ServletContext getServletContext()         用于返回当前HttpSession对象所属于的Web应用程序对象，即代表当前Web应用程序的ServletContext对象
+   void setAttribute(String name,Object value) 用于将一个对象与一个名称关联后存储到当前的HttpSession对象中
+   String getAttribute()                      用于从当前HttpSession对象中返回指定名称的属性对象
+   void removeAttribute(String name)          用于从当前HttpSession对象中删除指定名称的属性
+
+   Tomcat默认超时时时间为30分钟。
+
+   共享数据。
+   应用范围    ServletContext    所有用户的所有请求。
+   会话范围    HttpSession       一个用户的所有请求。
+   请求范围    ServletRequest    一个用户的一次请求。
+   setAttribute
+   getAttribute
+   removeAttribute
+   getAttributeName
+
+3. Session的生命周期。使用超时管理。
+   (1) Session生效。
+   Session在用户第一次访问服务器时创建，需要注意只有访问JSP、Servlet等程序时才会创建Session。此外，还可调用request.getSession(true)强制生成Session，只访问HTML、IMAGE等静态资源不会创建Session。
+
+   (2) Session失效——超时限制判断Session是否失效。
+   Web服务器采用&quot;超时限制&quot;判断客户端是否还在继续访问。在一定时间内，如果某个客户端一直没有请求访问，那么，Web服务器就会认为该客户端已经结束请求，并且将与该客户端会话所对应的HttpSession对象变成垃圾对象，等待垃圾收集器将其从内存中彻底清除。反之，如果浏览器超时后，再次向服务器发出请求访问，那么，web服务器会创建一个新的HttpSession对象，并为其分配一个新的ID属性。
+
+   (3) Session失效——强制Session失效。
+   有时默认的Session失效时间并不满足我们的需求，这时我们需要自定义Session的失效时间，自定义Session的失效时间有3种。
+
+   (4) Session失效——关闭浏览器。
+
+   注意：强制Session失效的方法(即自定义Session失效时间)
+   ① 配置自己的项目。
+   在项目的web.xml文件中配置Session的失效时间，具体代码如下所示：
+   &lt;session-config&gt;
+       &lt;session-timeout&gt;30&lt;/session-timeout&gt;
+   &lt;/session-config&gt;
+   → 如果设置为0或负数，则表示会话永不超时。
+   ※ Tomcat服务器默认会话超时时间为30分钟。
+   需要注意的是，在web.xml配置的Session失效时间默认是分钟。上述代码设置的Session失效时间为30分钟。
+
+   ② Servlet程序。设置web.xml。(对当前项目)
+   在Servlet程序中手动设置Session的失效时间，具体代码如下所示：
+   session.setMaxInactiveInterval(30*60); //设置单位为秒，设置为-1永不过期。
+
+   ③ 配置服务器。对所有项目一样。(设置web.xml)
+   上述代码设置了Session的失效时间为30分钟，如果将值设置为-1，则该Session永不过期，在&lt;Tomcat安装目录&gt;\conf\web.xml文件中，可以找到如下一段配置信息：
+   &lt;session-config&gt;
+       &lt;session-timeout&gt;30&lt;/session-timeout&gt;
+   &lt;/session-config&gt;
+   对站点内所有Web应用程序都起作用。
+
+4. 任务：实现购物车。
+   使用Session模拟购物车功能。
+   request：一个购物车只有一件商品。
+   ServletContext：所有用户用一个购物车。
+
+   通过所学Session知识及购物车的访问流程，以购买蛋糕为例，模拟实现购物车功能。购物车的访问流程具体如下图所示。
+
+   三个Servlet，只有第二个实现功能。
+   第1个和第3个都用于实现界面。
+
+   图中描述的是购物车的实现流程，当用户使用浏览器访问某个网站的蛋糕列表页面时，如果购买某个蛋糕，那么首先会判断蛋糕是否存在，如果存在就加入购物车，跳转到购物车中所购买蛋糕的列表页面。否则，返回蛋糕列表页面。
+
+5. 任务：应用Session对象模拟用户登录。
+   通过所学Session知识，学会如何使用Session技术实现用户登录的功能。为了使读者可以更直观的了解用户登录的流程，接下来，通过一张图来描述用户登录的流程，具体如下图所示。
+
+6. 域对象总结。
+   在Java Web中一共四个域对象，其中Servlet中可以使用的有3个。
+   对象                          生命周期                          有效范围
+   PageContext(JSP)(配置范围)    访问页面—离开页面。              1次请求的一个页面。
+   HttpServletRequest(request范围)发送请求—返回响应。              1个用户的1次请求。
+   HttpSession(Session范围)       第一次访问服务器—超时/关闭浏览器。1个用户的所有请求。
+   ServletContext(Application范围) 服务器启动—服务器关闭            所有用户的所有请求。
+
+第6章 JSP技术
+JSP = html + Java Code + JSP tags
+            2,5节      3,4节
+
+第1节 JSP概述
+
+1. JSP的简介。
+   JSP(Java服务器页面)是servlet更高级别的扩展。在JSP文件中，HTML代码与Java代码共同存在，其中HTML代码用于实现网页中静态内容的展示，Java代码用于实现网页中动态内容的显示。最终，JSP文件会通过Web服务器的Web容器编译成一个Servlet，用于处理各种请求。
+   使用JSP技术开发的Web应用程序是基于Java语言开发的。
+
+2. JSP的特性。
+   (1) 跨平台：JSP是基于Java语言开发，使用JSP开发的Web应用是跨平台的。JSP和JavaBean代码不需要重新编译，这是因为Java的字节码是与平台无关的。
+   (2) 业务代码相分离：在使用JSP技术开发Web应用时，可以将页面的开发与应用程序的开发分离开，开发人员使用HTML设计页面，使用JSP标签和脚本动态生成页面上的内容，在服务器端JSP容器负责解析JSP标签和脚本程序，生成所请求的内容，并将执行结果以HTML页面的形式返回给浏览器。
+   (3) 组件重用：JSP中可以使用JavaBean编写业务组件，即使用一个JavaBean封装业务处理代码或者作为一个数据存储模型，在JSP页面中，甚至在整个项目中，都可重复利用这个JavaBean。
+   (4) 预编译：就是在用户第一次通过浏览器访问JSP页面时，服务器对JSP页面代码进行编译，并且仅执行一次编译，编译好的代码将被保存，在用户下一次访问时，会直接执行编译好的代码，这样不仅节约了服务器的CPU资源，还大大提升了客户端的访问速度。
+
+3. JSP工作原理。
+   工作模式。
+   JSP的工作模式是请求/响应模式。客户端首先发出HTTP请求，JSP程序收到请求后进行处理并返回处理结果，一个JSP文件第一次被请求时，JSP容器把该JSP文件转换成Servlet，而这个容器本身也是一个Servlet。
+
+   JSP的运行原理图：(该过程只在第一次请求执行)
+   客户端 → 请求 → JSP容器 → JSP文件 → 转换 → Servlet文件(.java) → 编译 → class文件(.class) → 执行 → Servlet实例
+   第一次访问JSP，被JspServlet翻译成一个Servlet源文件，然后将源文件编译后编译为.class文件。
+   Servlet一旦创建不会销毁，直至关闭服务器。
+
+   JSP运行过程。
+   ① 客户端发送请求，请求访问JSP文件。
+   ② JSP容器先将JSP文件转换成一个Java源文件，在转换过程中如果发现JSP文件中有任何语法错误，则中断转换过程，并向服务器端和客户端返回出错信息。
+   ③ 如果转换成功，则JSP容器将生成的Java源文件编译成相应的字节码文件*.class，该.class文件就是一个Servlet，Servlet容器会像处理其他Servlet一样来处理它。
+   ④ 由Servlet容器加载转换后的Servlet类(.class文件)创建一个该Servlet(JSP页面的转换结果)的实例，并执行Servlet的jspInit()方法来完成初始化。jspInit()方法在Servlet的整个生命周期中只会执行一次。
+   ⑤ JSP容器执行jspService()方法处理客户端的请求。对于每一个请求，JSP容器都会创建一个新的线程来处理它。如果多个客户端同时请求该JSP文件，则JSP容器会创建多个线程，使每个客户端请求都对应一个线程。
+   JSP运行过程中采用的这种多线程的执行方式可以极大减少对系统资源的消耗，增加系统的并发量并缩短响应时间。(因生成的Servlet实例是常驻内存的，所以响应速度非常快)
+   ⑥ 如果JSP文件被修改了，则服务器将根据新的设置决定是否对该文件进行重新编译，如果需要重新编译，则使用重新编译后的结果取代内存中常驻的Servlet实例，并继续上述处理过程。
+   ⑦ 虽然JSP效率很高，但在第一次调用的时候往往由于需要转换和编译，会产生一些轻微的延迟，此外，由于系统资源不足等原因，JSP容器可能会以某种不确定的方式将Servlet实例从内存中移除，发生这种情况，JSP容器首先会调用jspDestroy()方法，然后Servlet实例会被加入&quot;垃圾收集&quot;处理。
+   ⑧ 当请求处理完成后，响应对象由JSP容器接收，并将HTML格式的响应信息发送回客户端。
+
+第2节 JSP基本语法(JSP tags)
+
+1. JSP页面的基本构成。
+   一个JSP页面可以包括指令标识，HTML代码，JavaScript代码，嵌入的Java代码，注释和JSP动作标识等内容。
+
+2. JSP脚本元素。
+   JSP脚本元素是指嵌套在&quot;&lt;% &quot;和&quot; %&gt;&quot;中的一条或多条Java程序代码。通过JSP脚本元素可以将Java代码嵌入HTML页面中，所有可执行的Java代码都可以通过JSP脚本执行。
+
+   JSP脚本元素主要包含以下3种类型：
+   Java code：
+       JSP Scriptlets：有{}
+       声明标识：
+       JSP表达式：无{}
+   JSP tags：
+       注释标签
+       指令标签
+       动作标签
+
+   (1) JSP Scriptlets。(可以进行属性的定义，也可以输出内容，不能进行方法的定义)
+   → 是一段代码片段，即在JSP页面中嵌入的Java代码或脚本代码，代码片段将在页面请求的处理期间被执行，通过Java代码可以定义变量或流程控制语句等，而脚本代码可以应用JSP的内置对象在页面输出内容，处理请求和访问会话等。
+   JSP Scriptlets语法格式如下：
+   &lt;% java代码(变量，方法，表达式等) %&gt;
+   → 内置对象：直接使用不需要new出来。
+   Servlet有2个内置对象：request与response。
+   JSP Scriptlets有9个内置对象。
+
+   (2) 声明标识。(全局变量/方法)
+   如果想在脚本元素中定义方法，可以使用声明标识。其用于在JSP页面中定义全局变量或方法，它以&quot;&lt;%!&quot;开始，以&quot;%&gt;&quot;结束。通过声明标识定义的变量和方法可以被整个JSP页面访问，所以通常使用该标识定义整个JSP页面需要引用的变量和方法。
+   声明标识的语法格式如下：
+   &lt;%!
+       定义变量或方法等
+   %&gt;
+
+   在上述语法格式中，在JSP声明语句中定义的都是成员方法，成员变量，静态方法，静态变量，静态代码块等。在JSP声明语句中声明的方法在整个JSP页面内有效，但是在方法内定义的变量只在该方法内有效。当声明的方法被调用时，会为方法内定义的变量分配内存，并调用结束后立刻释放所占内存。
+   在一个JSP页面中可以有多个JSP声明标识，单个声明中的Java语句可以是不完整的，但是多个声明组合后的结果必须是完整的Java语句。
+
+   注意：
+   ① &quot;&lt;%!&quot;和&quot;%&gt;&quot;里面的定义的属性是成员属性，相当于类的属性，方法相当于全局的方法，也相当于类里面的方法，但是在&quot;&lt;%!&quot;和&quot;%&gt;&quot;里面是不可以进行输出，只能进行方法的定义和属性的定义。
+   总之，&quot;&lt;%!&quot;和&quot;%&gt;&quot;是用于定义属性和方法的，而&quot;&lt;% &quot;和&quot; %&gt;&quot;主要是用于输出内容的。
+   ② 通过声明标识创建的变量和方法在当前JSP页面中有效，它的生命周期是从创建开始到服务器结束；代码片段创建的变量或方法也是在当前JSP页面有效，但它的生命周期是页面关闭后就会被销毁。
+
+   (3) JSP表达式。
+   JSP表达式用于向页面输出信息，它以&quot;&lt;%=&quot;开始，以&quot;%&gt;&quot;结束，其基本语法格式如下：
+   &lt;%= expression %&gt;
+   → 可以是Java语言中任意完整的表达式，该表达式的最终运算结果被转换成一个字符串。
+   ※ 注意：&quot;&lt;%=&quot;是一个完整的符号，&quot;&lt;% &quot;和&quot;=&quot;间不能有空格，且JSP表达式中的变量或表达式后面不能有分号(;)。
+
+3. JSP注释。(包括带有JSP表达式的注释，隐藏注释，动态注释)。
+   (1) 带有JSP表达式的注释。
+   在JSP页面中可以嵌入代码片段，在代码片段中也可加入注释。代码片段中的注释与Java注释相同。
+   ① 单行注释。    //注释内容。
+   ② 多行注释。    以&quot;/*&quot;开头，以&quot;*/&quot;结束，中间的注释内容可以换行。
+   ③ 提示文档注释。 /**
+                       提示信息！ 对代码结构和功能的描述。
+                     */
+
+   (2) 隐藏注释。
+   在文档中添加的HTML注释虽然在浏览器页面中不显示，但是可以通过查看源代码的方式看到这些注释信息。(HTML注释叫输出注释) 严格地说，这些注释是不安全的。
+   JSP提供了隐藏注释，隐藏注释不仅在浏览器页面中看不到，在查看页面源码时也看不到，所以隐藏注释有着较高的安全性。
+   隐藏注释的语法格式如下：
+   &lt;%-- 注释内容 --%&gt;
+   Tomcat编译JSP文件时，内容则会被忽略，不会发送到客户端。
+
+   (3) 动态注释。
+   由于HTML注释对JSP嵌入的代码不起作用，因此可以利用它们的组合构成动态的HTML注释文本。
+   相关代码如下：
+   &lt;body&gt;
+       &lt;!-- &lt;%= new Date() %&gt; --&gt;
+   &lt;/body&gt;
+
+第3节 JSP指令(前两个，第三个了解)。
+
+1. page指令。
+   → 对页面的某些特性进行描述，例如页面的编码方式，JSP页面采用的语言等。
+   page指令的具体语法格式如下：
+   &lt;%@ page 属性名1=&quot;属性值1&quot; 属性名2=&quot;属性值2&quot;...%&gt;
+   其中，page用于声明指令名称；属性用于指定JSP页面的某些特性。
+
+   Page指令的常用属性。
+   属性名称      取值范围              描述
+   language      java                  指定JSP页面所用的脚本语言，默认为Java
+   import        任何包名、类名        指定在JSP页面翻译成的Servlet源文件中导入的包或类。import是唯一可以声明多次的page指令属性。一个import属性可以引用多个类，中间用英文逗号隔开
+   session       true, false           指定该JSP内是否内置Session对象，如果为true，则说明内置Session对象，可以直接使用，否则没有内置Session对象。默认情况下，session属性的值为true。需要注意的是，JSP容器自动导入以下4个包：java.lang.*  javax.servlet.*  javax.servlet.jsp.*  javax.servlet.http.* (选择题)。默认导入的包。
+   isErrorPage   true, false           指定该页面是否为错误处理页面，如果为true，则该JSP内置有一个Exception对象的exception，可直接使用。默认情况下，isErrorPage的值为false
+   errorPage     某个JSP页面的相对路径  指定一个错误页面，如果该JSP程序抛出一个未捕捉的异常，则转到errorPage指定的页面。errorPage指定页面的isErrorPage属性为true，且内置的exception对象为未捕捉的异常
+   contentType   有效的文档类型        指定当前JSP页面的MIME类型和字符编码，例如：HTML格式为text/html 纯文本格式为text/plain JPG图像为image/jpeg GIF图像为image/gif Word文档为application/msword 内容类型 及有编码。
+   pageEncoding  当前页面              指定页面编码格式
+
+   除了import之外其余属性只能出现一次。
+   注意：
+   ① 属性值都具有唯一性，除import属性外，其他属性都只能出现一次，否则会编译失败。
+   ② page指令对整个页面都有效，与其书写位置无关，但是习惯上把page指令写在JSP页面的最前面。
+
+2. include指令。静态包含。
+   在实际开发时，有时需要在JSP页面中包含另一个JSP页面，可通过include指令实现，include指令的具体语法格式如下：
+   &lt;%@ include file=&quot;被包含的文件地址&quot;%&gt;
+   其中，include指令只有一个file属性，用于指定要包含文件的路径，需要注意的是，插入文件的路径一般不以&quot;/&quot;开头，而是使用相对路径。
+
+   ※ 关于include指令在实际应用的几个常见问题：
+   ① 被引入的文件必须遵循JSP语法，其中的内容可以包含静态HTML、JSP脚本元素和JSP指令等普通JSP页面所具有的一切内容。
+   ② 除指令元素外，被引入的文件中的其他元素都被转换成相应的Java源代码，然后插入当前JSP页面所翻译成的Servlet源文件中，插入位置与include指令在当前JSP页面中的位置保持一致。
+   ③ file属性的设置值必须使用相对路径，如果以&quot;/&quot;开头，表示对当前Web应用程序的根目录；否则表示相对于当前文件，需要注意的是，这里的file属性指定的相对路径是相对于文件(file)，而不是相对于页面(page)。
+   ④ 在应用include指令进行文件包含时，为了使整个页面的层次结构不发生冲突，建议在被包含页面中将&lt;html&gt;、&lt;body&gt;等标签删除，因为在包含页面的文件中已经指定了这些标签。
+
+3. taglib指令。(作用：引入第三方标签库)
+   在JSP文件中，可以通过taglib指令标识该页面中所使用的标签库，同时引用标签库并指定标签的前缀。在页面中引用标签库后，就可以通过前缀来引用标签库中的标签。
+   taglib指令的具体语法格式如下：
+   &lt;%@ taglib prefix=&quot;tagPrefix&quot; uri=&quot;tagURI&quot;%&gt;
+   taglib指令的属性说明如下：
+   prefix：用于指定标签的前缀，该前缀不能命名为jsp，jspx，java，sun，servlet和sunw。
+   uri：用于指定标签库文件的存放位置。
+
+第4节 JSP动作元素。(都以JSP为前缀)
+JSP动作元素用于控制JSP的行为，执行一些常见的JSP页面动作。通过动作元素可以实现使用多行Java代码才能够实现的效果，例如包含页面文件，实现请求转发等。
+
+1. 包含文件元素&lt;jsp:include&gt;(动态包含)
+   (1) &lt;jsp:include&gt;动作元素的格式。
+   在JSP页面中，&lt;jsp:include&gt;动作元素用于向当前页面引入其他的文件，被引入的文件可以是动态文件，也可以是静态文件。&lt;jsp:include&gt;动作元素的具体语法格式如下：
+   &lt;jsp:include page=&quot;URL&quot; flush=&quot;true|false&quot;/&gt;
+   其中，page：用于指定被引入文件的相对路径。例如：指定属性值为top.jsp，则表示当前JSP文件所在文件夹下的top.jsp文件引入到当前JSP页面中。
+   flush：用于指定是否将当前页面的输出内容刷新到客户端。默认情况下，flush属性的值为false。
+       false：包含，被包含放在缓存中，一次性发给客户端。
+       true：被包含内容先发给客户端。
+
+   &lt;jsp:include&gt;包含的原理是将被包含页面编译处理后的结果包含在当前页面中，例如，在页面1中使用&lt;jsp:include&gt;元素包含了页面2，当浏览器第一次请求页面1时，Web容器首先会编译页面2，然后将编译处理后的返回结果包含在页面1中，之后编译页面1，最后将两个页面相结合的结果响应给浏览器。
+
+   (2) include指令与&lt;jsp:include&gt;动作元素的区别。
+   本质区别：
+   ① 使用include指令时，被包含的文件内容会原封不动地插入到包含页中，然后JSP编译器再将合成后的文件最终编译成一个Java文件；使用&lt;jsp:include&gt;动作元素包含文件时，当该元素被执行时，程序会将请求转发到被包含的页面，并将执行结果输出到浏览器中，然后返回包含页，继续执行后面的代码。因为服务器执行的是多个文件，所以如果一个页面包含了多个文件，JSP编译器会分别对被包含的文件进行编译。
+   ② include指令通过file属性指定被包含的文件，file属性不支持任何表达式；&lt;jsp:include&gt;动作元素通过page属性指定被包含的文件，page属性支持JSP表达式。
+
+   (3) &lt;jsp:include&gt;动作元素。
+   注意：&lt;jsp:include&gt;动作元素对包含的动态文件和静态文件的处理方式是不同的，如果被包含的是静态文件，则包含页面执行后，在使用了&lt;jsp:include&gt;动作元素的位置将会输出被包含文件的内容。如果&lt;jsp:include&gt;动作元素包含的是一个动态文件，那么JSP编译器将编译并执行被包含文件。不需编译。
+
+2. 请求转发元素&lt;jsp:forward&gt;
+   &lt;jsp:forward&gt;动作元素可以将当前请求转发到其他资源(例如HTML页面，JSP页面和Servlet等)，执行转发请求之后，当前页面将不再执行，而是执行该元素指定的目标页面。
+   &lt;jsp:forward&gt;的具体语法格式如下：
+   &lt;jsp:forward page=&quot;relativeURL&quot;/&gt;
+   其中，page用于指定请求转发到的资源的相对路径，该路径的目标文件必须是当前应用中的内部资源。
+   (请求转发是服务器端的操作，浏览器并不知道请求的页面，所以浏览器地址栏不会发生变化)
+
+第5节 JSP隐式对象
+
+1. 隐式对象概述。
+   不需要自己创建，直接使用(在Java代码中用)。
+   JSP的规范中提供了9个隐式(内置)对象，它们是JSP默认创建的，可以直接在JSP页面使用。
+
+   表6-2 JSP隐式对象
+   名称        类型                              描述
+   out         javax.servlet.jsp.JspWriter       用于页面输出
+   request     javax.servlet.http.HttpServletRequest 得到用户请求信息
+   response    javax.servlet.http.HttpServletResponse 服务器向客户端的回应信息
+   config      javax.servlet.ServletConfig       服务器配置，可以取得初始化参数
+   session     javax.servlet.http.HttpSession    用于保存用户的信息
+   application javax.servlet.ServletContext      所有用户的共享信息
+   page        java.lang.Object                  指当前页面转换后的Servlet类的实例
+   pageContext javax.servlet.jsp.PageContext     JSP的页面容器
+   exception   java.lang.Throwable               表示JSP页面所发生的异常，在错误页中才起作用
+
+2. out对象。
+   在JSP页面中，向客户端发送文本内容可以使用out对象实现。out对象是javax.servlet.jsp.JspWriter类的实例对象，它的作用与ServletResponse.getWriter()方法返回的PrintWriter对象非常相似，都是用于向客户端发送文本形式的实体内容。不同的是，out对象的类型为JspWriter，它相当于带缓存功能的PrintWriter。
+
+   out对象与Servlet引擎提供的缓冲区之间的工作关系：
+   在JSP页面中，通过out隐式对象写入数据相当于将数据插入JspWriter对象的缓冲区中，只有调用了ServletResponse.getWriter()方法，缓冲区中的数据才能真正写入Servlet引擎所提供的缓冲区中。
+
+   ※ 可通过page指令中操作缓冲区的buffer属性来实现直接将数据写入Servlet引擎提供的缓冲区中。
+
+3. pageContext对象。
+   在JSP页面中，使用pageContext对象可以获取JSP的其他8个隐式对象。
+   pageContext对象是javax.servlet.jsp.PageContext类的实例对象，它代表当前JSP页面的运行环境，并提供了一系列用于获取其他隐式对象的方法。
+
+   ① PageContext对象获取隐式对象的方法。
+   方法名                              功能描述
+   JspWriter getOut()                  用于获取out隐式对象
+   Object getPage()                    用于获取page隐式对象
+   ServletRequest getRequest()         用于获取request隐式对象
+   ServletResponse getResponse()       用于获取response隐式对象
+   HttpSession getSession()            用于获取session隐式对象
+   Exception getException()            用于获取exception隐式对象
+   ServletConfig getServletConfig()    用于获取config隐式对象
+   ServletContext getServletContext()  用于获取application隐式对象
+
+   ② PageContext操作属性的相关方法。(存储数据，操作任意范围Attribute)。
+   方法名                                          功能描述
+   void setAttribute(String name,Object value,int scope)  用于设置pageContext对象的属性
+   Object getAttribute(String name,int scope)              用于获取pageContext对象的属性
+   void removeAttribute(String name,int scope)             用于删除指定范围内名称为name的属性
+   void removeAttribute(String name)                       用于删除所有范围内名称为name的属性
+   Object findAttribute(String name)                        用于从4个域对象中查找名称为name的属性，按范围从小到大
+
+   参数name指定的属性名称，参数scope指定的属性的作用范围。
+   pageContext对象的作用范围有4个值：
+   pageContext.PAGE_SCOPE：表示页面范围。
+   pageContext.REQUEST_SCOPE：表示请求范围。
+   pageContext.SESSION_SCOPE：表示会话范围。
+   pageContext.APPLICATION_SCOPE：表示Web应用程序范围。
+
+   查找域page，request，再Session，application。
+   如果找到，返回名称。
+   否则返回null。
+
+   通过pageContext对象可以获取到request对象，并且还可以获取不同范围内的隐式对象的属性。
+
+   相关代码：
+   //获取request对象。
+   HttpServletRequest req=(HttpServletRequest) pageContext.getRequest();
+   //设置page范围内属性。
+   pageContext.setAttribute(&quot;str&quot;,&quot;Java&quot;,pageContext.PAGE_SCOPE);
+   //设置request范围内属性  req.setAttribute(&quot;str&quot;,&quot;Java Web&quot;);
+   //获得的page范围属性。
+   String str1=(String) pageContext.getAttribute(&quot;str&quot;,pageContext.PAGE_SCOPE);
+   pageContext.REQUEST_SCOPE
+
+4. exception对象。(处理异常信息)
+   exception对象是java.lang.Exception类的实例对象，它用于封装JSP中抛出的异常信息。
+   需要注意的是，exception对象只有在错误处理页面才可以使用，即page指令中指定了属性&lt;%@ page isErrorPage=&quot;true&quot;%&gt;的页面。(默认为False)。
+
+第10章 JDBC。☆(JDBC API, DAO)
+第1节 什么是JDBC。
+
+JDBC：Java数据库连接。
+JDBC是一套用于执行SQL语句的Java API。应用程序可通过这套API连接到关系数据库，并使用SQL语句完成对数据库中数据的查询、更新、新增和删除操作。
+
+JDBC的优势。
+不同种类的数据库(如MySQL、Oracle等)在内部处理数据的方式是不同的，如果直接使用数据库厂商提供的访问接口操作数据库，应用程序的可移植性就会变得很差。例如，用户当前在程序中使用的是MySQL提供的接口操作数据库，如果换成Oracle数据库，则需要重新使用Oracle数据库提供的接口，这样代码的改动量会非常大。有了JDBC后，这问题就不复存在了，因为它要求各个数据库厂商按照统一的规范提供数据库驱动，而在程序中由JDBC和具体的数据库驱动联系，所以用户就不必直接与底层的数据库交互，这使得代码的通用性更强。
+代码不变，数据库可变。
+
+JDBC访问数据库的方式。
+JDBC在应用程序与数据库之间起到了桥梁作用，当应用程序使用JDBC访问特定的数据库时，需要通过不同的数据库驱动与不同的数据库进行连接，连接后即可对数据库进行相应的操作。
+
+第2节 JDBC常用API(6个)。导入java.sql.*包。
+
+1. Driver接口。(了解)
+   提供给数据库中商开发数据库驱动的。
+   Driver接口是所有JDBC驱动程序必须实现的接口，该接口专门提供给数据库厂商使用。
+   需要注意的是：在编写JDBC程序时，必须要把所使用的数据库驱动程序或类库加载到项目的classpath中(这里指MySQL驱动JAR包)。
+
+2. DriverManager类。
+   DriverManager类用于加载JDBC驱动并且创建与数据库的连接。
+   一般不用，会使驱动注册两次。
+
+   表10-1 DriverManager类的静态方法
+   方法名称                                  功能描述
+   registerDriver(Driver driver)             该方法用于向DriverManager中注册给定的JDBC驱动程序
+   getConnection(String url,String user,String pwd) 该方法用于建立与数据库的连接，并返回表示连接的Connection对象 → 得到数据库
+
+   数据库地址。  用户  密码。
+
+3. Connection接口。
+   Connection接口表示Java程序和数据库的连接，只有获得该连接对象后才能访问数据库，并操作数据表。在Connection接口中定义了一系列方法，常用方法如下表所示。
+
+   方法名称                      功能描述
+   getMetaData()                 用于返回表示数据库元数据的DatabaseMetaData对象
+   createStatement()             用于创建一个Statement对象并将SQL语句发送到数据库
+   prepareStatement(String sql)  用于创建一个PreparedStatement对象并将参数化的SQL语句发送到数据库 子接口，比父接口更强大。
+   prepareCall(String sql)       用于创建一个CallableStatement对象来调用数据库存储过程
+
+4. Statement接口。
+   Statement接口用于执行静态的SQL语句，并返回一个结果对象。Statement接口的对象通过Connection实例的createStatement()方法获得。利用Statement接口把静态的SQL语句发送到数据库编译执行，然后返回数据库的处理结果。Statement接口提供了执行SQL语句的3个常用方法。
+
+   方法名称                  功能描述
+   execute(String sql)       用于执行各种SQL语句，该方法返回一个boolean类型的值，如果为true，表示所执行的SQL语句有查询结果，可通过Statement的getResultSet()方法获得查询结果
+   executeUpdate(String sql) 用于执行SQL中的insert、update和delete语句，该方法返回一个int类型的值，表示数据库中受该SQL语句影响的记录条数
+   executeQuery(String sql)  用于执行SQL中的select语句，该方法返回一个表示查询结果的ResultSet对象
+
+   常用。
+   表结构。DDL。
+
+5. PreparedStatement接口。
+   PreparedStatement是Statement的子接口，用于预编译的SQL语句，PreparedStatement接口扩展了带有参数的SQL语句的执行操作，应用该接口中的SQL语句可以使用占位符&quot;?&quot;代替参数，然后通过setter()方法为SQL语句的参数赋值。
+
+   PreparedStatement接口的常用方法。
+   方法名称                                  功能描述
+   executeUpdate()                           在此PreparedStatement对象中执行SQL语句，该语句必须是一个DML语句或者是无返回内容的SQL语句，比如DDL语句
+   executeQuery()                            在此PreparedStatement对象中执行SQL查询，该方法返回的是ResultSet对象
+   setInt(int parameterIndex, int x)         将指定参数设置为给定的int值
+   setFloat(int parameterIndex, float x)     将指定参数设置为给定的float值
+   setString(int parameterIndex, String x)   将指定参数设置为给定的String值
+   setDate(int parameterIndex, Date x)       将指定参数设置为给定的Date值
+   addBatch()                                将一组参数添加到此PreparedStatement对象的批处理命令中
+   setCharacterStream(int parameterIndex, java.io.Reader reader,int length)  将指定的输入流写入数据库的文本字段
+   setBinaryStream(int parameterIndex, java.io.InputStream x, int length)  将二进制的输入流数据写入到二进制字段中
+
+   两个参数(位置，值)。
+
+6. ResultSet接口。
+   ResultSet接口用于保存JDBC执行查询时返回的结果集，该结果集封装在一个逻辑表格中。在ResultSet接口内部有一个指向表格数据行的游标(指针)，ResultSet对象初始化时，游标在表格的第一行之前，调用next()方法可将游标移动到下一行。如果下一行没有数据，则返回false。在应用程序中经常调用next()方法作为while循环的条件来迭代ResultSet结果集。
+
+   ResultSet接口常用方法。
+   方法名称                          功能描述
+   getString(int columnIndex)        用于获取指定字段的String类型的值，参数columnIndex代表字段的索引
+   getString(String columnName)      用于获取指定字段的String类型的值，参数columnName代表字段的名称
+   getInt(int columnIndex)           用于获取指定字段的int类型的值，参数columnIndex代表字段的索引
+   getInt(String columnName)         用于获取指定字段的int类型的值，参数columnName代表字段的名称
+   getDate(int columnIndex)          用于获取指定字段的Date类型的值，参数columnIndex代表字段的索引
+   getDate(String columnName)        用于获取指定字段的Date类型的值，参数columnName代表字段的名称
+
+   方法名称              功能描述
+   next()                将游标从当前位置向下移一行
+   absolute(int row)     将游标移动到此ResultSet对象的指定行
+   afterLast()           将游标移动到此ResultSet对象的末尾，即最后一行之后
+   beforeFirst()         将游标移动到此ResultSet对象的开头，即第一行之前
+   previous()            将游标移动到此ResultSet对象的上一行
+   last()                将游标移动到此ResultSet对象的最后一行
+
+   ResultSet接口中定义了大量的getter()方法，而采用哪种getter()方法获取数据，取决于字段的数据类型。程序既可以通过字段的名称获取指定数据，也可以通过字段的索引获取指定的数据，字段的索引是从1开始编号的。例如，数据表的第一列字段名为id，字段类型为int，那么既可以调用getInt(1)，以字段索引的方式获取该列的值，也可以调用getInt(&quot;id&quot;)，以字段名称的方式获取该列的值。
+
+============================================================
+                    全文本识别完成
+                    共45页
+============================================================
+</div>
+<a class="back-link" href="../index.html#articles">← 返回首页</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

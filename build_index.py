@@ -17,9 +17,10 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 ARTICLES_DIR = os.path.join(ROOT, "articles")
 INDEX_PATH = os.path.join(ROOT, "index.html")
 
-CATEGORY_ORDER = ["研究", "随笔", "知识库", "资料库"]
+CATEGORY_ORDER = ["研究", "学习笔记", "随笔", "知识库", "资料库"]
 CATEGORY_TITLE = {
     "研究": "研究文章",
+    "学习笔记": "学习笔记",
     "随笔": "随笔 · 科普",
     "知识库": "知识库 · 全部学习对话",
     "资料库": "资料库 · 审计与清单",

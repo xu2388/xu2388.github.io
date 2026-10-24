@@ -43,6 +43,18 @@
 - S6 的论文 PDF 与方法代码用于和 S1 的论文调研对话互证（例如 S1 里提到的 HistDiST、PSPStain、StainExpert 等都能在桌面 PDF 中找到原文）。
 - S7 若找到「深度学习到底在干什么」等随笔，应作为"科普长文"栏目直接收录。
 
+## 二·补、豆包本地资料已纳入（2026-10-24 更新）
+以下豆包本地内容已整理进博客（脚本 `ingest_doubao_local.py`）：
+
+| 内容 | 位置 | 博客页 |
+|---|---|---|
+| JavaWeb 手写笔记全文本（1732 行，HTML 代码已转义） | `/Users/hua/Doubao/chats/2026-09-13/new-chat/Javaweb手写笔记全文本.txt` | `articles/doubao-javaweb-notes.html`（学习笔记） |
+| MBTI 连续人格空间研究管线总览图（HTML，自包含） | `/Users/hua/Doubao/chats/2026-09-14/new-chat/mbti_pipeline_overview.html` | `articles/doubao-mbti-pipeline.html`（研究） |
+| 豆包 agent 会话（2 个 trajectory 还原，含 MBTI v0.2 完整方案） | `raw_exports/doubao_agent_raw/*.md` | `articles/doubao-agent-sessions.html` + 各会话页（资料库/研究） |
+
+- JavaWeb 笔记页里的 `<table>`、`<form>` 等 HTML 代码已做转义显示，不会被浏览器当成真标签渲染。
+- 仍未纳入：豆包 45 页 PNG 截图（page_01–45，JavaWeb 笔记配图）与 `JavaWeb(2).pdf`——如需图/公式要补 OCR。
+
 ## 三、已知覆盖缺口与风险
 1. **豆包主聊天是最大缺口**：若其中的科研讨论未导出，则"虚拟染色主线"的完整时间线会缺一大块。优先级最高。
 2. **时间戳不完整**：S1 多数对话有 `inserted_at`/`updated_at`，但部分消息级时间缺失，时间线重建以对话级日期为主。
