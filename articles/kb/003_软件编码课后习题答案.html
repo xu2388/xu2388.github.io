@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>软件编码课后习题答案</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>软件编码课后习题答案</h1>
+<div class="meta">2026-10-22 · 主题：课程-编程/计算机 · 6 条消息 · 对话编号 003</div>
+<div class="record"><span class="tag">我问</span><p>根据ppt回答课后系统的答案</p></div>
+<p>以下按PPT第6章内容整理课后习题答案（第4题题面(c)中“x”疑似笔误，按“B”理解更合理）。</p>
+<hr />
+<h2>1. 选择程序设计语言通常考虑哪些因素？</h2>
+<p>PPT给出两类标准：</p>
+<p><strong>理想标准：</strong></p>
+<ol><li>高级语言应有理想的模块化机制，以及可读性好的控制结构和数据结构，使程序容易测试和维护，降低软件总成本；</li><li>语言特点应使编译程序尽可能多地发现程序中的错误，便于调试、提高可靠性；</li><li>应有良好的独立编译机制，降低开发和维护成本。</li></ol>
+<p><strong>实用标准：</strong></p>
+<ol><li>待开发软件的应用领域；</li><li>用户的要求；</li><li>软件的运行环境；</li><li>软件开发人员的知识；</li><li>软件的可移植性要求。</li></ol>
+<hr />
+<h2>2. 举例说明各种程序设计语言的特点及适用范围</h2>
+<p>PPT将编程语言分为基础语言、结构化语言和面向对象语言。</p>
+<table>
+<tr><th>语言</th><th>特点</th><th>适用范围</th></tr>
+<tr><td>FORTRAN</td><td>基础语言，历史悠久，适合数值计算</td><td>科学计算、工程计算</td></tr>
+<tr><td>COBOL</td><td>基础语言，面向商业数据处理</td><td>商业、事务处理</td></tr>
+<tr><td>BASIC</td><td>基础语言，简单易学</td><td>入门教学、简单应用</td></tr>
+<tr><td>ALGOL</td><td>基础语言，结构化语言的基础</td><td>算法描述、学术研究</td></tr>
+<tr><td>Pascal</td><td>结构化语言，结构清晰</td><td>教学、结构化程序设计</td></tr>
+<tr><td>C</td><td>结构化语言，效率高、可移植性较好</td><td>系统软件、嵌入式开发</td></tr>
+<tr><td>Ada</td><td>结构化语言，适合大型高可靠系统</td><td>大型、可靠性要求高的系统</td></tr>
+<tr><td>C++</td><td>面向对象语言</td><td>大型应用、系统开发</td></tr>
+<tr><td>Java</td><td>面向对象语言，跨平台性较好</td><td>网络应用、企业应用</td></tr>
+</table>
+<p>PPT还按“代”划分：</p>
+<ul><li>1GL：机器语言、汇编语言；  </li><li>2GL：FORTRAN、ALGOL、COBOL、BASIC；  </li><li>3GL：Pascal、C、Ada、C++、Smalltalk等；  </li><li>4GL：VB、VC、JAVA等。</li></ul>
+<hr />
+<h2>3. 什么是程序设计风格？应注意事项？</h2>
+<p><strong>程序设计风格</strong>：源程序代码的逻辑简明、易读易懂，是好程序的一个重要标准。编码风格直接影响软件的可读性、可维护性和可移植性。</p>
+<p>应注意以下方面：</p>
+<ol><li><strong>程序内部文档</strong>：标识符选取、程序注解、程序布局；</li><li><strong>数据说明</strong>：说明次序标准化；多个变量按字典顺序排列；复杂数据结构应加注解；</li><li><strong>语句构造</strong>：不要多语句写同一行；避免复杂条件测试，减少“非”条件测试；避免大量循环和条件嵌套；利用圆括号使运算次序清晰；变量说明完整、类型长度存储初始化正确；心理换位——“如果我不是编码人，我能看懂它吗？”</li><li><strong>输入输出</strong>：所有输入数据要校验；检查输入项重要组合合法性；输入格式简单；一批数据用结束标志而非计数控制；交互输入说明选择范围和边界值；输入格式与输入语句要求一致；输出报表符合用户要求，尽量表格化、图形化，加标志和注解；</li><li><strong>效率</strong>：效率应在需求分析阶段确定；良好设计可提高效率；提高效率不能牺牲程序清晰性和可读性。包括代码效率、存储效率、输入输出效率。</li></ol>
+<hr />
+<h2>4. 表达式可读性分析</h2>
+<p>题面三个表达式：</p>
+<ul><li>(a) <code>-6**A/3*B</code></li><li>(b) <code>-(6**A/3)*B</code></li><li>(c) <code>+((6**A)/(-3))*x)</code>（题面疑似笔误，x应为B，且括号不匹配）</li></ul>
+<ul><li><strong>可读性最好：一般认为是(b)</strong>。它用括号明确了<code>6**A/3</code>的运算顺序，再取负、再乘B，歧义较少。</li><li><strong>可读性最差：(c)</strong>。括号层数多，且题面中还有<code>+</code>号、<code>x</code>与前面不一致、括号不匹配等问题，容易误解。</li><li>(a)中负号与乘方<code>**</code>、乘除混用，优先级容易让人混淆，可读性也不够好。</li></ul>
+<p>可列出：</p>
+<ol><li>运算符数量尽量少，但不能以牺牲清晰性为代价；</li><li>括号层数不宜过多，一般控制在较少层数内；</li><li>用圆括号明确运算次序，避免依赖记忆优先级；</li><li>避免同一表达式中混用过多不同类型运算符；</li><li>负号与乘方、乘除等易混处应加括号；</li><li>复杂表达式可拆成中间变量，分步书写；</li><li>避免括号不配对、符号不一致等错误。</li></ol>
+<hr />
+<h2>5. 第4代语言有哪些主要特征？为什么受欢迎？</h2>
+<p>PPT中第4代语言代表为：<strong>VB、VC、JAVA</strong>。PPT未展开其特征，按一般理解：</p>
+<p><strong>主要特征：</strong></p>
+<ol><li>面向问题、非过程化程度较高；</li><li>开发效率高，减少手工编码；</li><li>易学易用，贴近用户；</li><li>支持可视化、图形界面和快速开发；</li><li>便于数据库操作、报表生成等应用开发。</li></ol>
+<p><strong>受欢迎原因：</strong></p>
+<ol><li>能显著提高软件开发效率；</li><li>减少编码工作量，缩短开发周期；</li><li>用户容易掌握和使用；</li><li>便于快速构建应用和维护。</li></ol>
+<hr />
+<h2>本章小结要点</h2>
+<p>编码阶段是把详细设计中的模块算法转换为程序设计语言源程序。选择语言既要考虑现实可能性，又要从技术、工程、心理角度评价。编码风格要求简明清晰，不追求技巧，注重程序结构清晰、层次分明、语言简单明了、标识符规范，程序和复杂数据要有注释。</p>
+<div class="record"><span class="tag">我问</span><p>y同上</p></div>
+<p>根据PPT第5章内容，整理课后习题（思考和练习）的参考答案。由于文本格式无法直接绘制图像（如流程图、N-S图、PAD图），这里将通过<strong>文字描述结构</strong>和<strong>PDL伪代码</strong>来解答，方便你自行画出对应的图形。</p>
+<hr />
+<p><strong>基本任务（见PPT Page 7）：</strong></p>
+<ol><li>确定每个模块所采用的算法；</li><li>确定每个模块所使用的数据结构；</li><li>确定每个模块的接口细节；</li><li>为每个模块设计出一组测试用例。</li></ol>
+<p><em>(根本目的：确定应该怎样具体实现所要求的系统，得出对目标系统的精确描述)</em></p>
+<p><strong>描述方法（详细设计工具，见PPT Page 10）：</strong></p>
+<ol><li><strong>图形工具</strong>：程序流程图、盒图（N-S图）、问题分析图（PAD图）。</li><li><strong>表格工具</strong>：判定表、判定树。</li><li><strong>语言工具</strong>：过程设计语言（PDL）。</li></ol>
+<hr />
+<p><strong>结构化程序设计（SP）的基本要点（见PPT Page 8、9）：</strong></p>
+<ol><li><strong>经典定义</strong>：如果一个程序的代码块仅仅通过<strong>顺序、选择和循环</strong>这3种基本控制结构进行连接，并且每个代码块<strong>只有一个入口和一个出口</strong>，则称这个程序是结构化的。</li><li><strong>更全面的定义</strong>：尽可能少用 GOTO 语句，最好仅在检测出错误时才使用 GOTO，且应总是使用前向 GOTO。</li><li><strong>四个特征</strong>：一个入口、一个出口、程序中无死语句、程序中无死循环。</li></ol>
+<hr />
+<h4>(1) 在数据 A(1)—A(10) 中求最小数和次小数。</h4>
+<p><strong>PDL语言描述（参考）：</strong></p>
+<pre><code>BEGIN
+  min1 = A(1);  min2 = A(2);
+  IF min1 &gt; min2 THEN 交换 min1 和 min2;
+  FOR i = 3 TO 10 DO
+    IF A(i) &lt; min1 THEN
+      min2 = min1;
+      min1 = A(i);
+    ELSE IF A(i) &lt; min2 THEN
+      min2 = A(i);
+    ENDIF
+  ENDFOR
+END</code></pre>
+<p><em>图形结构提示：</em></p>
+<ul><li><strong>N-S图</strong>：外层为一个顺序结构（先初始化），下接一个 <code>DO-WHILE</code> 或 <code>FOR</code> 循环框。循环内是一个 <code>IF-THEN-ELSE</code> 分支结构，判断 <code>A(i) &lt; min1</code>，内部再嵌套一个判断。</li><li><strong>PAD图</strong>：左侧主干向下，先写初始化，再画 <code>FOR</code> 循环，循环右侧引出一条线画 <code>IF</code> 选择，再在分支右侧画子判断。</li><li><strong>流程图</strong>：标准的菱形判断与平行四边形输入输出结合，注意结构化的回环。</li></ul>
+<h4>(2) 输入三个正整数作为边长，判断构成的三角形是直角、等腰或一般三角形。</h4>
+<p><strong>PDL语言描述（参考）：</strong></p>
+<pre><code>输入 a, b, c (正整数)
+IF (a+b&gt;c) AND (a+c&gt;b) AND (b+c&gt;a) THEN
+  IF (a*a + b*b == c*c) OR (a*a + c*c == b*b) OR (b*b + c*c == a*a) THEN
+    输出 &quot;直角三角形&quot;
+  ELSE IF (a==b) OR (a==c) OR (b==c) THEN
+    输出 &quot;等腰三角形&quot;
+  ELSE
+    输出 &quot;一般三角形&quot;
+  ENDIF
+ELSE
+  输出 &quot;不能构成三角形&quot;
+ENDIF</code></pre>
+<p><em>图形结构提示：</em></p>
+<ul><li><strong>PAD图</strong>：首层判断“能否构成三角形”，能则向右伸出分支，进行“是否直角”判断，否则继续“是否等腰”，最后输出一般。</li><li><strong>N-S图</strong>：大型的 <code>IF-THEN-ELSE</code> 嵌套。外层判断能否构成三角形，THEN部分内嵌新的 <code>IF</code> 分支判断直角三角形。</li></ul>
+<hr />
+<p><em>(PPT Page 33/34 给出了选择排序的 PAD 图，此处以<strong>选择排序</strong>为例解答)</em></p>
+<p><strong>PDL语言描述：</strong></p>
+<pre><code>PROCEDURE sort(A, n)
+  FOR i = 1 TO n-1 DO
+    max_index = i;
+    FOR j = i+1 TO n DO
+      IF A(j) &gt; A(max_index) THEN
+        max_index = j;
+      ENDIF
+    ENDFOR
+    IF max_index != i THEN
+      交换 A(i) 和 A(max_index)
+    ENDIF
+  ENDFOR
+END</code></pre>
+<p><em>图形结构提示：</em></p>
+<ul><li><strong>N-S图</strong>：一个外层循环框（<code>i=1 to n-1</code>），里面包含一个内层循环框（<code>j=i+1 to n</code>），内层循环里面是一个 <code>IF</code> 选择框（判断 <code>A(j) &gt; A(max)</code>），内层循环下方是一个 <code>IF</code> 选择框（判断 <code>max_index != i</code>，若是则交换）。</li><li><strong>流程图</strong>：两个嵌套的菱形判断框（代表循环），内部有更新最大索引和交换数据的操作。</li></ul>
+<hr />
+<p><strong>原代码逻辑：</strong></p>
+<pre><code>REPEAT
+  IF x &gt; 0 THEN x1 ELSE x2 ENDIF;
+  S1;
+  IF y &gt; 0 THEN 
+    y1;
+    IF z &gt; 0 THEN z1 ELSE z2 ENDIF;
+    S2;
+  ELSE 
+    y2;
+  ENDIF;
+UNTIL L;</code></pre>
+<p><strong>PAD图文字结构描述（请按此结构在纸上画出树形图）：</strong></p>
+<ul><li>最左侧主干：<code>REPEAT (UNTIL L)</code> 循环框</li><li>在循环框右侧引出的第一层：</li><li>节点1：<code>x &gt; 0</code> 选择框（分为 T: <code>x1</code>, F: <code>x2</code>）</li><li>节点2：<code>S1</code></li><li>节点3：<code>y &gt; 0</code> 选择框</li><li><strong>T (True) 分支向下</strong>：</li><li><code>y1</code></li><li>嵌套 <code>z &gt; 0</code> 选择框（分为 T: <code>z1</code>, F: <code>z2</code>）</li><li><code>S2</code></li><li><strong>F (False) 分支向下</strong>：</li><li><code>y2</code></li></ul>
+<hr />
+<p><strong>各自特点：</strong></p>
+<ol><li><strong>程序流程图</strong>：易学、直观；但不够规范，箭头容易导致非结构化程序（随意转移控制），不易表示数据结构。</li><li><strong>N-S图（盒图）</strong>：强制结构化设计，功能域明确，无箭头，不能随意转移控制；缺点是嵌套层次多时方框变小，影响清晰度，修改麻烦。</li><li><strong>PAD图</strong>：结构十分清晰（竖线条数即层次数），强制结构化，易读易懂，且很容易转换成高级语言源代码（方便自动化）；支持自顶向下逐步求精。</li><li><strong>PDL语言</strong>：类似于伪码，外层语法固定（控制结构），内层用自然语言描述（灵活）。可作为注释直接插在源程序中；缺点是作为文本不如图形直观。</li></ol>
+<p><strong>哪一种最好（参考PPT Page 40）：</strong> <strong>PDL语言</strong>相对比较令人满意（在英语国家中最为流行）。 <strong>原因</strong>：它不仅是语言形式，易于被计算机处理，同程序同结构，易于自动产生代码，而且可以直接作为注释嵌入源程序，保持文档与程序的一致性。当然，如果从直观性考虑，<strong>PAD图</strong>也是极佳的选择，因为它既保证了结构化，又非常直观且易于自动化转换。实际工程中，通常结合使用（如用PAD图理清逻辑，用PDL写具体步骤）。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/003_软件编码课后习题答案.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

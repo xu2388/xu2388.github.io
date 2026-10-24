@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeepSeek API涨价确认</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>DeepSeek API涨价确认</h1>
+<div class="meta">2026-08-06 · 主题：杂项/其他 · 41 条消息 · 对话编号 047</div>
+<div class="record"><span class="tag">我问</span><p>deepseek的API要涨价了 ？</p></div>
+<p>是的，根据多个消息源证实，<strong>DeepSeek API服务确定将要涨价</strong>[reference:0][reference:1][reference:2]。</p>
+<p><strong>官方公告与关键信息</strong></p>
+<p>DeepSeek已于2026年8月6日发布官方公告，宣布计划在近期<strong>整体上调</strong>其API服务的定价[reference:3][reference:4][reference:5]。官方特别强调，<strong>预计涨幅较大</strong>[reference:6][reference:7][reference:8]。</p>
+<ul><li><strong>具体方案待公布</strong>：目前，具体的调价细则、新的价格表和生效时间都尚未公布，需要等待官方的正式通知[reference:9][reference:10][reference:11]。</li><li><strong>官方建议</strong>：DeepSeek建议开发者和企业合理规划API调用量，并控制充值金额[reference:12][reference:13][reference:14]。</li></ul>
+<p><strong>现行定价与峰谷机制（供参考）</strong></p>
+<p>在涨价之前，DeepSeek API执行的是“峰谷定价”模式[reference:15][reference:16][reference:17]。工作日的高峰时段（北京时间 9:00-12:00 和 14:00-18:00）价格会是平峰时段的2倍[reference:18][reference:19][reference:20]。</p>
+<p>以下是目前的详细价格（单位：元/百万Tokens）[reference:21][reference:22][reference:23]：</p>
+<table>
+<tr><th>模型</th><th>计费模式</th><th>平峰时段</th><th>高峰时段 (×2)</th></tr>
+<tr><td><strong>DeepSeek-V4-Flash</strong></td><td>输入 (缓存命中)</td><td>0.02</td><td>0.04</td></tr>
+<tr><td></td><td>输入 (缓存未命中)</td><td>1</td><td>2</td></tr>
+<tr><td></td><td>输出</td><td>2</td><td>4</td></tr>
+<tr><td><strong>DeepSeek-V4-Pro</strong></td><td>输入 (缓存命中)</td><td>0.025</td><td>0.05</td></tr>
+<tr><td></td><td>输入 (缓存未命中)</td><td>3</td><td>6</td></tr>
+<tr><td></td><td>输出</td><td>6</td><td>12</td></tr>
+</table>
+<p>这次涨价是继今年7月中旬引入“峰谷定价”[reference:24]、以及5月将V4-Pro的2.5折优惠转为永久价格[reference:25][reference:26]之后的又一次重大定价调整。</p>
+<div class="record"><span class="tag">我问</span><p>目前ds是业内最便宜，模型能力最好的模型了吧</p></div>
+<p>关于DeepSeek是否“最便宜、能力最强”，目前的行业数据给出了一个更 nuanced 的答案：<strong>在“性价比”这个综合维度上，DeepSeek，特别是其V4-Flash模型，可以说是断层式领先，但单纯论“模型能力”，它并非绝对的王者。</strong></p>
+<p>我将从价格和性能两个方面为你详细拆解。</p>
+<p>在成本方面，DeepSeek的优势是压倒性的。根据AI评测机构Artificial Analysis的测试，DeepSeek V4-Flash的运行成本是<strong>全球主流大模型中最低的</strong>[reference:0][reference:1]。</p>
+<p>以下是它完成一组标准化基准测试（Intelligence Index）的平均成本与主流模型的对比[reference:2][reference:3][reference:4]：</p>
+<table>
+<tr><th>模型</th><th>单任务平均成本</th><th>成本倍数（vs DeepSeek）</th></tr>
+<tr><td><strong>DeepSeek V4-Flash</strong></td><td><strong>~0.03 美元</strong>[reference:5][reference:6]</td><td><strong>1x (基准)</strong></td></tr>
+<tr><td>Kimi K3</td><td>~0.86 美元[reference:7]</td><td>约 29x</td></tr>
+<tr><td>GPT-5.6 Sol</td><td>~1.86 美元[reference:8]</td><td>约 62x</td></tr>
+<tr><td>Claude Fable 5</td><td>~3.15 美元[reference:9]</td><td>约 <strong>105x</strong>[reference:10][reference:11]</td></tr>
+</table>
+<blockquote>值得注意的是，这个成本是基于实际任务消耗计算的“落地成本”，而非简单的API标价[reference:12]。DeepSeek V4-Flash的API标价为输入$0.14/百万tokens、输出$0.28/百万tokens[reference:13][reference:14]。</blockquote>
+<p>这种极致的成本控制，源于其创新的模型架构。例如，V4-Flash模型总参数高达2840亿，但每次推理仅激活其中<strong>130亿</strong>参数[reference:15][reference:16]，这种“稀疏激活”技术极大地降低了计算成本。</p>
+<p>在模型能力上，DeepSeek的表现非常出色，达到了“准一线”水平，但与最顶尖的模型相比仍有差距。</p>
+<ul><li><strong>智能指数得分</strong>：在Artificial Analysis的“智能指数”（综合编程、推理等九项测试）中[reference:17]，DeepSeek V4-Flash得分为<strong>50分</strong>（满分100）[reference:18][reference:19]。</li><li><strong>横向对比</strong>：这个分数与谷歌的<strong>Gemini 3.6 Flash持平</strong>[reference:20][reference:21]，但落后于Kimi K3（57分）[reference:22][reference:23]以及Claude Opus 5（61分）等顶尖模型[reference:24][reference:25]。</li><li><strong>特定任务表现出色</strong>：在代码生成等任务上，DeepSeek-V4-Pro在HumanEval测试中达到了<strong>89.2%</strong>，超过了GPT-5.5（88.7%）和Claude Opus 4.7（87.5%）[reference:26]。</li></ul>
+<p>因此，行业将其定位为“<strong>准一线性能+断层级低价</strong>”的组合[reference:27][reference:28]。它在性能上足以满足绝大多数应用场景，同时价格优势极其明显。</p>
+<p>所以，你的判断基本准确，但更精确的描述是：</p>
+<p>DeepSeek并非“绝对最强”，但凭借其<strong>顶尖的性价比</strong>，在市场上划出了一道著名的 <strong>“DeepSeek斩杀线”</strong> [reference:29][reference:30]——即性能相近的模型，价格远高于它；而性能更强的模型，价格则是它的数十甚至上百倍。</p>
+<p>对于绝大多数追求<strong>成本效益</strong>的开发者与企业而言，DeepSeek无疑是当前市场上最具竞争力的选择。这也解释了为何其周调用量能以<strong>7.22万亿Token</strong>登顶全球榜首[reference:31]。</p>
+<div class="record"><span class="tag">我问</span><p>除了ds，如果涨价之后，性价比第二的模型是什么 啊</p></div>
+<p>在DeepSeek涨价后，要找出一个绝对的“性价比第二”确实不容易，因为这个“第二”<strong>高度依赖于你的具体使用场景</strong>。不同的模型在价格、性能和专长上各有侧重。</p>
+<p>不过，根据2026年中的市场数据，有几个模型在性价比上非常有竞争力，可以被看作是“第二名”的有力竞争者。</p>
+<ul><li><strong>MiniMax M3</strong>：根据评测机构Morph的研究，它在保证高性能（SWE-bench编码测试超过80%[reference:0][reference:1]）的同时，价格非常有竞争力（$0.60/$2.40每百万tokens[reference:2]），被认为是“<strong>最佳价值</strong>”模型[reference:3][reference:4]。</li><li><strong>小米 MiMo V2.5 Pro</strong>：它最大的优势是<strong>超长上下文（1M tokens）</strong>[reference:5][reference:6]，且价格固定（$1/$3每百万tokens）[reference:7][reference:8]。对于需要处理长文档的业务来说，性价比极高[reference:9][reference:10]。</li><li><strong>月之暗面 Kimi K2.6</strong>：如果使用场景是包含大量重复提示词的Agent或编程工作流，它的<strong>缓存命中价格（$0.07/百万tokens）</strong>[reference:11][reference:12]极具吸引力，能大幅降低成本[reference:13][reference:14]。</li><li><strong>阿里巴巴 Qwen3 Max</strong>：在DeepSeek之下，它常被视为<strong>通用生产环境的最佳性价比</strong>选择[reference:15][reference:16]，输出价格为$3.90/百万tokens[reference:17]，支持262K上下文[reference:18][reference:19]，能力均衡。</li><li><strong>智谱 GLM-5</strong>：定价$3.20/百万tokens输出[reference:20]，支持200K上下文[reference:21]，在需要<strong>复杂推理</strong>（如结构化思维链）的任务中表现出色[reference:22][reference:23]。</li></ul>
+<p>为了让你更直观地比较，这里是它们的关键数据对比：</p>
+<table>
+<tr><th>模型</th><th>输出价格 ($/MTok)</th><th>上下文窗口</th><th>核心优势与适用场景</th></tr>
+<tr><td><strong>MiniMax M3</strong></td><td><strong>$2.40</strong>[reference:24]</td><td>-</td><td><strong>综合最佳价值</strong>，在编码等任务上性能与价格平衡得最好[reference:25][reference:26]。</td></tr>
+<tr><td><strong>小米 MiMo V2.5 Pro</strong></td><td><strong>$3.00</strong>[reference:27][reference:28]</td><td><strong>1M</strong>[reference:29][reference:30]</td><td><strong>超长文档/代码库处理</strong>，长上下文场景下的性价比之王[reference:31][reference:32]。</td></tr>
+<tr><td><strong>月之暗面 Kimi K2.6</strong></td><td><strong>$3.20</strong>[reference:33]</td><td>-</td><td><strong>Agent/编程工作流</strong>，缓存命中价格极低（$0.07/MTok）[reference:34][reference:35]。</td></tr>
+<tr><td><strong>智谱 GLM-5</strong></td><td><strong>$3.20</strong>[reference:36]</td><td>200K[reference:37]</td><td><strong>复杂推理任务</strong>，在结构化思维链方面表现最强[reference:38][reference:39]。</td></tr>
+<tr><td><strong>阿里巴巴 Qwen3 Max</strong></td><td><strong>$3.90</strong>[reference:40]</td><td>262K[reference:41][reference:42]</td><td><strong>通用生产环境</strong>，能力均衡，适合大多数日常业务需求[reference:43][reference:44]。</td></tr>
+</table>
+<blockquote><strong>请注意</strong>：以上价格主要为2026年5-6月的数据[reference:45][reference:46][reference:47]，且多为输出价格。实际API调用费用是输入+输出之和，并受缓存等因素影响。</blockquote>
+<p>所以，“性价比第二”并没有一个唯一的答案。最明智的策略是根据你的具体需求来选择：</p>
+<ul><li><strong>追求综合性能与价格平衡</strong>：可以优先考虑 <strong>MiniMax M3</strong>。</li><li><strong>核心业务是处理长文档</strong>：<strong>小米 MiMo V2.5 Pro</strong> 是不二之选。</li><li><strong>大量使用Agent或编程助手</strong>：可以深入研究 <strong>Kimi K2.6</strong> 的缓存计费模式。</li><li><strong>需要一个稳定、通用的模型</strong>：<strong>Qwen3 Max</strong> 和 <strong>GLM-5</strong> 都是可靠的选择。</li></ul>
+<p>值得一提的是，目前AI应用的先进实践是<strong>模型路由（Model Routing）</strong>，即根据任务类型自动调配到最合适且成本最低的模型[reference:48][reference:49]。未来，善用工具组合或许比死守某一个“第二名”模型更能实现性价比最大化。</p>
+<p>建议你在做最终决定前，再去各模型官网确认一下最新的价格。</p>
+<div class="record"><span class="tag">我问</span><p>不能仅仅是价格，我还要你保证模型能力的</p></div>
+<p>抱歉，我上一轮的回复确实不够严谨，只谈了价格，忽略了模型能力这个最关键的因素。</p>
+<p>在DeepSeek涨价后，要找一个绝对的“性价比第二”确实很难，因为不同模型在价格和性能上各有侧重。不过，根据2026年8月最新的行业基准测试[reference:0][reference:1]，确实有几个模型在各自的领域里，称得上是“性价比第二”的有力竞争者。</p>
+<p>如果只看综合得分和价格，<strong>MiniMax M3</strong> 是最有力的竞争者。</p>
+<p>在BenchLM的“价格-性能”图表中，<strong>MiniMax M3</strong> 的综合得分达到了<strong>78分</strong>[reference:2]，高于DeepSeek V4 Flash的57分[reference:3]。虽然其输出价格为$1.20/百万tokens[reference:4]，比DeepSeek贵，但在非DeepSeek模型中，它用合理的价格提供了顶尖的性能。</p>
+<ul><li><strong>性能亮点</strong>：在衡量模型解决真实世界编程问题的SWE-Bench Pro测试中，M3表现<strong>超越了GPT-5.5和Gemini 3.1 Pro</strong>[reference:5][reference:6]。在自主Agent评测中也拿到了<strong>最高分</strong>[reference:7]。</li><li><strong>适用场景</strong>：适合对模型综合能力要求高，且预算相对充裕的通用型任务。</li></ul>
+<p>除了综合型的MiniMax M3，在特定任务上，其他模型的表现更为突出：</p>
+<p><strong>1. 👑 编程与复杂推理：智谱 GLM-5</strong></p>
+<ul><li><strong>性能</strong>：在编程领域是顶尖水平。在SWE-bench-Verified测试中得分<strong>77.8%</strong>[reference:8]，在代理编程（Agentic Coding）单项中<strong>排名第一</strong>[reference:9]。</li><li><strong>适用场景</strong>：如果你的核心需求是复杂的代码生成、软件工程任务，GLM-5是首选。</li></ul>
+<p><strong>2. 🚀 追求极致性能：Kimi K3</strong></p>
+<ul><li><strong>性能</strong>：综合能力极强，稳居全球第一梯队[reference:10]。在Frontend Code Arena前端代码测试中<strong>超越Claude Fable 5 登顶第一</strong>[reference:11][reference:12]。</li><li><strong>适用场景</strong>：适合对模型能力有极致要求、且能接受更高成本和可能较慢速度[reference:13]的前沿项目。</li></ul>
+<p><strong>3. 💰 预算有限但求高性能：Grok 4.1 Fast &amp; GPT-4o mini</strong></p>
+<ul><li><strong>Grok 4.1 Fast</strong>：输出价<strong>$0.50/百万tokens</strong>[reference:14]，综合得分<strong>68分</strong>[reference:15]。价格合理，性能不俗，是性价比很高的选择。</li><li><strong>GPT-4o mini</strong>：输出价<strong>$0.60/百万tokens</strong>[reference:16]，综合得分<strong>49分</strong>[reference:17]。作为OpenAI的轻量级模型，是入门和高频调用的经济之选。</li></ul>
+<p>下表整理了上述模型的关键数据，方便你对比：</p>
+<table>
+<tr><th>模型</th><th>综合得分</th><th>输出价格 ($/百万tokens)</th><th>核心优势与适用场景</th></tr>
+<tr><td><strong>DeepSeek V4 Flash (Max)</strong></td><td>76[reference:18]</td><td><strong>$0.28</strong>[reference:19]</td><td><strong>性价比之王</strong>，成本极致[reference:20]</td></tr>
+<tr><td><strong>MiniMax M3</strong></td><td><strong>78</strong>[reference:21]</td><td>$1.20[reference:22]</td><td><strong>综合性价比第二</strong>，适合通用任务[reference:23]</td></tr>
+<tr><td><strong>智谱 GLM-5</strong></td><td>~50[reference:24]</td><td>~$3.20</td><td><strong>编程与Agent任务</strong>顶尖[reference:25][reference:26]</td></tr>
+<tr><td><strong>Kimi K3</strong></td><td>74.7[reference:27]</td><td>$15.00[reference:28]</td><td><strong>综合性能极强</strong>，前端代码第一[reference:29]</td></tr>
+<tr><td><strong>Grok 4.1 Fast</strong></td><td>68[reference:30]</td><td><strong>$0.50</strong>[reference:31]</td><td><strong>高性价比</strong>，价格接近DS[reference:32]</td></tr>
+<tr><td><strong>GPT-4o mini</strong></td><td>49[reference:33]</td><td>$0.60[reference:34]</td><td><strong>经济适用</strong>，适合高频调用[reference:35]</td></tr>
+</table>
+<blockquote><strong>请注意</strong>：以上价格和得分主要基于2026年7-8月的第三方评测数据[reference:36][reference:37][reference:38]，实际API价格可能变动，请以各厂商官网为准。</blockquote>
+<p>所以，没有绝对的“第二”，但有最适合你需求的“第二”：</p>
+<ul><li>想要<strong>综合性能最好</strong>，选 <strong>MiniMax M3</strong>。</li><li>核心是<strong>编程和复杂任务</strong>，选 <strong>智谱 GLM-5</strong>。</li><li>追求<strong>极致性能、预算充足</strong>，选 <strong>Kimi K3</strong>。</li><li>希望<strong>平衡性能与成本</strong>，选 <strong>Grok 4.1 Fast</strong>。</li></ul>
+<p>最好的策略是根据你的具体应用场景来做选择。如果能分享你更具体的需求（比如是侧重编程、对话还是其他任务），我可以帮你做更细致的分析。</p>
+<div class="record"><span class="tag">我问</span><p>我主要就是写代码和文档处理的需求，你可以分别给我推荐</p></div>
+<p>针对你“写代码”和“文档处理”这两个核心需求，在DeepSeek涨价后，我为你梳理了几个在不同侧重点上表现出色的模型。</p>
+<p>如果你是追求<strong>极致编程能力</strong>的专业开发者，<strong>智谱 GLM-5.2 (max)</strong> 是首选；如果希望在<strong>能力与成本间取得最佳平衡</strong>，<strong>MiniMax M3</strong> 会是不错的选择。</p>
+<ol><li><strong>追求极致性能：智谱 GLM-5.2 (max)</strong></li></ol>
+<p>在2026年7月的SuperCLUE编程大模型测评中，GLM-5.2 (max) 以<strong>64.13分</strong>的<strong>全场最高</strong>成绩领跑[reference:0]。它在解决真实世界问题的SWE-bench Verified测试中得分高达<strong>77.8%</strong>[reference:1][reference:2]，被认为是“系统架构师”级别的存在[reference:3]。 <em>   <strong>特点</strong>：编程能力<strong>顶尖</strong>，逻辑严谨，适合处理复杂、高难度的项目。 </em>   <strong>代价</strong>：单题成本较高（4.35元）[reference:4]，适合对代码质量要求严苛的专业场景[reference:5]。</p>
+<ol><li><strong>兼顾性能与成本：MiniMax M3</strong></li></ol>
+<p>M3在编程和智能体（Agent）任务上表现均衡且出色[reference:6]。在SWE-Bench Pro上得分<strong>59.0%</strong>，超越了GPT-5.5[reference:7][reference:8]，甚至在架构设计评测中获得<strong>95分</strong>的高分[reference:9]。有开发者评价其编程能力比DeepSeek-V4-Pro“强一截”[reference:10]。 <em>   <strong>特点</strong>：综合能力强，尤其在<strong>复杂架构设计</strong>和<strong>自主执行任务</strong>上表现突出[reference:11]。 </em>   <strong>优势</strong>：性能和成本控制得比较好。</p>
+<ol><li><strong>其他值得关注的编程模型</strong></li></ol>
+<ul><li><strong>阿里 Qwen3.8-Max</strong>：新品，在CodeArena榜单上位居<strong>全球第四</strong>[reference:12][reference:13]。能力强大，能自主完成复杂项目[reference:14]，但缺乏公开的标准化跑分[reference:15]。其API国内价格为输入12元、输出36元/百万Tokens[reference:16]。</li><li><strong>小米 MiMo-V2.5-Pro</strong>：<strong>经济适用</strong>的选择。编程综合得分49.47分[reference:17]，单题成本仅<strong>0.22元</strong>，是所有测评模型中最低的[reference:18][reference:19]。适合预算有限的基础代码生成任务[reference:20]。</li><li><strong>月之暗面 Kimi K2.7-Code</strong>：表现均衡，编程得分55.43分，单题成本2.97元[reference:21]。</li></ul>
+<p>在文档处理领域，阿里云千问（Qwen）系列模型构建了明显的优势。</p>
+<ul><li><strong>综合能力的佼佼者：Qwen3.7 Plus</strong></li></ul>
+<p>根据BenchLM在2026年7月的评测，<strong>Qwen3.7 Plus</strong>在文档AI模型榜单上以<strong>90.3分</strong>高居榜首[reference:22][reference:23]。它拥有<strong>100万Token</strong>的上下文窗口[reference:24][reference:25]，被官方推荐用于文档撰写、摘要、会议纪要等办公场景[reference:26]。</p>
+<ul><li><strong>处理超长文档的利器：qwen-long</strong></li></ul>
+<p>如果你的工作涉及<strong>同时审阅多份合同、大规模文献梳理</strong>等超长文档，阿里云提供了专门的 <strong>qwen-long</strong> 模型，其上下文窗口高达<strong>1000万Token</strong>，可以完整处理大体量文档[reference:27][reference:28]。</p>
+<ul><li><strong>值得关注的替代选择</strong></li><li><strong>MiniMax M3</strong>：同样支持<strong>100万Token</strong>上下文[reference:29]，在文档处理榜单上也有不错表现[reference:30]。</li><li><strong>谷歌 Gemini</strong>：在处理长文档方面也有优势[reference:31]，但国内使用便捷性和成本需自行评估[reference:32]。</li></ul>
+<p>综合来看，如果你的核心需求是<strong>编程</strong>，追求极致性能选<strong>智谱GLM-5.2 (max)</strong>，看重综合性价比选<strong>MiniMax M3</strong>。如果你的核心需求是<strong>文档处理</strong>，<strong>阿里Qwen系列</strong>是近乎唯一的最优解，常规文档选 <strong>Qwen3.7 Plus</strong>，超长文档选 <strong>qwen-long</strong>。</p>
+<p>如果你的工作流<strong>同时包含编程和文档处理</strong>，可以考虑以下组合策略：</p>
+<ul><li><strong>组合一（性能优先）</strong>：编程用 <strong>智谱GLM-5.2 (max)</strong>，文档处理用 <strong>阿里 Qwen3.7 Plus</strong>。</li><li><strong>组合二（平衡优先）</strong>：编程和常规文档处理都用 <strong>MiniMax M3</strong>，仅在处理超长文档时调用 <strong>阿里 qwen-long</strong>。</li></ul>
+<p>最好的方式还是根据你的具体任务进行小范围测试，以找到最契合你工作流的模型。</p>
+<div class="record"><span class="tag">我问</span><p>关于长文档的话，合适的模型都给我介绍一下，并且和dsv4flash对比</p></div>
+<p>针对长文档处理，以下是几款主流模型与 <strong>DeepSeek-V4-Flash</strong> 的详细对比。</p>
+<table>
+<tr><th>模型</th><th>上下文窗口</th><th>核心优势</th><th>主要限制</th><th>参考价格 (输入/输出)</th><th>适用场景</th></tr>
+<tr><td><strong>DeepSeek-V4-Flash</strong></td><td><strong>100万</strong>[reference:0][reference:1]</td><td><strong>极致性价比</strong>，推理成本极低[reference:2]</td><td>复杂长文档的细节提取能力可能不如专业模型[reference:3]</td><td>$0.14 / $0.28 (每百万tokens)</td><td><strong>通用长文档处理</strong>，对成本敏感的大批量任务</td></tr>
+<tr><td><strong>阿里 qwen-long</strong></td><td><strong>1000万</strong>[reference:4][reference:5]</td><td><strong>上下文窗口极长</strong>，支持多种文件格式[reference:6]</td><td>功能较单一，不支持Function Calling等[reference:7]</td><td>¥0.5 / ¥2 (每百万tokens)[reference:8]</td><td><strong>超长文档分析</strong>，如多份合同审阅、大规模文献梳理[reference:9]</td></tr>
+<tr><td><strong>MiniMax M3</strong></td><td><strong>100万</strong>[reference:10][reference:11]</td><td><strong>编程与长文档能力兼备</strong>，综合实力强[reference:12]</td><td>上下文窗口为1M，处理极长文档不如qwen-long</td><td>待核实</td><td><strong>编程+长文档混合场景</strong>，如分析大型代码库[reference:13]</td></tr>
+<tr><td><strong>智谱 GLM-5.2</strong></td><td><strong>100万</strong>[reference:14]</td><td><strong>编程与Agent能力顶尖</strong>[reference:15]</td><td>价格可能较高</td><td>待核实</td><td><strong>复杂编程项目</strong>，需要深度理解大型代码库</td></tr>
+<tr><td><strong>Kimi K3</strong></td><td><strong>100万</strong>[reference:16]</td><td><strong>综合性能强</strong>，定位旗舰模型[reference:17]</td><td>价格可能较高</td><td>待核实</td><td><strong>端到端知识工作</strong>，需处理长文档的复杂推理[reference:18]</td></tr>
+<tr><td><strong>智谱 GLM-5</strong></td><td><strong>20万</strong>[reference:19][reference:20]</td><td><strong>编程与Agent能力优秀</strong>[reference:21]</td><td>上下文窗口相对较小</td><td>待核实</td><td><strong>常规长文档</strong>，如200页内的报告、合同[reference:22]</td></tr>
+</table>
+<hr />
+<ul><li><strong>DeepSeek-V4-Flash (基准模型)</strong>：原生支持<strong>100万</strong> token上下文[reference:23][reference:24]，主打<strong>极致性价比</strong>[reference:25]。对于大多数长文档（如一本书）已足够，但在处理超长文档的细节提取上，可能略逊于专业模型[reference:26]。</li></ul>
+<ul><li><strong>阿里 qwen-long (超长文档专家)</strong>：专为超长上下文设计，支持<strong>1000万</strong> token[reference:27][reference:28]（约1500万字或1.5万页[reference:29]）。支持上传TXT、PDF、Word等多种格式文件[reference:30]。<strong>价格</strong>为输入¥0.5/百万tokens、输出¥2/百万tokens[reference:31]。<strong>限制</strong>是功能较单一，不支持函数调用等功能[reference:32]。适合处理<strong>海量文档</strong>，如审阅数十份合同或分析大型财报[reference:33]。</li></ul>
+<ul><li><strong>MiniMax M3 (编程与长文档的平衡者)</strong>：基于自研MSA架构[reference:34]，支持<strong>100万</strong> token上下文[reference:35][reference:36]。它融合了<strong>前沿Coding能力</strong>和<strong>原生多模态</strong>[reference:37]，可一次性处理完整代码仓库或长篇文档[reference:38]。如果你既需要写代码，又需要分析长文档，它是一个不错的选择。</li></ul>
+<ul><li><strong>智谱 GLM-5.2 (编程与Agent任务之王)</strong>：上下文窗口同为<strong>100万</strong> token[reference:39]。其最大优势在于<strong>顶尖的编程与Agent能力</strong>[reference:40]。如果你的长文档处理与复杂编程或自动化任务强相关，GLM-5.2是强有力的竞争者。</li></ul>
+<ul><li><strong>Kimi K3 (综合性能强者)</strong>：作为月之暗面的<strong>旗舰模型</strong>[reference:41]，支持<strong>100万</strong> token上下文[reference:42]。它拥有<strong>2.8万亿</strong>参数，综合智能领先[reference:43]，适合需要深度推理的长文档任务[reference:44]。</li></ul>
+<ul><li><strong>智谱 GLM-5 (标准长文档处理)</strong>：支持<strong>20万</strong> token上下文[reference:45][reference:46]。对于大多数200页内的报告或合同已足够[reference:47]。如果文档长度在20万token内，它是一个可靠且可能更具成本效益的选择。</li></ul>
+<p>综合来看，如何选择取决于你的<strong>文档长度</strong>和<strong>是否与编程结合</strong>：</p>
+<ol><li><strong>处理“超长”文档 ( &gt; 100万token )</strong>：<strong>阿里 qwen-long</strong> 是唯一选择，其1000万的上下文窗口是“终极武器”[reference:48]。</li></ol>
+<ol><li><strong>处理“常规”长文档 ( ≤ 100万token )</strong>：</li></ol>
+<ul><li><strong>追求性价比</strong>：<strong>DeepSeek-V4-Flash</strong> 依然是最佳选择。</li><li><strong>需要同时处理长文档和编程任务</strong>：<strong>MiniMax M3</strong> 是理想选择，它很好地平衡了两者[reference:49]。</li><li><strong>追求极致编程与Agent能力</strong>：选择 <strong>智谱 GLM-5.2</strong>[reference:50]。</li><li><strong>追求综合最强性能</strong>：<strong>Kimi K3</strong> 是旗舰之选[reference:51]。</li></ul>
+<p>建议你在最终决定前，查阅各模型官网获取最实时的报价。</p>
+<div class="record"><span class="tag">我问</span><p>小米的大模型没上榜是吗</p></div>
+<p>小米的大模型不仅上榜了，而且表现相当亮眼。在最新的几份第三方评测和调用量榜单中，<strong>小米的 MiMo（尤其是 MiMo-V2.5 系列）都稳居前列</strong>，是一个不容忽视的强力选手。</p>
+<p>我在上次的回答中没有将其单独列出，主要是因为其作为“长文档处理”的专用属性没有其他几款那么突出，但它其实拥有<strong>100万tokens的超长上下文</strong>[reference:0][reference:1]，完全具备处理长文档的能力，并且综合实力很强。</p>
+<p>以下是小米大模型（主要是MiMo-V2.5系列）在近期的几个关键榜单和数据中的表现：</p>
+<ul><li><strong>全球调用量第一 (2026年8月)</strong>：在最新的全球大模型调用量榜单中，<strong>小米MiMo-V2.5以单周10.5万亿Token的调用量登顶榜首</strong>[reference:2][reference:3]。在另一个榜单中，前六名依次为小米MiMo-V2.5、DeepSeek V4 Flash等[reference:4][reference:5]。这说明其市场接受度和实际使用量非常高。</li></ul>
+<ul><li><strong>全球开源大模型智能指数第一 (2026年4月)</strong>：在Artificial Analysis榜单中，<strong>Xiaomi MiMo-V2.5-Pro的综合智能指数位列全球开源大模型第一</strong>[reference:6]。</li></ul>
+<ul><li><strong>SuperCLUE中文大模型测评 (2026年3月)</strong>：MiMo-V2-Pro在本次测评中获得<strong>60.67分</strong>，位列闭源模型前列[reference:7][reference:8]。其中<strong>数学推理</strong>能力表现突出，单项得分高达<strong>84.03分</strong>[reference:9][reference:10][reference:11]。</li></ul>
+<ul><li><strong>Text Arena榜单 (2026年3月)</strong>：MiMo-V2-Pro成功<strong>突破全球前五</strong>[reference:12]。</li></ul>
+<ul><li><strong>ClawBench速度榜单 (2026年3月)</strong>：MiMo-V2-Omni位列<strong>全球速度榜单第6位</strong>，是前十名中运行速度最快的产品[reference:13]。</li></ul>
+<ul><li><strong>SuperCLUE编程大模型测评 (2026年7月)</strong>：MiMo-V2.5-Pro被列为<strong>经济适用者</strong>，编程综合得分49.47分，但<strong>单题成本仅为0.22元，是所有测评模型中价格最低的</strong>[reference:14][reference:15]。</li></ul>
+<p>在处理长文档方面，小米的MiMo系列同样具备很强的实力：</p>
+<ul><li><strong>超长上下文</strong>：旗舰版 <strong>MiMo-V2.5-Pro</strong> 支持 <strong>100万 (1M) tokens</strong> 的超长上下文[reference:16][reference:17][reference:18]。这意味着它可以一次性处理像《三体》三部曲这样体量的超长文本、完整财报或大型代码库[reference:19][reference:20]。</li><li><strong>技术支撑</strong>：小米发布了专为超长文本设计的<strong>HySparse混合稀疏注意力架构</strong>，能在保证精度的同时提升效率[reference:21]。其模型采用的 <strong>SWA（Sliding Window Attention）架构</strong> 也专门针对长上下文进行了优化[reference:22]。</li><li><strong>应用场景</strong>：在实际应用中，它可以快速准确地概括长文、理解多页文档[reference:23]，并且支持多模态输入，能识别并分析图片中的信息，比如医院的检验报告[reference:24]。</li></ul>
+<p>小米的 MiMo 系列，尤其是 <strong>MiMo-V2.5-Pro</strong>，是一个在<strong>综合能力、编程性价比和长文档处理</strong>上都表现优异的模型。它在多个权威榜单上名列前茅，并且拥有百万tokens的上下文窗口，完全能满足你的长文档处理需求。</p>
+<p>考虑到你“写代码”和“文档处理”的需求，小米MiMo-V2.5-Pro是一个非常值得考虑的选项，尤其是在性价比方面优势巨大[reference:25][reference:26]。同时，小米还推出了“百万亿Token创造者激励计划”，可以免费申请大量tokens用于测试[reference:27][reference:28]，这为你提供了一个零成本体验其真实效果的好机会。</p>
+<div class="record"><span class="tag">我问</span><p>如果不是按量计费，就是会员制呢</p></div>
+<p>如果转向会员制，绝大多数主流大模型都提供了丰富的订阅选项，但<strong>DeepSeek是一个明显的例外</strong>。目前，DeepSeek官方<strong>并未推出面向普通用户的C端付费会员套餐</strong>[reference:0][reference:1]。</p>
+<p>以下是各家用模型的会员订阅情况：</p>
+<table>
+<tr><th>模型</th><th>会员方案（月费起）</th><th>会员模式简介</th></tr>
+<tr><td><strong>DeepSeek</strong></td><td><strong>无</strong></td><td><strong>坚持免费</strong>，仅对开发者API按量收费[reference:2][reference:3]。</td></tr>
+<tr><td><strong>Kimi</strong></td><td>¥49 - ¥699</td><td><strong>典型会员制</strong>，不同档位解锁不同模型、上下文长度和功能[reference:4][reference:5]。</td></tr>
+<tr><td><strong>MiniMax</strong></td><td>¥49 - ¥469</td><td><strong>Token套餐</strong>，订阅获得固定额度，用完后可购积分包补充[reference:6][reference:7]。</td></tr>
+<tr><td><strong>智谱GLM</strong></td><td>¥118 起</td><td><strong>积分制套餐</strong>，用量按规则折算为积分扣除[reference:8][reference:9]。</td></tr>
+<tr><td><strong>阿里千问</strong></td><td>¥39 - ¥499</td><td><strong>Token Plan</strong>，以Credits计费，可在平台内调用多款模型[reference:10][reference:11]。</td></tr>
+<tr><td><strong>小米MiMo</strong></td><td>¥39 - ¥659</td><td><strong>Token Plan</strong>，订阅获得Credits，用于调用旗下全模态模型[reference:12][reference:13]。</td></tr>
+</table>
+<hr />
+<ul><li><strong>DeepSeek：坚持免费，独树一帜</strong></li></ul>
+<p>在收费模式上，DeepSeek依然特立独行。无论网页版还是App，其核心的聊天、文件上传、联网搜索等功能对个人用户<strong>完全免费且无次数限制</strong>[reference:14]。它的收费模式仅面向开发者，通过API接口按调用量计费[reference:15][reference:16]。</p>
+<ul><li><strong>Kimi：典型的分层会员制</strong></li></ul>
+<p>Kimi是比较早落地分层付费模式的模型[reference:17]。不同会员等级权限差异明显，例如，只有<strong>199元/月</strong>及以上的套餐才能解锁<strong>完整的100万Token超长上下文</strong>[reference:18][reference:19]；而<strong>49元/月的入门档可能无法调用最新的Kimi K3模型</strong>[reference:20]。</p>
+<ul><li><strong>MiniMax、智谱GLM、阿里、小米：Token/积分套餐制</strong></li></ul>
+<p>这四家都采用了类似的“订阅套餐”模式，可以看作是一种“会员制”的变体。你支付固定的月费，获得一个包含一定数量Token或积分的“套餐”[reference:21][reference:22][reference:23][reference:24]。这种模式的好处是<strong>成本可预测</strong>，适合用量稳定的用户[reference:25]。用量超出套餐后，通常可以购买额外的“积分包”来补充[reference:26][reference:27]。</p>
+<p>综合来看，选择哪种模式取决于你的使用习惯：</p>
+<ul><li>如果你是<strong>轻度或中度用户</strong>，希望<strong>成本可控、可预测</strong>，那么<strong>Kimi、MiniMax、智谱GLM、阿里或小米的会员订阅</strong>是更合适的选择。你可以根据自己的月均使用量，选择对应的套餐档位。</li><li>如果你是<strong>重度、高频用户</strong>，用量波动极大，那么<strong>DeepSeek的按量付费API</strong>可能更具成本优势，用多少付多少，避免了为用不掉的套餐额度买单。</li><li>如果你是<strong>预算有限的个人用户</strong>，希望<strong>零成本</strong>使用，那么<strong>DeepSeek的免费网页/App版</strong>是当前独一无二的选择。</li></ul>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/047_DeepSeek API涨价确认.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

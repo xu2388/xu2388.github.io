@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>查电脑总开机时间</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>查电脑总开机时间</h1>
+<div class="meta">2026-08-18 · 主题：杂项/其他 · 5 条消息 · 对话编号 038</div>
+<div class="record"><span class="tag">我问</span><p>windows系统难道不能查看你这个电脑开机的总时间吗就是你开你电脑一共用了多长时间从你第一次开机开始</p></div>
+<p>Windows系统本身<strong>没有直接提供一个功能，能显示从你第一次开机到现在的“总开机时间”</strong>。不过，你可以通过下面两种方法，分别查看<strong>本次开机持续的时间</strong>和<strong>历史上每一次的开、关机记录</strong>。</p>
+<p>这个方法适用于想了解电脑从<strong>最近一次启动</strong>到现在，已经连续运行了多长时间。</p>
+<ul><li><strong>方法一：任务管理器（最直观）</strong></li></ul>
+<ol><li>按下 <strong><code>Ctrl</code> + <code>Shift</code> + <code>Esc</code></strong> 键打开任务管理器[reference:0][reference:1]。</li><li>点击左侧的“<strong>性能</strong>”选项卡，然后选择“<strong>CPU</strong>”[reference:2][reference:3]。</li><li>在右侧窗口的底部，就能看到“<strong>正常运行时间</strong>”[reference:4][reference:5][reference:6]，它会显示“X天X小时X分钟X秒”[reference:7][reference:8]。</li></ol>
+<ul><li><strong>方法二：命令提示符或PowerShell（更精确）</strong></li></ul>
+<ol><li>按下 <strong><code>Win</code> + <code>R</code></strong> 键，输入 <code>cmd</code> 后回车，打开命令提示符[reference:9][reference:10]。</li><li>输入以下命令后回车：</li></ol>
+<pre><code>        systeminfo | findstr &quot;系统启动时间&quot;</code></pre>
+<p>这会直接显示系统本次启动的具体时间点[reference:11][reference:12][reference:13][reference:14]。</p>
+<p>如果你用的是PowerShell，也可以直接运行 <code>Get-Uptime</code> 命令来查看[reference:15][!reference:16]。</p>
+<p>如果你想了解电脑过去的使用情况，比如某天是否开机过，可以用“事件查看器”查看系统日志[reference:17]。</p>
+<ol><li>按下 <strong><code>Win</code> + <code>R</code></strong> 键，输入 <code>eventvwr.msc</code> 后回车，打开“事件查看器”[reference:18]。</li><li>在左侧依次展开“<strong>Windows 日志</strong>” -&gt; “<strong>系统</strong>”[reference:19][!reference:20]。</li><li>在右侧点击“<strong>筛选当前日志...</strong>”[reference:21][reference:22][!reference:23]。</li><li>在“<strong>&lt;所有事件 ID&gt;</strong>”框中输入关键ID，然后点击“确定”[reference:24][reference:25][!reference:26]：</li></ol>
+<ul><li><strong><code>6005</code></strong>：代表<strong>开机</strong>[reference:27][reference:28][!reference:29]。</li><li><strong><code>6006</code></strong>：代表<strong>正常关机</strong>[reference:30][reference:31][!reference:32]。</li><li><strong><code>6008</code></strong>：代表<strong>异常关机</strong>（如断电、强制关机等）[reference:33][!reference:34]。</li></ul>
+<p>筛选后，列表里显示的就是所有符合条件的历史记录，从最早到最近都有[reference:35]。</p>
+<p>简单来说：</p>
+<ul><li>想看<strong>本次开机后运行了多久</strong>，用“<strong>任务管理器</strong>”最方便。</li><li>想看<strong>过去所有的开关机时间点</strong>，用“<strong>事件查看器</strong>”筛选项。</li></ul>
+<p>需要注意的是，“事件查看器”里的日志可能会因为系统清理或重装等原因丢失[reference:36]，所以它不一定能追溯到从你第一次开机到现在的所有记录。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/038_查电脑总开机时间.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

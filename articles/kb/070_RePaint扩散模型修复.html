@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RePaint扩散模型修复</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>RePaint扩散模型修复</h1>
+<div class="meta">2026-06-23 · 主题：科研-深度学习/模型、科研-论文调研、课程-数学 · 31 条消息 · 对话编号 070</div>
+<div class="record"><span class="tag">我问</span><p>这个是一个什么工作啊</p></div>
+<p>这篇工作是 <strong>CVPR 2022</strong> 的入选论文，名为 <strong>RePaint</strong>（全称：<em>RePaint: Inpainting using Denoising Diffusion Probabilistic Models</em>），由苏黎世联邦理工学院（ETH Zürich）的研究团队完成。</p>
+<p>简单来说，这是一个<strong>基于扩散模型（DDPM）的图像修复（Inpainting）方法</strong>，但它最大的亮点是<strong>“零样本”</strong>（Training-free）——不需要针对修复任务重新训练模型，而是直接“白嫖”一个预训练好的<strong>无条件图像生成模型</strong>来完成修复。</p>
+<p>为了方便你理解，我从几个核心角度拆解一下：</p>
+<p><strong>1. 核心思想（怎么做？）</strong> 传统的修复方法需要根据特定的掩码（Mask）去训练条件生成模型。而 RePaint 的做法很巧妙：</p>
+<ul><li>它直接拿一个现成的、只会“凭空画画”的扩散模型。</li><li>在反向去噪的每一步，它用<strong>原图的已知像素（加噪后）</strong>强行替换掉模型预测的对应区域，而<strong>未知的破损区域</strong>则继续由模型生成。</li><li>通过这种“已知区域照抄原图，未知区域交给模型”的交替操作，引导模型补全出与周围环境和谐的内容。</li></ul>
+<p><strong>2. 关键改进（为什么有效？）</strong> 作者发现，如果只是简单地替换像素，补出来的内容虽然纹理匹配，但经常<strong>语义不对</strong>（比如狗头上长出猫耳朵）。因此他们提出了 <strong>“重采样”（Resampling）策略</strong>：</p>
+<ul><li>在去噪过程中，模型不是一路“向前”降噪，而是<strong>来回跳跃</strong>（前进几步加噪，再后退几步去噪）。</li><li>这相当于给模型多次“反悔”和“调整”的机会，让生成区域和已知区域反复“沟通”，最终融合得更加自然和符合语义。</li></ul>
+<p><strong>3. 主要优势（厉害在哪？）</strong></p>
+<ul><li><strong>掩码无限制</strong>：因为没针对特定掩码训练，所以无论你是细线、粗刷、半张脸还是极端的“只留1%像素”，它都能泛化处理。</li><li><strong>语义强且多样</strong>：利用扩散模型的强先验，它能“理解”场景（比如即使遮住大半，也能画出合理的人脸五官），且每次生成的结果具有随机多样性。</li></ul>
+<p><strong>4. 主要局限（缺点）</strong></p>
+<ul><li><strong>极慢</strong>：因为每张图需要经历完整的扩散迭代加上额外的“重采样”来回跳跃，比 GAN 等方法慢几个数量级，难以用于实时应用。</li><li><strong>极端掩码下可能“自由发挥”</strong>：如果已知信息太少，它补出来的图像可能很真实，但会和原图（Ground Truth）完全不一样，导致客观评价指标不太好看。</li></ul>
+<hr />
+<p>如果要用一句话总结：<strong>RePaint 是第一个向学术界展示“无需训练、即插即用”的扩散模型修复能力的经典工作，奠定了后续扩散模型在图像修复领域的基础。</strong></p>
+<p>如果你想了解它的代码复现细节，或者想对比它和现在更新的扩散修复模型（如 ControlNet + Inpainting）的区别，可以告诉我，我再帮你展开。</p>
+<div class="record"><span class="tag">我问</span><p>现在很多基于扩撒模型的工作都有一个基于先验知识，其实就是首先在特定的域上去训练这个模型的无条件生成，让这个模型认识数据，请问这种无条件生成时是如何训练的</p></div>
+<p>这个问题问到了扩散模型最核心的“地基”。你理解得完全正确——所谓的“先验知识”，本质上就是让模型先学会<strong>“什么样的图像是真实的”</strong>。</p>
+<p>关于<strong>无条件扩散模型是如何训练的</strong>，虽然数学公式看起来很复杂（论文第3节），但背后的物理直觉和训练实操其实非常简洁。我尽量避开繁琐的公式，用<strong>“复原游戏”</strong>的视角帮你拆解这个过程：</p>
+<p>无条件生成模型的目标，是学会训练集（比如人脸数据集）的<strong>数据分布</strong>。训练过程不涉及任何标签（不需要告诉你这是“猫”还是“狗”），只给模型看海量的真实图片。</p>
+<p>训练的玩法可以概括为三步：</p>
+<ul><li><strong>第一步（加噪破坏）</strong>：从数据集中随机挑一张真实图片 \( x_0 \)。然后随机选择一个时间步 \( t \)（比如 \( t=50 \)），根据数学公式，给这张图加上 \( t \) 步的高斯噪声，得到一张模糊带噪的图片 \( x_t \)。</li><li><strong>第二步（让模型预测）</strong>：把这张带噪图 \( x_t \) 和时间步 \( t \) 喂给神经网络（通常是 U-Net）。让模型回答：“请告诉我，我刚刚往这张图里加的噪音长什么样？”</li><li><strong>第三步（计算误差）</strong>：因为模型生成答案是“预测的噪音”，而我们实际加噪时知道“真实的噪音”是什么。我们直接计算这两者的<strong>均方误差（MSE）</strong>，然后通过反向传播调整模型参数。</li></ul>
+<p><strong>核心结论</strong>：所谓“无条件训练”，就是<strong>一个不断让模型“猜噪音”，然后挨批纠正的过程</strong>。模型不需要知道图片内容是什么，只需要懂得“干净图片的像素分布规律”，才能准确把噪音从模糊图中剥离出来。</p>
+<p>你可能会疑惑：只是让它猜噪音，它怎么就能理解语义了呢？</p>
+<p>因为<strong>噪声的分布与图像的结构是强相关的</strong>。</p>
+<ul><li>在<strong>低噪</strong>阶段（\( t \) 很小），模型只需微调边缘纹理，这迫使它学会<strong>局部纹理</strong>。</li><li>在<strong>高噪</strong>阶段（\( t \) 很大），原图几乎被雪白噪音淹没，模型要准确猜出噪音，就必须依靠<strong>全局的抽象语义</strong>（比如：这里应该是个眼睛的结构，虽然被盖住了，但我不能把它猜成背景墙）。</li></ul>
+<p>通过反复训练数百万张不同图片、不同的 \( t \) 值，模型内部（U-Net的权重）就<strong>隐式地记住了</strong>整个数据域的分布规律。这就是你所说的“让模型认识数据”——它虽然没学过图像分类，但它知道<strong>“什么样的像素排列大概率是像一张人脸”</strong>。</p>
+<p>论文公式（6）其实就干这一件事： \[ L_{simple} = \mathbb{E}_{t, x_0, \epsilon} \left[ \| \epsilon - \epsilon_\theta(x_t, t) \|^2 \right] \]</p>
+<p>翻译成人话：<strong>让模型预测的噪音（\( \epsilon_\theta \)）无限逼近我们真实加进去的噪音（\( \epsilon \)）。</strong></p>
+<p>既然你提到底层原理，顺便可以对比一下，帮你理解为什么 RePaint 能“白嫖”这个预训练模型：</p>
+<ul><li><strong>无条件训练</strong>：输入给网络的只有 <strong>带噪图 \( x_t \)</strong> 和 <strong>时间步 \( t \)</strong>。模型只干一件事——去噪。这就是先验模型。</li><li><strong>有条件训练（如文本生成图）</strong>：除了输入 \( x_t \) 和 \( t \)，网络还要额外输入一个 <strong>条件信号 \( y \)</strong>（比如文本描述“一只狗”）。模型不仅要去噪，还要让生成的内容尽量符合 \( y \)。（这在数学上叫做 Classifier-Free Guidance）。</li></ul>
+<p>训练好的无条件模型，在推理时<strong>只需要输入一个纯随机噪声</strong>，模型一步一步去噪，就能“无中生有”变出一张新人脸。这说明它已经把数据域的先验知识压缩进了几十亿个参数里。</p>
+<p><strong>回到 RePaint</strong>：它的厉害之处就在于，它不动这个训练好的“橡皮泥”（先验模型），只是在去噪的每一步（推理时）强行把“已知像素”贴上去，利用这个强大的先验知识自动把“未知区域”填充得跟已知区域天衣无缝。</p>
+<hr />
+<p>如果你还想了解<strong>“训练时具体怎么采样的（为什么公式可以直接从 \( x_0 \) 跳到 \( x_t \)）”</strong>，或者想知道<strong>“时间步 \( t \) 的调度策略对训练有什么影响”</strong>，我可以接着为你拆解。</p>
+<div class="record"><span class="tag">我问</span><p>你给我标准的SD15模型权重的国内的下载地址</p></div>
+<p>SD 1.5 基础模型的官方权重，在国内可以通过以下几种方式获取。我把它们整理成了表格，方便你根据情况选择。</p>
+<table>
+<tr><th>获取方式</th><th>主要特点</th><th>适合人群</th></tr>
+<tr><td><strong>HuggingFace 镜像站</strong></td><td>无需特殊网络，直接下载官方文件[reference:0][reference:1]</td><td>习惯使用 <code>diffusers</code> 库，希望以编程方式加载模型的开发者[reference:2]</td></tr>
+<tr><td><strong>国内 AI 模型平台</strong></td><td>高速、稳定，提供模型卡片和详细信息[reference:3]</td><td>希望快速浏览模型信息并直接下载的用户</td></tr>
+<tr><td><strong>CSDN 星图镜像</strong></td><td>一键部署完整环境，无需手动配置[reference:4]</td><td>希望快速上手体验，不想处理复杂安装步骤的新手</td></tr>
+<tr><td><strong>百度网盘等</strong></td><td>备选方案，但链接可能失效或需关注公众号[reference:5]</td><td>当上述渠道均无法使用时作为备选</td></tr>
+</table>
+<hr />
+<p>这是最推荐的获取方式，因为它直接同步了 HuggingFace 上的官方模型文件，安全可靠，且在国内可以正常访问[reference:6][reference:7]。</p>
+<ul><li><strong>镜像站地址</strong>：<code>https://hf-mirror.com</code>[reference:8][reference:9][reference:10]</li><li><strong>官方模型页面</strong>：<code>https://hf-mirror.com/runwayml/stable-diffusion-v1-5</code>[reference:11]</li></ul>
+<p>你可以直接用浏览器访问这个镜像站地址，找到并下载对应的模型文件[reference:12]。</p>
+<p>一些国内的AI服务平台也托管了该模型，下载速度快，并且会提供模型说明。</p>
+<ul><li><strong>平台名称</strong>：鲸智社区·大模型公共服务平台[reference:13][reference:14]</li><li><strong>模型地址</strong>：<code>https://aihub.caict.ac.cn/models/runwayml/stable-diffusion-v1-5</code>[reference:15]</li><li><strong>提供方</strong>：runwayml[reference:16]</li></ul>
+<p>如果你不想手动下载和配置环境，CSDN 平台提供了一个“星图镜像”服务，可以将模型、环境和 Web 界面打包好，一键部署使用[reference:17]。</p>
+<ul><li><strong>使用方法</strong>：在 CSDN 星图镜像广场搜索 <code>stable-diffusion-v1-5-archive</code>[reference:18][reference:19]。</li><li><strong>特点</strong>：无需繁琐的下载和配置步骤，开箱即用[reference:20][reference:21]。</li></ul>
+<p>你也可以在百度网盘等平台找到热心用户分享的模型文件。但请注意，这类分享链接的有效性和安全性需要你自行判断。</p>
+<ul><li><strong>一个示例</strong>：在某个教程中，提供了百度网盘链接（提取码: <code>gtk8</code>）[reference:22]。</li><li><strong>其他渠道</strong>：一些公众号也可能提供下载链接，例如关注“<code>Rocky</code>”的公众号 <code>WeThinkIn</code> 并回复“<code>SD模型</code>”[reference:23][reference:24]。</li></ul>
+<hr />
+<p>在官方模型页面，你通常会看到两个主要文件，它们的主要区别如下[reference:25]：</p>
+<table>
+<tr><th>文件名</th><th>文件大小</th><th>特点与用途</th></tr>
+<tr><td><strong><code>v1-5-pruned-emaonly.ckpt</code></strong></td><td><strong>4.27 GB</strong>[reference:26][reference:27]</td><td><strong>精简版</strong>，占用显存较少，适合用于<strong>日常的图像生成（推理）</strong>[reference:28][reference:29][reference:30]。</td></tr>
+<tr><td><strong><code>v1-5-pruned.ckpt</code></strong></td><td><strong>7.7 GB</strong>[reference:31][reference:32]</td><td><strong>完整版</strong>，占用显存更多，包含了用于训练的权重，适合用来<strong>微调模型</strong>[reference:33][reference:34]。</td></tr>
+</table>
+<p>对于大多数用户来说，下载 <strong><code>v1-5-pruned-emaonly.ckpt</code></strong> 就足够了。</p>
+<p>如果你使用 <code>diffusers</code> 库，可以通过设置环境变量 <code>HF_ENDPOINT</code> 来指定国内镜像源，这样代码就会自动从镜像站下载模型[reference:35][reference:36]。</p>
+<pre><code>import os
+# 设置HuggingFace的国内镜像源
+os.environ[&#x27;HF_ENDPOINT&#x27;] = &#x27;https://hf-mirror.com&#x27;
+
+from diffusers import StableDiffusionPipeline
+import torch
+
+# 指定模型ID，代码将自动从镜像站下载
+model_id = &quot;runwayml/stable-diffusion-v1-5&quot;
+pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
+pipe = pipe.to(&quot;cuda&quot;)
+
+prompt = &quot;a photo of an astronaut riding a horse on mars&quot;
+image = pipe(prompt).images[0]
+image.save(&quot;astronaut_rides_horse.png&quot;)</code></pre>
+<p>这段代码会利用国内的 <code>hf-mirror.com</code> 镜像站来下载所需的模型文件[reference:37]。</p>
+<div class="record"><span class="tag">我问</span><p>runwayml这个是啥啊</p></div>
+<p><code>runwayml</code> 指的是一家名为 <strong>Runway</strong> 的人工智能研究公司[reference:0][reference:1]。在 AI 生成领域，尤其是文生图、文生视频方面，它是一家非常有影响力的公司。</p>
+<p>简单来说，可以从这几个方面来理解它：</p>
+<p>Runway 的核心目标是<strong>用 AI 技术来辅助艺术、娱乐和人类的创造力</strong>[reference:2][reference:3]。它不只是一个研究机构，更是一个提供各种 AI 创作工具的平台[reference:4]。</p>
+<p>它的产品非常丰富，最核心的是在<strong>AI 视频生成</strong>领域。例如，其开发的 <strong>Gen-2</strong> 和 <strong>Gen-3 Alpha</strong> 等模型，都是当时非常先进的、可以根据文字或图片生成视频的工具[reference:5][reference:6]。</p>
+<p>这正是你之前看到 <code>runwayml/stable-diffusion-v1-5</code> 的原因。Runway 和 Stability AI 等团队<strong>共同参与了 Stable Diffusion 模型的早期研发和发布</strong>[reference:7]。</p>
+<p>因此，<code>runwayml</code> 在 Hugging Face 等平台上托管了 Stable Diffusion v1.5 的官方模型权重，相当于一个“官方发布渠道”[reference:8]。所以你在寻找模型时看到它的名字，是因为它就是这个模型的最初发布者之一。</p>
+<p>除了 Stable Diffusion，Runway 还因这些事在圈内闻名：</p>
+<ul><li><strong>顶尖的视频生成模型</strong>：它的 <strong>Gen-4.5</strong> 模型被其称为“世界顶级的视频模型”[reference:9][reference:10]。</li><li><strong>参与知名电影制作</strong>：Runway 的技术曾被用于制作奥斯卡获奖影片<strong>《瞬息全宇宙》</strong>(Everything Everywhere All at Once) 的后期特效[reference:11]。</li><li><strong>全面的创作工具套件</strong>：它提供了一个在线平台，集成了图像生成、视频编辑、背景移除等数十种 AI 工具[reference:12][reference:13]。</li></ul>
+<p>你可以把 Runway 看作是一家走在技术前沿的 AI 公司，它不仅是 Stable Diffusion 的“娘家”之一，更是 AI 生成视频领域的领军者。</p>
+<div class="record"><span class="tag">我问</span><p>国内的魔搭社区呢</p></div>
+<p>魔搭社区（ModelScope）可以看作是国内AI领域，尤其是<strong>AIGC模型方面，一个不可或缺的基础设施</strong>。它和Runway类似，都是一个模型平台，但定位和规模有很大不同。</p>
+<p>如果说Runway是一个专注于开发尖端AI应用（特别是视频生成）的“<strong>创作工作室</strong>”，那么魔搭社区就是一个规模庞大、功能全面的“<strong>模型超级市场</strong>”。</p>
+<p>魔搭社区（ModelScope）是由<strong>阿里巴巴达摩院</strong>联合<strong>中国计算机学会（CCF）开源发展委员会</strong>共同发起的AI模型开源社区[reference:0][reference:1][reference:2]。它成立于2022年11月[reference:3]，秉持“模型即服务”（MaaS）的理念[reference:4][reference:5]，旨在为AI开发者提供从模型体验、下载、调优到训练、推理、部署的<strong>一站式服务</strong>[reference:6][reference:7]。</p>
+<ul><li><strong>国内规模最大、最活跃的AI模型社区</strong>：目前已汇聚超过<strong>5万个</strong>AI模型[reference:8]，活跃用户超过<strong>700万</strong>[reference:9]，服务开发者超过<strong>1300万</strong>[reference:10]。</li><li><strong>强大的背景与资源</strong>：背靠阿里云，为开发者提供<strong>免费的GPU算力</strong>和<strong>不限速的模型下载</strong>服务[reference:11][reference:12][reference:13]，这对国内开发者来说非常实用。</li><li><strong>全链路服务与生态</strong>：不仅提供模型，还集成了在线开发环境（Notebook）[reference:14]、模型微调（Fine-tuning）[reference:15]、在线推理[reference:16]和部署工具[reference:17]等。同时，它也在积极构建MCP（模型上下文协议）生态，为未来AI Agent应用提供基础设施[reference:18]。</li><li><strong>以中文为核心</strong>：作为全球首个以中文为核心的多模态模型生态社区[reference:19][reference:20]，它对中文用户和本土化场景的支持非常友好。</li></ul>
+<p>对于你关心的Stable Diffusion，魔搭社区不仅支持，而且投入很大：</p>
+<ul><li><strong>设有专门的AIGC专区</strong>：该专区在2024年云栖大会上推出，首批就上架了<strong>157款</strong>精选多模态模型[reference:21][reference:22]。</li><li><strong>模型资源丰富</strong>：专区里包含<strong>Stable Diffusion</strong>、<strong>FLUX</strong>、<strong>RealVisXL</strong>等热门基础模型，以及大量风格化的<strong>LoRA模型</strong>[reference:23][reference:24][reference:25]。</li><li><strong>提供官方模型下载</strong>：社区内直接托管了官方版的Stable Diffusion v1.5模型[reference:26][reference:27]。</li><li><strong>支持在线创作与微调</strong>：开发者可以在线使用Stable Diffusion生成图片[reference:28]，甚至可以用少量图片对模型进行<strong>LoRA微调</strong>，训练出自己的风格化模型[reference:29][reference:30]。</li></ul>
+<p>总的来说，魔搭社区是一个由阿里云等巨头支持的、服务国内AI开发者的<strong>综合性平台</strong>。它提供从模型获取、训练到部署的<strong>全链路服务</strong>，并且对Stable Diffusion等热门AIGC模型有非常完善的支持。</p>
+<div class="record"><span class="tag">我问</span><p>之前你说的通道数添加的那个作用的那个论文是哪一个</p></div>
+<p>根据你的描述，这篇论文很可能是：</p>
+<p><strong>《Teamwork: Collaborative Diffusion with Low-rank Coordination and Adaptation》</strong>[reference:0][reference:1][reference:2]</p>
+<p>这篇论文已被图形学顶会 <strong>SIGGRAPH Asia 2025</strong> 接收[reference:3]。</p>
+<p>论文指出，预训练的扩散模型（如Stable Diffusion）通常是<strong>3通道输入（RGB图），3通道输出（RGB图）</strong>[reference:4]。但在很多图形学任务中，需要处理更多通道，例如：</p>
+<ul><li><strong>输入侧</strong>：需要额外通道来输入法线、深度等信息[reference:5]。</li><li><strong>输出侧</strong>：需要预测更多通道，如SVBRDF（空间变化双向反射分布函数）[reference:6]、 intrinsic image decomposition（固有图像分解）[reference:7]等。</li></ul>
+<p>传统方法是针对每个任务专门修改模型，代价高昂[reference:8]。<strong>Teamwork</strong> 提出了一种新思路：</p>
+<ol><li><strong>核心思想</strong>：不改变原始模型，而是<strong>协同多个“队友”（teammates）</strong> 来实现通道扩展[reference:9][reference:10][reference:11]。</li><li><strong>关键技术</strong>：采用一种新的 <strong>LoRA（低秩适应）</strong> 变体，来协调这些“队友”共同完成任务[reference:12][reference:13]。它通过让多个队友协同工作，实现输入输出通道的同时扩展[reference:14]。</li></ol>
+<p>你提到的“通道数添加”，正是 <strong>Teamwork</strong> 这篇论文所要解决的核心问题。它提供了一种比传统方法更灵活、高效的“添加通道”方案。</p>
+<ul><li><strong>标题</strong>: Teamwork: Collaborative Diffusion with Low-rank Coordination and Adaptation[reference:15]</li><li><strong>作者</strong>: Sam Sartor 和 Pieter Peers[reference:16][reference:17]</li><li><strong>arXiv ID</strong>: [2510.05532](https://arxiv.org/abs/2510.05532)[reference:18]</li><li><strong>会议</strong>: SIGGRAPH Asia 2025[reference:19]</li></ul>
+<p>如果这不是你要找的论文，可以再提供一些细节，我继续帮你查找。</p>
+<div class="record"><span class="tag">我问</span><p>我想要把UNet,reanet ,里面的卷积都变成小波聚氨基</p></div>
+<p>你提到的“小波聚氨基”应该是指将<strong>小波变换（Wavelet Transform）</strong> 集成进神经网络，以替代或增强传统的卷积与池化操作。</p>
+<p>这并非特指某一种卷积层，而是近年来一系列研究的总称。它们的核心思想是：利用小波变换可逆、多尺度、能同时捕捉频域和空域信息的优势，来克服标准卷积神经网络（CNN）的一些局限性[reference:0]。</p>
+<p>将UNet和ResNet中的普通卷积替换为小波增强型模块，主要有以下几种主流且成熟的实现思路：</p>
+<p>这是最直接的方法，用<strong>离散小波变换（DWT）</strong> 来替代传统网络中的<strong>池化层</strong>或<strong>步长卷积</strong>，以进行下采样[reference:1][reference:2]。</p>
+<ul><li><strong>核心逻辑</strong>：DWT能将图像分解为四个子带：一个低频（<code>LL</code>，近似图）和三个高频（<code>LH</code>、<code>HL</code>、<code>HH</code>，细节图）。它不仅能缩小特征图尺寸以增大感受野，还能<strong>完整保留信息</strong>，避免了池化层丢失细节的问题[reference:3][reference:4]。</li><li><strong>在UNet中的应用</strong>：在编码器（收缩路径）中，用DWT替换池化；在解码器（扩张路径）中，用<strong>逆离散小波变换（IWD）</strong> 替换上采样，以实现高质量重建[reference:5]。</li><li><strong>代表工作</strong>：<strong>多级小波CNN（MWCNN）</strong>[reference:6][reference:7]。它在图像去噪、超分辨率等任务上取得了很好的效果。</li></ul>
+<p>这是2024年提出的一个更“即插即用”的方案[reference:8]。它设计了一个名为<strong>WTConv</strong>的新层，可以作为<strong>深度可分离卷积的直接替代品</strong>[reference:9]。</p>
+<ul><li><strong>核心逻辑</strong>：WTConv利用小波变换，在不显著增加参数量的前提下，有效地<strong>增大了卷积核的感受野</strong>[reference:10]。</li><li><strong>优势</strong>：更易于集成到现有网络中，可以直接替换特定的卷积层，以实现更好的性能[reference:11]。</li><li><strong>发表会议</strong>：ECCV&#x27;24[reference:12]。</li></ul>
+<p>你也可以将小波变换作为一个独立的模块，嵌入到ResNet的残差块中，以增强其提取多尺度特征的能力[reference:13]。</p>
+<ul><li><strong>核心逻辑</strong>：在残差块内部，或作为输入前/后的预处理步骤，加入小波变换。这能让网络更好地捕捉不同频域的信息，从而提升对纹理等细节的感知能力[reference:14]。</li><li><strong>应用实例</strong>：有研究将小波模块集成到ResNet-18中，在CIFAR-10和纹理数据集（DTD）上分别实现了<strong>2.12%</strong> 和<strong>9.73%</strong> 的准确率提升[reference:15]。</li></ul>
+<p>更进一步，有研究提出构建一个<strong>完全基于小波变换、不含可学习参数的编码器</strong>，来设计全新的UNet架构[reference:16][reference:17]。</p>
+<ul><li><strong>核心逻辑</strong>：利用多级离散小波变换（DWT）直接替代传统的、参数化的编码器部分[reference:18]。</li><li><strong>优势</strong>：这种设计极大地简化了网络，可能在某些特定任务（如求解偏微分方程）中更具优势[reference:19]。</li></ul>
+<hr />
+<p>所以，将卷积变成“小波卷积”，可以从以下几种主流方案中进行选择：</p>
+<table>
+<tr><th>集成方式</th><th>核心思想</th><th>典型应用/代表工作</th></tr>
+<tr><td><strong>替换下采样</strong></td><td>用<strong>DWT</strong>替代池化或步长卷积[reference:20][reference:21]</td><td>MWCNN[reference:22][reference:23]</td></tr>
+<tr><td><strong>替换标准卷积</strong></td><td>用<strong>WTConv</strong>层直接替换原有卷积层[reference:24]</td><td>WTConv (ECCV&#x27;24)[reference:25]</td></tr>
+<tr><td><strong>集成到残差块</strong></td><td>将<strong>小波变换作为模块</strong>嵌入残差结构中[reference:26]</td><td>用于提升分类准确率[reference:27]</td></tr>
+<tr><td><strong>构建新型编码器</strong></td><td>用<strong>多级DWT</strong>构建无参数的编码器[reference:28]</td><td>Multi-ResNet[reference:29]</td></tr>
+</table>
+<p>你可以根据自己的具体任务和需求，考虑从哪个方案入手。如果想深入了解某个具体方法（比如MWCNN或WTConv）的实现细节，可以随时再问我。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/070_RePaint扩散模型修复.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

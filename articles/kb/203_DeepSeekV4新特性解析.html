@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeepSeekV4新特性解析</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>DeepSeekV4新特性解析</h1>
+<div class="meta">2026-04-25 · 主题：杂项/其他 · 19 条消息 · 对话编号 203</div>
+<div class="record"><span class="tag">我问</span><p>最新的ds v4有什么不一样啊</p></div>
+<div class="record"><span class="tag">我问</span><p>贵吗</p></div>
+<p>根据2026年4月24日的官方消息，大家常说的&quot;ds v4&quot;（全称<strong>DeepSeek-V4</strong>）预览版已正式发布并开源[reference:0][reference:1]。这一版的主要升级目标，是把<strong>百万级上下文（1M Token）</strong> 和更强的<strong>智能体（Agent）能力</strong>变成所有用户的标配。</p>
+<ul><li>🚀 <strong>架构与规模升级</strong>：推出<strong>DeepSeek-V4-Pro</strong>（1.6万亿参数）和<strong>DeepSeek-V4-Flash</strong>（2840亿参数）两个版本[reference:2][reference:3]。V4采用了全新的<strong>DSA2注意力机制</strong>和MoE混合专家架构，将上下文长度从V3.2的128K提升至1M，实现了近10倍的跨越，可以轻松处理类似《三体》三部曲体量的超长文本[reference:4][reference:5][reference:6][reference:7]。</li><li>🤖 <strong>核心能力与定位</strong>：V4的核心升级之一是<strong>Agent（智能体）能力</strong>，让模型可以自主思考和调用外部工具来完成复杂任务[reference:8][reference:9]。<strong>Pro版</strong>的Agent能力在开源模型中达到最佳，数学和编程推理能力已比肩世界顶级闭源模型[reference:10][reference:11]。而<strong>Flash版</strong>在核心推理能力接近Pro版的同时，响应更快、成本更低[reference:12][reference:13]。同时，现在你可以自主选择“快速模式”以获取即时响应，或“专家模式”深度解决复杂问题[reference:14][reference:15]。</li><li>💰 <strong>定价与生态</strong>：Flash版价格为输入<strong>1元/百万tokens</strong>，输出<strong>2元/百万tokens</strong>；Pro版输出为<strong>24元/百万tokens</strong>[reference:16]。开发者现在就可以通过API调用（如<code>deepseek-v4-pro</code>或<code>deepseek-v4-flash</code>），或直接在官网/App上体验[reference:17]。</li></ul>
+<p>如果想深入了解某个方面，比如具体的API调用方式或技术细节，随时可以再问我～</p>
+<div class="record"><span class="tag">我问</span><p>写代码的能力怎么样啊</p></div>
+<p><strong>不贵，甚至可以说非常有竞争力。</strong> 我们分两个版本来看：</p>
+<ul><li><strong>Flash 版（输入 ¥1/百万tokens，输出 ¥2/百万tokens）</strong>  </li></ul>
+<p>这个价格在同类高性能模型中属于<strong>极低水平</strong>。拿它来处理超长文档或日常对话，成本几乎可以忽略不计。举例来说，把整本《三体》三部曲（约90万字）全文输入加输出一次，费用也就在几元钱。</p>
+<ul><li><strong>Pro 版（输出 ¥24/百万tokens）</strong>  </li></ul>
+<p>这个价格看起来比 Flash 高，但<strong>它的能力对标的是 GPT-4o、Claude Opus 这样的顶级闭源模型</strong>。 对比一下：GPT-4o 的输出定价是 <strong>15 美元/百万tokens</strong>（约合 <strong>¥108</strong>），Claude Opus 更是要 <strong>75 美元/百万tokens</strong>（约 <strong>¥540</strong>）。 也就是说，<strong>Pro 版只用大约 1/5 甚至 1/20 的价格，就能拿到世界顶级的推理和 Agent 能力</strong>。</p>
+<p>所以，无论你是想日常高频使用，还是处理复杂的深度推理任务，DeepSeek-V4 目前的定价都属于“量大管饱、丰俭由人”的类型。 而且，如果你是通过 <strong>官网或 App</strong> 直接使用，目前仍然是<strong>免费</strong>的。</p>
+<div class="record"><span class="tag">我问</span><p>丰俭由人 这个是什么意思啊</p></div>
+<p>DeepSeek-V4 的代码能力可以说是它最亮眼的标签之一，<strong>直接迈入了世界顶级行列，是它最核心的竞争力</strong>。不论是权威测试还是开发者的实际反馈，结果都很惊人，说是“王炸”级别的升级也不为过。</p>
+<p>为了方便你对它的水平有个直观概念，我整理了一份它在几个权威测试中的成绩单：</p>
+<ul><li><strong>LiveCodeBench (Pass@1)</strong>：V4-Pro 获 <strong>93.5</strong> 分，胜过 <strong>GPT-5.4 (91.7)</strong> 和 <strong>Gemini 3.1 Pro (89.2)</strong>[reference:0][reference:1]。</li><li><strong>Codeforces Rating</strong>：V4-Pro 获 <strong>3206</strong> 分，超过 <strong>GPT-5.4 (3168)</strong> 和 <strong>Gemini 3.1 Pro (3052)</strong>[reference:2][reference:3][reference:4]。</li><li><strong>SWE-bench Verified (Resolved)</strong>：V4-Pro 获 <strong>80.6%</strong>，与顶级闭源模型的 <strong>Claude Opus 4.6 (80.8%)</strong> 几乎持平[reference:5][reference:6][reference:7]。</li><li><strong>HumanEval (Pass@1)</strong>：V4 获 <strong>98%</strong>，在当前权威榜单上占据领先地位[reference:8][reference:9]。</li><li><strong>SWE-Bench Pro</strong>：V4 得分 <strong>58.6%</strong>[reference:10]。</li><li><strong>Terminal-Bench 2.0</strong>：V4 得分 <strong>82.7%</strong>[reference:11]。</li><li><strong>内部R&amp;D编程测试 (Pass Rate)</strong>：V4-Pro-Max 获 <strong>67%</strong>，远超 <strong>Sonnet 4.5 (47%)</strong>，已接近 <strong>Opus 4.6 Thinking (80%)</strong>[reference:12][reference:13]。该测试源自 50 余位工程师约 200 个真实任务，超九成参与调研的开发者认为 V4-Pro 已可作为首选编程模型[reference:14]。</li></ul>
+<p>测试分数或许有些抽象，但开发者的实际反馈最能说明问题，主要可以总结为三点：</p>
+<ul><li><strong>超强的独立编程能力（Agent能力）</strong>：V4能像真正的程序员一样自主工作。它能自主规划、调用工具并编写复杂代码，有测试显示它可以<strong>连续自主编程超过60分钟</strong>，无需任何人工干预就完成复杂的数据库设计和安卓模拟器开发[reference:15]。</li><li><strong>逻辑满分，审美需努力</strong>：对于后台逻辑、数据处理等任务，它的框架清晰、速度极快[reference:16]。不过，在前端页面设计等需要“审美”的任务上，它的成品功能完善但界面可能不够美观，需要人工微调[reference:17]。</li><li><strong>与顶尖闭源模型的差距</strong>：综合来看，V4的代码能力已经和<strong>Claude Opus 4.6、GPT-5.4</strong>这些顶级闭源模型处于同一梯队[reference:18]。现在，它已经是DeepSeek内部员工日常开发的主力模型，体验上已优于Sonnet 4.5，交付质量接近Claude Opus 4.6的非思考模式[reference:19][reference:20]。</li></ul>
+<p>V4 Flash是经济实惠版，推理能力<strong>接近Pro</strong>，响应速度更快、成本更低[reference:21][reference:22]。在处理常规编程任务时，性能与Pro版基本一致，是兼顾高性能与高性价比的选择[reference:23]。</p>
+<p>所以，简单概括DeepSeek-V4的代码水平就是：开源模型的定价，世界顶级闭源模型的实力。</p>
+<p>你目前主要用它来写哪类代码呢？是后台逻辑、脚本工具，还是前端页面？可以跟我说说你的具体场景，我帮你看看V4在你的领域里表现是否足够给力～</p>
+<div class="record"><span class="tag">我问</span><p>你给我写一个论坛的前端吧，我就要一个html，你给我写一下</p></div>
+<p>“丰俭由人”这个说法很形象，字面意思是“丰富还是节俭，由你自己决定”，后来常用来形容<strong>选择权完全在你自己手上，可以根据自己的需求和预算来灵活决定，高低档次都有得选</strong>。</p>
+<p>结合我上次给你分析的 DeepSeek-V4 价格，就可以这么理解：</p>
+<ul><li><strong>想“俭”一点、日常够用就行</strong></li></ul>
+<p>就选 <strong>V4 Flash 版</strong>。它推理能力接近 Pro，但响应更快，价格也极低（输出才 2 块钱/百万 tokens），用来处理超长文档或日常开发，成本几乎可以忽略不计。</p>
+<ul><li><strong>想“丰”一点、追求顶级体验</strong></li></ul>
+<p>就选 <strong>V4 Pro 版</strong>。它的代码和 Agent 能力直接对标世界顶级闭源模型，但价格只要它们的 1/5 甚至 1/20，花更少的钱就能拿到顶尖的能力。</p>
+<p>简单说就是：根据你现在要做的事，觉得够用就选实惠的，需要顶配就上最强的——<strong>丰俭由人，任君选择</strong>。</p>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<p>我来给你写一个功能完整、界面清爽的论坛单页面 HTML，包含帖子列表、发帖、回复和搜索等核心功能，所有数据都在前端模拟展示。</p>
+<p>把以下代码保存为一个 <code>.html</code> 文件，直接用浏览器打开就能看到效果：</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;轻论坛 - DeepSeek社区&lt;/title&gt;
+    &lt;style&gt;
+        :root {
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --primary: #4f6ef7;
+            --primary-hover: #3b5de7;
+            --text: #2c3e50;
+            --text-secondary: #606f7b;
+            --border: #e2e8f0;
+            --tag-bg: #eef2ff;
+            --tag-text: #4f6ef7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.06);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* 头部导航 */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.85);
+            box-shadow: var(--shadow);
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 2px 8px rgba(79,110,247,0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.8rem;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            border-radius: 20px;
+        }
+
+        /* 主体布局 */
+        .main-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+            display: flex;
+            gap: 24px;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-container {
+                flex-direction: column;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover {
+            background: #f1f5f9;
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: #eef2ff;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 1.1rem;
+        }
+
+        .tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            background: #dde3ff;
+        }
+
+        .tag.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* 内容区 */
+        .content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border 0.2s;
+            width: 220px;
+            background: #f9fafb;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .post-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .post-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: box-shadow 0.2s, transform 0.2s;
+            cursor: pointer;
+            display: flex;
+            gap: 16px;
+        }
+
+        .post-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .post-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .post-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .post-excerpt {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .badge-hot {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-new {
+            background: #d1fae5;
+            color: #059669;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 弹窗/模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.45);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius);
+            padding: 28px;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* 帖子详情页 */
+        .thread-detail {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .thread-header {
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        .thread-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .thread-content {
+            line-height: 1.8;
+            margin: 16px 0;
+            white-space: pre-wrap;
+        }
+
+        .reply-item {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 14px;
+        }
+
+        .reply-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .reply-content {
+            flex: 1;
+        }
+
+        .reply-author {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-right: 8px;
+        }
+
+        .reply-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .reply-text {
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+
+        .back-btn {
+            margin-bottom: 12px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .page-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .page-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.7;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- 头部导航 --&gt;
+    &lt;header class=&quot;header&quot;&gt;
+        &lt;div class=&quot;header-inner&quot;&gt;
+            &lt;div class=&quot;logo&quot;&gt;
+                &lt;span class=&quot;logo-icon&quot;&gt;D&lt;/span&gt;
+                DeepSeek 社区
+            &lt;/div&gt;
+            &lt;div class=&quot;user-area&quot;&gt;
+                &lt;span style=&quot;font-size:0.9rem; color:var(--text-secondary);&quot;&gt;你好，&lt;/span&gt;
+                &lt;span style=&quot;font-weight:600;&quot;&gt;开发者&lt;/span&gt;
+                &lt;div class=&quot;avatar&quot;&gt;DS&lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;div class=&quot;main-container&quot; id=&quot;app&quot;&gt;
+        &lt;!-- 侧边栏 --&gt;
+        &lt;aside class=&quot;sidebar&quot;&gt;
+            &lt;div class=&quot;card&quot;&gt;
+                &lt;ul class=&quot;nav-list&quot;&gt;
+                    &lt;li class=&quot;nav-item active&quot; data-view=&quot;home&quot;&gt;
+                        &lt;span class=&quot;nav-icon&quot;&gt;🏠&lt;/span&gt; 首页
+                    &lt;/li&gt;
+                    &lt;li class=&quot;nav-item&quot; data-view=&quot;hot&quot;&gt;
+                        &lt;span class=&quot;nav-icon&quot;&gt;🔥&lt;/span&gt; 热门
+                    &lt;/li&gt;
+                    &lt;li class=&quot;nav-item&quot; data-view=&quot;latest&quot;&gt;
+                        &lt;span class=&quot;nav-icon&quot;&gt;🕒&lt;/span&gt; 最新
+                    &lt;/li&gt;
+                    &lt;li class=&quot;nav-item&quot; data-view=&quot;tech&quot;&gt;
+                        &lt;span class=&quot;nav-icon&quot;&gt;💻&lt;/span&gt; 技术讨论
+                    &lt;/li&gt;
+                    &lt;li class=&quot;nav-item&quot; data-view=&quot;ask&quot;&gt;
+                        &lt;span class=&quot;nav-icon&quot;&gt;❓&lt;/span&gt; 问答求助
+                    &lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;card&quot;&gt;
+                &lt;h4 style=&quot;margin-bottom:12px; font-size:0.9rem; color:var(--text-secondary);&quot;&gt;热门标签&lt;/h4&gt;
+                &lt;div class=&quot;tag-cloud&quot; id=&quot;tagCloud&quot;&gt;
+                    &lt;span class=&quot;tag active&quot; data-tag=&quot;all&quot;&gt;全部&lt;/span&gt;
+                    &lt;span class=&quot;tag&quot; data-tag=&quot;DeepSeek-V4&quot;&gt;DeepSeek-V4&lt;/span&gt;
+                    &lt;span class=&quot;tag&quot; data-tag=&quot;前端&quot;&gt;前端&lt;/span&gt;
+                    &lt;span class=&quot;tag&quot; data-tag=&quot;后端&quot;&gt;后端&lt;/span&gt;
+                    &lt;span class=&quot;tag&quot; data-tag=&quot;AI&quot;&gt;AI&lt;/span&gt;
+                    &lt;span class=&quot;tag&quot; data-tag=&quot;开源&quot;&gt;开源&lt;/span&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/aside&gt;
+
+        &lt;!-- 主内容区 --&gt;
+        &lt;main class=&quot;content&quot; id=&quot;contentArea&quot;&gt;
+            &lt;!-- 动态渲染 --&gt;
+        &lt;/main&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 发帖弹窗 --&gt;
+    &lt;div class=&quot;modal-overlay&quot; id=&quot;newPostModal&quot;&gt;
+        &lt;div class=&quot;modal&quot;&gt;
+            &lt;h3&gt;✍️ 发布新帖子&lt;/h3&gt;
+            &lt;div class=&quot;form-group&quot;&gt;
+                &lt;label&gt;标题&lt;/label&gt;
+                &lt;input type=&quot;text&quot; id=&quot;newTitle&quot; placeholder=&quot;请输入标题...&quot;&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;form-group&quot;&gt;
+                &lt;label&gt;分类&lt;/label&gt;
+                &lt;select id=&quot;newCategory&quot;&gt;
+                    &lt;option value=&quot;tech&quot;&gt;💻 技术讨论&lt;/option&gt;
+                    &lt;option value=&quot;ask&quot;&gt;❓ 问答求助&lt;/option&gt;
+                    &lt;option value=&quot;share&quot;&gt;📢 分享交流&lt;/option&gt;
+                &lt;/select&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;form-group&quot;&gt;
+                &lt;label&gt;内容&lt;/label&gt;
+                &lt;textarea id=&quot;newContent&quot; rows=&quot;5&quot; placeholder=&quot;分享你的想法...&quot;&gt;&lt;/textarea&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;modal-actions&quot;&gt;
+                &lt;button class=&quot;btn btn-outline&quot; onclick=&quot;closeModal()&quot;&gt;取消&lt;/button&gt;
+                &lt;button class=&quot;btn btn-primary&quot; onclick=&quot;submitPost()&quot;&gt;发布&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        // ---------- 模拟数据 ----------
+        const currentUser = { name: &#x27;开发者&#x27;, avatar: &#x27;DS&#x27; };
+
+        // 初始帖子库
+        let posts = [
+            {
+                id: 1,
+                title: &#x27;DeepSeek-V4 发布！百万上下文 + Agent能力全面开源&#x27;,
+                category: &#x27;tech&#x27;,
+                tags: [&#x27;DeepSeek-V4&#x27;, &#x27;AI&#x27;, &#x27;开源&#x27;],
+                author: &#x27;深度求索&#x27;,
+                avatar: &#x27;DS&#x27;,
+                time: &#x27;2小时前&#x27;,
+                excerpt: &#x27;全新的DeepSeek-V4采用DSA2注意力机制和MoE架构，将上下文长度提升至1M Token，Agent能力大幅增强，代码和数学推理能力达到世界顶尖水平。&#x27;,
+                content: &#x27;DeepSeek-V4 正式发布！采用全新的 DSA2 注意力机制和 MoE 混合专家架构，上下文长度从128K提升至1M，实现了近10倍的跨越。V4的Agent能力在开源模型中达到最佳，数学和编程推理能力已比肩世界顶级闭源模型。Flash版价格极低，输入仅1元/百万tokens，输出2元/百万tokens。&#x27;,
+                views: 12890,
+                replies: 56,
+                likes: 342,
+                isHot: true,
+                isNew: false,
+                replyList: [
+                    { author: &#x27;AI爱好者&#x27;, avatar: &#x27;AI&#x27;, time: &#x27;1小时前&#x27;, text: &#x27;太强了！已经用上了Flash版，性价比无敌。&#x27; },
+                    { author: &#x27;前端小张&#x27;, avatar: &#x27;张&#x27;, time: &#x27;30分钟前&#x27;, text: &#x27;代码能力提升很明显，写React组件几乎不用改。&#x27; },
+                ]
+            },
+            {
+                id: 2,
+                title: &#x27;用V4写了一个完整的论坛前端，效果惊艳&#x27;,
+                category: &#x27;share&#x27;,
+                tags: [&#x27;前端&#x27;, &#x27;DeepSeek-V4&#x27;],
+                author: &#x27;前端小张&#x27;,
+                avatar: &#x27;张&#x27;,
+                time: &#x27;4小时前&#x27;,
+                excerpt: &#x27;尝试让DeepSeek-V4帮我写了一个纯前端的论坛页面，包含帖子列表、发帖、回复等功能，CSS也很漂亮，几乎不用修改就能用。&#x27;,
+                content: &#x27;最近在测试V4的代码能力，我让它帮我写一个论坛的前端HTML文件，要求功能完整、界面美观。结果一次性就生成了，帖子列表、发帖弹窗、回复功能都有，CSS也非常现代。V4的审美终于在线了！&#x27;,
+                views: 3456,
+                replies: 28,
+                likes: 189,
+                isHot: true,
+                isNew: false,
+                replyList: [
+                    { author: &#x27;设计师小王&#x27;, avatar: &#x27;王&#x27;, time: &#x27;3小时前&#x27;, text: &#x27;审美确实进步了，这个配色很舒服。&#x27; },
+                ]
+            },
+            {
+                id: 3,
+                title: &#x27;V4的Agent能力究竟有多强？连续自主编程60分钟不中断&#x27;,
+                category: &#x27;tech&#x27;,
+                tags: [&#x27;DeepSeek-V4&#x27;, &#x27;AI&#x27;],
+                author: &#x27;AI研究员&#x27;,
+                avatar: &#x27;研&#x27;,
+                time: &#x27;6小时前&#x27;,
+                excerpt: &#x27;实测V4的Agent模式，让它独立完成一个数据库设计+后端API开发，全程无需人工干预，工作持续了超过60分钟，代码质量很高。&#x27;,
+                content: &#x27;我设置了一个任务：设计一个电商系统的数据库模型，并编写对应的REST API。V4在Agent模式下，自行规划了表结构，生成了SQL脚本，然后用Express写了完整的后端接口。整个过程自主运行了60多分钟，中间没有一次中断请求帮助。&#x27;,
+                views: 8921,
+                replies: 42,
+                likes: 276,
+                isHot: true,
+                isNew: true,
+                replyList: [
+                    { author: &#x27;后端老李&#x27;, avatar: &#x27;李&#x27;, time: &#x27;5小时前&#x27;, text: &#x27;这个生产力太可怕了，以后CRUD估计都不用人写了。&#x27; },
+                ]
+            },
+            {
+                id: 4,
+                title: &#x27;请教：V4 Flash和Pro在实际项目中怎么选？&#x27;,
+                category: &#x27;ask&#x27;,
+                tags: [&#x27;DeepSeek-V4&#x27;],
+                author: &#x27;新手村村长&#x27;,
+                avatar: &#x27;村&#x27;,
+                time: &#x27;8小时前&#x27;,
+                excerpt: &#x27;看了价格对比，Flash便宜很多，但Pro的能力更强。日常开发中到底选哪个更合适？求过来人分享一下经验。&#x27;,
+                content: &#x27;我主要做Web开发，平时需要写一些中等复杂度的后端逻辑和前端组件。Flash的推理能力接近Pro，但价格只有1/10，有必要上Pro吗？主要怕Flash在处理复杂bug时不够用。&#x27;,
+                views: 2340,
+                replies: 19,
+                likes: 56,
+                isHot: false,
+                isNew: false,
+                replyList: [
+                    { author: &#x27;过来人老张&#x27;, avatar: &#x27;张&#x27;, time: &#x27;7小时前&#x27;, text: &#x27;日常开发Flash完全够用，我只有在做复杂重构时才切Pro。&#x27; },
+                    { author: &#x27;架构师王哥&#x27;, avatar: &#x27;王&#x27;, time: &#x27;6小时前&#x27;, text: &#x27;经验：80%场景用Flash，遇到难啃的骨头再上Pro，省钱又高效。&#x27; },
+                ]
+            },
+            {
+                id: 5,
+                title: &#x27;开源社区热议：DeepSeek-V4能否挑战GPT-5和Claude？&#x27;,
+                category: &#x27;tech&#x27;,
+                tags: [&#x27;开源&#x27;, &#x27;AI&#x27;, &#x27;DeepSeek-V4&#x27;],
+                author: &#x27;科技观察员&#x27;,
+                avatar: &#x27;科&#x27;,
+                time: &#x27;12小时前&#x27;,
+                excerpt: &#x27;V4的基准测试数据已经在LiveCodeBench上超越GPT-5.4，Codeforces评分也更高。开源模型终于能和顶级闭源模型正面竞争了。&#x27;,
+                content: &#x27;从已公布的基准测试来看，V4-Pro在LiveCodeBench上得分93.5，超过了GPT-5.4的91.7；Codeforces评分3206比GPT-5.4的3168更高。在开发者实际体验中，90%以上的受访者认为V4-Pro已经可以作为首选编程模型。&#x27;,
+                views: 15670,
+                replies: 88,
+                likes: 512,
+                isHot: true,
+                isNew: true,
+                replyList: [
+                    { author: &#x27;开源拥护者&#x27;, avatar: &#x27;开&#x27;, time: &#x27;11小时前&#x27;, text: &#x27;开源的胜利！希望更多厂商跟进。&#x27; },
+                ]
+            },
+        ];
+
+        let nextId = 6;
+        let currentView = &#x27;home&#x27;;    // home | detail
+        let currentPostId = null;
+        let activeTag = &#x27;all&#x27;;
+        let activeNav = &#x27;home&#x27;;
+
+        // ---------- 渲染函数 ----------
+        function getFilteredPosts() {
+            let filtered = [...posts];
+            if (activeTag !== &#x27;all&#x27;) {
+                filtered = filtered.filter(p =&gt; p.tags.includes(activeTag));
+            }
+            if (activeNav === &#x27;hot&#x27;) {
+                filtered.sort((a, b) =&gt; b.views - a.views);
+            } else if (activeNav === &#x27;latest&#x27;) {
+                filtered.sort((a, b) =&gt; b.id - a.id);
+            }
+            // 其他nav(&#x27;tech&#x27;,&#x27;ask&#x27;)可按category过滤，这里简单处理
+            if (activeNav === &#x27;tech&#x27;) {
+                filtered = filtered.filter(p =&gt; p.category === &#x27;tech&#x27;);
+            } else if (activeNav === &#x27;ask&#x27;) {
+                filtered = filtered.filter(p =&gt; p.category === &#x27;ask&#x27;);
+            }
+            return filtered;
+        }
+
+        function renderHome() {
+            currentView = &#x27;home&#x27;;
+            currentPostId = null;
+            const filtered = getFilteredPosts();
+            let html = `
+                &lt;div class=&quot;page-header&quot;&gt;
+                    &lt;h2 class=&quot;page-title&quot;&gt;${getNavTitle()}&lt;/h2&gt;
+                    &lt;div class=&quot;search-bar&quot;&gt;
+                        &lt;input class=&quot;search-input&quot; type=&quot;text&quot; placeholder=&quot;搜索帖子...&quot; id=&quot;searchInput&quot; oninput=&quot;handleSearch()&quot;&gt;
+                        &lt;button class=&quot;btn btn-primary&quot; onclick=&quot;openNewPostModal()&quot;&gt;+ 发帖&lt;/button&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;post-list&quot; id=&quot;postList&quot;&gt;
+            `;
+
+            if (filtered.length === 0) {
+                html += `&lt;div class=&quot;empty-state&quot;&gt;&lt;div class=&quot;icon&quot;&gt;📭&lt;/div&gt;&lt;p&gt;暂无帖子，快来发表第一个吧！&lt;/p&gt;&lt;/div&gt;`;
+            } else {
+                filtered.forEach(post =&gt; {
+                    html += `
+                        &lt;div class=&quot;post-card&quot; onclick=&quot;openDetail(${post.id})&quot;&gt;
+                            &lt;div class=&quot;post-avatar&quot;&gt;${post.avatar}&lt;/div&gt;
+                            &lt;div class=&quot;post-body&quot;&gt;
+                                &lt;div class=&quot;post-title&quot;&gt;
+                                    ${post.title}
+                                    ${post.isHot ? &#x27;&lt;span class=&quot;badge-hot&quot;&gt;热门&lt;/span&gt;&#x27; : &#x27;&#x27;}
+                                    ${post.isNew ? &#x27;&lt;span class=&quot;badge-new&quot;&gt;新&lt;/span&gt;&#x27; : &#x27;&#x27;}
+                                &lt;/div&gt;
+                                &lt;div class=&quot;post-meta&quot;&gt;
+                                    &lt;span&gt;👤 ${post.author}&lt;/span&gt;
+                                    &lt;span&gt;🕒 ${post.time}&lt;/span&gt;
+                                    &lt;span class=&quot;stat-icon&quot;&gt;👀 ${post.views}&lt;/span&gt;
+                                    &lt;span class=&quot;stat-icon&quot;&gt;💬 ${post.replies}&lt;/span&gt;
+                                    &lt;span class=&quot;stat-icon&quot;&gt;❤️ ${post.likes}&lt;/span&gt;
+                                &lt;/div&gt;
+                                &lt;div class=&quot;post-excerpt&quot;&gt;${post.excerpt}&lt;/div&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                    `;
+                });
+            }
+
+            html += `&lt;/div&gt;`;
+            document.getElementById(&#x27;contentArea&#x27;).innerHTML = html;
+        }
+
+        function getNavTitle() {
+            const map = {
+                home: &#x27;🏠 全部帖子&#x27;,
+                hot: &#x27;🔥 热门帖子&#x27;,
+                latest: &#x27;🕒 最新帖子&#x27;,
+                tech: &#x27;💻 技术讨论&#x27;,
+                ask: &#x27;❓ 问答求助&#x27;,
+            };
+            return map[activeNav] || &#x27;全部帖子&#x27;;
+        }
+
+        function openDetail(postId) {
+            const post = posts.find(p =&gt; p.id === postId);
+            if (!post) return;
+            currentView = &#x27;detail&#x27;;
+            currentPostId = postId;
+
+            let html = `
+                &lt;button class=&quot;btn btn-outline btn-sm back-btn&quot; onclick=&quot;renderHome()&quot;&gt;← 返回列表&lt;/button&gt;
+                &lt;div class=&quot;thread-detail&quot;&gt;
+                    &lt;div class=&quot;thread-header&quot;&gt;
+                        &lt;h1 class=&quot;thread-title&quot;&gt;${post.title}&lt;/h1&gt;
+                        &lt;div class=&quot;post-meta&quot;&gt;
+                            &lt;span&gt;👤 ${post.author}&lt;/span&gt;
+                            &lt;span&gt;🕒 ${post.time}&lt;/span&gt;
+                            &lt;span&gt;👀 ${post.views} 阅读&lt;/span&gt;
+                            &lt;span&gt;❤️ ${post.likes} 点赞&lt;/span&gt;
+                        &lt;/div&gt;
+                        &lt;div style=&quot;margin-top:8px;&quot;&gt;
+                            ${post.tags.map(t =&gt; `&lt;span class=&quot;tag&quot;&gt;${t}&lt;/span&gt;`).join(&#x27; &#x27;)}
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;thread-content&quot;&gt;${post.content}&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;card&quot; style=&quot;margin-top:16px;&quot;&gt;
+                    &lt;h3&gt;💬 回复 (${post.replyList ? post.replyList.length : 0})&lt;/h3&gt;
+                    &lt;div id=&quot;replyList&quot;&gt;
+                        ${post.replyList ? post.replyList.map(r =&gt; `
+                            &lt;div class=&quot;reply-item&quot;&gt;
+                                &lt;div class=&quot;reply-avatar&quot;&gt;${r.avatar}&lt;/div&gt;
+                                &lt;div class=&quot;reply-content&quot;&gt;
+                                    &lt;span class=&quot;reply-author&quot;&gt;${r.author}&lt;/span&gt;
+                                    &lt;span class=&quot;reply-time&quot;&gt;${r.time}&lt;/span&gt;
+                                    &lt;div class=&quot;reply-text&quot;&gt;${r.text}&lt;/div&gt;
+                                &lt;/div&gt;
+                            &lt;/div&gt;
+                        `).join(&#x27;&#x27;) : &#x27;&lt;p style=&quot;color:var(--text-secondary); padding:16px 0;&quot;&gt;暂无回复，快来抢沙发吧~&lt;/p&gt;&#x27;}
+                    &lt;/div&gt;
+                    &lt;div style=&quot;margin-top:16px; display:flex; gap:10px;&quot;&gt;
+                        &lt;input type=&quot;text&quot; id=&quot;replyInput&quot; placeholder=&quot;写下你的回复...&quot; style=&quot;flex:1; padding:10px; border:1px solid var(--border); border-radius:var(--radius-sm);&quot;&gt;
+                        &lt;button class=&quot;btn btn-primary btn-sm&quot; onclick=&quot;addReply(${post.id})&quot;&gt;回复&lt;/button&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            `;
+            document.getElementById(&#x27;contentArea&#x27;).innerHTML = html;
+            window.scrollTo({ top: 0, behavior: &#x27;smooth&#x27; });
+        }
+
+        function addReply(postId) {
+            const input = document.getElementById(&#x27;replyInput&#x27;);
+            if (!input || !input.value.trim()) return;
+            const post = posts.find(p =&gt; p.id === postId);
+            if (!post.replyList) post.replyList = [];
+            post.replyList.push({
+                author: currentUser.name,
+                avatar: currentUser.avatar,
+                time: &#x27;刚刚&#x27;,
+                text: input.value.trim()
+            });
+            post.replies = post.replyList.length;
+            input.value = &#x27;&#x27;;
+            openDetail(postId); // 刷新详情页
+        }
+
+        function openNewPostModal() {
+            document.getElementById(&#x27;newPostModal&#x27;).classList.add(&#x27;active&#x27;);
+        }
+
+        function closeModal() {
+            document.getElementById(&#x27;newPostModal&#x27;).classList.remove(&#x27;active&#x27;);
+            document.getElementById(&#x27;newTitle&#x27;).value = &#x27;&#x27;;
+            document.getElementById(&#x27;newContent&#x27;).value = &#x27;&#x27;;
+        }
+
+        function submitPost() {
+            const title = document.getElementById(&#x27;newTitle&#x27;).value.trim();
+            const content = document.getElementById(&#x27;newContent&#x27;).value.trim();
+            const category = document.getElementById(&#x27;newCategory&#x27;).value;
+            if (!title || !content) return alert(&#x27;请填写标题和内容&#x27;);
+
+            posts.unshift({
+                id: nextId++,
+                title,
+                category,
+                tags: [category === &#x27;tech&#x27; ? &#x27;技术&#x27; : category === &#x27;ask&#x27; ? &#x27;求助&#x27; : &#x27;分享&#x27;],
+                author: currentUser.name,
+                avatar: currentUser.avatar,
+                time: &#x27;刚刚&#x27;,
+                excerpt: content.substring(0, 80) + &#x27;...&#x27;,
+                content,
+                views: 0,
+                replies: 0,
+                likes: 0,
+                isHot: false,
+                isNew: true,
+                replyList: []
+            });
+
+            closeModal();
+            renderHome();
+        }
+
+        function handleSearch() {
+            const keyword = document.getElementById(&#x27;searchInput&#x27;).value.trim().toLowerCase();
+            if (keyword === &#x27;&#x27;) {
+                renderHome();
+                return;
+            }
+            const filtered = posts.filter(p =&gt; 
+                p.title.toLowerCase().includes(keyword) || 
+                p.content.toLowerCase().includes(keyword)
+            );
+            let html = `
+                &lt;div class=&quot;page-header&quot;&gt;
+                    &lt;h2 class=&quot;page-title&quot;&gt;🔍 搜索结果：${keyword}&lt;/h2&gt;
+                    &lt;button class=&quot;btn btn-outline btn-sm&quot; onclick=&quot;renderHome()&quot;&gt;清除&lt;/button&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;post-list&quot;&gt;
+            `;
+            if (filtered.length === 0) {
+                html += `&lt;div class=&quot;empty-state&quot;&gt;&lt;div class=&quot;icon&quot;&gt;🔎&lt;/div&gt;&lt;p&gt;没有找到相关帖子&lt;/p&gt;&lt;/div&gt;`;
+            } else {
+                filtered.forEach(post =&gt; {
+                    html += `
+                        &lt;div class=&quot;post-card&quot; onclick=&quot;openDetail(${post.id})&quot;&gt;
+                            &lt;div class=&quot;post-avatar&quot;&gt;${post.avatar}&lt;/div&gt;
+                            &lt;div class=&quot;post-body&quot;&gt;
+                                &lt;div class=&quot;post-title&quot;&gt;${post.title}&lt;/div&gt;
+                                &lt;div class=&quot;post-meta&quot;&gt;
+                                    &lt;span&gt;👤 ${post.author}&lt;/span&gt;
+                                    &lt;span&gt;🕒 ${post.time}&lt;/span&gt;
+                                &lt;/div&gt;
+                                &lt;div class=&quot;post-excerpt&quot;&gt;${post.excerpt}&lt;/div&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                    `;
+                });
+            }
+            html += `&lt;/div&gt;`;
+            document.getElementById(&#x27;contentArea&#x27;).innerHTML = html;
+        }
+
+        // ---------- 侧边栏交互 ----------
+        document.querySelectorAll(&#x27;.nav-item&#x27;).forEach(item =&gt; {
+            item.addEventListener(&#x27;click&#x27;, function() {
+                document.querySelectorAll(&#x27;.nav-item&#x27;).forEach(n =&gt; n.classList.remove(&#x27;active&#x27;));
+                this.classList.add(&#x27;active&#x27;);
+                activeNav = this.dataset.view;
+                activeTag = &#x27;all&#x27;;
+                document.querySelectorAll(&#x27;#tagCloud .tag&#x27;).forEach(t =&gt; t.classList.remove(&#x27;active&#x27;));
+                document.querySelector(&#x27;#tagCloud .tag[data-tag=&quot;all&quot;]&#x27;).classList.add(&#x27;active&#x27;);
+                renderHome();
+            });
+        });
+
+        document.querySelectorAll(&#x27;#tagCloud .tag&#x27;).forEach(tag =&gt; {
+            tag.addEventListener(&#x27;click&#x27;, function() {
+                document.querySelectorAll(&#x27;#tagCloud .tag&#x27;).forEach(t =&gt; t.classList.remove(&#x27;active&#x27;));
+                this.classList.add(&#x27;active&#x27;);
+                activeTag = this.dataset.tag;
+                renderHome();
+            });
+        });
+
+        // 关闭弹窗（点击遮罩）
+        document.getElementById(&#x27;newPostModal&#x27;).addEventListener(&#x27;click&#x27;, function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // 初始渲染
+        renderHome();
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>这份代码构建了一个可以直接交互的轻量级技术社区，它主要包含三大功能模块和一个清晰的操作路径：</p>
+<ul><li><strong>帖子浏览与筛选</strong>：页面左侧的导航栏可以按<strong>首页、热门、最新、技术讨论、问答求助</strong>快速分类浏览帖子。右侧的<strong>热门标签</strong>支持筛选特定话题，顶部的搜索框还能按标题和内容搜索帖子，方便你快速定位感兴趣的内容。</li></ul>
+<ul><li><strong>发布与回复</strong>：点击“+ 发帖”按钮会弹出表单，你可以填写标题、选择分类并撰写内容来<strong>发布新帖子</strong>。点击任意帖子卡片可以进入详情页，查看完整内容和他人回复，并在底部输入框<strong>发表自己的回复</strong>。</li></ul>
+<ul><li><strong>模拟真实社区体验</strong>：页面预置了多条与DeepSeek-V4相关的热门讨论帖和回复，帖子上会显示<strong>浏览量、回复数和点赞数</strong>，热门帖子还会带有角标，还原了真实论坛的浏览氛围。</li></ul>
+<hr />
+<p><strong>优化建议：</strong> 代码中的帖子数据（如标题、内容、回复）是静态示例，你可以替换<code>posts</code>数组里的内容或对接后端API来展示真实数据。搜索功能目前为前端过滤，大批量数据建议改用后端接口。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/203_DeepSeekV4新特性解析.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

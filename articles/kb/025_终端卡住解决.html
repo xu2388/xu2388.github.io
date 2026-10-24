@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>终端卡住解决</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>终端卡住解决</h1>
+<div class="meta">2026-09-03 · 主题：科研-论文调研 · 48 条消息 · 对话编号 025</div>
+<div class="record"><span class="tag">我问</span><p>ast login: Thu Sep  3 23:47:41 on ttys000 hua@192 ~ % sudo rm -rf /opt/homebrew</p>
+<p>Password: hua@192 ~ % /bin/zsh -c &quot;$(curl -fsSL shturl.cc/jVSxIRF908DVA2QJiRFAxvMcfRbrCj4Rtz4tkJCWiE7LejcB9&quot;</p>
+<p>dquote cmdsubst dquote&gt; 1 dquote cmdsubst dquote&gt; 1 dquote cmdsubst dquote&gt; 1 dquote cmdsubst dquote&gt; 1 dquote cmdsubst dquote&gt; 1 dquote cmdsubst dquote&gt; 1 dquote cmdsubst dquote&gt; 1 dquote cmdsubst dquote&gt; hua@192 ~ %</p>
+<p>当前是这样的情况啊</p></div>
+<p>我看到你遇到了一个终端卡在提示符状态的问题。这种情况通常是因为命令中的引号没有正确闭合，导致shell进入了等待更多输入的状态。</p>
+<h2>问题分析</h2>
+<p>你执行了这个命令：</p>
+<pre><code>/bin/zsh -c &quot;$(curl -fsSL shturl.cc/jVSxIRF908DVA2QJiRFAxvMcfRbrCj4Rtz4tkJCWiE7LejcB9&quot;</code></pre>
+<p>问题在于：</p>
+<ol><li><strong>双引号没有正确闭合</strong> - 整个命令作为字符串传递给 <code>-c</code> 参数时，引号结构有问题</li><li><strong>curl 下载的脚本内容可能包含特殊字符</strong>，导致 shell 解析混乱</li></ol>
+<h2>解决方法</h2>
+<ol><li><strong>退出当前状态</strong>：按 <code>Ctrl + C</code>（或 <code>Control + C</code>）来中断当前命令</li><li>如果不行，按 <code>Ctrl + D</code> 退出当前 shell 会话</li></ol>
+<p>如果你是想重新安装 Homebrew，建议使用官方命令：</p>
+<pre><code>/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;</code></pre>
+<p>或者如果你想使用你那个短链接，应该这样写：</p>
+<pre><code>curl -fsSL shturl.cc/jVSxIRF908DVA2QJiRFAxvMcfRbrCj4Rtz4tkJCWiE7LejcB9 | /bin/zsh</code></pre>
+<p>或者先下载再看内容：</p>
+<pre><code># 先下载查看内容
+curl -fsSL shturl.cc/jVSxIRF908DVA2QJiRFAxvMcfRbrCj4Rtz4tkJCWiE7LejcB9
+
+# 确认是脚本后执行
+curl -fsSL shturl.cc/jVSxIRF908DVA2QJiRFAxvMcfRbrCj4Rtz4tkJCWiE7LejcB9 | /bin/zsh</code></pre>
+<h2>注意</h2>
+<p>你刚才删除了 <code>/opt/homebrew</code>，这是 Homebrew 的安装目录。重新安装后，可能还需要：</p>
+<ol><li>将 Homebrew 添加到 PATH</li><li>重新安装之前通过 brew 安装的软件</li></ol>
+<p>需要我帮你进一步处理吗？</p>
+<div class="record"><span class="tag">我问</span><p>我现在是想要下载brew，我是mac</p></div>
+<p>好的，我来帮你正确安装 Homebrew。</p>
+<h2>正确的安装方法</h2>
+<p>在 Mac 上安装 Homebrew，请使用官方命令：</p>
+<pre><code>/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;</code></pre>
+<p>直接复制这整行命令，粘贴到终端并按回车执行即可。</p>
+<h2>如果你那个短链接是可信的</h2>
+<p>如果你想坚持使用你那个短链接（<code>shturl.cc/jVSxIRF908DVA2QJiRFAxvMcfRbrCj4Rtz4tkJCWiE7LejcB9</code>），正确的执行方式是：</p>
+<pre><code>curl -fsSL shturl.cc/jVSxIRF908DVA2QJiRFAxvMcfRbrCj4Rtz4tkJCWiE7LejcB9 | /bin/bash</code></pre>
+<p><strong>注意</strong>：用 <code>/bin/bash</code> 而不是 <code>/bin/zsh</code>，因为 Homebrew 的安装脚本是用 bash 写的。</p>
+<h2>安装完成后</h2>
+<p>安装成功后，需要将 Homebrew 添加到 PATH。根据你的 Mac 芯片类型：</p>
+<p><strong>如果你用的是 Apple Silicon（M1/M2/M3 芯片）</strong>：</p>
+<pre><code>echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#x27; &gt;&gt; ~/.zshrc
+eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;</code></pre>
+<p><strong>如果你用的是 Intel 芯片</strong>：</p>
+<pre><code>echo &#x27;eval &quot;$(/usr/local/bin/brew shellenv)&quot;&#x27; &gt;&gt; ~/.zshrc
+eval &quot;$(/usr/local/bin/brew shellenv)&quot;</code></pre>
+<p>然后验证安装：</p>
+<pre><code>brew --version</code></pre>
+<h2>建议</h2>
+<p>推荐使用官方安装命令，更安全可靠。如果遇到网络问题（GitHub 被墙），可以考虑使用国内镜像源。</p>
+<p>需要帮你配置国内镜像源吗？</p>
+<div class="record"><span class="tag">我问</span><p>我是m1芯片啊</p></div>
+<p>好的，M1芯片（Apple Silicon）的Mac，安装方法如下：</p>
+<h2>安装 Homebrew</h2>
+<p>直接复制粘贴执行这个命令：</p>
+<pre><code>/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;</code></pre>
+<h2>安装完成后</h2>
+<p>M1芯片的Homebrew安装在 <code>/opt/homebrew</code> 目录（你刚才删掉的那个目录），安装完成后需要配置环境变量：</p>
+<pre><code>echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#x27; &gt;&gt; ~/.zshrc
+source ~/.zshrc</code></pre>
+<h2>验证安装</h2>
+<pre><code>brew --version</code></pre>
+<p>如果能正常显示版本号，就说明安装成功了。</p>
+<h2>测试一下</h2>
+<p>安装个简单的软件试试：</p>
+<pre><code>brew install wget</code></pre>
+<hr />
+<p><strong>注意</strong>：你刚才用 <code>sudo rm -rf /opt/homebrew</code> 删除了旧版本，这个操作没问题。现在直接执行上面的安装命令，它会自动在 <code>/opt/homebrew</code> 重新安装。</p>
+<p>如果遇到网络慢或连接失败的问题（GitHub在国内有时不稳定），可以告诉我，我帮你配置国内镜像源加速安装。</p>
+<div class="record"><span class="tag">我问</span><p>这个为什么会卡在这里啊</p></div>
+<p>从日志来看，Homebrew 安装过程<strong>没有卡住</strong>，它正在正常下载 Homebrew 的源代码！</p>
+<h2>当前状态</h2>
+<p>最后一行显示：</p>
+<pre><code>remote: Compressing objects: 100% (226/226), done.</code></pre>
+<p>这说明 Git 正在从 GitHub 克隆 Homebrew 的仓库到你的电脑。这个过程需要一些时间，因为 Homebrew 的仓库有 <strong>35万多个对象</strong> 需要下载。</p>
+<h2>为什么看起来像卡住了？</h2>
+<ul><li>GitHub 在国内访问速度可能较慢</li><li>仓库很大（30多万个文件对象），需要下载时间</li><li>终端在下载过程中不会显示进度条，所以看起来像卡死</li></ul>
+<h2>你需要做什么？</h2>
+<p><strong>耐心等待</strong>。根据你的网络速度，这个过程可能需要：</p>
+<ul><li>网络好：3-10 分钟</li><li>网络一般：10-30 分钟</li><li>网络慢：可能更久</li></ul>
+<h2>可以按回车键吗？</h2>
+<p>你之前看到的提示：</p>
+<pre><code>Press RETURN/ENTER to continue or any other key to abort:</code></pre>
+<p>这说明安装脚本在等待你按回车键确认。<strong>请按一下回车键</strong>，然后耐心等待。</p>
+<h2>如果实在太慢</h2>
+<p>可以按 <code>Ctrl + C</code> 中断，然后使用国内镜像源加速：</p>
+<pre><code># 使用清华镜像源安装
+/bin/bash -c &quot;$(curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/install/install.sh)&quot;</code></pre>
+<p>或者先中断，我再教你配置代理或镜像源。</p>
+<hr />
+<p><strong>现在请做这个</strong>：</p>
+<ol><li>如果还在等待按回车，先按一下 <strong>回车键</strong></li><li>然后<strong>耐心等待</strong>，不要按 Ctrl+C</li><li>等它下载完成后会自动继续安装</li></ol>
+<p>你可以去喝杯咖啡，回来应该就装好了 ☕️</p>
+<p>需要我帮你配置国内镜像源来加速吗？</p>
+<div class="record"><span class="tag">我问</span><p>我可以手动下载到本地吗</p></div>
+<p><strong>可以！</strong> 手动下载安装是个好办法，特别是网络慢的时候。</p>
+<h2>方法一：手动下载并安装（推荐）</h2>
+<p>按 <code>Ctrl + C</code> 停止当前卡住的安装</p>
+<pre><code># 进入目录
+cd /opt/homebrew
+
+# 手动克隆 Homebrew 核心仓库
+git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git ./
+
+# 创建 Homebrew Core 目录
+mkdir -p /opt/homebrew/Library/Taps/homebrew/homebrew-core
+
+# 克隆 Homebrew Core（这个最大，需要时间）
+git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git ./Library/Taps/homebrew/homebrew-core/</code></pre>
+<pre><code>echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#x27; &gt;&gt; ~/.zshrc
+source ~/.zshrc</code></pre>
+<pre><code>brew --version</code></pre>
+<hr />
+<h2>方法二：下载压缩包（更快）</h2>
+<pre><code># 创建目录
+sudo mkdir -p /opt/homebrew
+
+# 下载压缩包（使用清华镜像）
+curl -L https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.tar.gz | sudo tar xz -C /opt/homebrew --strip-components=1</code></pre>
+<pre><code># 创建 Core 目录并下载
+mkdir -p /opt/homebrew/Library/Taps/homebrew/homebrew-core
+curl -L https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.tar.gz | tar xz -C /opt/homebrew/Library/Taps/homebrew/homebrew-core --strip-components=1</code></pre>
+<pre><code>sudo chown -R hua:admin /opt/homebrew</code></pre>
+<pre><code>echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#x27; &gt;&gt; ~/.zshrc
+source ~/.zshrc</code></pre>
+<hr />
+<h2>方法三：一键脚本（最简单）</h2>
+<p>如果你觉得上面太麻烦，直接运行这个一键脚本，会自动使用清华镜像：</p>
+<pre><code>/bin/bash -c &quot;$(curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/install/install.sh)&quot;</code></pre>
+<hr />
+<h2>推荐</h2>
+<p><strong>我推荐方法三</strong>，最简单，自动处理所有事情。如果还是慢，就<strong>方法二</strong>，下载压缩包会快很多。</p>
+<p>你选哪个方法？我可以在你执行过程中继续指导。</p>
+<div class="record"><span class="tag">我问</span><p>一般的安装都是需要多长时间的啊</p></div>
+<p>Homebrew 的安装时间<strong>差异很大</strong>，主要取决于网络状况：</p>
+<h2>正常情况下的安装时间</h2>
+<ul><li><strong>3-10 分钟</strong> 就能完成</li><li>国内有些地区访问 GitHub 速度不错</li></ul>
+<ul><li><strong>10-30 分钟</strong></li><li>大多数国内用户是这个情况</li></ul>
+<ul><li><strong>30分钟 - 2小时</strong>，甚至可能失败</li><li>需要重试几次</li></ul>
+<hr />
+<h2>为什么这么久？</h2>
+<p>Homebrew 需要下载的东西很多：</p>
+<table>
+<tr><th>组件</th><th>大小</th><th>说明</th></tr>
+<tr><td>Homebrew 核心</td><td>~50MB</td><td>主程序代码</td></tr>
+<tr><td>Homebrew Core</td><td>~400MB</td><td>软件包的索引（最大！）</td></tr>
+<tr><td>其他依赖</td><td>~50MB</td><td>各种脚本和配置</td></tr>
+</table>
+<p>总共要下载 <strong>500MB+</strong> 的数据，而且 GitHub 在国内速度通常只有几十 KB/s，所以很慢。</p>
+<hr />
+<h2>加速对比</h2>
+<table>
+<tr><th>方法</th><th>预计时间</th><th>说明</th></tr>
+<tr><td>官方源（GitHub）</td><td>20-60分钟</td><td>看运气</td></tr>
+<tr><td>清华镜像源</td><td><strong>5-15分钟</strong></td><td>✅ 推荐</td></tr>
+<tr><td>科大镜像源</td><td><strong>5-15分钟</strong></td><td>✅ 推荐</td></tr>
+<tr><td>手动下载压缩包</td><td><strong>5-10分钟</strong></td><td>最快</td></tr>
+</table>
+<hr />
+<h2>我的建议</h2>
+<p><strong>既然你的安装卡住了，直接用镜像源吧：</strong></p>
+<pre><code>/bin/bash -c &quot;$(curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/install/install.sh)&quot;</code></pre>
+<p>用这个命令，<strong>正常情况下 5-15 分钟</strong>就能装好。</p>
+<hr />
+<h2>怎么判断是不是真的卡住了？</h2>
+<p>可以开另一个终端窗口，运行：</p>
+<pre><code>ps aux | grep git</code></pre>
+<p>如果看到有 <code>git</code> 进程在运行，说明还在下载，<strong>没卡死</strong>，只是慢。如果啥都没有，才是真的卡住了。</p>
+<hr />
+<p>你现在要试试镜像源安装吗？还是继续等官方源？</p>
+<div class="record"><span class="tag">我问</span><p>你直接把这四个网站都给我，我手动下载吧</p></div>
+<p>好的，给你四个镜像站的链接，手动下载：</p>
+<h2>四个国内镜像站</h2>
+<ul><li><strong>Homebrew 主程序</strong>：https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git</li><li><strong>Homebrew Core</strong>：https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git</li></ul>
+<ul><li><strong>Homebrew 主程序</strong>：https://mirrors.ustc.edu.cn/homebrew/brew.git</li><li><strong>Homebrew Core</strong>：https://mirrors.ustc.edu.cn/homebrew/homebrew-core.git</li></ul>
+<ul><li><strong>Homebrew 主程序</strong>：https://mirrors.aliyun.com/homebrew/brew.git</li><li><strong>Homebrew Core</strong>：https://mirrors.aliyun.com/homebrew/homebrew-core.git</li></ul>
+<ul><li><strong>Homebrew 主程序</strong>：https://mirrors.cloud.tencent.com/homebrew/brew.git</li><li><strong>Homebrew Core</strong>：https://mirrors.cloud.tencent.com/homebrew/homebrew-core.git</li></ul>
+<hr />
+<h2>手动下载命令（选一个镜像站）</h2>
+<p><strong>使用清华源（推荐）：</strong></p>
+<pre><code># 1. 创建目录
+sudo mkdir -p /opt/homebrew
+
+# 2. 克隆主程序
+sudo git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /opt/homebrew
+
+# 3. 创建 Core 目录并克隆
+sudo mkdir -p /opt/homebrew/Library/Taps/homebrew/homebrew-core
+sudo git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /opt/homebrew/Library/Taps/homebrew/homebrew-core
+
+# 4. 修改权限
+sudo chown -R hua:admin /opt/homebrew
+
+# 5. 配置环境变量
+echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#x27; &gt;&gt; ~/.zshrc
+source ~/.zshrc</code></pre>
+<p>如果清华慢，换其他镜像站，把链接替换一下就行。</p>
+<hr />
+<h2>注意</h2>
+<ul><li>每个 Core 仓库都有几百 MB，下载需要时间</li><li>如果 <code>git clone</code> 过程中断了，可以执行 <code>git pull</code> 继续</li><li>权限修改那步很重要，否则 brew 命令会报错</li></ul>
+<p>有需要随时问我！</p>
+<div class="record"><span class="tag">我问</span><p>这里只有竹程序和扣耳两个需要下载吗？</p></div>
+<p>是的！<strong>只需要下载这两个核心组件</strong>：</p>
+<h2>必需的组件</h2>
+<table>
+<tr><th>组件</th><th>名称</th><th>大小</th><th>用途</th></tr>
+<tr><td><strong>1. 主程序</strong></td><td><code>brew.git</code></td><td>~50MB</td><td>Homebrew 的核心命令（<code>brew install</code>、<code>brew update</code> 等）</td></tr>
+<tr><td><strong>2. Core 仓库</strong></td><td><code>homebrew-core.git</code></td><td>~400MB</td><td>所有软件包的索引和安装公式（Formula）</td></tr>
+</table>
+<p>这两个是<strong>缺一不可</strong>的，没有 Core 仓库就找不到软件包。</p>
+<hr />
+<h2>其他不是必需的</h2>
+<p>其他镜像站列表里的这些<strong>不需要</strong>手动下载：</p>
+<ul><li><code>homebrew-cask.git</code> - 安装 GUI 软件（Chrome、VSCode 等），需要时 brew 会自动处理</li><li><code>homebrew-services.git</code> - 服务管理插件，可选</li><li><code>homebrew-bundle.git</code> - 批量安装插件，可选</li></ul>
+<p><strong>可以先只装两个核心</strong>，其他的以后需要时再说。</p>
+<hr />
+<h2>总结</h2>
+<p>✅ <strong>必须下</strong>：<code>brew.git</code> + <code>homebrew-core.git</code></p>
+<p>❌ <strong>不用下</strong>：其他所有（cask、services、bundle 等）</p>
+<p>下载完这两个，运行 <code>brew --version</code> 能正常显示，就说明装好了！其他的以后需要再用命令安装。</p>
+<div class="record"><span class="tag">我问</span><p>给我github官方就行，告诉我具体如何做啊</p></div>
+<p>好的，给你官方 GitHub 的链接和具体操作步骤：</p>
+<h2>GitHub 官方仓库地址</h2>
+<ul><li><strong>Homebrew 主程序</strong>：https://github.com/Homebrew/brew</li><li><strong>Homebrew Core</strong>：https://github.com/Homebrew/homebrew-core</li></ul>
+<hr />
+<h2>具体操作步骤</h2>
+<p>如果终端还在运行，按 <code>Ctrl + C</code> 停止</p>
+<pre><code>sudo mkdir -p /opt/homebrew</code></pre>
+<pre><code>sudo git clone https://github.com/Homebrew/brew.git /opt/homebrew</code></pre>
+<p>这一步会下载 ~50MB，可能需要几分钟到半小时</p>
+<pre><code>sudo mkdir -p /opt/homebrew/Library/Taps/homebrew/homebrew-core
+sudo git clone https://github.com/Homebrew/homebrew-core.git /opt/homebrew/Library/Taps/homebrew/homebrew-core</code></pre>
+<p>这一步会下载 ~400MB，<strong>这个是最大的</strong>，需要耐心等待</p>
+<pre><code>sudo chown -R hua:admin /opt/homebrew</code></pre>
+<pre><code>echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#x27; &gt;&gt; ~/.zshrc
+source ~/.zshrc</code></pre>
+<pre><code>brew --version</code></pre>
+<p>如果显示版本号（比如 <code>Homebrew 4.x.x</code>），就说明安装成功了！</p>
+<hr />
+<h2>如果克隆到一半断了</h2>
+<p>用这个命令继续：</p>
+<pre><code>cd /opt/homebrew &amp;&amp; sudo git pull
+cd /opt/homebrew/Library/Taps/homebrew/homebrew-core &amp;&amp; sudo git pull</code></pre>
+<hr />
+<h2>注意事项</h2>
+<ul><li>下载过程中终端<strong>没有进度条</strong>，耐心等待</li><li>如果实在太慢，可以考虑用镜像站（清华、中科大）</li><li>权限修改那步必须做，否则 brew 命令无法执行</li></ul>
+<p>现在开始执行吧，有问题随时问我！</p>
+<div class="record"><span class="tag">我问</span><p>这个是什么意思啊，如何做 ‘、</p></div>
+<p>🎉 <strong>恭喜！Homebrew 已经安装成功了！</strong></p>
+<p>从日志看，虽然中间有网络超时重试，但最后<strong>成功完成了安装</strong>。</p>
+<hr />
+<h2>现在需要做的</h2>
+<p>按照提示，执行以下命令把 Homebrew 添加到 PATH（让系统能找到 brew 命令）：</p>
+<pre><code>echo &gt;&gt; /Users/hua/.zprofile
+echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot;&#x27; &gt;&gt; /Users/hua/.zprofile
+eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot;</code></pre>
+<p>复制上面三行，一次性粘贴到终端执行即可。</p>
+<hr />
+<h2>验证安装</h2>
+<pre><code>brew --version</code></pre>
+<p>如果能显示版本号（比如 <code>Homebrew 4.3.0</code>），就完全搞定了！</p>
+<hr />
+<h2>测试一下</h2>
+<p>装个小软件试试：</p>
+<pre><code>brew install wget</code></pre>
+<p>如果能正常下载安装，说明一切正常！</p>
+<hr />
+<h2>顺便配置镜像源（可选，推荐）</h2>
+<p>为了以后下载软件更快，可以配置国内镜像源：</p>
+<pre><code># 设置清华镜像源
+export HOMEBREW_CORE_GIT_REMOTE=https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git
+export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles</code></pre>
+<p>可以把这两行加到 <code>~/.zshrc</code> 里，永久生效。</p>
+<hr />
+<p>现在执行那三行命令，然后 <code>brew --version</code> 试试看！有问题随时问我 ✅</p>
+<div class="record"><span class="tag">我问</span><p>hua@192 ~ % echo &gt;&gt; /Users/hua/.zprofile echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot;&#x27; &gt;&gt; /Users/hua/.zprofile eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot; hua@192 ~ % echo &gt;&gt; /Users/hua/.zprofile echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot;&#x27; &gt;&gt; /Users/hua/.zprofile eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot; hua@192 ~ %</p></div>
+<p>看起来你执行了两次，没关系，不会造成问题。现在来验证一下是否成功了：</p>
+<h2>验证 Homebrew 是否可用</h2>
+<pre><code>brew --version</code></pre>
+<p>如果显示类似这样的版本号，就说明成功了：</p>
+<pre><code>Homebrew 4.3.0
+Homebrew/homebrew-core (git revision 1234567; last commit 2024-09-04)</code></pre>
+<h2>如果提示 &quot;command not found&quot;</h2>
+<p>说明 PATH 还没生效，执行：</p>
+<pre><code>source ~/.zprofile</code></pre>
+<p>然后再试 <code>brew --version</code></p>
+<h2>测试安装软件</h2>
+<p>装个小程序测试一下：</p>
+<pre><code>brew install wget</code></pre>
+<p>如果能正常下载安装，说明一切 OK！</p>
+<hr />
+<p><strong>现在先运行 <code>brew --version</code>，把结果发给我看看。</strong></p>
+<div class="record"><span class="tag">我问</span><p>echo &#x27;eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot;&#x27; &gt;&gt; /Users/hua/.zprofile eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot; hua@192 ~ % brew -version Example usage: brew search TEXT|/REGEX/ brew info [FORMULA|CASK...] brew install FORMULA|CASK... brew update brew upgrade [FORMULA|CASK...] brew uninstall FORMULA|CASK... brew list [FORMULA|CASK...]</p>
+<p>Troubleshooting: brew config brew doctor brew install --verbose --debug FORMULA|CASK</p>
+<p>Contributing: brew create URL [--no-fetch] brew edit [FORMULA|CASK...]</p>
+<p>Further help: brew commands brew help [COMMAND] man brew https://docs.brew.sh</p>
+<p>Error: Invalid usage: Unknown command: brew -version Did you mean --version? hua@192 ~ %</p></div>
+<p>是 <code>--version</code>（两个横杠），不是 <code>-version</code>（一个横杠）：</p>
+<pre><code>brew --version</code></pre>
+<p>试试这个，应该就能看到版本号了！</p>
+<p>另外根据你的输出，Homebrew 已经<strong>完全可用</strong>了，因为 <code>brew</code> 命令能正常响应，只是参数写错了而已 ✅</p>
+<hr />
+<h2>顺便修复一下 .zprofile</h2>
+<p>刚才执行了两次，可能重复了，不过不影响使用。如果你想清理一下也没问题。</p>
+<p>现在运行 <code>brew --version</code> 确认一下吧！</p>
+<div class="record"><span class="tag">我问</span><p>如何安装Claude code</p></div>
+<p>既然你已经装好了 Homebrew，用它来安装 Claude Code 是最顺手的。</p>
+<p>下面是两种在 Mac 上安装的方法，其中 Homebrew 的方式更适合你现在的环境。</p>
+<p>因为你刚装好 Homebrew，可以直接用下面的命令安装，很方便[citation:3][citation:5][citation:6][!citation:8][!citation:9]。</p>
+<pre><code>brew install --cask claude-code</code></pre>
+<p>安装完成后，可以用这个命令验证是否成功：</p>
+<pre><code>claude --version</code></pre>
+<p>根据官方文档，原生安装器是推荐方式，因为它支持<strong>自动后台更新</strong>，可以让你始终用上最新版本[citation:1][citation:3][citation:4][!citation:7][!citation:12]。</p>
+<p>在终端执行以下命令即可[citation:1][citation:2][citation:4][!citation:7][!citation:8][!citation:9][!citation:12]：</p>
+<pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre>
+<p>安装成功后，进入你的项目目录，输入 <code>claude</code> 启动它：</p>
+<pre><code>cd your-project
+claude</code></pre>
+<p>首次启动时，终端会引导你完成登录[citation:1][citation:7]。</p>
+<hr />
+<p>Claude Code 默认需要访问 <code>claude.ai</code> 等国际服务端点才能正常登录和运行[citation:1][citation:7]。如果你在中国大陆的网络环境下使用，可能会遇到连接问题。</p>
+<p>如果登录不顺利，可以考虑：</p>
+<ol><li><strong>配置网络代理</strong>，确保终端能正常访问相关服务。</li><li><strong>配置第三方 API 提供商</strong>，让 Claude Code 通过其他国内可用的 API 来工作（比如 DeepSeek 等），这种配置方式会稍复杂一些，但可以解决网络问题[citation:11]。</li></ol>
+<div class="record"><span class="tag">我问</span><p>claude-code</p>
+<p>==&gt; Fetching downloads for: claude-code ✘ Cask claude-code (2.1.236) Error: Download failed on Cask &#x27;claude-code&#x27; with message: Download failed: https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude curl: (28) Failed to connect to downloads.claude.ai port 443 after 75006 ms: Couldn&#x27;t connect to server Warning: Problem : timeout. Will retry in 1 seconds. 3 retries left. curl: (28) Failed to connect to downloads.claude.ai port 443 after 75155 ms: Couldn&#x27;t connect to server Warning: Problem : timeout. Will retry in 2 seconds. 2 retries left. curl: (28) Failed to connect to downloads.claude.ai port 443 after 75084 ms: Couldn&#x27;t connect to server Warning: Problem : timeout. Will retry in 4 seconds. 1 retries left. curl: (28) Failed to connect to downloads.claude.ai port 443 after 75097 ms: Couldn&#x27;t connect to server Error: claude-code: Download failed for claude-code. hua@192 ~ %</p>
+<p>怎么回事啊</p></div>
+<p>这是因为<strong>网络连接问题</strong>，<code>downloads.claude.ai</code> 域名在国内无法直接访问，所以下载超时了。</p>
+<h2>解决方案</h2>
+<p><code>curl -fsSL https://claude.ai/install.sh | bash</code> 也会遇到同样的网络问题，因为它的下载源也是 <code>downloads.claude.ai</code>。</p>
+<hr />
+<p>如果你有代理工具（如 Clash、Surge、Shadowrocket 等），先开启代理，然后在终端执行：</p>
+<pre><code># 假设你的代理在 127.0.0.1:7890（Clash 默认端口）
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+export all_proxy=socks5://127.0.0.1:7890
+
+# 然后再安装
+brew install --cask claude-code</code></pre>
+<p>或者用官方脚本：</p>
+<pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre>
+<p><strong>注意</strong>：代理端口可能是 <code>7890</code>、<code>1087</code>、<code>1080</code> 等，具体看你代理软件的设置。</p>
+<hr />
+<p>既然 brew 下载失败，可以手动下载：</p>
+<ol><li><strong>在浏览器中打开</strong>（需要代理）：</li></ol>
+<pre><code>   https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<p>或</p>
+<pre><code>   https://claude.ai/download/claude-code</code></pre>
+<ol><li>下载后解压，把 <code>claude</code> 可执行文件放到 <code>/usr/local/bin/</code> 或 <code>/opt/homebrew/bin/</code> 目录：</li></ol>
+<pre><code>   # 假设下载到 Downloads
+   chmod +x ~/Downloads/claude
+   mv ~/Downloads/claude /opt/homebrew/bin/</code></pre>
+<ol><li>验证：</li></ol>
+<pre><code>   claude --version</code></pre>
+<hr />
+<p>目前 Claude Code 官方没有国内镜像源，所以这个方案暂时不可行。</p>
+<hr />
+<h2>总结</h2>
+<p>你现在的核心问题是<strong>网络访问</strong>。最直接的解决方式是：</p>
+<ol><li>开代理</li><li>在终端配置代理环境变量</li><li>重新执行安装命令</li></ol>
+<p>你有代理工具吗？如果有，告诉我你的代理端口，我帮你写完整的命令。</p>
+<div class="record"><span class="tag">我问</span><p>你的方案二是临时设置吗</p></div>
+<p><strong>是的，方案二是临时设置！</strong></p>
+<h2>临时设置 vs 永久设置</h2>
+<pre><code>export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+brew install --cask claude-code</code></pre>
+<ul><li>✅ <strong>只对当前终端窗口有效</strong></li><li>✅ 关闭终端后失效，不影响其他程序</li><li>✅ 适合偶尔需要代理的情况</li></ul>
+<hr />
+<p>把这些加到 <code>~/.zshrc</code> 文件里：</p>
+<pre><code># 打开配置文件
+nano ~/.zshrc
+
+# 在文件末尾添加（端口改成你自己的）
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+
+# 保存后生效
+source ~/.zshrc</code></pre>
+<p>这样每次打开终端都会自动设置代理。</p>
+<hr />
+<h2>更灵活的方式：配置别名</h2>
+<p>如果想随时开关代理，可以这样：</p>
+<pre><code># 添加到 ~/.zshrc
+alias proxy=&#x27;export https_proxy=http://127.0.0.1:7890; export http_proxy=http://127.0.0.1:7890&#x27;
+alias unproxy=&#x27;unset https_proxy; unset http_proxy&#x27;</code></pre>
+<p>然后使用时：</p>
+<pre><code>proxy          # 开启代理
+brew install --cask claude-code
+unproxy        # 关闭代理</code></pre>
+<hr />
+<h2>先试试方案二</h2>
+<p>你先执行：</p>
+<pre><code>export https_proxy=http://127.0.0.1:7890
+brew install --cask claude-code</code></pre>
+<p>如果不行，告诉我你的代理软件和端口号，我帮你调整。</p>
+<div class="record"><span class="tag">我问</span><p>我用的是sakura cat</p></div>
+<p>Sakura Cat 本质上和 Clash 系代理软件是一样的，所以找端口和配置代理的方法都是一样的。</p>
+<p>打开 Sakura Cat 客户端，找一下它设置的本地代理端口。</p>
+<ul><li><strong>找端口的位置</strong>：通常在 <strong>设置</strong>、<strong>参数设置</strong> 或 <strong>系统代理</strong> 这类页面里 [citation:2][citation:4]。</li><li><strong>端口长什么样</strong>：它通常是一个 4 位或 5 位的数字，最常见的就是 <code>7890</code> [citation:3][citation:5][citation:9][!citation:10]。也可能同时有 HTTP 代理端口和 SOCKS5 代理端口，我们一般用 HTTP 代理端口就行 [citation:2][citation:4][citation:7][!citation:9]。</li></ul>
+<p><strong>如果找不到端口</strong>：Sakura Cat 是 Clash 内核的话，可以看看客户端配置文件夹里的 <code>config.yaml</code> 文件，里面会有明确的 <code>port: 7890</code> 这样的设置 [citation:9]。</p>
+<hr />
+<p>知道端口后，比如端口是 <code>7890</code>，就在终端执行下面这组命令（复制粘贴，<strong>一次性输入</strong>）：</p>
+<pre><code>export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+brew install --cask claude-code</code></pre>
+<p><strong>注意</strong>：如果端口不是 <code>7890</code>，请把命令里的端口号都替换成你找到的真实端口 [citation:3][citation:10]。</p>
+<hr />
+<p>如果你经常要用代理，可以把开关代理的命令加到 <code>~/.zshrc</code> 文件里：</p>
+<pre><code># 先编辑配置文件
+nano ~/.zshrc
+
+# 在文件末尾加上这两行（端口请替换成你的）
+alias sakura-proxy=&#x27;export https_proxy=http://127.0.0.1:7890; export http_proxy=http://127.0.0.1:7890&#x27;
+alias sakura-unproxy=&#x27;unset https_proxy; unset http_proxy&#x27;
+
+# 保存后执行，让配置生效
+source ~/.zshrc</code></pre>
+<p>以后想用代理时，在终端输入 <code>sakura-proxy</code> 就行，不想用了就输入 <code>sakura-unproxy</code> [citation:3][citation:7][citation:10]。</p>
+<div class="record"><span class="tag">我问</span><p>curl: (28) Failed to connect to downloads.claude.ai port 443 after 75097 ms: Couldn&#x27;t connect to server Error: claude-code: Download failed for claude-code. hua@192 ~ % hua@192 ~ % export https_proxy=http://127.0.0.1:7890 export http_proxy=http://127.0.0.1:7890 brew install --cask claude-code ==&gt; Downloading Homebrew API data Warning: packages.arm64_tahoe.jws.json: update failed, falling back to cached version.                                                                                        Downloading  15.5MB/------- ✔︎ JSON API packages.arm64_tahoe.jws.json            Downloaded   15.5MB/ 15.5MB ==&gt; Would install 1 cask: claude-code ==&gt; Fetching downloads for: claude-code ✘ Cask claude-code (2.1.236) Error: Download failed on Cask &#x27;claude-code&#x27; with message: Download failed: https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude curl: (7) Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn&#x27;t connect to server Error: claude-code: Download failed for claude-code. hua@192 ~ % export https_proxy=http://127.0.0.1:7890 export http_proxy=http://127.0.0.1:7890 brew install --cask claude-code ==&gt; Would install 1 cask: claude-code ==&gt; Fetching downloads for: claude-code ✘ Cask claude-code (2.1.236) Error: Download failed on Cask &#x27;claude-code&#x27; with message: Download failed: https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude curl: (7) Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn&#x27;t connect to server Error: claude-code: Dow</p></div>
+<p>问题很明显了：<strong>端口 7890 不通</strong>，说明 Sakura Cat 的代理端口不是 7890。</p>
+<h2>解决方案</h2>
+<ol><li><strong>打开 Sakura Cat 客户端</strong></li><li>找到 <strong>设置</strong> 或 <strong>参数设置</strong></li><li>查看 <strong>本地代理端口</strong> 或 <strong>HTTP 代理端口</strong></li><li>常见端口可能是：<code>7890</code>、<code>1080</code>、<code>1087</code>、<code>8889</code> 等</li></ol>
+<p><strong>如果找不到端口设置</strong>，可以这样查：</p>
+<pre><code># 查看系统代理设置
+netstat -an | grep LISTEN | grep -E &quot;7890|1080|1087|8889&quot;</code></pre>
+<p>或者查看 Sakura Cat 的配置文件（通常是 <code>config.yaml</code> 或 <code>config.yml</code>）：</p>
+<pre><code># 找配置文件位置（一般在 ~/.config/ 或 ~/Library/Application Support/ 下）
+find ~ -name &quot;config.yaml&quot; 2&gt;/dev/null | grep -i sakura</code></pre>
+<p><strong>Sakura Cat 必须开启系统代理或全局模式</strong>，否则端口不会监听。</p>
+<ul><li>检查 Sakura Cat 是否处于 <strong>&quot;开启&quot;</strong> 或 <strong>&quot;运行中&quot;</strong> 状态</li><li>确保选择了 <strong>全局模式</strong> 或 <strong>规则模式</strong></li></ul>
+<p>假设你找到了端口是 <code>1080</code>，那么执行：</p>
+<pre><code>export https_proxy=http://127.0.0.1:1080
+export http_proxy=http://127.0.0.1:1080
+brew install --cask claude-code</code></pre>
+<pre><code># 测试代理连接
+curl -x http://127.0.0.1:7890 https://www.google.com
+
+# 或者测试不通过代理
+curl https://www.google.com</code></pre>
+<p>如果 <code>curl -x</code> 能通，说明代理端口对了。</p>
+<hr />
+<h2>快速排查清单</h2>
+<ul><li>[ ] Sakura Cat 是否已经<strong>开启</strong>？</li><li>[ ] 代理端口号是否正确（不是 7890 的话要改）？</li><li>[ ] 是否选择了<strong>全局模式</strong>或<strong>规则模式</strong>？</li><li>[ ] 系统代理设置是否被其他软件占用？</li></ul>
+<hr />
+<p><strong>你先告诉我 Sakura Cat 里显示的端口号是多少，我帮你写正确的命令。</strong></p>
+<div class="record"><span class="tag">我问</span><p>export http_proxy=http://127.0.0.1:12450; export https_proxy=http://127.0.0.1:12450; export all_proxy=socks5://127.0.0.1:12450; export no_proxy=localhost,127.0.0.1</p></div>
+<p>好的，你的代理端口是 <strong>12450</strong>，而且用了 HTTP 和 SOCKS5 两种代理。</p>
+<p>先测试一下代理是否正常：</p>
+<pre><code>curl -x http://127.0.0.1:12450 https://www.google.com</code></pre>
+<p>如果返回 HTML 内容（而不是超时错误），说明代理正常工作，继续执行：</p>
+<pre><code>export http_proxy=http://127.0.0.1:12450
+export https_proxy=http://127.0.0.1:12450
+brew install --cask claude-code</code></pre>
+<hr />
+<h2>如果还是不行</h2>
+<p>试试用 <code>curl</code> 直接下载 Claude Code：</p>
+<pre><code># 使用代理下载
+curl -x http://127.0.0.1:12450 -L -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude
+
+# 如果下载成功，添加执行权限并放到 bin 目录
+chmod +x ~/Downloads/claude
+mv ~/Downloads/claude /opt/homebrew/bin/</code></pre>
+<hr />
+<h2>快捷配置（加到 ~/.zshrc）</h2>
+<p>既然你已经有了完整的代理命令，可以加到 <code>~/.zshrc</code> 方便以后使用：</p>
+<pre><code>echo &#x27;alias proxy-sakura=&quot;export http_proxy=http://127.0.0.1:12450; export https_proxy=http://127.0.0.1:12450; export all_proxy=socks5://127.0.0.1:12450&quot;&#x27; &gt;&gt; ~/.zshrc
+echo &#x27;alias unproxy=&quot;unset http_proxy https_proxy all_proxy&quot;&#x27; &gt;&gt; ~/.zshrc
+source ~/.zshrc</code></pre>
+<p>以后用：</p>
+<pre><code>proxy-sakura  # 开启代理
+brew install --cask claude-code
+unproxy       # 关闭代理</code></pre>
+<hr />
+<p>你先试试 <code>curl -x</code> 测试，告诉我结果。</p>
+<div class="record"><span class="tag">我问</span><p>brew install --cask claude-code ==&gt; Would install 1 cask: claude-code ==&gt; Fetching downloads for: claude-code ✘ Cask claude-code (2.1.236) ################################################################################                                                                 Downloading 175.8MB/317.0MB Error: Download failed on Cask &#x27;claude-code&#x27; with message: Download failed: https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude curl: (18) Transferred a partial file Error: claude-code: Download failed for claude-code. hua@192 ~ %</p></div>
+<p>好消息是代理<strong>已经生效了</strong>！已经下载了 175.8MB，说明能连上了。问题是下载到一半断了（partial file），这在网络不稳定时很常见。</p>
+<h2>解决方案</h2>
+<pre><code>brew install --cask claude-code</code></pre>
+<p>多试几次，它会从断点续传，每次都能多下一点。你已经下了 175.8MB/317MB，再试一两次可能就好了。</p>
+<hr />
+<pre><code># 用 curl 下载到 Downloads 目录
+curl -L -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<p><code>curl</code> 比 brew 的下载更稳定，如果断了可以用 <code>-C -</code> 参数续传：</p>
+<pre><code># 支持断点续传
+curl -L -C - -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<p>下载完成后：</p>
+<pre><code>chmod +x ~/Downloads/claude
+mv ~/Downloads/claude /opt/homebrew/bin/</code></pre>
+<p>验证：</p>
+<pre><code>claude --version</code></pre>
+<hr />
+<pre><code>wget -c -O ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<p><code>-c</code> 参数支持断点续传。</p>
+<hr />
+<h2>建议</h2>
+<p>你现在已经下载了 175.8MB，离完成不远了。我建议：</p>
+<ol><li><strong>先执行</strong> <code>brew install --cask claude-code</code> <strong>再试一次</strong>，可能就续传成功了</li><li>如果还失败，用<strong>方案二的 curl 命令</strong>手动下载，支持断点续传更稳定</li></ol>
+<p>试试看，告诉我结果！</p>
+<div class="record"><span class="tag">我问</span><p>==&gt; Downloading Homebrew API data Warning: packages.arm64_tahoe.jws.json: update failed, falling back to cached version. ✔︎ JSON API packages.arm64_tahoe.jws.json            Downloaded   15.5MB/ 15.5MB ==&gt; Would install 1 cask: claude-code ==&gt; Fetching downloads for: claude-code ✘ Cask claude-code (2.1.236)                        Downloading 175.8MB/------- Error: Download failed on Cask &#x27;claude-code&#x27; with message: Download failed: https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude curl: (35) LibreSSL/3.3.6: error:1404B42E:SSL routines:ST_CONNECT:tlsv1 alert protocol version Error: claude-code: Download failed for claude-code. hua@192 ~ %</p></div>
+<p>看起来是 SSL/TLS 协议版本不兼容的问题，可能是代理工具对 HTTPS 连接的处理有问题。</p>
+<h2>快速解决方案</h2>
+<pre><code># 使用 -k 参数忽略 SSL 验证，加上代理
+curl -k -x http://127.0.0.1:12450 -L -C - -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<p><code>-k</code> 参数会忽略 SSL 证书验证，<code>-C -</code> 支持断点续传。</p>
+<hr />
+<pre><code># 如果没装 wget，先不通过代理装一个
+unset http_proxy https_proxy all_proxy
+brew install wget
+
+# 然后通过代理下载
+export http_proxy=http://127.0.0.1:12450
+export https_proxy=http://127.0.0.1:12450
+wget --no-check-certificate -c -O ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<hr />
+<pre><code># 使用 SOCKS5 代理
+export all_proxy=socks5://127.0.0.1:12450
+curl -k -L -C - -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<hr />
+<ol><li>在浏览器中打开（确保 Sakura Cat 代理开启）：</li></ol>
+<pre><code>   https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<ol><li>下载完成后，在终端执行：</li></ol>
+<pre><code>   # 移动到 Downloads 目录
+   cd ~/Downloads
+   
+   # 给下载的文件添加执行权限
+   chmod +x claude
+   
+   # 移动到 Homebrew bin 目录
+   mv claude /opt/homebrew/bin/
+   
+   # 验证
+   claude --version</code></pre>
+<hr />
+<h2>推荐</h2>
+<p><strong>方案四（浏览器下载）最靠谱</strong>，因为浏览器的 SSL/TLS 处理更完善。浏览器下载完成后，按上面步骤移动到 <code>/opt/homebrew/bin/</code> 就行了。</p>
+<p>你试试哪个方案？</p>
+<div class="record"><span class="tag">我问</span><p>==&gt; Fetching downloads for: claude-code ✘ Cask claude-code (2.1.236)                        Downloading 175.8MB/------- Error: Download failed on Cask &#x27;claude-code&#x27; with message: Download failed: https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude curl: (35) LibreSSL/3.3.6: error:1404B42E:SSL routines:ST_CONNECT:tlsv1 alert protocol version Error: claude-code: Download failed for claude-code. hua@192 ~ % # 使用 -k 参数忽略 SSL 验证，加上代理 curl -k -x http://127.0.0.1:12450 -L -C - -o ~/Downloads/claude \ https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude zsh: command not found: # % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current Dload  Upload   Total   Spent    Left  Speed 0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0 curl: (35) LibreSSL/3.3.6: error:1404B42E:SSL routines:ST_CONNECT:tlsv1 alert protocol version hua@192 ~ %</p>
+<p>这个是怎么回事啊，？==&gt; Fetching downloads for: claude-code ✘ Cask claude-code (2.1.236)                        Downloading 175.8MB/------- Error: Download failed on Cask &#x27;claude-code&#x27; with message: Download failed: https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude curl: (35) LibreSSL/3.3.6: error:1404B42E:SSL routines:ST_CONNECT:tlsv1 alert protocol version Error: claude-code: Download failed for claude-code. hua@192 ~ % # 使用 -k 参数忽略 SSL 验证，加上代理 curl -k -x http://127.0.0.1:12450 -L -C - -o ~/Downloads/claude \ https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude zsh: command not found: # % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current Dload  Upload   Total   Spent    Left  Speed 0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0 curl: (35) LibreSSL/3.3.6: error:1404B42E:SSL routines:ST_CONNECT:tlsv1 alert protocol version hua@192 ~ %</p></div>
+<p>问题根源找到了！错误 <code>tlsv1 alert protocol version</code> 说明 <strong>Sakura Cat 代理在 TLS 握手时被服务器拒绝了</strong>。这通常是因为代理工具对 HTTPS 的 TLS 版本支持有问题。</p>
+<h2>立即解决方案</h2>
+<pre><code>curl --http1.1 -k -x http://127.0.0.1:12450 -L -C - -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<hr />
+<pre><code>curl -k --socks5 127.0.0.1:12450 -L -C - -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<hr />
+<pre><code># 先清除之前设置的代理变量
+unset http_proxy https_proxy all_proxy
+
+# 使用系统代理设置（Sakura Cat 如果开了全局代理会生效）
+curl -k -L -C - -o ~/Downloads/claude \
+  https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<hr />
+<p>既然终端一直出 TLS 问题，<strong>用浏览器下载最省心</strong>：</p>
+<ol><li><strong>确保 Sakura Cat 处于开启状态</strong>（全局模式）</li><li>在 <strong>Safari 或 Chrome</strong> 中打开：</li></ol>
+<pre><code>   https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude</code></pre>
+<ol><li>下载完成后，在终端执行：</li></ol>
+<pre><code>   cd ~/Downloads
+   chmod +x claude
+   mv claude /opt/homebrew/bin/
+   claude --version</code></pre>
+<p>浏览器的 TLS 实现比终端 curl 完善，大概率能下载成功。</p>
+<hr />
+<h2>为什么会有这个问题？</h2>
+<p><code>tlsv1 alert protocol version</code> 表示：</p>
+<ul><li>Claude 服务器要求使用较新的 TLS 1.2 或 1.3</li><li>但经过 Sakura Cat 代理后，TLS 版本协商出了问题</li><li>这通常是代理软件的 TLS 实现有 bug 或配置问题</li></ul>
+<p><strong>建议先用方案四浏览器下载</strong>，最快速有效！</p>
+<div class="record"><span class="tag">我问</span><p>zsh: command not found: # % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current Dload  Upload   Total   Spent    Left  Speed 0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0 curl: (35) LibreSSL/3.3.6: error:1404B42E:SSL routines:ST_CONNECT:tlsv1 alert protocol version hua@192 ~ % curl -k --socks5 127.0.0.1:12450 -L -C - -o ~/Downloads/claude \ https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current Dload  Upload   Total   Spent    Left  Speed 100  302M  100  302M    0     0  6038k      0  0:00:51  0:00:51 --:--:-- 10.6M hua@192 ~ % 这个是什么意思啊</p></div>
+<p>🎉 <strong>成功了！！！</strong></p>
+<p>这个输出说明 <strong>Claude Code 已经完整下载完成了</strong>（302MB 全部下载成功）！</p>
+<hr />
+<h2>现在执行安装</h2>
+<pre><code># 1. 进入 Downloads 目录
+cd ~/Downloads
+
+# 2. 添加执行权限
+chmod +x claude
+
+# 3. 移动到 Homebrew 的 bin 目录
+mv claude /opt/homebrew/bin/
+
+# 4. 验证是否安装成功
+claude --version</code></pre>
+<hr />
+<h2>如果 <code>claude --version</code> 报错</h2>
+<p>可能是因为我们用的是 <code>curl</code> 直接下载，不是通过 <code>brew</code> 安装的，Homebrew 可能不认识。可以这样解决：</p>
+<pre><code># 查看文件是否在正确位置
+ls -la /opt/homebrew/bin/claude
+
+# 如果存在，尝试直接运行
+/opt/homebrew/bin/claude --version</code></pre>
+<p>如果还是不行，可以用 <code>brew</code> 来&quot;注册&quot;这个已下载的文件：</p>
+<pre><code># 告诉 brew 这个 cask 已经安装好了
+brew install --cask claude-code --force</code></pre>
+<hr />
+<h2>测试运行</h2>
+<pre><code>claude</code></pre>
+<p>或者在项目目录里运行：</p>
+<pre><code>cd ~/your-project
+claude</code></pre>
+<hr />
+<p><strong>现在先执行上面的安装命令，然后告诉我 <code>claude --version</code> 的结果！</strong> 🚀</p>
+<div class="record"><span class="tag">我问</span><p>Dload  Upload   Total   Spent    Left  Speed 0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0 curl: (35) LibreSSL/3.3.6: error:1404B42E:SSL routines:ST_CONNECT:tlsv1 alert protocol version hua@192 ~ % curl -k --socks5 127.0.0.1:12450 -L -C - -o ~/Downloads/claude \ https://downloads.claude.ai/claude-code-releases/2.1.236/darwin-arm64/claude % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current Dload  Upload   Total   Spent    Left  Speed 100  302M  100  302M    0     0  6038k      0  0:00:51  0:00:51 --:--:-- 10.6M hua@192 ~ % claude --version zsh: command not found: claude hua@192 ~ % claude zsh: command not found: claude hua@192 ~ %</p></div>
+<p>你下载完了，但还没放到正确的位置。现在执行这几步：</p>
+<h2>安装 Claude Code</h2>
+<pre><code># 1. 进入 Downloads 目录
+cd ~/Downloads
+
+# 2. 查看文件是否存在
+ls -la claude</code></pre>
+<p>如果看到文件存在（大约 302MB），继续：</p>
+<pre><code># 3. 添加执行权限
+chmod +x claude
+
+# 4. 移动到 Homebrew bin 目录
+sudo mv claude /opt/homebrew/bin/
+
+# 5. 验证
+claude --version</code></pre>
+<hr />
+<h2>如果提示 &quot;Operation not permitted&quot;（权限问题）</h2>
+<pre><code># 先确认你的用户名
+whoami
+
+# 然后用正确的用户权限移动（hua 是你的用户名）
+sudo mv ~/Downloads/claude /opt/homebrew/bin/
+sudo chown hua:admin /opt/homebrew/bin/claude</code></pre>
+<hr />
+<h2>如果还是找不到</h2>
+<p>检查文件是否在正确位置：</p>
+<pre><code>ls -la /opt/homebrew/bin/claude</code></pre>
+<p>如果显示文件存在，直接运行完整路径：</p>
+<pre><code>/opt/homebrew/bin/claude --version</code></pre>
+<hr />
+<h2>快捷方式：加到 PATH（如果还没加）</h2>
+<p>之前你已经执行过：</p>
+<pre><code>eval &quot;$(/opt/homebrew/bin/brew shellenv zsh)&quot;</code></pre>
+<p>所以 <code>/opt/homebrew/bin</code> 应该已经在 PATH 里了。如果 <code>claude</code> 命令还是找不到，重启终端试试：</p>
+<pre><code># 重新加载配置
+source ~/.zshrc
+source ~/.zprofile
+
+# 再试
+claude --version</code></pre>
+<hr />
+<p><strong>先执行 <code>ls -la ~/Downloads/claude</code> 和 <code>ls -la /opt/homebrew/bin/claude</code>，把结果发给我看看。</strong></p>
+<div class="record"><span class="tag">我问</span><p>hua@192 ~ % # 1. 进入 Downloads 目录 cd ~/Downloads</p>
+<h1>2. 查看文件是否存在</h1>
+<p>ls -la claude zsh: command not found: # zsh: command not found: # -rw-r--r--@ 1 hua  staff  317044624  9月  4 23:07 claude hua@192 Downloads % # 3. 添加执行权限 chmod +x claude</p>
+<h1>4. 移动到 Homebrew bin 目录</h1>
+<p>sudo mv claude /opt/homebrew/bin/</p>
+<h1>5. 验证</h1>
+<p>claude --version zsh: command not found: # zsh: command not found: # Password: 这个是咋回事</p></div>
+<p>很好！文件已经成功移动到 <code>/opt/homebrew/bin/</code> 了（你输入密码后应该已经移动成功了）。</p>
+<p>现在执行验证命令：</p>
+<pre><code>claude --version</code></pre>
+<p>如果还是提示 <code>command not found</code>，试试：</p>
+<pre><code># 检查文件是否在正确位置
+ls -la /opt/homebrew/bin/claude
+
+# 如果存在，直接运行完整路径
+/opt/homebrew/bin/claude --version</code></pre>
+<hr />
+<h2>如果文件存在但命令找不到</h2>
+<p>说明 PATH 没有包含 <code>/opt/homebrew/bin</code>，执行：</p>
+<pre><code># 重新加载配置
+source ~/.zshrc
+
+# 再试
+claude --version</code></pre>
+<hr />
+<h2>如果文件不存在</h2>
+<p>可能移动失败了，重新移动一次：</p>
+<pre><code>cd ~/Downloads
+ls -la claude  # 先确认文件还在 Downloads 里
+sudo mv claude /opt/homebrew/bin/
+ls -la /opt/homebrew/bin/claude  # 确认移动成功</code></pre>
+<hr />
+<p><strong>现在执行 <code>ls -la /opt/homebrew/bin/claude</code>，把结果发给我。</strong></p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/025_终端卡住解决.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>二次规划考试题目生成</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>二次规划考试题目生成</h1>
+<div class="meta">2026-05-18 · 主题：科研-论文调研、课程-数学、课程-编程/计算机、考试-学校/大创 · 75 条消息 · 对话编号 153</div>
+<div class="record"><span class="tag">我问</span><p>这里的就是我的最优化的课件，里面包含了考试要考的知识点，请你给我完整的浏览所有的知识点，然后给我出一套题目，难度适中，尽可能地包含里面的所有的知识，我的考试会有一道证明题，你出的题型里也要有证明题</p></div>
+<p>以下是根据你提供的《第五章 二次规划》课件内容整理的一套模拟试题，覆盖了二次规划的基本概念、KKT条件、等式约束求解（线性方程组法、变量消去法）、有效集法以及证明题。题型包括判断题、计算题和证明题，难度适中，可作为考试复习参考。</p>
+<hr />
+<h2>二次规划模拟试题</h2>
+<p><strong>满分：100分</strong>   <strong>考试时间：120分钟</strong></p>
+<hr />
+<ol><li>（ ）对于一般二次规划问题（G不一定半正定），局部最优解一定是全局最优解。  </li><li>（ ）凸二次规划的K-T点一定是全局最优解。  </li><li>（ ）用变量消去法求解等式约束二次规划时，若\(A_B\)接近奇异，会引起数值不稳定。  </li><li>（ ）有效集法中，若当前迭代点的所有有效约束乘子均非负，则该点不是最优解。  </li><li>（ ）对于等式约束二次规划\(\min \frac{1}{2}x^T Gx + r^T x,\; s.t.\; Ax=b\)，当G正定时，其最优解可通过解线性方程组得到。</li></ol>
+<hr />
+<ol><li>设二次规划问题\(\min \frac{1}{2}x^T Gx + r^T x\)，约束为\(\alpha_i^T x \le b_i,\; i=1,\dots,m\)。若\(x^<em>\)是K-T点，则存在乘子\(\lambda_i^</em> \ge 0\)使得________，且互补松弛条件为________。  </li><li>用有效集法解凸二次规划时，若当前搜索方向\(d^k = 0\)，则检查乘子；若存在某个有效约束的乘子\(\lambda_q^k &lt; 0\)，则下一步应________（填“增加”或“删除”）该约束，并令\(x^{k+1}=\)________。  </li><li>对于等式约束二次规划\(\min \frac{1}{2}x^T Gx + r^T x,\; s.t.\; Ax=b\)（\(A\)行满秩），其KKT系统为\(\begin{pmatrix} G &amp; A^T \\ A &amp; 0 \end{pmatrix}\begin{pmatrix} x \\ \lambda \end{pmatrix} = \begin{pmatrix} -r \\ b \end{pmatrix}\)。若G正定，则该系数矩阵________（填“非奇异”或“奇异”）。</li></ol>
+<hr />
+<h4>1. （20分）用线性方程组法求解下列等式约束凸二次规划</h4>
+<p>\[ \begin{aligned} \min \quad &amp; f(x) = x_1^2 + 2x_2^2 + x_3^2 - 2x_1x_2 + x_3 \\ \text{s.t.} \quad &amp; x_1 + x_2 + x_3 = 4 \\ &amp; 2x_1 - x_2 + x_3 = 2 \end{aligned} \]</p>
+<p>要求： (1) 写出矩阵\(G, r, A, b\)。 (2) 写出KKT线性方程组。 (3) 求解方程组，得到最优解\(x^<em>\)及乘子\(\lambda^</em>\)。</p>
+<h4>2. （15分）用变量消去法求解下列凸二次规划</h4>
+<p>\[ \begin{aligned} \min \quad &amp; f(x) = x_1^2 + x_2^2 + x_3^2 \\ \text{s.t.} \quad &amp; x_1 + 2x_2 - x_3 = 4 \\ &amp; x_1 - x_2 + x_3 = -2 \end{aligned} \]</p>
+<p>要求：写出消去过程，得到最优解\(x^<em>\)及乘子\(\lambda^</em>\)。</p>
+<h4>3. （15分）用有效集法求解下列二次规划（取初始点\(x^0 = (0,0)^T\)）</h4>
+<p>\[ \begin{aligned} \min \quad &amp; f(x) = x_1^2 + x_2^2 - 2x_1 - 4x_2 \\ \text{s.t.} \quad &amp; c_1(x) = x_1 + x_2 - 1 \le 0 \\ &amp; c_2(x) = -x_1 \le 0 \\ &amp; c_3(x) = -x_2 \le 0 \end{aligned} \]</p>
+<p>要求： (1) 写出第一轮迭代的等式约束子问题，并求解方向\(d^1\)。 (2) 计算步长并得到新点\(x^1\)，确定新的有效集。 (3) 继续迭代至最优解（至少完成两轮迭代），给出最终最优解及乘子。</p>
+<hr />
+<p><strong>凸二次规划全局最优解的充分性</strong></p>
+<p>设问题为凸二次规划：</p>
+<p>\[ \min f(x)=\frac{1}{2}x^T Gx + r^T x,\quad \text{s.t. } \alpha_i^T x - b_i = 0\;(i\in E),\ \alpha_i^T x - b_i \le 0\;(i\in I) \]</p>
+<p>其中\(G\)是半正定矩阵。设\(x^<em>\)是K-T点，即存在乘子\(\lambda_i^</em>\;(i\in E\cup I)\)使得：</p>
+<p>\[ Gx^<em> + r + \sum_{i\in E\cup I}\lambda_i^</em>\alpha_i = 0,\quad \lambda_i^<em> \ge 0\;(i\in I),\quad \lambda_i^</em>(\alpha_i^T x^* - b_i)=0\;(i\in I) \]</p>
+<p>证明：\(x^<em>\)是全局最优解。 （提示：利用\(f(x)-f(x^</em>) = \nabla f(x^<em>)^T(x-x^</em>) + \frac{1}{2}(x-x^<em>)^T G (x-x^</em>)\)，并利用K-T条件及互补松弛。）</p>
+<hr />
+<h2>参考答案（简要）</h2>
+<ol><li>×（只有凸二次规划才有此性质）  </li><li>√  </li><li>√  </li><li>×（乘子非负才是最优解）  </li><li>√</li></ol>
+<ol><li>\(Gx^<em> + r + \sum_{i=1}^m \lambda_i^</em> \alpha_i = 0\)；\(\lambda_i^<em>(\alpha_i^T x^</em> - b_i)=0\)  </li><li>删除；\(x^k\)  </li><li>非奇异</li></ol>
+<h4>1. 线性方程组法</h4>
+<p>(1) \(G = \begin{pmatrix}2 &amp; -2 &amp; 0 \\ -2 &amp; 4 &amp; 0 \\ 0 &amp; 0 &amp; 2\end{pmatrix},\ r=\begin{pmatrix}0 \\ 0 \\ 1\end{pmatrix},\ A=\begin{pmatrix}1 &amp; 1 &amp; 1 \\ 2 &amp; -1 &amp; 1\end{pmatrix},\ b=\begin{pmatrix}4 \\ 2\end{pmatrix}\) (2) \(\begin{pmatrix}2 &amp; -2 &amp; 0 &amp; 1 &amp; 2 \\ -2 &amp; 4 &amp; 0 &amp; 1 &amp; -1 \\ 0 &amp; 0 &amp; 2 &amp; 1 &amp; 1 \\ 1 &amp; 1 &amp; 1 &amp; 0 &amp; 0 \\ 2 &amp; -1 &amp; 1 &amp; 0 &amp; 0\end{pmatrix}\begin{pmatrix}x_1\\x_2\\x_3\\\lambda_1\\\lambda_2\end{pmatrix}=\begin{pmatrix}0\\0\\-1\\4\\2\end{pmatrix}\) (3) 解得 \(x^<em> = \left(\frac{21}{11},\frac{43}{22},\frac{3}{22}\right)^T,\ \lambda^</em> = \left(\frac{29}{11},-\frac{15}{11}\right)\)（注意\(\lambda_2\)可为负，因是等式约束无符号限制）</p>
+<h4>2. 变量消去法</h4>
+<p>由约束解得 \(x_1 = -\frac{1}{3}x_3,\ x_2 = 2+\frac{2}{3}x_3\)，代入得 \(\hat{f}(x_3)=\frac{14}{9}x_3^2+\frac{8}{3}x_3+4\)，一阶导得 \(x_3^<em>=-\frac{6}{7}\)，故 \(x^</em>=\left(\frac{2}{7},\frac{10}{7},-\frac{6}{7}\right)^T\)，乘子由 \(Gx^<em>+A^T\lambda=0\) 得 \(\lambda^</em>=\left(-\frac{8}{7},\frac{4}{7}\right)^T\)。</p>
+<h4>3. 有效集法（参考课件例）</h4>
+<p>第一轮：\(x^0=(0,0)\)，有效集\(\{2,3\}\)，子问题\(\min d_1^2+d_2^2-2d_1-4d_2,\ s.t.\ -d_1=0,-d_2=0\)，解得\(d^0=(0,0)\)？不对，注意：当\(d=0\)时乘子为负，应删除约束。需仔细计算：实际解KKT方程得\(d_1=1,d_2=2\)? 正确计算：子问题无约束？因为有效约束为\(d_1=0,d_2=0\)，退化为一点。实际上应先解等式子问题：\(\min \frac{1}{2}d^TGd+\nabla f^T d\)，约束\(d_1=0,d_2=0\)，则目标为0，方向为0，乘子\(\lambda_2= -2,\lambda_3=-4\)，均为负，故删除乘子最小的约束（如\(\lambda_3\)），令新有效集\(\{2\}\)，重新求解。类似课件过程，最终最优解为\(x^*=(0,1)^T\)，乘子\((2,0,0)\)。</p>
+<p><strong>证明</strong>：任取可行点\(x\)，令\(I(x^<em>)=\{i\in I | \alpha_i^T x^</em> = b_i\}\)。由K-T条件：\(\nabla f(x^<em>) = -\sum_{i\in E\cup I}\lambda_i^</em>\alpha_i\)，且对\(i\notin I(x^<em>)\)有\(\lambda_i^</em>=0\)。于是 \[ \begin{aligned} f(x)-f(x^<em>) &amp;= \nabla f(x^</em>)^T(x-x^<em>) + \frac{1}{2}(x-x^</em>)^T G (x-x^<em>) \\ &amp;= -\sum_{i\in E\cup I(x^</em>)}\lambda_i^<em>\alpha_i^T(x-x^</em>) + \frac{1}{2}(x-x^<em>)^T G (x-x^</em>) \\ &amp;= -\sum_{i\in E}\lambda_i^<em>(\alpha_i^T x - b_i) - \sum_{i\in I(x^</em>)}\lambda_i^<em>(\alpha_i^T x - b_i) + \frac{1}{2}(\cdots) \\ &amp;= 0 - 0 + \frac{1}{2}(x-x^</em>)^T G (x-x^<em>) \ge 0, \end{aligned} \] 因为\(G\)半正定。故\(f(x)\ge f(x^</em>)\)，即\(x^*\)是全局最优解。□</p>
+<hr />
+<blockquote><strong>提示</strong>：实际考试中证明题需写出完整逻辑，并注意符号和下标说明。建议复习时重点掌握KKT条件的应用和凸性的作用。</blockquote>
+<div class="record"><span class="tag">我问</span><p>答案也要有的</p></div>
+<p>以下是完整试题答案，包含所有判断题、填空题、计算题和证明题的详细解答过程。</p>
+<hr />
+<h2>二次规划模拟试题答案</h2>
+<ol><li><strong>×</strong>  </li></ol>
+<p>一般二次规划中，若\(G\)不是半正定（即非凸），局部最优解不一定是全局最优解。只有凸二次规划（\(G\)半正定）才有此性质。</p>
+<ol><li><strong>√</strong>  </li></ol>
+<p>对于凸二次规划，K-T点既是局部最优也是全局最优解。课件定理已明确。</p>
+<ol><li><strong>√</strong>  </li></ol>
+<p>变量消去法需要选取\(A_B\)非奇异，若接近奇异，求逆会放大误差，导致数值不稳定。</p>
+<ol><li><strong>×</strong>  </li></ol>
+<p>若当前点\(x^k\)处\(d^k=0\)且所有有效约束乘子\(\lambda_i^k \ge 0\)，则\(x^k\)是K-T点，即为最优解。若存在负乘子才需要删除对应约束。</p>
+<ol><li><strong>√</strong>  </li></ol>
+<p>当\(G\)正定时，KKT系统的系数矩阵\(\begin{pmatrix} G &amp; A^T \\ A &amp; 0 \end{pmatrix}\)非奇异，可通过求解线性方程组得到唯一的最优解和乘子。</p>
+<hr />
+<ol><li>**\(Gx^<em> + r + \sum_{i=1}^m \lambda_i^</em> \alpha_i = 0\)<strong>；</strong>\(\lambda_i^<em>(\alpha_i^T x^</em> - b_i) = 0\)**  </li></ol>
+<p>（前者是梯度条件，后者是互补松弛条件）</p>
+<ol><li><strong>删除</strong>；<strong>\(x^k\)</strong>  </li></ol>
+<p>（乘子负说明该约束不起作用，去掉后可改善目标值；且此处\(x^{k+1}=x^k\)不变）</p>
+<ol><li><strong>非奇异</strong>  </li></ol>
+<p>（当\(G\)正定且\(A\)行满秩时，该KKT矩阵非奇异）</p>
+<hr />
+<h4>1. （20分）线性方程组法</h4>
+<p><strong>(1) 写出矩阵\(G, r, A, b\)</strong> 目标函数\(f(x) = x_1^2 + 2x_2^2 + x_3^2 - 2x_1x_2 + x_3\) 化为标准形式\(\frac{1}{2}x^T G x + r^T x\)： \[ \frac{1}{2}x^T G x = \frac{1}{2}\big( 2x_1^2 + 4x_2^2 + 2x_3^2 -4x_1x_2 \big) = x_1^2 + 2x_2^2 + x_3^2 -2x_1x_2 \] 因此 \[ G = \begin{pmatrix} 2 &amp; -2 &amp; 0 \\ -2 &amp; 4 &amp; 0 \\ 0 &amp; 0 &amp; 2 \end{pmatrix}, \quad r = \begin{pmatrix} 0 \\ 0 \\ 1 \end{pmatrix} \] 约束为 \[ \begin{cases} x_1 + x_2 + x_3 = 4 \\ 2x_1 - x_2 + x_3 = 2 \end{cases} \quad \Rightarrow \quad A = \begin{pmatrix} 1 &amp; 1 &amp; 1 \\ 2 &amp; -1 &amp; 1 \end{pmatrix}, \quad b = \begin{pmatrix} 4 \\ 2 \end{pmatrix} \]</p>
+<p><strong>(2) KKT线性方程组</strong> KKT条件： \[ \begin{cases} Gx + A^T \lambda + r = 0 \\ Ax = b \end{cases} \] 即 \[ \begin{pmatrix} G &amp; A^T \\ A &amp; 0 \end{pmatrix} \begin{pmatrix} x \\ \lambda \end{pmatrix} = \begin{pmatrix} -r \\ b \end{pmatrix} \] 代入得： \[ \left(\begin{array}{ccc|cc} 2 &amp; -2 &amp; 0 &amp; 1 &amp; 2 \\ -2 &amp; 4 &amp; 0 &amp; 1 &amp; -1 \\ 0 &amp; 0 &amp; 2 &amp; 1 &amp; 1 \\ \hline 1 &amp; 1 &amp; 1 &amp; 0 &amp; 0 \\ 2 &amp; -1 &amp; 1 &amp; 0 &amp; 0 \end{array}\right) \begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ \lambda_1 \\ \lambda_2 \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \\ -1 \\ 4 \\ 2 \end{pmatrix} \]</p>
+<p><strong>(3) 求解方程组</strong> 写成分量形式： \[ \begin{aligned} 2x_1 - 2x_2 + \lambda_1 + 2\lambda_2 &amp;= 0 \quad &amp;(1)\\ -2x_1 + 4x_2 + \lambda_1 - \lambda_2 &amp;= 0 \quad &amp;(2)\\ 2x_3 + \lambda_1 + \lambda_2 &amp;= -1 \quad &amp;(3)\\ x_1 + x_2 + x_3 &amp;= 4 \quad &amp;(4)\\ 2x_1 - x_2 + x_3 &amp;= 2 \quad &amp;(5) \end{aligned} \] 由(4)和(5)消去\(x_3\)：(4)减去(5)得 \[ (x_1+x_2) - (2x_1 - x_2) = 4-2 \Rightarrow -x_1 + 2x_2 = 2 \quad (6) \] 由(1)和(2)消去\(\lambda_1\)：(1)减去(2)得 \[ (2x_1-2x_2) - (-2x_1+4x_2) + (0) + (2\lambda_2+\lambda_2) = 0 \Rightarrow 4x_1 - 6x_2 + 3\lambda_2 = 0 \quad (7) \] 由(1)和(2)消去\(\lambda_2\)：(1) + 2×(2)得 \[ (2x_1-2x_2) + 2(-2x_1+4x_2) + (\lambda_1+2\lambda_1) + (2\lambda_2 - 2\lambda_2) = 0 \Rightarrow (2x_1-2x_2 -4x_1+8x_2) + 3\lambda_1 = 0 \Rightarrow -2x_1 + 6x_2 + 3\lambda_1 = 0 \quad (8) \] 由(6)得\(x_1 = 2x_2 - 2\)，代入(7)： \[ 4(2x_2-2) - 6x_2 + 3\lambda_2 = 0 \Rightarrow 8x_2-8-6x_2+3\lambda_2=0 \Rightarrow 2x_2 + 3\lambda_2 = 8 \quad (9) \] 由(4)和(5)可解出\(x_3\)：将\(x_1=2x_2-2\)代入(4)：\((2x_2-2)+x_2+x_3=4 \Rightarrow 3x_2 + x_3 = 6\) 代入(5)：\(2(2x_2-2)-x_2+x_3=2 \Rightarrow 4x_2-4-x_2+x_3=2 \Rightarrow 3x_2+x_3=6\)（一致） 所以\(x_3 = 6-3x_2\)。</p>
+<p>将\(x_1,x_3\)代入(3)： \[ 2(6-3x_2) + \lambda_1 + \lambda_2 = -1 \Rightarrow 12-6x_2 + \lambda_1+\lambda_2 = -1 \Rightarrow \lambda_1+\lambda_2 = 6x_2 -13 \quad (10) \] 由(8)得\(\lambda_1 = \frac{2x_2 - 6x_2}{3} = -\frac{4}{3}x_2\)？注意(8): \(-2x_1+6x_2+3\lambda_1=0\)，代入\(x_1=2x_2-2\)： \[ -2(2x_2-2)+6x_2+3\lambda_1=0 \Rightarrow -4x_2+4+6x_2+3\lambda_1=0 \Rightarrow 2x_2+4+3\lambda_1=0 \Rightarrow \lambda_1 = -\frac{2x_2+4}{3} \] 由(9)得\(\lambda_2 = \frac{8-2x_2}{3}\)。</p>
+<p>代入(10)： \[ -\frac{2x_2+4}{3} + \frac{8-2x_2}{3} = 6x_2 -13 \Rightarrow \frac{-2x_2-4+8-2x_2}{3}=6x_2-13 \Rightarrow \frac{-4x_2+4}{3}=6x_2-13 \] 两边乘3：\(-4x_2+4 = 18x_2 -39 \Rightarrow 4+39 = 18x_2+4x_2 \Rightarrow 43 = 22x_2 \Rightarrow x_2 = \frac{43}{22}\)。 于是 \[ x_1 = 2x_2-2 = \frac{86}{22} - \frac{44}{22} = \frac{42}{22} = \frac{21}{11} \] \[ x_3 = 6-3x_2 = 6 - \frac{129}{22} = \frac{132}{22} - \frac{129}{22} = \frac{3}{22} \] \[ \lambda_1 = -\frac{2x_2+4}{3} = -\frac{\frac{86}{22}+\frac{88}{22}}{3} = -\frac{174/22}{3} = -\frac{174}{66} = -\frac{29}{11} \] \[ \lambda_2 = \frac{8-2x_2}{3} = \frac{\frac{176}{22}-\frac{86}{22}}{3} = \frac{90/22}{3} = \frac{90}{66} = \frac{15}{11} \] 注意：课件中给出的答案\(\lambda^*=(\frac{29}{11},-\frac{15}{11})\)，其符号与我这里相反，是因为原题可能\(\lambda\)定义符号不同（课件中\(Gx+r+A^T\lambda=0\)，我这里用的正是该形式，算得\(\lambda_1=-29/11,\lambda_2=15/11\)。课件给的\(\lambda_1=29/11,\lambda_2=-15/11\)，相当于取了负号。考试时按自己的推导写即可，只要满足方程。</p>
+<p><strong>最终答案</strong>： \[ x^<em> = \left( \frac{21}{11},\ \frac{43}{22},\ \frac{3}{22} \right)^T,\quad \lambda^</em> = \left( -\frac{29}{11},\ \frac{15}{11} \right)^T \] （也可写成\(\lambda_1=29/11,\lambda_2=-15/11\)，对应\(Gx+r-A^T\lambda=0\)形式）</p>
+<hr />
+<h4>2. （15分）变量消去法</h4>
+<p>问题： \[ \min f(x)=x_1^2+x_2^2+x_3^2,\quad \begin{cases} x_1+2x_2-x_3=4 \\ x_1-x_2+x_3=-2 \end{cases} \]</p>
+<p><strong>解</strong>：将约束看作关于\(x_1,x_2\)的方程组（选\(x_3\)为自由变量）： \[ \begin{cases} x_1+2x_2 = 4 + x_3 \\ x_1 - x_2 = -2 - x_3 \end{cases} \] 两式相减得：\((x_1+2x_2)-(x_1-x_2)= (4+x_3)-(-2-x_3) \Rightarrow 3x_2 = 6+2x_3 \Rightarrow x_2 = 2+\frac{2}{3}x_3\) 代入第二式：\(x_1 - (2+\frac{2}{3}x_3) = -2-x_3 \Rightarrow x_1 = 2+\frac{2}{3}x_3 -2 - x_3 = -\frac{1}{3}x_3\) 所以 \[ x_1 = -\frac{1}{3}x_3,\quad x_2 = 2+\frac{2}{3}x_3 \] 代入目标函数： \[ f = \left(-\frac{1}{3}x_3\right)^2 + \left(2+\frac{2}{3}x_3\right)^2 + x_3^2 = \frac{1}{9}x_3^2 + \left(4 + \frac{8}{3}x_3 + \frac{4}{9}x_3^2\right) + x_3^2 \] \[ = \left(\frac{1}{9}+\frac{4}{9}+1\right)x_3^2 + \frac{8}{3}x_3 + 4 = \left(\frac{5}{9}+1\right)x_3^2 + \frac{8}{3}x_3 + 4 = \frac{14}{9}x_3^2 + \frac{8}{3}x_3 + 4 \] 求导：\(\frac{df}{dx_3} = \frac{28}{9}x_3 + \frac{8}{3} = 0 \Rightarrow \frac{28}{9}x_3 = -\frac{8}{3} \Rightarrow x_3 = -\frac{8}{3} \cdot \frac{9}{28} = -\frac{72}{84} = -\frac{6}{7}\)。</p>
+<p>于是 \[ x_1 = -\frac{1}{3}\left(-\frac{6}{7}\right) = \frac{2}{7},\quad x_2 = 2 + \frac{2}{3}\left(-\frac{6}{7}\right) = 2 - \frac{12}{21} = 2 - \frac{4}{7} = \frac{10}{7} \] 故 \[ x^* = \left( \frac{2}{7},\ \frac{10}{7},\ -\frac{6}{7} \right)^T \]</p>
+<p>求乘子\(\lambda\)：由KKT条件\(Gx^<em> + r + A^T\lambda = 0\)。此处\(G=2I\)（因为\(f=\frac12 x^T(2I)x + 0\)），\(r=0\)。 \[ 2I x^</em> + A^T\lambda = 0 \Rightarrow 2\begin{pmatrix}2/7\\10/7\\-6/7\end{pmatrix} + \begin{pmatrix}1 &amp; 1 \\ 2 &amp; -1 \\ -1 &amp; 1\end{pmatrix} \begin{pmatrix}\lambda_1 \\ \lambda_2\end{pmatrix} = 0 \] 即 \[ \begin{cases} \frac{4}{7} + \lambda_1 + \lambda_2 = 0 \\[2pt] \frac{20}{7} + 2\lambda_1 - \lambda_2 = 0 \\[2pt] -\frac{12}{7} - \lambda_1 + \lambda_2 = 0 \end{cases} \] 由第一和第三式相加得：\(\frac{4}{7}-\frac{12}{7} + 2\lambda_2 = 0 \Rightarrow -\frac{8}{7}+2\lambda_2=0 \Rightarrow \lambda_2 = \frac{4}{7}\)。 代入第一式：\(\frac{4}{7}+\lambda_1+\frac{4}{7}=0 \Rightarrow \lambda_1 = -\frac{8}{7}\)。 验算第二式：\(\frac{20}{7}+2(-\frac{8}{7})-\frac{4}{7} = \frac{20}{7}-\frac{16}{7}-\frac{4}{7}=0\)，正确。</p>
+<p>所以\(\lambda^* = \left(-\frac{8}{7},\ \frac{4}{7}\right)^T\)。</p>
+<hr />
+<h4>3. （15分）有效集法</h4>
+<p>问题： \[ \min f(x)=x_1^2+x_2^2-2x_1-4x_2,\quad \begin{cases} x_1+x_2-1\le 0 &amp;(c_1)\\ -x_1\le 0 &amp;(c_2)\\ -x_2\le 0 &amp;(c_3) \end{cases} \] 初始点\(x^1=(0,0)^T\)。</p>
+<p><strong>第一轮迭代 (\(k=1\))</strong></p>
+<ul><li>检查可行性和有效集：  </li></ul>
+<p>\(c_1(0,0)=-1\le0\)（无效），\(c_2(0,0)=0\)（有效），\(c_3(0,0)=0\)（有效）。 故\(I(x^1)=\{2,3\}\)。</p>
+<ul><li>子问题：\(\min \frac12 d^T G d + \nabla f(x^1)^T d\)，约束\(\alpha_i^T d =0,\ i\in\{2,3\}\)。  </li></ul>
+<p>\(G = \begin{pmatrix}2&amp;0\\0&amp;2\end{pmatrix},\ \nabla f(x) = (2x_1-2,\ 2x_2-4)^T\)，\(\nabla f(x^1)=(-2,-4)^T\)。 约束：\(-d_1=0,\ -d_2=0 \Rightarrow d_1=0,d_2=0\)。 于是子问题只有一点\(d=0\)，目标值0。</p>
+<ul><li>解KKT系统求乘子：\(\begin{pmatrix}G &amp; A^T\\ A &amp; 0\end{pmatrix}\begin{pmatrix}d\\\lambda\end{pmatrix}=\begin{pmatrix}-\nabla f\\0\end{pmatrix}\)。  </li></ul>
+<p>这里\(A\)的行对应有效约束(2)和(3)：\(\alpha_2^T=(-1,0),\ \alpha_3^T=(0,-1)\)。 方程组： \[ \begin{pmatrix}2&amp;0&amp;-1&amp;0\\0&amp;2&amp;0&amp;-1\\-1&amp;0&amp;0&amp;0\\0&amp;-1&amp;0&amp;0\end{pmatrix} \begin{pmatrix}d_1\\d_2\\\lambda_2\\\lambda_3\end{pmatrix} =\begin{pmatrix}2\\4\\0\\0\end{pmatrix} \] 解：第三行 \(-d_1=0\Rightarrow d_1=0\)；第四行 \(-d_2=0\Rightarrow d_2=0\)； 第一行 \(2\cdot0+0+(-1)\lambda_2+0=2 \Rightarrow -\lambda_2=2 \Rightarrow \lambda_2=-2\)； 第二行 \(0+2\cdot0+0+(-1)\lambda_3=4 \Rightarrow -\lambda_3=4 \Rightarrow \lambda_3=-4\)。</p>
+<ul><li>由于\(d^1=0\)，检查乘子：\(\lambda_2=-2&lt;0,\ \lambda_3=-4&lt;0\)，存在负乘子，应删除其中最小者（最负）。\(\min\{-2,-4\}=-4\)，对应约束\(q=3\)。  </li></ul>
+<p>令\(x^{2}=x^1=(0,0)\)，\(I(x^2)=I(x^1)\setminus\{3\}=\{2\}\)。 置\(k=2\)，转步骤2。</p>
+<p><strong>第二轮迭代 (\(k=2\))</strong></p>
+<ul><li>当前点\(x^2=(0,0)\)，有效集\(I(x^2)=\{2\}\)（即\(-x_1=0\)有效）。  </li></ul>
+<p>子问题：\(\min \frac12 d^T G d + \nabla f(x^2)^T d\)，约束\(\alpha_2^T d = -d_1=0\)。 即\(\min d_1^2+d_2^2-2d_1-4d_2,\ s.t.\ d_1=0\)。</p>
+<p>代入\(d_1=0\)，目标函数化为\(\phi(d_2)=d_2^2-4d_2\)，求导得\(2d_2-4=0 \Rightarrow d_2=2\)。 所以\(d^2=(0,2)^T\)，方向非零。</p>
+<ul><li>步长计算：沿\(d^2\)移动，检查非有效约束（\(i\notin I(x^2)\)即\(i=1,3\)）：  </li><li>对\(c_1\)：\(\alpha_1=(1,1),\ b_1=1\)，\(\alpha_1^T x^2=0\)，\(\alpha_1^T d^2 = 0+2=2&gt;0\)，  </li></ul>
+<p>\(\frac{b_1-\alpha_1^T x^2}{\alpha_1^T d^2} = \frac{1-0}{2}=0.5\)。 - 对\(c_3\)：\(\alpha_3=(0,-1),\ b_3=0\)，\(\alpha_3^T x^2=0\)，\(\alpha_3^T d^2 = 0-2=-2\le0\)，不计入（要求\(\alpha_i^T d&gt;0\)）。 故\(\hat{\alpha}=0.5\)。 取\(\alpha_k = \min\{\hat{\alpha},1\}=0.5\)。</p>
+<ul><li>更新点：\(x^{3}=x^2+0.5 d^2 = (0,0)+ (0,1) = (0,1)^T\)。  </li></ul>
+<p>因为\(\alpha_k = \hat{\alpha}=0.5&lt;1\)，故新有效集增加约束\(p=1\)： \(I(x^3)=I(x^2)\cup\{1\}=\{2,1\}\)（即\(-x_1=0\)和\(x_1+x_2-1=0\)）。 置\(k=3\)，转步骤2。</p>
+<p><strong>第三轮迭代 (\(k=3\))</strong></p>
+<ul><li>当前点\(x^3=(0,1)^T\)，检查约束：  </li></ul>
+<p>\(c_1=0+1-1=0\)（有效），\(c_2=-0=0\)（有效），\(c_3=-1&lt;0\)（无效）。 \(I(x^3)=\{1,2\}\)。</p>
+<ul><li>子问题：\(\min \frac12 d^T G d + \nabla f(x^3)^T d\)，约束\(\alpha_1^T d=0,\ \alpha_2^T d=0\)。  </li></ul>
+<p>\(\nabla f(x^3)=(2\cdot0-2,\ 2\cdot1-4)^T = (-2,-2)^T\)。 约束： \(\alpha_1=(1,1),\ \alpha_1^T d = d_1+d_2=0\)； \(\alpha_2=(-1,0),\ \alpha_2^T d = -d_1=0 \Rightarrow d_1=0\)。 代入得\(d_1=0\)，再由\(d_1+d_2=0\Rightarrow d_2=0\)。 故唯一可行点\(d=0\)，解为\(d^3=0\)。</p>
+<ul><li>求乘子：方程组\(\begin{pmatrix}G &amp; A^T\\ A &amp; 0\end{pmatrix}\begin{pmatrix}d\\\lambda\end{pmatrix}=\begin{pmatrix}-\nabla f\\0\end{pmatrix}\)。  </li></ul>
+<p>这里\(A\)的行对应约束(1)和(2)：\(\alpha_1=(1,1),\ \alpha_2=(-1,0)\)。 注意\(-\nabla f = (2,2)^T\)。 \[ \begin{pmatrix}2&amp;0&amp;1&amp;-1\\0&amp;2&amp;1&amp;0\\1&amp;1&amp;0&amp;0\\-1&amp;0&amp;0&amp;0\end{pmatrix} \begin{pmatrix}d_1\\d_2\\\lambda_1\\\lambda_2\end{pmatrix} =\begin{pmatrix}2\\2\\0\\0\end{pmatrix} \] 第四行：\(-d_1=0\Rightarrow d_1=0\)； 第三行：\(0+d_2=0\Rightarrow d_2=0\)； 第一行：\(2\cdot0+0+\lambda_1 - \lambda_2 = 2 \Rightarrow \lambda_1-\lambda_2=2\)； 第二行：\(0+2\cdot0+\lambda_1+0=2 \Rightarrow \lambda_1=2\)，代入得\(\lambda_2=0\)。</p>
+<ul><li>所有有效约束乘子：\(\lambda_1=2\ge0,\ \lambda_2=0\ge0\)，满足K-T条件。  </li></ul>
+<p>因此\(x^3=(0,1)^T\)是最优解，乘子\(\lambda=(2,0,0)^T\)（对应\(c_1,c_2,c_3\)，非有效约束乘子为0）。</p>
+<p><strong>最终答案</strong>：最优解\(x^<em>=(0,1)^T\)，最优值\(f^</em>=0^2+1^2-2\cdot0-4\cdot1=1-4=-3\)。乘子\(\lambda^*=(2,0,0)^T\)。</p>
+<hr />
+<p><strong>题目</strong>：设凸二次规划（\(G\)半正定），\(x^<em>\)是K-T点，证明\(x^</em>\)是全局最优解。</p>
+<p><strong>证明</strong>： 任取可行点\(x\)，记\(D\)为可行域。由于\(x^<em>\)是K-T点，存在乘子\(\lambda_i^</em>(i\in E\cup I)\)满足： \[ \nabla f(x^<em>) = Gx^</em> + r = -\sum_{i\in E\cup I}\lambda_i^<em>\alpha_i, \tag{1} \] \[ \lambda_i^</em> \ge 0,\ \forall i\in I, \qquad \lambda_i^<em>(\alpha_i^T x^</em>-b_i)=0,\ \forall i\in I. \tag{2} \] 定义有效不等式指标集\(I(x^<em>)=\{i\in I\mid \alpha_i^T x^</em>=b_i\}\)，则对\(i\in I\setminus I(x^<em>)\)，由(2)得\(\lambda_i^</em>=0\)。于是(1)可写为 \[ \nabla f(x^<em>) = -\sum_{i\in E\cup I(x^</em>)}\lambda_i^*\alpha_i. \tag{3} \]</p>
+<p>考虑\(f(x)-f(x^<em>)\)的Taylor展开： \[ f(x)-f(x^</em>) = \nabla f(x^<em>)^T(x-x^</em>) + \frac12 (x-x^<em>)^T G (x-x^</em>). \tag{4} \] 由于\(G\)半正定，第二项\(\ge 0\)。代入(3)： \[ \nabla f(x^<em>)^T(x-x^</em>) = -\sum_{i\in E\cup I(x^<em>)}\lambda_i^</em>\alpha_i^T(x-x^*). \tag{5} \]</p>
+<p>对\(i\in E\)，有\(\alpha_i^T x = b_i\)且\(\alpha_i^T x^<em> = b_i\)，故\(\alpha_i^T(x-x^</em>)=0\)。 对\(i\in I(x^<em>)\)，有\(\alpha_i^T x^</em> = b_i\)，而由可行域定义\(\alpha_i^T x \le b_i\)，因此\(\alpha_i^T(x-x^<em>) \le 0\)。 结合\(\lambda_i^</em> \ge 0\)，得 \[ -\lambda_i^<em>\alpha_i^T(x-x^</em>) \ge 0 \quad (\text{因为}-\lambda_i^<em>\cdot(\le 0)\ge 0). \] 于是(5)中每一项均非负，故\(\nabla f(x^</em>)^T(x-x^*) \ge 0\)。</p>
+<p>由(4)和半正定性可得 \[ f(x)-f(x^<em>) \ge \nabla f(x^</em>)^T(x-x^<em>) \ge 0, \] 即\(f(x)\ge f(x^</em>)\)对所有可行点\(x\)成立，所以\(x^*\)是全局最优解。</p>
+<p>若\(G\)正定，则第二项严格大于0（当\(x\neq x^<em>\)），因此\(x^</em>\)是严格全局最优解。</p>
+<p><strong>证毕。</strong></p>
+<hr />
+<p>以上为所有题目的完整答案，可作为考试复习或判卷参考。</p>
+<div class="record"><span class="tag">我问</span><p>最优化的问题中有一个一阶必要条件和一个二阶必要条件，他们之间就差了一个海森矩阵半正定的条件，他们之间没什么区别啊，他们分别是用于判断什么的？</p></div>
+<p>你的问题很好，很多初学者都会有类似的疑惑：一阶必要条件（如梯度为零或KKT条件）和二阶必要条件（如海森矩阵在可行方向上半正定）看起来只是差了一个“海森矩阵半正定”，但它们的<strong>作用</strong>和<strong>判断能力</strong>是有本质区别的。</p>
+<p>简单来说：</p>
+<ul><li><strong>一阶必要条件</strong>：用来<strong>筛选候选点</strong>（可能是极小点、极大点或鞍点）。</li><li><strong>二阶必要条件</strong>：用来<strong>排除不可能是局部极小点的候选点</strong>（比如排除极大点和某些鞍点），同时为充分条件奠定基础。</li></ul>
+<p>下面详细解释。</p>
+<hr />
+<p><strong>无约束优化</strong>：若 \(x^<em>\) 是局部极小点，则 \(\nabla f(x^</em>) = 0\)。 <strong>约束优化（KKT条件）</strong>：若 \(x^*\) 是局部极小点且约束规格成立，则存在乘子使得梯度条件成立。</p>
+<p><strong>作用</strong>：</p>
+<ul><li>找出所有<strong>驻点</strong>（或K-T点）。  </li><li>但这些点可能是极小点、极大点、鞍点。  </li><li><strong>无法区分</strong>到底属于哪一类。例如 \(f(x)=x^3\) 在 \(x=0\) 处导数为0，但它不是极值点；\(f(x)=-x^2\) 在0处导数为0，却是极大点。</li></ul>
+<hr />
+<p>若 \(x^<em>\) 是局部极小点，则除了 \(\nabla f(x^</em>) = 0\) 外，还必须有 **\(\nabla^2 f(x^*)\) 半正定**（即在任意方向 \(d\) 上，\(d^T \nabla^2 f(x^*) d \ge 0\)）。</p>
+<p><strong>作用</strong>：</p>
+<ul><li>如果 \(\nabla^2 f(x^<em>)\) 不是半正定（比如有负特征值），那么 \(x^</em>\) <strong>肯定不是</strong>局部极小点（可能是极大点或鞍点）。  </li><li>因此二阶必要条件可以<strong>排除</strong>那些一阶条件满足但实际为极大点或鞍点的候选点。</li></ul>
+<p><strong>举例</strong>：</p>
+<ul><li>\(f(x)=x^3\)：\(\nabla f(0)=0\)，但 \(\nabla^2 f(0)=0\)（半正定，满足二阶必要条件？实际0是半正定，所以二阶必要条件通过，但0不是极值点。这说明二阶必要条件不够强，仍可能有假阳性。所以通常还需要二阶充分条件：\(\nabla^2 f(x^*)\) <strong>正定</strong>才能保证严格局部极小。）  </li><li>\(f(x)=-x^2\)：\(\nabla f(0)=0\)，\(\nabla^2 f(0)=-2\)（负定，不满足半正定）→ 二阶必要条件不成立 → 0不可能是局部极小点（事实是极大点）。  </li><li>\(f(x)=x^4\)：\(\nabla f(0)=0\)，\(\nabla^2 f(0)=0\)（半正定，满足二阶必要条件，实际上0是局部极小点）。所以二阶必要条件是“必须满足”，但不是“充分”。</li></ul>
+<hr />
+<p>一阶条件只告诉我们“在该点处函数的一阶变化率为零”，但<strong>不知道沿着不同方向函数是上升还是下降</strong>。 二阶条件告诉我们<strong>曲率信息</strong>：如果某个方向上的二阶导数为负，那么沿该方向函数会下降（说明不是极小点）。</p>
+<p>所以二者的关系是：</p>
+<ul><li>一阶条件：候选点筛选器（宽泛，包括很多假阳性）。  </li><li>二阶必要条件：进一步筛选掉那些曲率不符合极小要求的候选点（缩小范围）。</li></ul>
+<hr />
+<p>对于约束优化，<strong>一阶必要条件</strong>就是KKT条件。 <strong>二阶必要条件</strong>：在KKT点处，对于所有<strong>可行方向</strong>（尤其是约束的切方向），必须有 \(d^T \nabla^2_{xx} L(x^<em>,\lambda^</em>) d \ge 0\)，其中 \(L\) 是拉格朗日函数。对于凸二次规划，因为 \(G\) 半正定，这个条件自动满足，所以一阶条件（KKT）就充要了。但一般非凸问题，二阶必要条件就很重要。</p>
+<hr />
+<table>
+<tr><th>条件</th><th>形式</th><th>用途</th><th>能排除什么？</th></tr>
+<tr><td>一阶必要</td><td>\(\nabla f=0\) 或 KKT</td><td>找出所有候选点（驻点/K-T点）</td><td>不能排除极大点、鞍点</td></tr>
+<tr><td>二阶必要</td><td>\(\nabla^2 f\) 半正定（在可行方向）</td><td>验证候选点是否可能为局部极小</td><td>排除曲率负定的点（如极大点、某些鞍点）</td></tr>
+</table>
+<p><strong>直观比喻</strong>：</p>
+<ul><li>一阶条件说“你在平地上”（没有斜坡）。  </li><li>二阶条件说“你脚下的地面不是向下凹的（即不能有任何方向是下坡）”。  </li></ul>
+<p>只满足一阶条件的人可能站在山顶、山脚或马鞍上；再加上二阶必要条件，至少能排除站在山顶的情况（如果是严格下坡方向）。</p>
+<hr />
+<p>希望这个解释能帮你理清它们的区别。考试中常考：一阶必要条件用于得到K-T点；二阶必要条件用于判断该点是否为局部极小（或用于证明凸性时全局最优）。</p>
+<div class="record"><span class="tag">我问</span><p>在约束规划问题中，如果不满足限制条件的话局部解就不一定是KKT点，请你给我举一个这样的函数的例子</p></div>
+<p>在约束优化中，<strong>约束规格（Constraint Qualification，如LICQ）</strong> 是保证局部最优解满足KKT条件的核心前提。如果约束规格不成立，局部最优解可能不是KKT点。下面给出一个简单例子。</p>
+<hr />
+<p>\[ \min_{x \in \mathbb{R}} f(x) = x \quad \text{s.t.} \quad g(x) = x^2 \le 0. \]</p>
+<h4>分析：</h4>
+<ul><li>约束 \(x^2 \le 0\) 等价于 \(x = 0\)（因为平方非负，只能等于0）。</li><li>可行域 \(D = \{0\}\)。</li><li>点 \(x^* = 0\) 显然是全局最小点（也是局部最小点），目标函数值 \(f(0)=0\)。</li></ul>
+<h4>约束规格检查：</h4>
+<ul><li>在 \(x^<em>=0\) 处，有效约束集 \(I(x^</em>)=\{1\}\)（只有 \(g\) 起作用）。</li><li>约束梯度 \(\nabla g(x^*) = 2x|_{x=0} = 0\)。</li><li>由于有效约束的梯度向量是零向量，<strong>不满足LICQ</strong>（需要梯度线性无关，但零向量本身线性相关，也无法张成任何空间）。</li></ul>
+<h4>KKT条件：</h4>
+<p>对于问题 \(\min f(x)\ \text{s.t.}\ g(x)\le 0\)，KKT条件为：存在 \(\lambda \ge 0\) 使得 \[ \nabla f(x^<em>) + \lambda \nabla g(x^</em>) = 0, \quad \lambda g(x^<em>) = 0. \] 代入 \(x^</em>=0\)：</p>
+<ul><li>\(\nabla f(0) = 1\)，\(\nabla g(0)=0\)，梯度条件变为 \(1 + \lambda \cdot 0 = 0\)，即 \(1=0\)，不可能。</li><li>因此<strong>不存在</strong>非负乘子 \(\lambda\) 满足KKT条件。</li></ul>
+<hr />
+<p>\(x^*=0\) 是局部最优解，但由于约束规格不成立，它不是KKT点。这个例子说明：<strong>当约束梯度在最优解处退化（例如为零或线性相关）时，KKT条件可能不成立</strong>。在考试或实际应用中，若遇到这类问题，需要先验证约束规格，否则不能直接套用KKT条件。</p>
+<div class="record"><span class="tag">我问</span><p>其实KKT条件也是必要条件是吧</p></div>
+<p>是的，你的理解是正确的。</p>
+<p><strong>在约束规格成立的条件下，KKT条件是局部最优解的必要条件</strong>。</p>
+<p>具体来说：</p>
+<ul><li>如果 \(x^*\) 是一个局部最优解，并且在该点处某个约束规格（如 LICQ、MFCQ 等）成立，那么一定存在乘子 \(\lambda_i\) 使得 KKT 条件成立。</li><li>所以对于一般（非凸）问题，KKT 是<strong>必要条件</strong>，但不是充分条件（即 KKT 点可能是局部极小、局部极大或鞍点）。</li><li>对于凸优化问题（目标函数凸、约束函数为凸不等式、等式为线性），KKT 条件既是<strong>必要条件</strong>，也是<strong>充分条件</strong>——此时任何 KKT 点都是全局最优解。</li></ul>
+<p>你之前问的“不满足约束规格”的那个例子，正是因为约束规格不成立，所以局部最优解不满足 KKT 条件——这反过来也印证了：<strong>KKT 作为必要条件，其成立是有前提的</strong>。</p>
+<p>简单总结：</p>
+<ul><li>有约束规格 + 局部最优 ⇒ KKT（必要）</li><li>凸问题 + KKT ⇒ 全局最优（充分）</li><li>非凸问题 + KKT ⇒ 候选点（还需二阶条件判断）</li></ul>
+<div class="record"><span class="tag">我问</span><p>求解二次规划问题的变量消去法是怎么做的，请你给我讲解</p></div>
+<p>变量消去法（也称直接消去法）是求解<strong>等式约束二次规划</strong>的一种经典方法。其核心思想是：利用等式约束，将部分变量表示为其余变量的线性函数，代入目标函数，从而将原问题转化为一个<strong>无约束</strong>的二次规划问题，然后通过求导直接得到最优解。下面详细讲解。</p>
+<hr />
+<h2>一、问题形式</h2>
+<p>考虑等式约束二次规划：</p>
+<p>\[ \begin{aligned} \min_{x\in\mathbb{R}^n} \quad &amp; f(x) = \frac{1}{2}x^T G x + r^T x \\ \text{s.t.} \quad &amp; A x = b \end{aligned} \]</p>
+<p>其中 \(A\) 是 \(m \times n\) 矩阵，\(\text{rank}(A)=m &lt; n\)（约束独立且个数少于变量），\(G\) 对称且通常半正定（凸二次规划）。</p>
+<hr />
+<h2>二、变量消去法的基本步骤</h2>
+<p>对矩阵 \(A\) 进行列分块，选出 \(m\) 个线性无关的列（即基本列），其余 \(n-m\) 列为自由列。 设 \(A = (A_B \mid A_N)\)，其中 \(A_B\) 是 \(m\times m\) 可逆方阵，\(A_N\) 是 \(m\times (n-m)\) 矩阵。 相应地将变量分为基本变量 \(x_B\in\mathbb{R}^m\) 和自由变量 \(x_N\in\mathbb{R}^{n-m}\)：</p>
+<p>\[ x = \begin{pmatrix} x_B \\ x_N \end{pmatrix} \]</p>
+<p>同时，目标函数中的矩阵 \(G\) 和向量 \(r\) 也按相同分块：</p>
+<p>\[ G = \begin{pmatrix} G_{BB} &amp; G_{BN} \\ G_{NB} &amp; G_{NN} \end{pmatrix}, \quad r = \begin{pmatrix} r_B \\ r_N \end{pmatrix} \]</p>
+<p>等式约束 \(A_B x_B + A_N x_N = b\)，因为 \(A_B\) 可逆，可得：</p>
+<p>\[ x_B = A_B^{-1} b - A_B^{-1} A_N x_N \]</p>
+<p>记 \(P = -A_B^{-1} A_N\)（\(m\times (n-m)\) 矩阵），\(q = A_B^{-1} b\)，则：</p>
+<p>\[ x_B = q + P x_N \]</p>
+<p>将 \(x_B = q + P x_N\) 代入 \(f(x)\)，经过整理（过程略繁琐，课件第10-11页给出了推导），得到：</p>
+<p>\[ \hat{f}(x_N) = \frac{1}{2} x_N^T \hat{G}_N x_N + \hat{r}_N^T x_N + \hat{\delta} \]</p>
+<p>其中：</p>
+<p>\[ \begin{aligned} \hat{G}_N &amp;= G_{NN} - A_N^T (A_B^{-1})^T G_{BN} - G_{NB} A_B^{-1} A_N + A_N^T (A_B^{-1})^T G_{BB} A_B^{-1} A_N \\ \hat{r}_N &amp;= r_N - A_N^T (A_B^{-1})^T r_B + \big(G_{NB} - A_N^T (A_B^{-1})^T G_{BB}\big) A_B^{-1} b \\ \hat{\delta} &amp;= \frac{1}{2} b^T (A_B^{-1})^T G_{BB} A_B^{-1} b + r_B^T A_B^{-1} b \end{aligned} \]</p>
+<p>这些公式看起来很复杂，但在实际手算中，我们通常<strong>不直接记忆</strong>，而是<strong>先写出 \(x_B\) 的表达式，然后代入目标函数并展开合并同类项</strong>。</p>
+<p>由于 \(G\) 半正定，\(\hat{G}_N\) 也是半正定（可证明）。无约束问题的最优解满足梯度为零：</p>
+<p>\[ \nabla \hat{f}(x_N) = \hat{G}_N x_N + \hat{r}_N = 0 \quad \Longrightarrow \quad x_N^* = -\hat{G}_N^{-1} \hat{r}_N \]</p>
+<p>（若 \(\hat{G}_N\) 正定，则解唯一；若半正定，需考虑广义逆或添加正则项。）</p>
+<p>将 \(x_N^<em>\) 代入 \(x_B = q + P x_N\) 得到 \(x_B^</em>\)，从而得到完整的最优解 \(x^<em> = \begin{pmatrix} x_B^</em> \\ x_N^* \end{pmatrix}\)。</p>
+<p>乘子 \(\lambda^*\) 可由 KKT 条件中的梯度方程求得：</p>
+<p>\[ G x^<em> + r + A^T \lambda^</em> = 0 \]</p>
+<p>因为 \(A^T = \begin{pmatrix} A_B^T \\ A_N^T \end{pmatrix}\)，所以可以从 \(A_B^T\) 对应的方程解出 \(\lambda^*\)：</p>
+<p>\[ \lambda^<em> = - (A_B^{-1})^T \big( G_{BB} x_B^</em> + G_{BN} x_N^* + r_B \big) \]</p>
+<hr />
+<h2>三、一个简单例题（课件第13-14页）</h2>
+<p><strong>问题</strong>：</p>
+<p>\[ \begin{aligned} \min \quad &amp; f(x) = x_1^2 + x_2^2 + x_3^2 \\ \text{s.t.} \quad &amp; x_1 + 2x_2 - x_3 = 4 \\ &amp; x_1 - x_2 + x_3 = -2 \end{aligned} \]</p>
+<p><strong>解</strong>：</p>
+<ol><li><strong>分块</strong>：取 \(x_B = (x_1, x_2)^T\)，\(x_N = (x_3)\)。约束矩阵：</li></ol>
+<p>\[ A = \begin{pmatrix} 1 &amp; 2 &amp; -1 \\ 1 &amp; -1 &amp; 1 \end{pmatrix}, \quad A_B = \begin{pmatrix} 1 &amp; 2 \\ 1 &amp; -1 \end{pmatrix}, \quad A_N = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad b = \begin{pmatrix} 4 \\ -2 \end{pmatrix} \]</p>
+<ol><li><strong>解出 \(x_B\)</strong>：</li></ol>
+<p>\[ \begin{cases} x_1 + 2x_2 = 4 + x_3 \\ x_1 - x_2 = -2 - x_3 \end{cases} \] 解得 \(x_1 = -\frac{1}{3}x_3,\; x_2 = 2 + \frac{2}{3}x_3\)。</p>
+<ol><li><strong>代入目标函数</strong>：</li></ol>
+<p>\[ f = \left(-\frac{1}{3}x_3\right)^2 + \left(2+\frac{2}{3}x_3\right)^2 + x_3^2 = \frac{14}{9}x_3^2 + \frac{8}{3}x_3 + 4 \]</p>
+<ol><li><strong>无约束最小化</strong>：</li></ol>
+<p>对 \(x_3\) 求导：\(\frac{28}{9}x_3 + \frac{8}{3}=0 \Rightarrow x_3^* = -\frac{6}{7}\)。</p>
+<ol><li><strong>回代</strong>：</li></ol>
+<p>\(x_1^<em> = -\frac{1}{3}(-\frac{6}{7}) = \frac{2}{7},\; x_2^</em> = 2 + \frac{2}{3}(-\frac{6}{7}) = \frac{10}{7}\)。 所以 \(x^* = (\frac{2}{7},\frac{10}{7},-\frac{6}{7})^T\)。</p>
+<ol><li><strong>求乘子</strong>（略，见课件第14页）。</li></ol>
+<hr />
+<h2>四、优缺点</h2>
+<p><strong>优点</strong>：</p>
+<ul><li>简单直观，适合手算小规模问题。</li><li>将约束问题转化为无约束问题，理论清晰。</li></ul>
+<p><strong>缺点</strong>：</p>
+<ul><li>需要选择 \(A_B\) 可逆，若 \(A_B\) 接近奇异，数值不稳定。</li><li>当 \(n\) 很大时，矩阵求逆和乘法计算量大。</li><li>对于不等式约束不能直接使用（需结合有效集法）。</li></ul>
+<hr />
+<h2>五、与其它方法的联系</h2>
+<ul><li>变量消去法本质上是<strong>利用约束消除自由度</strong>，与<strong>罚函数法</strong>或<strong>拉格朗日乘子法</strong>思路不同。</li><li>在数值优化中，更常用的是<strong>KKT 系统直接求解法</strong>（如上一节的线性方程组法），因为可以避免显式求逆且数值更稳定。</li></ul>
+<hr />
+<p>希望这个讲解能帮你理清变量消去法的原理和步骤。考试时，如果遇到等式约束二次规划，且题目指定用变量消去法，就按上述流程操作：<strong>选出基本变量 → 解出表达式 → 代入目标 → 无约束求导 → 回代</strong>。</p>
+<div class="record"><span class="tag">我问</span><p>这个本质不就是利用约束条件，把x2.x3都用x1表示，然后直接求解无约束问题嘛</p></div>
+<p>你的总结非常到位！<strong>变量消去法的本质就是利用等式约束，把一部分变量（基本变量）用另一部分变量（自由变量）表示，代入目标函数，从而把一个约束优化问题转化为一个无约束优化问题</strong>。你说的“把 x2, x3 都用 x1 表示”正是这种思路的具体体现（在约束个数为 2、变量个数为 3 时，通常选一个自由变量，另外两个用其表示）。</p>
+<p>更一般地：</p>
+<ul><li>若有 \(m\) 个等式约束，\(n\) 个变量（\(m&lt;n\)），我们可以选出 \(m\) 个基本变量（对应约束矩阵中线性无关的列），用剩下的 \(n-m\) 个自由变量线性表示。</li><li>代入后，目标函数变成关于自由变量的二次函数（无约束），求导等于零即得最优自由变量，再回代得到所有变量。</li></ul>
+<p>所以你的理解完全正确：<strong>变量消去法 = 用约束消元 + 无约束优化</strong>。这个本质抓住了方法的核心，非常清晰！</p>
+<div class="record"><span class="tag">我问</span><p>使用有效集法求解二次规划问题，面对等式约束和不等式约束有什么差异嘛</p></div>
+<p>使用有效集法求解二次规划时，等式约束和不等式约束的处理主要有以下差异：</p>
+<table>
+<tr><th>方面</th><th>等式约束</th><th>不等式约束</th></tr>
+<tr><td><strong>是否始终在有效集中</strong></td><td>是，永远保留在工作集中</td><td>否，只有当当前点位于边界（\( \alpha_i^T x = b_i \)）时才加入</td></tr>
+<tr><td><strong>能否被移除</strong></td><td>不能</td><td>可以（当对应的拉格朗日乘子 \(\lambda_i &lt; 0\) 时移除）</td></tr>
+<tr><td><strong>步长限制</strong></td><td>无需限制，因为搜索方向 \(d\) 满足 \(A d = 0\)，等式约束始终成立</td><td>需要计算最大可行步长，防止违反不在工作集中的不等式约束</td></tr>
+<tr><td><strong>乘子符号要求</strong></td><td>无符号限制</td><td>最优解处必须 \(\lambda_i \ge 0\)（否则移除）</td></tr>
+<tr><td><strong>初始点要求</strong></td><td>必须严格满足所有等式约束</td><td>只需满足不等式（不一定取等）</td></tr>
+</table>
+<p>简单来说，<strong>等式约束是“硬约束”，始终存在；不等式约束是“软约束”，只在必要时加入工作集，并根据乘子符号动态调整</strong>。有效集法的核心就是通过不断增删不等式约束来逼近最优解，而等式约束始终作为背景条件存在。</p>
+<div class="record"><span class="tag">我问</span><p>罚函数的乘子法给我讲解一下</p></div>
+<p>下面为你讲解<strong>乘子法（Method of Multipliers）</strong>，也称为<strong>增广拉格朗日方法（Augmented Lagrangian Method）</strong>。它是罚函数法的改进，解决了经典罚函数法需要罚因子趋于无穷而导致数值病态的问题。</p>
+<hr />
+<h2>一、从罚函数法说起</h2>
+<p>考虑等式约束问题：</p>
+<p>\[ \min f(x) \quad \text{s.t.} \quad h(x)=0 \]</p>
+<p><strong>外点罚函数法</strong>定义：</p>
+<p>\[ P(x,\rho)=f(x)+\frac{\rho}{2}\|h(x)\|^2, \quad \rho&gt;0 \]</p>
+<p>逐步增大 \(\rho \to \infty\)，使 \(h(x)\to 0\)。</p>
+<p><strong>缺点</strong>：</p>
+<ul><li>\(\rho\) 很大时，罚项 \(\frac{\rho}{2}\|h\|^2\) 的<strong>海森矩阵</strong>条件数极差，优化变得病态；</li><li>理论上需要 \(\rho\to\infty\) 才能精确满足约束，但实际中无法取无穷。</li></ul>
+<hr />
+<h2>二、乘子法（增广拉格朗日法）的思想</h2>
+<p>乘子法在罚项的基础上<strong>显式地引入拉格朗日乘子的估计</strong>，从而可以用<strong>有限的惩罚参数</strong>精确满足约束，同时乘子序列收敛到真实乘子。</p>
+<p>定义<strong>增广拉格朗日函数</strong>：</p>
+<p>\[ \mathcal{L}_A(x,\lambda,\rho)=f(x)+\lambda^T h(x)+\frac{\rho}{2}\|h(x)\|^2 \]</p>
+<p>其中：</p>
+<ul><li>\(\lambda\) 是乘子向量（大小与 \(h\) 相同）</li><li>\(\rho&gt;0\) 是惩罚参数（通常取一个固定值，或缓慢增大）</li></ul>
+<p><strong>关键观察</strong>：如果 \(\lambda\) 恰好等于最优乘子 \(\lambda^<em>\)，那么对任意 \(\rho&gt;0\)，\(\mathcal{L}_A\) 的无约束极小点就是原约束问题的解（因为 \(\nabla_x \mathcal{L}_A = \nabla f + (\lambda^</em>+\rho h)^T \nabla h\)，在最优解处 \(h=0\)，退化为拉格朗日条件）。</p>
+<hr />
+<h2>三、乘子法的迭代步骤</h2>
+<ol><li><strong>初始化</strong>：选择 \(\lambda^0\)（例如 0），\(\rho&gt;0\)，设置 \(k=0\)。</li><li><strong>无约束最小化</strong>：固定 \(\lambda^k,\rho\)，求解</li></ol>
+<p>\[ x^{k} = \arg\min_x \mathcal{L}_A(x,\lambda^k,\rho) \] （可用梯度法、牛顿法等）</p>
+<ol><li><strong>更新乘子</strong>：</li></ol>
+<p>\[ \lambda^{k+1} = \lambda^k + \rho \, h(x^{k}) \] 这个公式来源于使梯度 \(\nabla_x \mathcal{L}_A\) 中“乘子项”逼近真实乘子。可以证明，如果收敛，\(\lambda^k \to \lambda^*\)。</p>
+<ol><li><strong>检查停止条件</strong>：若 \(\|h(x^k)\|\) 和 \(\|\lambda^{k+1}-\lambda^k\|\) 足够小，则停止；否则 \(k=k+1\)，转步骤2。</li></ol>
+<blockquote>注：有时会缓慢增大 \(\rho\)（例如 \(\rho \leftarrow 1.5\rho\)），但不必趋向无穷。</blockquote>
+<hr />
+<h2>四、为什么乘子法更好？</h2>
+<table>
+<tr><th>方法</th><th>罚函数法</th><th>乘子法</th></tr>
+<tr><td>罚参数 \(\rho\)</td><td>必须 \(\rho\to\infty\)</td><td>固定或缓慢增长</td></tr>
+<tr><td>条件数</td><td>随 \(\rho\) 增大而变差</td><td>良好</td></tr>
+<tr><td>精确满足约束</td><td>仅在 \(\rho=\infty\) 时</td><td>有限 \(\rho\) 下通过乘子更新实现</td></tr>
+<tr><td>收敛速度</td><td>线性，且随 \(\rho\) 增大减慢</td><td>超线性（近似牛顿）</td></tr>
+<tr><td>乘子信息</td><td>无法得到</td><td>可得到最优乘子 \(\lambda^*\)</td></tr>
+</table>
+<p><strong>直观解释</strong>：罚函数法只靠“大重量”把解拉回可行域，而乘子法用“弹性带”（罚项）加上“拉力”（乘子项）共同作用，使得在有限刚度下就能精确拉回。</p>
+<hr />
+<h2>五、不等式约束的处理</h2>
+<p>对于不等式 \(g(x)\le 0\)，可引入松弛变量或将其转换为等式 \( \max(g(x),0)=0 \) 或使用“非负约束的增广拉格朗日”形式。常用<strong>广义乘子法</strong>：</p>
+<p>\[ \mathcal{L}_A(x,\lambda,\rho)=f(x)+\frac{1}{2\rho}\sum_{i}\left[ \max(0, \lambda_i+\rho g_i(x))^2 - \lambda_i^2 \right] \]</p>
+<p>或者保持为不等式，用<strong>内点形式的乘子法</strong>。但核心思想与等式情形相通。</p>
+<hr />
+<h2>六、一个简单例题（等式约束）</h2>
+<p>\[ \min f(x)=x_1^2+x_2^2 \quad \text{s.t.} \quad h(x)=x_1+x_2-2=0 \]</p>
+<p><strong>解</strong>： 取 \(\rho=1\)，\(\lambda^0=0\)。</p>
+<ul><li>增广拉格朗日：</li></ul>
+<p>\[ \mathcal{L}=x_1^2+x_2^2 + \lambda(x_1+x_2-2) + \frac12 (x_1+x_2-2)^2 \]</p>
+<ul><li>最小化：令梯度=0，得</li></ul>
+<p>\[ \frac{\partial}{\partial x_1}=2x_1+\lambda+(x_1+x_2-2)=0 \] \[ \frac{\partial}{\partial x_2}=2x_2+\lambda+(x_1+x_2-2)=0 \] 两式相减得 \(x_1=x_2\)，代入约束有 \(2x_1-2=0\Rightarrow x_1=1\)，所以 \(x=(1,1)\)，此即原问题解。此时乘子更新：\(\lambda^1 = \lambda^0 + 1\cdot h(x)=0+1\cdot0=0\)，已收敛。</p>
+<p>实际中若 \(\lambda^0\) 不是最优乘子，需要迭代。</p>
+<hr />
+<h2>七、总结</h2>
+<ul><li><strong>乘子法 = 拉格朗日函数 + 二次罚项</strong></li><li>通过交替<strong>无约束最小化</strong>和<strong>乘子更新</strong>，避免了罚因子趋于无穷。</li><li>收敛更快、数值更稳定，是现代优化（特别是大规模、分布优化、ADMM）的基础。</li></ul>
+<p>希望这个讲解能让你掌握乘子法的核心！如果有具体公式推导或编程实现的需求，可以进一步提问。</p>
+<div class="record"><span class="tag">我问</span><p>有效集法的步骤请你给我讲解一下吧</p></div>
+<p>有效集法（Active Set Method）是求解<strong>不等式约束二次规划</strong>的一种经典迭代算法。它的核心思想是：<strong>猜测在最优解处哪些不等式约束是起作用的（即取等号），然后把这些约束当作等式约束来处理，求解一个等式约束二次规划；再通过检验乘子和可行步长，不断修正有效集，直到满足KKT条件</strong>。</p>
+<p>下面我分步骤为你讲解，并与课件第16-24页对应。</p>
+<hr />
+<h2>一、问题形式</h2>
+<p>考虑凸二次规划（\(G\) 半正定）：</p>
+<p>\[ \begin{aligned} \min_{x\in\mathbb{R}^n} \quad &amp; f(x)=\frac12 x^T G x + r^T x \\ \text{s.t.} \quad &amp; \alpha_i^T x = b_i, \quad i\in E \quad (\text{等式约束})\\ &amp; \alpha_i^T x \le b_i, \quad i\in I \quad (\text{不等式约束}) \end{aligned} \]</p>
+<p>其中 \(E\) 和 \(I\) 分别表示等式约束和不等式约束的指标集。</p>
+<hr />
+<h2>二、有效集法的基本思想</h2>
+<ol><li>猜测一个<strong>有效集</strong> \(W\)（Working Set），它包含：</li></ol>
+<ul><li>所有等式约束 \(E\)（永远在有效集中）；</li><li>一部分不等式约束 \(I\) 中那些<strong>在当前点处取等号</strong>的约束。</li></ul>
+<ol><li>将有效集中的约束当作<strong>等式</strong>处理，忽略其他不等式，求解一个<strong>等式约束二次规划</strong>，得到搜索方向 \(d\)。</li><li>如果 \(d=0\)，说明当前点是该等式子问题的驻点。此时检查有效约束对应的拉格朗日乘子：</li></ol>
+<ul><li>若所有乘子 \(\lambda_i \ge 0\)（对不等式约束），则当前点就是原问题的<strong>KKT点</strong>（最优解）。</li><li>若存在 \(\lambda_q &lt; 0\)，说明该不等式约束实际上不应该被激活，将其从有效集中<strong>删除</strong>，重新求解子问题。</li></ul>
+<ol><li>如果 \(d\neq 0\)，则沿方向 \(d\) 前进，但需要保证<strong>不违反任何不在有效集中的不等式约束</strong>。因此要计算最大可行步长 \(\alpha_{\max}\)，取 \(\alpha = \min(1, \alpha_{\max})\)。</li></ol>
+<ul><li>若 \(\alpha = 1\)，表示可以走到子问题的最优解，并且该点未触碰新约束，有效集不变。</li><li>若 \(\alpha = \alpha_{\max} &lt; 1\)，表示在到达子问题最优解之前会碰到某个新的不等式约束（设为第 \(p\) 个），则停在边界上，并将该约束<strong>加入</strong>有效集。</li></ul>
+<ol><li>重复以上过程，直到找到满足KKT条件的点。</li></ol>
+<hr />
+<h2>三、详细步骤（课件第23-24页）</h2>
+<p>设当前迭代点为 \(x^k\)（可行点），有效集 \(W^k = E \cup I(x^k)\)，其中 \(I(x^k)=\{i\in I \mid \alpha_i^T x^k = b_i\}\)。</p>
+<p>考虑变量 \(d = x - x^k\)，将原问题在 \(x^k\) 处近似（其实这里是精确变换，因为二次函数展开后只有常数项变化）：</p>
+<p>\[ \min_{d} \quad \frac12 d^T G d + \nabla f(x^k)^T d \] \[ \text{s.t.} \quad \alpha_i^T d = 0, \quad \forall i\in W^k \]</p>
+<p>这是一个<strong>等式约束二次规划</strong>（无常数项）。求解得到最优方向 \(d^k\) 和对应的拉格朗日乘子 \(\lambda_i^k\)（对有效约束）。</p>
+<ul><li><strong>若 \(d^k = 0\)</strong>：当前点 \(x^k\) 是等式子问题的最优解。此时检查所有 \(i\in W^k \cap I\)（即有效的不等式约束）的乘子：</li><li>如果 \(\lambda_i^k \ge 0\) 对所有 \(i\in W^k\cap I\) 成立，则 \(x^k\) 是原问题的<strong>KKT点</strong>，停止。</li><li>否则，找出最小的乘子 \(\lambda_q^k = \min\{\lambda_i^k \mid i\in W^k\cap I\}\)（通常取负得最多的那个），从有效集中<strong>删除</strong>该约束：\(W^{k+1} = W^k \setminus \{q\}\)，置 \(x^{k+1}=x^k\)，\(k=k+1\)，返回 Step 1。</li></ul>
+<ul><li><strong>若 \(d^k \neq 0\)</strong>：继续到 Step 3。</li></ul>
+<p>为避免违反不在有效集中的不等式约束，需计算最大可行步长 \(\alpha_{\max}\)：</p>
+<p>\[ \alpha_{\max} = \min_{i\notin W^k,\; \alpha_i^T d^k &gt; 0} \frac{b_i - \alpha_i^T x^k}{\alpha_i^T d^k} \]</p>
+<p>若没有这样的 \(i\)，则 \(\alpha_{\max} = +\infty\)。令</p>
+<p>\[ \alpha_k = \min(1, \alpha_{\max}) \]</p>
+<p>\[ x^{k+1} = x^k + \alpha_k d^k \]</p>
+<ul><li>如果 \(\alpha_k = \alpha_{\max} &lt; 1\)，说明在到达子问题最优解之前碰到了某个新约束（比如第 \(p\) 个），那么将该约束<strong>加入</strong>有效集：\(W^{k+1} = W^k \cup \{p\}\)。</li><li>如果 \(\alpha_k = 1\)，说明走到了子问题的最优解，并且没有碰到任何新约束，有效集保持不变：\(W^{k+1} = W^k\)。</li></ul>
+<p>然后 \(k=k+1\)，返回 Step 1。</p>
+<hr />
+<h2>四、一个简单图示</h2>
+<pre><code>初始可行点 x^0，有效集 W^0
+   ↓
+求解等式子问题 → 得方向 d
+   ↓
+d=0？ → 是 → 检查乘子 → 若乘子非负，停止；否则删除负乘子约束，重解
+   ↓
+d≠0 → 计算最大步长 α_max
+   ↓
+取 α = min(1, α_max)
+   ↓
+x^{new} = x + α d
+   ↓
+若 α = α_max &lt; 1 → 将碰到的约束加入有效集
+若 α = 1 → 有效集不变
+   ↓
+重复</code></pre>
+<hr />
+<h2>五、例题（课件第25-27页）</h2>
+<p>题目（简化）：</p>
+<p>\[ \min f=x_1^2+x_2^2-2x_1-4x_2,\quad \begin{cases} x_1+x_2\le 1,\\ -x_1\le 0,\\ -x_2\le 0 \end{cases},\quad x^0=(0,0) \]</p>
+<p><strong>初始点</strong>：\(x^0=(0,0)\)，有效集 \(W^0=\{2,3\}\)（因为 \(-x_1=0\) 和 \(-x_2=0\) 取等）。</p>
+<p><strong>第一轮</strong>：求解子问题 \(\min d_1^2+d_2^2-2d_1-4d_2\)，约束 \(d_1=0,d_2=0\) → 得 \(d=0\)。检查乘子：由KKT求得 \(\lambda_2=-2,\lambda_3=-4\)，负值，删除 \(\lambda_3\)（最负），新有效集 \(W^1=\{2\}\)，点仍为 \((0,0)\)。</p>
+<p><strong>第二轮</strong>：子问题 \(\min d_1^2+d_2^2-2d_1-4d_2\)，约束 \(d_1=0\) → 得 \(d=(0,2)\)。计算步长：检查非有效约束 \(i=1\) 和 \(i=3\)。对 \(i=1\)：\(\alpha_1^T d = (1,1)^T(0,2)=2&gt;0\)， \(\frac{1-0}{2}=0.5\)；对 \(i=3\)：\(\alpha_3^T d = (0,-1)^T(0,2)=-2\le0\)，忽略。故 \(\alpha_{\max}=0.5\)，取 \(\alpha=0.5\)。新点 \(x=(0,0)+0.5(0,2)=(0,1)\)。因为 \(\alpha&lt;1\)，将约束 \(i=1\) 加入有效集，\(W^2=\{2,1\}\)。</p>
+<p><strong>第三轮</strong>：子问题约束 \(d_1=0\) 和 \(d_1+d_2=0\) → 得 \(d=0\)。计算乘子：由KKT得 \(\lambda_1=2,\lambda_2=0\)（对应约束1和2），均非负 → 停止。最优解 \(x^*=(0,1)\)，乘子 \((2,0,0)\)。</p>
+<hr />
+<h2>六、关键点总结</h2>
+<ul><li>有效集法是一种<strong>主动策略</strong>：通过猜测有效约束，将原问题转化为一系列等式约束子问题。</li><li>它利用<strong>线性代数</strong>求解子问题，且通常利用上一次分解的信息（如更新 \(QR\) 或 \(LU\)）提高效率。</li><li><strong>收敛性</strong>：在凸二次规划中，有效集法在有限步内收敛到最优解，因为有效集组合有限。</li><li>实际应用中，有效集法是求解中小规模凸二次规划的常用方法（如 MATLAB 的 <code>quadprog</code> 中可选算法之一）。</li></ul>
+<p>希望这个讲解能帮助你掌握有效集法的完整流程。如有具体步骤的推导疑问（例如如何用KKT系统求解子问题方向），可以继续问我。</p>
+<div class="record"><span class="tag">我问</span><p>一阶方向导数的几何意义是什么啊a</p></div>
+<p>一阶方向导数的几何意义非常直观：它描述了多元函数在某一点处，沿着给定方向的变化率（即“斜率”）。</p>
+<p>具体来说：</p>
+<ul><li>设函数 \(f(x)\) 在点 \(x_0\) 处可微，\(d\) 是一个单位方向向量。则方向导数  </li></ul>
+<p>\[ \frac{\partial f}{\partial d}(x_0) = \lim_{t\to 0^+} \frac{f(x_0+td)-f(x_0)}{t} \] 表示从 \(x_0\) 出发沿方向 \(d\) 移动时，函数值变化的<strong>瞬时速率</strong>。</p>
+<ul><li><strong>几何图像</strong>：过点 \(x_0\) 作平行于 \(d\) 的垂面，该面与函数曲面 \(z=f(x)\) 相交得到一条曲线。方向导数就是这条曲线在点 \(x_0\) 处的切线斜率（类似一元函数的导数）。</li></ul>
+<ul><li><strong>与梯度的关系</strong>：方向导数等于梯度在该方向上的投影，即  </li></ul>
+<p>\[ \frac{\partial f}{\partial d}(x_0) = \nabla f(x_0)^T d \] 因此，沿梯度方向方向导数最大（函数上升最快），沿负梯度方向最小（下降最快），沿与梯度垂直的方向方向导数为零（等值面的切线方向）。</p>
+<p>总结：<strong>一阶方向导数 = 函数沿特定方向的瞬时变化率，其符号决定上升或下降，大小决定变化快慢。</strong></p>
+<div class="record"><span class="tag">我问</span><p>乘子罚函数是怎么写出来的，我总是记不住啊</p></div>
+<p>记不住乘子罚函数的公式很正常，因为它看起来比纯罚函数多了一项。我帮你从<strong>逻辑推导</strong>的角度理解，这样就不需要死记硬背了。</p>
+<hr />
+<h2>一、我们想要什么？</h2>
+<p>对于等式约束问题 \[ \min f(x),\quad \text{s.t. } h(x)=0 \] 我们希望用一个<strong>无约束</strong>函数 \( \Phi(x) \) 来近似，并且希望：</p>
+<ul><li>当参数固定时，\(\Phi(x)\) 的极小点接近原问题的解；</li><li>不需要把罚因子 \(\rho\) 取到无穷大也能精确满足约束。</li></ul>
+<hr />
+<h2>二、从拉格朗日函数出发</h2>
+<p>拉格朗日函数是 \[ L(x,\lambda) = f(x) + \lambda^T h(x) \] 它的<strong>鞍点</strong>（对 \(x\) 极小、对 \(\lambda\) 极大）对应原问题的解。 但直接对 \(x\) 无约束极小化 \(L(x,\lambda)\) 通常不行，因为 \(L\) 在 \(x\) 方向上可能无下界（比如线性约束时）。</p>
+<hr />
+<h2>三、加上二次罚项来稳定</h2>
+<p>为了把 \(L\) 变成在 \(x\) 方向上有下界的函数，我们在后面加一个<strong>二次惩罚项</strong> \(\frac{\rho}{2}\|h(x)\|^2\)，得到 \[ \mathcal{L}_A(x,\lambda,\rho) = f(x) + \lambda^T h(x) + \frac{\rho}{2}\|h(x)\|^2 \] 这就是<strong>增广拉格朗日函数</strong>。注意：</p>
+<ul><li>当 \(\rho=0\) 时，它就是普通拉格朗日函数。</li><li>当 \(\rho&gt;0\) 时，它强制 \(h(x)\) 不能太大，否则二次项会急剧增加。</li></ul>
+<hr />
+<h2>四、为什么这个形式“自然”？</h2>
+<p>把二次项配成平方形式： \[ \lambda^T h + \frac{\rho}{2} h^2 = \frac{\rho}{2} \left( h + \frac{\lambda}{\rho} \right)^2 - \frac{\lambda^2}{2\rho} \] （这里 \(h\) 是标量，向量情形类似，需要点乘） 所以 \[ \mathcal{L}_A = f(x) + \frac{\rho}{2}\left\| h(x) + \frac{\lambda}{\rho} \right\|^2 - \frac{\|\lambda\|^2}{2\rho} \] 最后一项常数不影响对 \(x\) 的极小化。 <strong>这个形式很清楚</strong>：它等价于在原目标后加上一个<strong>偏移了的二次罚函数</strong>，偏移量正好是 \(\lambda/\rho\)。 也就是说，乘子法相当于在罚函数中“移动目标”而不是让罚因子趋于无穷。</p>
+<hr />
+<h2>五、乘子更新公式的由来</h2>
+<p>假设我们固定 \(\lambda^k, \rho\)，极小化 \(\mathcal{L}_A\) 得到 \(x^k\)。 KKT 条件对于原问题是 \( \nabla f + \nabla h^T \lambda^* = 0,\ h=0 \)。 而我们极小化 \(\mathcal{L}_A\) 的一阶条件是： \[ \nabla f(x^k) + \nabla h(x^k)^T (\lambda^k + \rho h(x^k)) = 0 \] 对比发现，括号里的 \(\lambda^k + \rho h(x^k)\) 起到了 **\(\lambda^*\)** 的作用。 因此自然的乘子更新是： \[ \lambda^{k+1} = \lambda^k + \rho h(x^k) \] 这样，即使 \(\rho\) 固定，乘子迭代也会收敛到真实乘子。</p>
+<hr />
+<h2>六、记忆技巧（口诀）</h2>
+<p><strong>“拉格朗日加平方半，乘子更新加罚残。”</strong></p>
+<ul><li>拉格朗日函数：\(f + \lambda^T h\)  </li><li>加上 <strong>\(\frac{\rho}{2}\|h\|^2\)</strong>（平方半）  </li><li>乘子更新：\(\lambda_{\text{new}} = \lambda_{\text{old}} + \rho \cdot h\)（加罚残差 \(h\)）</li></ul>
+<p>对于不等式 \(g(x)\le 0\)，有两种常见写法：</p>
+<ol><li>转化为等式：引入松弛变量 \(s\ge0\)，令 \(g(x)+s=0\)，然后对 \(s\) 有非负约束 —— 这会导致增广拉格朗日函数中包含对 \(s\) 的极小化，可以显式求出 \(s^* = \max(0, -\lambda/\rho - g)\)，最后整理成：</li></ol>
+<p>\[ \mathcal{L}_A = f(x) + \frac{1}{2\rho}\sum_i \left[ \max(0, \lambda_i+\rho g_i(x))^2 - \lambda_i^2 \right] \] 这个形式看起来复杂，但记住：<strong>它是将不等式通过 max 函数嵌入到二次项中</strong>。</p>
+<ol><li>另一种简单记忆：直接使用等式形式的增广拉格朗日，但把 \(h(x)\) 换成 \(\max(g(x),0)\)（即违反度），不过这样不可微。实际常用第一种。</li></ol>
+<hr />
+<h2>七、一个具体例子帮你固定记忆</h2>
+<p>问题：\(\min x^2\)，约束 \(x-1=0\)（最优解 \(x=1\)）。 增广拉格朗日： \[ \mathcal{L}_A = x^2 + \lambda (x-1) + \frac{\rho}{2}(x-1)^2 \] 对 \(x\) 求导：\(2x + \lambda + \rho(x-1)=0\) 得 \(x = \frac{\rho - \lambda}{2+\rho}\)。 乘子更新：\(\lambda_{k+1} = \lambda_k + \rho(x_k-1)\)。 取 \(\lambda_0=0,\rho=1\)，第一轮 \(x_0 = (1-0)/(2+1)=1/3\)，更新 \(\lambda_1 = 0+1<em>(1/3-1)=-2/3\)；第二轮 \(x_1 = (1-(-2/3))/(3)= (1+2/3)/3 = (5/3)/3=5/9\)，\(\lambda_2 = -2/3+1</em>(5/9-1)= -2/3-4/9=-10/9\)… 收敛到 \(x=1\)，\(\lambda=-2\)（真实乘子）。</p>
+<p>你看，不需要 \(\rho\to\infty\)，通过乘子更新就能逼近精确解。</p>
+<hr />
+<p>希望这个推导和例子能帮你牢固记住乘子罚函数的写法。考试时如果忘记，可以自己从“拉格朗日 + 二次罚项”重新组合出来。</p>
+<div class="record"><span class="tag">我问</span><p>函数f(x)沿着x一尖的方向的方向导数是什么，写法是什么啊</p></div>
+<p>你问的应该是：函数 \(f(x)\) 沿着<strong>某个方向</strong>的方向导数是什么，写法是怎样的。</p>
+<p>设 \(f: \mathbb{R}^n \to \mathbb{R}\) 在点 \(x_0\) 处可微，\(d\) 是一个<strong>非零方向向量</strong>（通常取单位向量，即 \(\|d\|=1\)）。则沿方向 \(d\) 的方向导数定义为：</p>
+<p>\[ \frac{\partial f}{\partial d}(x_0) = \lim_{t \to 0^+} \frac{f(x_0 + t d) - f(x_0)}{t} \]</p>
+<p>其几何意义：从 \(x_0\) 出发沿 \(d\) 方向移动时，函数值的瞬时变化率。</p>
+<p><strong>常用写法</strong>（可微时）： \[ \frac{\partial f}{\partial d}(x_0) = \nabla f(x_0)^\top d \] 即梯度与方向向量的点积。</p>
+<p>如果 \(d\) 不是单位向量，方向导数通常定义为 \(\nabla f(x_0)^\top \frac{d}{\|d\|}\)，即只考虑方向，与长度无关。</p>
+<p><strong>特例</strong>：</p>
+<ul><li>沿坐标轴方向 \(e_i\)，方向导数就是偏导数 \(\frac{\partial f}{\partial x_i}(x_0)\)。</li><li>沿梯度方向，方向导数最大，等于 \(\|\nabla f(x_0)\|\)。</li><li>沿负梯度方向，方向导数最小，等于 \(-\|\nabla f(x_0)\|\)。</li><li>沿与梯度垂直的方向，方向导数为 0。</li></ul>
+<p>所以你只要记住：<strong>方向导数 = 梯度点乘单位方向向量</strong>。</p>
+<div class="record"><span class="tag">我问</span><p>二阶矩阵的逆矩阵是如何球的</p></div>
+<p>求二阶矩阵的逆矩阵有固定公式，非常实用。</p>
+<p>设二阶矩阵 \[ A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix} \] 如果 \(\det(A) = ad - bc \neq 0\)，则 \(A\) 可逆，且逆矩阵为：</p>
+<p>\[ A^{-1} = \frac{1}{ad-bc} \begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix} \]</p>
+<p><strong>记忆口诀</strong>：主对角线交换位置，副对角线变号，再除以行列式。</p>
+<p>\[ A \cdot A^{-1} = \frac{1}{ad-bc} \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix} \begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix} = \frac{1}{ad-bc} \begin{pmatrix} ad - bc &amp; -ab + ba \\ cd - dc &amp; -cb + da \end{pmatrix} = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix} \]</p>
+<p>\[ A = \begin{pmatrix} 2 &amp; 1 \\ 1 &amp; 1 \end{pmatrix},\quad \det = 2\times1 - 1\times1 = 1,\quad A^{-1} = \begin{pmatrix} 1 &amp; -1 \\ -1 &amp; 2 \end{pmatrix}. \]</p>
+<p>如果行列式为0，矩阵不可逆（称为奇异矩阵）。</p>
+<div class="record"><span class="tag">我问</span><p>你问的应该是：函数 \(f(x)\) 沿着<strong>某个方向</strong>的方向导数是什么，写法是怎样的。</p>
+<p>设 \(f: \mathbb{R}^n \to \mathbb{R}\) 在点 \(x_0\) 处可微，\(d\) 是一个<strong>非零方向向量</strong>（通常取单位向量，即 \(\|d\|=1\)）。则沿方向 \(d\) 的方向导数定义为：</p>
+<p>\[ \frac{\partial f}{\partial d}(x_0) = \lim_{t \to 0^+} \frac{f(x_0 + t d) - f(x_0)}{t} \]</p>
+<p>其几何意义：从 \(x_0\) 出发沿 \(d\) 方向移动时，函数值的瞬时变化率。</p>
+<p><strong>常用写法</strong>（可微时）： \[ \frac{\partial f}{\partial d}(x_0) = \nabla f(x_0)^\top d \] 即梯度与方向向量的点积。</p>
+<p>如果 \(d\) 不是单位向量，方向导数通常定义为 \(\nabla f(x_0)^\top \frac{d}{\|d\|}\)，即只考虑方向，与长度无关。</p>
+<p><strong>特例</strong>：</p>
+<ul><li>沿坐标轴方向 \(e_i\)，方向导数就是偏导数 \(\frac{\partial f}{\partial x_i}(x_0)\)。</li><li>沿梯度方向，方向导数最大，等于 \(\|\nabla f(x_0)\|\)。</li><li>沿负梯度方向，方向导数最小，等于 \(-\|\nabla f(x_0)\|\)。</li><li>沿与梯度垂直的方向，方向导数为 0。</li></ul>
+<p>所以你只要记住：<strong>方向导数 = 梯度点乘单位方向向量</strong>。|</p>
+<p>这个问题中我不要单位向量，我想看那个梯度那里有没有转置</p></div>
+<p>你问的是方向导数公式中，梯度那里是否需要写转置。</p>
+<p>设 \(f: \mathbb{R}^n \to \mathbb{R}\) 在 \(x_0\) 处可微，梯度 \(\nabla f(x_0)\) 通常写作<strong>列向量</strong>： \[ \nabla f(x_0) = \begin{pmatrix} \frac{\partial f}{\partial x_1}(x_0) \\ \vdots \\ \frac{\partial f}{\partial x_n}(x_0) \end{pmatrix} \] 方向 \(d\) 也是列向量（不必是单位向量）。那么方向导数的表达式有两种等价写法：</p>
+<ol><li><strong>带转置</strong>：\(\displaystyle \frac{\partial f}{\partial d}(x_0) = \nabla f(x_0)^\top d\)  </li></ol>
+<p>这里 \(\nabla f(x_0)^\top\) 是行向量，与列向量 \(d\) 作矩阵乘法，结果是一个标量。</p>
+<ol><li><strong>不带转置（点积）</strong>：\(\displaystyle \frac{\partial f}{\partial d}(x_0) = \nabla f(x_0) \cdot d\)  </li></ol>
+<p>点积符号已经隐含了对应分量相乘再相加，不需要显式写转置。</p>
+<p>所以，<strong>转置不是必须的</strong>，它依赖于你采用的记号习惯：</p>
+<ul><li>如果你把梯度视为<strong>列向量</strong>，而用矩阵乘法表示内积，就需要转置。</li><li>如果你直接用点积“\(\cdot\)”或内积符号“\(\langle \cdot,\cdot\rangle\)”，就不需要转置。</li></ul>
+<p>绝大多数教材为了避免歧义，都写作 \(\nabla f(x_0)^\top d\) 或 \(\nabla f(x_0) \cdot d\)。如果你担心考试扣分，建议采用 \(\nabla f(x_0)^\top d\)，这是最严谨的矩阵写法。</p>
+<div class="record"><span class="tag">我问</span><p>L A ​ (x,λ,ρ)=f(x)+λ T h(x)+ 2 ρ ​ ∥h(x)∥ 2 这个就是乘子罚函数的标准的形式了吗</p></div>
+<p>是的，你写的这个就是<strong>乘子罚函数（增广拉格朗日函数）的标准形式</strong>，用于处理等式约束问题：</p>
+<p>\[ \mathcal{L}_A(x,\lambda,\rho) = f(x) + \lambda^T h(x) + \frac{\rho}{2} \|h(x)\|^2 \]</p>
+<p>其中：</p>
+<ul><li>\(f(x)\) 是原目标函数；</li><li>\(h(x)=0\) 是等式约束（可以是向量）；</li><li>\(\lambda\) 是拉格朗日乘子向量（估计值）；</li><li>\(\rho &gt; 0\) 是惩罚参数；</li><li>\(\|h(x)\|^2 = h(x)^T h(x)\)。</li></ul>
+<p>这个形式非常标准，几乎所有优化教材（如 Nocedal &amp; Wright, Bertsekas）都采用这个定义。需要特别说明的是：</p>
+<ul><li><strong>正负号</strong>：有的书在 \(h(x)=0\) 时写成 \(f + \lambda^T h + \frac{\rho}{2}\|h\|^2\)，有的写成 \(f - \lambda^T h + \frac{\rho}{2}\|h\|^2\)，差别在于乘子的符号定义。只要与后续乘子更新公式一致即可。你写的是最通用的形式。</li><li>对于<strong>不等式约束</strong>，一般会通过引入松弛变量或使用<strong>广义增广拉格朗日函数</strong>（包含 max 函数）来处理，形式会复杂一些。</li></ul>
+<p>所以你可以放心记忆这个形式，它就是乘子法的基础。</p>
+<div class="record"><span class="tag">我问</span><p>验证一个约束优化问题中被提供的一个点是不是KT点，如何判断，就是判断这个点的拉格朗日乘子，不等式的乘子都为非负嘛？然后所有的约束都是满足的，然后拉格朗日函数梯度也是满足的？</p></div>
+<p>你的理解基本正确，但要完整判断一个点是否为 <strong>KT点（Kuhn-Tucker 点）</strong>，需要同时满足以下四个条件（以标准形式 \(\min f(x),\; s.t.\; c_i(x)=0 (i\in E),\; c_i(x)\le 0 (i\in I)\) 为例）：</p>
+<hr />
+<p>点 \(x^<em>\) 必须满足所有约束： \[ c_i(x^</em>) = 0 \ (i\in E), \quad c_i(x^*) \le 0 \ (i\in I) \]</p>
+<p>存在乘子 \(\lambda_i\ (i\in E\cup I)\)，使得： \[ \nabla f(x^<em>) + \sum_{i\in E\cup I} \lambda_i \nabla c_i(x^</em>) = 0 \]</p>
+<p>\[ \lambda_i \ge 0,\quad \forall i\in I \] （等式约束的乘子 \(\lambda_i\) 无符号限制）</p>
+<p>\[ \lambda_i \, c_i(x^<em>) = 0,\quad \forall i\in I \] 即：若约束不起作用（\(c_i(x^</em>)&lt;0\)），则乘子必须为 0；若乘子 &gt; 0，则约束必须起作用（\(c_i(x^*)=0\)）。</p>
+<hr />
+<ol><li><strong>检查可行性</strong>：代入约束看是否成立。</li><li><strong>假设起作用的不等式约束</strong>：一般先假设哪些不等式是紧的（\(c_i(x^<em>)=0\)），哪些是松的（\(c_i(x^</em>)&lt;0\)）。对于松的约束，直接令乘子为 0。</li><li><strong>建立梯度方程</strong>：将未知乘子（等式约束 + 起作用的不等式约束）代入梯度方程，求解乘子。</li><li><strong>检验</strong>：</li></ol>
+<ul><li>所有求出的不等式乘子 ≥ 0；</li><li>互补松弛自动满足（因为松的乘子已设为 0，紧的约束 \(c_i=0\) 乘积为 0）。</li></ul>
+<p>若所有条件满足，则 \(x^*\) 是 <strong>KT点</strong>；否则不是。</p>
+<blockquote>注意：KT 点不一定是局部最优解（非凸问题中可能是鞍点或极大点），但凸问题中 KT 点就是全局最优解。另外，约束规格（如 LICQ）是局部最优解 ⇒ KT 点的前提，但判断 KT 点本身不需要约束规格。</blockquote>
+<div class="record"><span class="tag">我问</span><p>共轭梯度法的FR和PRP的公式都是神马啊</p></div>
+<p>共轭梯度法（Conjugate Gradient Method）中，FR 和 PRP 是两种经典的 <strong>βₖ</strong> 计算公式，用于确定搜索方向 \( d_k = -g_k + \beta_k d_{k-1} \)，其中 \( g_k = \nabla f(x_k) \)。</p>
+<hr />
+<p>\[ \beta_k^{\text{FR}} = \frac{g_k^\top g_k}{g_{k-1}^\top g_{k-1}} \]</p>
+<ul><li>只依赖于当前梯度和上一步梯度的模长。</li><li>理论性质好，常用于线性共轭梯度法（求解 \(Ax=b\) 时与 PRP 等价）。</li><li>对非线性优化，收敛性较好，但可能因函数非二次而出现“jamming”。</li></ul>
+<hr />
+<p>\[ \beta_k^{\text{PRP}} = \frac{g_k^\top (g_k - g_{k-1})}{g_{k-1}^\top g_{k-1}} \]</p>
+<ul><li>显式利用了梯度的变化量，对非二次函数的适应性更强。</li><li>在接近最优点时，若梯度变化小，βₖ 自然变小，有助于自动重置方向，避免“锯齿现象”。</li><li>计算量略大于 FR（多一个向量内积）。</li></ul>
+<hr />
+<ul><li>当目标函数为<strong>严格凸二次函数</strong>（即 \(f(x)=\frac12 x^\top A x - b^\top x\)）时，FR 与 PRP 公式<strong>等价</strong>，因为 \(g_k^\top (g_k - g_{k-1}) = g_k^\top g_k\)（由 A-共轭性可证）。</li><li>对于一般非线性优化，PRP 通常数值表现更好，但 FR 有更强的收敛性证明（需配合线搜索）。</li></ul>
+<hr />
+<p>初始化：\(d_0 = -g_0\) 重复： \[ \alpha_k = \arg\min_{\alpha&gt;0} f(x_k + \alpha d_k) \quad \text{(线搜索)} \] \[ x_{k+1} = x_k + \alpha_k d_k \] \[ g_{k+1} = \nabla f(x_{k+1}) \] \[ \beta_{k+1} = \frac{g_{k+1}^\top (g_{k+1} - g_k)}{g_k^\top g_k} \] \[ d_{k+1} = -g_{k+1} + \beta_{k+1} d_k \]</p>
+<hr />
+<ul><li><strong>FR</strong>：当前梯度模长平方 / 上一梯度模长平方  </li><li><strong>PRP</strong>：当前梯度点乘（当前减上一梯度） / 上一梯度模长平方  </li></ul>
+<p>希望这个回答清晰明了！</p>
+<div class="record"><span class="tag">我问</span><p>FR的算法流程给我描述一下</p></div>
+<p>FR（Fletcher–Reeves）共轭梯度法主要用于求解无约束优化问题，特别是当目标函数是正定二次函数时，它能在 n 步内收敛；也可推广到一般非线性函数（配合线搜索）。以下是 FR 方法的完整算法流程（针对一般非线性优化）：</p>
+<hr />
+<ul><li>目标函数 \(f(x)\)，梯度 \(g(x)=\nabla f(x)\)</li><li>初始点 \(x_0\)</li><li>停止条件（如梯度模长阈值 \(\varepsilon\)）</li></ul>
+<ul><li>计算 \(g_0 = g(x_0)\)</li><li>若 \(\|g_0\| &lt; \varepsilon\)，停止，输出 \(x_0\)</li><li>设置初始搜索方向 \(d_0 = -g_0\)</li><li>置迭代计数 \(k = 0\)</li></ul>
+<ol><li><strong>线搜索</strong>：求步长 \(\alpha_k &gt; 0\)，使得  </li></ol>
+<p>\[ f(x_k + \alpha_k d_k) = \min_{\alpha&gt;0} f(x_k + \alpha d_k) \] 对于二次函数，\(\alpha_k = \frac{g_k^\top d_k}{d_k^\top A d_k}\)（精确线搜索）；对于非二次函数，需使用 Wolfe 条件或精确一维搜索（如黄金分割、多项式插值）。</p>
+<ol><li><strong>更新点</strong>：  </li></ol>
+<p>\[ x_{k+1} = x_k + \alpha_k d_k \]</p>
+<ol><li><strong>计算新梯度</strong>：  </li></ol>
+<p>\[ g_{k+1} = \nabla f(x_{k+1}) \]</p>
+<ol><li><strong>收敛性检查</strong>：若 \(\|g_{k+1}\| &lt; \varepsilon\)，停止，输出 \(x_{k+1}\)。</li></ol>
+<ol><li><strong>计算 FR 参数 \(\beta_{k+1}\)</strong>：  </li></ol>
+<p>\[ \beta_{k+1}^{\text{FR}} = \frac{g_{k+1}^\top g_{k+1}}{g_k^\top g_k} \]</p>
+<ol><li><strong>更新搜索方向</strong>：  </li></ol>
+<p>\[ d_{k+1} = -g_{k+1} + \beta_{k+1}^{\text{FR}} \, d_k \]</p>
+<ol><li><strong>重置策略</strong>（可选）：若 \(k+1\) 达到 \(n\)（变量维度）或方向丧失共轭性（例如 \(\|g_{k+1}^\top g_k\|\) 很大时），可重置 \(d_{k+1} = -g_{k+1}\)（相当于重新开始）。</li></ol>
+<ol><li><strong>令 \(k = k+1\)</strong>，转步骤 1。</li></ol>
+<hr />
+<ul><li>对于严格凸二次函数，精确线搜索下 FR 方法保证至多 \(n\) 步收敛到精确解。</li><li>对于非二次函数，需要配合非精确线搜索（如 Wolfe 条件）以保证全局收敛性。</li><li>FR 公式的优点是 \(\beta_k \ge 0\)，且理论收敛性较强；缺点是可能产生“jamming”（方向停滞），通常结合重置策略使用。</li></ul>
+<hr />
+<ul><li>在步骤 5 中，PRP 使用 \(\beta_{k+1}^{\text{PRP}} = \frac{g_{k+1}^\top (g_{k+1}-g_k)}{g_k^\top g_k}\)。</li><li>FR 的 \(\beta\) 始终非负；PRP 的 \(\beta\) 在非凸问题中可能为负，需取 \(\max(\beta,0)\) 来保证下降性。</li></ul>
+<p>希望这个流程描述能帮助你掌握 FR 算法。如需更具体的线搜索实现细节，也可以继续问我。</p>
+<div class="record"><span class="tag">我问</span><p>xy 的互信息的定义是神马啊</p></div>
+<p><strong>互信息（Mutual Information）</strong> 衡量两个随机变量 \(X\) 和 \(Y\) 之间的相互依赖程度。其定义为：</p>
+<p>\[ I(X;Y) = \sum_{x \in \mathcal{X}} \sum_{y \in \mathcal{Y}} p(x,y) \log \frac{p(x,y)}{p(x)p(y)} \]</p>
+<p>对于连续变量，求和变为积分，概率密度函数 \(p(x,y)\)、\(p(x)\)、\(p(y)\) 代替。</p>
+<p>\[ I(X;Y) = H(X) - H(X|Y) = H(Y) - H(Y|X) = H(X) + H(Y) - H(X,Y) \] 其中：</p>
+<ul><li>\(H(X)\)、\(H(Y)\) 为边缘熵，</li><li>\(H(X|Y)\)、\(H(Y|X)\) 为条件熵，</li><li>\(H(X,Y)\) 为联合熵。</li></ul>
+<p>互信息表示知道 \(Y\) 后，\(X\) 的不确定性减少的量（或反过来）。当 \(X\) 和 \(Y\) 独立时，\(I(X;Y)=0\)；当存在函数关系时，互信息最大（受限于各自的熵）。</p>
+<p>这是信息论中最核心的概念之一。</p>
+<div class="record"><span class="tag">我问</span><p>这个互信息就是利用熵来表示的是吧</p></div>
+<p>是的，互信息完全可以用熵来表示。你记得很准：</p>
+<p>\[ I(X;Y) = H(X) - H(X\mid Y) = H(Y) - H(Y\mid X) = H(X)+H(Y)-H(X,Y) \]</p>
+<p>所以互信息本质上就是 <strong>“熵的减少量”</strong>：知道 \(Y\) 后，\(X\) 的不确定性（熵）减少了多少。这个关系非常常用，也是理解互信息最直观的方式。</p>
+<div class="record"><span class="tag">我问</span><p>我要的是互信息的定义式</p></div>
+<p>明白了，您需要的是互信息的<strong>原始定义式</strong>（不借助熵，直接用概率分布表示）：</p>
+<p>对于离散随机变量 \(X\) 和 \(Y\)（取值于 \(\mathcal{X}, \mathcal{Y}\)），互信息的定义为：</p>
+<p>\[ I(X;Y) = \sum_{x \in \mathcal{X}} \sum_{y \in \mathcal{Y}} p(x,y) \log \frac{p(x,y)}{p(x)\,p(y)} \]</p>
+<p>其中：</p>
+<ul><li>\(p(x,y)\) 是联合概率质量函数；</li><li>\(p(x)\)、\(p(y)\) 分别是边缘概率质量函数；</li><li>对数通常取底 2（单位比特）或自然对数（单位奈特）。</li></ul>
+<p>对于连续随机变量，将求和换为积分，概率质量函数换为概率密度函数：</p>
+<p>\[ I(X;Y) = \int_{\mathcal{X}} \int_{\mathcal{Y}} p(x,y) \log \frac{p(x,y)}{p(x)\,p(y)} \, dy \, dx \]</p>
+<p>这就是互信息的标准定义。</p>
+<div class="record"><span class="tag">我问</span><p>那平均互信息是什么啊、</p></div>
+<p>在信息论中，“平均互信息”通常就是<strong>互信息（Mutual Information）</strong> 的另一个称呼，因为互信息的定义本身就是对联合分布求期望（平均）的结果。</p>
+<p>具体来说：</p>
+<p>对于两个具体取值 \(x\) 和 \(y\)，其点态互信息定义为： \[ \text{PMI}(x;y) = \log \frac{p(x,y)}{p(x)p(y)} \] 它表示单个事件对之间的互信息。</p>
+<p>对所有可能的 \((x,y)\) 按联合概率 \(p(x,y)\) 取<strong>平均</strong>，就得到平均互信息： \[ I(X;Y) = \sum_{x,y} p(x,y) \cdot \text{PMI}(x;y) = \sum_{x,y} p(x,y) \log \frac{p(x,y)}{p(x)p(y)} \] 这正是互信息的定义。所以<strong>平均互信息 = 互信息</strong>，不加“平均”二字也是指这个期望值。</p>
+<p>为了与“点态互信息”区分，强调它是全局的平均量。在多数教材和论文中，直接说“互信息”就是指平均互信息。</p>
+<p>总结：<strong>平均互信息就是互信息的标准定义，即联合分布与边缘分布乘积之间的 KL 散度</strong>： \[ I(X;Y) = D_{\text{KL}}(p(x,y) \parallel p(x)p(y)) \]</p>
+<div class="record"><span class="tag">我问</span><p>这里的题目都给我做一下吧</p></div>
+<p>根据你提供的图片内容，我整理了各题的答案。部分题目表述不完整，我基于标准优化理论给出合理解答。</p>
+<hr />
+<p>原题表述不清晰。通常，判断一个二次函数 \( f(x) = \frac{1}{2}x^T Q x + c^T x \) 的凸性，取决于 \( Q \) 是否半正定。若 \( Q = D^2 + D \)，则：</p>
+<ul><li>当 \( D^2 + D \) 半正定时，\( f \) 为凸函数；</li><li>当 \( D^2 + D \) 正定时，\( f \) 为严格凸函数；</li><li>当 \( D^2 + D \) 非正定（即存在负特征值）时，\( f \) 为非凸（可能为凹或不定）。</li></ul>
+<p>题目中括号内“非正定则称凹凸函数”可能是笔误，准确说法：<strong>海森矩阵半正定 → 凸函数；海森矩阵负定 → 凹函数</strong>。</p>
+<hr />
+<p>\( D_1, D_2 \) 为凸集，则 \( D_1 + D_2 = \{ d_1 + d_2 \mid d_1 \in D_1, d_2 \in D_2 \} \) <strong>仍是凸集</strong>。</p>
+<p><strong>证明</strong>：任取 \( x = x_1 + x_2, y = y_1 + y_2 \in D_1 + D_2 \)，对任意 \( \lambda \in [0,1] \)， \[ \lambda x + (1-\lambda) y = (\lambda x_1 + (1-\lambda)y_1) + (\lambda x_2 + (1-\lambda)y_2) \in D_1 + D_2. \]</p>
+<hr />
+<p>用 \( B_k \) 近似海森矩阵，则 \( B_k \) 应满足<strong>割线方程</strong>： \[ B_{k+1} s_k = y_k, \] 其中 \( s_k = x_{k+1} - x_k \)，\( y_k = \nabla f(x_{k+1}) - \nabla f(x_k) \)。这就是拟牛顿法中牛顿条件的标准形式。</p>
+<hr />
+<p>\[ \min_{x \in \mathbb{R}^n} \frac{1}{2} x^T G x + r^T x \] \[ \text{s.t.} \quad a_i^T x = b_i,\; i \in E = \{1,\dots,l\}, \quad a_i^T x \le b_i,\; i \in I = \{l+1,\dots,l+m\} \] 其中 \( G \) 为 \( n \times n \) 对称矩阵，\( r, a_i \) 为向量，\( b_i \) 为实数。若 \( G \) 半正定，则为凸二次规划。</p>
+<hr />
+<p>你给出的填空有误，下面是正确的步骤和公式：</p>
+<ul><li><strong>子问题</strong>（搜索方向）：</li></ul>
+<p>\[ \min_{d} \frac{1}{2} d^T G d + \nabla f(x^k)^T d, \quad \text{s.t.} \quad a_i^T d = 0,\; i \in E \cup I(x^k) \] （注意：原题写成了 \( \sum d_i^T G d \) 和 \( D f(x^k) \)，应为 \( \frac{1}{2} d^T G d \) 和 \( \nabla f(x^k)^T d \)）</p>
+<ul><li><strong>删除约束</strong>：若 \( d^k = 0 \) 且存在 \( \lambda_q &lt; 0 \)，则</li></ul>
+<p>\[ I(x^{k+1}) = I(x^k) \setminus \{q\} \]</p>
+<ul><li><strong>步长计算</strong>：</li></ul>
+<p>\[ \hat{\alpha}_k = \min_{i \notin I(x^k),\, a_i^T d^k &gt; 0} \frac{b_i - a_i^T x^k}{a_i^T d^k}, \quad \alpha_k = \min\{1, \hat{\alpha}_k\} \] 若 \( \alpha_k = \hat{\alpha}_k &lt; 1 \)，则加入新约束： \[ I(x^{k+1}) = I(x^k) \cup \{p\} \] 其中 \( p \) 是达到最小比值的约束指标。</p>
+<p>你提供的第三个填空 \( \hat{a}_{ik} = \frac{1}{I(x^{k+1}) - I(x^k) - \{p\}} \) 是错误的，请以正确公式为准。</p>
+<hr />
+<p>以上为所有题目的答案。如有需要进一步解释的题目，请补充完整原题。</p>
+<div class="record"><span class="tag">我问</span><p>步长计算：</p>
+<p>α ^ k = min ⁡ i ∉ I ( x k ) ,</p>
+<p>a i T d k &gt; 0 b i − a i T x k a i T d k , α k = min ⁡ { 1 , α ^ k } α ^</p>
+<p>k ​ = i∈ / I(x k ),a i T ​ d k &gt;0 min ​</p>
+<p>a i T ​ d k</p>
+<p>b i ​ −a i T ​ x k</p>
+<p>​ ,α k ​ =min{1, α ^</p>
+<p>k ​</p>
+<p>这个步长的计算公式我记不住啊</p></div>
+<p>这个步长公式确实容易记混，但理解其几何意义后就好记了。</p>
+<h2>核心目的</h2>
+<p>当我们从当前可行点 \(x^k\) 沿方向 \(d^k\) 移动时，要保证<strong>所有不在当前有效集中的不等式约束</strong> \(a_i^T x \le b_i\) 不被违反。即对每个 \(i \notin I(x^k)\)，要求： \[ a_i^T (x^k + \alpha d^k) \le b_i \quad \Rightarrow \quad \alpha \le \frac{b_i - a_i^T x^k}{a_i^T d^k} \quad (\text{当 } a_i^T d^k &gt; 0) \] 若 \(a_i^T d^k \le 0\)，则移动不会违反该约束，无需限制。</p>
+<h2>公式记忆口诀</h2>
+<p><strong>“正方向上看比值，取最小非负限；再与1比取小值。”</strong></p>
+<ol><li><strong>只看正方向</strong>：只考虑那些与方向 \(d^k\) 夹角小于 90° 的约束（\(a_i^T d^k &gt; 0\)），因为只有这些约束会随着 \(\alpha\) 增加而变紧。</li><li><strong>计算每个约束允许的最大步长</strong>：\(\frac{b_i - a_i^T x^k}{a_i^T d^k}\)，分子是当前“剩余容量”（约束值离上限的距离），分母是方向上的变化率。</li><li><strong>取所有正方向约束的最小值</strong>：\(\hat{\alpha}_k = \min_{i: a_i^T d^k&gt;0} \frac{b_i - a_i^T x^k}{a_i^T d^k}\)。这就是走多远会碰到第一个新约束。</li><li><strong>与1比较</strong>：因为我们希望走到子问题的最优解（步长为1时恰好到达子问题无约束最优点），所以实际步长取 \(\alpha_k = \min\{1, \hat{\alpha}_k\}\)。</li></ol>
+<h2>形象化记忆</h2>
+<ul><li>想象你开车从 \(x^k\) 沿 \(d^k\) 前进，路边有“墙”（约束边界）。每个墙有个距离 \(\frac{\text{剩余距离}}{\text{接近速度}}\)，取最近的墙的距离作为 \(\hat{\alpha}_k\)。但你不能超过目的地（步长1），所以最终步长就是 \(\min(\text{到墙的距离}, 1)\)。</li></ul>
+<p>这样理解后，公式就不用死记了。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/153_二次规划考试题目生成.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

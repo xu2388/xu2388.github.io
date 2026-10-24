@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>为什么 H&amp;E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <script id="meta" type="application/json">
+  {
+    "title": "为什么 H&E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据",
+    "date": "2026-10-24",
+    "tags": ["主线", "归因", "逐像素跨图", "BCI数据集", "H-score"],
+    "summary": "一份内部 M0 归因报告告诉我：H&E 预测 DAB 在逐像素、跨图口径下根本不可学，不是模型没调好，是数据里没这个规律。本文保留全部硬数据（8px 输给常数 −16.3%、625 个平移全救不回、跨图块级 r≈0、22.5px 错位）和我当时的困惑。",
+    "category": "研究",
+    "source_ids": ["013"]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">科研博客</h1>
+      <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
+      <nav class="site-nav">
+        <a href="../index.html#threads">研究方向</a>
+        <a href="../index.html#articles">文章</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <article class="article">
+    <h1>为什么 H&amp;E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据</h1>
+    <div class="meta">
+      写于 2026-10-24 · 归因篇 · 原始来源：DeepSeek 对话 [013] M0归因报告解读（23 条）
+    </div>
+
+    <p class="lead">
+      有一天我拿到一份内部技术复盘报告，说实话第一眼根本看不懂，满屏的 T0、M0、M1、Cocos、CFG、probe_scale 这些缩写，可是它给的结论特别硬，硬到我后来好几次想绕开它都没绕过去。这篇就把这份报告到底说了什么、以及我当时一连串的追问和困惑，原原本本记下来。
+    </p>
+
+    <h2>一、报告在干什么，以及它的暴击结论</h2>
+    <p>
+      背景是这样的：我们想用扩散模型从 H&amp;E 预测 DAB（也就是 IHC 里某种标志物），输入 H&amp;E、输出一张 128×128 的 DAB 预测图，模型有个把 H&amp;E 喂进去的条件通道。报告想回答「这事儿到底行不行」。结论特别不留情面：<strong>这个任务在逐像素层面根本做不了，不是模型没调好，是数据里就没这个规律。</strong> 我当时第一反应是不信，因为领域里明明一堆 H&amp;E→IHC 的工作做成了啊，可是报告把口径卡得很死，它就是只在「128×128 逐像素 + 跨不同患者图像 + MSE 衡量」这个组合下说话，报告说它从未否定扩散模型在虚拟染色领域本身的可行性。这个边界我后来才真正吃透。
+    </p>
+
+    <h2>二、问题一：模型根本没在「看」条件</h2>
+    <p>
+      报告先锤了第一件事：把条件从「正确的 H&amp;E」换成「别人的 H&amp;E」，输出几乎不变，只差 0.2%–2%。在 t=999（几乎是纯噪声）那个时刻，条件本来是唯一信息来源，换掉它输出只动了 0.0014。这说明网络学的是「不管给什么条件，我都吐一个平均图」，条件从头到尾没进梯度。他们试了 CFG、cross-attention 这些标准解药，都没用。
+    </p>
+
+    <div class="record">
+      <span class="tag">原始记录 · 报告对「条件失效」的解释</span>
+      扩散模型的噪声起点跟条件无关，所以条件难以区分时，梯度退化成拟合边缘分布。这个现象有篇论文叫 <strong>「loss collapse」</strong>，解药叫 <strong>Cocos</strong>——把条件塞进采样起点（z_t），而不是指望它从 concat 通道里自己长出来。这是真问题，但注意：它救的是「条件进不了梯度」，<strong>拿不到本来就不存在的东西</strong>。
+    </div>
+
+    <h2>三、问题二（真正的主问题）：就算条件进了梯度，逐像素答案也不存在</h2>
+    <p>
+      这是报告最硬的部分，由四个独立实验支撑。我当时一个一个追问，因为每一条都反直觉。
+    </p>
+
+    <h3>实验 1：信号随块变大才出现，但 M0 的目标整体在「地板以下」</h3>
+    <div class="record">
+      <span class="tag">原始记录 · 块边长 vs 跨图预测较常数基线</span>
+      <table>
+        <tr><th>块边长</th><th>跨图预测 vs 常数基线</th></tr>
+        <tr><td>8 px</td><td><strong>−16.3%</strong>（输给常数）</td></tr>
+        <tr><td>16 px</td><td>+4.7%</td></tr>
+        <tr><td>32 px</td><td>+11%</td></tr>
+        <tr><td>64 px</td><td>+13.7%</td></tr>
+      </table>
+      8 px 块的预测还不如直接输出一个常数。而 M0 的 128×128 逐像素目标，整体落在错位地板以下。
+    </div>
+
+    <h3>实验 2：错位量到了，但它不是瓶颈</h3>
+    <p>
+      我当时天然觉得「肯定是 H&amp;E 和 IHC 没配准嘛，先修配准」，报告偏偏把这个念头掐死了。H&amp;E 和 IHC 之间有几何错位，中位 <strong>22.5 px</strong>。可是：用估出的平移做 oracle 对齐干预，块级 r 反而更差；全平移扫描扫遍 ±48 px 的<strong>全部 625 个平移</strong>，最好的那个比不平移还差，没有一个能让预测超过常数基线。所以报告说「先修配准」这条路被实测排除了——我本来最想走的捷径，没了。
+    </p>
+
+    <h3>实验 3：跨图块级空间场 r ≈ 0</h3>
+    <div class="record">
+      <span class="tag">原始记录 · 口径对比</span>
+      <table>
+        <tr><th>口径</th><th>同 split 内</th><th>跨图（诚实）</th></tr>
+        <tr><td>块级空间场 r</td><td>0.183</td><td><strong>≈ 0</strong>（MSE 还输给常数基线）</td></tr>
+        <tr><td>per-image 整体强度 r</td><td>—</td><td>0.331，与平凡对照 0.276 无显著差异</td></tr>
+      </table>
+      可迁移的只有「整块/整图平均染多浓」这种组织级统计量，而它要么已经在 z_t 里，要么和一个不用学习的 H&amp;E 亮度统计量分不开。
+    </div>
+
+    <h3>实验 4：结论</h3>
+    <p>
+      「H&amp;E 的哪个像素对应多少 DAB」这件事本身没有跨图可迁移的规律。这不是错位、目标函数、超参的锅，三个独立实验（线性探针、CNN 留出、oracle 对齐干预）都指向同一个结论。我当时其实有点释然，因为这意味着我之前那些「模型没调好」的焦虑，方向就错了。
+    </p>
+
+    <h2>四、那下一步怎么办：轨道 A（改任务）vs 轨道 B（改模型）</h2>
+    <div class="record">
+      <span class="tag">原始记录 · 报告给的两条路线</span>
+      <p><strong>轨道 A（主推）：先改任务，再改模型。</strong>把目标从「逐像素场」降到「组织级统计量」（比如 H-score 路线）。先跑一个小 CNN 在 32 px 块均值上，看能不能超过线性上界 +11%；超不过就不要做 A-2。</p>
+      <p><strong>轨道 B（次要）：M1/Cocos。</strong>修的是「条件进不了梯度」这个真问题，但它拿不到本来就不存在的东西。验收标准变了：不是 loss 曲线好看，而是 32 px 块口径上跨图 MSE 能不能超过平凡基线 11%。只有在留出 r ≥ 0.4 时才做。</p>
+      <p><strong>已经明确不要做的：</strong>不要再调扩散超参；不要指望「先做配准」；不要用 min-SNR / t 重加权当解药。</p>
+    </div>
+
+    <div class="note">
+      <span class="tag">补充解释 · 改 CNN 是不是就「改变了」</span>
+      我当时追问：报告说不要改模型先改任务，可轨道 A 又建议用 CNN，这不矛盾吗？DeepSeek 的解释很干脆——<strong>换 CNN 本身不改变数据里的信息量</strong>。如果只是把 M0 的 UNet 换成 CNN 继续做 128×128 逐像素，没用，因为报告已排除架构是主因（同 UNet 同路径回归支能到 r=0.99，扩散支只有 0.02；cross-attention 无差别；各尺度 r 只从 0.183 到 0.293）。CNN 在轨道 A 里是「探针」——用来在 32px 块均值新口径上问一句「靶子还在不在」。类比很损但很准：不管用毛笔还是钢笔，纸上本来就没有那个字；换笔不改变纸上有没有字，报告建议的是换纸，CNN 只是用来检查新纸上有没有字。
+    </div>
+
+    <h2>五、可是领域里 H&E→IHC 明明做成了啊，矛盾吗？</h2>
+    <p>
+      这是我最后一个、也是最倔的追问。DeepSeek 的答案把我和解了：不矛盾，是口径不同。领域里绝大多数 H&amp;E→IHC 工作，评估用的是<strong>分布级指标（FID、JSD、LPIPS、SSIM）</strong>、<strong>病理医生盲评</strong>、<strong>下游任务验证（跑 HER2 分类器看掉不掉）</strong>，根本不要求每个像素对得上。有研究报告病理医生区分真实和虚拟 IHC 的准确率只有 52%、区分真实和合成 Ki-67 只有 60%，接近随机——这说明<strong>在临床可用的标准下，虚拟染色是成立的</strong>。
+    </p>
+    <p>
+      而报告否定的，是「BCI 连续切片 + 128×128 逐像素 + 完全不微调跨图」这个严苛组合。领域里默认用未配对/弱配对训练（CycleGAN、Star-Diff 不要求逐像素对应），或主动做弹性配准（DGR 框架、Spatial Transformer、BiReC），而报告的全平移扫描只测了<strong>刚性平移</strong>——真实组织形变是非刚性的，平移救不回来不代表弹性配准也救不回来。所以一句话：领域做成是因为没在报告那个组合条件下做；报告否定的正是这个组合，不是扩散模型本身。
+    </p>
+
+    <div class="note">
+      <span class="tag">当前结论</span>
+      BCI 连续切片在逐像素、跨图口径下，H&amp;E 与 DAB 之间没有可迁移的逐像素规律——这是数据属性，不是模型问题。我的交付口径应该接受「组织级染多浓」（H-score 路线）或者换配准好的数据；M1/Cocos 在这两个选择里都只是锦上添花。这条结论对我「死磕逐像素」的执念是一记耳光，也是我需要的停止规则。
+    </div>
+
+    <div class="note">
+      <span class="tag">未解决问题 / 待核实</span>
+      <ul>
+        <li>报告说的「H-score 路线」具体怎么落地成可训练目标，我还没排实验。</li>
+        <li>报告里的探针脚本（probe_p90.py、probe_scale、probe_depth）我还没拿到/跑过，数据来自报告复述，属<strong>待核实</strong>。</li>
+        <li>弹性配准到底能在 BCI 上救回多少，报告没测，我也没测——这是和报告结论唯一可能冲突的点，值得单独验证。</li>
+        <li>跨图 r≈0 是基于 BCI 连续切片；如果换到真正配准好的配对数据，结论未必成立。</li>
+      </ul>
+    </div>
+
+    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+  </article>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
+    </div>
+  </footer>
+</body>
+</html>

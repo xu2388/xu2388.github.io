@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KMP算法匹配次数计算</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>KMP算法匹配次数计算</h1>
+<div class="meta">2025-11-17 · 主题：课程-编程/计算机 · 3 条消息 · 对话编号 256</div>
+<div class="record"><span class="tag">我问</span></div>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<p>现有如下函数</p>
+<pre><code>int fun(SqString s, SqString t) {
+    int i=0, j=0, count=0;
+    int next[MaxSize];
+    GetNext(t,next);
+    while (i&lt;s.length &amp;&amp; j&lt;t.length) {
+        if (j==-1 || s.data[i]==t.data[j]) {
+            i++;
+            j++;
+        }
+        else
+            j=next[j];
+        if (j&gt;=t.length) {
+            count++;
+            j=0;
+        }
+    }
+    return count;
+}</code></pre>
+<p>设有两个顺序存储的字符串S和T，S的串值为&quot;abaabaabcaabaabc&quot;，T的串值为&quot;abaabc&quot;，则函数调用fun(S,T)的返回值为 _______（输入答案）。</p>
+<p>把这个题目做一下，确保你是真正的了解了题目的内涵</p>
+<p>根据给定的函数代码和字符串S=&quot;abaabaabcaabaabc&quot;、T=&quot;abaabc&quot;，模拟KMP匹配过程后，函数返回T在S中出现的次数为2。</p>
+<p>匹配过程简要说明：</p>
+<ul><li>第一次匹配发生在S的索引3至8（子串&quot;abaabc&quot;）。</li><li>第二次匹配发生在S的索引10至15（子串&quot;abaabc&quot;）。</li></ul>
+<p>因此，返回值为2。</p>
+<p>答案：<strong>2</strong></p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/256_KMP算法匹配次数计算.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

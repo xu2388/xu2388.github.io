@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>序列模式挖掘题答案</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>序列模式挖掘题答案</h1>
+<div class="meta">2026-10-16 · 主题：科研-论文调研、课程-数学、课程-编程/计算机 · 15 条消息 · 对话编号 007</div>
+<div class="record"><span class="tag">我问</span><p>全部正确答案给我</p></div>
+<p>以下是这10道题目的全部正确答案及解析：</p>
+<p><strong>1/14 单选题</strong> <strong>答案：A</strong> <strong>解析：</strong> PrefixSpan算法与传统Apriori-like算法（如GSP）的最大区别在于，PrefixSpan采用分治思想，通过投影数据库递归挖掘，<strong>不需要生成候选序列</strong>（Candidate Generation），从而大大提高了效率。B、C、D描述均错误（它可处理长序列，采用深度优先，也不限于事务型数据库）。</p>
+<p><strong>2/14 单选题</strong> <strong>答案：B</strong> <strong>解析：</strong> Spade算法采用垂直数据格式（列式计数/ID列表）。对两个序列的列式计数（即ID列表）进行交集操作，得到的就是这两个序列<strong>共同出现的位置</strong>（即共同包含它们的序列ID），以此来计算支持度。</p>
+<p><strong>3/14 单选题</strong> <strong>答案：B</strong> <strong>解析：</strong> Spade算法中列式计数（垂直数据格式）的主要作用就是<strong>高效存储</strong>每个项/序列出现的位置（SID, EID），并通过<strong>交集计算</strong>快速得出候选序列的支持度，避免多次扫描数据库。</p>
+<p><strong>4/14 单选题</strong> <strong>答案：B</strong> <strong>解析：</strong> PrefixSpan的主要思想是<strong>递归分割序列数据库并挖掘局部频繁模式</strong>。它以频繁单项为前缀，构造投影数据库，不断递归向下挖掘。</p>
+<p><strong>5/14 单选题</strong> <strong>答案：B</strong> <strong>解析：</strong> PrefixSpan算法的深度优先特点体现在：它沿着一个前缀<strong>递归地挖掘每个前缀的局部序列</strong>（投影数据库），直到无法产生更长的频繁序列才回溯。</p>
+<p><strong>6/14 判断题</strong> <strong>答案：B（错）</strong> <strong>解析：</strong> PrefixSpan算法的核心优势之一就是<strong>不需要事先生成所有候选序列</strong>，而是通过投影数据库直接挖掘频繁序列。</p>
+<p><strong>7/14 判断题</strong> <strong>答案：B（错）</strong> <strong>解析：</strong> Spade算法是通过<strong>垂直划分</strong>数据库（使用垂直数据格式/列式计数）来进行挖掘的，而不是“水平划分数据库”。</p>
+<p><strong>8/14 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> Spade算法的核心正是利用垂直数据格式（列式计数），通过不同序列ID列表的交集组合（格理论）来进行序列模式挖掘。</p>
+<p><strong>9/14 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> PrefixSpan算法采用递归投影的方式，属于典型的<strong>深度优先</strong>挖掘序列模式的算法（相对于Apriori-like的广度优先）。</p>
+<p><strong>10/14 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> PrefixSpan和Spade都是经典的序列模式挖掘算法。PrefixSpan基于<strong>投影数据库和深度优先搜索</strong>，Spade基于<strong>垂直数据格式和交叠操作</strong>，两者的策略确实不同。</p>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<p>以下是这4道题目的全部正确答案及解析：</p>
+<p><strong>第7题</strong> <strong>答案：B（错）</strong> <strong>解析：</strong> Spade算法的核心特点是采用<strong>垂直数据格式</strong>（即列式计数/ID列表）来挖掘序列模式，而不是“水平划分数据库”。题目中说“通过水平划分数据库”是错误的。</p>
+<p><strong>第8题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> Spade算法正是基于垂直数据格式，通过列式计数（记录每个项出现的位置ID）并进行交集组合运算，来快速计算支持度并挖掘频繁序列模式。</p>
+<p><strong>第9题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> PrefixSpan算法采用分治思想，通过递归构建投影数据库来挖掘序列。它是沿着一棵前缀树不断向下扩展（深度优先搜索），直到无法产生更长的频繁序列才回溯，属于深度优先挖掘算法。</p>
+<p><strong>第10题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> PrefixSpan和Spade都是经典的序列模式挖掘算法。但PrefixSpan基于<strong>投影数据库和深度优先</strong>策略，Spade基于<strong>垂直数据格式和交叠组合</strong>策略，两者的具体实现策略确实不同。</p>
+<p>针对您再次发送的这几张判断题截图，以下是第7、8、9、10题的正确答案及解析：</p>
+<p><strong>7/14 判断题</strong> <strong>答案：B（错）</strong> <strong>解析：</strong> Spade算法是基于<strong>垂直数据格式</strong>（列式计数）来进行挖掘的，而非“水平划分数据库”。水平划分通常是Apriori-like算法的特点。</p>
+<p><strong>8/14 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> Spade算法的核心机制正是利用<strong>列式计数组合（即垂直数据格式下的ID列表交集操作）</strong>来进行序列模式挖掘。</p>
+<p><strong>9/14 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> PrefixSpan算法通过递归构建投影数据库来挖掘频繁序列，属于典型的<strong>深度优先挖掘</strong>算法。</p>
+<p><strong>10/14 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> PrefixSpan和Spade都是经典的序列模式挖掘算法，但策略不同。PrefixSpan基于<strong>投影数据库和深度优先搜索</strong>，Spade基于<strong>垂直数据格式和交叠（交集）操作</strong>。</p>
+<p>（注：第7题和第10题在上一轮回答中已包含，特此再次为您核对并确认。）</p>
+<p>以下为您最新上传的第11-14题的填空答案及解析：</p>
+<p><strong>11/14 填空客观题</strong> <strong>答案：频繁序列</strong> （或填“频繁”） <strong>解析：</strong> PrefixSpan算法通过递归地扩展序列前缀（Prefix），来挖掘满足最小支持度的<strong>频繁序列</strong>模式。</p>
+<p><strong>12/14 填空客观题</strong> <strong>答案：交集</strong> （或填“交”） <strong>解析：</strong> Spade算法采用垂直数据格式（列式计数），通过计算两个序列ID列表的<strong>交集</strong>操作，来快速生成新的候选序列并统计其支持度。</p>
+<p><strong>13/14 填空客观题</strong> <strong>答案：ID列表</strong> （或填“垂直列表”、“列式计数”、“垂直数据格式”） <strong>解析：</strong> Spade算法采用<strong>ID列表</strong>（ID-list，即垂直数据格式）结构来存储序列的出现位置信息（如SID, EID），以此实现高效的候选生成与计数。</p>
+<p><strong>14/14 填空客观题</strong> <strong>答案：投影</strong> （或填“投影数据库构建”、“投影数据库”） <strong>解析：</strong> 在PrefixSpan算法中，根据当前前缀，递归分解原始序列数据库，生成局部子数据库的过程称为<strong>投影</strong>（Projection），生成的数据库称为投影数据库（Projected Database）。</p>
+<p>至此，您提供的1-14题全部正确答案已为您梳理完毕。祝您答题顺利！</p>
+<p>以下是您最新上传的第1、2、3、4、5、6题的正确答案及详细解析：</p>
+<p><strong>1/16 单选题</strong> <strong>答案：A</strong> <strong>解析：</strong> 在FP-growth算法中，<strong>条件模式基（Conditional Pattern Base）</strong>是指FP树中与该后缀项（或项集）一起出现的前缀路径的集合。即以某个给定项（如项i）为叶子节点，向上回溯到根节点的所有路径的集合。因此，A选项“条件模式基是以某个给定项结尾的所有路径的集合”描述正确。B、C、D的描述均不准确。</p>
+<p><strong>3/16 单选题</strong> <strong>答案：A</strong> <strong>解析：</strong> FP-growth算法的核心优势在于通过构建FP树，<strong>减少了数据库的扫描次数</strong>（只需两次），后续挖掘都在内存中的FP树上进行，从而大大提高了效率。B错误（需要递归挖掘）；C错误（适用于各种数据集）；D错误（存储的是频繁项及计数，而非置信度）。</p>
+<p><strong>2/16 单选题</strong> <strong>答案：A</strong> <strong>解析：</strong> FP-growth算法在递归挖掘过程中，对于每个频繁项，都会<strong>构建其对应的条件FP树（Conditional FP-tree）</strong>，并在条件FP树上递归挖掘。B选项（全排列）显然错误；C选项属于关联规则生成步骤；D选项不是必须的步骤。</p>
+<p><strong>4/16 判断题</strong> <strong>答案：B（错）</strong> <strong>解析：</strong> FP-growth算法是通过递归调用构建条件FP树，属于<strong>深度优先搜索（DFS）</strong>，而非广度优先搜索（BFS）。它沿着一条路径深入挖掘，然后再回溯。</p>
+<p><strong>5/16 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> 与上一题相对，FP-growth算法通过构建FP树，并采用<strong>深度优先（DFS）</strong>的递归挖掘策略来发现频繁项集。表述正确。</p>
+<p><strong>6/16 判断题</strong> <strong>答案：A（对）</strong> <strong>解析：</strong> 这是FP-growth算法相对于Apriori算法最显著的优点之一。Apriori采用“产生-测试”模式，需要<strong>生成候选集</strong>；而FP-growth采用“模式增长”模式，<strong>不需要生成候选项集</strong>，极大提升了性能。</p>
+<p>以下是您最新上传的几道FP-growth算法填空题的正确答案及解析（按题号排序）：</p>
+<p><strong>7/16 填空客观题</strong> <strong>答案：条件FP树</strong> （或填“条件树”） <strong>解析：</strong> FP-growth算法在递归挖掘过程中，通过为每个频繁项构建<strong>条件FP树</strong>（Conditional FP-tree）来不断缩小挖掘范围，直到无法继续生成子树为止。</p>
+<p><strong>8/16 填空客观题</strong> <strong>答案：频繁项</strong> （或填“项”） <strong>解析：</strong> 头指针表（Header Table）用于存储<strong>频繁项</strong>及其支持度计数，并作为链表的头节点，指向FP树中所有该频繁项出现的位置，以便实现快速访问和遍历。</p>
+<p><strong>9/16 填空客观题</strong> <strong>答案：给定项</strong> （或填“特定项”、“某个项”） <strong>解析：</strong> 条件模式基的定义是：在FP树中，以某个<strong>给定项</strong>（或项集）为叶子节点，向上回溯到根节点所经过的所有路径的集合。</p>
+<p><strong>10/16 填空客观题</strong> <strong>答案：候选集</strong> （或填“候选项集”） <strong>解析：</strong> 这是FP-growth与Apriori最核心的区别。Apriori采用“产生-测试”模式，需要反复<strong>生成候选集</strong>并测试支持度；而FP-growth采用模式增长方法，<strong>不需要生成候选集</strong>。</p>
+<p><strong>11/16 填空客观题</strong> <strong>答案：数据</strong> （或填“事务”） <strong>解析：</strong> FP-growth算法由于仅需两次扫描数据库，将数据压缩到内存中的FP树中，因此非常适合处理<strong>数据</strong>规模较大的事务数据库（填“数据集”或“事务”也是常见标准答案）。</p>
+<p><strong>温馨提示：</strong> 填空题由系统自动批阅，通常对关键词有严格匹配。建议优先填写上述括号外的第一个词（如“条件FP树”、“频繁项”、“候选集”等），如果是同义词通常系统也会给分。祝您顺利完成考试！</p>
+<p>以下是您最新上传的第7、8、9、10、11题的正确答案及解析（已按题号顺序整理）：</p>
+<p><strong>7/16 填空客观题</strong> <strong>答案：条件FP树</strong> （或填“条件FP-tree”、“FP树”） <strong>解析：</strong> FP-growth算法在递归挖掘过程中，通过为每个频繁项递归地构建<strong>条件FP树</strong>来不断缩小挖掘范围，从而发现更长的频繁模式。</p>
+<p><strong>8/16 填空客观题</strong> <strong>答案：频繁项</strong> （或填“项”、“频繁项集”） <strong>解析：</strong> FP-growth算法中的头指针表（Header Table）用于存储<strong>频繁项</strong>及其出现次数和支持度等信息，并将FP树中相同项连接起来，以便快速访问。</p>
+<p><strong>9/16 填空客观题</strong> <strong>答案：给定项</strong> （或填“特定项”、“后缀项”） <strong>解析：</strong> 在FP-growth算法中，条件模式基（Conditional Pattern Base）是指FP树中所有包含<strong>给定项</strong>（即以该项为后缀）的前缀路径的集合。</p>
+<p><strong>10/16 填空客观题</strong> <strong>答案：候选项集</strong> （或填“候选集”） <strong>解析：</strong> FP-growth算法与Apriori算法的本质区别在于：Apriori是基于“产生-测试”模式，需要<strong>候选项集</strong>的生成和测试；而FP-growth采用模式增长，<strong>不需要生成候选项集</strong>。</p>
+<p><strong>11/16 填空客观题</strong> <strong>答案：数据</strong> （或填“数据集”） <strong>解析：</strong> FP-growth算法适合处理<strong>数据</strong>规模较大的事务数据库，因为它只需要扫描原始数据库两次，避免了Apriori算法多次扫描数据库的巨大开销。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/007_序列模式挖掘题答案.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>频繁子序列FP树不适用</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>频繁子序列FP树不适用</h1>
+<div class="meta">2026-10-09 · 主题：科研-深度学习/模型、科研-论文调研、课程-数学、课程-编程/计算机 · 3 条消息 · 对话编号 011</div>
+<div class="record"><span class="tag">我问</span><p>对于数据挖掘频繁子序列挖掘，用fptree不是一目了然吗</p></div>
+<p>结论：<strong>FP-Tree 对“频繁项集挖掘”是一目了然的，但对“频繁子序列挖掘”不能直接套。</strong> 因为两者的数据语义根本不同。</p>
+<p>FP-Tree 的本质是：把事务数据库中的<strong>项集</strong>按项频排序、压缩成前缀树，节点计数，然后通过条件模式基递归挖频繁项集。它压缩的是“无序项集”，不是“有序序列”。</p>
+<p>频繁子序列挖掘里，序列是：</p>
+<p>\[ S=\langle s_1,s_2,\dots,s_n\rangle \]</p>
+<p>子序列 \(T=\langle t_1,\dots,t_k\rangle\) 要求存在下标 \(i_1&lt;i_2&lt;\dots&lt;i_k\)，使得对应项相等。也就是说：</p>
+<ul><li><strong>顺序是语义的一部分，不能重排</strong>；</li><li>同一项可以重复出现；</li><li>支持度是“有多少条序列包含该子序列”，不是“有多少事务包含这个项集”。</li></ul>
+<p>而 FP-Tree 在构建时通常会按支持度重排项，并且合并相同前缀。这样会直接丢掉顺序信息。</p>
+<p>举个简单例子：</p>
+<p>\[ S_1=\langle a,b\rangle,\quad S_2=\langle b,a\rangle,\quad S_3=\langle a,b\rangle \]</p>
+<p>如果只看项集，\(\{a,b\}\) 的支持度是 3。 但在序列模式里：</p>
+<ul><li>\(\langle a,b\rangle\) 支持度是 2，出现在 \(S_1,S_3\)；</li><li>\(\langle b,a\rangle\) 支持度是 1，出现在 \(S_2\)。</li></ul>
+<p>如果你直接建 FP-Tree，很可能把 \(S_2\) 的 \(\langle b,a\rangle\) 按频率重排成 \(\langle a,b\rangle\)，于是 \(\langle a,b\rangle\) 和 \(\langle b,a\rangle\) 被混在一起。挖出来的是“a 和 b 经常一起出现”，而不是“a 在 b 前面出现”。这已经不是频繁子序列挖掘了。</p>
+<p>所以，<strong>把每个序列当成一个事务直接丢进 FP-Tree，得到的是频繁项集，不是频繁序列模式。</strong></p>
+<p>那为什么感觉“用树很直观”？因为序列模式确实也可以借用“前缀共享 + 分治投影”的思想，但结构要改。典型算法是 <strong>PrefixSpan</strong>：它找频繁单项，然后构造前缀投影数据库，递归挖掘，保留序列顺序。它和 FP-Growth 的思想相似，但不是原版 FP-Tree。其他还有 SPADE、SPAM、GSP 等。</p>
+<p>所以一句话：</p>
+<ul><li><strong>频繁项集</strong>：FP-Tree 很合适，一目了然；</li><li><strong>频繁子序列</strong>：顺序是命根子，原版 FP-Tree 不适用；</li><li>想用树/投影思想，应该用 <strong>PrefixSpan、序列投影树</strong> 这类方法，而不是直接套 FP-Tree。</li></ul>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/011_频繁子序列FP树不适用.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

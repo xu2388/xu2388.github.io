@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>数据库范式与码求解</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>数据库范式与码求解</h1>
+<div class="meta">2026-04-16 · 主题：课程-编程/计算机 · 3 条消息 · 对话编号 211</div>
+<div class="record"><span class="tag">我问</span><p>我把1-10题按顺序完整整理成文字版了，包含题目描述、选项和填空位，方便你直接复制使用：</p>
+<hr /></div>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<ol><li><strong>题目1</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，$R$最高可达到以下哪种范式级别。 函数依赖：$A→B,\ A→C,\ D→A$ A. BCNF B. 3NF C. 1NF D. 2NF</p>
+<ol><li><strong>题目2</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，$R$最高可达到以下哪种范式级别。 函数依赖：$ABD→C$ A. 2NF B. 1NF C. 3NF D. BCNF</p>
+<ol><li><strong>题目3</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，$R$最高可达到以下哪种范式级别。 函数依赖：$B→C,\ B→D,\ CD→A$ A. 1NF B. 3NF</p>
+<ol><li><strong>题目4</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，$R$最高可达到以下哪种范式级别。 函数依赖：$B→D,\ AB→C$ A. 1NF B. 2NF C. BCNF D. 3NF</p>
+<ol><li><strong>题目5</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，$R$最高可达到以下哪种范式级别。 函数依赖：$BCD→A,\ A→C$ A. 2NF B. BCNF C. 3NF D. 1NF</p>
+<hr />
+<ol><li><strong>题目6</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，其码是什么。 函数依赖：$A→B,\ A→C,\ D→A$ 第1空：________</p>
+<ol><li><strong>题目7</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，其码是什么。 函数依赖：$ABD→C$ 第1空：________</p>
+<ol><li><strong>题目8</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，其码是什么。 函数依赖：$B→C,\ B→D,\ CD→A$ 第1空：________</p>
+<ol><li><strong>题目9</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，其码是什么。 函数依赖：$B→D,\ AB→C$ 第1空：________</p>
+<ol><li><strong>题目10</strong></li></ol>
+<p>给定关系模式$R(A,B,C,D)$，则在下述函数依赖集合下，其码是什么。 函数依赖：$BCD→A,\ A→C$ 第1空：________ 第2空：________</p>
+<p>做一下</p>
+<ol><li><strong>D</strong>（2NF）  </li></ol>
+<p>候选码为 D，存在传递依赖 D→A→B 和 D→A→C，不满足 3NF，但满足 2NF。</p>
+<ol><li><strong>D</strong>（BCNF）  </li></ol>
+<p>候选码为 ABD，唯一函数依赖 ABD→C 的决定因素是候选码，满足 BCNF。</p>
+<ol><li><strong>2NF</strong>（选项仅有 1NF 和 3NF，但实际应为 2NF）  </li></ol>
+<p>候选码为 B，存在传递依赖 B→CD→A，不满足 3NF，但单属性候选码自动满足 2NF。</p>
+<ol><li><strong>A</strong>（1NF）  </li></ol>
+<p>候选码为 AB，存在部分依赖 B→D（D 非主属性，B 为候选码真子集），不满足 2NF，仅满足 1NF。</p>
+<ol><li><strong>C</strong>（3NF）  </li></ol>
+<p>候选码为 BCD 和 ABD，所有函数依赖满足 3NF 条件（A→C 中 C 为主属性），但不满足 BCNF（A 不是超码）。</p>
+<ol><li><strong>D</strong>  </li><li><strong>ABD</strong>  </li><li><strong>B</strong>  </li><li><strong>AB</strong>  </li><li><strong>ABD</strong> 和 <strong>BCD</strong>（顺序不限）</li></ol>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/211_数据库范式与码求解.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

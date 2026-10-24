@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>科研博客 · 我的虚拟染色探索之路</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">科研博客</h1>
+      <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
+      <nav class="site-nav">
+        <a href="#threads">研究方向</a>
+        <a href="#articles">文章与资料</a>
+        <a href="articles/source_audit.html">资料库</a>
+        <a href="#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="intro" class="intro">
+      <p>
+        这是我从豆包、DeepSeek 等对话里整理出来的一年的科研轨迹，加上我自己的随笔。
+        主线是<b> H&amp;E 到 IHC 的虚拟染色</b>：用深度学习把普通病理切片"染"成免疫组化染色，
+        省掉真实染色的人力与试剂成本。这里既有方法探索，也有大量自我质疑和踩坑——
+        我把"我当初怎么想的、后来怎么被数据打脸"都原样留下来了，没做光滑处理。
+      </p>
+    </section>
+
+    <section id="threads" class="block">
+      <h2>研究方向地图</h2>
+      <p class="muted">我这一年真正在做的线（点进文章看细节；带 ⌛ 的是还没写成文章的）。</p>
+      <ul class="thread-list">
+        <li>
+          <span class="tag">主线</span>
+          <a href="articles/001-虚拟染色主线.html">H&amp;E → IHC 虚拟染色：从扩散模型到 CUT</a>
+          <span class="desc">整套任务的起点、结构控制难题、为什么放弃扩散转投 CUT-GAN、浓度域的念头。</span>
+        </li>
+        <li>
+          <span class="tag warn">核心难题</span>
+          <a href="articles/002-逐像素跨图不可迁移.html">逐像素跨图不可迁移：一份归因报告的硬数据</a>
+          <span class="desc">M0 报告锤死的事：H&E 预测 DAB 在逐像素口径下数据里就没规律。8px 输给常数、625 平移全救不回。</span>
+        </li>
+        <li>
+          <span class="tag warn">核心难题</span>
+          <a href="articles/深度学习到底在干什么_第二版.html">「你没写进 loss 的东西，它一定不会自己懂」</a>
+          <span class="desc">浓度坍缩归因到 InstanceNorm 的尺度不敏感——这条从我的随笔里能直接看到根因。</span>
+        </li>
+        <li>
+          <span class="tag">调研</span>
+          <a href="articles/source_audit.html">相关方法横向梳理 / 资料源审计</a>
+          <span class="desc">MIU-Diff、Star-Diff、PST-Diff、HistDiT、CUT-GAN、浓度域先例（Agilent 专利 Beer-Lambert）等。</span>
+        </li>
+        <li>
+          <span class="tag">工程</span>
+          <span class="tag warn">⌛</span>
+          <a href="#">AutoDL / 训练日常与失败排查</a>
+          <span class="desc">服务器经常关机、本地无 GPU，远程调试的折腾——待从对话里提炼。</span>
+        </li>
+        <li>
+          <span class="tag">决策</span>
+          <span class="tag warn">⌛</span>
+          <a href="#">继续深究 vs 收口投稿</a>
+          <span class="desc">论文框架偏弱时的路线纠结与最终判断——待提炼。</span>
+        </li>
+      </ul>
+    </section>
+
+    <section id="articles" class="block">
+      <h2>文章与资料</h2>
+      <p class="muted">
+        按类别分组：<b>研究文章</b>记录我的虚拟染色探索；<b>随笔</b>是我写的科普；
+        <b>资料库</b>是审计与全量清单，保证 270 条对话每一条都可溯源到原始档案。
+      </p>
+      <!-- ARTICLES_START -->
+<section class="block">
+  <h2>研究文章</h2>
+  <ul class="article-list">
+  <li>
+    <a href="articles/001-虚拟染色主线.html">虚拟染色这一年：从扩散模型到 CUT，一条路我走死了又走活了</a><span class="date">2026-10-24</span><br />
+    <span class="tag">主线</span> <span class="tag">虚拟染色</span> <span class="tag">H&E→IHC</span> <span class="tag">扩散模型</span> <span class="tag">CUT/GAN</span>
+    <span class="desc">我一年多虚拟染色研究的完整自述：从扩散模型起步、撞上「有色调无结构」、找扩散里的 CUT、因为训练成本转投 CUT-GAN、再到浓度域和逐像素跨图不可迁移的硬结论。保留了我自己的困惑、自我推翻和原始数据。</span>
+  </li>
+  <li>
+    <a href="articles/002-逐像素跨图不可迁移.html">为什么 H&E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据</a><span class="date">2026-10-24</span><br />
+    <span class="tag">主线</span> <span class="tag">归因</span> <span class="tag">逐像素跨图</span> <span class="tag">BCI数据集</span> <span class="tag">H-score</span>
+    <span class="desc">一份内部 M0 归因报告告诉我：H&E 预测 DAB 在逐像素、跨图口径下根本不可学，不是模型没调好，是数据里没这个规律。本文保留全部硬数据（8px 输给常数 −16.3%、625 个平移全救不回、跨图块级 r≈0、22.5px 错位）和我当时的困惑。</span>
+  </li>
+</ul>
+</section>
+<section class="block">
+  <h2>随笔 · 科普</h2>
+  <ul class="article-list">
+  <li>
+    <a href="articles/深度学习到底在干什么.html">深度学习到底在干什么（初稿）</a><span class="date">2026-10-23</span><br />
+    <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
+    <span class="desc">作者 2026-10-23 写的第一版随笔：用大白话讲清深度学习本质在干什么，例子来自自己的虚拟染色踩坑。</span>
+  </li>
+  <li>
+    <a href="articles/深度学习到底在干什么_第二版.html">深度学习到底在干什么（定稿）</a><span class="date">2026-10-23</span><br />
+    <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
+    <span class="desc">作者偏好的定稿版本：一段一长句、逗号串到底的第一人称风格，讲清深度学习本质在干什么。</span>
+  </li>
+</ul>
+</section>
+<section class="block">
+  <h2>知识库 · 全部学习对话</h2>
+  <ul class="article-list">
+  <li>
+    <a href="articles/knowledge-index.html">知识库 · 全部学习对话（270 条）</a><span class="date">2026-10-24</span><br />
+    <span class="tag">知识库</span> <span class="tag">全量</span> <span class="tag">学习</span>
+    <span class="desc">把 DeepSeek 全部 270 条对话转成可浏览的问答存档，按主题分组，一条不丢。每条都可点进去看完整我问+AI回答，并链接回未删减的原始档案。</span>
+  </li>
+</ul>
+</section>
+<section class="block">
+  <h2>资料库 · 审计与清单</h2>
+  <ul class="article-list">
+  <li>
+    <a href="articles/deepseek_inventory.html">DeepSeek 对话全量清单（270 条）</a><span class="date">2026-10-24</span><br />
+    <span class="tag">清单</span> <span class="tag">覆盖率</span> <span class="tag">DeepSeek</span>
+    <span class="desc">270 个 DeepSeek 对话的逐条清单：ID、条数、时间范围、主题、对应原始档案文件名。每一条都分配了唯一编号，方便溯源到 raw_exports/deepseek_raw/。</span>
+  </li>
+  <li>
+    <a href="articles/source_audit.html">资料源审计报告（阶段 A）</a><span class="date">2026-10-24</span><br />
+    <span class="tag">审计</span> <span class="tag">资料源</span> <span class="tag">覆盖率</span>
+    <span class="desc">记录本项目实际能访问的资料来源及其读取状态：DeepSeek 已全量、豆包 agent 部分、网页主聊天待导出、本地数据库不可解析。明确区分已读/部分读/读不到。</span>
+  </li>
+</ul>
+</section>
+  <!-- ARTICLES_END -->
+    </section>
+
+    <section id="about" class="block">
+      <h2>关于</h2>
+      <p>
+        这个博客的内容来自我和 AI 助手（豆包、DeepSeek、WorkBuddy）一年多来的科研与学习对话，
+        由 WorkBuddy 自动整理归纳。原则是：<b>原始信息尽量不删减、思考过程原样保留、
+        每条结论尽量能溯源到具体对话</b>。目的是把一次性的聊天变成一份真正属于我自己的资料库。
+      </p>
+      <p class="muted">
+        技术栈：纯静态 HTML + CSS，零依赖，可直接托管到 GitHub Pages / Vercel / 任意静态空间。
+        新增文章：把 Markdown 放进项目、用 <code>md_to_html.py</code> 转成 <code>articles/</code> 下的页面，
+        再跑 <code>build_index.py</code> 即可自动收录。
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
+    </div>
+  </footer>
+</body>
+</html>

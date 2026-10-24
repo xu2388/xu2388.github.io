@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>对偶问题外逼近算法示例</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>对偶问题外逼近算法示例</h1>
+<div class="meta">2026-04-22 · 主题：课程-编程/计算机 · 6 条消息 · 对话编号 208</div>
+<div class="record"><span class="tag">我问</span><p>对偶问题的外逼近算法我不会，请你给我一个具体的例子</p></div>
+<div class="record"><span class="tag">我问</span><p>懂了一点了，但是不是完全的懂</p></div>
+<h2>对偶问题的外逼近算法——一个具体例子</h2>
+<p>外逼近（Outer Approximation）是一种常用于求解凸优化问题（尤其是混合整数非线性规划）对偶的迭代算法。其核心思想是：将对偶问题的可行域用一个多面体（初始为简单盒子）从外部逼近，每次求解一个线性松弛子问题得到候选点，再根据该点处对偶函数的梯度（或次梯度）添加一个线性割平面（即支撑超平面），逐步收紧多面体，直到收敛到最优解。</p>
+<p>下面通过一个<strong>一维凸二次规划</strong>的例子，完整演示外逼近算法如何求解其对偶问题。</p>
+<p>考虑原问题： \[ \begin{aligned} \min_{x,y} \quad &amp; x^2 + y^2 \\ \text{s.t.} \quad &amp; x + y \geq 1, \\ &amp; x \geq 0,\; y \geq 0. \end{aligned} \] 这是一个凸二次规划，最优解为 \(x=y=0.5\)，最优值 \(0.5\)。</p>
+<p>构造拉格朗日函数（乘子 \(\lambda \geq 0\)）： \[ L(x,y,\lambda)=x^2+y^2+\lambda(1-x-y). \] 对偶函数： \[ g(\lambda)=\inf_{x\ge0,\,y\ge0} L(x,y,\lambda). \] 对于固定的 \(\lambda\ge0\)，无约束最小值点 \(x=y=\lambda/2\)（满足非负），故 \[ g(\lambda)=\frac{\lambda^2}{4}+\frac{\lambda^2}{4}+\lambda\Bigl(1-\frac{\lambda}{2}-\frac{\lambda}{2}\Bigr)=\lambda-\frac{\lambda^2}{2}. \] 因此对偶问题为： \[ \max_{\lambda\ge0} \quad f(\lambda)=\lambda-\frac{\lambda^2}{2}. \] 这是一个凹函数（开口向下的二次函数），最大值在 \(\lambda=1\) 处取得，最大值为 \(0.5\)，与原问题最优值一致（强对偶成立）。</p>
+<p>将对偶问题转化为等价凸最小化问题： \[ \min_{\lambda\ge0} \quad h(\lambda)=-f(\lambda)=\frac{\lambda^2}{2}-\lambda. \] \(h(\lambda)\) 是凸函数。外逼近（切割平面法）求解该一维凸问题。</p>
+<p><strong>算法步骤</strong>：</p>
+<ul><li>初始化：选取初始点 \(\lambda_0\)（例如 \(\lambda_0=0\)），构造第一个线性下界割平面。</li><li>迭代：在第 \(k\) 步，已有若干线性下界约束 \(h(\lambda) \ge \ell_i(\lambda)\)。求解线性松弛问题：</li></ul>
+<p>\[ \min_{t,\lambda} \; t \quad \text{s.t.} \quad t \ge \ell_i(\lambda),\; \lambda\in[0,U],\; t\in\mathbb{R}, \] 得到最优解 \((\lambda_k, t_k)\)。</p>
+<ul><li>计算真实函数值 \(h(\lambda_k)\)。若 \(t_k \ge h(\lambda_k) - \varepsilon\)（即下界与真实值足够接近），停止；否则在 \(\lambda_k\) 处添加切平面：</li></ul>
+<p>\[ h(\lambda) \ge h(\lambda_k) + h&#x27;(\lambda_k)(\lambda-\lambda_k). \]</p>
+<ul><li>重复。</li></ul>
+<p>其中 \(h&#x27;(\lambda)=\lambda-1\)。取上界 \(U=10\)（足够大）。</p>
+<h4>迭代过程</h4>
+<p><strong>第1步</strong>（\(k=0\)）：初始点 \(\lambda_0=0\)，\(h(0)=0\)，\(h&#x27;(0)=-1\)。添加切平面： \[ h(\lambda) \ge 0 + (-1)(\lambda-0) = -\lambda. \] 线性松弛问题： \[ \min t \quad \text{s.t.} \quad t \ge -\lambda,\; \lambda\in[0,10]. \] 最优解在 \(\lambda=10\) 处，\(t=-10\)，得 \(\lambda_1=10\)。计算真实值 \(h(10)=10^2/2-10=50-10=40\)，下界 \(t=-10\)，差距很大，继续。</p>
+<p><strong>第2步</strong>：在 \(\lambda_1=10\) 处，\(h(10)=40\)，\(h&#x27;(10)=9\)，添加切平面： \[ h(\lambda) \ge 40 + 9(\lambda-10) = 9\lambda-50. \] 现有两个线性下界： \[ t \ge -\lambda,\quad t \ge 9\lambda-50. \] 求解线性松弛： \[ \min t \quad \text{s.t.} \quad t \ge -\lambda,\; t \ge 9\lambda-50,\; \lambda\in[0,10]. \] 最优解为两条直线的交点：\(-\lambda = 9\lambda-50 \Rightarrow \lambda=5,\; t=-5\)。得 \(\lambda_2=5\)，\(t=-5\)。真实值 \(h(5)=25/2-5=12.5-5=7.5\)，下界 \(t=-5\)，差距 \(12.5\)，继续。</p>
+<p><strong>第3步</strong>：在 \(\lambda_2=5\) 处，\(h(5)=7.5\)，\(h&#x27;(5)=4\)，添加切平面： \[ h(\lambda) \ge 7.5 + 4(\lambda-5) = 4\lambda-12.5. \] 三个下界： \[ t \ge -\lambda,\; t \ge 9\lambda-50,\; t \ge 4\lambda-12.5. \] 求解线性松弛：需要找到 \(\lambda\) 使 \(\max\{-\lambda,\;9\lambda-50,\;4\lambda-12.5\}\) 最小化。比较交点：</p>
+<ul><li>\(-\lambda = 4\lambda-12.5 \Rightarrow \lambda=2.5,\; t=-2.5\)，此时 \(9\lambda-50=-27.5\)，最大值为 \(-2.5\)。</li><li>\(4\lambda-12.5 = 9\lambda-50 \Rightarrow \lambda=7.5,\; t=17.5\)，此时 \(-\lambda=-7.5\)，最大值为 \(17.5\)。</li><li>\(-\lambda = 9\lambda-50 \Rightarrow \lambda=5,\; t=-5\)，此时 \(4\lambda-12.5=7.5\)，最大值为 \(7.5\)。</li></ul>
+<p>最小值出现在 \(\lambda=2.5\)，\(t=-2.5\)。得 \(\lambda_3=2.5\)，\(t=-2.5\)。真实值 \(h(2.5)=6.25/2-2.5=3.125-2.5=0.625\)，下界 \(t=-2.5\)，差距 \(3.125\)，继续。</p>
+<p>后续迭代会逐步逼近真实最优解 \(\lambda^*=1\)（\(h(1)=0.5\)），当 \(\lambda\) 接近 \(1\) 时，下界与真实值之差趋于 \(0\)。例如再添加几次割平面后，最优解会收敛到 \(\lambda=1\)，最小值为 \(0.5\)。</p>
+<p>通过上述一维例子，我们清楚地展示了外逼近算法如何求解对偶问题：</p>
+<ul><li>将对偶问题（凹函数最大化）转为凸函数最小化；</li><li>用一系列线性下界（切平面）从外部逼近凸函数；</li><li>每次求解一个线性规划（实际上一维问题直接解析求解）得到候选点；</li><li>根据候选点处的梯度添加新的切平面，逐步收紧可行域，最终收敛到全局最优。</li></ul>
+<p>对于高维问题，算法原理相同，只是线性松弛子问题需要调用LP求解器。这个例子直观体现了外逼近“从外部逐步切割”的本质。</p>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<p>明白了，你感觉“懂了一点但不是完全懂”很正常，因为外逼近算法涉及对偶、割平面、线性松弛等多个概念。让我换一种更直观的方式来解释，<strong>不引入太多数学符号</strong>，只讲核心思想，然后用你刚才看到的一维例子画个图（文字描述）来帮你建立几何直觉。</p>
+<h2>一、先忘记数学，想象一个场景</h2>
+<p>假设你想知道一座山（凸函数 \(h(\lambda)\)）的最低点在哪儿，但你不能直接看到整座山，只能<strong>一次一次地测量某个点的位置和坡度</strong>。</p>
+<ul><li>你一开始完全不知道山形，就在山脚下随便选一个点（比如 \(\lambda=0\)），测一下该点的<strong>高度</strong>和<strong>坡度</strong>。</li><li>根据这个点的坡度，你画一条<strong>直线</strong>（切平面），这条直线<strong>完全在山的下方</strong>（因为凸函数在切线的上方）。</li><li>这条直线就是你对山的<strong>一个下界估计</strong>：真实的山一定在这条直线的上方。</li><li>然后你问：既然山一定在这条直线上方，那<strong>直线上最低的点</strong>在哪里？这个最低点就是你的下一个候选点（比如 \(\lambda=10\)）。</li><li>到了新点，再测真实高度和坡度，画第二条直线。现在你有了两条直线，它们共同构成一个<strong>更紧的下界</strong>（取每条直线的最大值）。这个下界就像一个<strong>从下方支撑山的帐篷</strong>。</li><li>再次找这个“帐篷”的最低点，得到下一个候选点…… 重复下去，“帐篷”的最低点会逐渐逼近真实山的最低点。</li></ul>
+<p><strong>为什么叫“外逼近”</strong>？ 因为我们每次用线性不等式（切平面）来构造一个<strong>多面体</strong>（这里是一维的线段区间），这个多面体<strong>完全包含真实可行域</strong>（或者包含真实函数图像的下方区域），并且从<strong>外部</strong>不断收缩，直到紧贴真实函数。</p>
+<h2>二、回到你刚才的例子，用“找最低点”重新走一遍</h2>
+<p>我们对偶问题转化成了： \[ \min_{\lambda\ge0} h(\lambda)=\frac{\lambda^2}{2}-\lambda \] 这是一个<strong>凸函数</strong>，形状像开口向上的抛物线，最低点在 \(\lambda=1\)，最低值为 \(-0.5\)？（注意检查：\(h(1)=0.5-1=-0.5\)？不对，之前我们写 \(h(\lambda)=\lambda^2/2-\lambda\)，代入1得 \(0.5-1=-0.5\)，但原对偶最大值是0.5，所以最小化 \(h\) 应该得到 \(-0.5\)。啊，之前例子中我写的 \(h(\lambda)=\lambda^2/2-\lambda\) 确实在 \(\lambda=1\) 取 \(-0.5\)，与对偶最大值0.5相差一个负号，没问题，因为我们最小化的是负的对偶函数。）</p>
+<p>但是之前计算切平面时，我用了 \(h(0)=0\) 和 \(h&#x27;(0)=-1\)，得到切平面 \(h(\lambda)\ge -\lambda\)。而真实 \(h(\lambda)\) 在 \(\lambda=0\) 时是0，在 \(\lambda=1\) 时是-0.5。你可以看到，这条切线在 \(\lambda=1\) 处给出 \(-1\)，而真实值是 \(-0.5\)，所以切线确实是下界（-1 &lt; -0.5）。</p>
+<p>然后我们找<strong>线性下界函数的最大值</strong>的最小点，相当于求 \(\min_\lambda \max\{ -\lambda, 9\lambda-50, \dots \}\)。这个最大值函数就是“帐篷”的形状，它的最低点就是下一个试探点。</p>
+<p>经过几次迭代，帐篷的最低点会从 \(\lambda=10\) 跳到5，再跳到2.5，然后越来越接近1。</p>
+<h2>三、你可能还没完全理解的几个点</h2>
+<p>因为我们暂时不知道 \(h(\lambda)\) 的完整形状，只知道它大于等于一些线性函数。那么当前最好的下界就是这些线性函数的最大值。我们想看看在这个下界之下，<strong>最小的可能值</strong>是多少，这个最小值对应的 \(\lambda\) 就是一个有希望的新点。</p>
+<p>对于凸函数，每次添加切平面都会排除掉一大块不可能包含最优解的区域。在一维情况下，收敛是指数级的（很快）。上面例子中从10到5到2.5到… 确实很快逼近1。</p>
+<p>常用技巧：把凹函数 \(f(\lambda)\) 最大化等价于凸函数 \(-f(\lambda)\) 最小化，然后对 \(-f(\lambda)\) 做外逼近。或者直接对凹函数用<strong>上逼近</strong>（从上方切），本质一样。</p>
+<ul><li><strong>内逼近</strong>：从可行域内部逐渐扩大（比如多面体内部逼近凸集），用于某些内点法。</li><li><strong>外逼近</strong>：从外部用一个简单集合（比如一个大的多面体）包含真实可行域，然后通过切割不断缩小，直到逼近真实边界。这里我们的“可行域”是指<strong>对偶变量的可行域</strong>（通常很简单，如 \(\lambda \ge 0\)），而切割是在<strong>目标函数的下方</strong>做线性近似。</li></ul>
+<h2>四、一个更简单的类比帮你彻底搞懂</h2>
+<p>想象你要用一个<strong>多边形</strong>（初始是一个很宽的矩形）去<strong>包围</strong>一个<strong>圆</strong>（真实可行域）。</p>
+<ul><li>一开始矩形很大，完全包含圆（外逼近）。  </li><li>你找到矩形离圆最远的点（比如右上角），发现它不在圆内，于是你画一条直线把那个角切掉（添加线性约束）。  </li><li>现在多边形变少了，但仍然包含圆。  </li><li>重复：每次找到多边形边界上离圆最远的点，切掉一块。  </li><li>最终多边形无限逼近圆。</li></ul>
+<p>在我们的算法中，那个“圆”就是凸函数 \(h(\lambda)\) 的图像下方的区域（epigraph），我们用一个多面体（由线性不等式定义）从外部逼近它，每次切掉一块，直到多面体的最低点接近真实最低点。</p>
+<h2>五、你现在可以问自己三个问题来检查理解</h2>
+<ol><li>为什么切平面一定是真实函数的下界？（凸函数性质）</li><li>为什么每次求解线性松弛得到的新点，一定比之前的点更接近最优解？（因为下界被提高了）</li><li>如果函数不是凸的，这个算法还可能有效吗？（不行，会陷入局部最优，切平面不一定全局下界）</li></ol>
+<p>如果这三个问题你都能回答，那就真正懂了。如果还有卡住的地方，告诉我具体哪一步让你困惑，我再帮你拆解。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/208_对偶问题外逼近算法示例.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

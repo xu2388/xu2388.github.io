@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Java覆盖重载讲解</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>Java覆盖重载讲解</h1>
+<div class="meta">2026-04-02 · 主题：课程-编程/计算机 · 6 条消息 · 对话编号 222</div>
+<div class="record"><span class="tag">我问</span><p>给我讲解一下Java的覆盖和重载</p></div>
+<div class="record"><span class="tag">我问</span><p>关于java 多线程的基础知识也请你给我讲解一下，就是基础的一些知识</p></div>
+<p>在 Java 中，<strong>覆盖（Override）</strong> 和 <strong>重载（Overload）</strong> 是实现多态性的两种核心机制。虽然名字相似，但它们的作用、规则和适用场景完全不同。</p>
+<p>下面我来为你详细讲解。</p>
+<hr />
+<p><strong>定义</strong>：覆盖是指子类重新定义（实现）父类中已有的方法。它体现了<strong>继承</strong>的特性，属于运行时多态（动态绑定）。</p>
+<h4>关键规则：</h4>
+<ol><li><strong>方法签名必须相同</strong>：方法名、参数列表（个数、顺序、类型）必须完全一致。</li><li><strong>返回值类型</strong>：</li></ol>
+<ul><li>可以是原返回类型的子类（<strong>协变返回类型</strong>，Java 5+）。</li><li>如果是基本数据类型或 <code>void</code>，必须与原方法完全相同。</li></ul>
+<ol><li><strong>访问修饰符</strong>：子类方法的访问权限<strong>不能比父类更严格</strong>。</li></ol>
+<ul><li>例如：父类是 <code>protected</code>，子类可以是 <code>public</code> 或 <code>protected</code>，但不能是 <code>private</code>。</li></ul>
+<ol><li><strong>异常</strong>：子类方法声明的异常<strong>不能抛出新的或更宽的受检异常</strong>（可以抛出更少、更窄的异常，或不抛出异常）。</li><li><strong>静态方法不能覆盖</strong>：如果子类定义了与父类同名的静态方法，这叫“隐藏（Hiding）”，而非覆盖。</li><li><strong><code>final</code> 方法不能被覆盖</strong>。</li><li><strong>构造方法不能被覆盖</strong>。</li></ol>
+<h4>示例：</h4>
+<pre><code>class Animal {
+    public void sound() {
+        System.out.println(&quot;Animal makes a sound&quot;);
+    }
+}
+
+class Dog extends Animal {
+    @Override   // 注解，用于编译器检查，推荐使用
+    public void sound() {
+        System.out.println(&quot;Dog barks&quot;);
+    }
+}
+
+// 使用
+Animal myDog = new Dog();
+myDog.sound(); // 输出: Dog barks （运行时决定调用哪个方法）</code></pre>
+<hr />
+<p><strong>定义</strong>：重载是指在<strong>同一个类</strong>中，定义多个同名方法，但它们的<strong>参数列表不同</strong>。它体现了<strong>编译时多态</strong>（静态绑定）。</p>
+<h4>关键规则：</h4>
+<ol><li><strong>方法名相同</strong>。</li><li><strong>参数列表必须不同</strong>：</li></ol>
+<ul><li>参数个数不同。</li><li>参数类型不同。</li><li>参数顺序不同（但通常不推荐依赖顺序，易混淆）。</li></ul>
+<ol><li><strong>与返回类型无关</strong>：仅改变返回类型不是重载，编译器会报错。</li><li><strong>与访问修饰符无关</strong>：可以有不同的访问权限。</li><li><strong>与异常声明无关</strong>：可以声明不同的异常。</li></ol>
+<h4>示例：</h4>
+<pre><code>class MathUtil {
+    // 重载方法1
+    public int add(int a, int b) {
+        return a + b;
+    }
+    
+    // 重载方法2：参数个数不同
+    public int add(int a, int b, int c) {
+        return a + b + c;
+    }
+    
+    // 重载方法3：参数类型不同
+    public double add(double a, double b) {
+        return a + b;
+    }
+}
+
+// 调用时，编译器根据传入的参数决定调用哪个版本
+MathUtil math = new MathUtil();
+math.add(5, 10);        // 调用 int add(int, int)
+math.add(5, 10, 15);    // 调用 int add(int, int, int)
+math.add(5.0, 10.0);    // 调用 double add(double, double)</code></pre>
+<hr />
+<table>
+<tr><th>特性</th><th>覆盖（Override）</th><th>重载（Overload）</th></tr>
+<tr><td><strong>发生范围</strong></td><td>子类与父类之间</td><td>同一个类中</td></tr>
+<tr><td><strong>方法签名</strong></td><td>必须相同（方法名+参数列表）</td><td>必须不同（参数列表）</td></tr>
+<tr><td><strong>返回类型</strong></td><td>相同或其子类</td><td>无关，可任意</td></tr>
+<tr><td><strong>访问修饰符</strong></td><td>不能比父类更严格</td><td>无限制</td></tr>
+<tr><td><strong>异常</strong></td><td>不能抛出更宽泛的受检异常</td><td>无限制</td></tr>
+<tr><td><strong>多态类型</strong></td><td>运行时多态（动态绑定）</td><td>编译时多态（静态绑定）</td></tr>
+<tr><td><strong>注解支持</strong></td><td>可使用 <code>@Override</code> 检查</td><td>无专用注解</td></tr>
+<tr><td><strong>静态方法</strong></td><td>不能覆盖，只能隐藏</td><td>可以重载（静态方法也可重载）</td></tr>
+</table>
+<hr />
+<ol><li><strong>重载能根据返回类型区分吗？</strong>  </li></ol>
+<p>不能。以下代码编译会报错：</p>
+<pre><code>    public int show() { return 1; }
+    public String show() { return &quot;1&quot;; } // 编译错误</code></pre>
+<ol><li><strong>私有方法能被覆盖吗？</strong>  </li></ol>
+<p>不能。私有方法对子类不可见，子类中定义同名方法属于新方法，不是覆盖。</p>
+<ol><li><strong>覆盖时，子类方法能否抛出比父类更多的异常？</strong>  </li></ol>
+<p>对于受检异常，不能；对于运行时异常，无限制。</p>
+<ol><li><strong>构造方法能重载吗？</strong>  </li></ol>
+<p>可以。构造方法可以重载，提供多种初始化对象的方式。</p>
+<hr />
+<p>如果你正在准备面试或实际编码，记住一个简单的判断方式：</p>
+<ul><li>看<strong>方法名和参数列表</strong>：如果相同，且在不同类（继承关系）中 → 检查是否覆盖。</li><li>如果方法名相同但参数列表不同 → 重载。</li><li>如果方法名相同、参数列表相同、返回类型不同 → 编译错误（除非是协变返回的覆盖情况）。</li></ul>
+<p>如果有具体的代码场景需要分析，也可以告诉我，我可以帮你进一步拆解。</p>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<p>我们来系统地讲解 Java 多线程的基础知识。多线程是 Java 并发编程的核心，掌握这些基础对后续深入理解并发至关重要。</p>
+<hr />
+<h2>1. 进程与线程</h2>
+<ul><li><strong>进程</strong>：操作系统资源分配的基本单位，拥有独立的内存空间。每个 Java 程序运行就是一个进程。</li><li><strong>线程</strong>：进程内的执行单元，共享进程的内存空间（如堆、方法区），每个线程拥有独立的程序计数器、栈和局部变量。线程是 CPU 调度的最小单位。</li></ul>
+<p><strong>为什么使用多线程？</strong></p>
+<ul><li>提高 CPU 利用率（充分利用多核）</li><li>提升响应速度（异步处理）</li><li>简化建模（将复杂任务分解为多个独立执行流）</li></ul>
+<hr />
+<h2>2. 创建线程的三种方式</h2>
+<pre><code>class MyThread extends Thread {
+    @Override
+    public void run() {
+        System.out.println(&quot;线程运行中：&quot; + Thread.currentThread().getName());
+    }
+}
+
+// 使用
+MyThread t1 = new MyThread();
+t1.start();  // 启动线程，自动调用 run()</code></pre>
+<pre><code>class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        System.out.println(&quot;线程运行中：&quot; + Thread.currentThread().getName());
+    }
+}
+
+// 使用
+Thread t2 = new Thread(new MyRunnable());
+t2.start();</code></pre>
+<p>也可以使用 Lambda 简化（Java 8+）：</p>
+<pre><code>new Thread(() -&gt; {
+    System.out.println(&quot;线程运行中：&quot; + Thread.currentThread().getName());
+}).start();</code></pre>
+<pre><code>Callable&lt;Integer&gt; task = () -&gt; {
+    Thread.sleep(1000);
+    return 123;
+};
+FutureTask&lt;Integer&gt; futureTask = new FutureTask&lt;&gt;(task);
+new Thread(futureTask).start();
+Integer result = futureTask.get(); // 阻塞直到获取结果</code></pre>
+<hr />
+<h2>3. 线程的生命周期</h2>
+<p>线程从创建到终止有 6 种状态（<code>Thread.State</code> 枚举）：</p>
+<table>
+<tr><th>状态</th><th>说明</th></tr>
+<tr><td><strong>NEW</strong></td><td>线程创建但尚未调用 <code>start()</code></td></tr>
+<tr><td><strong>RUNNABLE</strong></td><td>可运行状态，可能在运行也可能在等待 CPU 时间片</td></tr>
+<tr><td><strong>BLOCKED</strong></td><td>阻塞状态，等待获取锁（synchronized 块）</td></tr>
+<tr><td><strong>WAITING</strong></td><td>等待状态，需要被其他线程显式唤醒（如 <code>wait()</code>、<code>join()</code> 无超时）</td></tr>
+<tr><td><strong>TIMED_WAITING</strong></td><td>超时等待，到达指定时间或唤醒后自动返回（如 <code>sleep(ms)</code>、<code>wait(ms)</code>）</td></tr>
+<tr><td><strong>TERMINATED</strong></td><td>终止状态，线程执行完毕或异常结束</td></tr>
+</table>
+<p>状态转换图（简化）：</p>
+<pre><code>NEW -&gt; RUNNABLE -&gt; TERMINATED
+            |-&gt; BLOCKED -&gt; RUNNABLE
+            |-&gt; WAITING -&gt; RUNNABLE
+            |-&gt; TIMED_WAITING -&gt; RUNNABLE</code></pre>
+<hr />
+<h2>4. 线程常用方法</h2>
+<table>
+<tr><th>方法</th><th>说明</th></tr>
+<tr><td><code>start()</code></td><td>启动线程，JVM 调用该线程的 <code>run()</code> 方法</td></tr>
+<tr><td><code>run()</code></td><td>线程执行体，直接调用就是普通方法调用</td></tr>
+<tr><td><code>sleep(long millis)</code></td><td>静态方法，让当前线程休眠指定时间（不释放锁）</td></tr>
+<tr><td><code>yield()</code></td><td>静态方法，让出 CPU 时间片，但线程仍处于 RUNNABLE 状态，可能立即又被调度</td></tr>
+<tr><td><code>join()</code></td><td>等待该线程终止（当前线程阻塞直到目标线程结束）</td></tr>
+<tr><td><code>interrupt()</code></td><td>中断线程，设置中断标志位。如果线程处于阻塞状态（sleep、wait、join）会抛出 <code>InterruptedException</code></td></tr>
+<tr><td><code>isInterrupted()</code></td><td>检查中断标志位是否被设置</td></tr>
+<tr><td><code>setDaemon(boolean on)</code></td><td>设置守护线程（如垃圾回收线程），当所有用户线程结束时 JVM 退出</td></tr>
+</table>
+<hr />
+<h2>5. 线程同步（基础）</h2>
+<p>多线程共享资源时可能出现数据不一致（竞态条件），需要使用同步机制。</p>
+<ul><li><strong>同步方法</strong>：锁定当前实例对象（静态方法锁定类对象）</li><li><strong>同步代码块</strong>：更细粒度，指定锁对象</li></ul>
+<pre><code>public class Counter {
+    private int count = 0;
+
+    // 同步方法
+    public synchronized void increment() {
+        count++;
+    }
+
+    public void decrement() {
+        // 同步代码块，锁当前对象
+        synchronized (this) {
+            count--;
+        }
+    }
+
+    public int getCount() {
+        return count;
+    }
+}</code></pre>
+<p><strong>注意</strong>：<code>synchronized</code> 保证了原子性、可见性、有序性（部分）。</p>
+<ul><li>保证变量的<strong>可见性</strong>：一个线程修改后，其他线程立即看到最新值。</li><li><strong>不保证原子性</strong>：<code>volatile int i; i++</code> 依然不是线程安全的。</li><li>适用场景：状态标志位、一次性安全发布。</li></ul>
+<pre><code>volatile boolean running = true;</code></pre>
+<p>这些方法定义在 <code>Object</code> 类中，必须在同步块内使用（持有锁）。</p>
+<pre><code>synchronized (lock) {
+    while (条件不满足) {
+        lock.wait();      // 释放锁，进入 WAITING 状态
+    }
+    // 条件满足，执行操作
+    lock.notifyAll();     // 唤醒等待该锁的其他线程
+}</code></pre>
+<p>典型用法：生产者-消费者模型。</p>
+<hr />
+<h2>6. 线程安全问题与常见工具类（简要）</h2>
+<p>Java 并发包 <code>java.util.concurrent</code> 提供了更高级的工具：</p>
+<ul><li><strong>原子类</strong>：<code>AtomicInteger</code>、<code>AtomicReference</code> 等，基于 CAS 实现原子操作。</li><li><strong>锁</strong>：<code>ReentrantLock</code> 提供比 <code>synchronized</code> 更灵活的锁机制。</li><li><strong>并发容器</strong>：<code>ConcurrentHashMap</code>、<code>CopyOnWriteArrayList</code> 等。</li><li><strong>线程池</strong>：<code>ExecutorService</code> 管理线程生命周期，避免频繁创建销毁线程。</li></ul>
+<p>这些属于进阶内容，基础阶段先理解 <code>synchronized</code> 和 <code>volatile</code> 即可。</p>
+<hr />
+<h2>7. 简单示例：卖票系统（线程安全）</h2>
+<pre><code>public class TicketSeller {
+    private int tickets = 100;
+
+    public synchronized void sell() {
+        if (tickets &gt; 0) {
+            System.out.println(Thread.currentThread().getName() + &quot; 卖出一张票，剩余：&quot; + --tickets);
+        }
+    }
+
+    public static void main(String[] args) {
+        TicketSeller seller = new TicketSeller();
+        for (int i = 0; i &lt; 5; i++) {
+            new Thread(seller::sell, &quot;窗口&quot; + i).start();
+        }
+    }
+}</code></pre>
+<p>如果不加 <code>synchronized</code>，可能出现多个线程同时卖出同一张票的情况。</p>
+<hr />
+<h2>8. 总结</h2>
+<ul><li>创建线程：继承 <code>Thread</code> 或实现 <code>Runnable</code>（推荐后者）。</li><li>生命周期：NEW → RUNNABLE → BLOCKED/WAITING/TIMED_WAITING → TERMINATED。</li><li>常用方法：<code>start</code>、<code>sleep</code>、<code>join</code>、<code>interrupt</code>。</li><li>同步机制：<code>synchronized</code> 保证原子性与可见性；<code>volatile</code> 保证可见性；<code>wait/notify</code> 用于线程间协作。</li><li>基础多线程编程要特别注意<strong>竞态条件</strong>和<strong>死锁</strong>。</li></ul>
+<p>多线程是 Java 进阶的重要部分，打好基础后可以进一步学习 <code>java.util.concurrent</code> 包中的高级并发工具。如果有具体场景或问题，欢迎继续交流！</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/222_Java覆盖重载讲解.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

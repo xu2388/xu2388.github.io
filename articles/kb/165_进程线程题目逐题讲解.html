@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>进程线程题目逐题讲解</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>进程线程题目逐题讲解</h1>
+<div class="meta">2026-05-19 · 主题：课程-编程/计算机 · 3 条消息 · 对话编号 165</div>
+<div class="record"><span class="tag">我问</span><p>题目1：关于进程与线程的内存与资源分配，下列说法正确的是： A. 现代操作系统允许不同的进程之间直接且轻易地共享内存空间。 B. 线程拥有自己独立的系统资源和私有的地址空间。 C. 同一个进程下的多个线程共享该父进程所拥有的系统资源和地址空间。 D. 创建一个新进程所需的系统开销远小于创建一个新线程。 题目2：作为操作系统中的独立实体，进程的核心特征是什么？ A. 一个进程内部只能包含一个顺序执行流。 B. 进程拥有自己私有的地址空间和独立的系统资源。 C. 一个并发进程的异常崩溃会导致其他并发进程直接终止。 D. 进程在系统中是静态存在的，没有生命周期和状态变化。 题目3： 分析以下符合 Java 语法且仅能单继承的线程创建代码，下列关于其核心步骤的说法正确的是： class MyThread extends Thread { public void run() { System.out.println(&quot;Thread running&quot;); } } public class Main { public static void main(String[] args) { MyThread t = new MyThread(); t.start(); } } A. MyThread 成功继承了 Thread 类，因此该类未来还可以继承其他自定义父类。 B. 代码中的 run() 方法被称为线程执行体，负责定义线程的顺序执行流。 C. 若将 t.start() 改为 t.run()，在 Java 中依然可以正常启动一个独立的新线程。 D. 创建 t 实例时，操作系统就已经自动为其分配了独立的系统资源和私有地址空间。 题目4 ：请阅读以下基于继承 Thread 类创建并启动线程的代码。请在空缺处（ ______ ）填入正确的方法名，使程序能够正常启动并异步执行线程体。 class PlayThread extends Thread { // 重写方法，定义线程执行体 public void run() { System.out.println(&quot;Thread is running...&quot;); } } public class Test { public static void main(String[] args) { // 1. 创建 Thread 子类的实例 PlayThread pt = new PlayThread(); // 2. 填空：启动该线程 pt.______(); } } 题目5： 分析以下基于 Runnable 接口创建线程的代码，下列说法中完全正确的是 class MyTask implements Runnable { public void run() { System.out.println(Thread.currentThread().getName()); } } public class Main { public static void main(String[] args) { MyTask task = new MyTask(); Thread t = new Thread(task, &quot;Download-Thread&quot;);//8 line t.start(); } } A. 代码第 8 行利用了 Thread(Runnable target, String name) 构造函数，在创建线程的同时为其指定了名字。 B. 因为 Java 只支持单继承，MyTask 实现了 Runnable 接口后就无法再继承其他任何自定义类。 C. 代码中 task 属于 Thread 类的子类实例，因此可以直接调用 start() 方法来启动。 D. 执行 t.start() 后，程序会立即在当前主线程中按顺序同步执行 run() 方法体内的代码。</p>
+<p>题目6： 请阅读以下使用 Runnable 接口创建线程的代码。请在空缺处（ ______ ）填入正确的代码，以便将任务目标正确传递给 Thread 的构造函数，使程序能够正常打印出线程的自定义名称 &quot;Math-Task&quot;。 class Task implements Runnable { public void run() { System.out.println(Thread.currentThread().getName()); } } public class Main { public static void main(String[] args) { // 1. 创建 Runnable 实现类的实例 Task myTask = new Task(); // 2. 填空：利用构造函数创建 Thread 对象并命名 Thread t = new Thread(______, &quot;Math-Task&quot;); t.start(); } } 题目7：关于 Java 中的 FutureTask 类，下列说法【错误】的是？ •A. FutureTask 实现了 Runnable 接口，因此可以作为参数传递给 Thread 构造方法来启动线程。 •B. FutureTask 实现了 Future 接口，可以通过调用其 get() 方法获取异步线程的执行结果。 •C. 直接调用 futureTask.get() 方法时，如果子线程还没有执行完毕，该方法会立刻返回 null。 •D. FutureTask 的构造方法 new FutureTask(Callable callable) 可以将一个 Callable 对象包装起来。 题目8 ：分析以下利用 Callable 与 FutureTask 创建线程的代码，下列说法中完全正确的是： import java.util.concurrent.<em>; class MyCall implements Callable&lt;Integer&gt; { public Integer call() throws Exception { return 100; } } public class Main { public static void main(String[] args) throws Exception { FutureTask&lt;Integer&gt; task = new FutureTask&lt;&gt;(new MyCall()); new Thread(task).start(); System.out.println(task.get()); } } A. MyCall 实现了 Callable 接口，因此可以直接作为参数传给 new Thread(new MyCall()) 来启动线程。 B. FutureTask 实现了 Future 接口，但未实现 Runnable 接口，所以必须依赖 Thread 类做二次包装。 C. 即使 call() 方法中发生了逻辑异常，该方法也绝对不允许使用 throws 声明抛出任何检查异常。 D. 最终调用 task.get() 方法可以阻塞当前主线程，并成功获取到 call() 方法返回的整数 100 题目9： 请阅读以下使用 Callable 与 FutureTask 创建线程的代码。在空缺处（ ______ ）填入正确的泛型类名，以便将 Callable 实例包装为符合 Thread 构造函数要求的 Runnable 目标对象 import java.util.concurrent.</em>; class SumTask implements Callable&lt;Integer&gt; { public Integer call() throws Exception { return 50 + 50; } } public class Main { public static void main(String[] args) throws Exception { // 1. 创建 Callable 实现类的实例 SumTask myTask = new SumTask(); // 2. 填空：利用 FutureTask 包装 Callable 实例 ____________&lt;Integer&gt; futureTask = new ____________&lt;&gt;(myTask); // 3. 将其作为 target 传入并启动线程 new Thread(futureTask).start(); // 4. 获取返回值并打印 System.out.println(futureTask.get()); } } 题目10： 根据 “线程的生命周期”状态转换图，下列关于线程状态转换触发条件的说法中完全正确的是： A. 处于“运行”状态的线程一旦调用了 Thread.yield() 方法，将会直接进入“阻塞”状态。 B. 导致线程从“运行”状态进入“阻塞”状态的原因，只有调用 Thread.sleep(long) 这一种情况。 C. 处于“阻塞”状态的线程在“获得同步监视器”或“sleep 时间到”后，会直接回到“运行”状态。 D. 线程调用 start() 方法后进入“就绪”状态，此时只有“获得 CPU 资源”才能进入“运行”状态。 题目11： 下列关于线程状态判断与中断机制的说法中完全正确的是： A. 当一个线程刚被 new 出来（处于新建状态）或刚执行完任务（处于结束状态）时，调用 isAlive() 方法都会返回 True。 B. 对一个正在运行（处于运行状态）的线程调用 interrupt() 方法，该线程会立刻中断并抛出 InterruptedException。 C. 当线程处于阻塞状态时，如果调用了它的 interrupt() 方法，该线程会抛出 InterruptedException 异常。 D. getName() 方法和 isInterrupted() 方法都是静态（static）方法，必须通过 Thread 类名直接调用。 题目12 ：下列关于线程调度与执行顺序控制的说法中完全正确的是： A. 正在运行的线程如果调用了静态方法 yield()，会直接进入阻塞状态并设置睡眠时间。 B. 在主线程中调用了线程对象 t 的 t.join() 方法，会导致线程 t 暂停执行，让主线程优先执行。 C. 静态方法 sleep(long millis) 的功能是用来设置当前正在运行的线程的睡眠时间。 D. 通过 setPriority(int newPriority) 提高某线程的优先级后，该线程在运行时便无法再主动放弃 CPU 资源。 题目13： 关于后台线程（Daemon 线程）的描述，下列说法中完全正确的是： A. JVM 的垃圾回收线程属于典型的前台线程，负责在后台为其他线程提供资源服务。 B. 只要将某个线程通过 setDaemon(true) 设置为后台线程，它在运行期间就绝对不会死亡。 C. 当整个 Java 程序中所有的前台线程都死亡后，后台线程会失去服务对象并自动死亡。 D. 如果一个前台线程正在运行，那么通过调用 setDaemon(false) 也可以将其强行转化为 JVM 垃圾回收线程。 题目14： 请阅读以下关于线程优先级的代码。请在空缺处（ ______ ）填入正确的静态常量名，使子线程 t 显式继承并设置与主线程相同的默认普通优先级。 public class PriorityTest { public static void main(String[] args) { // 主线程默认具有普通优先级 Thread mainThread = Thread.currentThread(); Thread t = new Thread(() -&gt; { System.out.println(&quot;Child thread priority: &quot; + Thread.currentThread().getPriority()); }); // 填空：显式将子线程设置为普通优先级静态常量 t.setPriority(Thread.____________);</p>
+<p>t.start(); } } 题目15:阅读以下代码，多线程并发执行 run() 后，最终余额必定是 2000 吗？ class Account { int balance = 0; } // 共享账户 // 线程执行体内部代码 public void run() { // 1. 读取并计算 int next = account.balance + 1000;</p>
+<p>// 2. 写入操作 synchronized (account) { account.balance = next; } } 选项： •A. 必定是 2000，因为写入操作已经加锁排队了。 •B. 不一定（仍有线程安全问题），因为读取和计算漏在了锁外面。 题目16: 请在 DepositTask 类的 run() 方法中编写代码。使用同步代码块（synchronized block），将共享资源 account 作为同步监听器（锁），安全地实现存钱操作（每次存入 1000 元）。 class Account { int balance = 0; } // 共享资源 class DepositTask implements Runnable { Account account; // 多个线程共享此对象 @Override public void run() { // ========== 请在此处编写你的同步代码块 ========== // ============================================= } } 题目17: 现在有丈夫线程负责“存钱”，妻子线程负责“取钱”。他们操作的是同一个账户 account。请在两个不同的线程体中，使用同步代码块确保两人的操作能够安全地排队执行。 class Account { int balance = 1000; } // 共享账户 // 1. 丈夫的存钱任务 class DepositTask implements Runnable { Account account; public void run() { // [1] 请为丈夫的存钱操作加同步块 account.balance += 1000; } } // 2. 妻子的取钱任务 class WithdrawTask implements Runnable { Account account; public void run() { // [2] 请为妻子的取钱操作加同步块 account.balance -= 500; } } 题目18: 阅读以下代码，丈夫和妻子并发执行后，最终余额必定是 2000 吗？ class Account { int balance = 0; // 同步方法：锁定的是当前对象 this public synchronized void deposit(int amount) { this.balance += amount; } } // 两个线程分别操作各自 new 出来的账户对象 Thread husband = new Thread(() -&gt; new Account().deposit(1000)); Thread wife    = new Thread(() -&gt; new Account().deposit(1000)); 选项： •A. 必定是 2000，因为 deposit 方法加了 synchronized 关键字。 •B. 不是（各自余额都是 1000），因为两个线程使用了不同的锁，同步失效。 题目19:  请为 Account 类补全代码。编写一个名为 deposit 的同步方法，接收一个 int 类型的参数 amount（金额），并在方法内实现余额的累加。 请补全以下代码 class Account { int balance = 0; // 共享公共变量 // ========== 请在此处编写你的同步方法 ========== // =========================================== }</p>
+<p>题目20: 请在下面名为 Pocket（存钱罐）的类中，补全两个方法： 1.用同步方法的方式实现 add1。 2.用同步代码块（以 this 为锁）的方式实现 add2。 class Pocket { int money = 0; // 共享的变量 // 1. 请在下方编写同步方法 add1 (money每次加100) // 2. 请在下方编写同步代码块方法 add2 (money每次加100，使用this作为锁) } 题目21 : 在 Java 多线程中，当一个线程正在执行某个对象的 synchronized 同步代码块时，执行以下哪种操作【绝对不会】释放该对象的同步监听器（锁）？ A. 在同步代码块中遇到了未处理的 NullPointerException（空指针异常）。 B. 在同步代码块中遇到了 return 语句，提前终止了代码块的执行。 C. 调用了 Thread.sleep(5000) 方法，让当前线程休眠 5 秒钟。 D. 调用了同步监听器对象的 wait() 方法。 题目22: 某电影院正在并发售卖最后 10 张 电影票。现在有 “窗口A” 和 “窗口B” 两个线程同时进行抢票。请使用 同步代码块（synchronized block） 完善下面的 TicketTask 类，确保电影票不会被超卖（即票数不能变成负数），且两个窗口能安全地排队抢票。每次抢票成功后，请将票数减 1。 class Cinema { int tickets = 10; // 剩余票数（公共共享资源） } class TicketTask implements Runnable { Cinema cinema; public TicketTask(Cinema cinema) { this.cinema = cinema; } @Override public void run() { while (true) { // ========== 在此处补全代码（限 10 行内） ============ // =================================================== } } } 题目23:请编写一个完整的 Java 类，并在 main 方法中实现以下多线程协作逻辑： 1.创建一个名为 “紧急任务（Urgent）” 的工作线程（使用 实现 Runnable 接口 的方式创建）。该线程启动后，先调用 Thread.sleep(1500) 模拟处理业务 1.5 秒，随后打印 &quot;紧急任务处理完成&quot;。 2.创建另一个名为 “普通任务（Normal）” 的工作线程，并将其线程优先级设置为最低优先级（即 Thread.MIN_PRIORITY）。 3.核心协作要求：主线程启动这两个线程后，必须处于阻塞状态，等待“紧急任务”彻底执行完毕后，主线程才能继续向下打印 &quot;主线程继续向下执行&quot;。 【答题骨架】 public class ThreadPriorityExam { public static void main(String[] args) throws InterruptedException { // 1. 创建“普通任务”线程并将其设置为最低优先级 Thread normalWorker = new Thread(() -&gt; { System.out.println(&quot;普通任务正在运行...&quot;); }, &quot;普通任务&quot;); // ========== 补全代码：设置最低优先级并启动 ========== // 2. 使用实现 Runnable 接口的方式创建并启动“紧急任务”线程 // ========== 补全代码：创建并启动紧急任务（睡眠1.5秒后打印） ========== // 3. 线程协作：确保主线程等待“紧急任务”完成后再向下执行 // ========== 补全代码：主线程等待并最终打印 ========== System.out.println(&quot;主线程继续向下执行&quot;); } }</p>
+<p>这里是我的所有的题目，请你一道一道题目讲解，首先讲解第一题的知识点，然后写一遍题目，然后讲解答案，每道题都是这样处理的</p></div>
+<p>我们逐题来讲解。</p>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li><strong>进程</strong>是操作系统资源分配的基本单位，拥有独立的地址空间和系统资源；进程间内存默认隔离，无法直接共享，需通过IPC机制。  </li><li><strong>线程</strong>是CPU调度的基本单位，同一进程下的线程共享该进程的地址空间和资源，但每个线程有自己的栈和寄存器上下文。  </li><li>创建进程的开销远大于创建线程，因为进程需要分配独立资源，线程只需少量私有结构。  </li></ul>
+<p><strong>题目</strong> 关于进程与线程的内存与资源分配，下列说法正确的是： A. 现代操作系统允许不同的进程之间直接且轻易地共享内存空间。 B. 线程拥有自己独立的系统资源和私有的地址空间。 C. 同一个进程下的多个线程共享该父进程所拥有的系统资源和地址空间。 D. 创建一个新进程所需的系统开销远小于创建一个新线程。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>C</strong>。</p>
+<ul><li>A 错误：不同进程拥有独立的地址空间，不能直接共享内存，必须使用共享内存、管道等IPC技术。  </li><li>B 错误：线程共享进程的地址空间和大部分资源，只有栈、程序计数器等是线程私有的。  </li><li>C 正确：同一进程内的线程共享进程持有的资源（文件句柄、内存等）及地址空间。  </li><li>D 错误：创建进程的开销通常远大于创建线程。</li></ul>
+<hr />
+<p><strong>知识点</strong> 进程是操作系统中的独立实体，其核心特征包括：</p>
+<ul><li>拥有独立的地址空间和系统资源。  </li><li>具有生命周期（创建、就绪、运行、阻塞、终止）。  </li><li>进程间相互隔离，一个进程崩溃一般不会直接导致其他进程终止。  </li></ul>
+<p><strong>题目</strong> 作为操作系统中的独立实体，进程的核心特征是什么？ A. 一个进程内部只能包含一个顺序执行流。 B. 进程拥有自己私有的地址空间和独立的系统资源。 C. 一个并发进程的异常崩溃会导致其他并发进程直接终止。 D. 进程在系统中是静态存在的，没有生命周期和状态变化。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>B</strong>。</p>
+<ul><li>A 错误：一个进程可以包含多个线程（多个执行流）。  </li><li>B 正确：独立的地址空间和资源是进程的根本特征。  </li><li>C 错误：进程间隔离性好，一个进程崩溃通常不会直接终止其他进程。  </li><li>D 错误：进程是动态的，有完整的生命周期和状态变化。</li></ul>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li>Java线程创建方式之一：继承<code>Thread</code>类并重写<code>run()</code>方法。  </li><li><code>run()</code>是线程执行体，定义线程任务；<code>start()</code>启动新线程，JVM会调用<code>run()</code>。  </li><li>若直接调用<code>run()</code>，不会启动新线程，只是在当前线程顺序执行。  </li><li>Java单继承限制：继承了<code>Thread</code>就不能再继承其他类。  </li><li>创建线程实例不会立即分配操作系统资源，真正分配发生在<code>start()</code>调用后。</li></ul>
+<p><strong>题目</strong> 分析以下符合 Java 语法且仅能单继承的线程创建代码，下列关于其核心步骤的说法正确的是：</p>
+<pre><code>class MyThread extends Thread {
+    public void run() {
+        System.out.println(&quot;Thread running&quot;);
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        MyThread t = new MyThread();
+        t.start();
+    }
+}</code></pre>
+<p>A. MyThread 成功继承了 Thread 类，因此该类未来还可以继承其他自定义父类。 B. 代码中的 run() 方法被称为线程执行体，负责定义线程的顺序执行流。 C. 若将 t.start() 改为 t.run()，在 Java 中依然可以正常启动一个独立的新线程。 D. 创建 t 实例时，操作系统就已经自动为其分配了独立的系统资源和私有地址空间。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>B</strong>。</p>
+<ul><li>A 错误：Java单继承，继承了<code>Thread</code>不能再继承其他类。  </li><li>B 正确：<code>run()</code>是线程执行体。  </li><li>C 错误：直接调用<code>run()</code>不会启动新线程，仅是普通方法调用。  </li><li>D 错误：<code>new</code>只是创建Java对象，线程资源和地址空间在<code>start()</code>后由操作系统分配。</li></ul>
+<hr />
+<p><strong>知识点</strong> 启动线程必须调用<code>start()</code>方法，而不是<code>run()</code>。<code>start()</code>会创建新线程并回调<code>run()</code>。</p>
+<p><strong>题目</strong> 请阅读以下基于继承 Thread 类创建并启动线程的代码。请在空缺处填入正确的方法名，使程序能够正常启动并异步执行线程体。</p>
+<pre><code>class PlayThread extends Thread {
+    public void run() {
+        System.out.println(&quot;Thread is running...&quot;);
+    }
+}
+public class Test {
+    public static void main(String[] args) {
+        PlayThread pt = new PlayThread();
+        pt.______();
+    }
+}</code></pre>
+<p><strong>答案与解析</strong> 填空：<strong><code>start</code></strong> 即 <code>pt.start();</code>。调用<code>start()</code>才能启动新线程，JVM会调用<code>run()</code>。</p>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li>实现<code>Runnable</code>接口是创建线程的另一种方式，避免了单继承限制。  </li><li>用<code>Thread(Runnable target, String name)</code>构造器可指定线程名。  </li><li><code>Runnable</code>实例不是<code>Thread</code>子类，不能直接调用<code>start()</code>，需包装到<code>Thread</code>中。  </li><li><code>t.start()</code>启动后，<code>run()</code>在新线程异步执行，不会阻塞主线程。</li></ul>
+<p><strong>题目</strong> 分析以下基于 Runnable 接口创建线程的代码，下列说法中完全正确的是</p>
+<pre><code>class MyTask implements Runnable {
+    public void run() {
+        System.out.println(Thread.currentThread().getName());
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        MyTask task = new MyTask();
+        Thread t = new Thread(task, &quot;Download-Thread&quot;);//8 line
+        t.start();
+    }
+}</code></pre>
+<p>A. 代码第 8 行利用了 Thread(Runnable target, String name) 构造函数，在创建线程的同时为其指定了名字。 B. 因为 Java 只支持单继承，MyTask 实现了 Runnable 接口后就无法再继承其他任何自定义类。 C. 代码中 task 属于 Thread 类的子类实例，因此可以直接调用 start() 方法来启动。 D. 执行 t.start() 后，程序会立即在当前主线程中按顺序同步执行 run() 方法体内的代码。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>A</strong>。</p>
+<ul><li>A 正确：使用的正是该构造器。  </li><li>B 错误：实现接口同时仍然可以继承类，没有冲突。  </li><li>C 错误：task是<code>MyTask</code>实例，不是<code>Thread</code>子类，不能直接调用<code>start()</code>。  </li><li>D 错误：<code>start()</code>后新线程异步执行，主线程继续向下。</li></ul>
+<hr />
+<p><strong>知识点</strong> <code>Thread</code>构造器接收<code>Runnable</code>对象作为任务目标，格式：<code>new Thread(Runnable target, String name)</code>。</p>
+<p><strong>题目</strong> 请阅读以下使用 Runnable 接口创建线程的代码。请在空缺处填入正确的代码，以便将任务目标正确传递给 Thread 的构造函数，使程序能够正常打印出线程的自定义名称 &quot;Math-Task&quot;。</p>
+<pre><code>class Task implements Runnable {
+    public void run() {
+        System.out.println(Thread.currentThread().getName());
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Task myTask = new Task();
+        Thread t = new Thread(______, &quot;Math-Task&quot;);
+        t.start();
+    }
+}</code></pre>
+<p><strong>答案与解析</strong> 填空：<strong><code>myTask</code></strong> 即 <code>new Thread(myTask, &quot;Math-Task&quot;)</code>，将<code>Runnable</code>目标传入。</p>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li><code>FutureTask</code>同时实现了<code>Runnable</code>和<code>Future</code>接口。  </li><li>可以包装<code>Callable</code>对象，通过<code>get()</code>获取结果，<code>get()</code>会阻塞直到计算完成。  </li><li><code>FutureTask</code>可作为<code>Runnable</code>传给<code>Thread</code>启动。  </li><li>若计算未完成时调用<code>get()</code>，会阻塞等待，不会立即返回null。</li></ul>
+<p><strong>题目</strong> 关于 Java 中的 FutureTask 类，下列说法【错误】的是？ A. FutureTask 实现了 Runnable 接口，因此可以作为参数传递给 Thread 构造方法来启动线程。 B. FutureTask 实现了 Future 接口，可以通过调用其 get() 方法获取异步线程的执行结果。 C. 直接调用 futureTask.get() 方法时，如果子线程还没有执行完毕，该方法会立刻返回 null。 D. FutureTask 的构造方法 new FutureTask(Callable callable) 可以将一个 Callable 对象包装起来。</p>
+<p><strong>答案与解析</strong> 错误的说法是 <strong>C</strong>。</p>
+<ul><li>C 错误：<code>get()</code>会阻塞直到结果可用，不会立即返回null。  </li><li>A、B、D 正确。</li></ul>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li><code>Callable</code>可以返回结果并抛出检查异常。  </li><li><code>Callable</code>不能直接传给<code>Thread</code>，需用<code>FutureTask</code>包装（<code>FutureTask</code>实现了<code>Runnable</code>）。  </li><li><code>FutureTask.get()</code>会阻塞等待结果。</li></ul>
+<p><strong>题目</strong> 分析以下利用 Callable 与 FutureTask 创建线程的代码，下列说法中完全正确的是：</p>
+<pre><code>import java.util.concurrent.*;
+class MyCall implements Callable&lt;Integer&gt; {
+    public Integer call() throws Exception {
+        return 100;
+    }
+}
+public class Main {
+    public static void main(String[] args) throws Exception {
+        FutureTask&lt;Integer&gt; task = new FutureTask&lt;&gt;(new MyCall());
+        new Thread(task).start();
+        System.out.println(task.get());
+    }
+}</code></pre>
+<p>A. MyCall 实现了 Callable 接口，因此可以直接作为参数传给 new Thread(new MyCall()) 来启动线程。 B. FutureTask 实现了 Future 接口，但未实现 Runnable 接口，所以必须依赖 Thread 类做二次包装。 C. 即使 call() 方法中发生了逻辑异常，该方法也绝对不允许使用 throws 声明抛出任何检查异常。 D. 最终调用 task.get() 方法可以阻塞当前主线程，并成功获取到 call() 方法返回的整数 100。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>D</strong>。</p>
+<ul><li>A 错误：<code>Callable</code>不是<code>Runnable</code>，不能直接传。  </li><li>B 错误：<code>FutureTask</code>实现了<code>RunnableFuture</code>，它继承了<code>Runnable</code>和<code>Future</code>。  </li><li>C 错误：<code>call()</code>声明了<code>throws Exception</code>，允许抛出检查异常。  </li><li>D 正确：<code>get()</code>阻塞并获取返回值100。</li></ul>
+<hr />
+<p><strong>知识点</strong> <code>FutureTask</code>是泛型类，构造时需传入<code>Callable</code>实例，泛型与<code>Callable</code>返回类型一致。类型声明为<code>FutureTask&lt;Integer&gt;</code>。</p>
+<p><strong>题目</strong> 请阅读以下使用 Callable 与 FutureTask 创建线程的代码。在空缺处填入正确的泛型类名，以便将 Callable 实例包装为符合 Thread 构造函数要求的 Runnable 目标对象</p>
+<pre><code>import java.util.concurrent.*;
+class SumTask implements Callable&lt;Integer&gt; {
+    public Integer call() throws Exception {
+        return 50 + 50;
+    }
+}
+public class Main {
+    public static void main(String[] args) throws Exception {
+        SumTask myTask = new SumTask();
+        ____________&lt;Integer&gt; futureTask = new ____________&lt;&gt;(myTask);
+        new Thread(futureTask).start();
+        System.out.println(futureTask.get());
+    }
+}</code></pre>
+<p><strong>答案与解析</strong> 填空：两处都填 <strong><code>FutureTask</code></strong> 即</p>
+<pre><code>FutureTask&lt;Integer&gt; futureTask = new FutureTask&lt;&gt;(myTask);</code></pre>
+<hr />
+<p><strong>知识点</strong> 线程生命周期：新建 → 就绪 → 运行 → 阻塞/等待 → 终止。</p>
+<ul><li><code>yield()</code>让出CPU，线程回到就绪状态，不是阻塞。  </li><li><code>sleep()</code>、等待锁等会使线程进入阻塞状态，但不是唯一途径。  </li><li>阻塞结束后线程先进入就绪状态，重新竞争CPU。  </li><li><code>start()</code>后进入就绪，获得CPU后才运行。</li></ul>
+<p><strong>题目</strong> 根据 “线程的生命周期”状态转换图，下列关于线程状态转换触发条件的说法中完全正确的是： A. 处于“运行”状态的线程一旦调用了 Thread.yield() 方法，将会直接进入“阻塞”状态。 B. 导致线程从“运行”状态进入“阻塞”状态的原因，只有调用 Thread.sleep(long) 这一种情况。 C. 处于“阻塞”状态的线程在“获得同步监视器”或“sleep 时间到”后，会直接回到“运行”状态。 D. 线程调用 start() 方法后进入“就绪”状态，此时只有“获得 CPU 资源”才能进入“运行”状态。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>D</strong>。</p>
+<ul><li>A 错：<code>yield()</code>进入就绪态。  </li><li>B 错：进入阻塞的原因还有等待I/O、等待锁等。  </li><li>C 错：阻塞结束后先到就绪态，再竞争CPU。  </li><li>D 正确：<code>start()</code>后进入就绪，需调度分配CPU才运行。</li></ul>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li><code>isAlive()</code>：线程启动后到终止前返回true，新建和终止状态返回false。  </li><li><code>interrupt()</code>：给线程设置中断标志。若线程在阻塞状态（如<code>sleep</code>、<code>wait</code>），会抛出<code>InterruptedException</code>并清除标志；若在运行中，不会立刻中断，需自行检查标志。  </li><li><code>getName()</code>是实例方法，<code>Thread.currentThread().getName()</code>；<code>isInterrupted()</code>也是实例方法，静态方法为<code>interrupted()</code>。</li></ul>
+<p><strong>题目</strong> 下列关于线程状态判断与中断机制的说法中完全正确的是： A. 当一个线程刚被 new 出来（处于新建状态）或刚执行完任务（处于结束状态）时，调用 isAlive() 方法都会返回 True。 B. 对一个正在运行（处于运行状态）的线程调用 interrupt() 方法，该线程会立刻中断并抛出 InterruptedException。 C. 当线程处于阻塞状态时，如果调用了它的 interrupt() 方法，该线程会抛出 InterruptedException 异常。 D. getName() 方法和 isInterrupted() 方法都是静态（static）方法，必须通过 Thread 类名直接调用。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>C</strong>。</p>
+<ul><li>A 错：新建或结束状态<code>isAlive()</code>返回false。  </li><li>B 错：运行时中断不会立刻抛异常，只会置中断标志。  </li><li>C 正确：阻塞状态被中断会抛<code>InterruptedException</code>。  </li><li>D 错：<code>getName()</code>和<code>isInterrupted()</code>是实例方法；静态的为<code>interrupted()</code>。</li></ul>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li><code>yield()</code>：暗示调度器让出CPU，线程进入就绪状态，不会阻塞。  </li><li><code>join()</code>：调用者线程等待被调用线程执行完毕，即主线程调<code>t.join()</code>会使主线程阻塞直到t完成。  </li><li><code>sleep(long millis)</code>：是静态方法，让当前执行线程休眠指定时间。  </li><li>优先级高的线程更可能获得CPU，但不保证，仍可能主动放弃（如调用<code>yield()</code>）。</li></ul>
+<p><strong>题目</strong> 下列关于线程调度与执行顺序控制的说法中完全正确的是： A. 正在运行的线程如果调用了静态方法 yield()，会直接进入阻塞状态并设置睡眠时间。 B. 在主线程中调用了线程对象 t 的 t.join() 方法，会导致线程 t 暂停执行，让主线程优先执行。 C. 静态方法 sleep(long millis) 的功能是用来设置当前正在运行的线程的睡眠时间。 D. 通过 setPriority(int newPriority) 提高某线程的优先级后，该线程在运行时便无法再主动放弃 CPU 资源。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>C</strong>。</p>
+<ul><li>A 错：<code>yield()</code>进入就绪，不阻塞也不设置睡眠。  </li><li>B 错：<code>t.join()</code>使主线程等待t，而非t暂停。  </li><li>C 正确：<code>Thread.sleep(long)</code>使当前线程休眠。  </li><li>D 错：仍可调用<code>yield()</code>、<code>sleep()</code>等主动放弃CPU。</li></ul>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li>守护线程（Daemon）是为用户线程服务的，如GC线程。  </li><li>当所有用户线程结束时，JVM退出，守护线程自动终止。  </li><li><code>setDaemon(true)</code>将线程设为守护线程，必须在<code>start()</code>前调用。  </li><li>守护线程并非永不死亡，JVM退出时即终止。</li></ul>
+<p><strong>题目</strong> 关于后台线程（Daemon 线程）的描述，下列说法中完全正确的是： A. JVM 的垃圾回收线程属于典型的前台线程，负责在后台为其他线程提供资源服务。 B. 只要将某个线程通过 setDaemon(true) 设置为后台线程，它在运行期间就绝对不会死亡。 C. 当整个 Java 程序中所有的前台线程都死亡后，后台线程会失去服务对象并自动死亡。 D. 如果一个前台线程正在运行，那么通过调用 setDaemon(false) 也可以将其强行转化为 JVM 垃圾回收线程。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>C</strong>。</p>
+<ul><li>A 错：GC线程是守护线程。  </li><li>B 错：用户线程结束则守护线程自动死亡。  </li><li>C 正确：所有前台线程结束时，守护线程自动终止。  </li><li>D 错：线程启动后不能修改守护状态，且<code>setDaemon(false)</code>并不合理。</li></ul>
+<hr />
+<p><strong>知识点</strong> 线程优先级范围：<code>Thread.MIN_PRIORITY</code>（1）到<code>Thread.MAX_PRIORITY</code>（10），默认是<code>Thread.NORM_PRIORITY</code>（5）。 <code>setPriority()</code>用于设置优先级。</p>
+<p><strong>题目</strong> 请阅读以下关于线程优先级的代码。请在空缺处填入正确的静态常量名，使子线程 t 显式继承并设置与主线程相同的默认普通优先级。</p>
+<pre><code>public class PriorityTest {
+    public static void main(String[] args) {
+        Thread mainThread = Thread.currentThread();    
+        Thread t = new Thread(() -&gt; {
+            System.out.println(&quot;Child thread priority: &quot; +
+                Thread.currentThread().getPriority());
+        });
+        t.setPriority(Thread.____________);
+        t.start();
+    }
+}</code></pre>
+<p><strong>答案与解析</strong> 填空：<strong><code>NORM_PRIORITY</code></strong>。 主线程默认优先级为该常量，此处显式设置子线程为普通优先级。</p>
+<hr />
+<p><strong>知识点</strong> 线程安全需保证复合操作的原子性。这里“读取-计算-写入”若只有写入加锁，读取和计算在锁外则可能读取到脏数据，导致更新丢失。 必须将整个“读取-计算-写入”放入同步块才能保证安全性。</p>
+<p><strong>题目</strong> 阅读以下代码，多线程并发执行 run() 后，最终余额必定是 2000 吗？</p>
+<pre><code>class Account { int balance = 0; }
+public void run() {
+    int next = account.balance + 1000;
+    synchronized (account) {
+        account.balance = next;
+    }
+}</code></pre>
+<p>选项： A. 必定是 2000，因为写入操作已经加锁排队了。 B. 不一定（仍有线程安全问题），因为读取和计算漏在了锁外面。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>B</strong>。 读取和计算未加锁，两个线程可能读到相同的初始balance，导致最终结果小于2000，线程不安全。</p>
+<hr />
+<p><strong>知识点</strong> 用<code>synchronized(lock){}</code>对共享对象加锁，保证代码块原子性。</p>
+<p><strong>题目</strong> 请在 DepositTask 类的 run() 方法中编写代码。使用同步代码块，将共享资源 account 作为同步监听器，安全地实现存钱操作（每次存入 1000 元）。</p>
+<pre><code>class Account { int balance = 0; }
+class DepositTask implements Runnable {
+    Account account;
+    @Override
+    public void run() {
+        // ========== 请在此处编写你的同步代码块 ==========
+    }
+}</code></pre>
+<p><strong>答案与解析</strong> 应填入：</p>
+<pre><code>synchronized (account) {
+    account.balance += 1000;
+}</code></pre>
+<p>这样保证多个线程操作同一account时安全排队。</p>
+<hr />
+<p><strong>知识点</strong> 多个线程操作同一个共享对象时，需使用同一把锁。这里两人操作同一个account，在各自任务中对该account加锁即可互斥。</p>
+<p><strong>题目</strong> 现在有丈夫线程负责“存钱”，妻子线程负责“取钱”。他们操作的是同一个账户 account。请在两个不同的线程体中，使用同步代码块确保两人的操作能够安全地排队执行。</p>
+<pre><code>class Account { int balance = 1000; }
+class DepositTask implements Runnable {
+    Account account;
+    public void run() {
+        // [1] 请为丈夫的存钱操作加同步块
+        account.balance += 1000;
+    }
+}
+class WithdrawTask implements Runnable {
+    Account account;
+    public void run() {
+        // [2] 请为妻子的取钱操作加同步块
+        account.balance -= 500;
+    }
+}</code></pre>
+<p><strong>答案与解析</strong> 丈夫存钱块：<code>synchronized (account) { account.balance += 1000; }</code> 妻子取钱块：<code>synchronized (account) { account.balance -= 500; }</code> 两者使用同一把锁（account对象），保证互斥。</p>
+<hr />
+<p><strong>知识点</strong> <code>synchronized</code>实例方法锁定的是<code>this</code>对象。如果两个线程各自<code>new Account()</code>，则每个线程锁的是自己创建的Account对象，不是同一把锁，互斥失效。</p>
+<p><strong>题目</strong> 阅读以下代码，丈夫和妻子并发执行后，最终余额必定是 2000 吗？</p>
+<pre><code>class Account {
+    int balance = 0;
+    public synchronized void deposit(int amount) {
+        this.balance += amount;
+    }
+}
+Thread husband = new Thread(() -&gt; new Account().deposit(1000));
+Thread wife    = new Thread(() -&gt; new Account().deposit(1000));</code></pre>
+<p>选项： A. 必定是 2000，因为 deposit 方法加了 synchronized 关键字。 B. 不是（各自余额都是 1000），因为两个线程使用了不同的锁，同步失效。</p>
+<p><strong>答案与解析</strong> 正确答案是 <strong>B</strong>。 两个线程各操作一个Account实例，锁不同，不能同步，两个实例各变成1000，总和不是2000。</p>
+<hr />
+<p><strong>知识点</strong> 同步实例方法使用<code>synchronized</code>修饰，锁定当前对象。</p>
+<p><strong>题目</strong> 请为 Account 类补全代码。编写一个名为 deposit 的同步方法，接收一个 int 类型的参数 amount，并在方法内实现余额的累加。</p>
+<pre><code>class Account {
+    int balance = 0;
+    // ========== 请在此处编写你的同步方法 ==========
+}</code></pre>
+<p><strong>答案与解析</strong> 填入：</p>
+<pre><code>public synchronized void deposit(int amount) {
+    balance += amount;
+}</code></pre>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li>同步方法：方法修饰符加<code>synchronized</code>。  </li><li>同步代码块：<code>synchronized(this){...}</code>，以当前实例为锁。</li></ul>
+<p><strong>题目</strong> 请在下面名为 Pocket（存钱罐）的类中，补全两个方法： 1.用同步方法的方式实现 add1。 2.用同步代码块（以 this 为锁）的方式实现 add2。</p>
+<pre><code>class Pocket {
+    int money = 0;
+    // 1. 请在下方编写同步方法 add1 (money每次加100)
+    // 2. 请在下方编写同步代码块方法 add2 (money每次加100，使用this作为锁)
+}</code></pre>
+<p><strong>答案与解析</strong></p>
+<pre><code>// 1. 同步方法
+public synchronized void add1() {
+    money += 100;
+}
+
+// 2. 同步代码块
+public void add2() {
+    synchronized (this) {
+        money += 100;
+    }
+}</code></pre>
+<hr />
+<p><strong>知识点</strong> 线程在执行<code>synchronized</code>块时，持有锁。以下情况会释放锁：</p>
+<ul><li>正常退出同步块。  </li><li>未捕获异常退出。  </li><li>执行<code>wait()</code>。  </li></ul>
+<p>不会释放锁的情况：<code>sleep()</code>、<code>yield()</code>等只会暂停线程，不释放锁。</p>
+<p><strong>题目</strong> 在 Java 多线程中，当一个线程正在执行某个对象的 synchronized 同步代码块时，执行以下哪种操作【绝对不会】释放该对象的同步监听器（锁）？ A. 在同步代码块中遇到了未处理的 NullPointerException。 B. 在同步代码块中遇到了 return 语句，提前终止了代码块的执行。 C. 调用了 Thread.sleep(5000) 方法，让当前线程休眠 5 秒钟。 D. 调用了同步监听器对象的 wait() 方法。</p>
+<p><strong>答案与解析</strong> 绝对不会释放锁的是 <strong>C</strong>。 <code>sleep()</code>让线程休眠但不释放锁。A、B会导致退出同步块释放锁，D<code>wait()</code>也会释放锁。</p>
+<hr />
+<p><strong>知识点</strong> 卖票问题中，判断和减票必须是原子操作。用<code>synchronized</code>包裹判断<code>if(tickets&gt;0)</code>与<code>tickets--</code>，避免超卖。循环中若票卖完可break。</p>
+<p><strong>题目</strong> 某电影院正在并发售卖最后 10 张电影票。现在有 “窗口A” 和 “窗口B” 两个线程同时进行抢票。请使用同步代码块完善下面的 TicketTask 类，确保电影票不会被超卖，且两个窗口能安全地排队抢票。每次抢票成功后，请将票数减 1。</p>
+<pre><code>class Cinema {
+    int tickets = 10;
+}
+class TicketTask implements Runnable {
+    Cinema cinema;
+    public TicketTask(Cinema cinema) { this.cinema = cinema; }
+    @Override
+    public void run() {
+        while (true) {
+            // ========== 在此处补全代码（限 10 行内） ============
+        }
+    }
+}</code></pre>
+<p><strong>答案与解析</strong></p>
+<pre><code>synchronized (cinema) {
+    if (cinema.tickets &gt; 0) {
+        System.out.println(Thread.currentThread().getName() + &quot; 抢到一张票，剩余：&quot; + (--cinema.tickets));
+    } else {
+        break;
+    }
+}</code></pre>
+<p>循环中退出当票为0时用<code>break</code>。</p>
+<hr />
+<p><strong>知识点</strong></p>
+<ul><li><code>Runnable</code>创建线程。  </li><li>设置优先级：<code>setPriority(Thread.MIN_PRIORITY)</code>。  </li><li>线程等待：<code>join()</code>使调用者阻塞直到目标线程执行完。</li></ul>
+<p><strong>题目</strong> 请编写一个完整的 Java 类，并在 main 方法中实现以下多线程协作逻辑。已给骨架，需补全代码。</p>
+<p><strong>答案与解析</strong></p>
+<pre><code>public class ThreadPriorityExam {
+    public static void main(String[] args) throws InterruptedException {
+        // 1. 创建“普通任务”线程并将其设置为最低优先级
+        Thread normalWorker = new Thread(() -&gt; {
+            System.out.println(&quot;普通任务正在运行...&quot;);
+        }, &quot;普通任务&quot;);
+        normalWorker.setPriority(Thread.MIN_PRIORITY);
+        normalWorker.start();
+
+        // 2. 使用实现 Runnable 接口的方式创建并启动“紧急任务”线程
+        Thread urgentWorker = new Thread(() -&gt; {
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(&quot;紧急任务处理完成&quot;);
+        }, &quot;紧急任务&quot;);
+        urgentWorker.start();
+
+        // 3. 线程协作：确保主线程等待“紧急任务”完成后再向下执行
+        urgentWorker.join();
+
+        System.out.println(&quot;主线程继续向下执行&quot;);
+    }
+}</code></pre>
+<p>关键点：</p>
+<ul><li>普通任务设置<code>MIN_PRIORITY</code>并启动。  </li><li>紧急任务内部sleep 1500毫秒后打印，启动后主线程调用<code>urgentWorker.join()</code>等待其结束，然后再打印最后一行。</li></ul>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/165_进程线程题目逐题讲解.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

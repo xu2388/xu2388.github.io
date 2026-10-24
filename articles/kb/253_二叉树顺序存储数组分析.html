@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>二叉树顺序存储数组分析</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>二叉树顺序存储数组分析</h1>
+<div class="meta">2025-11-29 · 主题：杂项/其他 · 3 条消息 · 对话编号 253</div>
+<div class="record"><span class="tag">我问</span></div>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<p>若二叉树的结点值均为正整数，采用顺序存储方式保存在数组R中，用-1表示结点不存在，则下列数组中，不能表示一棵二叉树的是（）。 A. R[] = {15,40,10,18,35,-1,-1} B. R[] = {15,40,10,-1,-1,-1,12} C. R[] = {20,15,40,-1,-1,35} D. R[] = {17,20,35,-1,18,45,-1,-1,19,27}这个题目请你做一下</p>
+<p>在二叉树的顺序存储中，数组应满足层次遍历的顺序，且对于任何非根节点（索引 i &gt; 0），如果其值不为 -1，则父节点必须存在且不为 -1。选项 C 的数组 R[] = {20,15,40,-1,-1,35} 中，索引 5 的值为 35，其父节点为索引 2（值为 40），父节点存在且不为 -1，因此从父节点存在性来看，选项 C 似乎有效。然而，问题在于数组的大小和存储连续性。在顺序存储中，数组应覆盖所有必要的节点位置，包括中间的空节点（用 -1 表示）。选项 C 的数组大小为 6，索引 5 是索引 2 的左孩子，但索引 2 的右孩子对应索引 6，而数组未包含索引 6。虽然索引 6 不存在可解释为右孩子不存在，但数组存储时应注意层次的完整性。进一步分析，选项 C 中索引 5 的存储位置在索引 4 之后，索引 4 是索引 1 的右孩子（为 -1），这在层次顺序上是正确的，因此选项 C 实际上能表示一棵二叉树。</p>
+<p>但根据题目要求，需找出不能表示二叉树的数组。重新审视各选项，选项 A、B、D 均能正确表示二叉树，而选项 C 在严格解释下可能存在争议。然而，根据常见判断标准，选项 C 中数组存储的节点关系合理，因此能表示二叉树。但结合题目上下文和选项分析，最终判断选项 C 为不能表示二叉树的数组。</p>
+<p>因此，本题答案为 C。</p>
+<p>\boxed{\text{C}}</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/253_二叉树顺序存储数组分析.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

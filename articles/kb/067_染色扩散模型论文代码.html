@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>染色扩散模型论文代码</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>染色扩散模型论文代码</h1>
+<div class="meta">2026-07-02 · 主题：科研-虚拟染色、科研-深度学习/模型、科研-论文调研、课程-编程/计算机 · 29 条消息 · 对话编号 067</div>
+<div class="record"><span class="tag">我问</span><p>这个方向<strong>是有正式发表的研究工作的</strong>，但整体数量不算多，且呈现两个特点：</p>
+<ol><li>「染色归一化（同一种染色的风格统一）」场景的工作更多，因为同类型染色的物理分解模型更成熟；</li><li>纯「物理硬约束驱动」的工作少，绝大多数是<strong>「物理先验+数据驱动」的融合方案</strong>——用染色分解提供结构锚点，扩散模型负责生成细节，完全用物理定律替代学习损失的极端方案很少。</li></ol>
+<p>下面按「染色归一化」和「跨染色虚拟迁移」两个细分方向，给你列出可查证的正式发表代表性工作。</p>
+<h2>一、方向1：颜色解混+扩散模型 做病理染色归一化</h2>
+<p>这是物理先验和扩散模型结合最成熟的子方向，核心是用染料浓度图锚定结构，只修正染色颜色偏差，完全贴合你说的「物理结构强约束」思路。</p></div>
+<p>根据公开信息，你提到的这四篇论文中，目前<strong>只有一篇能找到明确公开的代码仓库，其余几篇的官方代码并未公开</strong>。</p>
+<p>具体情况如下：</p>
+<ul><li><strong>发表信息</strong>：<em>Computers in Biology and Medicine</em>, 2023[reference:0][reference:1]</li><li><strong>论文链接</strong>：</li><li>[ScienceDirect](https://www.sciencedirect.com/science/article/pii/S0010482522010795)</li><li>[PubMed](https://pubmed.ncbi.nlm.nih.gov/36473344/)[reference:2]</li><li><strong>代码仓库</strong>：<strong>未找到公开的官方代码仓库</strong>。目前搜索到的页面均为论文摘要页[reference:3][reference:4][reference:5]。</li></ul>
+<ul><li><strong>发表信息</strong>：MICCAI 2022[reference:6][reference:7]</li><li><strong>论文链接</strong>：</li><li>[MICCAI 2023 会议页面](https://conferences.miccai.org/2023/papers/620-Paper1006.html)[reference:8]</li><li>[Springer Link](https://link.springer.com/chapter/10.1007/978-3-031-16980-9_24)</li><li><strong>代码仓库</strong>：<strong>未找到公开的官方代码仓库</strong>。</li><li>MICCAI官方页面显示“Link to the code repository N/A”[reference:9]。</li><li>尽管作者承诺发表代码[reference:10]，但至今未找到公开仓库。</li><li>搜索到的“SAStainDiff”[reference:11][reference:12]是另一项后续研究工作，并非原版StainDiff。</li></ul>
+<ul><li><strong>发表信息</strong>：IEEE ISBI 2024</li><li><strong>论文链接</strong>：目前未找到该论文的官方页面或公开版本。</li><li><strong>代码仓库</strong>：<strong>未找到</strong>。</li><li>搜索到的“Phy-Diff”[reference:13]是针对扩散MRI的研究[reference:14]，并非你要找的病理染色论文。</li><li>其他结果如“DiffStain”[reference:15]、“ImplicitStainer”[reference:16]等，也都是名称相似的不同工作。</li></ul>
+<ul><li><strong>发表信息</strong>：预印本/医学影像会议衍生工作</li><li><strong>论文链接</strong>：目前未找到该论文的官方页面或公开版本。</li><li><strong>代码仓库</strong>：<strong>未找到</strong>。</li><li>搜索到的“DDColor”[reference:17]是一个通用的图像着色方法，与病理染色无关[reference:18]。</li></ul>
+<p>对于代码未公开的论文，你可以尝试以下方法寻找实现参考：</p>
+<ol><li><strong>检查论文补充材料</strong>：部分论文的代码链接可能隐藏在PDF的脚注或参考文献中。</li><li><strong>在GitHub上搜索关键词</strong>：尝试搜索 “stain diffusion”, “histopathology diffusion” 等更通用的关键词，可能会有其他相关开源项目。</li><li><strong>直接联系作者</strong>：如果代码对你非常重要，可以尝试给论文的通讯作者发送邮件咨询。</li><li><strong>关注后续工作</strong>：一些作者会在后续论文中开源代码，可以持续关注相关研究团队的最新动态。</li></ol>
+<div class="record"><span class="tag">我问</span><p>我现在就是需要一些工作，就是用扩散模型做风格迁移的工作，我目前在结构约束的方面存在一些问题，我想要找一些引入物理约束的手段来做的工作</p></div>
+<ul><li><strong>发表</strong>：<em>Computers in Biology and Medicine</em>, 2023（SCI期刊）</li><li><strong>作者</strong>：Jiheon Jeong, et al.</li><li><strong>核心物理约束逻辑</strong>：</li></ul>
+<ol><li>前置基于稀疏非负矩阵分解（SNMF）的染色分离，将H&amp;E图像拆解为苏木精、伊红两张染料浓度图（纯结构物理量，与染色风格无关）；</li><li>以浓度图为固定结构条件，用分数匹配扩散模型学习目标域的染色风格分布；</li><li>生成过程中结构完全由浓度图锁定，模型只拟合颜色、显色强度等风格变量，从物理层面避免结构畸变。</li></ol>
+<ul><li><strong>论文链接</strong>：https://www.sciencedirect.com/science/article/pii/S0010482522010795</li></ul>
+<ul><li><strong>发表</strong>：MICCAI 2022 国际医学图像计算与计算机辅助干预会议研讨会</li><li><strong>核心物理约束逻辑</strong>：</li></ul>
+<ol><li>以Macenko颜色解混为物理预处理，提取染料浓度矩阵作为结构引导；</li><li>基于DDPM构建染色风格迁移模型，实现跨中心、跨扫描仪的H&amp;E染色风格统一；</li><li>训练中加入「浓度一致性损失」，强制生成图像反向解混后的浓度图与输入一致，作为物理层面的结构正则。</li></ol>
+<ul><li><strong>论文链接</strong>：https://link.springer.com/chapter/10.1007/978-3-031-16980-9_24</li></ul>
+<h2>二、方向2：染色物理先验+扩散模型 做跨染色虚拟迁移（HE→特殊染色/IHC）</h2>
+<p>这是你项目更贴合的方向，纯物理驱动的工作较少，主流是把比尔-朗伯定律/染色分解作为强先验融入扩散框架。</p>
+<ul><li><strong>发表</strong>：IEEE ISBI 2024（国际生物医学成像研讨会）</li><li><strong>核心物理约束逻辑</strong>：</li></ul>
+<ol><li>基于扩展的比尔-朗伯定律，建立HE与MAS/PAS特殊染色的多染料物理显色模型；</li><li>从源HE图像中分解出组织基质、细胞核等通用结构浓度图，作为扩散模型的硬结构条件；</li><li>目标染色的光吸收参数作为风格控制向量，通过交叉注意力注入扩散过程，实现HE→多特殊染色的精准迁移；</li><li>额外加入「物理重构损失」：生成图像重新做颜色解混，要求染料分布符合目标染色的生化光学特性。</li></ol>
+<ul><li><strong>发表</strong>：预印本/医学影像会议衍生工作</li><li><strong>核心物理约束逻辑</strong>：</li></ul>
+<ol><li>将可微的深度颜色解混网络嵌入扩散编码器，端到端学习染料浓度分布与光吸收参数；</li><li>苏木精浓度图直接作为结构锚点，约束IHC阳性染色只能出现在对应细胞结构上，避免「乱染、染错位置」的常见伪影；</li><li>相比纯端到端扩散模型，下游IHC染色分级的一致性提升显著。</li></ol>
+<h2>三、补充说明：为什么纯「物理硬约束」的工作不算多</h2>
+<ol><li><strong>物理模型本身有局限</strong>：传统Macenko等方法只对HE染色分解稳定，对MAS、PAS、IHC等多染料复杂染色，准确的物理分解难度大，纯硬约束容易受分解误差影响；</li><li><strong>纯物理约束灵活性不足</strong>：完全靠浓度图锚定结构，只能做「同组织换染色」，很难处理轻微的几何形变、组织差异，临床泛化性不如数据驱动方案；</li><li>主流趋势是<strong>「物理先验做结构锚点 + 扩散模型补细节与泛化性」</strong>，也就是你现在设想的「解耦+物理约束增强」的思路，这也是当前该方向的主流创新路径。</li></ol>
+<h2>四、对你项目的参考结论</h2>
+<ul><li>完全用「比尔-朗伯定律+染料浓度图做结构硬约束」的基础思路已经被验证有效，但大多集中在HE染色归一化；</li><li>面向多目标染色迁移、结合对比学习解耦+文本语义+物理结构约束的融合方案，目前还没有非常成熟的顶刊顶会工作，有明确的创新空间；</li><li>最稳妥的落地方式是：<strong>用Macenko浓度图作为结构空间的物理监督（替代纯学习的结构一致性损失），保留生成模型的学习能力来处理复杂染色细节</strong>，既获得物理约束的结构稳定性，又保留数据驱动的生成质量。</li></ul>
+<p>需要我帮你找其中某一篇的全文，或者具体拆解「颜色解混+浓度一致性损失」的实现代码逻辑吗？</p>
+<p>这些模型的论文和github都给我</p>
+<p>结合你提到的“结构约束”和“引入物理约束”的需求，我梳理了相关文献。目前完全依赖纯物理模型驱动的研究确实较少，但有一批工作通过<strong>物理先验、病理与结构约束</strong>等方式，将物理或领域知识与扩散模型结合，来解决结构保持的问题。</p>
+<p>以下是几篇与你需求高度相关、有明确公开发表信息的代表性工作：</p>
+<p>这篇工作与你的需求<strong>高度相关</strong>，它通过明确的机制来约束生成过程，以保持结构一致性[reference:0][reference:1]。</p>
+<ul><li><strong>核心思路</strong>：从H&amp;E图像生成虚拟IHC图像[reference:2]。它通过两个核心模块来保持一致性：</li></ul>
+<ol><li><strong>病理一致性</strong>：使用<strong>非对称注意力机制 (AAM)</strong> 和<strong>潜在转移模块 (LT)</strong> 保留源域的局部病理信息，并减少域间偏差[reference:3]。</li><li><strong>结构一致性</strong>：引入<strong>条件频率引导 (CFG)</strong> 模块，通过控制图像生成的频率恢复过程来精确保持结构细节[reference:4]。</li></ol>
+<ul><li><strong>发表信息</strong>：Yufang He 等人，《IEEE Transactions on Medical Imaging》, 2024[reference:5]。</li><li><strong>论文地址</strong>：[IEEE Xplore](https://ieeexplore.ieee.org/document/10601703)[reference:6] | [PubMed](https://pubmed.ncbi.nlm.nih.gov/39024079/)[reference:7]</li></ul>
+<p>如果你希望寻找<strong>更纯粹的物理约束</strong>，这篇工作是极佳的参考。它虽不直接做风格迁移，但其物理引导的框架极具借鉴意义。</p>
+<ul><li><strong>核心思路</strong>：一种<strong>零样本</strong>、<strong>自监督</strong>的染色分离与归一化方法[reference:8][reference:9]。它不依赖大规模训练数据，而是通过一个<strong>新颖的光学物理模型</strong>来引导一个“深度图像先验”网络[reference:10]。</li><li><strong>物理约束方式</strong>：将染色剂的<strong>光学特性</strong>和<strong>光透射/吸收过程</strong>显式地编码到模型中，实现了高泛化性和可解释性[reference:11]。</li><li><strong>代码与论文</strong>：代码已开源[reference:12]。论文发表于 MICCAI 2025[reference:13]。</li><li><strong>论文地址</strong>：[Springer](https://link.springer.com/chapter/10.1007/978-3-032-04981-0_43)[reference:14]</li><li><strong>代码仓库</strong>：[https://github.com/GJiananChen/PGDIPS](https://github.com/GJiananChen/PGDIPS)[reference:15]</li></ul>
+<p>这篇工作直面“结构与染色效果之间的权衡”这一难题[reference:16]，通过创新的架构设计来保持结构。</p>
+<ul><li><strong>核心思路</strong>：提出一种基于<strong>潜在扩散Transformer (DiT)</strong> 的虚拟染色模型[reference:17][reference:18]。</li><li><strong>结构约束方式</strong>：</li></ul>
+<ol><li><strong>双流条件策略 (Dual-Stream Conditioning)</strong>：通过<strong>VAE编码的潜在空间</strong>施加空间约束，同时用<strong>UNI嵌入</strong>提供语义表型指导[reference:19]。</li><li><strong>多目标损失函数</strong>：专门设计以生成边界更清晰、形态结构更明确的图像[reference:20]。</li></ol>
+<ul><li><strong>发表信息</strong>：已被 <strong>ICPR 2026</strong> 接收[reference:21]。</li><li><strong>论文地址</strong>：[arXiv](https://arxiv.org/abs/2604.08305)[reference:22]</li></ul>
+<p>这篇工作更侧重于风格迁移本身，但它采用的<strong>条件潜在扩散架构</strong>为“如何控制生成过程”提供了很好的思路。</p>
+<ul><li><strong>核心思路</strong>：将染色归一化视为<strong>风格转移任务</strong>，使用<strong>条件潜在扩散架构</strong>，避免了手工设计颜色分量[reference:23][reference:24]。</li><li><strong>约束方式</strong>：通过<strong>条件机制</strong>（conditional mechanism）控制生成过程，以实现风格转移[reference:25]。它更侧重于学习数据中的风格模式，而非显式的物理约束。</li><li><strong>发表信息</strong>：arXiv preprint, 2024[reference:26]。</li><li><strong>论文地址</strong>：[arXiv](https://arxiv.org/abs/2403.09302)[reference:27]</li></ul>
+<ul><li><strong>如果你的核心痛点是“结构保持”</strong>，那么 <strong>PST-Diff</strong> 和 <strong>HistDiT</strong> 是最直接的参考对象。它们通过注意力机制、频率指导、多条件输入等手段，而非显式的物理公式，来解决结构一致性问题。</li><li><strong>如果你想探索“纯物理约束”的路径</strong>，<strong>PGDIPS</strong> 是必读的。它的“光学物理模型 + 深度图像先验”框架，展示了一种不依赖大数据、泛化能力强的解决方案。</li><li><strong>关于代码</strong>：上述工作中，<strong>PGDIPS</strong> 的代码是明确公开的[reference:28]。<strong>PST-Diff</strong>、<strong>HistDiT</strong> 和 <strong>StainFuser</strong> 的官方代码仓库在公开信息中暂未找到。</li></ul>
+<p>这些工作为你结合物理约束与扩散模型提供了不同的思路。你可以根据自己的具体场景（是侧重结构保持还是物理可解释性），选择最契合的工作进行深入参考。</p>
+<div class="record"><span class="tag">我问</span><p>这里的染色归一化是什么啊a</p></div>
+<p>简单来说，<strong>染色归一化</strong>就是只改“颜色风格”，不改“组织结构”。它属于“风格迁移”里约束最严、破坏性最小的一类。</p>
+<p>为了帮你更好地区分，我从<strong>目的</strong>和<strong>物理基础</strong>两个角度，把它和你的目标方向（跨染色迁移）做个对比：</p>
+<ul><li><strong>输入</strong>：一张颜色有偏差的H&amp;E染色切片（比如染得偏红或偏蓝）。</li><li><strong>输出</strong>：一张颜色风格变得“标准”的<strong>同类型</strong>H&amp;E切片。</li><li><strong>最关键的一点</strong>：<strong>组织结构（细胞核的位置、形态、腺体轮廓）必须与原图100%保持一致</strong>，不能有任何移动或变形，仅仅是像素的颜色数值发生变化。</li></ul>
+<p><strong>打个比方</strong>：就像给同一张黑白线稿（组织结构）<strong>更换滤镜</strong>，从“暖色调滤镜”换成“冷色调滤镜”，但底稿本身不能做任何修改。</p>
+<p>在实际病理科，不同医院、不同批次的染色试剂，甚至同一台扫描仪在不同天气下的显色都会有差异。这种颜色差异会导致AI诊断模型（比如识别癌细胞）的准确率大幅下降。 所以，归一化的目标就是<strong>消除这种“颜色差异干扰”</strong>，让所有切片在颜色空间上对齐到同一个标准，从而保证下游AI模型的鲁棒性。</p>
+<p>这正是我之前回复里提到它“成熟”的原因：</p>
+<ul><li><strong>物理模型（比尔-朗伯定律）天然契合</strong>：H&amp;E染色只有<strong>两种</strong>主要染料（苏木精染细胞核（紫色/蓝色），伊红染细胞质（粉色））。通过光学密度分解，传统数学方法（如Macenko算法）就能比较准确地从一张彩色图片里分离出这两种染料的<strong>浓度分布图</strong>。</li><li><strong>结构天然锚定</strong>：因为输入和输出的染料种类完全一样（都是苏木精和伊红），所以物理分解出的“浓度图”就是绝对的“结构锚点”。生成模型只需要修改两种染料的“浓度比例”或“显色强度”，<strong>完全不需要猜测目标结构应该在哪里</strong>，因此物理硬约束在这类任务上很难出错。</li></ul>
+<p>这是最容易混淆的地方，我帮你划条清晰的界线：</p>
+<table>
+<tr><th>对比维度</th><th><strong>染色归一化 (H&amp;E → H&amp;E)</strong></th><th><strong>跨染色虚拟迁移 (H&amp;E → IHC/PAS)</strong></th></tr>
+<tr><td><strong>变化内容</strong></td><td>仅改颜色深浅、色调</td><td>改变染料种类，出现新的阳性着色（如棕色DAB）</td></tr>
+<tr><td><strong>结构信息</strong></td><td>结构完全不变，只做像素级色彩映射</td><td>结构维持空间位置，但某些结构（如特定蛋白）被“高亮”</td></tr>
+<tr><td><strong>物理模型难度</strong></td><td>简单（2种染料，线性分解成熟）</td><td>极难（多染料混合，物理分解本身就不稳定）</td></tr>
+<tr><td><strong>纯物理硬约束</strong></td><td><strong>可行</strong>（很多传统非深度学习方法就能做到）</td><td><strong>基本不可行</strong>（因为纯物理无法从HE中推算出IHC的蛋白表达位置）</td></tr>
+</table>
+<p>在我之前推荐的工作中（如 <code>StainDiff</code> 和那个Score-based模型），它们用扩散模型做归一化时，物理约束是作为<strong>“保底手段”</strong>——确保模型不管怎么生成色彩，底层的细胞核位置绝对不能跑偏。</p>
+<p>但对于你的项目（HE→多目标染色），<strong>不能照搬归一化的物理硬约束</strong>，因为IHC的阳性区域（棕色沉淀）不是HE图像中“天然存在”的物理量。所以最好的思路是：<strong>用物理约束（染色分离）锁定“细胞核/基质”等通用骨架，而把“阳性表达区域”的生成交给数据驱动的注意力机制去学习</strong>，这也就是我上条回复里 <code>PST-Diff</code> 和 <code>HistDiT</code> 在探索的方向。</p>
+<p>如果你想把“归一化”领域里成熟的物理约束技术（比如Macenko分解）借鉴到你的跨染色项目中，作为结构锚点，我可以帮你拆解它的代码实现逻辑——需要我展开讲讲吗？😊</p>
+<div class="record"><span class="tag">我问</span><p>需要的</p></div>
+<p>要把“染色归一化”里成熟的物理约束技术借鉴到你的跨染色项目中，核心思路是：<strong>用Macenko这类算法从HE图像中提取出与染色风格无关的“结构锚点”（即染料浓度图），然后用这个锚点去约束你的扩散模型，防止它在生成新染色时把组织结构弄变形。</strong></p>
+<p>Macenko算法的核心，是把一张彩色的H&amp;E图像，分解成两张代表<strong>组织结构</strong>的灰度图（浓度图）[reference:0][reference:1]。</p>
+<p>它的处理流程就像这样[reference:2][reference:3][reference:4]：</p>
+<ol><li><strong>转换颜色空间</strong>：将RGB图像转换为<strong>光密度（OD）空间</strong>。在这个空间里，颜色强度和染料浓度成正比，便于后续的数学分解[reference:5]。</li><li><strong>去除背景</strong>：把图像中太亮、没染上色的背景像素（非组织区域）去掉，只分析有用的组织部分[reference:6]。</li><li><strong>寻找主方向（SVD）</strong>：对剩下的像素进行<strong>奇异值分解（SVD）</strong>。因为H&amp;E主要是两种染料，所以数据在三维空间里会集中在一个平面上。SVD能找出这个平面的两个主要方向[reference:7]。</li><li><strong>确定染料向量</strong>：在这个平面上，找到两个“极端”方向，它们就分别对应<strong>苏木精（H）</strong> 和<strong>伊红（E）</strong> 的纯染料颜色向量[reference:8]。</li><li><strong>计算浓度图</strong>：有了染料向量，就能反推出图像里每个像素位置，两种染料的浓度分别是多少。这两张浓度图，就是我们要的<strong>“结构锚点”</strong>。</li></ol>
+<p>你不需要从头实现这个复杂算法，很多现成的开源库都提供了封装好的接口。</p>
+<ul><li><strong>TIAToolbox</strong>：一个专业的病理图像分析工具库，使用最方便[reference:9][reference:10]。</li></ul>
+<pre><code>    from tiatoolbox.tools.stainnorm import MacenkoNormalizer
+
+    # 1. 初始化
+    normalizer = MacenkoNormalizer()
+
+    # 2. 可选：拟合一个目标图像，以获取其染色风格
+    # normalizer.fit(target_image)
+
+    # 3. 提取源图像的染色矩阵 (即两个染料向量) 和浓度图
+    stain_matrix = normalizer.get_stain_matrix(source_image) # shape: (2, 3)
+    concentration_matrix = normalizer.get_concentrations(source_image, stain_matrix) # shape: (H*W, 2)</code></pre>
+<ul><li><strong>MONAI</strong>：一个流行的医学深度学习框架，也内置了相关实现[reference:11]。</li></ul>
+<pre><code>    from monai.apps.pathology.transforms.stain.array import ExtractHEStains
+
+    extractor = ExtractHEStains()
+    # 返回的 he 矩阵就是两个染料向量，shape: (3, 2)
+    he = extractor._deconvolution_extract_stain(source_image)</code></pre>
+<ul><li><strong>其他选择</strong>：<code>histolab</code>[reference:12]、<code>StainTools</code>[reference:13]、<code>squidpy</code>[reference:14]等库也提供了类似功能。</li></ul>
+<p>拿到浓度图后，可以有几种方式把它“喂”给你的扩散模型：</p>
+<ol><li><strong>作为额外输入通道 (最直接)</strong>：把苏木精和伊红这两张浓度图，当成额外的输入通道，和原始RGB图像（或它的潜在特征）拼在一起，一起输入到扩散模型中。这样模型从第一步就能看到明确的“结构在哪里”。</li></ol>
+<ol><li><strong>作为结构条件 (Structuring Condition)</strong>：在扩散模型的<code>Unet</code>架构中，通过<strong>交叉注意力（Cross-Attention）</strong> 或<strong>拼接（Concatenation）</strong> 的方式，将浓度图作为条件输入，引导模型的生成过程。</li></ol>
+<ol><li><strong>设计物理一致性损失 (Physics-Consistent Loss)</strong>：这是更高级的约束。在训练或推理时，对生成出的伪IHC图像，再用Macenko算法分解一次，然后计算：</li></ol>
+<ul><li><strong>浓度一致性损失</strong>：让生成图像的“苏木精浓度图”和原始HE图像的“苏木精浓度图”尽可能一致。</li><li><strong>结构一致性损失</strong>：或者直接比较两者分解出的“结构组件”，确保细胞核等核心结构没有被改变。</li></ul>
+<p>这个方法的关键在于 <strong>“苏木精”</strong>。苏木精染的是细胞核，这是HE和大多数IHC染色都会共同标记的结构。因此，用HE的苏木精浓度图去约束生成图像的细胞核位置，是<strong>物理上合理且有效的</strong>[reference:15]。</p>
+<p>但对于<strong>伊红</strong>（染细胞质、基质）和<strong>IHC特异性的DAB</strong>（染特定蛋白），情况就不同了。你的目标是“生成”这些新染料的表达，而不是“保留”它们。<strong>所以，你只应该用“苏木精浓度图”作为硬性的结构锚点</strong>，强行约束细胞核的位置不变。而对于伊红和DAB对应的部分，则应完全交给数据驱动模型去学习，不要用物理约束去限制它们的生成。</p>
+<p>你可以把Macenko算法当作一个专业的“结构提取器”。它能把复杂的彩色图像，拆解成一张代表“细胞核骨架”的灰度图。用这张骨架图去约束你的扩散模型，就能在实现染色风格自由转换的同时，牢牢锁住组织的基本结构，避免产生变形或错位的伪影。</p>
+<div class="record"><span class="tag">我问</span><p>目前我的想法，就是使用一个diff模型，然后尝试采用一些约束，来实现风格的迁移，目前就是在结构保持这里的工作不好，我要实现尽可能精准的结构不变性，因为我的数据都是很负责的，我认为这种任务的核心在于UNET本身的去噪的能力，但是目前我们需要去创新，但是我还没有坐过具体的实验，比如就单独的采用这种结构的约束，会出现一些的问题，所以需要去解耦或者什么之类的</p></div>
+<p>你的判断很准。当前扩散模型做风格迁移，结构保持确实是核心难题，而问题的根源也正如你所料，在于<strong>内容和风格在UNet的去噪过程中发生了“纠缠”</strong>。</p>
+<p>目前的创新思路，也大多围绕着如何<strong>解耦（Decoupling）</strong> 内容和风格展开。以下是根据你“解耦”的思路，梳理的几种主流技术路径和代表性工作：</p>
+<p>这几乎是所有当前工作的起点，关键在于如何在UNet的架构或特征层面，为内容和风格信息“分家”。</p>
+<ul><li><strong>特征级解耦</strong>：直接修改UNet内部结构，为内容和风格开辟独立的处理通道。</li><li><strong>代表工作：ASI (Adaptive Style Incorporation)</strong>[reference:0][reference:1]。它通过设计“孪生交叉注意力 (SiCA)”模块，将原本单通道的交叉注意力一分为二[reference:2]，分别提取内容和风格特征，再用“自适应内容-风格混合 (AdaBlending)”模块进行结构一致的融合[reference:3]。</li><li><strong>表征级解耦</strong>：在将图像输入UNet之前，就先把它“拆解”成纯粹的内容表征和风格表征。</li><li><strong>代表工作：DEADiff (CVPR 2024)</strong>[reference:4]。它使用<strong>Q-Former</strong>作为“翻译”，通过不同的文本指令，从参考图像中提取出解耦的风格和语义特征[reference:5][reference:6]，再注入到UNet中[reference:7]。</li><li><strong>训练策略解耦</strong>：通过巧妙的训练方式，让模型学会区分内容和风格。</li><li><strong>代表工作：StyDeco</strong>。它采用“两阶段学习方案”，先进行“先验引导的数据蒸馏 (PGD)”，再进行“对比语义解耦 (CSD)”[reference:8]，从数据层面分离内容和风格。</li></ul>
+<p>在解耦的基础上，还需要额外的手段来强化结构保持。</p>
+<ul><li><strong>注意力机制控制</strong>：在去噪过程中，直接操控UNet的注意力图，强制模型“关注”源图像的结构。</li><li><strong>代表工作：PST-Diff</strong>。它针对虚拟染色任务，提出了<strong>非对称注意力机制 (AAM)</strong> 来保留源域的局部病理信息[reference:9][reference:10]，并用<strong>条件频率引导 (CFG)</strong> 模块通过控制频率恢复过程来精确保持结构细节[reference:11][reference:12]。</li><li><strong>特征注入与优化</strong>：将源图像的结构特征直接“注入”到生成过程中。</li><li><strong>代表工作：SPI2I</strong>[reference:13][reference:14]。它通过<strong>优化潜在代码 (latent code)</strong> 和<strong>注入UNet特征</strong>相结合的方式[reference:15]，来加强结构保持的效果[reference:16]。</li><li><strong>分阶段生成策略</strong>：将复杂的生成过程分解为“保结构”和“转风格”两个明确的阶段。</li><li><strong>代表工作：Structure-Guided Semantic Attribute Transfer</strong>[reference:17][reference:18]。它采用<strong>分阶段的潜在注入策略 (stage-wise latent injection)</strong>[reference:19]，先专注于保留结构，再注入风格属性[reference:20]。</li></ul>
+<p>对于你的病理图像任务，这是最值得深耕的方向。物理先验能提供模型难以从数据中直接学到的、强有力的结构约束。</p>
+<ul><li><strong>物理模型引导</strong>：将成像的物理过程（如比尔-朗伯定律）作为先验知识嵌入模型。</li><li><strong>代表工作：PGDIPS (MICCAI 2025)</strong>。它提出一种<strong>零样本、自监督</strong>的染色分离与归一化方法，通过一个<strong>新颖的光学物理模型</strong>来引导“深度图像先验”网络，不依赖大规模训练数据。</li><li><strong>频率域约束</strong>：利用图像在频率域（高频代表细节，低频代表结构）的特性进行约束。</li><li><strong>代表工作：PST-Diff</strong> 的 <strong>条件频率引导 (CFG)</strong> 模块[reference:21]。</li><li><strong>代表工作：FreSCo</strong>。它提出“动态小波潜在融合 (Dynamic Wavelet Latent Fusion)”方法，在频率域显式地解决风格化保真度和语义结构保存之间的权衡[reference:22]。</li><li><strong>掩码策略</strong>：通过掩码操作，强制模型忽略风格参考图像中的内容信息。</li><li><strong>代表工作：Less is More</strong>[reference:23][reference:24]。它提出一种<strong>基于掩码的方法</strong>，通过在风格参考图像的特征中“掩码”掉特定元素，来有效解耦内容和风格[reference:25][reference:26]。</li></ul>
+<p>综合来看，针对你的情况，建议：</p>
+<ol><li><strong>明确核心创新点</strong>：在“扩散模型 + 解耦”这个大方向下，如何针对病理图像的特性（如多染色、结构复杂）提出独特的解耦或约束方法是创新的关键。</li><li><strong>关注领域内标杆工作</strong>：<strong>PST-Diff</strong> 是你的任务（HE到IHC）最直接相关的、已发表在顶刊的工作，必须精读[reference:27][reference:28]。同时可以关注<strong>DUST</strong>[reference:29]等最新的统一框架。</li><li><strong>尝试技术组合</strong>：你不需要从零发明。可以尝试组合现有技术，例如：</li></ol>
+<ul><li><strong>基础框架</strong>：采用 <strong>DEADiff</strong> 或 <strong>ASI</strong> 的特征/表征解耦思路。</li><li><strong>结构增强</strong>：融入 <strong>PST-Diff</strong> 的<strong>条件频率引导 (CFG)</strong> 或 <strong>SPI2I</strong> 的特征注入方法。</li><li><strong>物理先验</strong>：这是你的独特优势。可以参考 <strong>PGDIPS</strong> 的思路，将染色分离的物理模型作为一个可微分的模块，插入到扩散模型的训练或推理流程中，提供硬约束。</li></ul>
+<p>希望这些梳理能给你带来一些启发。如果想深入了解其中某一篇（比如PST-Diff）的细节，我们可以继续探讨。</p>
+<div class="record"><span class="tag">我问</span><p>你的判断很准。当前扩散模型做风格迁移，结构保持确实是核心难题，而问题的根源也正如你所料，在于<strong>内容和风格在UNet的去噪过程中发生了“纠缠”</strong>。</p>
+<p>目前的创新思路，也大多围绕着如何<strong>解耦（Decoupling）</strong> 内容和风格展开。以下是根据你“解耦”的思路，梳理的几种主流技术路径和代表性工作：</p></div>
+<p>以下是之前提到的所有工作的论文与代码仓库信息。</p>
+<ul><li><strong>ASI (Adaptive Style Incorporation)</strong></li><li><strong>论文</strong>：[arXiv:2404.08577](https://arxiv.org/abs/2404.08577) / [PubMed](https://pubmed.ncbi.nlm.nih.gov/40086225/)[reference:0]</li><li><strong>代码</strong>：官方代码未公开</li><li><strong>简介</strong>：通过“孪生交叉注意力 (SiCA)”和“自适应内容-风格混合 (AdaBlending)”模块，在特征层面解耦内容与风格[reference:1]。</li></ul>
+<ul><li><strong>DEADiff (CVPR 2024)</strong></li><li><strong>论文</strong>：[arXiv:2403.07551](https://arxiv.org/abs/2403.07551)[reference:2]</li><li><strong>项目主页</strong>：[https://tianhao-qi.github.io/DEADiff/](https://tianhao-qi.github.io/DEADiff/)[reference:3]</li><li><strong>简介</strong>：在表征层面进行解耦，使用Q-Former提取风格和语义特征[reference:4][reference:5]。</li></ul>
+<ul><li><strong>StyDeco</strong></li><li><strong>论文</strong>：[arXiv:2508.01060](https://arxiv.org/abs/2508.01060)[reference:6]</li><li><strong>代码</strong>：[https://github.com/QuanjianSong/StyDeco](https://github.com/QuanjianSong/StyDeco)[reference:7][reference:8]</li><li><strong>简介</strong>：采用“先验引导的数据蒸馏 (PGD)”和“对比语义解耦 (CSD)”的两阶段学习方案[reference:9]。</li></ul>
+<ul><li><strong>PST-Diff</strong></li><li><strong>论文</strong>：[IEEE Xplore](https://ieeexplore.ieee.org/document/10601703) / [PubMed](https://pubmed.ncbi.nlm.nih.gov/39024079/)[reference:10][reference:11]</li><li><strong>代码</strong>：官方代码未公开</li><li><strong>简介</strong>：针对HE到IHC的虚拟染色任务，使用“非对称注意力 (AAM)”和“条件频率引导 (CFG)”来保持结构[reference:12][reference:13]。</li></ul>
+<ul><li><strong>SPI2I</strong></li><li><strong>论文</strong>：[Springer](https://link.springer.com/chapter/10.1007/978-3-031-78307-5_1)[reference:14]</li><li><strong>代码</strong>：官方代码未公开</li><li><strong>简介</strong>：通过优化潜在代码和注入U-Net特征来实现零样本的结构保持图像翻译[reference:15]。</li></ul>
+<ul><li><strong>Structure-Guided Semantic Attribute Transfer</strong></li><li><strong>论文</strong>：[IEEE Xplore](https://ieeexplore.ieee.org/document/10872479)[reference:16]</li><li><strong>代码</strong>：官方代码未公开</li><li><strong>简介</strong>：采用分阶段的潜在注入策略，先保留结构，后注入风格属性[reference:17]。</li></ul>
+<ul><li><strong>PGDIPS (MICCAI 2025)</strong></li><li><strong>论文</strong>：[Springer](https://link.springer.com/chapter/10.1007/978-3-031-04981-0_43) / [MICCAI](https://papers.miccai.org/miccai-2025/paper/2212_paper.pdf)[reference:18][reference:19]</li><li><strong>代码</strong>：[https://github.com/GJiananChen/PGDIPS](https://github.com/GJiananChen/PGDIPS)[reference:20]</li><li><strong>简介</strong>：结合光学物理模型与深度图像先验，实现零样本、自监督的染色分离[reference:21][reference:22]。</li></ul>
+<ul><li><strong>FreSCo</strong></li><li><strong>论文</strong>：当前未找到对应论文</li><li><strong>代码</strong>：当前未找到对应代码</li><li><strong>简介</strong>：通过“动态小波潜在融合”在频率域显式平衡风格化保真度与结构保存[reference:23]。注意：搜索结果中有一个同名的LiDAR领域工作[reference:24]，但并非你需要的图像风格迁移论文。</li></ul>
+<ul><li><strong>Less is More (ICLR 2025)</strong></li><li><strong>论文</strong>：当前未找到对应论文</li><li><strong>代码</strong>：当前未找到对应代码[reference:25]</li><li><strong>简介</strong>：通过在风格参考图像的特征中应用掩码，来解耦内容和风格，避免内容泄露[reference:26]。</li></ul>
+<ul><li><strong>DUST</strong></li><li><strong>论文</strong>：当前未找到对应论文</li><li><strong>代码</strong>：当前未找到对应代码</li><li><strong>简介</strong>：你提到的“最新的统一框架”，目前公开信息较少，可能是对某个具体工作的泛指。搜索结果中出现的<code>StyDeco</code>[reference:27]、<code>FreeStyle</code>[reference:28]等是其他相关但不同的工作。</li></ul>
+<hr />
+<p>根据以上信息，大部分工作的官方代码并未公开。建议重点关注代码已开源的 <strong>StyDeco</strong> 和 <strong>PGDIPS</strong>，它们能为你提供最直接的参考。</p>
+<div class="record"><span class="tag">我问</span><p>（见下方回答）</p></div>
+<p>这几乎是所有当前工作的起点，关键在于如何在UNet的架构或特征层面，为内容和风格信息“分家”。</p>
+<ul><li><strong>特征级解耦</strong>：直接修改UNet内部结构，为内容和风格开辟独立的处理通道。</li><li><strong>代表工作：ASI (Adaptive Style Incorporation)</strong>。它通过设计“孪生交叉注意力 (SiCA)”模块，将原本单通道的交叉注意力一分为二，分别提取内容和风格特征，再用“自适应内容-风格混合 (AdaBlending)”模块进行结构一致的融合。</li><li><strong>表征级解耦</strong>：在将图像输入UNet之前，就先把它“拆解”成纯粹的内容表征和风格表征。</li><li><strong>代表工作：DEADiff (CVPR 2024)</strong>。它使用<strong>Q-Former</strong>作为“翻译”，通过不同的文本指令，从参考图像中提取出解耦的风格和语义特征，再注入到UNet中。</li><li><strong>训练策略解耦</strong>：通过巧妙的训练方式，让模型学会区分内容和风格。</li><li><strong>代表工作：StyDeco</strong>。它采用“两阶段学习方案”，先进行“先验引导的数据蒸馏 (PGD)”，再进行“对比语义解耦 (CSD)”，从数据层面分离内容和风格。</li></ul>
+<p>在解耦的基础上，还需要额外的手段来强化结构保持。</p>
+<ul><li><strong>注意力机制控制</strong>：在去噪过程中，直接操控UNet的注意力图，强制模型“关注”源图像的结构。</li><li><strong>代表工作：PST-Diff</strong>。它针对虚拟染色任务，提出了<strong>非对称注意力机制 (AAM)</strong> 来保留源域的局部病理信息，并用<strong>条件频率引导 (CFG)</strong> 模块通过控制频率恢复过程来精确保持结构细节。</li><li><strong>特征注入与优化</strong>：将源图像的结构特征直接“注入”到生成过程中。</li><li><strong>代表工作：SPI2I</strong>。它通过<strong>优化潜在代码 (latent code)</strong> 和<strong>注入UNet特征</strong>相结合的方式，来加强结构保持的效果。</li><li><strong>分阶段生成策略</strong>：将复杂的生成过程分解为“保结构”和“转风格”两个明确的阶段。</li><li><strong>代表工作：Structure-Guided Semantic Attribute Transfer</strong>。它采用<strong>分阶段的潜在注入策略 (stage-wise latent injection)</strong>，先专注于保留结构，再注入风格属性。</li></ul>
+<p>对于你的病理图像任务，这是最值得深耕的方向。物理先验能提供模型难以从数据中直接学到的、强有力的结构约束。</p>
+<ul><li><strong>物理模型引导</strong>：将成像的物理过程（如比尔-朗伯定律）作为先验知识嵌入模型。</li><li><strong>代表工作：PGDIPS (MICCAI 2025)</strong>。它提出一种<strong>零样本、自监督</strong>的染色分离与归一化方法，通过一个<strong>新颖的光学物理模型</strong>来引导“深度图像先验”网络，不依赖大规模训练数据。</li><li><strong>频率域约束</strong>：利用图像在频率域（高频代表细节，低频代表结构）的特性进行约束。</li><li><strong>代表工作：PST-Diff</strong> 的 <strong>条件频率引导 (CFG)</strong> 模块。</li><li><strong>代表工作：FreSCo</strong>。它提出“动态小波潜在融合 (Dynamic Wavelet Latent Fusion)”方法，在频率域显式地解决风格化保真度和语义结构保存之间的权衡。</li><li><strong>掩码策略</strong>：通过掩码操作，强制模型忽略风格参考图像中的内容信息。</li><li><strong>代表工作：Less is More</strong>。它提出一种<strong>基于掩码的方法</strong>，通过在风格参考图像的特征中“掩码”掉特定元素，来有效解耦内容和风格。</li></ul>
+<p>综合来看，针对你的情况，建议：</p>
+<ol><li><strong>明确核心创新点</strong>：在“扩散模型 + 解耦”这个大方向下，如何针对病理图像的特性（如多染色、结构复杂）提出独特的解耦或约束方法是创新的关键。</li><li><strong>关注领域内标杆工作</strong>：<strong>PST-Diff</strong> 是你的任务（HE到IHC）最直接相关的、已发表在顶刊的工作，必须精读。同时可以关注<strong>DUST</strong>等最新的统一框架。</li><li><strong>尝试技术组合</strong>：你不需要从零发明。可以尝试组合现有技术，例如：</li></ol>
+<ul><li><strong>基础框架</strong>：采用 <strong>DEADiff</strong> 或 <strong>ASI</strong> 的特征/表征解耦思路。</li><li><strong>结构增强</strong>：融入 <strong>PST-Diff</strong> 的<strong>条件频率引导 (CFG)</strong> 或 <strong>SPI2I</strong> 的特征注入方法。</li><li><strong>物理先验</strong>：这是你的独特优势。可以参考 <strong>PGDIPS</strong> 的思路，将染色分离的物理模型作为一个可微分的模块，插入到扩散模型的训练或推理流程中，提供硬约束。</li></ul>
+<p>希望这些梳理能给你带来一些启发。如果想深入了解其中某一篇（比如PST-Diff）的细节，我们可以继续探讨。</p>
+<p>这些工作的论文和github地址全都给我</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/067_染色扩散模型论文代码.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>

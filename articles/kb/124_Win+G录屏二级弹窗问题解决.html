@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Win+G录屏二级弹窗问题解决</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 知识库</h1>
+<p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../knowledge-index.html">知识库索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>Win+G录屏二级弹窗问题解决</h1>
+<div class="meta">2026-06-07 · 主题：科研-论文调研、课程-编程/计算机、考试-学校/大创 · 26 条消息 · 对话编号 124</div>
+<div class="record"><span class="tag">我问</span><p>我现在要录屏展示我做的JAVA课程设计的功能，但是这个二级的弹窗他是录制不到的，我用的是win+G ,怎么办啊</p></div>
+<p>Win+G录不到弹窗，核心原因是 Xbox Game Bar 这个工具的工作原理导致的：</p>
+<p><strong>Xbox Game Bar 的设计目标是</strong>录制“游戏”的独占画面[!reference:0]。它采用“窗口捕获”模式，只能稳定追踪一个主程序窗口，你程序里的二级弹窗往往不被识别为“主窗口”，所以就被忽略了[reference:1]。</p>
+<p>在你之前，有一个Java的Bug，会导致<code>java.awt.Robot</code>类（用来截屏）无法正确捕获某些对话框的内容[reference:2]。不过我查到的这个Bug已经在Java 9版本里修复了[reference:3]。只要你用的是比较新的Java版本（一般8以上都没问题），就可以先排除这个可能性。</p>
+<table>
+<tr><th>办法</th><th>优点</th><th>缺点</th><th>一句话总结</th></tr>
+<tr><td><strong>最佳方案：OBS Studio (完全免费)</strong></td><td>功能强大，能捕获所有画面</td><td>初次使用需简单设置</td><td>彻底解决问题的完美替代品，推荐首选</td></tr>
+<tr><td><strong>备用方案：Xbox Game Bar + 全屏录制技巧</strong></td><td>无需安装新软件</td><td>可能还会遇到其他问题</td><td>不装新软件情况下的临时救急方法</td></tr>
+</table>
+<p>这是最根本的解决方法。OBS Studio是开源免费、功能强大的专业录屏软件，没有Xbox Game Bar的限制[reference:4]。</p>
+<ol><li><strong>下载与安装</strong>：从 [OBS官网](https://obsproject.com/) 下载并安装。</li><li><strong>设置“显示捕获”（关键步骤）</strong>：</li></ol>
+<ul><li>打开OBS，在“来源”框里，点“+”号，选择“<strong>显示捕获</strong>”[reference:5]。</li><li>选择你要录制的那个显示器。这个模式会录制你屏幕上<strong>看到的一切</strong>，二级弹窗当然也能完美录制[reference:6]。</li></ul>
+<blockquote>注意：在OBS里，如果选“窗口捕获”，仍可能录不到弹窗[reference:7]。所以一定要选“<strong>显示捕获</strong>”。</blockquote>
+<ol><li><strong>开始录制</strong>：点击右边控制区的“<strong>开始录制</strong>”按钮就行了。</li></ol>
+<p>如果实在不想安装软件，可以试试下面的步骤，但这个方法不保证100%成功。</p>
+<ol><li><strong>开启完整屏幕录制</strong>：打开Xbox Game Bar，点击“捕获”窗口，在录制按钮旁边有个小箭头，点开后选择“<strong>录制整个屏幕</strong>”[reference:8]。</li><li><strong>检查“记住这是一款游戏”设置</strong>：打开<code>设置 -&gt; 游戏 -&gt; 屏幕截图</code>里查看[reference:9]。如果之前手动标记过你的Java程序是“游戏”，Game Bar可能会优先用“游戏模式”录制。你可以尝试“忘记”这个设置，让它把程序当成普通应用来录制[!reference:10]。</li><li><strong>勾选“是的，这是一个游戏”（尝试性步骤）</strong>：在录屏前，按Win+G唤出游戏栏，看看有没有弹窗问你是否这是一个游戏，如果有的话，就勾选“是的，这是一个游戏”[reference:11]。这一步或许能让Game Bar与程序的兼容性更好一点。</li></ol>
+<p>为了避免突发状况，可以在正式开始课程设计演示前，先用OBS试录一个包含弹出窗口的短片，确认一切顺利，确保你的展示万无一失～</p>
+<div class="record"><span class="tag">我问</span><p>但是这个OBS怎么是好几个窗口重叠啊</p></div>
+<p>别担心，你遇到的“多个窗口重叠”是OBS里一个很常见的入门情况，通常原因只有两个，按下面的顺序排查就好：</p>
+<ol><li><strong>你的OBS可能正处在“工作室模式”</strong>：这个模式会同时显示“预览”和“节目”两个画面，看起来就是重叠的[reference:0]。解决方法很简单：点击顶部菜单栏的“<strong>视图</strong>”，然后取消勾选“<strong>工作室模式</strong>”即可[reference:1]。</li></ol>
+<ol><li><strong>你可能不小心添加了多个“显示器捕获”或重复的源</strong>：比如，同一个屏幕画面被你添加了两次，导致它们叠在了一起[reference:2]。解决方法：</li></ol>
+<ul><li>检查“<strong>来源</strong>”窗口，看看是不是有多个“显示器捕获”或重复的源。</li><li><strong>删除多余的来源</strong>：除了保留一个你想要的主要来源外，右键点击其他的，选择“删除”就行。</li><li>如果那个叠在下面的窗口并非无意添加，而是你想要的，那可以直接<strong>用鼠标拖动调整它的位置</strong>（比如把弹窗窗口拖到主窗口的角落），或者<strong>调整图层顺序</strong>（在“来源”列表里把窗口来源拖到最下面）。</li></ul>
+<p>小提示：建议尝试用“<strong>窗口捕获</strong>”来抓取你的Java程序，这样能有效避免捕获到OBS自身界面而产生“无限镜像”效果[reference:3]。</p>
+<p>总之，先从“视图”菜单里关掉“工作室模式”试试，这往往是最好用的解决方法。</p>
+<div class="record"><span class="tag">我问</span><p>CLIPCHamp不能局部加马赛克吗</p></div>
+<p>Clipchamp 并不支持那种跟随物体移动、打上“马赛克”或像素化效果的局部遮挡功能。不过，如果被遮挡物是静止不动的，可以通过分割时间线的方式来实现对固定区域的模糊效果。</p>
+<p>但如果你想在视频中打码，保护画面中静止的敏感信息（例如学号、地址），可以考虑<strong>局部模糊</strong>：</p>
+<ol><li><strong>分割视频</strong>：在时间轴上，找到敏感信息出现的开始位置和结束位置，使用工具栏的“<strong>分割</strong>”功能，把这段视频单独裁剪出来[reference:0]。</li><li><strong>添加模糊效果</strong>：选中裁剪出的这一段，在右侧的属性面板中，找到“<strong>效果</strong>”选项卡，为它添加“<strong>模糊</strong>”效果[reference:1]。</li><li><strong>调整和预览</strong>：利用滑块调整模糊强度，点击“播放”按钮实时预览，确保效果符合预期[reference:2]。</li></ol>
+<div class="record"><span class="tag">我问</span><p>如何在PPT里插入视频呢</p></div>
+<p>在PPT里插入视频可以让你的演示更生动。这里为你整理了从最直接的方法到如何确保播放万无一失的完整流程。</p>
+<p>如果你的视频文件已经在电脑里，这是最常用的方法。</p>
+<ol><li><strong>选定幻灯片</strong>：打开你的PPT，选中想要插入视频的那张幻灯片[reference:0]。</li><li><strong>插入视频</strong>：点击顶部菜单栏的“<strong>插入</strong>”选项卡，然后找到“<strong>媒体</strong>”（或“视频”）功能组[reference:1]。</li><li><strong>选择来源</strong>：根据你的PPT版本，在下拉菜单中点击“<strong>视频</strong>”后，选择“<strong>此设备</strong>”、“PC上的视频”或“<strong>文件中的视频</strong>”[reference:2]。</li><li><strong>找到视频</strong>：在弹出窗口中，找到你存放的<strong>视频文件</strong>（最常见的格式是MP4），选中它并点击“<strong>插入</strong>”即可[reference:3]。</li><li><strong>调整与预览</strong>：视频插入后，像调整图片一样拖动它的<strong>边框</strong>可以改变大小，<strong>拖动它</strong>可以移动到合适位置[reference:4]。右键点击视频，选择“<strong>预览</strong>”来看看效果。</li></ol>
+<p><strong>小提醒</strong>：如果想把视频作为演示的背景或让它一打开幻灯片就自动播放，选中视频后，在顶部菜单栏点击“<strong>播放</strong>”选项卡，找到“<strong>开始</strong>”下拉菜单，选择“<strong>自动</strong>”就可以了[reference:5][reference:6]。</p>
+<p>PPT在插入视频时，主要有两种方式，了解它们的区别很重要：</p>
+<ul><li><strong>嵌入</strong>：视频文件会直接被复制进PPT文件里。这样分享PPT文件给他人时，视频也会跟着走。缺点是会<strong>让PPT文件变得非常大</strong>[reference:7]。</li><li><strong>链接</strong>：PPT里只存储了视频文件的路径。这样PPT文件体积很小。但缺点是，一旦移动视频文件或更换演示电脑，视频就容易无法播放，出现提示“无法定位链接的多媒体文件”[reference:8]。</li></ul>
+<p><strong>✅ 最可靠的建议是：</strong> 打开PPT时，将视频和PPTX文件放在<strong>同一个文件夹</strong>里，再使用“<strong>链接</strong>”方式插入[reference:9]。需要演示时，<strong>直接把整个文件夹拷贝到U盘</strong>，就能确保PPT准确链接到视频了。</p>
+<p>为了确保演示万无一失，建议提前做好以下准备：</p>
+<h4>💡 事前预防：确认视频格式</h4>
+<p>最简单有效的方法是，把你的视频转成<strong>MP4 (H.264 编码)</strong>格式，这是目前兼容性最好的选择[reference:10]。如果PPT文件很大，很可能是嵌入了大体积视频，你可以重新以“链接”方式插入，降低文件大小[reference:11]。</p>
+<h4>🩹 事后补救：无法播放怎么办</h4>
+<p>如果到了演示现场才发现视频无法播放，可以按以下顺序尝试解决：</p>
+<ol><li><strong>首选</strong>：直接在电脑上用本地视频播放器打开视频文件，绕过PPT，向观众展示。</li><li><strong>尝试一</strong>：看到“媒体对象升级”提示时，按<strong>“取消”</strong>并多关闭几次PPT，这个提示通常过一阵会自动消失[!reference:12]。</li><li><strong>尝试二</strong>：卸载不必要的第三方视频播放器，或将 <code>.mp4</code> 文件的默认打开方式设置为Windows系统自带的“电影和电视”[!reference:13]。</li><li><strong>尝试三</strong>：在PPT的“文件” &gt; “选项” &gt; “高级”里，找到“禁用幻灯片放映硬件图形加速”选项并尝试开启或关闭[reference:14]。</li></ol>
+<p>除了插入文件，PPT也支持：</p>
+<ul><li><strong>插入在线视频</strong>：点击“插入” &gt; “视频” &gt; “在线视频”，然后粘贴YouTube等网站的链接[reference:15]。</li><li><strong>屏幕录制</strong>：点击“插入” &gt; “屏幕录制”，可以直接录制电脑屏幕内容，自动放入幻灯片[reference:16]。</li><li><strong>Mac用户</strong>：Mac版PPT的插入路径与Windows版基本相同，都位于“插入”菜单中[reference:17][reference:18]。Mac版只支持“链接”方式插入在线视频，不支持嵌入[reference:19]。</li></ul>
+<p>希望这份指南能帮你顺利搞定PPT里的小视频～</p>
+<div class="record"><span class="tag">我问</span><p>我如何把两个PPT拼接到一起啊</p></div>
+<p>想把两个PPT合并成一个，有多种方法可以实现，从最简单的复制粘贴到能精细调整的高级功能都有。</p>
+<p>这是最推荐的方法，尤其适合想自由选择插入哪些页面，或需要保留原格式时使用。</p>
+<ol><li>首先打开作为基础的主PPT文件。</li><li>在左侧幻灯片预览区的目标位置<strong>右键单击</strong>，选择“<strong>新建幻灯片</strong>” -&gt; “<strong>重用幻灯片</strong>”。这时右侧会打开一个操作面板[reference:0][reference:1]。</li><li>在右侧面板点击“<strong>浏览</strong>”，找到并选择要合并进来的那个PPT文件[reference:2][reference:3]。</li><li><strong>关键技巧在这里</strong>：如果想要保留源文件的格式，可以<strong>勾选</strong>面板底部的“<strong>保留源格式</strong>”。<strong>不勾选</strong>的话，新插入的幻灯片会沿用主PPT的模板样式[reference:4][reference:5]。</li><li>接下来，在面板中<strong>单击</strong>任意幻灯片缩略图即可单张插入；如果想一次性插入全部，可以<strong>右键单击</strong>任意缩略图，选择“<strong>插入所有幻灯片</strong>”[reference:6]。</li></ol>
+<p>如果只是想快速把几个幻灯片拼起来，这是最直接的方法。</p>
+<ol><li>同时打开两个PPT文件，在主PPT中确定好要粘贴的位置[reference:7][reference:8]。</li><li>在源文件中（要粘贴的来源），<strong>全选或按住<code>Ctrl</code>键多选</strong>目标幻灯片，然后按<code>Ctrl+C</code>复制[reference:9][reference:10]。</li><li>切换到主PPT的目标位置，按<code>Ctrl+V</code>粘贴[reference:11]。在出现的“粘贴选项”里，同样可以选择“<strong>使用目标主题</strong>”或“<strong>保留源格式</strong>”[reference:12]。</li></ol>
+<p>如果你的PPT包含同一个稿件的多个修改版本，用这个功能可以逐一审查和接受修改，避免内容冲突[reference:13]。</p>
+<ol><li>打开你的主要版本，然后点击顶部菜单栏的“<strong>审阅</strong>”选项卡，再点击“<strong>比较</strong>”按钮[reference:14][!reference:15][reference:16]。</li><li>在弹出的文件选择窗口中，找到另一个版本的PPT文件，点击“<strong>合并</strong>”[reference:17][reference:18]。</li><li>PowerPoint会进入修订视图，<strong>右侧面板</strong>会详细列出每一处修改和不同。你可以逐条点击“接受”或“拒绝”，来选择将哪些改动合并进来[reference:19][reference:20]。</li></ol>
+<p>如果你使用的是WPS Office，除了可以尝试WPS的会员功能[reference:21]，还可以试试下面的方法：</p>
+<ol><li>打开主PPT，点击“<strong>插入</strong>”菜单，然后选择“<strong>对象</strong>”[reference:22][reference:23]。</li><li>在弹窗中选择“<strong>由文件创建</strong>”，点击“<strong>浏览</strong>”选中第二个PPT文件[reference:24][reference:25]。</li><li>点击“<strong>打开</strong>”后，第二个PPT就会作为一个可双击播放的对象插入到当前页面中，不破坏原结构[reference:26][reference:27]。</li></ol>
+<p>如果不想安装或打开Office软件，可以试试在线工具。上传两个或多个PPT文件，在线合并后再下载下来。不过需要注意，这有可能存在隐私风险，所以建议只用于不重要的演示文稿。</p>
+<hr />
+<ul><li><strong>保留格式 / 自由选择</strong>：首推 <strong>方法一“重用幻灯片”</strong>，操作直观可控性强。</li><li><strong>快速粗暴</strong>：直接用 <strong>方法二“复制粘贴”</strong>，简单直接。</li><li><strong>整合多人版本</strong>：用 <strong>方法三“比较”功能</strong>，能精确把控最终内容。</li><li><strong>WPS用户</strong>：推荐 <strong>方法四“插入对象”</strong>。</li><li><strong>强调文件整体性</strong>：当你希望把合并进来的文件作为一个独立文件展示，并且不想改变它原来的样子时，“<strong>插入对象</strong>”是个不错的选择[reference:28]。</li></ul>
+<p>💡 <strong>一个小提示</strong>：合并后记得统一检查和微调幻灯片的过渡动画、字体大小等细节，确保整份演示文稿的视觉风格保持一致。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/deepseek_raw/124_Win+G录屏二级弹窗问题解决.md</code>（未删减，含 AI 思考过程）</p>
+<a class="back-link" href="../knowledge-index.html">← 返回知识库索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+</body>
+</html>
