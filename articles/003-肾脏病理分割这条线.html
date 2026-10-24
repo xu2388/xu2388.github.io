@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>肾脏病理分割这条线：从"急着交结果"到"回头磕边界"的一次绕远路</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <script id="meta" type="application/json">
+  {
+    "title": "肾脏病理分割这条线：从\"急着交结果\"到\"回头磕边界\"的一次绕远路",
+    "date": "2026-10-24",
+    "tags": ["研究", "病理分割", "病灶分割", "频域", "边界优化", "风格迁移"],
+    "summary": "一开始我只是想复现个 SOTA 模型把 Masson/PAS/PASM 三染色的病灶分割结果交上去，结果这条线一路带我摸过 nnU-Net、GloPath、Swin-UNETR，又为扩数据拐进了文本驱动风格迁移，最后自己绕回起点，卡在边界模糊这个真问题上。本文按时间顺序留下完整的思路演变、我引用的每个模型的指标、我实测的那组 Dice/IoU，和一路的自我推翻。",
+    "category": "研究",
+    "source_ids": ["215", "233", "234", "244", "194"]
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">科研博客</h1>
+      <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
+      <nav class="site-nav">
+        <a href="../index.html#threads">研究方向</a>
+        <a href="../index.html#articles">文章</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <article class="article">
+    <h1>肾脏病理分割这条线：从"急着交结果"到"回头磕边界"的一次绕远路</h1>
+    <div class="meta">
+      写于 2026-10-24 · 病理分割篇 · 原始来源：DeepSeek 对话 [233][234][244][215][194]
+    </div>
+
+    <p class="lead">
+      这条线我最开始的目的特别功利：手上有一批 Masson、PAS、PASM 三染色的肾脏病理切片，还带病灶的掩码图，我就想赶紧找个 SOTA 分割模型复现出来，把结果交上去。可它后来带我走了多远呢——先摸了一整圈分割模型，又为了扩充数据拐进了文本驱动的风格迁移，最后居然自己绕回了起点，卡在"边界到底怎么描"这个最土的问题上。这篇就把这几个月里思路怎么一步步挪的，原原本本记下来。
+    </p>
+
+    <h2>一、起点：一个特别具体的活儿</h2>
+    <p>
+      一切的开口都很直接，我在 233 那条对话（整整 617 条消息，是我最长的一条）开头是这么问的：
+    </p>
+
+    <div class="record">
+      <span class="tag">原始记录 · 我的第一个问题 [233]</span>
+      "我的任务是肾脏病理染色切片的病灶分割，我有 pas,pasm,masson 三类，然后我有病灶的掩码图，请问这个领域的 sota 模型是什么？我需要尽快复现出来作为结果提交。"
+    </div>
+
+    <p>
+      这里有个细节我后来反复强调，因为助手一开始总会理解偏：<strong>我要分割的是病灶，不是肾小球、不是器官。</strong> 到了 215 我又纠正过一次——"因为我做的是病灶的分割，不是简单的肾小球，或者什么器官的分割，但是我的数据是就是肾脏的 masson 切片。" 这句话是我这条线的锚：数据是肾脏的，但目标不是教科书里那种"把肾小球圈出来"，而是病灶区域。这个区分听着小，实际上直接决定了后面哪些模型能用、哪些公开权重根本不对口。
+    </p>
+
+    <h2>二、SOTA 全景：一圈模型摸下来，保底的和冲榜的不是一回事</h2>
+    <p>
+      为了回答"这个领域的 SOTA 是什么"，我连着扒了 233、234、244 三条对话，把肾脏/病理分割能碰到的模型梳理了一遍。我的结论是它们分成三层，各干各的活。
+    </p>
+
+    <div class="record">
+      <span class="tag">整理归纳 · 我梳理的模型清单（按用途分层）</span>
+      <table>
+        <tr><th>层</th><th>模型</th><th>是什么 / 我的判断</th></tr>
+        <tr>
+          <td>保底黄金标准</td>
+          <td><strong>nnU-Net</strong>（含 nnU-Net V2 for Pathology）</td>
+          <td>助手反复定位的"保底"选择。有实例：PTC Segmentation 用它做 PAS 染色肾小管周围毛细血管分割，Dice 0.751。凡是冲榜模型没权重，最后都退回它。</td>
+        </tr>
+        <tr>
+          <td>专用 / 冲 SOTA</td>
+          <td><strong>GloPath</strong>（arXiv:2603.02926）</td>
+          <td>肾小球病变评估的基础模型，100 万+ 肾小球、14049 份活检训练，52 项任务 80.8% 超 SOTA，AUC 91.51%。<strong>但当时代码未开源</strong>——直接排除。</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><strong>Glo-Net</strong>（南京鼓楼）</td>
+          <td>分割+分类双任务，253 张 PAS WSI，硬化肾小球 mIoU&gt;0.8。</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><strong>MSMTSeg</strong>（山西省人民医院）</td>
+          <td>多染色（PASM/PAS/H&amp;E/Masson）、少样本，每染色仅 25 张标注，CycleGAN+MoCo-v3+MAML。<strong>无开源权重</strong>，思路我认可但复现不了。</td>
+        </tr>
+        <tr>
+          <td>通用 Transformer</td>
+          <td><strong>Swin-UNETR</strong></td>
+          <td>BTCV Dice 0.918、肾脏 95.21%，MONAI/Zenodo 有开源权重、支持 LoRA 少样本。<strong>但标准版是 3D CT</strong>，和我的 2D 病理有模态差，得改 2D 或伪 3D。</td>
+        </tr>
+        <tr>
+          <td>通用 Transformer</td>
+          <td><strong>Swin-Unet / TransUNet / MedT</strong></td>
+          <td>小鼠肾皮质（SPIE 2024）mIoU 92.2% / 91.9%。</td>
+        </tr>
+        <tr>
+          <td>WSI / 通用</td>
+          <td><strong>Mask2Former-Swin-B</strong>、<strong>SegGPT</strong>、<strong>HoVer-Net</strong></td>
+          <td>肾活检 WSI（肾小球/小管/动脉/间质）有公开权重；SegGPT 肾小球硬化 patch 级 0.74（BMC Nephrology 2025）。</td>
+        </tr>
+        <tr>
+          <td>轻量化 / 落地</td>
+          <td><strong>V-SAM / ASRMU-Net / MGM-Unet</strong></td>
+          <td>V-SAM 基于 SAM 的 V 型适配器，HuBMAP F1 86.17%/95.54%；ASRMU-Net 间质纤维化 MDice 85.4%、AIDPATH 96.1%；MGM-Unet 用 MobileNetv3+Ghost，GFLops 降 424.26G、参数量降 19.43M。</td>
+        </tr>
+      </table>
+      <p>上表所有指标均为对话中助手给出的数字，<strong>多为检索引用，属【待核实】</strong>，写进正式材料前我应当回原始论文核对一遍。</p>
+    </div>
+
+    <p>
+      梳理的整个过程里我发过一次火，也学到一课。在 234 我坚持说"那类似于这种的模型肯定有很多吧，你怎么说没有呢"，助手才承认自己表述不准——它想说的是 <strong>MSMTSeg 这个特定框架没有开源权重</strong>，而不是"所有这类模型都没权重"。这个纠正对我很关键：我一开始被"没有 SOTA 能用"吓到了，其实通用模型（Swin-UNETR、Mask2Former）有大量现成资源，真正卡住的只是那几个最对口的专用框架。<strong>问题是"最想要的没有"，不是"什么都没有"。</strong>
+    </p>
+
+    <h2>三、我自己的架构偏见，以及它怎么一次次改的</h2>
+    <p>
+      这条线里我换过好几次架构立场，每次都不是无缘无故的，我把这个变化过程也留下来了，因为它本身说明我那时候有多摇摆。
+    </p>
+
+    <div class="record">
+      <span class="tag">历史观点 · 我的架构立场演变（按时间）</span>
+      <p><strong>最早（215, 4 月初）：</strong>泛泛问 2D 分割，收敛到"肾脏三染色 + 病灶分割"，放话要"<strong>不基于卷积，或其他架构</strong>"——那会儿就是看衰 CNN，一心想上新结构。</p>
+      <p><strong>接着（233/234, 3 月）：</strong>开始认真掂量 Transformer，一头扎进 Swin-UNETR，又被"它是 3D CT"卡住，在"改 2D 还是做伪 3D"之间反复纠结。</p>
+      <p><strong>后来自己松口：</strong>"CNN、mamba、transformer 架构都应该尝试一下。" 不再迷信单一架构，谁好用谁上。</p>
+      <p><strong>最后（194, 4 月底-5 月初）：</strong>火力集中到<strong>频域</strong>——用小波（DWT/HWD）、多频率通道注意力（MFCA）去攻边界，这是后面第五章的主角。</p>
+    </div>
+
+    <p>
+      至于轻量化这条支线（244），我真金白银下载训练过 <strong>E-SegNet</strong>，结论却有点打脸——"边缘精度其实不是很好"。这其实已经埋下了后面边界问题的伏笔：我早就撞上边界模糊了，只是那会儿还没把它当成主攻方向。
+    </p>
+
+    <h2>四、一次大跑偏：为了扩数据，拐进了文本驱动风格迁移</h2>
+    <p>
+      这条线最出人意料的一段：分割干着干着，我被"数据不够"逼向了<strong>生成</strong>。我的想法在 244 里说得很清楚：
+    </p>
+
+    <div class="record">
+      <span class="tag">原始记录 · 我转向生成式的动机 [244]</span>
+      "文本驱动的风格迁移，我需要用 diffusion 扩散模型来实现，我的输入就是目标风格的文本描述和需要被迁移的图片……生成原图片的目标风格图片。" 动机是<strong>扩充不同染色的数据</strong>——我手上三染色样本少，想靠生成补。
+    </div>
+
+    <p>
+      这里有个特别妙的闭环：<strong>分割本来是要交的结果，反过来成了生成的结构控制器。</strong> 我的设想是先用 nnU-Net 把肾小球、间质的轮廓分割出来，拿这个轮廓当 <strong>ControlNet 的结构引导</strong>，再用扩散模型按文本换染色风格；文本编码器我甚至想用病理专用的 <strong>CONCH 替换掉 SD 默认的 CLIP</strong>，英文文本按染色区分来写。我的原话假设是："不同染色突出不同特征……让 UNET 学习这个部分。" 换句话说，<strong>我打算让分割给生成让路，让生成反过来解决分割的数据荒。</strong> 这一段和我博客里虚拟染色的主线（001、002）是同一条河。
+    </p>
+
+    <p>
+      但我也不是没脾气。当助手建议我"复用 Stable Diffusion 别的域的 UNet"时，我直接炸了：
+    </p>
+
+    <div class="record">
+      <span class="tag">原始记录 · 我的一次强烈反对 [233]</span>
+      "卧槽你是傻逼吗，他的 UNET 的训练的图像和我的域不一样啊。" 这句话糙，但理不糙：预训练 UNet 见过的图像域和我的肾脏病理差得远，直接拿来微调未必靠谱。这个质疑我一直留着，也是后面我对"跨域预训练到底能迁移多少"始终保持警惕的起点。
+    </div>
+
+    <h2>五、绕回起点：边界模糊，这个真问题终于被正面刚</h2>
+    <p>
+      生成式那边还没落地，我在最晚的 194（4 月底-5 月初）又回到了分割本身，而且这次是从根上问问题：
+    </p>
+
+    <div class="record">
+      <span class="tag">原始记录 · 我对分割本质的追问 [194]</span>
+      "分割的本质，到底是检测边界，还是检测目标呢？" 以及我对自己模型的诊断——"我发现模型的问题了，就是边界清晰度不够""从纯白到纯黑中间存在很多灰色。" 这句"从纯白到纯黑中间有很多灰色"，是我对边界模糊最形象的描述：掩膜边缘不是干净的 0/1，而是一圈灰度过渡， Dice 就被这圈灰吃掉了。
+    </div>
+
+    <p>
+      我当时的实测指标是这样的（注意那个 Accuracy 很高、Dice 却只有 0.90 上下的反差，正是"整体对、边界糊"的典型特征）：
+    </p>
+
+    <div class="record">
+      <span class="tag">原始记录 · 我在 [194] 的实测指标</span>
+      <table>
+        <tr><th>指标</th><th>均值 ± 标准差</th></tr>
+        <tr><td>IoU</td><td>0.8295 ± 0.1081</td></tr>
+        <tr><td>Dice</td><td>0.9022 ± 0.0782</td></tr>
+        <tr><td>Recall</td><td>0.8941 ± 0.0999</td></tr>
+        <tr><td>Accuracy</td><td>0.9741 ± 0.0227</td></tr>
+      </table>
+      标准差偏大（Dice 抖到 ±0.078）说明不同样本间很不稳定，我认为瓶颈就在边界。
+    </div>
+
+    <p>
+      为了啃边界，我把宝押在了<strong>频域</strong>上。逻辑是：边界模糊是空间域的老大难，但频域（小波/DCT）能把高频的边缘信息单独拎出来处理。我在 194 开头就说"这几天希望可以在频域方向做一些工作直接提升精度"，甚至想拿 <strong>HWD（Haar 小波下采样）把 UNet 的下采样"全部替换掉"</strong>。我摸过的方法包括：
+    </p>
+
+    <div class="record">
+      <span class="tag">整理归纳 · 我碰过的频域 / 边界方法 [194]</span>
+      <ul>
+        <li><strong>频域下采样/特征：</strong>MFR-UNet（小波频域）、MFCA（CVPR 2024 多频率通道注意力）、MSCWNet（我采用的）、HWD（Haar 小波下采样）。</li>
+        <li><strong>频-空双路径注意力：</strong>MADGNet、EGNet、FSA-Net；WBDM-ECRF（2026，小波+桥式扩散，mIoU 88.08%）。</li>
+        <li><strong>边界后处理（即插即用）：</strong>SegFix（边界修正）、Post-DAE（去噪自编码器学完美掩膜分布）。</li>
+      </ul>
+    </div>
+
+    <p>
+      但频域这条路我摔得挺惨，坑我都记着：<strong>"加了模块效果就变弱了"</strong>——想给网络加频域分支，精度不升反降；<strong>"集成之后精度突然变低，正常吗"</strong>——多模块集成互相打架；小波替换下采样还撞上<strong>通道数变化</strong>的工程难题。到 194 结尾我蔫蔫地写了句"换一个方案吧"。可就算撞墙，我投入频域的真实动机也在 194 里说了，特别坦诚：
+    </p>
+
+    <div class="record">
+      <span class="tag">原始记录 · 我的真实动机 [194]</span>
+      "我需要系统帮助……我要答辩，需要言之有物……这个问题必须要解决出来。" 说白了，边界模糊不只是技术瓶颈，它还是我<strong>答辩时拿得出手的创新点</strong>——这解释了我为什么在频域上花了远超"交个结果"所需的时间。
+    </div>
+
+    <div class="note">
+      <span class="tag">当前结论</span>
+      这条线真正的收获，不是某个 Dice 数字，而是我认清了两件事：其一，<strong>最对口的专用模型（GloPath、MSMTSeg）都没权重</strong>，落地只能靠通用模型（nnU-Net 保底、Swin-UNETR 改 2D）；其二，<strong>我模型的核心短板是边界模糊，不是架构不够新</strong>——Accuracy 0.97 而 Dice 只有 0.90，问题定位得很清楚。频域是我想赌的反转手段，但还没赌赢。而"分割→生成→再回到分割"这个环，说明分割这条线从来不是孤立的，它一直和虚拟染色的生成主线咬合在一起。
+    </div>
+
+    <div class="note">
+      <span class="tag">未解决问题 / 待核实</span>
+      <ul>
+        <li><strong>频域分支"加了就变弱"</strong>的 bug 我还没定位——是梯度冲突、是通道没对齐、还是频域特征没接对地方，待查。</li>
+        <li><strong>SegFix / Post-DAE 这两个边界后处理</strong>我只是列为候选，没实际跑，能否把那圈"灰色"收干净是未知的。</li>
+        <li><strong>HWD 全替换下采样</strong>撞上的通道数问题没有解决方案。</li>
+        <li>模型清单里所有指标都是对话引述，<strong>写进答辩材料前必须回原始论文核实</strong>（尤其 GloPath 的 arXiv 编号和 52 任务口径）。</li>
+        <li>风格迁移那条支线（CONCH 换 CLIP、ControlNet 用肾小球轮廓）<strong>还停在设想</strong>，"推理时目标风格文本怎么配对"是我自己提出但没答案的问题。</li>
+        <li>数据集的规模和划分方式我从没在这条线里写清楚，<strong>实验可复现性存疑</strong>。</li>
+      </ul>
+    </div>
+
+    <div class="note">
+      <span class="tag">溯源 · 全部原始对话</span>
+      <p style="margin:.3em 0">
+        <a href="kb/233_肾脏病理分割SOTA模型推荐.html">[233] 肾脏病理分割 SOTA 模型推荐（617 条）</a> ·
+        <a href="kb/234_肾病理图像分割框架咨询.html">[234] 肾病理图像分割框架咨询（51 条）</a> ·
+        <a href="kb/244_轻量化肾脏病理分割模型推荐.html">[244] 轻量化肾脏病理分割模型推荐（125 条）</a> ·
+        <a href="kb/215_2D分割模型推荐.html">[215] 2D 分割模型推荐（111 条）</a> ·
+        <a href="kb/194_ROI在分割中的含义.html">[194] ROI 在分割中的含义（397 条）</a>
+      </p>
+    </div>
+
+    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+  </article>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
+    </div>
+  </footer>
+</body>
+</html>
