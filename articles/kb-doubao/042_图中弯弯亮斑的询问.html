@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>图中弯弯亮斑的询问</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>图中弯弯亮斑的询问</h1>
+<div class="meta">杂项/其他 · 3 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>这个图中的一个一个小的弯弯的亮斑是什么</p></div>
+<h1>结论（结合你病理AI/虚拟染色的场景）</h1>
+<p>这些一个个弯弯的月牙形亮斑，<strong>绝大多数是切片扫描带来的【气泡伪影（盖玻片下微小气泡）】</strong>，不是组织细胞本身结构。</p>
+<h2>为什么是气泡</h2>
+<ol><li>封片时，盖玻片和组织切片之间残留微小空气泡，显微镜/WSI扫描时，气泡边缘会形成<strong>月牙/弯弧形亮反光</strong>，就是你看到的这种小弯亮斑；气泡中心偏暗，边缘是亮的弧形轮廓，和图上形态完全匹配。</li><li>气泡是病理数字切片最常见伪影之一，会直接干扰你训练的虚拟染色、分割、病灶检测模型，一般预处理阶段要做伪影剔除。</li></ol>
+<h2>少数备选情况</h2>
+<ul><li>石蜡切片里的<strong>淀粉/粉尘异物</strong>：也会出现亮折射，但大多是十字偏振光，不是这种均匀月牙；</li><li>组织褶皱：褶皱一般是长条带状，不是这种离散孤立小弯斑；</li><li>细胞本身：正常细胞核不会是这种月牙亮弧，细胞腔隙一般是成片而不是零散独立小弯斑。</li></ul>
+<blockquote>补充：如果你这是StainBridge/VMST这类虚拟染色输出图，<strong>模型会把原始WSI里的扫描伪影原样继承过来</strong>，所以这些亮斑是原图自带的伪影，不是AI生成出来的新结构。</blockquote>
+<p>要不要我给你一段简单代码，用来批量检测WSI里这种月牙气泡伪影？</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/042_图中弯弯亮斑的询问.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a1091891dddda">https://www.doubao.com/thread/a1091891dddda</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

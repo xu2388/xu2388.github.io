@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>论文地址</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>论文地址</h1>
+<div class="meta">科研·论文调研 · 4 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>https://arxiv.org/abs/2609.17090 StainBridge: Stain-Aware Pairwise Registration of Serial Renal Biopsy Whole-Slide Images Across Structural and Immunohistochemical Stains Generative AI for misalignment-resistant virtual staining to accelerate histopathology workflows Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining 这里的三个论文的地址给我</p></div>
+<h1>三篇论文arXiv链接</h1>
+<ol><li><strong>StainBridge: Stain-Aware Pairwise Registration of Serial Renal Biopsy Whole-Slide Images Across Structural and Immunohistochemical Stains</strong></li></ol>
+<p>https://arxiv.org/abs/2609.17090</p>
+<ol><li><strong>Generative AI for misalignment-resistant virtual staining to accelerate histopathology workflows</strong></li></ol>
+<p>https://arxiv.org/abs/2509.14119</p>
+<ol><li><strong>Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining</strong></li></ol>
+<p>https://arxiv.org/abs/2407.03655</p>
+<p>如果你需要，我可以一并给出pdf直链版本。</p>
+<div class="record"><span class="tag">我问</span><p>Generative AI for misalignment-resistant virtual staining to accelerate histopathology workflows</p>
+<p>这个是一个什么工作啊</p></div>
+<h1>Generative AI for misalignment-resistant virtual staining to accelerate histopathology workflows（DGR，HKUST，Nature Communications）</h1>
+<p><strong>核心一句话</strong>：提出<strong>DGR（Decoupled Generation and Registration，解耦生成与配准）</strong>框架，解决病理虚拟染色里一个老大难问题：<strong>连续切片天然存在空间错位，旧模型训练时必须严格对齐，一旦图像对有偏移，训练loss就会乱罚，生成结果失真</strong>；DGR训练时直接容忍这种配准误差，不用提前把切片像素级对齐，就能生成高保真虚拟染色图。</p>
+<h2>背景痛点</h2>
+<p>病理做多种染色（H&amp;E、PAS-AB、IHC免疫组化），需要切连续薄片分别化学染色；切片会拉伸、褶皱、形变，<strong>两张切片天然做不到完美像素对齐</strong>。</p>
+<ul><li>之前虚拟染色（GAN/扩散）训练前提：训练对必须精准配准；</li><li>如果没对齐，细胞只是轻微移位，loss就会惩罚本来正确的细胞结构，模型学坏；</li><li>临床很难拿到大量完美对齐的WSI全切片对，限制落地。</li></ul>
+<h2>方法核心：生成与空间配准解耦</h2>
+<p>DGR把两件事拆开：</p>
+<ol><li><strong>生成分支</strong>：学习不同染色之间外观、颜色、蛋白信号的转换（虚拟染色本身）；</li><li><strong>空间配准分支</strong>：建模切片带来的形变、偏移，显式学习两张图之间的空间变换场；</li></ol>
+<blockquote>训练时不再强制像素一一对应，允许局部空间偏移，损失函数不再简单逐像素比对。</blockquote>
+<h2>实验任务（4类虚拟染色，5个数据集）</h2>
+<ol><li>无标记自发荧光图像 → 虚拟H&amp;E</li><li>H&amp;E → PAS-AB特殊染色</li><li>H&amp;E → 多重免疫组化mIHC</li><li>染色归一化</li></ol>
+<h2>关键结果</h2>
+<ol><li>即使训练图像对有错位，生成图像质量、结构保真度显著优于SOTA；</li><li><strong>病理医生盲测：区分虚拟染色与真实化学染色的准确率≈52%，接近猜硬币</strong>，视觉上几乎分不清；</li><li>下游诊断任务（结直肠息肉、胃癌分类），用DGR虚拟染色图训练AI，性能不掉；</li><li>临床价值：<strong>减少珍贵组织样本消耗，省去多种化学染色流程，加快病理工作流</strong>。</li></ol>
+<h2>和另外两篇的简单对比（方便你三篇一起看）</h2>
+<ul><li>本篇DGR：<strong>重点解决【训练对不对齐】的鲁棒性</strong>，不限定H&amp;E→IHC，多染色通用；</li><li>StainBridge：<strong>肾活检连续WSI的配准</strong>，重点是<strong>图像配准算法本身</strong>（染色感知配准）；</li><li>Pathological Semantics-Preserving Learning：<strong>H&amp;E转IHC虚拟染色</strong>，侧重病理语义保留，假设切片已经对齐。</li></ul>
+<p>如果你需要，我可以把三篇论文整理成一个对比表格，或者单独提取DGR的loss设计。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/079_论文地址.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a6852252beda0">https://www.doubao.com/thread/a6852252beda0</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

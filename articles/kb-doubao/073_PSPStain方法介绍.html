@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PSPStain方法介绍</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>PSPStain方法介绍</h1>
+<div class="meta">科研·虚拟染色 · 2 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>Abstract. Conventional hematoxylin-eosin (H&amp;E) staining is limited torevealing cell morphology and distribution, whereas immunohistochem-ical (IHC) staining provides precise and specific visualization of pro-tein activation at the molecular level. Virtual staining technology hasemerged as a solution for highly efficient IHC examination, which di-rectly transforms H&amp;E-stained images to IHC-stained images. However,virtual staining is challenged by the insufficient mining of pathologicalsemantics and the spatial misalignment of pathological semantics. Toaddress these issues, we propose the Pathological Semantics-PreservingLearning method for Virtual Staining (PSPStain), which directly incor-porates the molecular-level semantic information and enhances semanticsinteraction despite any spatial inconsistency. Specifically, PSPStain com-prises two novel learning strategies: 1) Protein-Aware Learning Strategy(PALS) with Focal Optical Density (FOD) map maintains the coherenceof protein expression level, which represents molecular-level semantic in-formation; 2) Prototype-Consistent Learning Strategy (PCLS), whichenhances cross-image semantic interaction by prototypical consistencylearning. We evaluate PSPStain on two public datasets using five met-rics: three clinically relevant metrics and two for image quality. Extensiveexperiments indicate that PSPStain outperforms current state-of-the-artH&amp;E-to-IHC virtual staining methods and demonstrates a high patho-logical correlation between the staging of real and virtual stains. Code isavailable at https://github.com/ccitachi/PSPStain.</p>
+<p>这个摘要主要说了什么</p></div>
+<h1>摘要核心内容总结</h1>
+<p>这篇论文针对<strong>H&amp;E转IHC虚拟染色</strong>任务提出新方法PSPStain，核心背景、问题、方法、实验结论如下：</p>
+<ol><li><strong>研究背景</strong></li></ol>
+<p>常规H‑E染色只能展示细胞形态与分布；免疫组化IHC染色可以在分子层面特异性显示蛋白表达，但检测成本高、耗时长。<strong>虚拟染色技术</strong>可以直接把H&amp;E病理图像转换成IHC图像，有望实现高效的IHC检测。</p>
+<ol><li><strong>现存两大难题</strong></li></ol>
+<p>① 病理语义挖掘不足；② 病理语义存在空间错位（配对图像像素不能严格对齐），制约虚拟染色效果。</p>
+<ol><li><strong>提出方法 PSPStain</strong></li></ol>
+<p>设计两种学习策略解决上述问题：</p>
+<ul><li><strong>蛋白质感知学习策略PALS</strong>：引入<strong>焦点光密度FOD图</strong>，保证蛋白表达水平的一致性，捕获分子层面病理语义；</li><li><strong>原型一致性学习策略PCLS</strong>：利用原型一致性学习，提升跨图像之间的语义交互，即使图像存在空间错位也能工作。</li></ul>
+<ol><li><strong>实验与结果</strong></li></ol>
+<p>在两个公开数据集上开展验证，评价指标包含<strong>3个临床病理指标+2个图像质量指标</strong>。大量实验证明：PSPStain优于现有SOTA的H&amp;E‑to‑IHC虚拟染色算法；虚拟生成染色结果和真实染色结果之间具备很高的病理分期相关性。</p>
+<ol><li><strong>开源</strong>：代码已公开至给出的GitHub仓库。</li></ol>
+<hr />
+<h2>中文精简版（适合笔记）</h2>
+<blockquote>H&amp;E染色仅能观察细胞形态，IHC可观测分子层面蛋白表达。虚拟染色可以将H&amp;E图像直接转为IHC图像，但该技术面临病理语义挖掘不足、病理语义空间不对齐两大问题。本文提出PSPStain方法，包含PALS（搭配FOD图，维持蛋白表达水平一致）和PCLS（原型一致性学习增强跨图语义交互）两大模块。在公开数据集上测试表明，该方法超过现有最优算法，虚拟染色与真实染色的病理分期相关性高，代码开源。</blockquote>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/073_PSPStain方法介绍.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a2b7a64eb86a0">https://www.doubao.com/thread/a2b7a64eb86a0</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

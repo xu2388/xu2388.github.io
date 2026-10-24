@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ODA-GAN论文查找</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>ODA-GAN论文查找</h1>
+<div class="meta">科研·虚拟染色 · 46 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>https://github.com/ittong/ODA-GAN.git这个的论文请你给我找到</p></div>
+<h1>ODA‑GAN 论文信息</h1>
+<p>论文完整标题： <strong>ODA‑GAN: Orthogonal Decoupling Alignment GAN Assisted by Weakly‑supervised Learning for Virtual Immunohistochemistry Staining</strong></p>
+<ul><li>会议：<strong>CVPR 2025</strong></li><li>作者：Tong Wang, Mingkang Wang, Zhongze Wang, Hongkai Wang, Qi Xu, Fengyu Cong, Hongming Xu</li><li>配套代码仓库：https://github.com/ittong/ODA‑GAN（即你给出的仓库）</li><li>CVF官方论文页面（可看摘要、下载PDF）：</li></ul>
+<p>https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html</p>
+<h2>研究简介</h2>
+<p>面向<strong>虚拟免疫组化染色（病理图像）</strong>的无配对图像翻译任务：</p>
+<ol><li>提出O‑MLP正交模块，把病理图像解耦为染色相关特征、组织形态（染色无关）特征；</li><li>提出DPNCE（Dual‑stream PatchNCE）损失，提升染色效果；</li><li>MDA多层域对齐模块缩小域间隙，在3个病理数据集取得SOTA结果。</li></ol>
+<h2>BibTeX引用</h2>
+<pre><code>@InProceedings{Wang_2025_CVPR,
+    author    = {Wang, Tong and Wang, Mingkang and Wang, Zhongze and Wang, Hongkai and Xu, Qi and Cong, Fengyu and Xu, Hongming},
+    title     = {ODA-GAN: Orthogonal Decoupling Alignment GAN Assisted by Weakly-supervised Learning for Virtual Immunohistochemistry Staining},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {6},
+    year      = {2025},
+    pages     = {25920-25929}
+}</code></pre>
+<p>你打开上面CVF链接，网页里有<code>Download PDF</code>按钮，可直接下载原文PDF。 如果你需要，我可以帮你整理该论文的核心方法梳理。</p>
+<div class="record"><span class="tag">我问</span><p>这个就是他的整体的范式了是吧，你给我讲一下大致的流程</p></div>
+<h1>ODA-GAN 整体范式讲解</h1>
+<h2>一、主流程（图 a）：无配对染色翻译</h2>
+<pre><code>H&amp;E patches X (紫粉色常规染色)  ──┐
+                                  ├──→ 生成器 G  ──→  虚拟 IHC patches Ŷ (棕褐色)
+IHC patches Y (真实免疫组化)    ──┘</code></pre>
+<ul><li>任务本质：<strong>无配对（unpaired）image-to-image translation</strong>——不需要 H&amp;E 和 IHC 是同一张组织切片的配对图，只要一批 H&amp;E、一批 IHC 就能训。</li><li>G 的目标：把 H&amp;E 图翻译成&quot;如果染了 IHC 会是什么样&quot;的伪 IHC。</li><li>下面图 b 全是<strong>训练时的约束（损失函数）</strong>，推理时只用 G。</li></ul>
+<hr />
+<h2>二、训练时的五大组件（图 b）</h2>
+<pre><code>H&amp;E X  →  冻结的 UNI 病理大模型  →  MLP  →  整张 patch 的粗标签 (Pos / Neg)
+                                          ↓
+                              Grad-CAM 反推  →  弱监督 mask</code></pre>
+<ul><li>UNI 冻结不动，只训一个小 MLP 给 patch 打&quot;阳/阴&quot;粗标签（图级别标签，便宜）。</li><li>Grad-CAM 从 MLP 反推热力图，二值化成 <strong>mask m</strong>：绿色 = 染色相关区域，橙色 = 染色无关区域。</li><li>这个 mask 是后面所有解耦/对比损失的&quot;指路牌&quot;。</li></ul>
+<hr />
+<pre><code>X, Y  →  编码器 G_enc  →  多层特征 I₁…I_L  →  O-MLP  →  ┬─ related 分支（染色相关）
+                                                      └─ unrelated 分支（组织形态/染色无关）</code></pre>
+<ul><li><strong>O-MLP</strong>：用 DWConv + LayerNorm + DWConv + LeakyReLU 的小模块，强制两支特征<strong>正交</strong>（互不干扰）。</li><li>用 mask 监督：</li><li>related 特征只在 <code>m=1</code>（阳性区域）响应 → <code>S_a(f)⊙m</code></li><li>unrelated 特征只在 <code>m=0</code>（阴性区域）响应 → <code>S_a(f)⊙(1-m)</code></li><li>效果：染色信息和组织结构信息被拆开，生成时染色不会把组织形态搞坏。</li></ul>
+<hr />
+<pre><code>真实 IHC Y 的局部 patch  ──┐
+                          ├──→ 判别器 D  ──→  L_adv
+生成 IHC Ŷ 的局部 patch ──┘</code></pre>
+<ul><li>标准 patch-GAN 判别器，盯局部纹理，让生成的棕褐色染色<strong>看起来像真的</strong>。</li></ul>
+<hr />
+<pre><code>H&amp;E 切成小 subpatch ──→ query 特征
+IHC 切成小 subpatch ──→ keys 特征
+        (再用 O-MLP 投影，并用 mask m 筛选)</code></pre>
+<ul><li><strong>正样本对 (++)</strong>：H&amp;E 阳性 subpatch ↔ IHC 阳性 subpatch（同位置该染色的地方）。</li><li><strong>负样本对 (+-)</strong>：H&amp;E 阳性 ↔ IHC 阴性、或同图内别的阴性区域。</li><li>双流 PatchNCE 把&quot;该染色的位置&quot;在特征空间拉近，&quot;不该染色的&quot;推远。</li><li>这一步解决的是<strong>对抗损失只管纹理、不管位置对不对</strong>的问题——确保棕色块长在真正该长的地方。</li></ul>
+<hr />
+<pre><code>真实 Y 的完整特征  → O-MLP → Q_Y&#x27;⁺ (阳), Q_Y&#x27;⁻ (阴)
+生成 Ŷ 的完整特征 → O-MLP → Q_Ŷ&#x27;⁺,   Q_Ŷ&#x27;⁻
+                ↓
+          MMD 对齐（同符号互相拉近）</code></pre>
+<ul><li>用 <strong>MMD（最大均值差异）</strong> 把真实 IHC 和生成 IHC 的<strong>阳性特征分布、阴性特征分布</strong>分别对齐。</li><li>缩小整体&quot;域间隙&quot;，让生成图不只是局部像，全局染色风格也落在 IHC 的真实分布里。</li></ul>
+<hr />
+<h2>三、一句话总结</h2>
+<blockquote><strong>用冻结 UNI 打粗标签 + Grad-CAM 得到弱监督 mask → O-MLP 把特征正交拆成&quot;染色&quot;和&quot;形态&quot;两支 → 对抗损失管纹理像不像、DPNCE 对比损失管位置对不对、MMD 管整体域分布对不对 → 四条损失一起训出生成器 G，推理时把 H&amp;E 直接翻译成虚拟 IHC。</strong></blockquote>
+<p>四个损失各管一件事：<strong>解耦（①）防串味、对抗（②）像、对比（③）准、MMD（④）稳</strong>。这就是 ODA-GAN 名字里 <strong>O(Orthogonal) D(Decoupling) A(Alignment)</strong> 的来历。</p>
+<div class="record"><span class="tag">我问</span><p>对，而且我这次专门按照你说的这个范式去查了：“一个共享浅层编码器 → 两个有不同职责的分支 → 分别注入生成器 → 用不同约束让两个分支真正解耦 → 最终生成”，而不是泛泛地搜“虚拟染色”。 结果其实非常有价值： 这个思路不是凭空想出来的，而且已经有几类工作分别验证了其中的关键组成。 更重要的是，我找到了一篇 CVPR 2025 的 ODA-GAN，它和我们现在的研究问题非常接近：也是 H&amp;E → IHC、解耦 staining-related / morphology-related features、再做真实 IHC 分布对齐。这篇我认为我们应该重点精读。( https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html?utm_source=chatgpt.com ) 但同时，它和我们现在的“解耦 + Diffusion + 浓度场 + Beer–Lambert”范式并不相同。这恰恰可能成为我们借鉴它、而不是简单复现它的地方。 一、最重要的：ODA-GAN —— 和我们现在的问题几乎正面对上 论文： ODA-GAN: Orthogonal Decoupling Alignment GAN Assisted by Weakly-supervised Learning for Virtual Immunohistochemistry Staining CVPR 2025，作者来自大连理工大学等。论文明确针对： H&amp;E→IHCH\&amp;E \rightarrow IHC 的无配对虚拟 IHC 染色。( https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html?utm_source=chatgpt.com ) https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_Virtual_Immunohistochemistry_Staining.html?utm_source=chatgpt.com https://github.com/ittong/ODA-GAN?utm_source=chatgpt.com</p>
+<ol><li>它的核心思想和我们非常接近</li></ol>
+<p>它直接提出一个假设： 一张 IHC 图像的信息可以分成两类： staining-related features 和 staining-unrelated features，例如 tissue morphology。 也就是： F=Fstain+FmorphologyF = F_{\text{stain}} + F_{\text{morphology}} 论文使用 Orthogonal MLP（O-MLP）把图像特征投影到正交空间，进行这两类特征的解耦。( https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html?utm_source=chatgpt.com ) 这和我们现在说的： Fp=ProteinF_p=\text{Protein}Fs=StructureF_s=\text{Structure} 在研究思想上高度一致。 二、甚至连我们刚才说的“正交约束”都有对应 我们之前讨论： Lorth=∥FsTFp∥F2L_{orth} = \|F_s^TF_p\|_F^2 让： Fs⊥FpF_s\perp F_p 而 ODA-GAN 的名字本身就是： Orthogonal Decoupling Alignment 它也是通过 O-MLP 将特征投影到正交空间，从而分离 staining-related 和 staining-unrelated components。( https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html?utm_source=chatgpt.com ) 所以这件事情现在可以确认： “Structure / Stain 双因素解耦 + 正交化”是有文献依据的。\boxed{\text{“Structure / Stain 双因素解耦 + 正交化”是有文献依据的。}} 这对我们非常重要。 三、但是 ODA-GAN 比我们现在的想法还多了一层：它做了真实 IHC 的分布对齐 这个其实就是你前面一直在想的那个问题。 你之前说： “生成图即使语义正确，也不一定是真实 IHC 的物理分布。” 而 ODA-GAN 恰恰也认为虚拟 IHC 存在 staining unreality and unreliability 问题。 它加入了： Multi-layer Domain Alignment (MDA)\boxed{\text{Multi-layer Domain Alignment (MDA)}} 来缩小： P(Fgenerated IHC)P(F_{\text{generated IHC}}) 和： P(Freal IHC)P(F_{\text{real IHC}}) 之间的差异。( https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html?utm_source=chatgpt.com ) 他们公开的代码进一步显示，MDA 使用了 MMD / Gaussian kernel 对 fake 和 real 的多层特征进行分布对齐。( https://github.com/ittong/ODA-GAN?utm_source=chatgpt.com ) 这和我们前面讨论的： “不要把物理真实性等同于像素级配准，而是让生成 IHC 落在真实 IHC 的合理特征分布附近。” 其实已经非常接近了。 四、所以我们现在可以把 ODA-GAN 拆成三件事情来看 ODA-GAN  H&amp;E  │  ▼ Feature representation  │  ├──────────────┐  ▼              ▼ Staining      Morphology related       related  │              │  └──────┬───────┘         ▼       GAN         │         ▼    Virtual IHC         │         ▼ Multi-layer Domain Alignment         ↑         │    Real IHC 它解决的是： ① 解耦 Fstain⊥FmorphologyF_{stain}\perp F_{morphology} ② 蛋白/染色相关特征 通过 Dual-stream PatchNCE（DPNCE）增强 staining-related representation。( https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html?utm_source=chatgpt.com ) ③ 真实 IHC 分布 通过 MDA： P(Ffake)→P(Freal)P(F_{fake})\rightarrow P(F_{real}) 五、这对我们的方案意味着什么？ 我觉得这里非常关键： 我们现在的想法不是“有没有人做过”。 而应该变成： ODA-GAN 已经证明“Structure / IHC-staining factor disentanglement”这条路是合理的。 所以我们可以借鉴它的范式，但不能照搬它。 因为我们的生成过程是： H&amp;E→(Fs,Fp)→Diffusion→C^→Beer−Lambert→I^HC\boxed{ H\&amp;E \rightarrow (F_s,F_p) \rightarrow Diffusion \rightarrow \hat C \rightarrow Beer-Lambert \rightarrow \hat IHC } 而 ODA-GAN 是 GAN 路线： H&amp;E→decoupling→GAN→IHCH\&amp;E \rightarrow \text{decoupling} \rightarrow GAN \rightarrow IHC 六、另外一个特别值得看的：MVFStain 论文： MVFStain: Multiple virtual functional stain histopathology images generation based on specific domain mapping Medical Image Analysis, 2022。( https://www.sciencedirect.com/science/article/pii/S1361841522001670?utm_source=chatgpt.com ) https://www.sciencedirect.com/science/article/pii/S1361841522001670?utm_source=chatgpt.com 它也是 H&amp;E → 功能性染色，而且涉及： Ki67 HER2 PR ER α-SMA macrophage 等多个 functional stains。( https://www.sciencedirect.com/science/article/pii/S1361841522001670?utm_source=chatgpt.com ) 它特别值得我们借鉴的一点 它明确把病理图像的信息理解成： domain-invariant content+domain-variant style\boxed{ \text{domain-invariant content} + \text{domain-variant style} } 也就是： Histology                     │            ┌────────┴────────┐            ↓                 ↓      domain-invariant    domain-variant          content             style            │                 │       morphology          staining 它用 KL loss + histo loss 去约束不同 domain 的 style feature，从而实现不同功能染色的生成。( https://www.sciencedirect.com/science/article/pii/S1361841522001670?utm_source=chatgpt.com ) 而且它还专门评估了 positive signal generation，包括： mIODmIOD 以及： CNR,gCNRCNR,\quad gCNR 这和你现在特别关注的： “蛋白表达到底是不是正确的” 是直接相关的。 七、还有一篇更早的：Stain Transfer using GANs and Disentangled Features 论文： Stain transfer using Generative Adversarial Networks and disentangled features Computers in Biology and Medicine, 2022。( https://www.sciencedirect.com/science/article/pii/S0010482522000117?utm_source=chatgpt.com ) https://www.sciencedirect.com/science/article/pii/S0010482522000117?utm_source=chatgpt.com 这篇非常适合我们研究<strong>“为什么双分支解耦是合理的”</strong>。 它明确把： color-related features\boxed{\text{color-related features}} 和： structural features\boxed{\text{structural features}} 分开。 而且它的 generator 本身就采用了： shared + exclusive branches 来 disentangle style 和 structural features。( https://www.sciencedirect.com/science/article/pii/S0010482522000117?utm_source=chatgpt.com ) 也就是说，你刚才说的： “是不是很多人做科研就是基于一个已有模型，设计一个 shared encoder，然后两个 branch？” 是的。这个范式在 stain transfer 里已经有非常直接的先例。 八、甚至这篇和我们现在的结构非常像 它的思路可以抽象成： Input                       │                Shared Encoder                       │               ┌───────┴───────┐               ↓               ↓         Structural         Color/Stain           branch             branch               │               │               └───────┬───────┘                       ↓                   Generator                       ↓                 Stained image 论文明确说，它使用 neural networks 提取 color-related and structural features，并通过 disentanglement 改善 stain transformation。( https://www.sciencedirect.com/science/article/pii/S0010482522000117?utm_source=chatgpt.com ) 所以我们的： Shared   ↓ Structure branch   ↓ Protein branch   ↓ Diffusion 不是一个没有前例的架构。 九、但是我发现一个很重要的区别 这也是我认为我们应该特别注意的地方。 以前这些工作主要是在： Structure↔Style\boxed{ Structure \leftrightarrow Style } 之间做解耦。 而我们现在实际上想做： Structure↔Protein Expression\boxed{ Structure \leftrightarrow Protein\ Expression } 这两者不是完全相同的事情。 普通 stain transfer 比如： H&amp;E→MassonH\&amp;E \rightarrow Masson 这里主要是： Structure + Color/Stain 我们的 H&amp;E → IHC 更接近： H&amp;E                │        ┌───────┴────────┐        ↓                ↓     Morphology      Protein expression        │                │        │                │        └───────┬────────┘                ↓              IHC 因为 IHC 的染色不是单纯改变颜色。 它是在表达： 某种蛋白在什么位置、什么细胞、什么区域、什么强度出现。 这也是为什么你前面一直强调： 不能把 IHC 当成普通 style transfer。 而 MVFStain、ODA-GAN 已经开始往这个方向走了。尤其 ODA-GAN 直接把 IHC staining-related features 和 tissue morphology 分开。( https://openaccess.thecvf.com/content/CVPR2025/html/Wang_ODA-GAN_Orthogonal_Decoupling_Alignment_GAN_Assisted_by_Weakly-supervised_Learning_for_CVPR_2025_paper.html?utm_source=chatgpt.com ) 十、还有一个非常关键的工作：AAAI 2025 的 Dual Path Prompted Inversion 论文： Unpaired Multi-Domain Histopathology Virtual Staining Using Dual Path Prompted Inversion AAAI 2025。( https://ojs.aaai.org/index.php/AAAI/article/view/32949 ) https://ojs.aaai.org/index.php/AAAI/article/view/32949?utm_source=chatgpt.com 这篇也是无配对虚拟染色 + Diffusion。 它甚至直接使用： Dual Path\boxed{\text{Dual Path}} 一条路径强调： Structural Target 另一条： Style Target 然后在 diffusion inversion / deterministic sampling 中逐步进行内容和风格的解耦。( https://ojs.aaai.org/index.php/AAAI/article/view/32949 ) 这个和我们的关系就更直接了： 他们：  Structure path ──────┐                       ├→ Diffusion Style path ──────────┘   我们：  Structure Encoder ───┐                       ├→ Diffusion Protein Encoder ─────┘ 十一、但是这里有一个非常重要的区别 AAAI 这篇的： StyleStyle 主要还是： staining style / target stain appearance。 而我们的： ProteinProtein 想表达的是： protein-associated concentration field\boxed{\text{protein-associated concentration field}} 最后： CDAB→Beer−LambertIHCC_{DAB} \xrightarrow{Beer-Lambert} IHC 所以我们比单纯的： content/stylecontent/style 又往前走了一步。 十二、另外还有一类工作值得参考：普通医学图像的 disentanglement 我还查到了一个比较经典的医学生成工作： Conditional generation of medical images via disentangled adversarial inference 它把医学图像拆成： Content+Style\boxed{Content + Style} 然后用两个 latent variables，并用： gradient reversal self-supervised regularization style-content information minimization 去实现 disentanglement。( https://www.sciencedirect.com/science/article/abs/pii/S1361841521001523?utm_source=chatgpt.com ) 这篇不是虚拟染色，但是对于我们以后设计： LorthL_{orth} 或者： LindependenceL_{independence} 很有参考价值。 十三、所以我现在给你画一张“文献 → 我们”的关系图 这个非常重要。 已有研究                    │       ┌────────────┼─────────────┐       │            │             │       ▼            ▼             ▼ Stain Transfer   MVFStain      ODA-GAN 2022             2022         CVPR 2025       │            │             │       │            │             │       ▼            ▼             ▼ Structure/     Content /      Morphology / Color          Stain          IHC-related Disentangle    Disentangle    Orthogonal       │            │             │       └────────────┼─────────────┘                    │                    ▼           AAAI 2025 Diffusion           Dual Path Inversion                    │                    ▼          Structure / Style          Dual-path control                    │                    ▼              我们的方案                    │           ┌────────┴─────────┐           ▼                  ▼      Structure          Protein Expression       Branch                 Branch           │                  │           └────────┬─────────┘                    ▼            Conditional Diffusion                    │                    ▼            Concentration Ĉ                    │                    ▼             Beer–Lambert                    │                    ▼               Virtual IHC 十四、所以我现在反而建议：不要马上确定我们刚才那个 Encoder 具体长什么样 这是这次调研之后我认为最重要的改变。 刚才我们是： “Shared shallow stem + Structure ResBlock + Protein Dilated ResBlock” 这个可以作为工程实现方案。 但是从论文设计角度，我们应该先进一步研究： ODA-GAN 到底怎么做它的 Orthogonal Decoupling？ 尤其是： O-MLP\boxed{ O\text{-}MLP } 和： DPNCE\boxed{ DPNCE } 究竟是怎么让： FIHCF_{IHC} 和： FmorphologyF_{morphology} 分开的。 因为它比我们刚才随手设计： Lorth=∥FsTFp∥2L_{orth}=\|F_s^TF_p\|^2 要有更强的文献依据。 十五、而且 ODA-GAN 有一个地方和你的“物理真实性”想法非常值得结合 它做的是： Generated IHC↔Real IHC\boxed{ Generated\ IHC \leftrightarrow Real\ IHC } 的多层特征分布对齐。 它公开的代码中明确实现了 MMD： LMMD=MMD(Ffake,Freal)L_{MMD} = MMD(F_{fake},F_{real}) 而且不是只在最终 RGB 上比较，而是在多个生成器层提取特征进行 domain alignment。( https://github.com/ittong/ODA-GAN?utm_source=chatgpt.com ) 这其实非常接近你之前说的： “我不一定要把生成图和真实图一一对齐，我想让生成图符合真实 IHC 的规律。” 十六、但我们可以进一步问一个更关键的问题 ODA-GAN 的： Ffake∼FrealF_{fake}\sim F_{real} 只是： feature distribution alignment 它不等于： physical law alignment\boxed{\text{physical law alignment}} 因为： MMD(Ffake,Freal)→0MMD(F_{fake},F_{real})\rightarrow 0 并不能证明： I^HC\hat IHC 满足： Beer−LambertBeer-Lambert 也不能证明： CDABC_{DAB} 与真实蛋白表达之间具有正确的物理关系。 所以我们的思路可以变成： ODA-GAN 给我们第一层： Real-IHC feature distribution\boxed{\text{Real-IHC feature distribution}} 我们进一步加入： Concentration-space constraint\boxed{\text{Concentration-space constraint}} 以及： Beer-Lambert physical rendering\boxed{\text{Beer-Lambert physical rendering}} 最终： Disentanglement+Diffusion+Real-IHC Distribution+Physical Rendering\boxed{ \text{Disentanglement} + \text{Diffusion} + \text{Real-IHC Distribution} + \text{Physical Rendering} } 这就不是简单把 ODA-GAN 换成 Diffusion 了。 十七、我现在对我们这个课题的判断反而比刚才更有信心了 因为调研以后发现，我们现在提出的每个“大方向”都有文献支撑： 我们想做的东西已有工作支持Structure / Stain 解耦2022 Stain TransferContent / Stain 解耦MVFStainH&amp;E → IHC 的解耦ODA-GANOrthogonal disentanglementODA-GANReal IHC feature distribution alignmentODA-GAN / MDADiffusion 做虚拟染色AAAI 2025 Dual PathStructure / Style 双路径AAAI 2025Protein positive-signal evaluationMVFStainConcentration/OD 思路与我们前面的 FOD/Beer–Lambert 路线结合物理渲染层这是我们目前方案的重要区别 所以现在真正值得我们深入研究的已经不是： “双分支是不是有人做过？” 答案是：明确有人做过。 而是： “已有的 Structure/Stain disentanglement 能不能被重新定义成 Structure/Protein Expression disentanglement，并放进 concentration-space diffusion，再通过 Beer–Lambert 物理层生成 IHC？” 我认为这才是我们下一步应该认真论证的核心。 尤其是 ODA-GAN，我建议我们下一步直接把它的论文从 网络结构 → O-MLP → DPNCE → MDA → 每一个 loss → 消融实验完整拆一遍。它很可能就是我们这个课题目前最值得参考的“前置工作”。 这个是他说的，我没懂什么意思是</p></div>
+<h1>这段话到底在说什么</h1>
+<p>别被那一大堆链接和公式吓到，他其实只在论证一件事：<strong>&quot;你的想法站不站得住脚？创新点到底在哪？&quot;</strong></p>
+<p>我帮你把这 17 段拆成 3 句话。</p>
+<hr />
+<h2>一、他先做了&quot;查户口&quot;：你的想法别人做过没？</h2>
+<p>他翻了 4 篇相关论文，结论是：<strong>&quot;共享编码器 + 两个分支解耦&quot;这个骨架，别人早就做过了。</strong></p>
+<table>
+<tr><th>论文</th><th>干了什么</th><th>跟你的关系</th></tr>
+<tr><td>Stain Transfer 2022</td><td>共享编码器 → 结构分支 + 颜色分支</td><td>证明&quot;双分支&quot;这个架构不新</td></tr>
+<tr><td>MVFStain 2022</td><td>把病理图拆成&quot;内容 + 染色风格&quot;，还专门评估了阳性信号准不准</td><td>你关心&quot;蛋白对不对&quot;，他有现成指标（mIOD、CNR）</td></tr>
+<tr><td><strong>ODA-GAN 2025</strong></td><td>H&amp;E→IHC，把特征<strong>正交</strong>拆成&quot;染色相关 / 形态相关&quot;，再对齐真实 IHC 分布</td><td><strong>和你最像，重点精读对象</strong></td></tr>
+<tr><td>AAAI 2025 Dual Path</td><td>Diffusion 做虚拟染色，一条路管结构、一条路管风格</td><td>证明&quot;双路径 + 扩散&quot;也有人做</td></tr>
+</table>
+<p><strong>所以他在劝退你别吹&quot;双分支是我原创&quot;——这玩意儿早就有了。</strong></p>
+<hr />
+<h2>二、但他紧跟着说：你和他们有两个关键不一样</h2>
+<p>这才是重点，也是他真正想表达的：</p>
+<pre><code>别人（MVFStain / ODA-GAN）：
+    结构  ←→  染色颜色（换个色调而已）
+
+你：
+    结构  ←→  蛋白表达浓度场 C_DAB</code></pre>
+<p>IHC 不是&quot;把紫图染成棕图&quot;，棕色深浅代表<strong>某个蛋白在哪个细胞、多少量</strong>。这是物理量，不是风格。</p>
+<pre><code>ODA-GAN:   H&amp;E → 解耦 → GAN → 直接吐一张 IHC 图
+你:        H&amp;E → 解耦 →</code></pre>
+<div class="record"><span class="tag">我问</span><p>我来跟你说一下我们目前的思路，就是我们一开始是想在PSPS电影上这个做一些改动。就是PSP stain是一边看的工作，那么。他这个工作就是说做了一个解耦，但是我发现如果我们把它的。主主干的改成unit的扩散的话，这个。生成的结构会非常的差，所以我们现在决定我们做一个解耦方向的，而不是像干这种约束方向的。就我们希望能够结合出蛋白的成分和非蛋白的成分，就是一个是结构的成分，一个是蛋白的成分，然后把这两个成分作为条件注入到我们的生成过程当中。所以我现在就是需要一个这样的扩散框架来让我做改进，然后。我我我的那个想法就是说，我们生成一个图，然后最后让我们的比尔这个图去生成，也是因为基于我们说让他这个图像符合物理成像规律的这个出发点。那么如果现在这样来说的话，我有你能真的能给我推荐一个可用的这个。扩散解耦的范式嘛，这个我想在这个范式上做改进，加上一些频域和门供的方方法。门控的话，就是说如果说辅助损失的这个方向和我们的扩散损失又偏离，我们就不要用。然后频域的方案就是把低频成分作为我们的。结构的一些监督来注入，大概就是这样一个思路。所以说我们可能需要在一个扩散范式上改，你有这方面的思路吗？</p></div>
+<h1>先一句话解码上一段文献综述在说啥</h1>
+<p>那个助手其实就讲了三句话：</p>
+<ol><li><strong>&quot;双分支解耦 + 正交&quot;这件事不是你拍脑袋想的</strong>——ODA-GAN(CVPR25)、MVFStain(MedIA22)、Stain Transfer(CBM22) 都做过 Structure/Style 解耦，范式合法。</li><li><strong>但它们全是 GAN 路线，且解耦的是&quot;结构 vs 染色风格&quot;</strong>，没人把&quot;染色&quot;换成&quot;蛋白浓度场&quot;，也没人接 Beer-Lambert 物理渲染。</li><li><strong>你的 novelty 就落在最后这一步</strong>：把 Structure/Style 解耦升级成 Structure/Protein-Concentration 解耦，再用 Diffusion + 物理层生成 IHC。</li></ol>
+<p>这就是它建议你精读 ODA-GAN 的原因。</p>
+<hr />
+<h1>直接回答：推荐你用什么框架</h1>
+<h2>首选：<strong>Latent Diffusion (LDM) 改双路条件</strong>，不要从 SD 预训练起步</h2>
+<p>理由：</p>
+<ul><li>你本地就有 <code>latent-diffusion-main_1</code>，代码现成；</li><li>医学图像域 gap 太大，从 SD/SDXL 初始化反而拖累结构；</li><li>LDM 的 U-Net 本身就有 cross-attention 层，<strong>把 text token 换成两路 visual token 就行</strong>，改动量最小。</li></ul>
+<h2>不要选的两条路</h2>
+<ul><li>❌ <strong>ControlNet</strong>：它是&quot;单图强条件&quot;，天然单路，硬塞两路要改大量 block，不划算。</li><li>❌ <strong>DDID / Prompt-to-Prompt / Dual Path Prompted Inversion (AAAI25)</strong>：要做反向迭代(inversion)，训练慢、推理慢，你还要加频域和门控，工程上太重。</li></ul>
+<hr />
+<h1>具体架构（你直接照着改 LDM 就行）</h1>
+<pre><code>                H&amp;E patch X
+                     │
+        ┌────────────┼────────────────┐
+        ▼                             ▼
+  低频分支(结构)                  全频分支(蛋白)
+  FFT/DCT 取低频 → Enc_s         Enc_p (带弱监督 mask)
+        │                             │
+        ▼                             ▼
+       F_s (structural tokens)    F_p (protein tokens)
+        │                             │
+        └──────────┬──────────────────┘
+                   ▼
+        U-Net Diffusion (LDM 主干)
+        每一层 cross-attn 同时吃 F_s 和 F_p
+                   │
+                   ▼
+              浓度场 latent Ĉ  (1~3 通道, 不是 RGB!)
+                   │
+                   ▼
+             VAE decode → Ĉ (DAB 浓度图)
+                   │
+                   ▼
+        Beer-Lambert: ÎHC = I₀ · exp(-ε_DAB · Ĉ)</code></pre>
+<p><strong>关键设计点</strong>：</p>
+<ol><li><strong>Diffusion 学的是浓度场 Ĉ，不是 RGB</strong>。这样输出空间从 3 通道压到 1~3 通道，物理上也合理，训练更稳。</li><li><strong>Beer-Lambert 层不训练</strong>，是硬编码的渲染层。这直接解决你&quot;物理成像规律&quot;的诉求。</li><li><strong>结构分支走低频</strong>：H&amp;E 先做 FFT，保留低频成分（组织轮廓、核浆分布），高频细节（染料噪声）丢掉——这就是你说的&quot;频域作为结构监督&quot;。</li></ol>
+<hr />
+<h1>你提的两个改进，分别插在哪</h1>
+<h2>① 频域结构监督（解决&quot;扩散把结构搞崩&quot;）</h2>
+<p>你说的&quot;改 UNet 扩散后结构变差&quot;，根因是：<strong>交叉注意力太松，扩散模型学会了随便画</strong>。两个补丁：</p>
+<pre><code># 补丁 A：结构分支输入就走低频
+X_low = fft_lowpass(X, cutoff=0.1)   # 只保留低频
+F_s = Enc_s(X_low)
+
+# 补丁 B：加一个频域重建损失，把结构钉死在 H&amp;E 上
+L_freq = || FFT(ÎHC).low - FFT(X).low ||_1</code></pre>
+<p><code>L_freq</code> 直接在频谱空间惩罚，低频对低频，结构纹理就不会被扩散模型&quot;自由发挥&quot;。</p>
+<h2>② 门控（aux loss 和 diffusion loss 冲突时别用）</h2>
+<p>这就是 <strong>PCGrad / GradVac</strong> 的标准做法，不要自己造：</p>
+<pre><code># 反向传播时
+g_diff = grad(L_diffusion, params)
+g_aux  = grad(L_aux, params)   # L_aux 可能是 L_freq, L_MMD, L_orth
+
+# 如果两个梯度方向冲突（点积 &lt; 0），把 g_aux 投影到 g_diff 的垂直面
+if dot(g_diff, g_aux) &lt; 0:
+    g_aux = g_aux - dot(g_diff, g_aux)/||g_diff||² * g_diff
+
+# 用 g_diff + λ·g_aux 更新</code></pre>
+<p>这样 auxiliary loss 一旦跟主损失打架，就自动被&quot;关掉&quot;，不会把训练带偏。你说的&quot;方向偏离就不要用&quot;就是这个。</p>
+<hr />
+<h1>一个你必须现在就想清楚的问题</h1>
+<p><strong>蛋白分支 F_p 的监督信号从哪来？</strong></p>
+<p>无配对 H&amp;E→IHC 没有 (H&amp;E, IHC) 同位置配对，所以 F_p 不能靠&quot;对齐真实 IHC patch&quot;来训。三条路，选一条：</p>
+<table>
+<tr><th>方案</th><th>监督来源</th><th>对应工作</th></tr>
+<tr><td>A. 弱监督 patch 级标签</td><td>冻结 UNI + MLP 打 Pos/Neg，Grad-CAM 出 mask</td><td><strong>直接抄 ODA-GAN</strong></td></tr>
+<tr><td>B. 对抗 + 对比</td><td>判别器看真实 IHC，DPNCE 拉近 H&amp;E 阳性↔IHC 阳性</td><td>ODA-GAN</td></tr>
+<tr><td>C. 纯无监督</td><td>只靠正交损失逼 F_p 学&quot;和 F_s 无关&quot;的剩余信息</td><td>风险大，容易学成噪声</td></tr>
+</table>
+<p><strong>我建议 A+B 抄 ODA-GAN</strong>：它已经把这套路跑通了，你把它的 GAN 主干换成 Diffusion、把 RGB 输出换成 Ĉ + Beer-Lambert，就是你的方法。</p>
+<hr />
+<h1>一句话总结</h1>
+<blockquote><strong>在你已有的 <code>latent-diffusion</code> 代码上改：U-Net 双路 cross-attn 吃 F_s(低频结构) 和 F_p(蛋白)，扩散学浓度场 Ĉ，再接硬编码 Beer-Lambert 出 IHC；频域重建损失钉死结构，PCGrad 门控处理辅助损失冲突。ODA-GAN 的弱监督 mask 和 DPNCE 直接搬过来当 F_p 的监督。</strong></blockquote>
+<p>要不要我下一步帮你把这个架构画成一张正式的方法图（HTML/PPT），或者直接把 LDM 里需要改的几个文件列出来？</p>
+<div class="record"><span class="tag">我问</span><p>这个是一一个什么工作啊</p></div>
+<h1>这篇论文是干什么的</h1>
+<h2>一句话定位</h2>
+<p><strong>AAAI 2025，沈先进所/中科院。</strong> 用一个<strong>预训练好的无条件扩散模型</strong>（注意：不是从零训），通过 <strong>DDIM inversion + 双路 prompt 优化</strong>，在<strong>推理阶段</strong>把 H&amp;E 一键转成 MAS / PAS / PASM 三种功能性染色。<strong>全程不训主干网络</strong>，只优化两张小 prompt map。</p>
+<hr />
+<h2>它的核心套路（和你的范式完全不同）</h2>
+<pre><code>              H&amp;E 图
+                │
+       ① DDIM 反演（把图片&quot;反向&quot;加噪回 latent）
+                │
+        ┌───────┴───────┐
+        ▼               ▼
+   路径A: 结构轨迹    路径B: 风格轨迹
+   StainStructPrompt  StainStylePrompt
+   (从H&amp;E反演来的,    (可学习的prompt + 
+    保留组织结构)      特征适配器F()映射目标域)
+        │               │
+        └───────┬───────┘
+                ▼
+        StainPrompt 优化:  λ·结构损失 + (1-λ)·风格损失
+                ▼
+        前向 deterministic sampling → 目标染色图</code></pre>
+<p><strong>两个关键设计</strong>：</p>
+<ol><li><strong>Structural 路径</strong>：直接用 H&amp;E 自己的 DDIM 反演轨迹，保证&quot;结构不走样&quot;。</li><li><strong>Style 路径</strong>：不真正看目标染色图，而是训一个小的 feature adapter <code>F(·)</code>，把源域特征映射到目标域特征分布上，再喂给扩散模型当 prompt。</li><li><strong>λ 调权重</strong>：λ 大 → 保结构；λ 小 → 像目标染色。消融里 H&amp;E2MAS 取 λ=0.05，H&amp;E2PAS 取 λ=0.55。</li></ol>
+<hr />
+<h2>关键事实（决定你能不能参考它）</h2>
+<table>
+<tr><th>维度</th><th>这篇论文</th><th>你的想法</th></tr>
+<tr><td>主干</td><td><strong>冻结</strong>的预训练扩散模型</td><td><strong>从头训</strong>的 LDM</td></tr>
+<tr><td>何时介入</td><td><strong>推理时</strong>优化 prompt（每张图跑 50 步迭代）</td><td><strong>训练时</strong>学双分支条件</td></tr>
+<tr><td>双分支含义</td><td>结构轨迹 vs <strong>染色风格</strong>轨迹</td><td>结构分支 vs <strong>蛋白浓度</strong>分支</td></tr>
+<tr><td>输出空间</td><td>直接 RGB 图</td><td>浓度场 Ĉ → Beer-Lambert</td></tr>
+<tr><td>多域</td><td>一个模型切 MAS/PAS/PASM（类别 embedding）</td><td>你单做 IHC</td></tr>
+<tr><td>数据</td><td>肾脏 H&amp;E + MAS/PAS/PASM（UMDST）</td><td>你的病理 IHC 数据</td></tr>
+</table>
+<hr />
+<h2>对你的三个判断</h2>
+<ol><li><strong>&quot;双路&quot;思想本身</strong>：它用两条独立轨迹分别管结构和风格，和你 F_s / F_p 双分支在哲学上一致——可以拿来写 related work / motivation。</li><li><strong>λ 加权 + 结构损失 / 风格损失</strong> 的平衡思路：你后面也会面临&quot;扩散 loss 和辅助 loss 谁主导&quot;的问题，它的 <code>λ·l_struct + (1-λ)·l_style</code> 就是个现成的参考形式。</li><li><strong>它的失败案例（Fig.10）</strong>：风格 reference 给错颜色时结构依然稳——这正好说明&quot;结构和风格解耦&quot;确实成立。</li></ol>
+<ol><li><strong>它是 inversion 范式</strong>，每张测试图都要跑 50 步 prompt 优化，<strong>慢且不是训练好的生成器</strong>。你要的是一个&quot;给 H&amp;E 直接出 IHC&quot;的网络，推理一次前向就完，这跟它不兼容。</li><li><strong>它的 style 就是颜色纹理</strong>，没有&quot;蛋白浓度场&quot;概念。它做的 MAS/PAS 本身就是胶原/糖原染色，和你要的 IHC 蛋白表达浓度不是一回事。</li><li><strong>没有物理渲染层</strong>，输出就是 RGB。</li></ol>
+<p>它实验里专门比了 <strong>EGSD E</strong>（CVPR 2022 的 energy-guided 无配对扩散图像翻译），那是另一条&quot;基于预训练扩散做无配对翻译&quot;的路线。你后面写 related work 时，EGSD E、这篇 Dual Path、StainDiff 这三篇可以归为<strong>&quot;diffusion 虚拟染色&quot;</strong>那一栏。</p>
+<hr />
+<h2>结论</h2>
+<blockquote><strong>这篇不是你要的&quot;可改的扩散解耦框架&quot;</strong>，它是&quot;冻结预训练模型 + 推理时 prompt 优化&quot;的编辑式路线。它对你的价值是<strong>写 motivation 和 related work 时的对照</strong>：证明&quot;双路管结构和染色&quot;这个 idea 在 diffusion 上有人做过，但人家做的是 style、是推理时、是 RGB——你做的是 protein concentration、是训练时、是 Beer-Lambert 物理渲染，差异点非常清楚，正好拿来立 novelty。</blockquote>
+<p>你之前定的&quot;在 LDM 上从零改双分支&quot;路线<strong>不要动摇</strong>，这篇不是你的基座，是你的参考文献。</p>
+<div class="record"><span class="tag">我问</span><p>我需要在一个可以复现的模型的基础上做改动过，不想从LDM上做啊</p></div>
+<h1>推荐基座：<strong>HistDiST</strong>（不是让你从 LDM 白板开始）</h1>
+<h2>为什么是它</h2>
+<p>我刚把它的论文读了一遍，这就是你要找的东西——<strong>已经跑通的、有代码的、专门做 H&amp;E→IHC 的扩散模型</strong>，而且它本身就已经是&quot;双路条件&quot;结构，正好是你要改的骨架。</p>
+<p><strong>仓库</strong>：https://github.com/ErikGro/HistDiST <strong>论文</strong>：HistDiST: Histopathological Diffusion-based Stain Transfer (2025) <strong>基座</strong>：Stable Diffusion v1.5 微调（U-Net + VAE 全在 diffusers 里，你不用写扩散数学）</p>
+<hr />
+<h2>它现在的结构（你直接对着改）</h2>
+<pre><code>H&amp;E 图
+  ├── VAE encoder → z_H&amp;E ──(concat)──→ U-Net 输入  ← 这就是&quot;结构分支&quot;
+  │
+  └── Phikon (病理大模型) → 全局 embedding ──cross-attn──→ U-Net 每一层
+                                                          ↑
+                                                   这就是&quot;语义/形态分支&quot;
+  训好后: U-Net 去噪 → VAE decode → IHC 图</code></pre>
+<p><strong>它已经做完的脏活</strong>（你不用碰）：</p>
+<ul><li>SD1.5 VAE/U-Net 全部冻结好的工程代码</li><li>zero-terminal-SNR 噪声 schedule + v-prediction（解决 IHC 亮度偏置）</li><li>DDIM inversion 保结构推理</li><li>MIST/BCI 数据集的 dataloader、评测脚本（FID, KID, MRA, PHV）</li><li>训练 pipeline（joint train H&amp;E 生成 + H&amp;E→IHC 翻译）</li></ul>
+<hr />
+<h2>你要改的四个地方（对应你的 idea）</h2>
+<table>
+<tr><th>你的 idea</th><th>在 HistDiST 上怎么改</th><th>改动量</th></tr>
+<tr><td>蛋白分支 vs 结构分支解耦</td><td>把 Phikon embedding 分支<strong>换成你自己的 protein encoder</strong>（接 ODA-GAN 风格的弱监督 mask + DPNCE）</td><td>中等</td></tr>
+<tr><td>浓度场 Ĉ + Beer-Lambert</td><td>VAE decode 后不直接出 RGB，<strong>多加一个 head 预测 Ĉ</strong>，再接硬编码 <code>I = I₀·exp(-ε·Ĉ)</code></td><td>小</td></tr>
+<tr><td>频域结构监督</td><td>加一个 loss：<code>‖FFT(ÎHC).low - FFT(H&amp;E).low‖</code>，挂在 U-Net 输出上</td><td>小</td></tr>
+<tr><td>门控（辅助 loss 跟扩散 loss 打架就关掉）</td><td>改 trainer 里的 backward，加 PCGrad 投影</td><td>小</td></tr>
+</table>
+<p><strong>总工作量估计</strong>：主要是换 Phikon 分支 + 加 Beer-Lambert 头，其他都是 plug-in。比从 LDM 白板开始写省 80% 工程。</p>
+<hr />
+<h2>一个必须先确认的事实</h2>
+<p>HistDiST 用的是 <strong>MIST 数据集（H&amp;E 和 IHC 是相邻切片，近似配对）</strong>。如果你手里的数据是<strong>完全无配对</strong>的（H&amp;E 一批、IHC 一批，没有任何对应关系），那它的 paired 训练 loss 不适用，你需要把它改成 unpaired 的对抗/对比训练。这种情况下备选是：</p>
+<ul><li><strong>ContourDiff</strong>（mazurowski-lab，约翰霍普金斯）：https://github.com/mazurowski-lab/ContourDiff — 无配对医学图像翻译，专门做结构一致性，代码干净。</li><li><strong>PD-UniST</strong>：https://github.com/chujie-zhang/PD-UniST — 明确无配对 H&amp;E→IHC，prompt 驱动。</li></ul>
+<hr />
+<h2>我的建议</h2>
+<ol><li><strong>先 clone HistDiST，在 MIST 上把它的官方 baseline 跑通</strong>（你 4060 应该能跑，batch=4，fp16）。这一步能确认环境和数据 pipeline 没问题。</li><li><strong>跑通后，再做最小改动</strong>：先只加 Beer-Lambert 头，验证物理渲染层能训；然后换 Phikon 分支成你的 protein encoder；最后加频域 loss 和 PCGrad 门控。</li><li><strong>不要一上来就改主干</strong>，先把 baseline 数字复现出来，再改一点看曲线。</li></ol>
+<p>要不要我下一步帮你看一下 HistDiST 仓库的目录结构，列出具体要改哪几个文件？</p>
+<div class="record"><span class="tag">我问</span><p>KIMI会员的五小时code权益是咋用的a</p></div>
+<h1>Kimi Code 的&quot;5 小时&quot;权益到底是什么</h1>
+<p>先纠正一个误解：<strong>&quot;5 小时&quot;不是给你 5 小时的使用时长</strong>，而是一个<strong>滚动限流窗口</strong>——防止你短时间内请求太猛。</p>
+<h2>两层限制</h2>
+<table>
+<tr><th>限制</th><th>含义</th><th>刷新方式</th></tr>
+<tr><td><strong>每周额度</strong></td><td>一周内能消耗的总量</td><td>从订阅日算起，每 7 天刷新，<strong>不累积</strong></td></tr>
+<tr><td><strong>5 小时滚动窗口</strong></td><td>即使周额度还够，短时间请求太多也会被掐</td><td>等窗口往后滚，自动恢复</td></tr>
+</table>
+<p>两个任一用完都会停。在 [Kimi Code 控制台](https://code.kimi.com) 能看到两个进度条：&quot;本周用量&quot;和&quot;限频明细&quot;（比如&quot;4 小时后重置&quot;）。</p>
+<h2>怎么用（三种入口，共用同一个额度）</h2>
+<ol><li><strong>Kimi Code CLI</strong>：终端里装官方命令行工具，<code>/login</code> 登录后直接对话</li><li><strong>VS Code 插件</strong>：装 Kimi Code for VS Code</li><li><strong>第三方工具接 API Key</strong>：在控制台生成 API Key，塞进 Claude Code / Roo Code / OpenCode 这些客户端</li></ol>
+<p>所有设备、所有客户端<strong>共用一份额度</strong>，30 天不活跃会被自动踢下线。</p>
+<h2>实操步骤</h2>
+<ol><li>打开 https://code.kimi.com 登录</li><li>控制台里要么装 CLI、要么生成 API Key</li><li>CLI 里输入 <code>/usage</code> 随时查用量</li><li>周额度或 5 小时窗口任一超 80%，会弹出&quot;加油包&quot;充值按钮兜底</li></ol>
+<h2>几个注意点</h2>
+<ul><li>这权益<strong>只用于个人开发</strong>，企业场景用不了</li><li>改客户端 User-Agent 会被判违规、封号</li><li>新会员体系上线后 Code 权益会和聊天额度拆开卖，现在买的老套餐不受影响</li></ul>
+<p>参考：</p>
+<div class="record"><span class="tag">我问</span><p>这个和我的kimi会员是共享额度的吗</p></div>
+<h1>是共享的，但分两层</h1>
+<h2>共享的部分：<strong>总额度池</strong></h2>
+<p>Kimi 会员下所有功能——网页聊天、深度研究、PPT、Kimi Work、<strong>Kimi Code</strong>——<strong>共用一个大额度池</strong>，按 token 消耗扣。网页聊天聊光了，Code 也跟着冻；反过来也一样。</p>
+<h2>不共享的部分：<strong>Code 专属限流</strong></h2>
+<p>在共享池之上，Kimi Code 还叠了两道<strong>只卡 Code、不卡其他功能</strong>的额外限制：</p>
+<ul><li><strong>每 5 小时滚动窗口</strong>（短时间请求太猛就限流）</li><li><strong>每周额度</strong>（从订阅日起 7 天一轮，不累积）</li></ul>
+<h2>一句话</h2>
+<blockquote><strong>你在网页上聊得越多，留给 Code 的就越少；但 Code 被 5 小时窗口卡住时，网页聊天不受影响。</strong></blockquote>
+<p>加油包（Extra Usage）也是网页和 Code <strong>共用一个钱包</strong>，充一次两边都能扣。</p>
+<div class="record"><span class="tag">我问</span><p>https://zhuanlan.zhihu.com/p/575776243没懂这个方法的部分</p></div>
+<p>知乎的链接我这边抓不到正文（它反爬了），搜索也没定位到这篇文章讲的是什么。</p>
+<p>你直接把<strong>&quot;方法&quot;那一节的文字复制粘贴过来</strong>，或者<strong>截个图发我</strong>，我就能给你逐句讲清楚。</p>
+<div class="record"><span class="tag">我问</span><p>论文题目： EGSDE: Unpaired Image-to-Image Translation via Energy-Guided Stochastic Differential Equations 论文地址： https://link.zhihu.com/?target=https%3A//arxiv.org/abs/2207.06635 模型仓库： https://link.zhihu.com/?target=https%3A//github.com/ML-GSAI/EGSDE 视频地址: https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV1xg411h7qj/%3Fspm_id_from%3D333.999.0.0 二、动机： 无监督的图到图翻译的任务是在没有成对数据的情况下学习源域到目标域的映射，且希望翻译后的图像一方面要去掉原图的域特有特征（例如在猫到狗任务中的鼻子、胡须）使其更“真实”，另一方面可以保留原图的域无关特征（例如在猫到狗任务中的姿势、色调）使其更“可信”。过去的几年里，基于https://zhida.zhihu.com/search?content_id=216083041&amp;content_type=Article&amp;match_order=1&amp;q=GAN&amp;zhida_source=entity的模型成为这个领域主流的方法。随着扩散模型的发展，逐渐开始涌现一些基于扩散模型的图到图翻译方法并且取得了SOTA的结果。这些方法往往是在目标域训练一个SDE（扩散模型）保证“真实”，在测试的阶段用上原图的信息实现“可信”，但是并没有用上源域的训练数据。所以本文希望同时利用源域和目标域的数据训练一个能量函数，通过能量函数对预训练好的目标域SDE（扩散模型）进行指导生成，从而实现更“可信”且“真实”的图到图翻译（如图1所示）。 图1 EGSDE的框架图</p>
+<p>三、方法： 本方法的核心要义是如何根据任务设计合适的能量函数。在本文关注的图像翻译任务中，根据其目的，我们将能量函数 拆成两项对数势函数，分别负责生成图像的“真实”和“可信”。 进一步，我们将负责“真实”的对数势函数 定义为原图和生成的图片经过域独特的特征提取器 后之间的相似度（余弦相似度），负责“可信”的 则定义为两者经过域无关的特征提取器 后之间的负相似度（负 距离的平方）。 直观上来说，去噪过程中能量函数的减少一方面导致原图和翻译图片间的特有特征相似度变低，从而去掉原图中源域特有的特征，另一方面导致两者的域无关的特征相似度变高，从而保留原图中域无关的特征。</p>
+<p>实现上，如图2所示，我们用分类器除去最后一层的剩下部分和低通滤波器分别当做域独特的特征提取器 和域无关的特征提取器 。至此，如图1所示，能量函数和SDE已知，从一个带噪声的原图出发，我们可以通过SDE solver对EGSDE进行采样实现图到图的翻译。除此之外，将 依赖的二分类器拓展到多分类器，我们的方法也很容易拓展到多域翻译任务。 图2 特征提取器的实现</p>
+<p>理论上，我们展示了对EGSDE的离散化采样近似等价于从如下product of experts形式的分布采样:</p>
+<p>这为EGSDE中每个部分的作用提供了解释，其中SDE和 对应于负责“真实”的专家， 对应于负责“可信”的专家。</p>
+<p>四、实验： 在实验中，我们选择https://zhida.zhihu.com/search?content_id=216083041&amp;content_type=Article&amp;match_order=1&amp;q=FID&amp;zhida_source=entity作为对“真实”的衡量，L2、PSNR、SSIM作为对“可信”的衡量，人工测量AMT作为同时两方面的衡量，在AFHQ和https://zhida.zhihu.com/search?content_id=216083041&amp;content_type=Article&amp;match_order=1&amp;q=CelebA-HQ&amp;zhida_source=entity数据集验证方法的有效性。如图3所示，EGSDE取得了最好的“可信-真实”权衡结果，且通过调整超参可以进一步改善FID (51.04 in Cat → Dog)。‘</p></div>
+<h1>EGSDE 方法部分逐段拆</h1>
+<h2>一句话核心</h2>
+<blockquote><strong>先在目标域单独训一个扩散模型（保证&quot;像目标域&quot;），再在采样时外挂两个&quot;引导梯度&quot;：一个把生成图和源图在&quot;域特征&quot;上推远（脱胎换骨），另一个在&quot;内容特征&quot;上拉近（保留姿势）。</strong></blockquote>
+<p>它不训新的生成器，<strong>改的是采样过程</strong>。</p>
+<hr />
+<h2>一、为什么要拆成两个特征</h2>
+<p>无配对翻译的矛盾是：生成图要同时满足</p>
+<ul><li><strong>像目标域</strong>（猫→狗，要像狗）</li><li><strong>不像源域</strong>（不能还留着猫胡须、猫鼻子）</li><li><strong>保源图结构</strong>（猫坐着→狗也坐着）</li></ul>
+<p>作者说：一张图的特征可以拆成两部分</p>
+<table>
+<tr><th>特征</th><th>含义</th><th>怎么提出来</th></tr>
+<tr><td><strong>域独特</strong> <code>f_d(x)</code></td><td>&quot;这是猫还是狗&quot;的判别信息</td><td><strong>二分类器（猫 vs 狗）去掉最后一层的 backbone</strong></td></tr>
+<tr><td><strong>域无关</strong> <code>f_c(x)</code></td><td>姿势、轮廓、构图等跨域通用信息</td><td><strong>低通滤波器（高斯模糊）</strong></td></tr>
+</table>
+<p><strong>为什么分类器中间层 = 域独特？</strong> 因为分类器为了区分猫和狗，逼自己的中间层记住&quot;猫有胡须、狗有长嘴&quot;这种<strong>域差异最强</strong>的东西。</p>
+<p><strong>为什么低通 = 域无关？</strong> 高频（猫毛纹理、狗斑点）是域特有细节；低频（大轮廓、构图、姿势）跨域通用。高斯模糊一拍，高频没了，剩下的就是结构。</p>
+<hr />
+<h2>二、能量函数长什么样</h2>
+<p>把这两个特征写成能量项（知乎笔记里写的 <code>E_real</code> 和 <code>E_faith</code>）：</p>
+<p>$$ \log E_d(x, x_0) = -\cos\!\big(f_d(x),\, f_d(x_0)\big) $$</p>
+<p>$$ \log E_c(x, x_0) = -\big\| f_c(x) - f_c(x_0) \big\|^{2} $$</p>
+<p>其中 $x_0$ 是源图，$x$ 是正在生成的翻译图。</p>
+<p><strong>注意两个项的符号方向相反：</strong></p>
+<table>
+<tr><th>项</th><th>形式</th><th>能量减小意味着</th></tr>
+<tr><td>$E_d$（域独特）</td><td>$-\cos$</td><td>$\cos$ 变大 → 为什么？因为我们采样时要<strong>减能量</strong>……</td></tr>
+<tr><td>$E_c$（域无关）</td><td>$-\</td><td>f_c(x)-f_c(x_0)\</td><td>^2$</td><td>L2 距离变小 → <strong>内容靠近源图</strong> ✓</td></tr>
+</table>
+<p>这里知乎笔记写得有点绕。<strong>直觉上</strong>你只要记住：</p>
+<ul><li><strong>域独特项</strong>：让 $x$ 和 $x_0$ 在判别特征上<strong>越来越不像</strong> → 脱掉猫味</li><li><strong>域无关项</strong>：让 $x$ 和 $x_0$ 在低频内容上<strong>越来越像</strong> → 保留姿势</li></ul>
+<p>至于前面那堆负号和余弦怎么摆，是为了让&quot;减小能量&quot;恰好对应&quot;想要的方向&quot;。你真要复现时照着公式抄就行，不用硬抠符号。</p>
+<hr />
+<h2>三、采样时到底怎么跑</h2>
+<p>预训练好的目标域扩散模型（SDE）本身的 score 是：</p>
+<p>$$ \nabla_x \log p_{\text{SDE}}(x_t, t) $$</p>
+<p>EGSDE 在它上面<strong>加两项梯度引导</strong>：</p>
+<p>$$ \nabla_x \log p_{\text{guided}} = \underbrace{\nabla_x \log p_{\text{SDE}}(x_t, t)}_{\text{往目标域拉（真实）}} + \lambda_d \underbrace{\nabla_x \log E_d(x_t, x_0)}_{\text{脱源域}} + \lambda_c \underbrace{\nabla_x \log E_c(x_t, x_0)}_{\text{保内容}} $$</p>
+<ul><li><strong>第一项</strong>：目标域预训练扩散，保证生成图&quot;像狗&quot;。</li><li><strong>第二项</strong>：每一步都把生成图往&quot;和源图判别特征不一样&quot;的方向推。</li><li><strong>第三项</strong>：每一步都把生成图往&quot;和源图低频内容接近&quot;的方向拉。</li></ul>
+<p>从噪声（或加噪的源图）出发，按这个引导 score 一步步去噪，T 步后出来就是翻译好的图。<strong>全程不训生成器，只在推理时改采样方向。</strong></p>
+<hr />
+<h2>四、&quot;Product of Experts&quot; 那段在说什么</h2>
+<p>把上面那个引导 score 积分回去：</p>
+<p>$$ p_{\text{guided}}(x) \;\propto\; p_{\text{SDE}}(x) \cdot E_d(x, x_0) \cdot E_c(x, x_0) $$</p>
+<p>这就是<strong>三个专家的乘积</strong>（Product of Experts）：</p>
+<ul><li>$p_{\text{SDE}}$ 专家：负责&quot;真实&quot;</li><li>$E_d$ 专家：负责&quot;脱源域&quot;</li><li>$E_c$ 专家：负责&quot;保内容&quot;</li></ul>
+<p>乘积分布 = 同时满足三个专家的要求。这一段只是数学上把&quot;为什么这三项放一起是合理的&quot;说圆了，<strong>对你工程复现没影响</strong>，知道就行。</p>
+<hr />
+<h2>五、和你现在的工作的关系（一句话）</h2>
+<p>EGSDE 是<strong>推理时引导</strong>路线（不训主干，外挂梯度）；你想做的是<strong>训练时双分支</strong>路线（把结构/蛋白直接编进 U-Net）。它对你的价值主要是：</p>
+<ol><li>它用<strong>低通滤波提内容特征</strong>这一招，正好可以借鉴到你想加的&quot;频域结构监督&quot;上；</li><li>它是 H&amp;E→IHC 那条线里 diffusion 类 baseline 的常客，写 related work 必引。</li></ol>
+<div class="record"><span class="tag">我问</span><p>这个论文可以复现吗</p></div>
+<h1>结论：<strong>能复现，但不建议你拿它当基座</strong></h1>
+<h2>仓库我刚 clone 下来看了，情况如下</h2>
+<ol><li><strong>代码完整</strong>：<code>run_EGSDE.py</code>（推理）、<code>run_train_dse.py</code>（训域判别分类器）、<code>run_score.py</code>（FID/PSNR 评测）全有。</li><li><strong>预训练权重全给了</strong>（Google Drive）：</li></ol>
+<ul><li>目标域扩散模型 <code>afhq_dog_4m.pt</code>（直接抄 ILVR 的）</li><li>三个任务的域判别分类器 <code>cat2dog_dse.pt</code> 等</li><li>ImageNet 预训练分类器 <code>256x256_classifier.pt</code></li></ul>
+<ol><li><strong>data/ 里自带 demo 图</strong>，不用先下 AFHQ 就能跑通。</li><li><strong>它本质是&quot;推理时引导&quot;</strong>——不用你自己训扩散模型，下完权重就能采样。这一点比从头训省 90% 时间。</li></ol>
+<table>
+<tr><th>问题</th><th>具体</th></tr>
+<tr><td><strong>环境极老</strong></td><td>README 要求 <strong>Python 3.7 + PyTorch 1.9.0 + CUDA 10.2</strong>。你 4060 是 Ada 架构，CUDA 10.2 根本不支持，得自己升 PyTorch、改 API</td></tr>
+<tr><td><strong>代码栈过时</strong></td><td>基于 2021 年的 <code>guided-diffusion</code> + SDEdit，<strong>没用 diffusers</strong>，全是手写训练循环和 fp16 工具，和现在主流写法差一代</td></tr>
+<tr><td><strong>Google Drive 下载</strong></td><td>国内网络要自己想办法</td></tr>
+<tr><td><strong>256×256 分辨率</strong></td><td>病理 patch 一般 512，要改 U-Net 配置</td></tr>
+</table>
+<h2>给你的实际建议</h2>
+<p>值得花半天折腾：开个 conda 环境按 README 装，PyTorch 升级到 1.13/2.0 一般也能跑（主要改几处 <code>torch.cuda.amp</code> API）。4060 8G 在 256×256 上跑采样没问题。</p>
+<p><strong>别用它当基座</strong>，原因：</p>
+<ol><li>它是 2022 年的 ADM 代码栈，和你之前选的 HistDiST（SD1.5 + diffusers）差一代，硬迁过来比新写还累；</li><li>它的核心创新就是<strong>那两个能量项</strong>（分类器中间层 + 低通滤波），这部分你<strong>单独抄到 HistDiST 上就行</strong>，不用整个仓库搬过来；</li><li>它本身不训主干，你想加双分支、Beer-Lambert、频域损失，等于在它外面再套一层生成器，反而别扭。</li></ol>
+<blockquote><strong>一句话</strong>：EGSDE 复现出来&quot;看看长什么样&quot;是可以的；但作为你博士/毕设的代码基座，它太老了。<strong>去 HistDiST 上改，把 EGSDE 的&quot;低通滤波当内容特征&quot;那一招借过去就行。</strong></blockquote>
+<div class="record"><span class="tag">我问</span><p>他做的是什么图像啊</p></div>
+<h1>EGSDE 做的图（全是自然图像，不是病理）</h1>
+<h2>两个数据集、三个任务</h2>
+<table>
+<tr><th>任务</th><th>源域 → 目标域</th><th>数据</th></tr>
+<tr><td>cat → dog</td><td>猫脸 → 狗脸</td><td>AFHQ（256×256）</td></tr>
+<tr><td>wild → dog</td><td>野猫/狼脸 → 狗脸</td><td>AFHQ</td></tr>
+<tr><td>male → female</td><td>男性人脸 → 女性人脸</td><td>CelebA-HQ（256×256）</td></tr>
+</table>
+<p>另外支持 AFHQ 三域（cat / dog / wild）多域互译。</p>
+<h2>关键事实</h2>
+<ul><li><strong>分辨率 256×256</strong></li><li><strong>内容是动物脸和人脸</strong>，不是病理切片</li><li>它的两个&quot;特征提取器&quot;是这么来的：</li><li>域独特特征 = 在 AFHQ/CelebA 上训的猫 vs 狗、男 vs 女二分类器</li><li>域无关特征 = 直接高斯模糊</li></ul>
+<h2>对你的意义</h2>
+<p>它<strong>本身不是病理工作</strong>，你不能直接把它的分类器权重搬到 H&amp;E→IHC 上用。要搬也只能搬<strong>思路</strong>：</p>
+<ul><li>&quot;域独特用分类器中间层、域无关用低通滤波&quot;这个范式；</li><li>真要在病理上用，得自己在你的 H&amp;E + IHC 数据上重训一个二分类器（H&amp;E vs IHC，或阳性 vs 阴性 patch）。</li></ul>
+<p>这也是为什么我前面说——<strong>EGSDE 对你是&quot;思想来源&quot;，不是代码基座</strong>。病理基座还是 HistDiST。</p>
+<div class="record"><span class="tag">我问</span><p>他这个yu分类器是用在了哪里啊</p></div>
+<h1>分类器（DSE）用在哪——逐行看代码</h1>
+<p>我把 <code>/tmp/EGSDE/functions/denoising.py</code> 的 <code>egsde_sample</code> 扒出来了，就 80 行，核心用法如下：</p>
+<h2>调用位置：<strong>每一步反向去噪时都跑一次</strong></h2>
+<p>采样是从噪声一步步去噪到图，<strong>每个时间步 t</strong> 都会执行一次 <code>egsde_sample</code>。在这一步里：</p>
+<pre><code># 第 54-62 行：域独特项（用分类器）
+Y = dse(y,  t)     # 当前正在去噪的样本 → 分类器提特征
+X = dse(xt, t)     # 源图在时刻 t 的加噪版本 → 同一个分类器提特征
+
+energy = cosine_similarity(Y, X)      # 或 neg_l2
+grad   = autograd.grad(energy.sum(), y)[0]
+mean   = mean - ls * weight_t * grad   # 把梯度叠到去噪方向上</code></pre>
+<pre><code># 第 64-73 行：域无关项（用低通滤波，不用分类器）
+down, up = die
+Y = up(down(y))     # 当前样本高斯模糊
+X = up(down(xt))    # 源图高斯模糊
+energy = mse(X, Y)
+grad   = autograd.grad(energy.sum(), y)[0]
+mean   = mean - li * weight_t * grad</code></pre>
+<h2>它到底在干嘛</h2>
+<table>
+<tr><th>符号</th><th>含义</th></tr>
+<tr><td><code>y</code></td><td>当前去噪迭代里的样本（正在从噪声变回图）</td></tr>
+<tr><td><code>xt</code></td><td><strong>源图</strong>（猫）在时刻 t 的加噪版本</td></tr>
+<tr><td><code>dse(y, t)</code></td><td>分类器对<strong>带噪输入</strong>提中间层特征（注意它是 timestep-conditioned 的）</td></tr>
+<tr><td><code>ls</code> / <code>li</code></td><td>两个超参：域独特项权重、域无关项权重</td></tr>
+</table>
+<p><strong>分类器不输出&quot;这是猫还是狗&quot;的 logits</strong>——它只是被当成一个<strong>特征提取器</strong>，把最后分类层摘掉，用中间层那串 feature map。</p>
+<h2>一句话总结</h2>
+<blockquote><strong>分类器在每一步去噪时被调用两次</strong>：一次对&quot;当前要生成的样本&quot;提特征，一次对&quot;源图加噪版&quot;提特征。两者算距离后对当前样本求梯度，这个梯度作为引导，把去噪方向往&quot;和源图的域特征不一样、但内容一样&quot;那边掰一下。</blockquote>
+<h2>这跟普通 classifier guidance 的区别</h2>
+<p>普通 classifier guidance：<code>∇ log p(class | x)</code>——往&quot;是狗&quot;那个类别上靠。 EGSDE 的 DSE：<code>∇ · cos(dse(x_t), dse(x_source_t))</code>——<strong>不和类别比，和源图比</strong>，而且是中间层特征不是 logits。</p>
+<p>这就是为什么它能做&quot;无配对&quot;——不需要知道目标类标签，只要有一个能区分猫/狗的分类器当特征提取器就行。</p>
+<div class="record"><span class="tag">我问</span><p>CSDN + MCL2024arXiv两套可学习 query 显式解耦 + style 只注入 middle block三个可直接抄的 trick：独立 query 解耦、middle-block-only 注入防泄漏、训练时随机替换模态防作弊。第三个对「防止生成器直接抄 H&amp;E 结构」特别有用。</p></div>
+<h1>这三个 trick 我给你逐个拆一下为什么能打</h1>
+<h2>Trick 1：独立 learnable queries 解耦</h2>
+<p><strong>做法</strong>：cross-attention 里不要一组通用 query，改成<strong>两组可学习 query</strong>——<code>Q_struct</code> 和 <code>Q_protein</code>，分别 attend 同一个 key/value。</p>
+<p><strong>为什么有效</strong>：</p>
+<ul><li>一组 query 既 attend 结构又 attend 蛋白，网络容易&quot;一鱼两吃&quot;，最后学出来的东西混在一起。</li><li>两组独立 query 向量是参数，梯度会自然把它们推向不同的注意力模式——<code>Q_struct</code> 倾向 attend 高分辨率浅层的轮廓，<code>Q_protein</code> 倾向 attend 深层的语义区域。</li><li>比你之前说的&quot;两个 encoder 分支&quot;更轻量：不用多两个网络，只多两组 <code>(L, d)</code> 的可学习向量。</li></ul>
+<p><strong>落地</strong>：在 U-Net 每个 cross-attention 层，<code>to_q</code> 改成输出两组 head，前半走结构、后半走蛋白。</p>
+<hr />
+<h2>Trick 2：middle-block-only 注入防泄漏</h2>
+<p><strong>做法</strong>：蛋白/结构条件<strong>只在 U-Net 最中间那个 bottleneck block 注入</strong>，不在 encoder/decoder 的浅层高分辨率层 concat。</p>
+<p><strong>为什么有效</strong>（这是关键）：</p>
+<ul><li>如果你在 encoder 的第一层就把 H&amp;E 像素和噪声 concat 进去，U-Net 是个大拷贝机，它会<strong>直接把 H&amp;E 的高频细节（核位置、纹理）抄到输出</strong>——这在图像翻译里叫 &quot;identity shortcut&quot;。</li><li>中间层是 8×8 或 16×16 的瓶颈，分辨率最低、语义最抽象。条件只在这里注入，等于强迫网络先把 H&amp;E <strong>压缩成语义</strong>再注入，不能走像素级捷径。</li><li>IP-Adapter、T2I-Adapter 都用这个设计，是个经过验证的工程 trick。</li></ul>
+<p><strong>对应到你的架构</strong>：H&amp;E 通过 VAE encode 后，<strong>不要 concat 到 U-Net 输入</strong>（HistDiST 就是这么干的，所以它结构保得好但染色自由度差），而是只通过 cross-attention 在 middle block 注入。</p>
+<hr />
+<h2>Trick 3：训练时随机替换模态（你说最重要的那个）</h2>
+<p><strong>做法</strong>：训练时每个 batch 按概率 <code>p</code>（一般 0.1~0.3）把<strong>条件 H&amp;E 替换成</strong>：</p>
+<ul><li>纯噪声（标准做法）</li><li>或随机另一张 H&amp;E（更强）</li><li>或全零张量</li></ul>
+<p><strong>为什么这能防止&quot;抄 H&amp;E&quot;</strong>：</p>
+<ul><li>如果你不做这步，生成器会发现一个捷径：<strong>把 H&amp;E 的低频轮廓抄过来 + 随机染个棕黄色</strong>，loss 就很低。它根本没学&quot;H&amp;E 形态 → 蛋白表达位置&quot;的真正映射。</li><li>一旦训练时有 30% 的概率条件是噪声，这条捷径就堵死了——因为那 30% 的样本没有 H&amp;E 可抄，生成器必须靠学出来的语义规律去&quot;猜&quot;蛋白在哪。</li><li>推理时你还是喂真 H&amp;E，但因为训练时见过&quot;条件缺失&quot;的情况，网络对条件的使用会更克制、更语义化，而不是像素级复读。</li></ul>
+<p><strong>这其实就是 classifier-free guidance 的 unconditional drop 思想搬到视觉条件上</strong>，ControlNet 里也这么做（训练时随机把条件图换成零张量）。</p>
+<p><strong>对你的具体价值</strong>：你之前担心&quot;扩散模型直接把 H&amp;E 结构复制过来&quot;，这个 trick 就是直接的解药。建议：</p>
+<ul><li>替换概率 <code>p = 0.15 ~ 0.3</code></li><li>替换成噪声（不要换成另一张 H&amp;E，否则会引入错误配对信号）</li><li>配合 CFG 推理时 <code>guidance_scale = 2~4</code>，双收益</li></ul>
+<hr />
+<h2>三个 trick 怎么叠到你的架构上</h2>
+<pre><code>H&amp;E
+  │
+  ├── VAE encode → z_HE (latent)
+  │
+  └── protein encoder → F_p ┐
+                            ├── 两组 learnable queries (Q_s, Q_p)
+                            │     在 middle block 做 cross-attn
+                            │
+                            └── 训练时 30% 把 (z_HE, F_p) 一起换成噪声
+                                  ↑ 这就是 trick 3</code></pre>
+<p><strong>关键组合</strong>：trick 2（只在 middle block 注入）和 trick 3（随机替换）是<strong>互补</strong>的——前者从架构上堵捷径，后者从数据上堵捷径。两个一起上，生成器才真的被逼去学&quot;H&amp;E 形态 → 蛋白浓度&quot;的映射，而不是抄像素。</p>
+<p>这三个 trick 工程改动量都很小（几十行代码），但都是被工业界验证过的，直接抄就行。</p>
+<div class="record"><span class="tag">我问</span><p>这个工作地址给我</p></div>
+<h1>我没搜到这篇</h1>
+<p>你说的&quot;CSDN + MCL2024 arXiv&quot;这个标识对不上具体某篇论文——我用 learnable query 解耦、middle block 注入、随机替换模态这三个关键词组合搜了两轮，出来的都是别的工作（DEADiff、UniPortrait、NECOMIMI 等），没有一篇同时命中这三个 trick。</p>
+<p><strong>你直接把下面任意一个发我就行</strong>：</p>
+<ul><li>论文标题（哪怕是中文翻译的大概）</li><li>arXiv ID（比如 <code>2407.xxxxx</code>）</li><li>或者 CSDN 那篇解读文章的链接</li></ul>
+<p>我猜你说的&quot;MCL&quot;可能是某个实验室缩写（不是我熟悉的标准会议名），盲猜容易给你指错路。</p>
+<div class="record"><span class="tag">我问</span><p>给我找这个工作</p></div>
+<h1>找到了：就是 <strong>PSPStain</strong></h1>
+<p>你截图里的&quot;SPI&quot;其实是 <strong>PSPStain</strong>（Pathological Semantics-Preserving learning for Virtual Staining）的简称——也就是你一开始说&quot;想在 PSP 上做改动&quot;的那个工作。</p>
+<h2>论文信息</h2>
+<ul><li><strong>标题</strong>：Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining</li><li><strong>作者</strong>：Fuqiang Chen, Ranran Zhang, Boyun Zheng, Yiwen Sun, Jiahui He, Wenjian Qin（深圳先进院，就是写 Dual Path Prompted Inversion 那组人）</li><li><strong>会议</strong>：AAAI 2025（Proceedings of the AAAI Conference on Artificial Intelligence, vol. 39, no. 8, pp. 8780–8787）</li><li><strong>arXiv</strong>：https://arxiv.org/abs/2407.03655</li><li><strong>arXiv HTML</strong>：https://arxiv.org/html/2407.03655</li></ul>
+<h2>它的两个核心组件（对应你截图里的&quot;浓度空间 2ch&quot;）</h2>
+<ol><li><strong>PALS（Protein-Aware Learning Strategy）+ FOD（Focal Optical Density map）</strong>：直接在光学密度空间维护蛋白表达水平的一致性——这就是你说的&quot;浓度空间 2ch 扩散&quot;的来源。</li><li><strong>Prototype-Consistent Learning</strong>：处理 H&amp;E 和 IHC 之间空间不对齐的问题。</li></ol>
+<h2>和你现在的关系</h2>
+<p>你之前说&quot;我们一开始想在 PSPStain 上改，但把主干换成 UNet 扩散后结构很差，所以转向解耦方向&quot;——这篇就是它。它本身是 GAN 路线，<strong>FOD map（光学密度/浓度）</strong>这个概念正好就是你后来想接 Beer-Lambert 的物理浓度场的源头。</p>
+<p>要不要我把这篇 PDF 拉下来精读一遍，重点拆 FOD map 是怎么定义、怎么算、怎么当监督的？这对你设计自己的浓度场 Ĉ 直接有用。</p>
+<div class="record"><span class="tag">我问</span><p>https://github.com/hvcl/DiffVS.git这个工作是一个什么工作啊</p></div>
+<h1>DiffVS 是什么</h1>
+<p>刚 clone 下来看完 README，这是一篇 <strong>AAAI 2026</strong> 的新工作，来自 Harvard / Peter Sorger + Hanspeter Pfister 组（病理 AI 大佬组）。</p>
+<h2>一句话定位</h2>
+<blockquote><strong>用一个 marker-wise 条件化的扩散模型，从 H&amp;E 一键生成多通道多重荧光（multiplex IF）图，并且蒸馏成单步推理，适合 WSI 大图。</strong></blockquote>
+<h2>论文信息</h2>
+<ul><li><strong>标题</strong>：Virtual Multiplex Staining for Histological Images using a Marker-wise Conditioned Diffusion Model</li><li><strong>作者</strong>：Hyun-Jic Oh, Junsik Kim, ... Peter K. Sorger, Hanspeter Pfister, Won-Ki Jeong</li><li><strong>会议</strong>：AAAI 2026</li><li><strong>代码</strong>：https://github.com/hvcl/DiffVS</li></ul>
+<h2>核心方法（两阶段训练）</h2>
+<pre><code>H&amp;E latent ──┐
+              ├──→ concat → U-Net (加噪 target latent)
+marker token ─┘</code></pre>
+<ul><li><strong>source H&amp;E 的 latent 直接和 noisy target latent 在通道维 concat</strong>（这就是 Marigold / InstructPix2Pix 的做法）</li><li><strong>一个可学习 marker token</strong>（如 <code>Hoechst</code>、<code>PanCK</code>、<code>SMA</code>...）告诉模型这次要染哪个 marker</li><li>一个模型同时支持多种 marker，靠 token 切换</li></ul>
+<ul><li>把 Stage 1 的多步扩散<strong>蒸馏成单步推理</strong>（类似 Consistency Model / LCM 的思路）</li><li>固定一个 timestep，直接预测 clean latent，VAE 解码</li><li>推理快到能跑 WSI</li></ul>
+<h2>实验数据集</h2>
+<table>
+<tr><th>数据集</th><th>任务</th></tr>
+<tr><td><strong>ORION-CRC</strong></td><td>结直肠癌 H&amp;E → 多重荧光（Hoechst, PanCK, SMA 等多个 marker）</td></tr>
+<tr><td><strong>HEMIT</strong></td><td>配对 H&amp;E → 虚拟染色（1024×1024 patch，512 训练，滑窗推理）</td></tr>
+</table>
+<h2>对你的参考价值</h2>
+<ol><li><strong>Marigold-style concat 条件</strong>：source latent 直接拼到 noisy target latent 上——这是最直接、最稳的&quot;把 H&amp;E 喂给扩散&quot;的做法，比 cross-attn 简单。</li><li><strong>marker token</strong>：如果你以后要做多个 IHC marker（HER2/ER/Ki67...），一个可学习 token 切换，比训 N 个模型优雅。</li><li><strong>两阶段蒸馏</strong>：你后面要落地 WSI，单步推理是必须的，可以直接抄这个 recipe。</li><li><strong>代码栈现代</strong>：HuggingFace + SD 微调，跟你 HistDiST 路线一致。</li></ol>
+<ol><li><strong>它是 paired 设定</strong>——HEMIT 是配对数据，ORION-CRC 也是配对 tile。你想做 unpaired，它的训练 loss 不直接适用。</li><li><strong>它输出 multiplex IF（多通道荧光）</strong>，不是 IHC RGB。颜色空间完全不一样。</li><li><strong>没有浓度场 / Beer-Lambert</strong>——它就是直接生成 RGB/多通道图。</li><li><strong>没有显式解耦</strong>——source concat 进去是个&quot;黑盒条件&quot;，没有你想做的 Structure/Protein 双分支。</li></ol>
+<h2>一句话总结</h2>
+<blockquote><strong>这是一个工程上很干净、代码现代、但任务设定（paired + multiplex IF）和你（unpaired + IHC + 浓度场）不重叠的工作。</strong> 你可以把它当&quot;Marigold-style 配对扩散怎么在病理上落地 + 怎么蒸馏成单步&quot;的参考代码，但不要拿它当主干。</blockquote>
+<p>要不要我下一步帮你把它的 <code>src/diffvs/modeling.py</code> 翻出来，看看它的 U-Net 是怎么 concat source latent 的？这个实现细节对你改 HistDiST 有用。</p>
+<div class="record"><span class="tag">我问</span><p>这两个工作都分别是什么啊</p></div>
+<h1>两个 PDF 分别是什么</h1>
+<h2>第一个：Diff-VS（音频！不是你想找的那个）</h2>
+<p><strong>这是个同名巧合，跟你之前看的 <code>github.com/hvcl/DiffVS</code> 不是一回事。</strong></p>
+<ul><li><strong>标题</strong>：Diff-VS: Efficient Audio-Aware Diffusion U-Net for Vocals Separation</li><li><strong>任务</strong>：<strong>从混音音乐里分离人声</strong>（vocals separation），跟病理毫无关系</li><li><strong>方法</strong>：用 EDM（Elucidated Diffusion Model）框架，改 U-Net，加 band-split（频带拆分）和 RoFormer blocks</li><li><strong>场景</strong>：音频信号处理，处理的是 spectrogram（时频谱图），不是病理图</li></ul>
+<p>你之前 clone 的 <code>hvcl/DiffVS.git</code> 是哈佛那个病理虚拟染色的 AAAI 2026 工作，<strong>跟这个音频 Diff-VS 只是缩写撞车</strong>。这个 PDF 可以直接关掉，跟你的课题无关。</p>
+<hr />
+<h2>第二个：Star-Diff（这个和你直接相关）</h2>
+<ul><li><strong>标题</strong>：From Pixels to Pathology: Restoration Diffusion for Diagnostic-Consistent Virtual IHC</li><li><strong>arXiv</strong>：2508.02528（2025 年 8 月）</li><li><strong>单位</strong>：慕尼黑大学 TUM / MCML（慕尼黑机器学习中心）</li><li><strong>任务</strong>：H&amp;E → IHC（BCI 数据集，HER2 乳腺癌）</li></ul>
+<p>它的关键观察是：<strong>传统 DDPM 把 H&amp;E→IHC 当 image translation，必须走&quot;加噪 → 去噪&quot;这条路，噪声虽然带来多样性，但会把 H&amp;E 的结构细节丢掉</strong>（Figure 1a）。</p>
+<p>Star-Diff 改成<strong>双路径</strong>（Figure 1b）：</p>
+<pre><code>            IHC 域
+           ↗        ↖
+  Restoration 路径    Noise 路径
+  (确定性, 保结构)   (随机性, 加多样性)
+           ↖        ↗
+            H&amp;E 域</code></pre>
+<ul><li><strong>Restoration path</strong>：H&amp;E 当输入，网络直接学&quot;从 H&amp;E 修复出 IHC&quot;——结构确定性地保留</li><li><strong>Noise path</strong>：标准扩散噪声路径——提供分子表达的多样性</li><li><strong>两条路径联合训练</strong>，平衡&quot;结构保真&quot;和&quot;染色多样性&quot;</li></ul>
+<ol><li><strong>SFS（Semantic Fidelity Score）</strong>：一个新的病理评估指标。因为 H&amp;E 和 IHC 是相邻切片、像素不对齐，传统 SSIM/PSNR 失效。SFS 用一个预训练的 IHC 分类器（ResNet）给生成图打分，比 SSIM 鲁棒。</li><li><strong>BCI 数据集上 SOTA</strong>：超过 8 个 baseline，诊断指标 AUC 比第二名高 5%。</li></ol>
+<ul><li><strong>&quot;双路径&quot;思路</strong>（确定性结构路径 + 随机性多样性路径）跟你想做的&quot;Structure/Protein 双分支&quot;在哲学上很像——它是工程版，你是解耦版。</li><li><strong>把任务重定义为 restoration 而不是 translation</strong>——这个 framing 很重要，你可以在 motivation 里引。</li><li><strong>SFS 指标</strong>直接可用——你做实验时不用再纠结 SSIM 在不对齐数据上不靠谱的问题。</li><li>但它<strong>没有浓度场、没有 Beer-Lambert、没有显式解耦</strong>，还是 RGB 直接生成。</li></ul>
+<hr />
+<h2>一句话总结</h2>
+<blockquote><strong>第一个 PDF 是音频人声分离，同名误传，忽略；第二个 Star-Diff 是把 H&amp;E→IHC 改造成 restoration 任务、双路径平衡结构和多样性的工作，跟你路线高度相关，值得读。</strong></blockquote>
+<div class="record"><span class="tag">我问</span><p>详细说一下第二个工作的创新指标是什么</p></div>
+<h1>SFS（Semantic Fidelity Score）详解</h1>
+<h2>它想解决什么问题</h2>
+<p>病理虚拟染色的老大难：<strong>H&amp;E 和 IHC 是相邻切片，像素对不齐</strong>（平移、旋转、弹性形变）。</p>
+<p>论文里测了一下，稍微动一下图：</p>
+<table>
+<tr><th>扰动</th><th>SSIM 跌幅</th></tr>
+<tr><td>5% 平移</td><td><strong>−47.9%</strong></td></tr>
+<tr><td>15° 旋转</td><td><strong>−51%</strong></td></tr>
+</table>
+<p>所以 SSIM/PSNR 在这个任务上<strong>根本不可信</strong>——两张在诊断上一模一样的 IHC 图，只要对不齐，SSIM 就崩了。Star-Diff 的作者说：&quot;别再比像素了，比<strong>语义</strong>。&quot;</p>
+<hr />
+<h2>SFS 怎么算（三步走）</h2>
+<p>在<strong>真实 IHC</strong> 上训一个 ResNet 二分类器：</p>
+<ul><li>输入：IHC patch</li><li>输出：HER2 positive (2+/3+) vs negative (0/1+)</li><li>在 BCI test split 上准确率 <strong>&gt;86%</strong></li><li>这个分类器就是&quot;裁判&quot;——它代表病理医生的诊断判断</li></ul>
+<p>把你的生成图喂给同一个分类器，看它判得准不准。</p>
+<p><strong>先算类别语义退化（AvgDeg）</strong>：</p>
+<p>$$ R_c^{\text{real}} = \frac{TP_c^{\text{real}}}{N_c}, \qquad R_c^{\text{gen}} = \frac{TP_c^{\text{gen}}}{N_c} $$</p>
+<ul><li>$R_c^{\text{real}}$：分类器在<strong>真实 IHC</strong> 上对类别 $c$ 的 recall</li><li>$R_c^{\text{gen}}$：分类器在<strong>生成 IHC</strong> 上对类别 $c$ 的 recall</li><li>两者差多少，说明生成图在这个类别上&quot;丢了多少语义&quot;</li></ul>
+<p>$$ \text{AvgDeg} = \frac{1}{C}\sum_{c=1}^{C}\big(R_c^{\text{real}} - R_c^{\text{gen}}\big) $$</p>
+<p><strong>再算整体分类准确率</strong>：</p>
+<p>$$ \text{Acc}_{\text{gen}} = \text{分类器在生成 IHC 上的准确率} $$</p>
+<p><strong>最终 SFS</strong>：</p>
+<p>$$ \boxed{\text{SFS} = \frac{\text{Acc}_{\text{gen}} + (1 - \text{AvgDeg})}{2}} $$</p>
+<p>范围 [0, 1]，越高越好。</p>
+<hr />
+<h2>这个公式为什么这么设计</h2>
+<table>
+<tr><th>项</th><th>它在管什么</th></tr>
+<tr><td><code>Acc_gen</code></td><td>生成图<strong>整体</strong>上能不能骗过分类器（像不像 IHC）</td></tr>
+<tr><td><code>1 - AvgDeg</code></td><td>生成图在 positive / negative 两类上<strong>公平不公平</strong>（不能只染好阳性、阴性就崩）</td></tr>
+<tr><td>除以 2</td><td>两项平均，平衡&quot;像&quot;和&quot;准&quot;</td></tr>
+</table>
+<p><strong>直觉</strong>：一个生成图 SFS 高 = 不仅长得像 IHC，而且分类器看了之后<strong>做出的诊断和看真实 IHC 一样准</strong>。这才叫&quot;诊断一致&quot;。</p>
+<hr />
+<h2>它比 SSIM 强在哪（论文的鲁棒性实验）</h2>
+<p>论文故意把真实 IHC 做扰动（平移/旋转/弹性形变），然后算指标跌幅：</p>
+<ul><li><strong>SSIM/PSNR</strong>：5% 平移就崩一半</li><li><strong>SFS</strong>：几乎不变</li></ul>
+<p>因为 SFS 依赖的是分类器的<strong>语义</strong>，分类器对位置不敏感（只要 patch 里有 HER2 阳性区域，挪一下还是阳性）。</p>
+<hr />
+<h2>对你做实验的直接价值</h2>
+<ol><li><strong>你做 H&amp;E→IHC 实验时，必报这个指标</strong>——光报 SSIM/FID 会被审稿人怼&quot;病理不对齐你比像素有啥意义&quot;。</li><li><strong>复现成本极低</strong>：BCI 数据集上别人已经训好了 HER2 二分类器（就是 ResNet），你拿过来直接跑就行。</li><li><strong>如果你做的不是 HER2</strong>：把分类器换成你那个 marker 的二分类（比如 Ki67 high vs low），SFS 公式不用改。</li><li><strong>写论文时把&quot;SSIM 对扰动敏感、SFS 不敏感&quot;那张表放进去</strong>，方法论上立刻立住。</li></ol>
+<hr />
+<h2>一句话</h2>
+<blockquote><strong>SFS = 拿一个在真实 IHC 上训好的病理分类器当裁判，看生成的 IHC 能不能骗过它；同时要求阳性/阴性两类都骗过、不能偏科。它绕开了&quot;像素不对齐&quot;这个死结，直接量&quot;诊断语义保真度&quot;。</strong></blockquote>
+<div class="record"><span class="tag">我问</span><p>当前有没有打折的优惠的token plan 啊</p></div>
+<h1>当前能查到的 Kimi 优惠（2026-10-03）</h1>
+<h2>官方常驻：包年 8 折</h2>
+<table>
+<tr><th>套餐</th><th>月付</th><th>包年月均</th><th>一年省</th></tr>
+<tr><td>Andante</td><td>¥49/月</td><td>—</td><td>—</td></tr>
+<tr><td>Moderato</td><td>¥99/月</td><td>~¥79</td><td>~¥240</td></tr>
+<tr><td>Allegretto</td><td>¥199/月</td><td>~¥159</td><td>~¥480</td></tr>
+<tr><td>Allegro</td><td>¥699/月</td><td>~¥559</td><td>~¥1,680</td></tr>
+</table>
+<p>包年约等于月付的 <strong>8 折</strong>，是官方唯一常驻折扣。</p>
+<h2>当前短期</h2>
+<ul><li>第三方折扣站挂了一个 <strong>Kimi Pro 年付 8 折</strong>，标注 10 月 9 日到期（还有 6 天）。这种第三方码要自己甄别，优先走官网结账页看有没有实际折扣。</li><li>农业银行 × Kimi 联名卡活动（送会员）<strong>9 月 30 日刚结束</strong>，赶不上了。</li></ul>
+<h2>你作为学生最该看的</h2>
+<p>你是太原理工 24 级本科生，<strong>有学生优惠通道</strong>。要不要我现在帮你走一下学生优惠申请流程？需要你确认：</p>
+<ol><li>你现在是不是已经有 Kimi 会员了？还是新开户？</li><li>你主要想用哪个档（Moderato / Allegretto / Allegro）？</li><li>想月付还是年付？</li></ol>
+<p>告诉我这三个，我直接帮你走学生认证 + 领权益。</p>
+<div class="record"><span class="tag">我问</span><p>我看就是9.9那种的我看有的做活动呢吧</p></div>
+<h1>有，就是那个&quot;和 AI 砍价&quot;的活动</h1>
+<p>你说的应该是 Kimi 的 <strong>首月砍价活动</strong>：原价 ¥49/月的 Andante，跟 AI 聊几句砍价，最低能砍到 <strong>¥0.99/月</strong>（不是 9.9，是 9 毛 9）。</p>
+<h2>入口</h2>
+<p>直接打开 👉 <strong>https://www.kimi.com/kimiplus/sale</strong></p>
+<p>跟页面里的 &quot;Kimmmmy&quot; 那个 AI 角色对话，说点好话/卖惨/整活，它就会给你出一个折扣价。历史上最低能砍到 <strong>0.99 元</strong>，大部分人能砍到几块到十几块。</p>
+<h2>注意</h2>
+<ul><li><strong>仅限新用户首月</strong>——老订阅用户砍不了，只能邀请好友拿权益（好友下单你得 10 次 OK Computer 权益）</li><li>砍完不续订下个月就恢复原价，记得关自动续费</li><li>淘宝上那些 ¥5.8、¥2.99 的&quot;K3 日卡/月卡&quot;是黄牛代充，<strong>别买</strong>，容易封号、也没有 Kimi Code 权益</li></ul>
+<p>你现在是新号还是已经订阅过了？如果是新号直接去那个链接砍就行，不用买任何黄牛卡。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/062_ODA-GAN论文查找.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/ab3e3920cf242">https://www.doubao.com/thread/ab3e3920cf242</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

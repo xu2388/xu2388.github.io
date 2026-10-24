@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>问题咨询</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>问题咨询</h1>
+<div class="meta">杂项/其他 · 5 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>这个是怎么回事啊</p></div>
+<h1>文本提取</h1>
+<pre><code>Bug report drafted: Repeated inference retries without resolving dependencies
+- What happened: The model repeatedly launched original StainFuser inference, encountered missing dependencies one at a time, and reported no reset
+1 to review • 2 to send • 0 to dismiss • +1 more queued</code></pre>
+<h2>含义解释</h2>
+<blockquote><strong>问题：StainFuser 在推理时反复重试，但不会自动补全依赖包</strong> 现象：模型一遍一遍启动 StainFuser 推理，<strong>每次只碰到一个缺失依赖报错</strong>，程序不会自动安装依赖，也不会重置环境，陷入循环重试。</blockquote>
+<ol><li>环境缺少运行StainFuser所需的python包（比如某些torch、opencv、tifffile等病理图像相关依赖）</li><li>代码的<strong>异常捕获逻辑</strong>写的有问题：捕获到<code>ImportError</code>之后，<strong>没有终止流程、没有安装依赖，只是简单重试推理</strong>，所以反复触发同一个类别的报错，一次只暴露一个缺失包。</li></ol>
+<ol><li>手动提前一次性安装全部依赖，不要靠跑推理来碰缺包</li></ol>
+<pre><code>pip install -r requirements.txt</code></pre>
+<ol><li>检查代码里的重试逻辑：<strong>依赖缺失属于不可重试错误</strong>，碰到ImportError应当直接退出，不要继续循环重试。</li><li>你这个终端界面是某个AI助手/代理工具自动生成bug报告的交互窗口：</li></ol>
+<ul><li>按<code>1</code>：查看完整bug详情</li><li>按<code>2</code>：提交这份bug报告</li><li>按<code>0</code>：关掉这条提示</li></ul>
+<p>你是直接运行StainFuser推理脚本触发的这个报错吗？我可以帮你定位缺的是哪个包。</p>
+<div class="record"><span class="tag">我问</span><p>我的cludecode不干活</p></div>
+<h1>✅ 问题定位（你说的是 <strong>Claude Code</strong>，不是cludecode）</h1>
+<p>你截图就是 Claude Code 终端 agent 卡住的典型现象： 它在跑 StainFuser 推理脚本，<strong>每次执行只遇到1个缺失依赖包 → 抛出异常 → 自动重试</strong>，但<strong>不会主动安装依赖</strong>，无限循环，看起来就是“不干活”，一直在原地重试、反复触发同一个类型的错误，还自动生成bug报告。</p>
+<h2>为什么卡住不推进</h2>
+<ol><li><strong>Agent默认重试机制</strong>：Claude Code 遇到命令执行失败，默认会重试任务；它分不清「临时报错」和「环境缺包这种硬故障」，缺包属于<strong>不可重试错误</strong>，但它仍然反复启动推理。</li><li>逻辑误区：它以为多跑几次推理就能好，但是不会自动执行 <code>pip install</code> 补依赖，所以每次只会爆出下一个缺失包，循环卡死。</li><li>界面提示：<code>1 to review • 2 to send • 0 to dismiss</code> 是它内置bug报告弹窗，正在排队，阻塞下一步任务。</li></ol>
+<h2>立刻修复方案（按顺序操作）</h2>
+<p>在当前终端直接按 <code>0</code> → dismiss（关闭bug报告），停止队列阻塞。</p>
+<pre><code># 快捷键退出当前claude会话
+Ctrl + C</code></pre>
+<blockquote>如果还停不住，用 <code>Ctrl+X</code> 杀掉agent子进程（Claude Code专用）</blockquote>
+<p>进入你的StainFuser项目环境，执行</p>
+<pre><code>pip install -r requirements.txt</code></pre>
+<blockquote>这一步最重要，不要让Claude边跑边碰缺失包，环境预先准备好。</blockquote>
+<p>启动Claude Code的时候，设置环境变量，减少重试次数：</p>
+<pre><code># Linux / Mac 终端
+export CLAUDE_CODE_MAX_RETRIES=1
+claude</code></pre>
+<p>这个配置意思：<strong>命令失败最多重试1次，不再无限重试</strong>，碰到缺包直接停止，而不是原地循环。</p>
+<blockquote>任务规则：如果执行代码出现 ImportError / 缺失python包，<strong>立刻停止任务，优先执行pip安装，禁止重复重试推理脚本</strong>。</blockquote>
+<h2>备选排查</h2>
+<ul><li>检查虚拟环境：确认Claude使用的python环境，和你手动<code>pip</code>安装包的环境是同一个，经常出现<strong>装到base环境，agent在conda子环境里运行</strong>，包找不到。</li><li>权限：如果是AutoDL远程服务器，看pip有没有权限安装包。</li></ul>
+<p>你现在是在AutoDL云服务器跑这个StainFuser吗？要不要我直接给你一条完整启动命令，直接带环境变量+进入项目目录。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/058_问题咨询.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a9635e6682fc5">https://www.doubao.com/thread/a9635e6682fc5</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

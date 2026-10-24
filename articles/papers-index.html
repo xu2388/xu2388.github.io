@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>论文分享屋 · 虚拟染色与病理影像调研导读</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <script id="meta" type="application/json">
+  {
+    "title": "论文分享屋 · 虚拟染色与病理影像调研导读",
+    "date": "2026-10-24",
+    "tags": ["论文", "调研", "虚拟染色", "H&E→IHC", "导读"],
+    "summary": "我调研过的虚拟染色 / 病理影像论文导读，按主题分组，每篇一句话总结 + 和我 H&E→IHC 主线的关系。PDF 都存在本地，这里做一份能检索的清单。",
+    "category": "论文",
+    "source_ids": []
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">科研博客</h1>
+      <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
+      <nav class="site-nav">
+        <a href="../index.html#threads">研究方向</a>
+        <a href="../index.html#articles">文章</a>
+        <a href="papers-index.html">论文</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <article class="article">
+    <h1>论文分享屋 · 虚拟染色与病理影像调研导读</h1>
+    <div class="meta">写于 2026-10-24 · 论文篇 · 共 27 篇，按主题分组 · 每篇一句话 + 和我主线的关系</div>
+
+    <p class="lead papers-lead">
+      这里收录我这一年调研过的虚拟染色 / 病理影像论文。不逐篇精讲，就每篇一句话说清"它想解决什么、怎么解"，再点一句<strong>它和我 H&amp;E→IHC 主线的关系</strong>——方便我以后回看、也方便同路人快速扫一遍这个领域在干什么。PDF 都存在本地，这里做一份能检索的导读清单。
+    </p>
+
+    <div class="note">
+      <span class="tag">阅读约定</span>
+      <strong>💡 橙色那行</strong> = 这篇和我的主线（虚拟染色 / 浓度域 / 频率域 / 结构控制）直接相关，优先看。右侧 <code>arXiv</code> 链接是我手上有的，别的只留标题（PDF 在本地）。总结是我读摘要的理解，属<strong>待核实</strong>，真要引用回原文。
+    </div>
+
+    <h2>A. H&amp;E→IHC 虚拟染色<span class="theme-count">我的主线，11 篇</span></h2>
+
+    <div class="paper">
+      <div class="paper-title">PSPStain · Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining <span class="tag">虚拟染色</span></div>
+      <div class="paper-sum">中科院深圳先进院：把分子级语义直接灌进 H&amp;E→IHC，用"蛋白感知学习"挖病理语义、并设计能扛空间错位的语义交互，治"语义挖得不够 + 空间没对齐"两个老问题。</div>
+      <div class="paper-rel">我基线/同门一脉，我 002 里重点聊过它——它就是我 PSPStain 思路的源头之一。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Star-Diff · From Pixels to Pathology: Restoration Diffusion <span class="tag">虚拟染色</span><a href="https://arxiv.org/abs/2508.02528">arXiv:2508.02528</a></div>
+      <div class="paper-sum">把虚拟染色从"翻译"重写成"修复"：一条确定性修复通路保结构、一条随机噪声通路保多样性，两者可控平衡；还提出 SFS 评测指标来对付 H&amp;E/IHC 不可避免的空间错位。</div>
+      <div class="paper-rel">我 002 的核心调研对象——"残差通路 + 噪声通路双路径"正是它，直接回应我"有色调无结构"。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">UNIStainNet · Foundation-Model-Guided Virtual Staining <span class="tag">虚拟染色</span></div>
+      <div class="paper-sum">St. Jude：用一个冻结的病理基础模型 UNI 的稠密空间 token 去条件化一个 SPADE-UNet，给染色翻译提供组织级语义引导，外加一套 misalignment-aware 损失。</div>
+      <div class="paper-rel">正是我 007 想干的——用 UNI/Phikon 这类病理编码器当条件源，而非原生 CLIP。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">PAINT · Pathology-Aware Integrated Next-Scale Transformation <span class="tag">虚拟染色</span></div>
+      <div class="paper-sum">华南理工（TMI）：视觉自回归路线，把合成改成"结构优先"——先用 Spatial Structural Start Map 锚定全局结构布局，再逐级解析分子细节，治 H&amp;E 形态对蛋白表达的语义不一致。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">CCPL · Cross-channel Perception Learning for H&amp;E-to-IHC <span class="tag">虚拟染色</span><a href="https://arxiv.org/abs/2506.07559">arXiv:2506.07559</a></div>
+      <div class="paper-sum">复旦：抓住细胞核与细胞膜的跨通道相关——把 HER2 免疫染色拆成 Hematoxylin（核）和 DAB（膜）两个通道，用病理基础模型 Gigapath 的 Tile Encoder 提双通道特征、算跨通道相关性来监督。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Progressive Translation of H&amp;E to IHC with Enhanced Structural Fidelity <span class="tag">虚拟染色</span></div>
+      <div class="paper-sum">俄亥俄州立：把"颜色"和"细胞边界"拆成两个独立优化阶段分别精修，不再把多个损失简单加权，针对性提升结构保真、颜色准确和细胞细节。</div>
+      <div class="paper-rel">和我在 006 里想的"分阶段、分工守护"是一个思路——别一锅炖。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Score-based Diffusion for Unpaired Virtual Histology Staining <span class="tag">无配对</span><a href="https://arxiv.org/abs/2506.23184">arXiv:2506.23184</a></div>
+      <div class="paper-sum">港理大/剑桥：用互信息（MI）引导的 score-based 扩散做无配对翻译——设计全局 MI 能量函数把组织结构和染色特性解耦，并专门处理 H&amp;E/IHC 非像素对齐。</div>
+      <div class="paper-rel">接我 002 的 MINE/MIDiffusion 互信息思路——推理时用 MI 引导保结构、不改训练。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Dual Path Prompted Inversion · Unpaired Multi-Domain Virtual Staining <span class="tag">反演</span></div>
+      <div class="paper-sum">中科院深圳先进院（PSPStain 同组）：双路径反演 + prompt 学习，用视觉 prompt 分别控制内容与风格，在无配对、多染色域下尽量保住完整病理诊断内容。</div>
+      <div class="paper-rel">把我 004 的 DDIM 反演和 007 的 prompt 控制缝一起了，值得精读。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">VIMs · Virtual IHC Multiplex staining via Text-to-Stain Diffusion <span class="tag">文本引导</span></div>
+      <div class="paper-sum">犹他大学：第一个做"多重 IHC"的——用单步视觉-语言扩散，按每个 marker 的文本提示从同一张 H&amp;E 生成多种 IHC，只在单重配对数据上训练。</div>
+      <div class="paper-rel">接我 007 "文本引导染色"——一句话控制生成哪种 marker 的染色。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">ODA-GAN · Orthogonal Decoupling Alignment GAN <span class="tag">解耦</span></div>
+      <div class="paper-sum">大连理工（CVPR 2025）：正交解耦对齐——把特征投到正交空间拆成"染色相关 / 染色无关"两部分，用病理基础模型做弱监督分割代替人工标注，配双流 PatchNCE 损失。</div>
+      <div class="paper-rel">接我 007 的染色-结构解耦——用对比/正交把两者彻底分开。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Making HE More Colorful by Conditional Flow Matching <span class="tag">Flow Matching</span></div>
+      <div class="paper-sum">Paris-Saclay：在浓度域做虚拟染色——先用染色分离算法从 HE 提浓度图，再用条件 Flow Matching 生成 HES（多一层藏红花染）。</div>
+      <div class="paper-rel">接我 004 的 Flow Matching + 我的浓度域主线，少有的"浓度域 + FM"组合。</div>
+    </div>
+
+    <h2>B. 染色归一化 / 域适应<span class="theme-count">5 篇</span></h2>
+
+    <div class="paper">
+      <div class="paper-title">SAStainDiff · Self-supervised stain normalization by stain augmentation using DDPM <span class="tag">归一化</span></div>
+      <div class="paper-sum">Elsevier BSPC 2025：自监督染色归一化——把归一化变成逐像素 color-to-color 映射，用去噪扩散 + 染色增广，再配一个重排采样策略提速。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Stain normalization via score-based diffusion + overlapped moving window patch <span class="tag">归一化</span></div>
+      <div class="paper-sum">Comput Biol Med 2023：score-based 扩散做归一化，采用临床合理的苏木素/伊红分离协议，并用重叠滑动窗口 patch 消除整张 WSI 归一化时的网格伪影。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Self-Supervised Semantic Guidance for Structure-Preserving Stain Normalization <span class="tag">归一化</span></div>
+      <div class="paper-sum">Inception/MBZUAI：给 GAN 归一化加自监督语义引导——不需要手工分割图，就把语义信息在预训练语义网络和归一化网络的不同层之间传递，保住组织结构。</div>
+      <div class="paper-rel">"不用手工标注就注入语义"这个点，对我这种缺标注的场景有参考价值。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">TT-SaD · Test-Time Stain Adaptation with Diffusion Models <span class="tag">域适应</span></div>
+      <div class="paper-sum">台湾中研院：测试时染色适应——把染色迁移当成一个非线性逆问题在推理时解，单域训练就能适配训练时没见过的染色，不用为新数据重训。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">SGCD · Stain-Guided CycleDiffusion for UDA <span class="tag">域适应</span></div>
+      <div class="paper-sum">台湾成大（NeurIPS 2025 spotlight）：双扩散模型 + 双向生成约束合成逼真数据给下游分类微调，再加染色引导一致性损失增强去噪，做病理图像的无监督域适应。</div>
+    </div>
+
+    <h2>C. 染色解混 / 物理约束<span class="theme-count">接我的浓度域主线，2 篇</span></h2>
+
+    <div class="paper">
+      <div class="paper-title">Beer-Lambert Autoencoder for Unsupervised Stain Deconvolution in Multiplex IHC <span class="tag">浓度域</span></div>
+      <div class="paper-sum">Warwick / KU Leuven：数据驱动的染色解混——U-Net 预测 K 个非负浓度通道，解码器是一个可微的 Beer-Lambert 前向模型（染色矩阵可学、用典型色相初始化），无监督训出干净、分离的每染浓度图；经典 BL 解混在 &gt;3 染时就欠定不稳定，它能扛多重 IHC。</div>
+      <div class="paper-rel">直接接我的浓度域 / 比尔-朗伯思路（我那份 Agilent 专利 WO2026030747A1 同宗）——把"可微物理前向模型"嵌进编解码器，是我浓度域路线想借鉴的范式。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">FPM2Stain Net · physics-guided super-resolution + multi-modal virtual staining <span class="tag">物理约束</span></div>
+      <div class="paper-sum">曼彻斯特（Biomed Opt Express 2026）：物理引导的超分 + 多模态虚拟染色端到端管线——先用双向物理傅里叶叠层（BiP-FPM）重建高分辨率振幅/相位图，再用带小波空频融合和感知监督的多任务 cGAN 合成 H&amp;E/DAPI/LAP2/panCK。</div>
+      <div class="paper-rel">"物理成像 + 小波 + 生成"三合一，接我物理约束和频率域两条线。</div>
+    </div>
+
+    <h2>D. 频率域 / 频谱<span class="theme-count">接我 003/194 的频域攻边界，6 篇</span></h2>
+
+    <div class="paper">
+      <div class="paper-title">FDG · Guidance in the Frequency Domain Enables High-Fidelity Sampling at Low CFG <span class="tag">频域</span><a href="https://arxiv.org/abs/2506.19713">arXiv:2506.19713</a></div>
+      <div class="paper-sum">ETH / Disney：从频域拆解 classifier-free guidance——低频引导管全局结构与条件对齐、高频引导管视觉保真；标准 CFG 对所有频率一视同仁导致过饱和/失真，FDG 把两者分开设强度，低 CFG 也高清。</div>
+      <div class="paper-rel">直接接我 003/194 频域攻边界——原来"高低频分工"在 CFG 层就能做。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">On the Frequency Bias of Generative Models <span class="tag">频谱</span></div>
+      <div class="paper-sum">图宾根大学：系统扒 GAN 的频谱偏差——不同上采样方式让生成器偏向不同频谱特性，棋盘伪影不能独自解释真假图的谱差异，判别器也有份。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">SWAGAN · Style-based WAvelet-driven Generative Model <span class="tag">频域</span></div>
+      <div class="paper-sum">特拉维夫大学：把 StyleGAN2 搬到小波频域做渐进生成，生成器/判别器全程嵌入小波、强制频率感知的隐表示，高频更真、还更快。</div>
+      <div class="paper-rel">接我 194 想拿 HWD 小波下采样改造 UNet 的念头——人家整网都小波化了。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">WaveGAN · Frequency-aware GAN for High-Fidelity Few-shot Generation <span class="tag">频域</span></div>
+      <div class="paper-sum">华东理工：频率感知的少样本生成——把编码特征拆成多频率分量，低频跳连保轮廓结构、高频跳连补细节，再加频率 L1 损失防频率信息丢失。</div>
+      <div class="paper-rel">"低频保结构、高频补细节"的跳连设计，和我频域解耦的思路同构。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Watch your Up-Convolution · CNN GANs Failing to Reproduce Spectral Distributions <span class="tag">频谱</span></div>
+      <div class="paper-sum">Fraunhofer：反卷积（转置卷积）上采样会让生成模型谱分布错误、可被近 100% 检出（deepfake 检测就是这么干的）；提出加频谱正则项训出谱一致的 GAN。</div>
+      <div class="paper-rel">提醒我：UNet 的上采样方式本身就在偷偷扭曲频谱，和我 003 的边界模糊可能同源。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">SAWR · Stain-Aware Wavelet Regularization for Adversarial Purification <span class="tag">频域</span><a href="https://arxiv.org/abs/2606.08745">arXiv:2606.08745</a></div>
+      <div class="paper-sum">FAU / Imperial：染色感知的小波正则做对抗净化——用 Haar 小波分层把对抗扰动和诊断结构信息拆开，还按 H/E 通道分别做频率调节，鲁棒性提升约 10.69%。</div>
+      <div class="paper-rel">"按染色通道分别调频率"这个思路很新，接我按 H/DAB 分通道的想法。</div>
+    </div>
+
+    <h2>E. 可控生成 / 结构引导<span class="theme-count">1 篇</span></h2>
+
+    <div class="paper">
+      <div class="paper-title">SegGuidedDiff · Anatomically-Controllable Medical Image Generation <span class="tag">结构控制</span></div>
+      <div class="paper-sum">杜克大学：分割掩码引导的扩散——每个采样步都跟随一个多类解剖分割掩码，让生成严格受解剖结构约束；配随机掩码消融训练，可只约束选定的解剖区域、其余放开。</div>
+      <div class="paper-rel">接我"结构控制"执念——用掩码在每一步锚定结构，是 ControlNet 之外的另一条路，也是我 007 结尾说的"结构靠 ControlNet/掩码"的根据。</div>
+    </div>
+
+    <h2>F. 病理基础模型 / 通用训练技巧<span class="theme-count">2 篇</span></h2>
+
+    <div class="paper">
+      <div class="paper-title">A Unified Low-level Foundation Model for Enhancing Pathology Image Quality <span class="tag">基础模型</span></div>
+      <div class="paper-sum">港科大陈浩组：面向病理的"低级视觉"基础模型——统一对付噪声、模糊、低分辨率等切片退化（高级诊断模型很强，但低级增强一直没人系统做），替代染色也能省成本。</div>
+      <div class="paper-rel">我本地这份文件就叫"HISTDIST的后续工作"——我基线的同门后续，主线演进必看。</div>
+    </div>
+
+    <div class="paper">
+      <div class="paper-title">Perception Prioritized Training of Diffusion Models <span class="tag">训练技巧</span></div>
+      <div class="paper-sum">首尔大 / LG：重设扩散损失的加权方案——优先训练某些噪声档（把它们当成学视觉概念的 pretext task），不换架构、不换采样就全面变好。</div>
+      <div class="paper-rel">便宜好用的训练 trick，我调扩散时值得一试。</div>
+    </div>
+
+    <div class="note">
+      <span class="tag">待补 / 未纳入</span>
+      <ul>
+        <li>桌面还有 <strong>MIDiff</strong>（手机用量生成，误存，非病理）和 <strong>大创中期动画</strong>（项目报告，非论文），已排除。</li>
+        <li>部分论文我只读了摘要，<strong>总结待核实</strong>；真要引用回原文。</li>
+        <li>PDF 目前只在本地（桌面），没挂到网上——那几个几十 MB 的 PDF 不适合进 Git 仓库。若你想让某几篇可下载，我可以挑小的几篇挂上去或补 arXiv 链接。</li>
+        <li>你说的"很多 HTML 调研"我目前在桌面只找到 2 个相关 HTML（SAStainDiff 网页存档 + 一个染色归一化网页存档，都归到 B 组了）；其余调研若在别的文件夹/之前的会话里，告诉我路径，我补进来。</li>
+      </ul>
+    </div>
+
+    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+  </article>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
+    </div>
+  </footer>
+</body>
+</html>

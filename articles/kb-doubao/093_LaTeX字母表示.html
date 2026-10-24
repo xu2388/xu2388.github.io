@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LaTeX字母表示</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>LaTeX字母表示</h1>
+<div class="meta">杂项/其他 · 92 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>这里的几个字母的latex给我</p></div>
+<pre><code>x_t,\quad x_0,\quad x_{t-1}</code></pre>
+<p>对应原文：</p>
+<ul><li>$x_t$：<code>x_t</code></li><li>$x_0$：<code>x_0</code></li><li>$x_{t-1}$：<code>x_{t-1}</code></li></ul>
+<p>整句 LaTeX：</p>
+<pre><code>扩散模型的关键在于学习前向过程的逆过程.虽然从 $x_t$ 一步恢复出 $x_0$ 通常是困难的,但从 $x_t$ 恢复 $x_{t-1}$ 只是一个局部去噪问题.</code></pre>
+<p>需要我顺带把扩散模型前向/反向过程的全套公式（$\beta_t,\alpha_t,\epsilon_\theta$）也一起给你吗？</p>
+<div class="record"><span class="tag">我问</span><p>这个公式的含义请你给我解释一下</p></div>
+<h1>公式</h1>
+<p>$$ p_\theta(\boldsymbol{x}_{0:T}) = p(\boldsymbol{x}_T) \prod_{t=1}^{T} p_\theta(\boldsymbol{x}_{t-1} \mid \boldsymbol{x}_t) \tag{16.65} $$</p>
+<blockquote>来源：nndl（动手学深度学习）扩散模型反向生成过程</blockquote>
+<h2>符号说明</h2>
+<ul><li>$\theta$：神经网络的参数（U-Net的权重）</li><li>$\boldsymbol{x}_0$：<strong>真实原图</strong></li><li>$\boldsymbol{x}_1,\dots,\boldsymbol{x}_T$：逐步加噪后的图像；$\boldsymbol{x}_T$ 是完全高斯噪声图</li><li>$\boldsymbol{x}_{0:T}$：序列 $\boldsymbol{x}_0,\boldsymbol{x}_1,\dots,\boldsymbol{x}_T$</li><li>$p_\theta(\boldsymbol{x}_{t-1}\mid \boldsymbol{x}_t)$：<strong>反向转移概率</strong>：给定第$t$步带噪图$\boldsymbol{x}_t$，预测上一步（噪声更少）的图$\boldsymbol{x}_{t-1}$的条件分布，由神经网络建模</li><li>$\prod_{t=1}^T$：连乘，从$t=1$乘到$T$</li></ul>
+<h2>公式含义</h2>
+<p>这个式子定义<strong>扩散模型的反向生成（去噪）过程</strong>：</p>
+<ol><li>生成起点：从纯高斯噪声 $\boldsymbol{x}_T$，它的分布是 $p(\boldsymbol{x}_T)$</li><li>迭代去噪：从 $t=T$ 到 $t=1$，<strong>一步一步</strong>，利用学到的条件分布 $p_\theta(\boldsymbol{x}_{t-1}\mid \boldsymbol{x}_t)$，由 $\boldsymbol{x}_t$ 采样得到噪声更少的 $\boldsymbol{x}_{t-1}$</li><li>整体联合分布：整条图像序列$\boldsymbol{x}_0,\boldsymbol{x}_1,\dots,\boldsymbol{x}_T$的联合概率，等于初始噪声分布，乘以每一步反向转移条件概率的乘积。</li></ol>
+<blockquote>通俗理解： 前向过程是：原图 $x_0 \xrightarrow{\text{加噪}} x_1 \rightarrow \dots \rightarrow x_T$（逐步变成白噪声） 反向生成过程是：白噪声 $x_T \xrightarrow{\text{逐步去噪}} x_{T-1}\rightarrow\dots\rightarrow x_0$（逐步还原图片）  这个公式就是描述：<strong>整个去噪链条的概率，等于每一小步去噪概率相乘</strong>。我们的神经网络$\theta$就是用来学习每一步的条件分布$p_\theta(x_{t-1}|x_t)$。</blockquote>
+<h2>关键点</h2>
+<ul><li>马尔可夫假设：反向过程也满足马尔可夫性质，$x_{t-1}$只依赖$x_t$，不依赖更早的$x_{t+1},\dots$，所以可以写成条件概率连乘。</li><li>不是一步直接从$x_T$恢复$x_0$，而是T次局部去噪，这就是你上一张PPT那句话对应的数学表达。</li></ul>
+<h2>LaTeX代码</h2>
+<pre><code>p_\theta(\boldsymbol{x}_{0:T}) = p(\boldsymbol{x}_T) \prod_{t=1}^{T} p_\theta(\boldsymbol{x}_{t-1} \mid \boldsymbol{x}_t) \tag{16.65}</code></pre>
+<p>要不要继续下一个公式（反向过程是高斯分布 $p_\theta(x_{t-1}|x_t)=\mathcal{N}(\dots)$）？</p>
+<div class="record"><span class="tag">我问</span><p>这里的每一项转移分布都是高斯分布吧，这个是为什么啊</p></div>
+<h1>核心结论</h1>
+<p>是的，<strong>反向转移分布 $p_\theta(\boldsymbol{x}_{t-1}\mid \boldsymbol{x}_t)$ 被建模成高斯分布</strong>。根本原因：<strong>前向加噪过程的每一步转移都是高斯，根据贝叶斯，它的逆转移在小步长下也近似高斯</strong>。</p>
+<hr />
+<h2>1. 先回顾前向过程（马尔可夫加噪）</h2>
+<p>前向过程：从 $\boldsymbol{x}_{t-1}\to\boldsymbol{x}_t$，每一步加少量高斯噪声： $$ q(\boldsymbol{x}_t \mid \boldsymbol{x}_{t-1}) = \mathcal{N}\big(\boldsymbol{x}_t; \sqrt{\beta_t}\boldsymbol{x}_{t-1},\beta_t\boldsymbol{I}\big) $$ $q$ 是真实的前向加噪分布，固定不变。</p>
+<blockquote>每一步都是<strong>高斯分布</strong>；多个高斯的叠加依然是高斯，所以任意 $q(\boldsymbol{x}_t\mid\boldsymbol{x}_0)$ 也是高斯。</blockquote>
+<p>前向是已知的、固定的马尔可夫链，每一步转移都是高斯。</p>
+<h2>2. 贝叶斯推导：逆转移 $q(\boldsymbol{x}_{t-1}\mid\boldsymbol{x}_t)$ 天然是高斯</h2>
+<p>根据贝叶斯公式： $$ q(\boldsymbol{x}_{t-1}\mid \boldsymbol{x}_t) = \frac{q(\boldsymbol{x}_t|\boldsymbol{x}_{t-1})\,q(\boldsymbol{x}_{t-1})}{q(\boldsymbol{x}_t)} $$</p>
+<ul><li>$q(\boldsymbol{x}_t|\boldsymbol{x}_{t-1})$：高斯</li><li>$q(\boldsymbol{x}_{t-1})$：高斯</li></ul>
+<p><strong>两个高斯的乘积归一化之后仍然是高斯</strong>。 👉 所以真实的逆转移分布 $q(\boldsymbol{x}_{t-1}\mid\boldsymbol{x}_t)$ 一定是高斯分布！</p>
+<blockquote>我们无法直接拿到这个真实逆分布 $q$，所以用神经网络参数化一个高斯分布 $p_\theta(\boldsymbol{x}_{t-1}\mid\boldsymbol{x}_t)$ 去<strong>拟合这个高斯</strong>。 这就是为什么我们直接把 $p_\theta$ 设定为高斯：<strong>目标分布本身就是高斯，用同分布族去拟合是合理的</strong>。</blockquote>
+<h2>3. 形式：$p_\theta(\boldsymbol{x}_{t-1}\mid \boldsymbol{x}_t) = \mathcal{N}\big(\boldsymbol{x}_{t-1}; \boldsymbol{\mu}_\theta(\boldsymbol{x}_t,t), \boldsymbol{\Sigma}_\theta(\boldsymbol{x}_t,t)\big)$</h2>
+<p>网络不直接输出整张图，而是输出<strong>高斯分布的均值（和方差）</strong>：</p>
+<ul><li>$\boldsymbol{\mu}_\theta(\boldsymbol{x}_t,t)$：U-Net预测高斯均值</li><li>原始DDPM里做了简化：方差不学习，直接固定为常数，只学习均值</li></ul>
+<h2>4. 直观理解 + 为什么不能随便选别的分布</h2>
+<ol><li>前向是一点点加高斯噪声，反转这个过程，<strong>每一步只移除一点点噪声</strong>，局部的不确定性满足高斯；</li><li>高斯分布性质极好：高斯的条件分布、边缘分布、乘积都还是高斯，数学上可以直接写出闭式，方便推导损失；</li><li>如果选用别的分布（比如伯努利、拉普拉斯），无法匹配 $q(\boldsymbol{x}_{t-1}\mid\boldsymbol{x}_t)$ 的高斯形式，推导会非常麻烦。</li></ol>
+<h2>5. 补充一个容易混淆的点</h2>
+<blockquote>注意：只有<strong>条件转移分布</strong>是高斯。 原图 $\boldsymbol{x}_0$ 的分布<strong>不是高斯分布</strong>（图片像素不是高斯）；只是经过T步加噪后，$\boldsymbol{x}_T$ 趋近标准高斯。</blockquote>
+<hr />
+<p>前向每一步转移是高斯，由贝叶斯公式得到的逆转移 $q(x_{t-1}|x_t)$ 天然是高斯分布；因此我们用神经网络参数化一个高斯分布 $p_\theta(x_{t-1}|x_t)$ 去拟合它。</p>
+<p>如果你想，我可以把这个 $q(x_{t-1}|x_t)$ 的均值方差完整推导一遍（就是DDPM原文那个核心推导）。</p>
+<div class="record"><span class="tag">我问</span><p>这个是为森么啊</p></div>
+<h1>一句话核心</h1>
+<p><strong>DDPM原版不学习方差 $\sigma_t^2$，只学习均值 $\mu_\theta(x_t,t)$，是为了简化训练；方差直接固定为前向过程算出来的真实后验方差 $\tilde{\beta}_t$，当作已知常数。</strong></p>
+<h2>逐句拆解PPT原文</h2>
+<blockquote>其中均值项 $\boldsymbol{\mu}_\theta(\boldsymbol{x}_t,t)$ 为待学习的函数，$t$ 表示时间步。在很多经典实现中，反向方差 $\sigma_t^2$ 通常取为预先给定的常数或与真实后验方差 $\tilde{\beta}_t$ 相关的固定值，因此反向去噪的主要目标是如何学习 $\boldsymbol{\mu}_\theta(\boldsymbol{x}_t,t)$。</blockquote>
+<p>前向加噪链 $q(x_t|x_{t-1})$ 是我们<strong>人为定义好的固定过程</strong>，所以利用贝叶斯公式，我们可以<strong>直接数学推导出真实逆转移分布 $q(x_{t-1}|x_t)$ 的均值和方差</strong>，不需要网络预测： $$ q(x_{t-1}|x_t) = \mathcal{N}\big(\tilde{\mu}_t(x_t),\tilde{\beta}_t \boldsymbol{I}\big) $$ 这里的 $\tilde{\beta}_t$ 就是<strong>真实后验方差</strong>，完全由我们提前设置好的 $\beta_1,\beta_2,\dots,\beta_T$ 计算得到，是和数据无关、固定的常数。</p>
+<blockquote>既然真实逆分布的方差我们能直接算出来，那神经网络就没必要再去预测方差了。</blockquote>
+<ol><li><strong>减少网络预测输出，降低训练难度</strong></li></ol>
+<p>如果同时预测均值+方差，U-Net要输出两倍通道，优化目标更复杂，训练不稳定。 DDPM直接复用已知的 $\tilde{\beta}_t$ 作为反向过程 $p_\theta(x_{t-1}|x_t)$ 的方差，网络只需要预测高斯均值 $\mu_\theta$，训练负担大幅下降。</p>
+<ol><li><strong>实验效果足够好</strong></li></ol>
+<p>论文里发现：<strong>方差对生成质量影响很小，均值才是决定图片能不能还原出来的核心</strong>。方差只控制采样时添加噪声的强弱，只要方差设置合理，固定方差也能生成高质量图像。</p>
+<ol><li><strong>数学上的匹配</strong></li></ol>
+<p>我们的模型 $p_\theta(x_{t-1}|x_t)=\mathcal{N}(\mu_\theta,\sigma_t^2 I)$，目标是逼近真实后验 $q(x_{t-1}|x_t)=\mathcal{N}(\tilde{\mu}_t,\tilde{\beta}_t I)$。 把方差直接固定成 $\sigma_t^2=\tilde{\beta}_t$，模型只需要拟合均值 $\mu_\theta \to \tilde{\mu}_t$，优化目标更简单。</p>
+<p>后面的改进版本<strong>让网络同时预测方差</strong>，可以动态学习方差，生成效果更好，但代价是训练更难</p>
+<div class="record"><span class="tag">我问</span><p>这里涉及到字母的地方的latex请你给我</p></div>
+<pre><code>其中均值项 $\mu_\theta(\boldsymbol{x}_t, t)$ 为待学习的函数，$t$ 表示时间步。在很多经典实现中，反向方差 $\sigma_t^2$ 通常取为预先给定的常数或与真实后验方差 $\tilde{\beta}_t$ 相关的固定值，因此反向去噪的主要目标是如何学习 $\mu_\theta(\boldsymbol{x}_t, t)$。</code></pre>
+<p>单独提取公式符号：</p>
+<ul><li>$\mu_\theta(\boldsymbol{x}_t, t)$</li><li>$\sigma_t^2$</li><li>$\tilde{\beta}_t$</li></ul>
+<blockquote>说明：PPT里的x是粗体向量 $\boldsymbol{x}$；如果你的文档不需要粗体，直接写 $x_t$ 即可。</blockquote>
+<p>要不要我把前面几张PPT的所有扩散公式，一次性整理成完整的nndl版本LaTeX段落？</p>
+<div class="record"><span class="tag">我问</span><p>贫贱夫妻百事哀的意思是什么</p></div>
+<h1>贫贱夫妻百事哀</h1>
+<p><strong>出处</strong>：元稹《遣悲怀·其二》，悼亡诗，悼念亡妻韦丛。</p>
+<blockquote>诚知此恨人人有，贫贱夫妻百事哀。</blockquote>
+<h2>原意（很关键，很多人理解错）</h2>
+<p>我早知道生离死别的悲痛人人都会经历；<strong>但一同熬过贫穷困苦岁月的夫妻，一旦永别，回忆起往日种种琐事，就格外悲伤</strong>。 ✅ 核心：<strong>不是说贫穷就会导致夫妻矛盾多、日子难过</strong>；而是共苦的伴侣离世之后，回首当年一起吃苦的点滴，每一件往事都勾起哀伤。</p>
+<h2>现在大众常用引申义（现代通俗理解）</h2>
+<p>贫穷会给家庭带来重重压力，柴米油盐处处拮据，很容易引发矛盾，夫妻之间很多事情都难顺心，日子过得愁苦。</p>
+<blockquote>⚠️ 注意：这是后世的误读，但日常交流大家大多是这个意思。</blockquote>
+<ul><li>古诗本义：<strong>死别之痛，共苦的夫妻失去对方后，往事皆哀</strong></li><li>现代俗语用法：<strong>贫穷会让夫妻生活处处为难</strong></li></ul>
+<p>要不要把全诗和白话翻译给你？</p>
+<div class="record"><span class="tag">我问</span><p>这个诗全部给我</p></div>
+<h1>遣悲怀三首 【唐·元稹】（悼亡妻韦丛）</h1>
+<h2>其一</h2>
+<p>谢公最小偏怜女，自嫁黔娄百事乖。 顾我无衣搜荩箧，泥他沽酒拔金钗。 野蔬充膳甘长藿，落叶添薪仰古槐。 今日俸钱过十万，与君营奠复营斋。</p>
+<h2>其二（“贫贱夫妻百事哀”出自这一首）</h2>
+<p>昔日戏言身后意，今朝都到眼前来。 衣裳已施行看尽，针线犹存未忍开。 尚想旧情怜婢仆，也曾因梦送钱财。 诚知此恨人人有，贫贱夫妻百事哀。</p>
+<h2>其三</h2>
+<p>闲坐悲君亦自悲，百年都是几多时。 邓攸无子寻知命，潘岳悼亡犹费词。 同穴窅冥何所望，他生缘会更难期。 惟将终夜长开眼，报答平生未展眉。</p>
+<hr />
+<p>当年我们还开玩笑说起死后的事，如今这些场景全都一一应验。 你的衣物大多已经施舍出去，你留下的针线盒，我不忍心打开。 念及往日情分，连家里的仆人都让我多几分怜惜；也曾在梦里梦见你，醒来就去为你烧纸。 我固然知道，生死离别这种遗憾人人都会经历； 可<strong>一同熬过贫苦岁月的夫妻，一旦永别，回忆起往日点滴，件件往事都令人哀伤</strong>。</p>
+<blockquote>重点：不是贫穷导致夫妻不和，是<strong>共苦之人离世之后，回忆带来的悲痛更深</strong>。</blockquote>
+<p>需要我把三首诗完整白话翻译发给你吗？</p>
+<div class="record"><span class="tag">我问</span><p>这里涉及到的几个公式地方的latex单独给我就行了</p></div>
+<pre><code>\sqrt{\bar{\alpha}_t},\quad \sqrt{1-\bar{\alpha}_t},\quad \bar{\alpha}_t + (1-\bar{\alpha}_t)=1,\quad \theta_t</code></pre>
+<p>完整句子的LaTeX供你参考：</p>
+<pre><code>这里，$\sqrt{\bar{\alpha}_t}$ 与 $\sqrt{1-\bar{\alpha}_t}$ 刻画了当前状态在“图像方向”和“噪声方向”上的权重。
+由于 $\bar{\alpha}_t + (1-\bar{\alpha}_t)=1$，因此可以把它们看成某个角度 $\theta_t$ 对应的余弦和正弦，即</code></pre>
+<blockquote>符号说明：$\bar{\alpha}_t$ 是 $\alpha_t$ 的累乘（DDPM里的alpha bar）。</blockquote>
+<p>要不要顺带把 $\sqrt{\bar{\alpha}_t}=\cos\theta_t,\sqrt{1-\bar{\alpha}_t}=\sin\theta_t$ 这一行也给你？</p>
+<div class="record"><span class="tag">我问</span><p>这里的两个latex给我</p></div>
+<pre><code>x_t</code></pre>
+<pre><code>x_t = \cos\theta_t x_0 + \sin\theta_t \epsilon.</code></pre>
+<p>完整句子LaTeX：</p>
+<pre><code>于是 $x_t$ 可以改写为
+\[
+x_t = \cos\theta_t x_0 + \sin\theta_t \epsilon.
+\]</code></pre>
+<blockquote>如果你需要向量版本（和前面保持统一）：</blockquote>
+<pre><code>\boldsymbol{x}_t = \cos\theta_t \boldsymbol{x}_0 + \sin\theta_t \boldsymbol{\epsilon}.</code></pre>
+<div class="record"><span class="tag">我问</span><p>你好</p></div>
+<p>你好，继续吗？是接着提取扩散模型这段的LaTeX，还是有别的问题？</p>
+<div class="record"><span class="tag">我问</span><p>现在几点了</p></div>
+<p>现在是 <strong>2026年09月15日 12:38</strong>（星期二，太原）。</p>
+<p>继续看扩散模型的LaTeX吗？还是要聊别的？</p>
+<div class="record"><span class="tag">我问</span><p>这里出现的几个字母的latex给我</p></div>
+<pre><code>x_0,\quad \epsilon,\quad \bar{\alpha}_t,\quad v</code></pre>
+<p>公式整体 LaTeX：</p>
+<pre><code>v = \sqrt{\bar{\alpha}_t} \epsilon - \sqrt{1-\bar{\alpha}_t} x_0. \tag{16.84}</code></pre>
+<p>完整句子参考：</p>
+<pre><code>若只关注 $x_0$ 与 $\epsilon$ 张成的二维子空间中的几何关系，那么扩散过程可以理解为状态从“更接近原始图像”逐步旋转到“更接近纯噪声”的过程，而 $\bar{\alpha}_t$ 则决定了当前状态在这条轨迹上的位置。
+
+速度参数化（$v$-parameterization）定义为
+\[
+v = \sqrt{\bar{\alpha}_t} \epsilon - \sqrt{1-\bar{\alpha}_t} x_0. \tag{16.84}
+\]</code></pre>
+<p>需要我继续提取下一张图里的LaTeX吗？</p>
+<div class="record"><span class="tag">我问</span><p>这里的出现的字母的latex给我啊</p></div>
+<pre><code>x_0,\quad \epsilon,\quad \bar{\alpha}_t,\quad v</code></pre>
+<p>公式完整代码：</p>
+<pre><code>v = \sqrt{\bar{\alpha}_t} \epsilon - \sqrt{1-\bar{\alpha}_t} x_0. \tag{16.84}</code></pre>
+<p>要不要继续下一张？</p>
+<div class="record"><span class="tag">我问</span><p>𝒗 = cos 𝜃𝑡 𝝐 − sin 𝜃𝑡 𝒙0. latex给我</p></div>
+<pre><code>\boldsymbol{v} = \cos \theta_t \boldsymbol{\epsilon} - \sin \theta_t \boldsymbol{x}_0.</code></pre>
+<p>如果你不需要粗体向量版本：</p>
+<pre><code>v = \cos \theta_t \epsilon - \sin \theta_t x_0.</code></pre>
+<div class="record"><span class="tag">我问</span><p>Mac bookm12020的屏幕是不是防反光的啊</p></div>
+<h1>MacBook Air M1（2020）屏幕反光说明</h1>
+<p>✅ <strong>有一层减反射（AR）镀膜，但不是雾面防眩光屏（anti-glare）</strong></p>
+<ul><li>本质：<strong>镜面玻璃屏（Glossy）</strong>，表面是光滑玻璃，强光下依然会映出人脸、窗户灯光，会反光</li><li>AR减反射涂层：可以<strong>削弱一部分反光</strong>，相比完全没有镀膜的镜面屏，反光会柔和一点，但<strong>不能做到像ThinkPad雾面屏那样几乎看不到倒影</strong></li><li>亮度：最高400尼特，室内环境还行；阳光直射场景反光问题会很明显</li></ul>
+<ol><li><strong>AR减反射镀膜（M1 Air自带）</strong>：减少玻璃表面的反射光，镜面基底，依然能看到倒影</li><li><strong>AG防眩光雾面屏（M1 Air没有）</strong>：玻璃表面做微磨砂，打散反光，几乎看不到人像倒影，代价是轻微降低清晰度</li></ol>
+<ul><li>方案1：贴高品质AG防眩光膜（缺点：会轻微降低屏幕通透度、P3色域观感）</li><li>方案2：尽量避开屏幕背后有强光源/窗户的位置</li></ul>
+<p>要不要顺带说下这个屏幕容易出现的<strong>涂层脱落</strong>老问题？二手M1 Air很常见。</p>
+<div class="record"><span class="tag">我问</span><p>这里乱码的地方我记不住了，把乱码的地方的latex给我</p></div>
+<blockquote>在给定 $x_0$ 时，条件分布 $q(x_t \mid x_0)$ 是高斯分布，其分数函数为</blockquote>
+<pre><code>\nabla_{x_t} \log q(x_t \mid x_0) = -\frac{x_t - \sqrt{\bar{\alpha}_t}x_0}{1-\bar{\alpha}_t} = -\frac{1}{\sqrt{1-\bar{\alpha}_t}} \epsilon.</code></pre>
+<pre><code>x_0,\ q,\ x_t,\ \nabla_{x_t},\ \log,\ \bar{\alpha}_t,\ \epsilon</code></pre>
+<blockquote>向量粗体版本（推荐论文使用）：</blockquote>
+<pre><code>\nabla_{\boldsymbol{x}_t} \log q(\boldsymbol{x}_t \mid \boldsymbol{x}_0) = -\frac{\boldsymbol{x}_t - \sqrt{\bar{\alpha}_t}\boldsymbol{x}_0}{1-\bar{\alpha}_t} = -\frac{1}{\sqrt{1-\bar{\alpha}_t}} \boldsymbol{\epsilon}.</code></pre>
+<p>继续下一张吗？</p>
+<div class="record"><span class="tag">我问</span><p>也就是说现在不在加入随机的噪声的扰动，变成了一个确定的路径，他不会生成别的了，减少了随机性，你的意思是，他根据噪声的调度，在预测出x0之后，构建一个随意时间步的样本，可以这样做的原因也是因为我们去掉了推理过程中添加的随机噪声，可以稳定的得到一个自己自定义路径的样本 这个是不是关于DDI M采样的正确理解</p></div>
+<h1>✅ 核心结论</h1>
+<p>你的理解<strong>大体方向是对的，但有几处概念要修正</strong>：你说的这个是 <strong>DDIM（Denoising Diffusion Implicit Models）</strong>，不是 DDIM。</p>
+<blockquote>DDPM：每一步都加高斯噪声扰动，<strong>随机马尔可夫链</strong>，采样是随机轨迹； DDIM：<strong>去掉采样时的随机项</strong>，变成确定性ODE轨迹，同一个噪声初值，每次采样得到完全一样的图片；可以自由自定义时间步调度（不一定按照训练时的$\bar{\alpha}_t$）。</blockquote>
+<hr />
+<h2>逐句校对你的原话</h2>
+<blockquote>也就是说现在不在加入随机的噪声的扰动，变成了一个确定的路径 ✔</blockquote>
+<p>DDIM 的更新公式里<strong>移除了 DDPM 的随机高斯项 $\boldsymbol{z}$</strong>。给定初始噪声 $\boldsymbol{x}_T$，整个采样轨迹唯一确定，不再有随机抖动。</p>
+<blockquote>他不会生成别的了 ✔</blockquote>
+<p>同一个初始噪声 + 相同采样参数，每次跑出来的图像完全相同；不像DDPM，同输入每次结果都不一样。</p>
+<blockquote>减少了随机性 ✔</blockquote>
+<p>DDPM：强随机；DDIM：<strong>完全确定性（默认配置）</strong>，随机性只来自最开始的初始噪声$x_T$，采样途中不再新增随机量。</p>
+<blockquote>他根据噪声的调度，在预测出$x_0$之后，构建一个随意时间步的样本 ✔</blockquote>
+<p>DDIM 核心就是：每一步利用模型预测的$\boldsymbol{x}_0$，结合$\bar{\alpha}_t$调度，直接从$x_t$跳到$x_{t-1}$；<strong>时间步序列可以自定义</strong>，不用严格按训练的连续时间步，可以跳步加速采样（比如只走50步、20步）。</p>
+<blockquote>可以这样做的原因也是因为我们去掉了推理过程中添加的随机噪声，可以稳定的得到一个自己自定义路径的样本 ⚠️【这里需要微调】</blockquote>
+<p>✅ 现象：去掉推理每一步的随机噪声，轨迹确定。 ❌ 根本原因<strong>不是单纯“删掉噪声”</strong>： DDIM 是<strong>重新设计了前向过程的边际分布约束</strong>： 要求 $q(\boldsymbol{x}_t | \boldsymbol{x}_0)$ 和 DDPM 保持一模一样（训练时用的分布不变！所以可以直接复用DDPM训练好的网络，不需要重新训练），但是<strong>不要求是马尔可夫链式的前向过程</strong>。 DDPM强制前向是马尔可夫链，所以反向必须带随机项；DDIM放弃马尔可夫假设，只保留边际分布，于是反向采样可以构造确定性更新规则。</p>
+<p>一句话浓缩原因：</p>
+<blockquote>DDPM：前向是马尔可夫扩散，反向采样必须带随机噪声； DDIM：只保留 $q(x_t|x_0)$ 与DDPM一致，放弃马尔可夫条件，因此可以构造不带随机项的确定性采样方案，时间步可以自由跳选。</blockquote>
+<hr />
+<h2>补充一个关键点（容易混淆）</h2>
+<p>DDIM也支持<strong>可选加回少量随机性</strong>（非确定性模式），但最经典、最常用的就是确定性采样。</p>
+<h2>一句话精简版（写笔记可用）</h2>
+<p>DDIM采样通过放弃扩散过程的马尔可夫假设，保持和DDPM相同的边际分布，移除采样迭代过程中的随机噪声项，形成确定性采样轨迹；给定初始噪声，采样结果唯一，并且支持自定义时间步序列，实现快速采样。</p>
+<p>要不要我把 DDIM 的采样公式（带LaTeX）和DDPM采样公式并排给你对比？</p>
+<div class="record"><span class="tag">我问</span><p>我的话哪里说错了啊</p></div>
+<blockquote>可以这样做的原因也是因为我们去掉了推理过程中添加的随机噪声，可以稳定的得到一个自己自定义路径的样本</blockquote>
+<p>❌ <strong>错误点：因果搞反了</strong> 不是：<strong>删掉随机噪声 → 所以能自定义路径</strong> 真实逻辑：</p>
+<blockquote>作者<strong>先放弃前向过程的马尔可夫假设</strong>（只保留 $q(x_t|x_0)$ 和DDPM一致），数学上才推导出：反向更新公式<strong>可以不包含随机项</strong>，同时支持跳时间步、自定义采样路径。</blockquote>
+<p>简单类比： 不是“擦掉公式里的噪声项，碰巧就可以跳步采样”； 而是<strong>数学结构的放宽（丢掉马尔可夫条件）</strong>，才允许我们写出不带随机噪声的更新式，才有确定性轨迹、自定义时间步。</p>
+<hr />
+<ol><li>不在加入随机的噪声的扰动，变成了一个确定的路径</li><li>同一个初始噪声，不会生成别的图片</li><li>减少了随机性（采样途中不再新增随机量）</li><li>根据噪声调度，预测$x_0$之后，可以构建任意时间步的样本</li></ol>
+<blockquote>之所以能够自定义采样路径并得到稳定确定的样本，根本原因是DDIM放弃了扩散过程的马尔可夫假设；推理时移除每一步随机噪声，只是这个数学推导带来的结果，不是原因。</blockquote>
+<p>要不要我用极简的两句话区分「原因」和「结果」，方便放进复习笔记？</p>
+<div class="record"><span class="tag">我问</span><p>DDPM的我写到这里了，均值构造的公式我忘了，你给我一下</p></div>
+<h1>第3步 DDPM 均值公式（两种写法，你可以选）</h1>
+<blockquote>第3步文字：<strong>3. 代入预测的 $\hat{x}_0$，构造反向转移分布的均值 $\mu_\theta(x_t,t)$</strong></blockquote>
+<pre><code>\mu_\theta(x_t,t) = \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1-\bar{\alpha}_t}\hat{x}_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}x_t</code></pre>
+<pre><code>\mu_\theta(x_t,t) = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\hat{\epsilon}\right)</code></pre>
+<hr />
+<ol><li>网络给出当前预测噪声 $\hat{\epsilon}$</li><li>由公式 $\hat{x}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}\left(x_t - \sqrt{1-\bar{\alpha}_t}\hat{\epsilon}\right)$ 恢复出当前对干净样本的估计</li><li>代入 $\hat{x}_0$，计算反向高斯分布均值：</li></ol>
+<p>$$\mu_\theta(x_t,t) = \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1-\bar{\alpha}_t}\hat{x}_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}x_t$$</p>
+<blockquote>第4步（采样）顺带一并给你：</blockquote>
+<ol><li>从高斯分布 $\mathcal{N}\big(\mu_\theta,\sigma_t^2 I\big)$ 采样得到 $x_{t-1}$</li></ol>
+<p>$$x_{t-1} = \mu_\theta + \sigma_t z,\quad z\sim \mathcal{N}(0,I)$$</p>
+<p>要不要我把整套DDPM采样4步整理成干净的Markdown笔记？</p>
+<div class="record"><span class="tag">我问</span><p>这里出现的几个字母的latex  都给我吧</p></div>
+<pre><code>\hat{\boldsymbol{x}}_0,\ \hat{\boldsymbol{\epsilon}},\ \sigma_t,\ \eta,\ \bar{\alpha}_{t-1},\ \bar{\alpha}_t</code></pre>
+<pre><code>\sigma_t(\eta) = \eta\sqrt{\frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t}}\sqrt{1-\frac{\bar{\alpha}_t}{\bar{\alpha}_{t-1}}},\qquad \eta\in[0,1]. \tag{16.91}</code></pre>
+<pre><code>其中 $\hat{\boldsymbol{x}}_0$ 和 $\hat{\boldsymbol{\epsilon}}$ 由当前网络预测得到, 而 $\sigma_t$ 不再必须取为 DDPM 中的后验方差. 常见的写法是令</code></pre>
+<blockquote>说明：$\eta$ 就是DDIM的随机性参数： - $\eta=0$：完全确定性DDIM采样 - $\eta=1$：等价还原成DDPM采样</blockquote>
+<p>要不要把DDIM完整采样更新式（带$\eta$）一并给你？</p>
+<div class="record"><span class="tag">我问</span><p>这里出现的字母的latex  也给我吧</p></div>
+<pre><code>\eta</code></pre>
+<pre><code>其中 $\eta$ 控制生成路径中的随机性：当 $\eta=0$ 时，采样过程变为确定性的；当 $\eta$ 取较大值时，则保留更多随机性。</code></pre>
+<blockquote>小结： $\eta=0$ → DDIM 确定性采样 $\eta=1$ → 等价 DDPM</blockquote>
+<p>要不要我把前面DDIM整套公式和这段文字合并成完整笔记段落？</p>
+<div class="record"><span class="tag">我问</span><p>这个是一个什么工作啊</p></div>
+<h1>这篇论文工作简介（Chalmers,2012，<em>mirt</em>包）</h1>
+<p>这是发表在 <strong>Journal of Statistical Software</strong> 的论文，开发R语言的<strong>mirt软件包</strong>，用来做<strong>多维项目反应理论MIRT</strong>分析，是心理测量、教育测量领域非常经典的开源工具包论文。</p>
+<h2>背景（之前软件的痛点）</h2>
+<ol><li>R里已有的IRT包（<code>ltm</code>、<code>eRm</code>）<strong>只能很好地做单维IRT，多维能力很弱</strong>。</li><li>MCMCpack做多维IRT需要懂贝叶斯收敛诊断，计算慢、耗内存，只支持二分题。</li><li><strong>当时没有R包实现验证性多维项目因子分析（confirmatory item factor analysis）</strong>，只能靠商业软件TESTFACT、NOHARM、Mplus。</li><li>多维模型传统EM算法：高斯‑埃尔米特求积，维度升高后求积点数量指数爆炸，计算代价极高。</li></ol>
+<h2>这个包实现两大套估计算法</h2>
+<ol><li><strong>EM算法（高斯‑埃尔米特求积）</strong></li></ol>
+<ul><li>适合<strong>低维</strong>：探索性MIRT、bifactor双因子模型。</li></ul>
+<ol><li><strong>MH‑RM随机算法（Metropolis‑Hastings Robbins‑Monro，Cai 2010）</strong></li></ol>
+<ul><li>适合<strong>高维</strong>的探索、验证性多维IRT，规避求积点指数爆炸问题。</li></ul>
+<ul><li>二分数据：多维3PL/2PL/1PL；</li><li>多分有序数据：Samejima等级反应模型；</li><li><strong>探索性MIRT</strong>（不知道因子结构，估计+旋转载荷矩阵）；</li><li><strong>验证性MIRT</strong>（人为设定约束：固定某些题目载荷=0、参数相等）；</li><li><strong>bifactor双因子模型</strong>（通用因子+多个局部特殊因子，处理题目局部依赖）。</li></ul>
+<h2>包提供的功能（论文里演示）</h2>
+<ol><li>参数估计：<code>mirt()</code>（EM），<code>bfactor()</code>双因子，<code>polymirt()</code>、<code>confmirt()</code>（MH‑RM，验证性模型）</li><li>模型评价：对数似然、AIC/BIC、G²拟合统计量；残差、局部依赖LD检验；模型似然比比较<code>anova()</code></li><li>输出：题目参数、因子载荷旋转、被试潜在特质分数（EAP/MAP）；题目信息函数、测验信息曲面（论文里图1、图2就是测验信息图）；模拟作答数据<code>simdata()</code>。</li></ol>
+<h2>论文做了对比实验</h2>
+<p>把<code>mirt</code>和商业软件TESTFACT、R包<code>ltm</code>、<code>MCMCpack</code>对比，比较<strong>计算耗时、参数恢复效果（RMSD）</strong>，证明：</p>
+<ul><li>EM版本低维下速度很快；</li><li>MH‑RM算法在高维模型参数恢复精度最好。</li></ul>
+<h2>核心贡献</h2>
+<blockquote>在R中提供<strong>免费开源、完整的多维项目反应理论工具</strong>，同时支持探索性+验证性MIRT，支持二分+多分作答；既实现传统EM，又实现MH‑RM随机估计算法，不再依赖昂贵商业测量软件。</blockquote>
+<blockquote>心理考试、问卷，很多测验不是只有一个能力维度。比如阅读题同时考词汇+推理。 单维IRT处理不了这种多潜在特质；mirt就是R里用来拟合这种多维题目反应模型的工具，论文介绍这个工具怎么用、内部算法、性能对比。</blockquote>
+<p>如果你需要，我可以把这篇论文<strong>核心摘要翻译成中文</strong>。</p>
+<div class="record"><span class="tag">我问</span><p>我想要学习MIRT的理论的话，应该看这个论文吗</p></div>
+<h1>结论先说</h1>
+<p><strong>不建议拿这篇 mirt 包论文当 MIRT 理论入门材料</strong>。 这篇本质是<strong>软件包介绍论文</strong>：重点讲代码、估计算法、包功能、对比实验；它默认读者已经懂 IRT / MIRT 基础理论，不适合从零学理论。 ✅ 用途：学会基础MIRT之后，看这篇来理解<code>mirt</code>包底层原理 ❌ 用途：MIRT理论入门</p>
+<hr />
+<h2>学习路线（由浅入深）</h2>
+<p>推荐材料：</p>
+<ol><li>教材：<em>Item Response Theory for Psychologists</em>（Embretson &amp; Reise，最友好入门书）</li></ol>
+<ul><li>讲1PL/2PL/3PL、等级反应模型、项目信息、潜在特质，公式推导很柔和</li></ul>
+<ol><li>中文：《项目反应理论及其应用》 漆书青，国内经典IRT教材</li></ol>
+<blockquote>不把单维IRT搞懂，直接上MIRT会完全看不懂载荷、潜在特质向量。</blockquote>
+<h4>首选教材</h4>
+<ul><li><em>Multidimensional Item Response Theory</em>（Reckase, 2009）</li></ul>
+<p>MIRT领域<strong>圣经级专著</strong>，专门讲多维项目反应理论，非常适合系统学习。 内容：多维2PL模型、项目维度、复合信息、因子旋转、探索性/验证性MIRT、bifactor模型。</p>
+<h4>短综述论文（快速建立框架）</h4>
+<ul><li>Adams, R. J., Wilson, M., &amp; Wang, W. C. (1997). The multidimensional random coefficients multinomial logit model.</li></ul>
+<p>经典MIRT综述，公式干净，适合快速建立模型认知。</p>
+<p>等你懂MIRT模型形式之后，再读 Chalmers 2012 mirt JSS论文： 这篇价值在于：</p>
+<ol><li>介绍 MH-RM 算法（解决高维MIRT积分爆炸问题）</li><li>不同模型在R包怎么实现</li><li>参数估计的实操细节</li></ol>
+<blockquote>MH-RM 是 Cai 提出的，如果你想深挖这个估计算法，还要看 Cai (2010) 的原始MH-RM论文。</blockquote>
+<p>用 <code>mirt</code> R包跑模拟数据、拟合模型，对照理论验证。</p>
+<hr />
+<h2>简单区分三者侧重点</h2>
+<ol><li>Reckase 2009 书：<strong>MIRT模型理论，学“模型是什么”</strong></li><li>Cai 2010：<strong>MH-RM估计算法，学“怎么估计参数”</strong></li><li>Chalmers 2012（mirt包论文）：<strong>R包实现，学“代码怎么跑、包内部怎么封装”</strong></li></ol>
+<h2>给你的精简学习顺序建议</h2>
+<ol><li>单维IRT（Embretson）→</li><li>Reck</li></ol>
+<div class="record"><span class="tag">我问</span><p>只有教材没有论文吗</p></div>
+<h1>MIRT 经典论文清单（分模块，按阅读先后排序）</h1>
+<blockquote>注意：先把单维IRT弄懂再读。Reckase(2009)是教材，下面全部是<strong>论文</strong>，覆盖：模型定义、补偿/非补偿、bifactor双因子、传统EM估计、MH‑RM高维估计算法、综述入门。 你手里的 Chalmers(2012) mirt包论文，<strong>放在最后读</strong>，属于软件实现，不是理论入门。</blockquote>
+<h2>一、入门综述（先读，快速建立整体框架）</h2>
+<ol><li><strong>Wirth, R. J., &amp; Edwards, M. C. (2007). Item factor analysis: Current approaches and future directions. Psychological Methods.</strong></li></ol>
+<ul><li>非常友好的综述，讲清楚：什么叫项目因子分析（MIRT的另一个名字）、探索性MIRT、验证性MIRT、各类估计方法优缺点。适合刚接触MIRT，搞懂“问题是什么”。</li></ul>
+<ol><li><strong>Adams, R. J., Wilson, M., &amp; Wang, W. C. (1997). The multidimensional random coefficients multinomial logit model. Applied Psychological Measurement.</strong></li></ol>
+<ul><li>广义MIRT框架论文，统一二分+多分作答的多维模型公式；很多MIRT推导都引用这篇，公式干净，适合熟悉单维IRT之后读。</li></ul>
+<h2>二、基础模型（补偿/非补偿MIRT，模型形式）</h2>
+<ol><li><strong>McKinley, R., &amp; Reckase, M. D. (1983). An extension of the two‑parameter logistic model to the multidimensional latent space.</strong></li></ol>
+<ul><li><strong>补偿性M2PL模型原始论文</strong>；定义补偿MIRT：多个维度能力可以互相补偿，就是mirt包里最常跑的模型。</li></ul>
+<ol><li><strong>Sympson, J. B. (1978). A model for testing with multidimensional items.</strong></li></ol>
+<ul><li><strong>非补偿MIRT原始论文</strong>；一个维度再高，弥补不了另一维度的不足。区分补偿/非补偿的源头文献。</li></ul>
+<h2>三、Bifactor（双因子MIRT，极高频实证模型）</h2>
+<ol><li><strong>Gibbons, R. D., &amp; Hedeker, D. (1992). Full‑information item bifactor analysis. Psychometrika.</strong></li></ol>
+<ul><li>双因子IRT开山论文，二分数据；定义通用因子+多个互相正交特殊因子，mirt包<code>bfactor()</code>底层就是这篇的思路。</li></ul>
+<ol><li><strong>Gibbons, R. D., et al. (2007). Full‑information item bifactor analysis of graded response data. Applied Psychological Measurement.</strong></li></ol>
+<ul><li>把bifactor拓展到<strong>多分等级作答数据</strong>（等级反应模型），实证非常常用。</li></ul>
+<ol><li><strong>Cai, L. (2010c). A two‑tier full‑information item factor analysis model with applications. Psychometrika.</strong></li></ol>
+<ul><li><strong>两层模型(Two‑tier)</strong>，bifactor的广义升级版，解决bifactor限制；mirt包支持该模型。</li></ul>
+<h2>四、参数估计论文（核心，理解怎么算参数）</h2>
+<blockquote>MIRT两大估计路线：①EM高斯‑埃尔米特求积；②MH‑RM随机近似（高维用）</blockquote>
+<ol><li><strong>Bock, R. D., Gibbons, R., &amp; Muraki, E. (1988). Full‑information item factor analysis. Applied Psychological Measurement.</strong></li></ol>
+<ul><li>传统<strong>EM+高斯‑埃尔米特求积做MIRT</strong>的经典论文，低维探索性MIRT；但维度升高求积点指数爆炸，是局限来源。</li></ul>
+<ol><li><strong>Cai, L. (2010a). High‑dimensional exploratory item factor analysis by a Metropolis‑Hastings Robbins‑Monro algorithm. Psychometrika.</strong></li></ol>
+<ul><li><strong>MH‑RM算法原始论文（探索性MIRT）</strong>。解决EM求积爆炸，高维下不用海量求积点，mirt包<code>polymirt()</code>底层。必须读，看懂之后再读Chalmers 2012。</li></ul>
+<ol><li><strong>Cai, L. (2010b). Metropolis‑Hastings Robbins‑Monro algorithm for confirmatory item factor analysis. Journal of Educational and Behavioral Statistics.</strong></li></ol>
+<ul><li>MH‑RM拓展到<strong>验证性MIRT</strong>，对应mirt包<code>confmirt()</code>，可以固定载荷、设置参数相等约束。</li></ul>
+<h2>五、软件实现（理论看懂后再看）</h2>
+<ol><li><strong>Chalmers, R. P. (2012). mirt: A Multidimensional Item Response Theory Package for the R Environment. Journal of Statistical Software.</strong></li></ol>
+<ul><li>就是你手上这篇！<strong>不要拿来入门理论</strong>，是前面理论、估计算法在R语言的工程实现。</li></ul>
+<h2>中文文献（如果需要中文辅助理解）</h2>
+<ul><li>詹沛达,陈平,边玉芳.(2016).使用验证性补偿多维IRT模型进行认知诊断评估.心理学报。国内MIRT实操、模型解读的代表性中文论文。</li></ul>
+<hr />
+<h1>推荐阅读顺序（实操路线）</h1>
+<ol><li>Wirth &amp; Edwards (2007) 综述 → 建立全局认知</li><li>McKinley &amp; Reckase (1983) 补偿MIRT模型</li><li>Gibbons &amp; Hedeker (1992) bifactor模型</li><li>Bock et al.(1988) EM估计，理解EM的局限（维度灾难）</li><li>Cai(2010a、2010b) MH‑RM，理解高维估计算法怎么解决EM的痛点</li><li>最后读 Chalmers(2012) mirt包论文：看上面理论如何被写成R代码</li></ol>
+<h2>小提醒</h2>
+<ul><li>Psychometrika、Applied Psychological Measurement 是心理测量顶刊，上面绝大多数论文都出自这两个期刊。</li><li>Reckase(2009)教材是用来当字典备查，论文用来啃原始推导。</li><li>不要直接上手Chalmers2012，它默认读者已经熟悉MIRT模型、EM、MH‑RM。</li></ul>
+<p>如果你需要，我可以帮你挑其中<strong>2篇最高性价比入门论文</strong>，给你整理核心公式的latex。</p>
+<div class="record"><span class="tag">我问</span><p>你把刚才说的几个论文的地址全部给我</p></div>
+<h1>MIRT相关论文完整引用（BibTeX格式+DOI+链接）</h1>
+<blockquote>说明：Sympson 1978属于会议论文，没有公开DOI；其余全部给出DOI，把DOI复制到浏览器地址栏即可跳转论文页面。</blockquote>
+<h2>一、入门综述</h2>
+<ol><li>Wirth, R. J., &amp; Edwards, M. C. (2007). Item factor analysis: Current approaches and future directions. <em>Psychological Methods</em>, 12(1), 58‑79。</li></ol>
+<pre><code>@article{wirth2007item,
+  title={Item factor analysis: Current approaches and future directions},
+  author={Wirth, R. J. and Edwards, Michael C.},
+  journal={Psychological Methods},
+  volume={12},
+  number={1},
+  pages={58--79},
+  year={2007},
+  doi={10.1037/1082-989X.12.1.58}
+}</code></pre>
+<p>🔗 https://doi.org/10.1037/1082‑989X.12.1.58</p>
+<ol><li>Adams, R. J., Wilson, M., &amp; Wang, W. C. (1997). The multidimensional random coefficients multinomial logit model. <em>Applied Psychological Measurement</em>, 21(1), 1‑24。</li></ol>
+<pre><code>@article{adams1997multidimensional,
+  title={The multidimensional random coefficients multinomial logit model},
+  author={Adams, Raymond J. and Wilson, Mark and Wang, Wen‑Chung},
+  journal={Applied Psychological Measurement},
+  volume={21},
+  number={1},
+  pages={1--24},
+  year={1997},
+  doi={10.1177/0146621697211001}
+}</code></pre>
+<p>🔗 https://doi.org/10.1177/0146621697211001</p>
+<h2>二、基础模型（补偿/非补偿MIRT）</h2>
+<ol><li>McKinley, R. L., &amp; Reckase, M. D. (1983). An extension of the two‑parameter logistic model to the multidimensional latent space. <em>NCME conference paper</em>。</li></ol>
+<blockquote>会议报告，无DOI。</blockquote>
+<ol><li>Sympson, J. B. (1978). A model for testing with multidimensional items. In D. J. Weiss (Ed.), <em>Proceedings of the 1977 Computerized Adaptive Testing Conference</em> (pp.82‑98). University of Minnesota。</li></ol>
+<blockquote>会议论文，无DOI。</blockquote>
+<h2>三、Bifactor双因子、Two‑Tier两层模型</h2>
+<ol><li>Gibbons, R. D., &amp; Hedeker, D. (1992). Full‑information item bifactor analysis. <em>Psychometrika</em>, 57(3), 423‑436。</li></ol>
+<pre><code>@article{gibbons1992full,
+  title={Full‑information item bifactor analysis},
+  author={Gibbons, Robert D. and Hedeker, Donald},
+  journal={Psychometrika},
+  volume={57},
+  number={3},
+  pages={423--436},
+  year={1992},
+  doi={10.1007/BF02295430}
+}</code></pre>
+<p>🔗 https://doi.org/10.1007/BF02295430</p>
+<ol><li>Gibbons, R. D., Bock, R. D., Hedeker, D., Weiss, D. J., Segawa, E., Bhaumik, D. K., Kupfer, D. J., Frank, E., Grochocinski, V. J., &amp; Stover, A. (2007). Full‑information item bifactor analysis of graded response data. <em>Applied Psychological Measurement</em>, 31(1), 4‑19。</li></ol>
+<pre><code>@article{gibbons2007full,
+  title={Full‑information item bifactor analysis of graded response data},
+  author={Gibbons, Robert D. and Bock, R. Darrell and Hedeker, Donald and Weiss, David J. and Segawa, Emi and Bhaumik, D. K. and Kupfer, David J. and Frank, Ellen and Grochocinski, Victoria J. and Stover, Andrew},
+  journal={Applied Psychological Measurement},
+  volume={31},
+  number={1},
+  pages={4--19},
+  year={2007},
+  doi={10.1177/0146621606289485}
+}</code></pre>
+<p>🔗 https://doi.org/10.1177/0146621606289485</p>
+<ol><li>Cai, L. (2010c). A two‑tier full‑information item factor analysis model with applications. <em>Psychometrika</em>, 75(4), 581‑612。</li></ol>
+<pre><code>@article{cai2010twotier,
+  title={A two‑tier full‑information item factor analysis model with applications},
+  author={Cai, Li},
+  journal={Psychometrika},
+  volume={75},
+  number={4},
+  pages={581--612},
+  year={2010},
+  doi={10.1007/s11336-010-9178-0}
+}</code></pre>
+<p>🔗 https://doi.org/10.1007/s11336‑010‑9178‑0</p>
+<h2>四、参数估计论文</h2>
+<ol><li>Bock, R. D., Gibbons, R., &amp; Muraki, E. (1988). Full‑information item factor analysis. <em>Applied Psychological Measurement</em>, 12(3), 261‑280。</li></ol>
+<pre><code>@article{bock1988full,
+  title={Full‑information item factor analysis},
+  author={Bock, R. Darrell and Gibbons, Robert and Muraki, Eiji},
+  journal={Applied Psychological Measurement},
+  volume={12},
+  number={3},
+  pages={261--280},
+  year={1988},
+  doi={10.1177/014662168801200305}
+}</code></pre>
+<p>🔗 https://doi.org/10.1177/014662168801200305</p>
+<ol><li>Cai, L. (2010a). High‑dimensional exploratory item factor analysis by a Metropolis‑Hastings Robbins‑Monro algorithm. <em>Psychometrika</em>, 75(1), 33‑57。</li></ol>
+<pre><code>@article{cai2010high,
+  title={High‑dimensional exploratory item factor analysis by a Metropolis‑Hastings Robbins‑Monro algorithm},
+  author={Cai, Li},
+  journal={Psychometrika},
+  volume={75},
+  number={1},
+  pages={33--57},
+  year={2010},
+  doi={10.1007/s11336-009-9136-x}
+}</code></pre>
+<p>🔗 https://doi.org/10.1007/s11336‑009‑9136‑x</p>
+<ol><li>Cai, L. (2010b). Metropolis‑Hastings Robbins‑Monro algorithm for confirmatory item factor analysis. <em>Journal of Educational and Behavioral Statistics</em>, 35(3), 307‑335。</li></ol>
+<pre><code>@article{cai2010metropolis,
+  title={Metropolis‑Hastings Robbins‑Monro algorithm for confirmatory item factor analysis},
+  author={Cai, Li},
+  journal={Journal of Educational and Behavioral Statistics},
+  volume={35},
+  number={3},
+  pages={307--335},
+  year={2010},
+  doi={10.3102/1076998609353115}
+}</code></pre>
+<p>🔗 https://doi.org/10.3102/1076998609353115</p>
+<h2>五、软件实现（mirt包）</h2>
+<ol><li>Chalmers, R. P. (2012). mirt: A Multidimensional Item Response Theory Package for the R Environment. <em>Journal of Statistical Software</em>, 48(6), 1‑29。</li></ol>
+<pre><code>@article{chalmers2012mirt,
+  title={mirt: A Multidimensional Item Response Theory Package for the R Environment},
+  author={Chalmers, R. Philip},
+  journal={Journal of Statistical Software},
+  volume={48},
+  number={6},
+  pages={1--29},
+  year={2012},
+  doi={10.18637/jss.v048.i06}
+}</code></pre>
+<p>🔗 https://doi.org/10.18637/jss.v048.i06</p>
+<h2>六、中文文献</h2>
+<ol><li>詹沛达, 陈平, 边玉芳. (2016). 使用验证性补偿多维IRT模型进行认知诊断评估. <strong>心理学报</strong>, 48(10), 1347‑1356。</li></ol>
+<pre><code>@article{zhan2016confirmatory,
+  title={使用验证性补偿多维IRT模型进行认知诊断评估},
+  author={詹沛达 and 陈平 and 边玉芳},
+  journal={心理学报},
+  volume={48},
+  number={10},
+  pages={1347--1356},
+  year={2016},
+  doi={10.3724/SP.J.1041.2016.01347}
+}</code></pre>
+<p>🔗 https://doi.org/10.3724/SP.J.1041.2016.01347</p>
+<ol><li>DOI使用方法：<code>https://doi.org/这里粘贴你的doi编号</code>，复制到浏览器地址栏，直接跳转论文官网。</li><li>Sympson(1978)、McKinley &amp; Reckase(1983)是旧会议报告，没有在线DOI链接，需要去ERIC数据库查找扫描版。</li><li>Psychometrika、Applied Psychological Measurement、JEB Statistics这些期刊大多需要机构账号访问全文。</li></ol>
+<p>如果你需要，我可以帮你生成一份适合直接粘贴到Word（GB/T7714）的顺序编码参考文献文本。</p>
+<div class="record"><span class="tag">我问</span><p>0.5核的CPU是什么性能啊</p></div>
+<h1>0.5核CPU性能说明</h1>
+<blockquote><strong>0.5核不是物理CPU核心，是容器/云主机的CPU配额（K8s、Docker、阿里云/腾讯云容器实例），叫CPU shares / CPU限制</strong></blockquote>
+<p>物理CPU的1个完整逻辑核 = <code>1核 =1000毫核(mCPU)</code>，所以 <strong>0.5核 = 500毫核</strong>。</p>
+<h2>通俗解释</h2>
+<p>假设宿主机上一颗物理逻辑CPU，满负载跑是100%。</p>
+<ul><li><strong>0.5核代表：最多只能占用半颗逻辑核的计算时间</strong></li><li>时间片机制：在调度周期内，最多允许用50%的一个CPU核心时间，<strong>不能同时使用多个核心</strong>。</li></ul>
+<ol><li>✅ 业务负载低，CPU没打满：</li></ol>
+<p>如果你的程序只需要0.2核算力，那0.5核实例跑得和1核几乎看不出差别。</p>
+<ol><li>⚠️ 程序突发计算、短时高负载：</li></ol>
+<p>上限被锁死，<strong>最多只能跑到50%单核性能</strong>。 哪怕机器还有大量空闲CPU，你的程序也不能用更多，会被限流、CPU节流，进程变慢。</p>
+<blockquote>不会占用第2个核心，0.5核≠半个多核。它只是<strong>单个核心的时间配额</strong>，不是半个物理芯片。</blockquote>
+<h2>大概对标什么实际性能</h2>
+<p>以现代x86云服务器Intel Xeon 3代/4代举例： 1完整逻辑核：大概 2‑3k‑4k 的单核整数跑分（sysbench） 👉 <strong>0.5核 ≈ 1000～2000 单核跑分上限</strong></p>
+<p>✅ 适合：轻量后台、小脚本、代理、简单API、测试环境、小数据库demo，CPU占用长期很低的服务。 ❌ 不适合：AI推理、模型训练、编译代码、MIRT心理测量统计、R大矩阵运算、高并发接口。</p>
+<blockquote>像你跑R/mirt做MIRT参数估计（EM、MH‑RM迭代），<strong>千万不要用0.5核</strong>。统计迭代计算是CPU密集任务，0.5核会跑的极慢，甚至迭代超时。</blockquote>
+<h2>容易踩坑的误区</h2>
+<ol><li>❌ 误区：0.5核等于“半个物理核心硬件”</li></ol>
+<p>✅ 真相：还是完整CPU，只是调度器限制你的进程最多拿50%单核心时间。</p>
+<ol><li>❌ 误区：0.5核两个实例加起来等于1核</li></ol>
+<p>✅ 真相：两个0.5容器，<strong>每个最多各占0.5核</strong>，合计最大1核；但两个容器不能合并凑成一个完整的1核给单进程。单个R程序依然最多只能0.5核。</p>
+<ol><li>❌ 误区：空闲宿主机，0.5核可以偷偷跑满1核</li></ol>
+<p>✅ 真相：容器设置 <code>cpu:0.5</code>（K8s limits）是硬上限，无论宿主机多闲，你的进程CPU使用率最高50%。</p>
+<h2>参考选型建议（针对你跑R/mirt）</h2>
+<ul><li>小模拟/小数据集：至少给 <strong>1‑2核</strong></li><li>真实实证数据、MH‑RM估计：推荐 4核以上。</li></ul>
+<p>如果你是K8s yaml，对应配置片段：</p>
+<pre><code>resources:
+  limits:
+    cpu: &quot;0.5&quot;   # 硬上限0.5核
+    memory: 1Gi
+  requests:
+    cpu: &quot;0.2&quot;</code></pre>
+<blockquote>requests是最低保障，limits是最大封顶。0.5写在limits才会锁死性能。</blockquote>
+<p>如果你需要，我可以简单讲下 <code>requests</code> 和 <code>limits</code> 的区别。</p>
+<div class="record"><span class="tag">我问</span><p>hadoop作业</p></div>
+<h1>Hadoop作业（Hadoop Job）</h1>
+<p>Hadoop 作业指提交到 Hadoop 分布式计算框架的计算任务，最经典是 <strong>MapReduce Job</strong>；现在也常泛指 YARN 上运行的各类作业（MapReduce、Spark、Hive、Pig 等，资源全部由 YARN 调度）。</p>
+<h2>1. 基础概念</h2>
+<ul><li><strong>Hadoop Job</strong>：用户提交的完整计算任务；</li><li><strong>YARN</strong>：Hadoop 的资源管理器，负责给作业分配 CPU、内存容器（Container，就是前面聊的 0.5核/1核 这种资源单位）；</li><li><strong>MapReduce</strong>：Hadoop 原生编程模型，作业拆分为 <strong>Map阶段 + Reduce阶段</strong>。</li></ul>
+<ol><li><strong>Map Task（Map任务）</strong>：并行读取HDFS分片，做映射处理；一个HDFS block一般对应1个MapTask，多机器并行跑。</li><li><strong>Shuffle</strong>：Map输出数据洗牌、排序、分组，传给Reduce。</li><li><strong>Reduce Task（Reduce任务）</strong>：对分组后的数据聚合，结果写回HDFS。</li></ol>
+<blockquote>1个Job = 很多个MapTask + 若干ReduceTask，分散在集群多台机器的Container中执行。</blockquote>
+<h2>2. YARN资源与你刚才的0.5核关联</h2>
+<p>每个 Task（Map/Reduce）跑在 YARN Container 容器里面，容器会配置：</p>
+<ul><li><code>vcores</code>：虚拟CPU核（逻辑配额，和K8s的cpu核概念类似）</li><li><code>memory</code>：内存</li></ul>
+<pre><code># mapred‑site.xml示例配置
+mapreduce.map.cpu.vcores=1
+mapreduce.map.memory.mb=1024
+
+mapreduce.reduce.cpu.vcores=2
+mapreduce.reduce.memory.mb=2048</code></pre>
+<blockquote>⚠️ 如果给 Container 设置 <code>vcores=0.5</code>，这个任务最多只能使用半颗逻辑核，CPU密集计算会被节流变慢，类似你前面说的0.5核限制。 统计、机器学习、R作业不要配很低的vcores。</blockquote>
+<h2>3. 常用命令行操作</h2>
+<pre><code># 列出全部hadoop yarn作业
+yarn application -list
+
+# 杀死作业（application‑id从list中获取）
+yarn application -kill application_17xxxxxx_0001
+
+# 查看作业日志
+yarn logs -applicationId application_17xxxxxx_0001
+
+# 提交MR作业
+hadoop jar xxx.jar main_class /input /output</code></pre>
+<h2>4. Job的几种状态</h2>
+<ul><li><code>ACCEPTED</code>：已经接受，正在等待分配Container资源</li><li><code>RUNNING</code>：正在运行，执行Map/Reduce task</li><li><code>SUCCEEDED</code>：成功结束</li><li><code>FAILED</code>：失败（内存溢出、数据错误、资源不足）</li><li><code>KILLED</code>：被手动杀死</li></ul>
+<h2>5. 常见问题</h2>
+<ol><li><strong>作业卡在ACCEPTED不动</strong></li></ol>
+<p>集群资源耗尽，没有空闲Container；或者你的申请的vcores/memory太大，集群满足不了。</p>
+<ol><li><strong>Map跑很快，Reduce跑很慢</strong></li></ol>
+<p>shuffle数据量大，reduce任务数太少；或者reduce容器CPU/内存给的不足。</p>
+<ol><li><strong>任务被 killed：Container is killed by YARN for exceeding memory limits</strong></li></ol>
+<p>内存超限，调大 <code>mapreduce.map.memory.mb</code> / <code>mapreduce.reduce.memory.mb</code>。</p>
+<h2>6. 延伸：现在Hadoop生态</h2>
+<p>现在很少手写原生MapReduce代码。</p>
+<ul><li>Hive：写SQL，自动翻译成MapReduce/Tez</li></ul>
+<div class="record"><span class="tag">我问</span><p>那么0.5 的CPU可以吗</p></div>
+<h1>YARN 容器设置0.5 vcores 到底行不行</h1>
+<blockquote>YARN的<code>vcores=0.5</code>等价前面说的0.5核：<strong>一个Container最多只能用半颗逻辑CPU时间片，硬上限</strong>。分场景看：</blockquote>
+<h2>✅ 可以用0.5 vcores的场景</h2>
+<ol><li><strong>IO密集，CPU消耗很低</strong></li></ol>
+<p>比如简单的数据拷贝、小文件移动、简单过滤，大部分时间在等磁盘/HDFS读写，CPU几乎不干活。</p>
+<ol><li>非常轻量的预处理，简单字符串处理，单条处理耗时几乎全部是等待IO。</li><li>测试调试，只是跑通流程，不在乎速度。</li></ol>
+<blockquote>这类任务CPU使用率长期在10‑20%，0.5核上限碰不到，看不出性能损失。</blockquote>
+<h2>❌ 绝对不要用0.5 vcores（Hadoop/MapReduce重点）</h2>
+<ol><li><strong>CPU密集任务（统计、聚合、数值计算、排序、大的shuffle）</strong></li></ol>
+<ul><li>Map端做复杂计算、数值转换；Reduce端做聚合、统计运算。</li><li>比如：你跑R、MIRT统计、特征计算、大量排序，任务需要CPU算力。</li></ul>
+<blockquote>一旦计算需要超过0.5核算力，YARN直接限流，CPU被压到50%上限，任务速度成倍变慢，甚至超时失败。</blockquote>
+<ol><li><strong>Shuffle很重的Reduce任务</strong></li></ol>
+<p>Reduce在shuffle阶段要做大量排序，非常吃CPU。<code>vcores=0.5</code>会直接拖慢整个Reduce，作业整体运行时间暴涨。</p>
+<blockquote>YARN的<code>vcores</code>是<strong>单个Container的上限</strong>。</blockquote>
+<p>就算集群机器CPU完全空闲，只要你设置0.5，这个task最多只能消耗半核，不会自动扩容到1核。 <strong>不会因为集群空闲就给你更多CPU。</strong></p>
+<h2>实际生产建议（MapReduce）</h2>
+<pre><code># 普通业务：推荐至少1核
+mapreduce.map.cpu.vcores=1
+mapreduce.reduce.cpu.vcores=1
+
+# 计算较重、shuffle大的任务：给 2核
+mapreduce.reduce.cpu.vcores=2</code></pre>
+<blockquote>尽量不要设置小数vcores（0.5、0.2），很多老版本YARN对小数vcores支持有bug，调度容易异常。优先用整数。</blockquote>
+<h2>那什么情况下我才选0.5？</h2>
+<p>只有确认你的task监控看下来，CPU平均只跑在<strong>0.2核以内</strong>，才考虑0.5； 但MR实践中，宁可设置<code>1 vcore</code>，让YARN调度器根据实际使用来抢占，也不要硬锁死0.5。</p>
+<h2>总结</h2>
+<ol><li>IO为主、轻量预处理：<strong>0.5勉强能用</strong>；</li><li>只要涉及计算、排序、聚合、统计：<strong>0.5核不行，会严重拖慢作业</strong>；</li><li>YARN尽量避免小数vcores，优先用整数。</li></ol>
+<blockquote>如果你是跑统计类作业（类似之前MIRT那种数值迭代），那<strong>坚决不能用0.5核</strong>。</blockquote>
+<p>如果你需要，我可以给你讲怎么看YARN任务实际的CPU利用率，判断任务该配多少vcores。</p>
+<div class="record"><span class="tag">我问</span><p>workbuddy  的免费额度是有限的事啊吗</p></div>
+<h1>WorkBuddy（腾讯AI办公工作台）免费额度是有限的</h1>
+<p>✅ <strong>账号本身可以永久免费，不是限时试用期，但每月有积分（Credits）硬上限</strong>，积分用完AI任务就无法执行，要等下月重置或者买付费套餐。</p>
+<h2>免费体验版核心限制（官方）</h2>
+<ol><li><strong>每月积分：500积分（按月重置，不滚存，当月没用完月底清零）</strong></li></ol>
+<blockquote>所有对话、Agent任务、数据分析、文档生成都消耗积分；复杂任务（长文档、深度分析、高级大模型）消耗会更高。</blockquote>
+<ol><li>项目：最多创建 <strong>5个项目</strong></li><li>自动任务：最多可建 <strong>3个自动任务</strong></li><li>资料库存储：<strong>5GB</strong></li><li>协作：每个项目最多3人协作</li></ol>
+<blockquote>限时活动：部分功能临时放开（代码补全无限次、自动任务临时99个），活动结束后会恢复原始限制。</blockquote>
+<h2>关键规则</h2>
+<ol><li>积分<strong>当月有效，不会结转</strong>；每月月初重新发放500，剩余积分直接清空。</li><li>积分耗尽之后，不能跑AI任务，只能看历史记录；要么等下个月刷新，要么购买标准版/高级版增加额度。</li><li>新用户注册直接给到体验版，不需要绑卡。</li></ol>
+<h2>适合/不适合免费版</h2>
+<p>✅ 适合：偶尔用、简单小任务、学习测试。 ❌ 不适合：批量处理、大文档分析、频繁跑复杂Agent任务，很快会把500积分耗尽。</p>
+<ul><li>标准版99元/月：每月基础2000积分，限时赠2000，合计4000积分/月，同时放开项目、自动任务数量限制。</li></ul>
+<blockquote>小提示：在界面右上角可以看当前剩余积分，做复杂任务前可以留意余量。</blockquote>
+<p>如果你需要，我可以简单对比免费/标准版，帮你判断你日常用量够不够。</p>
+<div class="record"><span class="tag">我问</span><p>我说的是免费的模型</p></div>
+<h1>WorkBuddy「限时免费模型」说明</h1>
+<blockquote>界面标 <strong>0消耗、限时免费</strong> 的模型（比如Hy3），<strong>≠无限随便用，有限制</strong>。</blockquote>
+<h2>两种“免费模型”区分</h2>
+<ul><li>✅ <strong>不扣你每月500的套餐积分</strong>，这一点是真免费。</li><li>❌ <strong>但是有账号级别的每日/并发QPS硬限制</strong>，不是无限token。</li><li>高频批量调用、短时间大量提问，直接报429/6004报错：请求被限流冷却，要等一段时间恢复。</li><li>额度界面<strong>不会显示剩余多少</strong>，看不到还剩多少免费调用，撞到报错才知道用光了。</li><li>属于<strong>营销限时活动</strong>，官方随时可以结束免费，变回扣积分模式。</li></ul>
+<blockquote>适合：日常少量对话、文档整理；<strong>不适合批量跑任务、大批量数据处理</strong>，很容易触发限流。</blockquote>
+<p>你在模型市场填入自己的API‑Key，用的是<strong>第三方厂商给你的免费token包</strong>，和workbuddy积分完全无关。</p>
+<ul><li>额度由原厂商控制：比如通义每模型100万token，有效期90天；DeepSeek新用户500万token30天有效期。</li><li>限制来自API服务商：有token上限、QPS/并发上限；额度用完就报错。</li><li>WorkBuddy这边<strong>不做二次扣费</strong>，只做转发。</li></ul>
+<h2>容易踩坑的误区</h2>
+<ol><li>❌误区：显示“0积分消耗”=无限调用</li></ol>
+<p>✅真相：只是<strong>不扣workbuddy的积分账号</strong>，但有每日调用/并发上限，批量跑会被锁。</p>
+<ol><li>❌误区：外接免费模型接入后，workbuddy会吃掉额度</li></ol>
+<p>✅真相：扣的是你API key所属厂商的token，workbuddy本身不计费。</p>
+<h2>实操建议</h2>
+<ol><li>批量任务、自动化任务，<strong>不要依赖workbuddy内置限时免费模型</strong>，很容易中途限流失败。</li><li>如果要大批量跑：优先自己申请第三方API免费资源包，填入自定义模型，额度更透明；</li><li>内置免费模型只用来做少量调试、单次问答。</li></ol>
+<blockquote>简单一句话总结：<strong>workbuddy内置标免费的模型，不扣积分，但有隐藏调用配额，不是无限；外接第三方免费模型，额度看原API服务商。</strong></blockquote>
+<p>如果你需要，我可以告诉你怎么在workbuddy接入自己的免费API模型。</p>
+<div class="record"><span class="tag">我问</span><p>mac如何调整屏幕常亮啊</p></div>
+<h1>Mac 设置屏幕常亮（macOS Ventura / Sonoma / Sequoia，M1/M2/M3通用）</h1>
+<blockquote>⚠️ MacBook<strong>电池模式下不建议屏幕永久常亮</strong>，耗电很快；插电源才适合长期屏幕常亮。</blockquote>
+<h2>方法1：系统设置（永久生效，推荐）</h2>
+<ol><li>点左上角苹果图标  → <strong>系统设置</strong></li><li>侧边栏找到 <strong>锁定屏幕</strong>（往下滚动）</li><li>两个选项分开设置：</li></ol>
+<ul><li><strong>使用电池供电且不活跃时关闭显示器</strong>：下拉选「永不」（电池模式屏幕常亮，耗电巨大）</li><li><strong>使用电源适配器供电且不活跃时关闭显示器</strong>：下拉选「永不」✅插电屏幕常亮</li></ul>
+<blockquote>补充：「锁定屏幕」里还有<strong>闲置时启动屏幕保护程序</strong>，这个要设置成「永不」，否则就算显示器不关还会弹出屏保。</blockquote>
+<blockquote>笔记本额外选项：进入「电池」→「电源适配器」，打开 <strong>使用电源适配器供电且显示器关闭时，防止自动进入睡眠</strong>。作用：屏幕黑掉，但后台程序继续跑，不等于屏幕常亮。</blockquote>
+<h2>方法2：终端命令（临时屏幕常亮，跑完任务就恢复，非常适合跑代码、跑R、模型运算）</h2>
+<p>打开「终端」（启动台‑其他‑终端）</p>
+<pre><code># 阻止屏幕休眠（屏幕保持常亮，终端窗口要保留）
+caffeinate -d</code></pre>
+<ul><li>停止：回到终端窗口，按 <code>Ctrl + C</code>，立刻恢复系统默认休眠规则。</li></ul>
+<p>带时长版本，例如保持屏幕常亮<strong>3小时（10800秒）</strong>，时间到自动恢复：</p>
+<pre><code>caffeinate -d -t 10800</code></pre>
+<blockquote>参数说明： <code>-d</code>：<strong>阻止显示器（屏幕）休眠</strong>（你要屏幕常亮就用这个） <code>-i</code>：阻止系统休眠，但屏幕还是会黑</blockquote>
+<p>后台运行（终端可以继续干别的）：</p>
+<pre><code>caffeinate -d &amp;
+# 结束后台进程
+pkill caffeinate</code></pre>
+<h2>方法3：第三方小工具（可视化）</h2>
+<p>App Store免费：<strong>Amphetamine</strong>，菜单栏小图标，可以一键开启屏幕常亮、定时、指定APP运行时保持唤醒，底层就是封装<code>caffeinate</code>命令。</p>
+<hr />
+<ol><li>合上笔记本盖子！<strong>合盖之后，上面设置全部无效，屏幕直接熄灭</strong>。想要屏幕常亮必须打开盖子。</li><li>M系列Mac，电池模式设置屏幕永不关闭，亮度高的情况下掉电非常快，跑完任务记得改回原来时间。</li><li>「关闭显示器」≠电脑睡眠；屏幕可以黑掉，但是程序继续跑，这两个是两套独立开关。</li></ol>
+<blockquote>设置了永不，屏幕还是黑？</blockquote>
+<p>检查两处：</p>
+<ol><li>锁定屏幕里面：<strong>闲置时启动屏幕保护程序</strong>，不要设置时间，改成永不。</li><li>显示器设置：有没有开启自动亮度、夜览不影响休眠。</li></ol>
+<p>如果你是跑R/mirt长时间统计运算：我更建议<strong>不要屏幕常亮</strong>，把显示器设置为几分钟关闭，打开「显示器关闭时防止电脑自动睡眠」，屏幕黑，程序继续跑，省电。</p>
+<div class="record"><span class="tag">我问</span><p>Interpretable Cognitive Diagnosis with Neural Network for Intelligent Educational Systems》</p>
+<p>这个工作的GitHub 给我</p></div>
+<p>你标题记的是简写，<strong>论文标准正式标题：<code>Neural Cognitive Diagnosis for Intelligent Education Systems</code>（AAAI‑2020）</strong>。 你写的：<code>Interpretable Cognitive Diagnosis with Neural Network for Intelligent Educational Systems</code>，是这篇论文的口语化转述版本。</p>
+<h2>GitHub仓库（NeuralCD / NeuralCDM）</h2>
+<p>🔗 https://github.com/bigdata‑ustc/NeuralCD</p>
+<pre><code>git clone https://github.com/bigdata-ustc/NeuralCD.git</code></pre>
+<pre><code>@inproceedings{wang2020neural,
+  title={Neural Cognitive Diagnosis for Intelligent Education Systems},
+  author={Wang, Fei and Liu, Qi and Chen, Enhong and Huang, Zhenya and Yin, Yu and Wang, Shijin},
+  booktitle={AAAI},
+  year={2020}
+}</code></pre>
+<blockquote>这个工作就是神经网络认知诊断NeuralCD，<strong>可以复现IRT、MIRT</strong>，正好和你前面看的多维项目反应理论可以对照学习，仓库自带ASSISTments等公开数据集。</blockquote>
+<p>如果你需要，我可以给你简要梳理这个模型核心公式。</p>
+<div class="record"><span class="tag">我问</span><p>这个是怎么回事啊</p></div>
+<h1>IEEE Xplore Error 418 原因+解决办法</h1>
+<p>HTTP 418 别名“I&#x27;m a teapot（我是茶壶）”，IEEE Xplore 用这个码代表<strong>请求被网站的安全/反代理系统拦截</strong>，不是论文本身不存在。 常见触发原因：</p>
+<ol><li><strong>校园代理/VPN/机构代理问题（最高概率）</strong>：你用学校图书馆的代理访问IEEE，代理转发的请求头被IEEE的WAF防火墙判定异常，直接返回418。很多高校图书馆访问IEEE都会碰到这个。</li><li>浏览器插件干扰：Zotero Connector、广告拦截、隐私脚本插件修改请求头，触发反爬。</li><li>Cookie/缓存损坏，或者UA（浏览器标识）异常。</li><li>短时间连续打开多篇论文，触发IEEE的访问限流。</li></ol>
+<h2>按顺序试修复（优先前2条）</h2>
+<ol><li><strong>无痕隐私窗口打开链接</strong></li></ol>
+<p>打开浏览器无痕模式，直接粘贴 <code>https://ieeexplore.ieee.org/abstract/document/9640012/</code> - 无痕模式会禁用所有插件，排除插件干扰。 - 如果开了校园代理，无痕模式也记得连上机构代理。</p>
+<ol><li><strong>排查代理/VPN</strong></li></ol>
+<ul><li>如果你正在用校园图书馆代理：尝试<strong>关掉代理直接访问</strong>；不行就重新连接图书馆VPN再试。</li><li>不要叠加多个代理（同时开梯子+校园代理极易418）。</li></ul>
+<ol><li>清理缓存Cookie，或者换浏览器（Chrome → Edge/Firefox）</li></ol>
+<ol><li>换访问方式：</li></ol>
+<p>不用abstract页面，直接去Google Scholar搜这篇论文标题，从Scholar的跳转链接进入IEEE页面，绕过部分拦截。</p>
+<ol><li>临时关闭插件：广告拦截、Zotero Connector、隐私类扩展全部禁用，再刷新页面。</li></ol>
+<h2>备选方案（打不开IEEE时获取论文）</h2>
+<ul><li>去<strong>Google Scholar / Semantic Scholar</strong>搜DOI或者论文标题，看有没有预印本。</li><li>用学校图书馆的文献传递服务。</li><li>直接搜DOI：你这篇文档编号 <code>9640012</code>，对应的DOI可以在Scholar查到。</li></ul>
+<blockquote>小提示：418<strong>不是论文404</strong>，论文本身是存在的，只是当前这个请求通道被IEEE防火墙拦截了。</blockquote>
+<p>要不要我帮你查一下 <code>9640012</code> 这篇论文的标题和DOI？</p>
+<div class="record"><span class="tag">我问</span><p>我使用一个代理，但是我不科学上网我是用不了谷歌学术啊的啊</p></div>
+<h1>先说核心矛盾</h1>
+<p>你现在的问题：<strong>校园EZProxy/图书馆代理，同时开着去访问IEEE，会触发IEEE的WAF，返回418；但关掉这个代理，又打不开谷歌学术。</strong></p>
+<blockquote>两个需求不能混在同一个浏览器标签/同一个代理里面：<strong>查文献线索用谷歌学术镜像；看IEEE全文的时候，单独走校园代理，并且不要叠加别的代理。</strong></blockquote>
+<h2>✅ 方案1：谷歌学术替代（不用科学上网，查文献标题、DOI、BibTeX）</h2>
+<p>直接用谷歌学术镜像，用来搜论文信息（刚好查9640012这篇）：</p>
+<ol><li>https://ac.scmor.com/ （思谋学术，最稳，国内直连，不需要任何代理）</li><li>https://scholar.lanfanshu.cn/</li></ol>
+<blockquote>功能：输入论文标题/文档编号，拿到DOI、摘要、引用格式，部分会附带预印本链接。 缺点：<strong>镜像不能用来打开IEEE付费全文</strong>，拿到DOI之后，再单独用校园代理去IEEE看原文。</blockquote>
+<h2>✅ 方案2：分开浏览器，隔离代理（解决IEEE 418）</h2>
+<p>用两个浏览器，完全隔离，不要混在一起：</p>
+<ol><li><strong>浏览器A（Chrome）：不开任何代理</strong>，打开谷歌学术镜像 <code>ac.scmor.com</code>，检索论文，拿到DOI：<code>10.1109/TKDE.2021.3102337</code>（你的9640012对应的DOI）</li><li><strong>浏览器B（Edge）：只开学校图书馆EZProxy/校园VPN</strong>，<strong>不要开任何其他代理</strong>，在这个浏览器里粘贴IEEE链接，访问全文。</li></ol>
+<blockquote>重点！不要在同一个浏览器同时装Zotero插件+校园代理，Zotero Connector是高频触发IEEE 418的元凶。 👉 临时关掉Zotero插件，再刷新IEEE页面，很多人418直接消失。</blockquote>
+<h2>✅ 方案3：CARSI访问IEEE（太原理工有CARSI，很多时候比EZProxy稳定）</h2>
+<p>IEEE支持CARSI校外认证，<strong>不需要校园代理</strong>：</p>
+<ol><li>打开 https://ieeexplore.ieee.org/</li><li>页面右上角 <code>Sign in</code> → <code>Sign in via institution</code></li><li>搜索 <code>Taiyuan University of Technology</code>（太原理工大学）</li><li>跳转统一身份认证，登录你的校园账号，直接解锁IEEE全文。</li></ol>
+<p>CARSI走的是身份认证，不走代理转发，<strong>几乎不会报418错误</strong>，推荐优先试这个。</p>
+<h2>✅ 方案4：其他文献检索平台（完全替代谷歌学术查文献）</h2>
+<p>国内直连，不需要任何代理：</p>
+<ul><li>Semantic Scholar：https://www.semanticscholar.org/ （查摘要、引用，部分预印本）</li><li>Web of Science中国版：https://webofscience.clarivate.cn/</li><li>CNKI外文文献库</li></ul>
+<h2>针对你这篇文档9640012，我直接给你信息</h2>
+<p>论文标题：<strong>Multi-Grained Cognitive Diagnosis with Neural Network</strong> 期刊：IEEE TKDE，2021 DOI：<code>10.1109/TKDE.2021.3102337</code></p>
+<blockquote>这篇就是神经网络多粒度认知诊断，你前面看的NeuralCD的扩展工作。</blockquote>
+<pre><code>@article{wang2021multi,
+  title={Multi-Grained Cognitive Diagnosis with Neural Network},
+  author={Wang, Fei and Liu, Qi and Chen, Enhong and Huang, Zhenya and Yin, Yu and Wang, Shijin},
+  journal={IEEE Transactions on Knowledge and Data Engineering},
+  volume={34},
+  number={10},
+  pages={4670--4683},
+  year={2021},
+  publisher={IEEE}
+}</code></pre>
+<hr />
+<ol><li>打开 ac.scmor.com，搜标题拿到DOI/BibTeX</li><li>新开浏览器，进入IEEE，使用CARSI登录太原理工账号访问全文</li><li>CARSI不需要代理，完美避开 418 报错</li></ol>
+<p>要不要我帮你找这篇论文的预印本链接？</p>
+<div class="record"><span class="tag">我问</span><p>mac的这个是干啥的e</p></div>
+<h1>✅ 查询与数据检测器（三指轻点）</h1>
+<p>英文原名：<strong>Look up &amp; data detectors</strong>，macOS触控板手势功能。</p>
+<blockquote>你现在设置的触发方式：<strong>三根手指同时轻点触控板</strong>。</blockquote>
+<h2>能干什么</h2>
+<ol><li><strong>查单词/术语</strong>：光标放在单词上，三指轻点，弹出词典、维基释义、翻译，读论文看英文文献非常方便。</li><li><strong>识别文本里的特殊数据（数据检测器）</strong>：</li></ol>
+<ul><li>日期：轻点直接新建日历提醒</li><li>地址：轻点打开地图定位</li><li>手机号：轻点新建联系人</li><li>链接：轻点预览网页（不用点开）</li><li>文件：轻点预览文件（类似空格预览）</li></ul>
+<h2>两种可选触发方式（下拉菜单）</h2>
+<ul><li><strong>三指轻点</strong>：你当前选的，轻轻点三下手指就行，不需要用力按</li><li><strong>用力点按（Force Click）</strong>：默认选项，单指用力往下压触控板触发（M1 MacBook Air 2020支持）</li><li><strong>关闭</strong>：关掉这个手势</li></ul>
+<h2>⚠️ 常见坑（很多人会误触）</h2>
+<p>如果你打字的时候，手掌不小心三根手指碰到触控板，<strong>会突然弹出词典窗口</strong>，干扰阅读/写代码。如果经常误触，可以改成「用力点按」或者直接关闭。</p>
+<h2>打开/关闭路径</h2>
+<p>系统设置 → 触控板 → 点按与点按（Point &amp; Click）→ 查询与数据检测器</p>
+<p>举个例子：你看英文论文，光标放在单词<code>diagnosis</code>上，三指轻点，立刻弹出词典释义，不用复制去网页查。</p>
+<p>要不要我顺便告诉你，三指轻点和「三指拖移」不要一起开，很容易冲突误触？</p>
+<div class="record"><span class="tag">我问</span><p>mac咋能复制文件的地址啊 ，我本地的文件啊</p></div>
+<h1>✅ Mac复制本地文件完整路径（POSIX路径，写代码/终端直接粘贴）</h1>
+<h2>方法1【推荐！最快快捷键】</h2>
+<p>访达（Finder）选中你的文件/文件夹 → 按下： <strong><code>Command + Option + C</code></strong>（⌘+⌥+C） 直接复制完整绝对路径到剪贴板，Command+V粘贴即可。 示例粘贴结果：<code>/Users/xxx/Documents/data.txt</code></p>
+<h2>方法2【鼠标右键方式】</h2>
+<ol><li>右键点文件，弹出菜单</li><li><strong>按住键盘Option键不放</strong>，菜单里的「拷贝xxx」会变成 <strong>「将xxx拷贝为路径名称」</strong></li><li>点一下，路径复制完成</li></ol>
+<h2>方法3【终端党：拖拽】</h2>
+<p>打开终端，直接把文件拖进终端窗口，自动输出完整路径，你手动复制这串文字。</p>
+<blockquote>适合写命令行的时候直接拖，不用手动输路径。</blockquote>
+<h2>方法4【常驻路径栏，查看+复制】</h2>
+<p>访达顶部菜单：<strong>显示 → 显示路径栏</strong>（快捷键 <code>Command+Option+P</code>） 窗口底部出现完整路径，右键路径栏里的项目，可拷贝路径。</p>
+<hr />
+<ul><li>复制出来是 <strong>POSIX路径</strong>，Python、Shell、VSCode直接识别</li><li>普通<code>Command+C</code>拷贝的是<strong>文件本身</strong>（粘贴会复制一份文件），<strong>不是文本地址</strong>，别搞混！</li><li>如果路径带空格，粘贴进终端时mac会自动给空格加转义符<code>\ </code></li></ul>
+<p>需要我顺便告诉你，在Mac里粘贴路径快速跳转文件夹的快捷键 <code>Shift+Command+G</code> 吗？</p>
+<div class="record"><span class="tag">我问</span><p>option在哪里啊</p></div>
+<p>你的M1 MacBook Air键盘上<strong>有2个Option键</strong>，空格左右各一个：</p>
+<ul><li><strong>左边Option</strong>：在 <code>Control</code>（⌃） 和 <code>Command</code>（⌘）之间</li><li><strong>右边Option</strong>：在 <code>Command</code>（⌘） 和方向键 ↑↓←→ 之间</li></ul>
+<blockquote>键帽上写着：<code>Option</code>，同时标了 <code>alt</code> 和小符号 <strong>⌥</strong></blockquote>
+<h4>📌 刚才复制文件路径的操作再讲一遍：</h4>
+<ol><li>鼠标右键点文件，弹出菜单</li><li><strong>按住Option（⌥）不要松手</strong></li><li>菜单里原来的「拷贝xx」会变成 <strong>将xx拷贝为路径名称</strong>，点一下就复制好路径文本了</li></ol>
+<h4>✨ 最快推荐：直接快捷键 <code>Command + Option + C</code></h4>
+<p>选中文件，同时按这三个键，一步复制路径，不用右键菜单。</p>
+<ul><li>Command：⌘</li><li>Option：⌥</li><li>C：字母C</li></ul>
+<blockquote>Windows习惯：Mac的Option ≈ Windows键盘的Alt键。</blockquote>
+<p>要不要我给你整理一份Mac最常用的几个修饰键对照表（⌘ ⌥ ⌃ ⇧）？</p>
+<div class="record"><span class="tag">我问</span><p>这个是一个什么工作啊</p></div>
+<h1>论文工作解读</h1>
+<p><strong>标题</strong>：<em>MBTI Personality Type Prediction Model Using WZT Analysis Based on the CNN Ensemble and GAN</em>（2023，HCIS期刊）</p>
+<blockquote>一句话概括：<strong>用青少年的WZT绘画投射测验的手绘图片，做深度学习，自动预测MBTI人格类型</strong>。和绝大多数用社交文本预测MBTI的论文不一样，它的输入是<strong>手绘图像，不是文字</strong>。</blockquote>
+<h2>背景</h2>
+<ol><li><strong>WZT（Wartegg‑Zeichen‑Test，瓦泰格绘画完成测验）</strong>：经典投射心理测验，给被试8个方框，每个框里面有一小段简单线条/记号，青少年在方框里自由补全绘画；心理学专家通过绘画内容分析人格。优点：被试不容易刻意伪装（不像问卷会说谎、防御作答）；缺点：<strong>必须专业心理学家人工阅卷，成本高、速度慢</strong>。</li><li>过去MBTI自动预测几乎全部用社交平台文本（推特、Reddit）做NLP分析；<strong>几乎没有人直接分析绘画图片来预测MBTI</strong>，这是本文的出发点。</li><li>数据集：<strong>808名韩国初中生的WZT手绘扫描图片，附带真实MBTI标签</strong>。数据集类别极度不平衡，部分MBTI类型样本极少（INTJ、ENTJ只有3个样本）。</li></ol>
+<h2>模型方案</h2>
+<p>MBTI四个维度：E/I、S/N、T/F、J/P。</p>
+<ul><li>方案A：<strong>独立四路CNN集成</strong>，四张流水线分别预测4个维度，最后拼接得到16型MBTI（图2）。</li><li>方案B：<strong>层级序列预测</strong>，按S/N → T/F → J/P → E/I的顺序分层预测（图3），模仿荣格人格理论的逻辑，作者提出的层级流水线。</li></ul>
+<p>WZT手绘图片大量空白区域，有效特征少；同时数据集类别不均衡、样本数量不足。 作者使用<strong>GAN+风格迁移</strong>做数据增强：保留学生手绘轮廓，给空白区域补充纹理图案，生成更多的扩充样本，用来训练CNN集成模型，缓解小样本问题。</p>
+<blockquote>不是生成全新的绘画，是改造原图、扩充训练集。</blockquote>
+<h2>实验结果</h2>
+<ul><li>只用CNN集成（无GAN增强）：16种MBTI总体平均准确率只有 <strong>17.2%</strong></li><li>CNN集成 + GAN图像增强之后：提升到 <strong>27.2%</strong>，提升10个百分点。</li></ul>
+<blockquote>⚠️注意：16分类本身难度极高，随机猜的基线是6.25%；但整体准确率依然很低。</blockquote>
+<ul><li>四个独立二分类维度准确率更高：E‑I(61.4%)、S‑N(64.2%)、T‑F(62.8%)、J‑P(68.6%)。</li><li>受数据不平衡影响：样本多的ESFP预测效果好；稀有类型INTJ、ENTJ几乎预测不出来。</li></ul>
+<h2>主要贡献</h2>
+<ol><li><strong>首次尝试：投射绘画图像 → 深度学习自动预测MBTI人格</strong>，区别主流文本NLP路线。</li><li>提出两种CNN集成预测架构：独立四路、层级序列预测。</li><li>使用GAN+风格迁移对WZT手绘做图像增强，缓解绘画数据集稀缺问题。</li></ol>
+<h2>明显的局限（读论文需要注意）</h2>
+<ol><li><strong>整体16分类准确率27.2%依旧很低，离实际心理测评工具差距很大，只是科研探索原型，不能拿来实际做心理诊断</strong>。</li><li>数据集样本分布严重倾斜，少数类型几乎学不到。</li><li>WZT绘画本身的心理学效度学界就有争议；把投射绘画直接喂CNN做人格预测，属于<strong>AI+心理交叉的探索性工作，不是成熟可用产品</strong>。</li><li><strong>没有公开数据集，没有开源代码仓库</strong>，复现难度高。</li></ol>
+<h2>和你之前读的工作对比</h2>
+<ul><li>NeuralCD：<strong>答题作答矩阵（0‑1做题数据）做认知诊断IRT/MIRT</strong>。</li><li>本篇论文：<strong>手绘图片图像，预测MBTI人格</strong>；输入模态完全不一样，是图像分类任务，不是项目反应理论。</li></ul>
+<p>如果你需要，我可以帮你整理这篇论文的标准BibTeX引用。</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/093_LaTeX字母表示.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a65af9c093842">https://www.doubao.com/thread/a65af9c093842</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

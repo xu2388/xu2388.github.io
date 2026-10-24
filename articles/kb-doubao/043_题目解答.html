@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>题目解答</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>题目解答</h1>
+<div class="meta">杂项/其他 · 5 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>这个题目给我做一下正确的答案</p></div>
+<h1>Apriori算法完整计算</h1>
+<p>数据集共6条交易：</p>
+<table>
+<tr><th>交易编号</th><th>商品集合</th></tr>
+<tr><td>T1</td><td>A,B,C</td></tr>
+<tr><td>T2</td><td>A,C,D</td></tr>
+<tr><td>T3</td><td>B,C,E</td></tr>
+<tr><td>T4</td><td>A,B,C,E</td></tr>
+<tr><td>T5</td><td>B,E</td></tr>
+<tr><td>T6</td><td>A,B,C,E</td></tr>
+</table>
+<p>参数： 总交易数 $N=6$ 最小支持度50% → <strong>最小支持计数 = 6 × 0.5 = 3</strong>，项集出现次数≥3才算频繁。 最小置信度 = 80%。</p>
+<hr />
+<h2>1、求频繁1项集 $L_1$</h2>
+<p>统计每个单项出现次数：</p>
+<ul><li>A：T1,T2,T4,T6 → 4次</li><li>B：T1,T3,T4,T5,T6 → 5次</li><li>C：T1,T2,T3,T4,T6 → 5次</li><li>D：T2 → 1次（&lt;3，淘汰）</li><li>E：T3,T4,T5,T6 → 4次</li></ul>
+<p>$L_1=\{\{A\},\{B\},\{C\},\{E\}\}$，对应计数：A:4，B:5，C:5，E:4</p>
+<hr />
+<h2>2、候选2项集$C_2$，求频繁2项集$L_2$</h2>
+<p>由$L_1$做连接生成$C_2$：$\{A,B\},\{A,C\},\{A,E\},\{B,C\},\{B,E\},\{C,E\}$</p>
+<p>统计每个2项集支持计数：</p>
+<ol><li>{A,B}: T1,T4,T6 → <strong>3次</strong> ✔</li><li>{A,C}: T1,T2,T4,T6 → <strong>4次</strong> ✔</li><li>{A,E}: T4,T6 → 2次 ❌</li><li>{B,C}: T1,T3,T4,T6 → <strong>4次</strong> ✔</li><li>{B,E}: T3,T4,T5,T6 → <strong>4次</strong> ✔</li><li>{C,E}: T3,T4,T6 → <strong>3次</strong> ✔</li></ol>
+<p>$L_2=\{\{A,B\},\{A,C\},\{B,C\},\{B,E\},\{C,E\}\}$</p>
+<hr />
+<h2>3、候选3项集$C_3$，求频繁3项集$L_3$</h2>
+<p>Apriori连接规则：两个k项集，前k‑1项相同，最后一项不同，进行连接。 $L_2$元素：{A,B},{A,C},{B,C},{B,E},{C,E}</p>
+<ul><li>{A,B}与{A,C}连接 → {A,B,C}</li><li>{B,C}与{B,E}连接 → {B,C,E}</li><li>{B,C}与{C,E}连接 → {B,C,E}（重复）</li><li>{B,E}与{C,E}连接 → {B,C,E}</li></ul>
+<p>候选 $C_3=\{\{A,B,C\},\{B,C,E\}\}$</p>
+<p>统计计数：</p>
+<ol><li>{A,B,C}: T1,T4,T6 → <strong>3次</strong> ✔</li><li>{B,C,E}: T3,T4,T6 → <strong>3次</strong> ✔</li></ol>
+<p>$L_3=\{\{A,B,C\},\{B,C,E\}\}$</p>
+<hr />
+<h2>4、判断是否存在频繁4项集$L_4$</h2>
+<p>拿$L_3$两个项集 {A,B,C}、{B,C,E}做连接： 需要前2项相同。{A,B,C}前两项{A,B}；{B,C,E}前两项{B,C}，无法满足连接条件，<strong>生成不出候选4项集$C_4$</strong>。 👉 <strong>不存在频繁4项集</strong>，算法到此停止生成更大项集。</p>
+<hr />
+<h2>5、生成强关联规则（置信度≥80%）</h2>
+<blockquote>公式： 支持度 $support(X\Rightarrow Y)=\frac{count(X\cup Y)}{N}$ 置信度 $conf(X\Rightarrow Y)=\frac{count(X\cup Y)}{count(X)}$</blockquote>
+<ul><li>$A\land B \Rightarrow C$</li></ul>
+<p>$conf=\dfrac{3}{count(A,B)}=\dfrac{3}{3}=100\% \ge80\%$ ✔ 支持度 $=3/6=50\%$，置信度$=100\%$</p>
+<ul><li>$A\land C \Rightarrow B$</li></ul>
+<p>$conf=\dfrac{3}{count(A,C)}=\dfrac{3}{4}=75\% &lt;80\%$ ❌</p>
+<ul><li>$B\land C \Rightarrow A$</li></ul>
+<p>$conf=\dfrac{3}{count(B,C)}=\dfrac{3}{4}=75\% &lt;80\%$ ❌</p>
+<ul><li>$B\land C \Rightarrow E$</li></ul>
+<p>$conf=\dfrac{3}{count(B,C)}=\dfrac{3}{4}=75\% &lt;80\%$ ❌</p>
+<ul><li>$B\land E \Rightarrow C$</li></ul>
+<p>$conf=\dfrac{3}{count(B,E)}=\dfrac{3}{4}=75\% &lt;80\%$ ❌</p>
+<ul><li>$C\land E \Rightarrow B$</li></ul>
+<p>$conf=\dfrac{3}{count(C,E)}=\dfrac{3}{3}=100\% \ge80\%$ ✔ 支持度$=3/6=50\%$，置信度$=100\%$</p>
+<ol><li>$B\Rightarrow E$，count{B,E}=4，count{B}=5</li></ol>
+<p>$conf=\dfrac{4}{5}=80\% \ge80\%$ ✔ 支持度$=4/6≈66.67\%$，置信度$=80\%$</p>
+<ol><li>$E\Rightarrow B$，count{B,E}=4，count{E}=4</li></ol>
+<p>$conf=\dfrac{4}{4}=100\% \ge80\%$ ✔ 支持度$=4/6≈66.67\%$，置信度$=100\%$</p>
+<ol><li>$\boldsymbol{A,B \Rightarrow C}$：支持度50%，置信度100%</li><li>$\boldsymbol{C,E \Rightarrow B}$：支持度50%，置信度100%</li><li>$\boldsymbol{B \Rightarrow E}$：支持度≈66.67%，置信度80%</li><li>$\boldsymbol{E \Rightarrow B}$：支持度≈66.67%，置信度100%</li></ol>
+<hr />
+<h1>最终汇总答案</h1>
+<ol><li>频繁1项集$L_1$：$\boldsymbol{\{A\},\{B\},\{C\},\{E\}}$</li><li>候选2项集$C_2$：$\boldsymbol{\{A,B\},\{A,C\},\{A,E\},\{B,C\},\{B,E\},\{C,E\}}$；频繁2项集$L_2$：$\boldsymbol{\{A,B\},\{A,C\},\{B,C\},\{B,E\},\{C,E\}}$</li><li>候选3项集$C_3$：$\boldsymbol{\{A,B,C\},\{B,C,E\}}$；频繁3项集$L_3$：$\boldsymbol{\{A,B,C\},\{B,C,E\}}$</li><li>无法生成候选4项集，<strong>不存在频繁4项集</strong>。</li><li>强关联规则示例：</li></ol>
+<ul><li>$A,B \Rightarrow C$，支持度50%，置信度100%</li><li>$C,E \Rightarrow B$，支持度50%，置信度100%</li><li>$B \Rightarrow E$，支持度≈66.67%，置信度80%</li><li>$E \Rightarrow B$，支持度≈66.67%，置信度100%</li></ul>
+<blockquote>注意：$B\Rightarrow E$刚好等于最小置信度80%，满足题目要求。</blockquote>
+<p>如果你需要，我可以把整个过程整理成可以直接抄写作业的简洁版。</p>
+<div class="record"><span class="tag">我问</span><p>你怎么舍得让我我的泪流向海</p></div>
+<h1>《泪海》- 许茹芸</h1>
+<p>作词：许常德、季忠平｜作曲：季忠平</p>
+<p>爱已不能动 还有什么值得我心痛 想你的天空 下起雨来 没人心疼的黑夜 脸颊两行咸咸的泪水 是你 哦是你 让我望穿泪水肝肠寸断</p>
+<p><strong>你怎么舍得让我的泪流向海 付出的感情永远 找不回来 你怎么舍得让我的爱流向海 伤心的往事一幕幕 就像潮水 将我淹埋</strong></p>
+<p>爱已不能动 还有什么值得我心痛 想你的天空 下起雨来 没人心疼的黑夜 脸颊两行咸咸的泪水 是你 哦是你 让我望穿泪水肝肠寸断</p>
+<p><strong>你怎么舍得让我的泪流向海 付出的感情永远 找不回来 你怎么舍得让我的爱流向海 伤心的往事一幕幕 就像潮水 将我淹埋</strong></p>
+<p>闭上了双眼 还看见和你的缠绵 眼角的泪水 洗不去心中 一遍一遍的誓言</p>
+<p><strong>你怎么舍得让我的泪流向海 付出的感情永远 找不回来 你怎么舍得让我的爱流向海 伤心的往事一幕幕 就像潮水 将我淹埋</strong></p>
+<p>要不要我播放这首歌？🎵</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/043_题目解答.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a641ba5c99dc8">https://www.doubao.com/thread/a641ba5c99dc8</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

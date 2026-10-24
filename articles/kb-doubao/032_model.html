@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>/model</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研博客 · 豆包知识库</h1>
+<p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
+<nav class="site-nav">
+<a href="../../index.html">首页</a>
+<a href="../doubao-index.html">豆包索引</a>
+</nav>
+</div></header>
+<article class="article">
+<h1>/model</h1>
+<div class="meta">杂项/其他 · 32 条消息 · 来源：豆包分享</div>
+<div class="record"><span class="tag">我问</span><p>/model</p></div>
+<p>Set model to <code>deepseek-v4-flash</code> and saved as your default for new sessions[2m[22m [2m     .claude/settings.json pins [22m<code>Fable 5.1</code>[2m — that applies on restart[22m</p>
+<div class="record"><span class="tag">我问</span><p>我们之前统计过HE和IHC的染色矩阵，我们统计的是全量矩阵吗</p></div>
+<p>核对了一遍落盘结果（<code>e06_bci_calib.json</code>、<code>c_full_bci.json</code>、<code>concentration_stats.json</code>、<code>e03_results.json</code>），答案是<strong>一半一半：验证是全量，标定不全是</strong>。</p>
+<table>
+<tr><th>矩阵</th><th>标定用了多少数据</th><th>验证用了多少数据</th></tr>
+<tr><td><code>M_HE</code>（[H,E]，在用）</td><td><strong>全量 3896 张 train</strong>（e06，逐图抽 4000 组织像素→池化→MU-NMF k=2）</td><td>只随机抽 <strong>120 张</strong>算往返 MAE；<strong>从未在 test(977) 上验过</strong></td></tr>
+<tr><td><code>M_FROZEN</code>（[H,DAB]，真正冻结在用）</td><td><strong>只有 96 张瓦片</strong>（e03 的 <code>M_D_nmf_queue</code>，来自 <code>stack_images_12000</code> 拼图切出的 IHC）</td><td><strong>全量 4873 张</strong>（train+test 全部，<code>c_full_bci.py</code>，往返 MAE 0.003582）；train 3896 上 0.003750（e06）</td></tr>
+<tr><td><code>M_IHC_new</code>（e06 全量重标，未采用）</td><td><strong>全量 3896 张 train</strong></td><td>train 往返 MAE 0.005076 —— 比 96 张标出来的 M_FROZEN 还差</td></tr>
+<tr><td>e07 浓度统计/负值率/跨域 H 一致性</td><td>—</td><td><strong>3896 对 train</strong>，不含 test</td></tr>
+</table>
+<p>几个需要留意的点：</p>
+<ol><li><strong>M_FROZEN 的&quot;全 4873&quot;是验证口径，不是标定口径。</strong> 它的标定样本只有 96 张瓦片。之所以仍被冻结，是因为它往返 MAE 0.00358 优于全量标定的 0.0051 —— 但这个&quot;更优&quot;要小心解读：<code>c_full_bci.json</code> 里全量 NMF 标定与 M_FROZEN 的 ICC=<strong>0.995</strong>、κ=0.931，两者其实是同一个矩阵（列角差 s_H 11.4°/s_DAB 9.9° vs M_A），MAE 的差别落在该指标的判别力之内。</li></ol>
+<ol><li><strong>&quot;全 3896 张&quot;≠&quot;全像素&quot;。</strong> e06 每图只抽 4000 像素（池约 1560 万），NMF 内部再抽 120k；c_full_bci 每图 8000 像素（池 3819 万）。对 6 个参数的 M 估计来说这远远够，但如果你要在报告里写&quot;全量标定&quot;，严格说法是&quot;覆盖全部图像、每图子采样&quot;。</li></ol>
+<ol><li><strong>HE 侧的空档最实</strong>：M_HE 是全量 train 标定的，但既没在 test(977) 上验过，也没有像 IHC 那样的 per-image 漂移分析。如果 H 的复用是主线论据，这个缺口值得补一次（e06 加 <code>--he_dir .../HE/test</code>，几分钟的事）。</li></ol>
+<p>另外一处对不上：记忆里写的 M_FROZEN 全量往返 MAE <strong>0.00387</strong>，磁盘上实际是 <strong>0.003582</strong>（4873）/ <strong>0.003750</strong>（train 3896），我没找到 0.00387 的出处。要用这个数的话以落盘的 json 为准。</p>
+<div class="record"><span class="tag">我问</span><p>你知道IHC图像的话，是存在H，DAB两种对吗，给我在IHC上统计矩阵</p></div>
+<p>明白了 —— 对，BCI 的 HER2 IHC 就是<strong>苏木素(H) + DAB</strong>两个染色，没有伊红（E0.2 已经验过：第三通道不是 E，是低频的残差/光照项）。我把之前的账务理清后，直接在全量 IHC 上跑一次正式的矩阵统计。</p>
+<p>矩阵已经算出来了，脚本在最后一段的对照表里挂了个小 bug（<code>mats[&quot;all&quot;]</code> 没登记）。修掉并加上缓存，重跑一次。</p>
+<p>确认前提：BCI 的 HER2 IHC 就是<strong>苏木素(H) 对染 + DAB 显色</strong>两个染色，没有伊红 —— 这与 E0.2 的独立结论一致（第三通道不是 E，是低频残差/光照项）。所以 IHC 的 M 是 3×2、列序 <code>[H, DAB]</code>。</p>
+<p>已在<strong>全量 4873 张 IHC</strong>（train 3896 + test 977）上跑完标定，口径与 e03/e06 完全一致（OD=log10、逐图组织掩膜 |OD|&gt;0.20、逐图抽 8000 像素池化 → MU-NMF k=2 → 按参考矩阵定槽位）：</p>
+<h2>IHC 染色矩阵（列 = [s_H, s_DAB]，行 = [R, G, B]，OD 空间）</h2>
+<table>
+<tr><th>标定数据</th><th>s_H</th><th>s_DAB</th><th>两列夹角</th></tr>
+<tr><td>train 3896</td><td><code>[0.6825, 0.6168, 0.3922]</code></td><td><code>[0.1297, 0.3843, 0.9141]</code></td><td>46.84°</td></tr>
+<tr><td>test 977</td><td><code>[0.6919, 0.6140, 0.3800]</code></td><td><code>[0.1309, 0.3905, 0.9112]</code></td><td>47.42°</td></tr>
+<tr><td><strong>all 4873</strong></td><td><strong><code>[0.6943, 0.6110, 0.3803]</code></strong></td><td><strong><code>[0.1347, 0.3993, 0.9069]</code></strong></td><td><strong>46.97°</strong></td></tr>
+<tr><td>M_FROZEN（现在在用的，96 张瓦片标定）</td><td><code>[0.705, 0.584, 0.402]</code></td><td><code>[0.181, 0.456, 0.871]</code></td><td>41.89°</td></tr>
+</table>
+<p><strong>三点结论：</strong></p>
+<ol><li><strong>极稳。</strong> train 与 test 各自独立标定，s_H 只差 <strong>0.90°</strong>、s_DAB 只差 <strong>0.40°</strong>。也就是说 977 张 test 和 3896 张 train 给出同一个矩阵 —— 这个矩阵的<strong>跨 split 可复现性是过硬的</strong>，不存在&quot;标定绑在某个子集上&quot;的问题。</li><li><strong>跨域 H 一致性很好</strong>：IHC 标出的 s_H 与 HE 的 s_H(<code>[0.710, 0.547, 0.443]</code>) 只差 <strong>5.2°</strong>；而与 HE 的 s_E 差 31.2°。这从矩阵层面支持了&quot;H 在 HE/IHC 之间是同一个染色&quot;这个前提。</li><li><strong>与在用的 M_FROZEN 有可见但不小的差异</strong>：全量标定把 s_DAB 从 <code>[0.181, 0.456, 0.871]</code> 拉到 <code>[0.135, 0.399, 0.907]</code> —— 更靠近&quot;纯棕色轴&quot;，两列夹角从 41.9° 张开到 47.0°。方向是让 H/DAB 更可分。</li></ol>
+<p>脚本还在跑后面几段（跨 split 往返 MAE、负值比例、逐图漂移），跑完我把 <code>M_FROZEN vs 全量标定</code> 的精确角差和&quot;该不该把 M_FROZEN 换成全量矩阵&quot;的裁决一起给你。</p>
+<div class="record"><span class="tag">我问</span><p>当前进度如何</p></div>
+<p>全跑完了。</p>
+<p><strong>进度：全部跑完了</strong>（脚本 <code>e09_ihc_matrix_full.py</code>，结果 <code>out/e09_ihc_matrix_full.json</code>）。完整的统计如下。</p>
+<h2>一、IHC 矩阵（列 = <code>[s_H, s_DAB]</code>，行 = <code>[R,G,B]</code>，OD 空间）</h2>
+<p>全量 4873 张 MU-NMF 标定：</p>
+<pre><code>M_IHC_full = np.array([[0.694327, 0.134697],
+                       [0.610970, 0.399252],
+                       [0.380296, 0.906893]])   # 两列夹角 46.97°</code></pre>
+<h2>二、稳定性：跨 split 可复现性极好</h2>
+<table>
+<tr><th>对比</th><th>s_H 角差</th><th>s_DAB 角差</th></tr>
+<tr><td>train 独立标定 vs test 独立标定</td><td><strong>0.90°</strong></td><td><strong>0.40°</strong></td></tr>
+<tr><td>train vs all</td><td>1.02°</td><td>0.99°</td></tr>
+<tr><td>test vs all</td><td>0.22°</td><td>0.60°</td></tr>
+</table>
+<p>977 张 test 单独标定，与 3896 张 train 单独标定几乎完全重合 —— 这个矩阵不绑在任何子集上。</p>
+<h2>三、与既有矩阵的关系</h2>
+<table>
+<tr><th>对比 M_all</th><th>s_H</th><th>s_DAB</th></tr>
+<tr><td>M_IHC_new（e06, 3896）</td><td>0.65°</td><td>1.10°</td></tr>
+<tr><td><strong>M_FROZEN（在用, 96 瓦片）</strong></td><td><strong>2.08°</strong></td><td><strong>4.68°</strong></td></tr>
+<tr><td>HistDiST M_A（固定参考）</td><td>9.36°</td><td>14.54°</td></tr>
+</table>
+<h2>四、两个判据打架 —— 这是需要你拍板的地方</h2>
+<table>
+<tr><th>判据</th><th>M_all（全量）</th><th>M_FROZEN（96 瓦片）</th></tr>
+<tr><td>负值率（38.19M 组织像素）</td><td><strong>C_H 0.105%</strong> / C_DAB 0.000%</td><td>C_H 0.378% / C_DAB 0.001%</td></tr>
+<tr><td>往返 MAE @ train</td><td>0.00510</td><td><strong>0.00402</strong></td></tr>
+<tr><td>往返 MAE @ test</td><td>0.00501</td><td><strong>0.00418</strong></td></tr>
+</table>
+<ul><li><strong>非负性全量标定更好</strong>（3.6 倍）。</li><li><strong>往返 MAE M_FROZEN 仍低 20%</strong>，且在两个 split 上一致，不是噪声。但 MAE 是 6 参数的自拟合指标、判别力弱（两者 ICC 0.995），我不认为它能当唯一裁判。</li></ul>
+<h2>五、如果换 M，代价是多少</h2>
+<p>在全量 38.19M 像素上算两个矩阵解出的浓度：</p>
+<pre><code>C_DAB:  r=0.9999   κ=0.8915   均值比 1.054 (M_all 大 5.4%)
+C_H:    r=0.9810   κ=0.7870   均值比 0.933 (M_all 小 6.7%)</code></pre>
+<p>DAB 几乎是同一条轴（r=0.9999），差的是<strong>一个 5.4% 的整体尺度</strong> —— 但 H-score 切点（0.10/0.30/0.50）是固定约定，5.4% 的尺度漂移会翻掉约 11% 的等级判定（κ=0.89）。</p>
+<p><strong>所以：要换就整体换 + 重定切点，不能只换矩阵。</strong> 如果 M0 已用 M_FROZEN 训到一半，现在换会让已训模型的输出语义错位 —— 建议留到下一轮从零开始时换。</p>
+<h2>六、顺带的两条</h2>
+<ul><li><strong>逐图漂移</strong>（arc-Macenko 逐图，相对 M_all）：s_H 11.49°±2.45、s_DAB 18.70°±7.23、自夹角 17.25°±7.43° —— 再次确认逐图标定病态（与 e03 的 21.3°±11.7° 同量级），<strong>只能用队列标定</strong>。train 与 test 的漂移分布几乎逐位相同（11.49±2.45 vs 11.49±2.43），两 split 同分布。</li><li><strong>跨域 H 一致性</strong>：IHC 标出的 s_H 与 HE 的 s_H 只差 <strong>5.2°</strong>（与 s_E 差 31.2°）—— 从矩阵层面支持&quot;H 在 HE/IHC 间是同一个染色&quot;，即你&quot;H 共享&quot;的前提成立。</li></ul>
+<p>需要的话我可以再补一版：把 M_all 的 H-score 切点按分位数重定（对齐到 M_FROZEN 的等级分布），这样换矩阵时下游指标口径不跳。</p>
+<div class="record"><span class="tag">我问</span><p>当前的HE和IHC图像都有了是吗</p></div>
+<p>HE 也都在（同一批 4873 对，文件名一一对应，无一缺失）。至于<strong>分解矩阵</strong>——IHC 侧刚补齐了全量版，HE 侧还是个不对称的缺口。先把状态给你，同时我已经把 HE 的全量标定挂上跑了。</p>
+<p><strong>图像：都在。</strong> 本地 <code>BCI_dataset</code> 就是完整的 4873 对，HE/IHC 文件名严格一一对应（train 交集 3896、test 交集 977，零缺失），另有 <code>bci_dataset.zip</code>（2.9 GB）备份，以及早期那套 96 对的瓦片子集。</p>
+<p><strong>分解矩阵：IHC 侧齐了，HE 侧只有一半 —— 这正是唯一的不对称。</strong></p>
+<table>
+<tr><th>域</th><th>矩阵</th><th>标定数据</th><th>验证情况</th></tr>
+<tr><td>IHC → <code>[H, DAB]</code></td><td><code>M_IHC_full = [[0.694,0.135],[0.611,0.399],[0.380,0.907]]</code></td><td><strong>全量 4873</strong></td><td>✅ train/test 独立标定互差 0.90°/0.40°，双向 MAE、负值率、逐图漂移都齐</td></tr>
+<tr><td>IHC → <code>[H, DAB]</code></td><td><code>M_FROZEN = [[0.705,0.181],[0.584,0.456],[0.402,0.871]]</code></td><td>96 张瓦片</td><td>✅ 全量 4873 上验过</td></tr>
+<tr><td>HE → <code>[H, E]</code></td><td><code>M_HE = [[0.710,0.222],[0.547,0.836],[0.443,0.502]]</code></td><td>3896 train</td><td>⚠️ <strong>只在随机 120 张上算过往返 MAE，从未在 test 上验过</strong>，也没有 train/test 稳定性、负值率、逐图漂移</td></tr>
+</table>
+<p>所以我刚把 HE 的全量标定挂上跑了（<code>e10_he_matrix_full.py</code>，与 IHC 完全同一口径，train/test/all 各标一次 + 双向泛化 + 负值率 + 逐图漂移），约 4 分钟，跑完给你。</p>
+<p>顺带先提醒两件事，等结果出来要一起看：</p>
+<ol><li><strong>HE 的可分性明显比 IHC 差</strong>：M_HE 两列夹角 <strong>33.18°</strong>，而 IHC 的 H/DAB 是 <strong>47.0°</strong>；往返 MAE <strong>0.0172</strong>，是 IHC（0.004~0.005）的 <strong>3~4 倍</strong>。这不是噪声，是伊红本身吸收谱宽、与苏木素重叠更多。<strong>如果 HE 侧解混的 C_H 精度不够，&quot;复用 H&quot; 的主线就得重新掂量</strong>。</li><li><strong>&quot;都有&quot; ≠ &quot;对得上&quot;</strong>：BCI 的 HE/IHC 是连续切片，<code>probe_shift</code> 量过相位错位中位 <strong>22.5 px</strong>（10–49 px 占 79%）。要做跨域逐像素的事，这一步仍卡着；聚合级（H-score）不受影响。</li></ol>
+<div class="record"><span class="tag">我问</span><p>&lt;task-notification&gt; &lt;task-id&gt;bvo6t921n&lt;/task-id&gt; &lt;tool-use-id&gt;call_00_ET_p1Qyhu5LnIWd0F1xO1no9128&lt;/tool-use-id&gt; &lt;output-file&gt;/private/tmp/claude-501/-Users-hua/18a52c79-9b18-48b8-bc2a-3e549f22af17/tasks/bvo6t921n.output&lt;/output-file&gt; &lt;status&gt;completed&lt;/status&gt; &lt;summary&gt;Background command &quot;Run full H&amp;E matrix calibration&quot; completed (exit code 0)&lt;/summary&gt; &lt;/task-notification&gt;</p></div>
+<p>HE 跑完了，但<strong>结果有个红旗必须先查清楚</strong>：<code>all</code> 那一档和 train/test 对不上（s_H 差 25.6°，而 train vs test 只差 1.39°）。这不像真实差异，像 NMF 掉进了不同的局部极小。</p>
+<p>NMF 用的是随机初始化（固定 seed 但数据不同 → 轨迹不同），而 HE 的 H/E 两列只差 33–37°，目标函数地形比 IHC 平坦得多，容易掉进不同极小。写个诊断确认。</p>
+<p>API Error: Can&#x27;t reach the API server — check your internet or DNS (ENOTFOUND)</p>
+<div class="record"><span class="tag">我问</span><p>&lt;task-notification&gt; &lt;task-id&gt;b9mhg6yre&lt;/task-id&gt; &lt;tool-use-id&gt;call_00_ET_vwTxjFujZIiIT9YB6C6b3035&lt;/tool-use-id&gt; &lt;output-file&gt;/private/tmp/claude-501/-Users-hua/18a52c79-9b18-48b8-bc2a-3e549f22af17/tasks/b9mhg6yre.output&lt;/output-file&gt; &lt;status&gt;completed&lt;/status&gt; &lt;summary&gt;Background command &quot;Run NMF multi-seed diagnostic&quot; completed (exit code 0)&lt;/summary&gt; &lt;/task-notification&gt;</p></div>
+<p>红旗确认了 —— <strong>是 e10 的 bug，不是真实差异</strong>：</p>
+<ul><li>HE 的 all-pool，20 个 seed 里 <strong>18 个</strong>互相一致（与 train/test 差 &lt;8°），只有 <strong>seed 0</strong>（e10 用的那个）掉进了坏极小：重建误差 0.07479（最差，好的解是 0.0688），<code>assign_and_fill</code> 的代价 <strong>47.80°</strong>（其余全在 30–34°）。</li><li><strong>IHC 的 all-pool 20/20 个 seed 全部一致</strong>（互相差 &lt;4°），e09 用的 seed 0 排第 4 好 —— <strong>e09 的 IHC 矩阵有效，不用改</strong>。</li></ul>
+<p>也就是说 <code>assign_and_fill</code> 返回的那个&quot;槽位代价&quot;是个很好的塌缩探测器，我用的时候没打印 all 那一档，漏看了。</p>
+<p>已挂上 <code>e10c_matrix_multistart.py</code>：对 HE 和 IHC 的 all-pool 各跑 8 个 seed、每次 1200 轮（保证收敛），按重建误差选优，并把修正后的矩阵连同负值率、往返 MAE 写回两个 json。跑完我把<strong>最终两个域的矩阵</strong>一起给你。</p>
+<p>先给已确定的结论：</p>
+<ul><li><strong>IHC 的 M_IHC_full 有效</strong>（<code>[[0.694,0.135],[0.611,0.399],[0.380,0.907]]</code>，sep 46.97°）——20/20 seed 一致，e09 那次没踩雷。IHC 的 H/DAB 夹角 47°，地形陡，NMF 稳。</li><li><strong>HE 的 all 一档作废</strong>，要用重启选优的结果替换。但 train 和 test 各自标定的解只差 1.39°，所以 HE 矩阵本身是稳的（稳到 1.4–2.6°），只是比 IHC（0.4–0.9°）松散 —— 这与 H/E 只差 33° 一致，<strong>伊红与苏木素天然更难分开</strong>，这个物理事实没有变。</li><li>顺带一个该记下的教训：<code>assign_and_fill</code> 返回的槽位代价是塌缩探测器，<strong>&gt;40° 就该报警</strong>，之前几处调用（包括 e06）都没打印它。</li></ul>
+<div class="record"><span class="tag">我问</span><p>&lt;task-notification&gt; &lt;task-id&gt;bky13n517&lt;/task-id&gt; &lt;tool-use-id&gt;call_00_ET_szzAuUbXy26JzC7r2jQ30268&lt;/tool-use-id&gt; &lt;output-file&gt;/private/tmp/claude-501/-Users-hua/18a52c79-9b18-48b8-bc2a-3e549f22af17/tasks/bky13n517.output&lt;/output-file&gt; &lt;status&gt;completed&lt;/status&gt; &lt;summary&gt;Background command &quot;Rerun all-pool matrices with multistart&quot; completed (exit code 0)&lt;/summary&gt; &lt;/task-notification&gt;</p></div>
+<p>两个域的全量矩阵都出来了，而且 HE 那一档已经用多种子重启修正。<strong>最终结果：</strong></p>
+<pre><code># IHC → [H, DAB]   （全量 4873，sep 47.98°）
+M_IHC_full = np.array([[0.696947, 0.124985],
+                       [0.611146, 0.393728],
+                       [0.375187, 0.910690]])
+
+# H&amp;E → [H, E]     （全量 4873，sep 33.43°）
+M_HE_full  = np.array([[0.693644, 0.249506],
+                       [0.510176, 0.867261],
+                       [0.508505, 0.430819]])</code></pre>
+<h2>总表</h2>
+<table>
+<tr><th>域</th><th>矩阵</th><th>标定数据</th><th>两列夹角</th><th>负值率</th><th>往返 MAE (train / test)</th></tr>
+<tr><td>IHC→<code>[H,DAB]</code></td><td><strong>M_IHC_full</strong></td><td>全量 4873</td><td><strong>47.98°</strong></td><td><strong>0.091%</strong> / 0.000%</td><td>0.00494 / 0.00485</td></tr>
+<tr><td>IHC→<code>[H,DAB]</code></td><td>M_FROZEN（在用）</td><td>96 瓦片</td><td>41.89°</td><td>0.378% / 0.001%</td><td><strong>0.00402 / 0.00418</strong></td></tr>
+<tr><td>IHC→<code>[H,DAB]</code></td><td>HistDiST M_A</td><td>固定参考</td><td>—</td><td>—</td><td>0.0242 / 0.0260</td></tr>
+<tr><td>HE→<code>[H,E]</code></td><td><strong>M_HE_full</strong></td><td>全量 4873</td><td><strong>33.43°</strong></td><td>0.226% / 0.000%</td><td>0.01688 / 0.01742</td></tr>
+<tr><td>HE→<code>[H,E]</code></td><td>M_HE_e06（在用）</td><td>3896 train</td><td>33.18°</td><td>0.286% / 0.000%</td><td>0.01672 / 0.01664</td></tr>
+</table>
+<h2>判读</h2>
+<p><strong>IHC 侧</strong>：<code>M_IHC_full</code> 与 train/test 各自独立标定的解差 0.63–1.32°，与旧 e09 结果差 0.33°/0.68° —— 修完多种子后基本没动，<strong>e09 的 IHC 结论原样成立</strong>。它和 M_FROZEN 的取舍不变：全量版<strong>非负性更好</strong>（0.091% vs 0.378%），M_FROZEN <strong>往返 MAE 更低</strong>（低约 18%）。换的话代价是 DAB 尺度整体 +5.4%，<strong>必须连 H-score 切点一起重定</strong>。</p>
+<p><strong>HE 侧（这次新补的）</strong>：</p>
+<ul><li>train 与 test 独立标定的解只差 <strong>1.39°</strong>，全量解与两者差 1.46°/2.83° —— <strong>HE 矩阵是稳的</strong>，之前&quot;只在 120 张上验过&quot;的缺口补上了。</li><li>但<strong>HE 的可分性明显差一档</strong>：H/E 夹角 33.4° vs IHC 的 H/DAB 48.0°；往返 MAE <strong>0.0169</strong>，是 IHC（0.0049）的 <strong>3.5 倍</strong>，负值率也是 2.5 倍。这是伊红吸收谱宽、与苏木素重叠更多的物理后果，不是标定没做好。</li><li>与在用的 M_HE_e06 只差 4.4°/4.7°，MAE 几乎相同 —— 换不换都行；新版的优势是<strong>有 train/test 双向验证</strong>。</li></ul>
+<p><strong>跨域 H 一致性</strong>：最终这两个矩阵之间 s_H 差 <strong>9.6°</strong>，而 s_H vs s_E 差 40.1°、s_H vs s_DAB 差... 数量级差 4 倍以上 ⇒ <strong>&quot;H 跨域是同一个染色&quot;定性成立</strong>。但注意这个度数对矩阵选择敏感（e06 的 HE 矩阵对 M_FROZEN 只有 3.2°），当硬指标引用要写明用的是哪一对。</p>
+<p><strong>一个要提前想的连锁反应</strong>：<code>M0</code> 现在用的 M_HE 来自 e06，<code>e07/e08</code> 的浓度归一化统计（<code>normalization_stats.json</code>、patch 索引）都是按它算的。换 M_HE_full 等于换浓度尺度，<strong>e07/e08 得重跑</strong>，已训的 M0 权重也不能接着用。建议和换 IHC 矩阵一起，留到下一轮从零开始时换。</p>
+<p>顺带把这次的教训记进项目记忆了：<code>e03.nmf_stain</code> 是单次随机初始化，<strong>H&amp;E 这种两列只差 33° 的平坦地形会掉进坏局部极小且静默出错</strong>（重建误差 0.0748 vs 最优 0.0688，槽位代价 47.8° vs 正常 ~32°），以后一律多种子重启 + 打印 <code>assign_and_fill</code> 的槽位代价（&gt;40° 报警）。</p>
+<div class="record"><span class="tag">我问</span><p>你把我们必要的矩阵信息和一些简单的说明写进一个文件里，我要给我agent看拿去训练</p></div>
+<p>写完了。验证一下文档里的代码片段真能跑、自检数字对得上：</p>
+<p>我测试脚本里手打了个 typo（<code>shape[:2]</code> 写成了文档里的 <code>shape[1:]</code>）。用文档原文重测：</p>
+<p>代码片段和自检数字都验过了 —— 文档里的 <code>unmix</code>/<code>render</code> 直接跑，往返 MAE 实测 <strong>HE 0.01658 / IHC 0.00484</strong>，与文档里写的 ≈0.017 / ≈0.0049 一致。</p>
+<p><strong>文件：<code>/Users/hua/Downloads/E0_闭环验证/handoff/outbox/06_stain_matrices_for_training.md</code></strong></p>
+<p>（编号接在既有 outbox 后面，你的 agent 照 <code>01</code>–<code>05</code> 的惯例直接读。）</p>
+<p>里面给了：</p>
+<table>
+<tr><th>节</th><th>内容</th></tr>
+<tr><td>§1</td><td><strong>两个矩阵的最终值</strong>（可直接复制的 numpy 字面量）+ 约定表（形状、列序、单位化、OD 空间、log₁₀、I₀=1、色素数=2）</td></tr>
+<tr><td>§2</td><td><strong>正反变换代码</strong>（<code>rgb_to_od</code> / <code>unmix</code> / <code>render</code>）+ 4 个坑（底数 log₁₀ vs ln 差 2.3026、必须用 pinv、IHC 禁 3×3、列序靠语义分配）+ 自检数字</td></tr>
+<tr><td>§3</td><td>关键数值表（夹角、负值率、往返 MAE、train/test 稳定性）+ 与旧矩阵的换算关系</td></tr>
+<tr><td>§4</td><td>组织掩膜必须逐域取（含假负值 7.09% 的坑）</td></tr>
+<tr><td>§5</td><td>归一化统计（<code>lo/hi</code>）——<strong>并明确警告这些数与旧矩阵绑定，换矩阵必须重算</strong></td></tr>
+<tr><td>§6</td><td>数据路径、4873 对配对规则、官方划分、无病例 ID 的划分警告</td></tr>
+<tr><td>§7</td><td>另外 5 条限制：错位 22.5px、跨域 H 一致 9.6°、逐图标定病态、<strong>NMF 多解会静默出错</strong>、矩阵已单位化</td></tr>
+<tr><td>§8</td><td>走浓度空间训练的现成结论（通道怎么凑 3 通道、可微渲染、别用 clamp）</td></tr>
+<tr><td>附</td><td>每个数字的出处脚本/JSON</td></tr>
+</table>
+<p>两点写文档时特意做的取舍，你过目一下：</p>
+<ol><li><strong>§3 里我把 <code>M_FROZEN</code> 和 <code>M_HE_e06</code> 也列进去了</strong>，标为&quot;旧，在用&quot;。因为往返 MAE 上 <code>M_FROZEN</code> 仍比新矩阵低 18%，如果 agent 现在就要开训、而你不想动 H-score 切点，用旧的也说得过去 —— 选哪个的判断依据我写清楚了，让它/你来定，不是我替你决定。</li><li><strong>没有把新矩阵设成&quot;必须换&quot;</strong>，而是给了&quot;换=尺度+5.4%+切点要重定&quot;的代价。因为一旦换了，<code>e07/e08</code> 的归一化统计和已训权重都得作废。</li></ol>
+<div class="record"><span class="tag">我问</span><p>你能知道我这两天的屏幕使用时间吗</p></div>
+<p>我本身看不到你的屏幕使用时间 —— 它不在对话上下文里。不过 macOS 的 Screen Time 数据存在本地数据库里，我可以试着查一下能不能读。先探一下路径和权限：</p>
+<p><strong>不能 —— 至少现在不能。</strong> 我看不到你的屏幕使用时间，而且刚查过本机：数据是有的，但被系统权限挡住了。</p>
+<p>查明的情况：</p>
+<ul><li>真正的使用记录在 <code>~/Library/Application Support/Knowledge/knowledgeC.db</code>（7.1 MB，今天还在更新）。</li><li>目录列出被拒（<code>Operation not permitted</code>），SQLite 直接读被拒（<code>authorization denied</code>）—— 这是 macOS 的 TCC 保护，当前运行的终端进程<strong>没有&quot;完全磁盘访问权限&quot;</strong>。</li><li><code>~/Library/Containers/com.apple.ScreenTimeAgent/</code> 里只有偏好设置，没有用量数据。</li><li>系统级 <code>/private/var/db/screenTime/</code> 不存在。</li></ul>
+<p>所以这几条路都走不通，我也不会去 <code>sudo</code> 绕（要你的密码，而且没必要）。</p>
+<p><strong>你有两个选择：</strong></p>
+<ol><li><strong>自己看</strong>：系统设置 → 屏幕使用时间，直接就有每日总计和 App 明细。</li><li><strong>让我算</strong>：给当前终端（或 Claude Code 宿主 App）开&quot;完全磁盘访问权限&quot;——系统设置 → 隐私与安全性 → 完全磁盘访问权限 → 添加/勾选你运行这个会话的 App，然后重启该 App。之后我可以查 <code>knowledgeC.db</code>，给你 10-16、10-17 两天按 App 的时长明细和总计。</li></ol>
+<p>提醒一句：这个库记录的是每个 App 的<strong>前台使用事件</strong>（<code>/app/usage</code>、<code>/app/inFocus</code> 流），能算到分钟级；但它不等于&quot;屏幕亮着的时间&quot;（锁屏、纯看视频不操作等口径会有出入），和屏幕使用时间 App 里的数字可能有几个百分点的差异。</p>
+<div class="record"><span class="tag">我问</span><p>/model</p></div>
+<p>Set model to <code>deepseek-v4-flash</code> and saved as your default for new sessions</p>
+<p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/032_model.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a324d7fc4b6d1">https://www.doubao.com/thread/a324d7fc4b6d1</a></p>
+<a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>
