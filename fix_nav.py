@@ -18,15 +18,19 @@ SKIP_DIRS = {".git", "raw_exports", "node_modules", ".github"}
 # (显示名, 相对站点的路径)
 NAV = [
     ("首页", "index.html"),
-    ("研究文章", "index.html#research"),
-    ("学习笔记", "index.html#notes"),
-    ("课程笔记", "index.html#courses"),
+    ("科研", "index.html#research"),
+    ("学习", "index.html#learning"),
     ("随笔", "index.html#essays"),
-    ("知识库", "index.html#kb"),
-    ("论文分享屋", "index.html#papers"),
-    ("资料库", "index.html#archive"),
     ("关于", "index.html#about"),
 ]
+
+# 列表页 → 当前应高亮的导航项
+LIST_GROUP = {"research": "科研", "papers": "科研", "notes": "学习", "courses": "学习",
+              "kb": "学习", "essays": "随笔"}
+
+THEME_INIT = ('<script id="theme-init">try{var t=localStorage.getItem("theme");'
+              'if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";'
+              'document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>')
 
 NAV_RE = re.compile(r'<nav class="site-nav">.*?</nav>', re.DOTALL)
 TITLE_RE = re.compile(r'<h1 class="site-title">.*?</h1>', re.DOTALL)
@@ -38,25 +42,42 @@ LIST_FILE = {"研究文章": "list-research.html", "学习笔记": "list-notes.h
              "资料库": "list-archive.html"}
 
 
+def _load_counts():
+    import json
+    path = os.path.join(ROOT, "data", "nav_counts.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
 def build_nav(prefix, active=None):
+    counts = _load_counts()
     parts = []
     for label, path in NAV:
+        badge = ""
+        if "#" in path:
+            gid = path.split("#")[1]
+            n = counts.get(gid)
+            if n:
+                badge = '<span class="n">%d</span>' % n
         # 在某个栏目的归档页上，当前栏目直接指向归档页本身，而不是首页锚点
         if active and label == active and label in LIST_FILE:
             href = prefix + "articles/" + LIST_FILE[label]
-            parts.append('<a class="active" href="%s">%s</a>' % (href, label))
+            parts.append('<a class="active" href="%s">%s%s</a>' % (href, label, badge))
             continue
         href = prefix + path
         cls = ' class="active"' if active and label == active else ""
-        parts.append('<a%s href="%s">%s</a>' % (cls, href, label))
+        parts.append('<a%s href="%s">%s%s</a>' % (cls, href, label, badge))
     return '<nav class="site-nav">%s</nav>' % "".join(parts)
 
 
 def build_foot(prefix):
     return (
         '<div class="side-foot">'
-        '<a href="%sindex.html#about">关于这个档案</a>'
-        '<span>纯静态 · 零依赖 · GitHub Pages</span>'
+        '<a href="%sarticles/list-archive.html">资料库 · 审计与溯源</a>'
+        '<span class="fine">纯静态 · GitHub Pages</span>'
         '</div>' % prefix
     )
 
@@ -82,15 +103,16 @@ def main():
             active = None
             m = re.match(r"list-([a-z]+)\.html$", fn)
             if m:
-                rev = {"research": "研究文章", "notes": "学习笔记", "courses": "课程笔记",
-                       "essays": "随笔", "kb": "知识库", "papers": "论文分享屋", "archive": "资料库"}
-                active = rev.get(m.group(1))
+                active = LIST_GROUP.get(m.group(1))
             elif depth == 0 and fn == "index.html":
                 active = "首页"
             # 先清掉旧的侧栏页脚，保证幂等
             text = re.sub(r'<div class="side-foot">.*?</div>', "", text, flags=re.DOTALL)
             # 统一站名（各页原来叫「科研博客 · 知识库」等，不统一）
             text = TITLE_RE.sub('<h1 class="site-title">%s</h1>' % SITE_TITLE, text, count=1)
+            # 确保 <head> 里有主题预置脚本（避免暗色用户首帧闪白）
+            if 'id="theme-init"' not in text:
+                text = text.replace("</head>", THEME_INIT + "\n</head>", 1)
             new = NAV_RE.sub(build_nav(prefix, active) + "\n" + build_foot(prefix), text, count=1)
             if new != text:
                 with open(path, "w", encoding="utf-8") as f:

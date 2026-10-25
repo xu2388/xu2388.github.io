@@ -10,7 +10,33 @@
   root.className += " js";
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- 侧边栏画布粒子 ---------- */
+  /* ---------- 明暗主题（初始化脚本已在 <head> 提前执行，这里只负责切换按钮） ---------- */
+  function currentTheme() {
+    return root.getAttribute("data-theme") || "light";
+  }
+  function initThemeToggle() {
+    var header = document.querySelector(".site-header");
+    var nav = document.querySelector(".site-nav");
+    if (!header || !nav || document.querySelector(".theme-toggle")) return;
+    var btn = document.createElement("button");
+    btn.className = "theme-toggle";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "切换明暗主题");
+    function paint() {
+      btn.innerHTML = '<span class="ic">' + (currentTheme() === "dark" ? "☀️" : "🌙") + "</span><span>" +
+        (currentTheme() === "dark" ? "浅色模式" : "深色模式") + "</span>";
+    }
+    btn.addEventListener("click", function () {
+      var next = currentTheme() === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("theme", next); } catch (e) { }
+      paint();
+    });
+    paint();
+    nav.insertAdjacentElement("afterend", btn);
+  }
+
+  /* ---------- 侧边栏画布粒子（配色随主题） ---------- */
   function initCanvas() {
     var header = document.querySelector(".site-header");
     if (!header || reduce) return;
@@ -20,6 +46,13 @@
     var ctx = canvas.getContext("2d");
     var W = 0, H = 0, pts = [], dpr = Math.min(window.devicePixelRatio || 1, 2);
 
+    function palette() {
+      var dark = currentTheme() === "dark";
+      return {
+        dot: dark ? "rgba(45,212,191,0.38)" : "rgba(13,148,136,0.30)",
+        line: dark ? "rgba(45,212,191,0.10)" : "rgba(13,148,136,0.09)"
+      };
+    }
     function resize() {
       W = header.clientWidth; H = header.clientHeight;
       canvas.width = W * dpr; canvas.height = H * dpr;
@@ -27,18 +60,19 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     function seed() {
-      var n = Math.max(18, Math.round(W * H / 16000));
+      var n = Math.max(14, Math.round(W * H / 20000));
       pts = [];
       for (var i = 0; i < n; i++) {
         pts.push({
           x: Math.random() * W, y: Math.random() * H,
-          vx: (Math.random() - 0.5) * 0.28,
-          vy: (Math.random() - 0.5) * 0.28,
-          r: Math.random() * 1.6 + 0.6
+          vx: (Math.random() - 0.5) * 0.22,
+          vy: (Math.random() - 0.5) * 0.22,
+          r: Math.random() * 1.4 + 0.6
         });
       }
     }
     function tick() {
+      var c = palette();
       ctx.clearRect(0, 0, W, H);
       var i, j, p, q, d;
       for (i = 0; i < pts.length; i++) {
@@ -48,17 +82,17 @@
         if (p.y < 0 || p.y > H) p.vy *= -1;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(110,231,210,0.5)";
+        ctx.fillStyle = c.dot;
         ctx.fill();
       }
       for (i = 0; i < pts.length; i++) {
         for (j = i + 1; j < pts.length; j++) {
           p = pts[i]; q = pts[j];
           d = (p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y);
-          if (d < 120 * 120) {
+          if (d < 110 * 110) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = "rgba(110,231,210," + (0.14 * (1 - Math.sqrt(d) / 120)).toFixed(3) + ")";
+            ctx.strokeStyle = c.line.replace("0.10", (0.10 * (1 - Math.sqrt(d) / 110)).toFixed(3));
             ctx.lineWidth = 1;
             ctx.stroke();
           }
@@ -252,6 +286,7 @@
   }
 
   function boot() {
+    initThemeToggle();
     initCanvas();
     initMobileNav();
     initProgress();

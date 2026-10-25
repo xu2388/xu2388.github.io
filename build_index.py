@@ -52,6 +52,13 @@ CATEGORY_DESC = {
 # 首页每个栏目预览几条
 PREVIEW_N = {"研究": 3, "课程笔记": 1, "学习笔记": 3, "随笔": 2, "知识库": 2, "论文": 1, "资料库": 2}
 
+# 首页大分组：科研 / 学习 / 随笔（用户的信息架构）
+GROUPS = [
+    ("科研", "research", "研究文章 · 论文调研", ["研究", "论文"]),
+    ("学习", "learning", "教程 · 课程笔记 · 对话存档", ["学习笔记", "课程笔记", "知识库"]),
+    ("随笔", "essays", "自己写的科普", ["随笔"]),
+]
+
 
 def extract_meta(text: str):
     m = re.search(r'<script id="meta" type="application/json">(.*?)</script>', text, re.DOTALL)
@@ -119,13 +126,10 @@ def site_header(title, subtitle, nav_items):
 
 LIST_NAV = [
     ("首页", "../index.html"),
-    ("研究文章", "list-research.html"),
-    ("学习笔记", "list-notes.html"),
-    ("课程笔记", "list-courses.html"),
-    ("随笔", "list-essays.html"),
-    ("知识库", "list-kb.html"),
-    ("论文分享屋", "list-papers.html"),
-    ("资料库", "list-archive.html"),
+    ("科研", "../index.html#research"),
+    ("学习", "../index.html#learning"),
+    ("随笔", "../index.html#essays"),
+    ("关于", "../index.html#about"),
 ]
 
 
@@ -169,13 +173,12 @@ def write_list_page(cat, items):
     return os.path.basename(path)
 
 
-def render_home_section(cat, items):
+def render_sub_block(cat, items):
+    """组内的一个栏目：小标题行 + 预览列表 + 「全部 N 篇 →」"""
     anchor = CATEGORY_ID.get(cat, "")
     title = CATEGORY_TITLE.get(cat, cat)
     n = len(items)
     preview_n = PREVIEW_N.get(cat, 3)
-    # 首页预览里跳过标题无信息量的存档条目（如「豆包会话 38441…」），
-    # 它们仍保留在归档页里。
     pool = [it for it in items if not it.get("title", "").startswith("豆包会话 ")]
     if len(pool) < preview_n:
         pool = items
@@ -189,7 +192,19 @@ def render_home_section(cat, items):
         '  %s\n'
         '</div>' % (htmlmod.escape(title), n, more)
     )
-    return '<section class="block" id="%s">\n%s\n%s\n</section>' % (anchor, head, render_list(preview, href_prefix="articles/"))
+    return '<div class="group-sub">\n%s\n%s\n</div>' % (head, render_list(preview, href_prefix="articles/"))
+
+
+def render_home_group(gname, gid, gdesc, cats, grouped):
+    parts = ['<section class="group" id="%s">' % gid]
+    head = '<div class="group-head"><h2>%s</h2><span class="g-desc">%s</span></div>' % (
+        htmlmod.escape(gname), htmlmod.escape(gdesc))
+    parts.append(head)
+    for cat in cats:
+        if cat in grouped and grouped[cat]:
+            parts.append(render_sub_block(cat, grouped[cat]))
+    parts.append("</section>")
+    return "\n".join(parts)
 
 
 def compute_stats(grouped):
@@ -221,9 +236,14 @@ def main():
     for cat in ordered:
         made.append(write_list_page(cat, grouped[cat]))
 
-    # 2) 首页栏目区
-    sections = [render_home_section(cat, grouped[cat]) for cat in ordered]
-    new_block = "\n".join(sections)
+    # 2) 首页：按 科研 / 学习 / 随笔 三大组渲染
+    group_html = []
+    covered = set()
+    for gname, gid, gdesc, cats in GROUPS:
+        group_html.append(render_home_group(gname, gid, gdesc, cats, grouped))
+        covered.update(cats)
+    # 未归组的分类（如 资料库）不进首页三大组，只保留归档页
+    new_block = "\n".join(group_html)
 
     with open(INDEX_PATH, encoding="utf-8") as f:
         idx = f.read()
@@ -247,8 +267,17 @@ def main():
     with open(INDEX_PATH, "w", encoding="utf-8") as f:
         f.write(idx)
 
+    # 4) 侧栏导航计数，供 fix_nav.py 读取
+    counts = {}
+    for gname, gid, gdesc, cats in GROUPS:
+        counts[gid] = sum(len(grouped.get(c, [])) for c in cats)
+    counts["archive"] = len(grouped.get("资料库", []))
+    os.makedirs(os.path.join(ROOT, "data"), exist_ok=True)
+    with open(os.path.join(ROOT, "data", "nav_counts.json"), "w", encoding="utf-8") as f:
+        json.dump(counts, f, ensure_ascii=False)
+
     total = sum(len(v) for v in grouped.values())
-    print("已更新：首页 %d 个栏目，归档页 %d 个，条目共 %d。" % (len(ordered), len(made), total))
+    print("已更新：首页 %d 大组，归档页 %d 个，条目共 %d。" % (len(GROUPS), len(made), total))
     for cat in ordered:
         print("  [%s] %d 篇（首页预览 %d）" % (cat, len(grouped[cat]), min(PREVIEW_N.get(cat, 3), len(grouped[cat]))))
 

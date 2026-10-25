@@ -3,20 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>我的科研与学习档案 · H&E→IHC 虚拟染色</title>
+  <title>科研与学习档案 · H&E→IHC 虚拟染色</title>
   <meta name="description" content="一个本科生的虚拟染色研究档案：研究文章、学习教程、课程笔记与全部学习对话存档。" />
   <link rel="stylesheet" href="assets/style.css" />
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
   <header class="site-header">
     <div class="container">
-      <h1 class="site-title">科研与学习档案</h1>
-      <p class="site-subtitle">H&amp;E→IHC 虚拟染色 · 从大一到现在</p>
-      <nav class="site-nav"><a class="active" href="index.html">首页</a><a href="index.html#research">研究文章</a><a href="index.html#notes">学习笔记</a><a href="index.html#courses">课程笔记</a><a href="index.html#essays">随笔</a><a href="index.html#kb">知识库</a><a href="index.html#papers">论文分享屋</a><a href="index.html#archive">资料库</a><a href="index.html#about">关于</a></nav>
-<div class="side-foot"><a href="index.html#about">关于这个档案</a><span>纯静态 · 零依赖 · GitHub Pages</span></div>
-
-
-
+      <div class="side-brand">
+        <div class="side-avatar">H&amp;E</div>
+        <div>
+          <h1 class="site-title">科研与学习档案</h1>
+          <p class="site-subtitle">H&amp;E→IHC 虚拟染色 · 从大一到现在</p>
+        </div>
+      </div>
+      <nav class="site-nav"><a class="active" href="index.html">首页</a><a href="index.html#research">科研<span class="n">8</span></a><a href="index.html#learning">学习<span class="n">8</span></a><a href="index.html#essays">随笔<span class="n">2</span></a><a href="index.html#about">关于</a></nav>
+<div class="side-foot"><a href="articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
     </div>
   </header>
 
@@ -25,8 +28,10 @@
       <p class="lead-label">RESEARCH &amp; STUDY ARCHIVE · 2024 — 2026</p>
       <h1>一年多的问题、踩坑与结论，都留在这里</h1>
       <p class="lead-text">
-        主线是用深度学习把普通病理切片<strong>“染”</strong>成免疫组化图。过程没有磨光：
-        当初怎么想的、后来怎么被数据推翻、哪些方案被否掉、为什么否，都按原样保留，
+        主线是用深度学习把普通病理切片<strong>“染”</strong>成免疫组化图。内容分两块：
+        <a href="#research">科研</a>是完整的研究文章与论文调研，
+        <a href="#learning">学习</a>是教程、课程笔记与全部对话存档。
+        过程没有磨光：当初怎么想的、后来怎么被数据推翻、哪些方案被否掉、为什么否，都按原样保留，
         每条结论尽量能溯源到具体对话。
       </p>
       <div class="stats">
@@ -40,7 +45,9 @@
     </section>
 
     <!-- ARTICLES_START -->
-<section class="block" id="research">
+<section class="group" id="research">
+<div class="group-head"><h2>科研</h2><span class="g-desc">研究文章 · 论文调研</span></div>
+<div class="group-sub">
 <div class="block-head">
   <h2>研究文章<span class="count">7</span></h2>
   <a class="more" href="articles/list-research.html">全部 7 篇 →</a>
@@ -62,21 +69,24 @@
   <span class="desc">一开始我只是想复现个 SOTA 模型把 Masson/PAS/PASM 三染色的病灶分割结果交上去，结果这条线一路带我摸过 nnU-Net、GloPath、Swin-UNETR，又为扩数据拐进了文本驱动风格迁移，最后自己绕回起点，卡在边界模糊这个真问题上。本文按时间顺序留下完整的思路演变、我引用的每个模型的指标、我实测的那组 Dice/IoU，和一路的自我推翻。</span>
 </li>
 </ul>
-</section>
-<section class="block" id="courses">
+</div>
+<div class="group-sub">
 <div class="block-head">
-  <h2>课程与科研笔记<span class="count">1</span></h2>
+  <h2>论文分享屋<span class="count">1</span></h2>
   
 </div>
 <ul class="article-list">
 <li>
-  <a href="articles/notes-index.html">学习笔记 · 课程复习与科研整理（25 篇）</a><span class="date">2026-10-24</span><br />
-  <span class="tag">课程笔记</span> <span class="tag">学习</span> <span class="tag">复习</span>
-  <span class="desc">把大一大二专业课复习与科研对话整理成的系统学习笔记，按学科分组，正式书面整理，完整覆盖知识点。</span>
+  <a href="articles/papers-index.html">论文分享屋 · 虚拟染色与病理影像调研导读</a><span class="date">2026-10-24</span><br />
+  <span class="tag">论文</span> <span class="tag">调研</span> <span class="tag">虚拟染色</span> <span class="tag">H&amp;E→IHC</span> <span class="tag">导读</span>
+  <span class="desc">我调研过的虚拟染色 / 病理影像论文导读，按主题分组，每篇一句话总结 + 和我 H&amp;E→IHC 主线的关系。PDF 都存在本地，这里做一份能检索的清单。</span>
 </li>
 </ul>
+</div>
 </section>
-<section class="block" id="notes">
+<section class="group" id="learning">
+<div class="group-head"><h2>学习</h2><span class="g-desc">教程 · 课程笔记 · 对话存档</span></div>
+<div class="group-sub">
 <div class="block-head">
   <h2>学习笔记 · 教程<span class="count">5</span></h2>
   <a class="more" href="articles/list-notes.html">全部 5 篇 →</a>
@@ -98,26 +108,21 @@
   <span class="desc">注意力是我啃过的第三块硬骨头（VAE、扩散/FM 之后）。这篇先把它还原成最朴素的一件事——&#x27;带着问题去查表&#x27;，讲清自注意力的 Q/K/V 和多头，再推到关键的分野：交叉注意力。正是它，让文本/结构条件能注入扩散 UNet，也正是 DeepSeek 给我&#x27;有色调无结构&#x27;开的药方。最后接回我的 HistDiST + Phikon 改造。</span>
 </li>
 </ul>
-</section>
-<section class="block" id="essays">
+</div>
+<div class="group-sub">
 <div class="block-head">
-  <h2>随笔 · 科普<span class="count">2</span></h2>
+  <h2>课程与科研笔记<span class="count">1</span></h2>
   
 </div>
 <ul class="article-list">
 <li>
-  <a href="articles/深度学习到底在干什么.html">深度学习到底在干什么（初稿）</a><span class="date">2026-10-23</span><br />
-  <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
-  <span class="desc">作者 2026-10-23 写的第一版随笔：用大白话讲清深度学习本质在干什么，例子来自自己的虚拟染色踩坑。</span>
-</li>
-<li>
-  <a href="articles/深度学习到底在干什么_第二版.html">深度学习到底在干什么（定稿）</a><span class="date">2026-10-23</span><br />
-  <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
-  <span class="desc">作者偏好的定稿版本：一段一长句、逗号串到底的第一人称风格，讲清深度学习本质在干什么。</span>
+  <a href="articles/notes-index.html">学习笔记 · 课程复习与科研整理（25 篇）</a><span class="date">2026-10-24</span><br />
+  <span class="tag">课程笔记</span> <span class="tag">学习</span> <span class="tag">复习</span>
+  <span class="desc">把大一大二专业课复习与科研对话整理成的系统学习笔记，按学科分组，正式书面整理，完整覆盖知识点。</span>
 </li>
 </ul>
-</section>
-<section class="block" id="kb">
+</div>
+<div class="group-sub">
 <div class="block-head">
   <h2>知识库 · 全部学习对话<span class="count">2</span></h2>
   
@@ -134,45 +139,37 @@
   <span class="desc">把 DeepSeek 全部 270 条对话转成可浏览的问答存档，按主题分组，一条不丢。每条都可点进去看完整我问+AI回答，并链接回未删减的原始档案。</span>
 </li>
 </ul>
+</div>
 </section>
-<section class="block" id="papers">
+<section class="group" id="essays">
+<div class="group-head"><h2>随笔</h2><span class="g-desc">自己写的科普</span></div>
+<div class="group-sub">
 <div class="block-head">
-  <h2>论文分享屋<span class="count">1</span></h2>
+  <h2>随笔 · 科普<span class="count">2</span></h2>
   
 </div>
 <ul class="article-list">
 <li>
-  <a href="articles/papers-index.html">论文分享屋 · 虚拟染色与病理影像调研导读</a><span class="date">2026-10-24</span><br />
-  <span class="tag">论文</span> <span class="tag">调研</span> <span class="tag">虚拟染色</span> <span class="tag">H&amp;E→IHC</span> <span class="tag">导读</span>
-  <span class="desc">我调研过的虚拟染色 / 病理影像论文导读，按主题分组，每篇一句话总结 + 和我 H&amp;E→IHC 主线的关系。PDF 都存在本地，这里做一份能检索的清单。</span>
+  <a href="articles/深度学习到底在干什么.html">深度学习到底在干什么（初稿）</a><span class="date">2026-10-23</span><br />
+  <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
+  <span class="desc">作者 2026-10-23 写的第一版随笔：用大白话讲清深度学习本质在干什么，例子来自自己的虚拟染色踩坑。</span>
+</li>
+<li>
+  <a href="articles/深度学习到底在干什么_第二版.html">深度学习到底在干什么（定稿）</a><span class="date">2026-10-23</span><br />
+  <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
+  <span class="desc">作者偏好的定稿版本：一段一长句、逗号串到底的第一人称风格，讲清深度学习本质在干什么。</span>
 </li>
 </ul>
-</section>
-<section class="block" id="archive">
-<div class="block-head">
-  <h2>资料库 · 审计与清单<span class="count">5</span></h2>
-  <a class="more" href="articles/list-archive.html">全部 5 篇 →</a>
 </div>
-<ul class="article-list">
-<li>
-  <a href="articles/deepseek_inventory.html">DeepSeek 对话全量清单（270 条）</a><span class="date">2026-10-24</span><br />
-  <span class="tag">清单</span> <span class="tag">覆盖率</span> <span class="tag">DeepSeek</span>
-  <span class="desc">270 个 DeepSeek 对话的逐条清单：ID、条数、时间范围、主题、对应原始档案文件名。每一条都分配了唯一编号，方便溯源到 raw_exports/deepseek_raw/。</span>
-</li>
-<li>
-  <a href="articles/doubao-agent-sessions.html">豆包 agent 会话存档</a><span class="date">2026-10-24</span><br />
-  <span class="tag">豆包</span> <span class="tag">agent会话</span> <span class="tag">MBTI</span>
-  <span class="desc">从豆包 agent 模式本地 trajectory 日志还原的研究会话存档，含 MBTI 连续人格空间建模的完整方案。</span>
-</li>
-</ul>
 </section>
   <!-- ARTICLES_END -->
 
-    <section id="about" class="block">
-      <div class="block-head"><h2>关于</h2></div>
-      <p class="lead-text">
+    <section id="about" class="group">
+      <div class="group-head"><h2>关于</h2></div>
+      <p class="lead-text" style="margin-top:14px">
         内容来自我和 AI 助手（DeepSeek、豆包、WorkBuddy）一年多的科研与学习对话，
         由 WorkBuddy 整理。原则：<strong>原始信息不删减、思考过程原样保留、每条结论尽量能溯源到具体对话</strong>。
+        全量审计与清单见<a href="articles/list-archive.html">资料库</a>。
       </p>
       <p class="lead-text" style="margin-top:14px">
         纯静态站点，零依赖，托管于 GitHub Pages。新增文章：把 Markdown 用
@@ -184,7 +181,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <span>用 WorkBuddy 搭建 · 静态博客 · 托管于 GitHub Pages</span>
+      <span>科研与学习档案 · 纯静态博客 · 托管于 GitHub Pages</span>
     </div>
   </footer>
 <script src="assets/blog.js" defer></script>
