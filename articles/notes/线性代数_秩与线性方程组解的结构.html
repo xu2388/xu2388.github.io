@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>线性代数 · 秩与线性方程组解的结构</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
+<script id="meta" type="application/json">
+{"title":"线性代数 · 秩与线性方程组解的结构","date":"2026-10-24","tags":["课程笔记","线性代数"],"category":"课程笔记","summary":"本文以矩阵的秩为主线，整理秩的四种等价刻画（主元个数、最高阶非零子式、行秩等于列秩、等价标准形），说明初等变换保秩以及等价、相似、合同的层次与传递性；用秩统一判定向量组线性相关性、伴随矩阵秩的分段结论，以及齐次与非齐次方程组解的存在性、解空间维数 n 减 r、基础解系构造，并讨论两方程组同解与矩阵方程有解的秩判据。原料多处算例有误，正文已逐条勘正。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
+<article class="article">
+<h1>线性代数 · 秩与线性方程组解的结构</h1>
+<div class="meta">课程笔记 · 线性代数</div>
+<h1>线性代数 · 矩阵的秩与线性方程组解的结构</h1>
+<h2>一、秩的四重刻画：主元、子式、行秩与列秩</h2>
+<p>矩阵的秩在教材里有四种彼此独立的引入方式，初学时的最大障碍往往不是定义本身，而是没有意识到这四个数相等。本篇的第一项目标就是把它们拧在一起，因为后面所有结论——等价关系的分类、向量组的相关性、伴随矩阵的分段、解空间的维数——本质上都在使用这同一个数。约定：以下 $A$ 表示 $m\times n$ 矩阵，$r(A)$ 表示其秩，$E$ 表示单位矩阵，$(A;b)$ 表示把列向量 $b$ 并到 $A$ 右侧得到的增广矩阵。</p>
+<p>第一种刻画来自计算过程。高斯消元把矩阵化成行阶梯形，主元（pivot）定义为每行从左起第一个非零元素，并要求每一行的主元严格位于上一行主元的右侧，主元所在列在其下方的元素全为零。原料给出的阶梯形</p>
+<p>$$ \begin{pmatrix}1&amp;2&amp;3&amp;4\\0&amp;5&amp;6&amp;7\\0&amp;0&amp;8&amp;9\\0&amp;0&amp;0&amp;0\end{pmatrix} $$</p>
+<p>的主元依次是 $(1,1)$ 元的 1、$(2,2)$ 元的 5、$(3,3)$ 元的 8，共三个。这里有两个反复出错的细节：其一，主元只需非零，并不要求是 1，只有行最简形才把主元归一且让主元所在列的其余元素为零；其二，主元未必落在主对角线上，降秩矩阵的主元会逐行右移，而主元所在的列恰好给出列向量组的一个极大线性无关组，非主元列对应的未知数就是自由变量。把这两点记住，「主元的个数」就从一个统计动作变成了有关结构的陈述。</p>
+<p>第二种刻画来自子式。取 $A$ 的若干行与同样多个列，交叉处的元素按原次序排成的行列式称为 $A$ 的一个子式；$A$ 中非零子式的最高阶数定义为秩，即 $r(A)=k$ 表示存在一个非零的 $k$ 阶子式而一切 $k+1$ 阶子式全为零。零矩阵没有非零子式，规定其秩为 $0$。由定义立刻有 $r(A)\leq\min\{m,n\}$，因为阶数超过 $\min\{m,n\}$ 的子式根本不存在。这个定义的好处是它把「秩」写成了一个可以被反证使用的整数：想证明某个秩不超过 $k$，只需说明所有 $k+1$ 阶子式为零。</p>
+<p>第三种刻画来自向量组。把 $A$ 的 $m$ 个行向量看成一组向量，其极大线性无关组所含向量个数称为行秩；把 $n$ 个列向量看成一组向量，同样得到列秩。行秩与列秩相等，且都等于上面两种刻画给出的数，这是整套理论真正的枢纽。论证可以三步走完。第一步，初等行变换不改变行空间：每一行新行都是原矩阵各行的线性组合，而变换可逆，故原各行也是新各行的线性组合，两个行空间互相包含因而相等，于是行秩在消元过程中不变。第二步，初等行变换不改变列向量之间的全部线性关系（第三节将给出严格证明），因而列向量组的极大线性无关组所含向量个数也不变，即列秩不变。第三步，取 $A$ 的行阶梯形 $U$，它有 $p$ 个主元、$p$ 个非零行；非零行按主元位置看是两两不成比例的，故行秩为 $p$；而 $U$ 中取主元所在行与主元所在列交叉的 $p$ 阶子式是一个上三角矩阵，主对角线全是非零主元，其行列式为非零主元之积，故列秩至少为 $p$，又 $U$ 只有 $p$ 个非零行、任何 $p+1$ 个行向量必相关，故列秩恰为 $p$。把三步连起来：</p>
+<p>$$ \text{行秩}(A)=\text{行秩}(U)=p=\text{列秩}(U)=\text{列秩}(A), $$</p>
+<p>并且那个非零的 $p$ 阶子式说明最高阶非零子式不小于 $p$，而 $p+1$ 阶子式所在的那 $p+1$ 行落在 $p$ 维行空间中必相关，故其行列式为零，即最高阶非零子式恰为 $p$。四种说法至此归一。</p>
+<p>第四种刻画来自等价标准形：任何秩为 $r$ 的矩阵都可经初等变换化为</p>
+<p>$$ \begin{pmatrix}E_{r}&amp;O\\O&amp;O\end{pmatrix}, $$</p>
+<p>并且这个 $r$ 由矩阵唯一决定。第四节会证明这件事，它把秩从「计算结果」提升为「分类不变量」：两个同型矩阵能用初等变换互化，当且仅当它们的标准形相同。</p>
+<p>可逆矩阵是这些刻画的交汇点。对 $n$ 阶方阵 $A$，下列说法彼此等价：$A$ 可逆；$\det A\neq0$；$r(A)=n$；$A$ 的列向量组线性无关；齐次方程组 $Ax=0$ 只有零解。最简单的例子是对角矩阵 $\operatorname{diag}(a_{11},\dots,a_{nn})$：它的所有子式都由对角元的乘积组成，故秩等于对角元中非零者的个数，可逆的充要条件是对角元全不为零，此时逆阵仍为对角阵且对角元取倒数，例如</p>
+<p>$$ \begin{pmatrix}2&amp;0&amp;0\\0&amp;3&amp;0\\0&amp;0&amp;4\end{pmatrix}^{-1}=\begin{pmatrix}\frac12&amp;0&amp;0\\0&amp;\frac13&amp;0\\0&amp;0&amp;\frac14\end{pmatrix}. $$</p>
+<p>这个例子也顺带划清一条界线：把对角元同时除以某个公因数并不是「求逆」，也不是任何合法的矩阵运算，它至多相当于若干次初等变换，第二节会回到这一点。</p>
+<h2>二、初等变换为何不改变秩</h2>
+<p>命题：三类初等变换（交换两行或两列、某行或某列乘以非零数、把某行或某列的倍数加到另一行或另一列）都不改变矩阵的秩。用子式定义证明最直接，因为三类变换对子式的影响各不相同，而「非零子式的最高阶数」在三类影响下都不动。</p>
+<p>交换两行时，任一子式的行序至多发生一次置换，其值要么不变、要么变号；变号不改变它是否为零，故非零子式的最高阶数不变。某行乘以非零数 $c$ 时，凡不含该行的子式取值不变，凡含该行的子式值变为原来的 $c$ 倍，仍由 $c\neq0$ 知非零性不变。最微妙的是「倍加」：把第 $j$ 行的 $k$ 倍加到第 $i$ 行，考察所得矩阵的任一子式。若它不含第 $i$ 行，则取值与原来相同；若含第 $i$ 行，则由行列式对单行的线性，其值等于原子式的值加上 $k$ 倍的「第 $i$ 行换成第 $j$ 行」的行列式，而后者有两行相同，值为零，故该子式的值原封不动。三类变换都可逆，其逆变换仍属三类之一，把 $A$ 变为 $B$ 与把 $B$ 变回 $A$ 两个方向合起来即得两侧非零子式的最高阶数互不相等的情形被排除，秩相等。初等列变换对子式的作用与行变换完全对称，不必另证。</p>
+<p>左乘可逆矩阵这一表述把上面的逐条验证压缩成一句话，并给出一个更有用的副产品。设 $E$ 可逆，$B=EA$，$A$ 与 $B$ 的列向量分别记作 $\alpha_1,\dots,\alpha_n$ 与 $\beta_1,\dots,\beta_n$，则 $\beta_j=E\alpha_j$。若 $c_1\alpha_1+\cdots+c_n\alpha_n=0$，左乘 $E$ 得 $c_1\beta_1+\cdots+c_n\beta_n=0$；反向若后者成立，则 $E(c_1\alpha_1+\cdots+c_n\alpha_n)=0$，左乘 $E^{-1}$ 得前者成立。于是两组列向量的线性关系完全一致：哪些列无关、哪些列相关、相关的那一列由极大无关组怎样线性表出、表出系数是多少，全都不变。这正是「解齐次方程组时可以随意作初等行变换」的深层理由，因为 $Ax=0$ 与 $(EA)x=0$ 同解。</p>
+<p>原料在此给过一个具体矩阵，本文重算并顺带修正其错误。取</p>
+<p>$$ A=\begin{pmatrix}1&amp;2&amp;3\\4&amp;5&amp;6\end{pmatrix}, $$</p>
+<p>其第三列等于前两列之和。作行变换「第二行减去第一行的 4 倍」得 $B=\begin{pmatrix}1&amp;2&amp;3\\0&amp;-3&amp;-6\end{pmatrix}$，仍有 $\beta_3=\beta_1+\beta_2$，即 $(3,-6)^{\mathrm{T}}=(1,0)^{\mathrm{T}}+(2,-3)^{\mathrm{T}}$，系数为 $1,1$，未变。原料此处相符。原料在别处对行、列变换与行、列空间的对应关系表述无误：初等行变换保持行空间，初等列变换保持列空间。本文补一句常被混用的一面：<strong>行变换一般不保持列空间，它保持的是列向量之间的线性关系</strong>。仍以上例作 $r_2-2r_1$，改取 $A=\begin{pmatrix}1&amp;2\\2&amp;4\end{pmatrix}$，所得为 $\begin{pmatrix}1&amp;2\\0&amp;0\end{pmatrix}$，前者的列空间由 $(1,2)^{\mathrm{T}}$ 生成，后者的由 $(1,0)^{\mathrm{T}}$ 生成，两个子空间不同；而两者的列关系（第二列恒为第一列的 2 倍）确实没变。正确的分工是：<strong>行变换保持行空间、零空间与列关系，列变换保持列空间、行空间与行关系</strong>。</p>
+<p>与「变换保秩」极易混用的还有一组关于提公因式的规则，原料在此反复过。矩阵的数乘要求同一个数乘到每一个元素上，因此把某一行独有的公因数「提到矩阵外」是不合法的，所得矩阵与原矩阵之间没有数乘关系；对某一行整体除以 $k$ 是初等变换，它改变矩阵本身，只保证秩不变。行列式才有按行（列）提取公因式的性质：某行元素全是 $k$ 的倍数时，行列式的值等于 $k$ 乘以其余部分。原料初稿把 $A=\begin{pmatrix}2&amp;4&amp;6\\1&amp;3&amp;5\\3&amp;6&amp;9\end{pmatrix}$ 第一行的公因数 2 提出得 $B=\begin{pmatrix}1&amp;2&amp;3\\1&amp;3&amp;5\\3&amp;6&amp;9\end{pmatrix}$ 并断言 $A=2B$，<strong>按数乘定义应为 $2B=\begin{pmatrix}2&amp;4&amp;6\\2&amp;6&amp;10\\6&amp;12&amp;18\end{pmatrix}\neq A$</strong>，原料在后文已自行订正，此处只是把这组对照固定下来。附带一个能同时用上两条规则的例子：</p>
+<p>$$ \begin{vmatrix}4&amp;8&amp;12\\3&amp;6&amp;9\\5&amp;10&amp;15\end{vmatrix}=4\begin{vmatrix}1&amp;2&amp;3\\3&amp;6&amp;9\\5&amp;10&amp;15\end{vmatrix}=0, $$</p>
+<p>因为提出首行因子后三行依次是 $(1,2,3)$ 的 $1,3,5$ 倍，成比例；对应的矩阵 $\begin{pmatrix}4&amp;8&amp;12\\3&amp;6&amp;9\\5&amp;10&amp;15\end{pmatrix}$ 的秩为 $1$，行列式为零与秩不满是一致的两件事。</p>
+<h2>三、向量组的线性相关性与秩</h2>
+<p>$n$ 维向量组 $\alpha_1,\dots,\alpha_m$ 线性相关，指存在不全为零的数组 $k_1,\dots,k_m$ 使 $k_1\alpha_1+\cdots+k_m\alpha_m=0$；不存在这样的数组则称线性无关。把 $\alpha_j$ 作为列排成 $n$ 行 $m$ 列的矩阵 $A=(\alpha_1,\dots,\alpha_m)$，上述定义就被翻译成一个齐次方程组：组合系数 $k_1,\dots,k_m$ 恰好是未知量，$\sum k_j\alpha_j=0$ 就是 $Ax=0$。于是三套语言可以互译——「向量组线性相关」等价于 $r(A)&lt;m$，「线性无关」等价于 $r(A)=m$（列满秩），「$\beta$ 可由 $\alpha_1,\dots,\alpha_m$ 线性表出」等价于 $r(A)=r(A;\beta)$，「极大线性无关组含 $r$ 个向量」等价于 $r(A)=r$。有了这层翻译，判定的全部技巧就归结为算秩。</p>
+<p>由 $r(A)\leq\min\{n,m\}$ 得到一个不必计算的结论：当向量个数多于维数，即 $m&gt;n$ 时，$n$ 维向量组必线性相关。原料在此处先给出一个方向颠倒的解释，随后自己否定了它，值得把这组问答固定下来：<strong>「是不是因为有效方程的个数大于未知量的个数」这一预设是错的，正确说法恰好相反——方程个数就是维数 $n$，未知量个数是组合系数 $m$，因 $m&gt;n$，未知量多于方程，齐次方程组必有非零解</strong>。这一字之差很容易在含参题里造成误判，因为「条件比未知数多」在直觉里意味着「约束更强」，而此处恰恰是约束不足以迫使全部系数为零。</p>
+<p>把上面的翻译用在一个具体矩阵上。取</p>
+<p>$$ A=\begin{pmatrix}3&amp;4&amp;-5&amp;7\\2&amp;-3&amp;3&amp;-2\\4&amp;11&amp;-13&amp;16\\7&amp;-2&amp;1&amp;3\end{pmatrix}. $$</p>
+<p>行变换化为行最简形得</p>
+<p>$$ \begin{pmatrix}1&amp;0&amp;-\frac{3}{17}&amp;\frac{13}{17}\\0&amp;1&amp;-\frac{19}{17}&amp;\frac{20}{17}\\0&amp;0&amp;0&amp;0\\0&amp;0&amp;0&amp;0\end{pmatrix}, $$</p>
+<p>主元在第一、二列，故列向量组的秩为 $2$，前两列构成一个极大线性无关组，第三、四列的表出系数直接从行最简形读出：</p>
+<p>$$ \alpha_3=-\frac{3}{17}\alpha_1-\frac{19}{17}\alpha_2,\qquad \alpha_4=\frac{13}{17}\alpha_1+\frac{20}{17}\alpha_2. $$</p>
+<p>代回原矩阵核验：$3\alpha_1+19\alpha_2=(9,6,12,21)^{\mathrm{T}}+(76,-57,209,-38)^{\mathrm{T}}=(85,-51,221,-17)^{\mathrm{T}}$，除以 $-17$ 恰得 $(-5,3,-13,1)^{\mathrm{T}}=\alpha_3$；$13\alpha_1+20\alpha_2=(39,26,52,91)^{\mathrm{T}}+(80,-60,220,-40)^{\mathrm{T}}=(119,-34,272,51)^{\mathrm{T}}$，除以 $17$ 恰得 $(7,-2,16,3)^{\mathrm{T}}=\alpha_4$。这正是第二节所述「行变换保持列关系与表出系数」的一次数值兑现。顺便看行向量组：三、四行可由前两行表出，$r_3=2r_1-r_2$、$r_4=r_1+2r_2$，逐项验算 $2(3,4,-5,7)-(2,-3,3,-2)=(4,11,-13,16)$，$ (3,4,-5,7)+2(2,-3,3,-2)=(7,-2,1,3)$，故行秩也是 $2$，与列秩相等。</p>
+<p>极大无关组的两个性质值得单独说明，它们在后面的同解讨论中要用。其一，若 $\alpha_{i_1},\dots,\alpha_{i_r}$ 是极大无关组，则任一向量 $\beta$ 由它线性表出的系数唯一：设有两组系数都行，则其差给出无关组的一个非平凡关系，矛盾。其二，同一向量组的不同极大无关组所含向量个数相同，这个公共个数就是向量组的秩；证明思路是两组各自能表出对方，故 $r$ 个向量能表出 $s$ 个无关向量意味着 $s\leq r$，对称地 $r\leq s$。</p>
+<p>秩为 $1$ 的矩阵有一条结构刻画：$r(A)=1$ 的充要条件是存在非零列向量 $\alpha$ 与非零行向量 $\beta^{\mathrm{T}}$ 使 $A=\alpha\beta^{\mathrm{T}}$。充分性由 $a_{ij}=\alpha_i\beta_j$ 给出每列都是 $\alpha$ 的倍数，故秩至多 $1$，而 $A$ 非零故秩不小于 $1$；必要性由秩为 $1$ 时列向量组的极大无关组恰含一个非零列 $\alpha$，其余每列形如 $b_j\alpha$，把 $b_j$ 排成行向量即得。原料在证明此条时出现过「$A$ 的列向量组线性相关，且存在非零列向量，故 $r(A)\geq1$」这样的表述，中间绕了「相关」一词，实际只需「$A\neq O$」；结论本身无误。</p>
+<p>顺着这条线，秩为 $r$ 的矩阵可写成 $r$ 个秩为 $1$ 矩阵之和：取可逆 $P,Q$ 使 $A=P\begin{pmatrix}E_r&amp;O\\O&amp;O\end{pmatrix}Q=\sum_{i=1}^{r}(PE_{ii}Q)$，每一项秩仍为 $1$，因左右乘可逆阵不改变秩。原料初稿只说「通过逆变换变回 $A$，过程中保持秩为 1」，写成 $PE_{ii}Q$ 才是可核查的形式。最简单的例子是 $A=\begin{pmatrix}1&amp;0&amp;0&amp;1\\0&amp;1&amp;2&amp;0\\O&amp;O&amp;O&amp;O\\O&amp;O&amp;O&amp;O\end{pmatrix}$，它本身就是标准形，拆成两个只含一个非零元素的矩阵之和，秩各为 $1$。</p>
+<h2>四、等价、合同与相似：三种关系与传递性</h2>
+<p>矩阵等价的定义是：$A$ 经有限次初等变换可化为 $B$，记 $A\cong B$；等价于存在可逆矩阵 $P,Q$ 使 $B=PAQ$。核心结论是：同型矩阵等价当且仅当秩相等。必要性就是第二节的定理——三类初等变换各自保持秩，有限次复合仍保持。充分性走标准形：设 $r(A)=r(B)=r$，两者都可化为同一个 $\begin{pmatrix}E_r&amp;O\\O&amp;O\end{pmatrix}$，由初等变换的可逆性，把 $A$ 到标准形的变换序列接上标准形到 $B$ 的逆变换序列，就得到 $A\to B$。可见秩是等价关系的完全不变量，除同型之外没有任何附加条件，这是三种关系中最粗的一种。</p>
+<p>合同与相似都只在方阵上讨论，并且都与等价一样满足三条性质。设 $A,B$ 为 $n$ 阶方阵，若存在可逆矩阵 $C$ 使 $C^{\mathrm{T}}AC=B$，则称 $A$ 与 $B$ 合同，记 $A\simeq B$。反身性取 $C=E$；对称性由 $C^{\mathrm{T}}AC=B$ 两端左乘 $(C^{-1})^{\mathrm{T}}$、右乘 $C^{-1}$ 得 $(C^{-1})^{\mathrm{T}}BC=A$；传递性由 $X^{\mathrm{T}}AX=B$、$Y^{\mathrm{T}}BY=C$ 得 $(XY)^{\mathrm{T}}A(XY)=Y^{\mathrm{T}}BY=C$，可逆阵取 $Z=XY$。原料此处把可逆阵与目标矩阵同时记作 $C$，写作「存在可逆矩阵 $X,Y$ 使得 $C^{\mathrm{T}}AC=B$」，<strong>同一字母兼指两个对象，符号自相冲突，应改作 $X^{\mathrm{T}}AX=B$</strong>。合同保持秩，因为 $C^{\mathrm{T}}$ 与 $C$ 都可逆；$A$ 对称时 $C^{\mathrm{T}}AC$ 必对称；实对称时还保持正定性。</p>
+<p>等价关系的三条性质原料只证明了合同一侧，等价一侧留给本文补证：反身性取 $P=Q=E$；对称性由 $B=PAQ$ 得 $A=P^{-1}BQ^{-1}$，这里不能图省事仍取单位阵，因为 $A$ 与 $B$ 未必相同，取 $P=Q=E$ 只能说明 $A\cong A$；传递性由 $B=P_1AQ_1$、$C=P_2BQ_2$ 得 $C=(P_2P_1)A(Q_1Q_2)$。</p>
+<p>合同的算例需要勘正。原料取 $A=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$、$C=\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$，断言 $C^{\mathrm{T}}AC=\begin{pmatrix}1&amp;2\\3&amp;4\end{pmatrix}$。<strong>按定义复核应为</strong>：先 $AC=\begin{pmatrix}1&amp;3\\2&amp;3\end{pmatrix}$，再 $C^{\mathrm{T}}(AC)=\begin{pmatrix}1&amp;3\\3&amp;6\end{pmatrix}$。原料的结果不对称，而原矩阵对称时 $C^{\mathrm{T}}AC$ 必对称，单凭这一点即可当场识破。合同的意义在二次型：$f=X^{\mathrm{T}}AX$ 经可逆替换 $X=CY$ 化为 $f=Y^{\mathrm{T}}(C^{\mathrm{T}}AC)Y$，把 $A$ 合同对角化即得标准形，系数全正则正定。</p>
+<p>相似的定义是存在可逆 $P$ 使 $P^{-1}AP=B$，记 $A\sim B$。传递性由 $P^{-1}AP=B$、$Q^{-1}BQ=C$ 得 $(PQ)^{-1}A(PQ)=Q^{-1}BQ=C$。相似保持特征多项式，从而保持特征值、迹、行列式与秩：$\det(\lambda E-B)=\det\bigl(P^{-1}(\lambda E-A)P\bigr)=\det(\lambda E-A)$。两条常用小结论随之而来：$A^{\mathrm{T}}$ 与 $A$ 有相同特征值，因 $\det(\lambda E-A^{\mathrm{T}})=\det\bigl((\lambda E-A)^{\mathrm{T}}\bigr)=\det(\lambda E-A)$；$A$ 可逆时 $AB$ 与 $BA$ 相似，因 $A^{-1}(AB)A=BA$。秩为 $1$ 的矩阵是相似理论里最省力的算例：$A=\alpha\beta^{\mathrm{T}}$ 时 $A^{2}=\alpha(\beta^{\mathrm{T}}\alpha)\beta^{\mathrm{T}}$，中间是一个数，取 $A=\begin{pmatrix}1&amp;1&amp;1\\2&amp;2&amp;2\\3&amp;3&amp;3\end{pmatrix}$ 得 $\beta^{\mathrm{T}}\alpha=1+2+3=6$，逐项乘开核对 $A^{2}=6A$ 成立，归纳得 $A^{n}=6^{\,n-1}A$。</p>
+<p>三种关系的强弱不能凭直觉排序，四个方向的推出关系需要正反例。相似与合同都是「左乘可逆、右乘可逆」的特例（相似取 $Q=P^{-1}$，合同取 $P=C^{\mathrm{T}},Q=C$），故二者都蕴涵等价；反过来都不成立，且互不包含。</p>
+<table>
+<tr><th>关系</th><th>定义式</th><th>不变量</th><th>推出等价</th><th>反例</th></tr>
+<tr><td>等价 $A\cong B$</td><td>$B=PAQ$</td><td>仅秩</td><td>本身</td><td>—</td></tr>
+<tr><td>相似 $A\sim B$</td><td>$B=P^{-1}AP$</td><td>秩、特征值、迹、行列式</td><td>真</td><td>等价不推相似：$E_2$ 与 $\operatorname{diag}(1,2)$ 同秩</td></tr>
+<tr><td>合同 $A\simeq B$</td><td>$B=C^{\mathrm{T}}AC$</td><td>秩、（实对称时）正负惯性指数</td><td>真</td><td>等价不推合同：$E_2$ 与 $\operatorname{diag}(1,-1)$ 同秩</td></tr>
+</table>
+<p>后一条反例值得展开：若 $E_2$ 与 $\operatorname{diag}(1,-1)$ 合同，则存在可逆 $C$ 使 $C^{\mathrm{T}}C=\operatorname{diag}(1,-1)$，取 $x=(0,1)^{\mathrm{T}}$ 得 $\|Cx\|^{2}=x^{\mathrm{T}}C^{\mathrm{T}}Cx=-1$，与范数非负矛盾。合同不推相似同样有反例：$E_2$ 与 $\operatorname{diag}(2,\tfrac12)$，取 $C=\operatorname{diag}(\sqrt2,\tfrac1{\sqrt2})$ 有 $C^{\mathrm{T}}EC=\operatorname{diag}(2,\tfrac12)$，两者皆对称且合同，特征值却不同。相似也不推合同：$A=\operatorname{diag}(1,-1)$ 与 $B=\begin{pmatrix}1&amp;2\\0&amp;-1\end{pmatrix}$ 相似（取 $P=\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$，按 $P^{-1}AP$ 算得 $\begin{pmatrix}1&amp;2\\0&amp;-1\end{pmatrix}$，逐项核对 $\begin{pmatrix}1&amp;-1\\0&amp;1\end{pmatrix}\begin{pmatrix}1&amp;0\\0&amp;-1\end{pmatrix}\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$ 的第二列：先 $\begin{pmatrix}1&amp;1\\0&amp;-1\end{pmatrix}$，再左乘 $\begin{pmatrix}1&amp;-1\\0&amp;1\end{pmatrix}$ 得 $(0,2)^{\mathrm{T}}$），但 $A$ 对称而 $B$ 不对称。三句话的记法是：等价只看秩，相似只看特征值，合同只看二次型正负号的分布。</p>
+<p>含参矩阵的秩是这条主线上最常见的落点。设 $n$ 阶（$n\geq2$）矩阵 $A$ 的对角元为 $a$、其余元素为 $b$，原料给出的分档结论如下：$a=b=0$ 时 $r(A)=0$；$a=b\neq0$ 时 $r(A)=1$；$a\neq b$ 且 $a+(n-1)b\neq0$ 时 $r(A)=n$；$a\neq b$ 且 $a+(n-1)b=0$ 时 $r(A)=n-1$。前三档的理由都很短：元素全相同则二阶子式 $a^{2}-a^{2}=0$ 而有非零一阶子式；末档则原料只写了「实际上其秩为 $n-1$」而未证，此处补全。首行各元同为 $a+(n-1)b=0$，故首行为零，秩不超过 $n-1$；另一方面划去第一行第一列所得的 $n-1$ 阶子矩阵与原矩阵同型，其行列式为 $(a-b)^{n-2}\bigl(a+(n-2)b\bigr)$，代入 $a=(1-n)b$ 得 $(-nb)^{n-2}(-b)$，而此时 $b\neq0$（否则 $a=0=b$ 与 $a\neq b$ 矛盾），该子式非零，故秩恰为 $n-1$。取 $n=3$、$a=1$、$b=-\tfrac12$ 验算：</p>
+<p>$$ A=\begin{pmatrix}1&amp;-\frac12&amp;-\frac12\\-\frac12&amp;1&amp;-\frac12\\-\frac12&amp;-\frac12&amp;1\end{pmatrix},\qquad \det A=(a-b)^{2}\bigl(a+2b\bigr)=0, $$</p>
+<p>而行和为零说明第三行可由前两行表出，秩至多 $2$；顺序主子式 $\begin{vmatrix}1&amp;-\frac12\\-\frac12&amp;1\end{vmatrix}=\frac34\neq0$ 说明秩恰为 $2$，与分档一致。</p>
+<h2>五、伴随矩阵的秩：三档结论的完整推导</h2>
+<p>设 $A$ 为 $n$ 阶矩阵（$n\geq2$），$A^{*}$ 为其伴随矩阵：$(A^{*})_{ij}=A_{ji}$，其中 $A_{ij}$ 是 $a_{ij}$ 的代数余子式，即划去第 $i$ 行第 $j$ 列所得 $n-1$ 阶子式冠以符号 $(-1)^{i+j}$。基本恒等式是</p>
+<p>$$ AA^{*}=A^{*}A=(\det A)E. $$</p>
+<p>结论按 $r(A)$ 落在哪一档取值：</p>
+<p>$$ r(A^{*})=\begin{cases} n, &amp; r(A)=n,\\ 1, &amp; r(A)=n-1,\\ 0, &amp; r(A)\leq n-2.\end{cases} $$</p>
+<p>第一档：$A$ 可逆时，对 $AA^{*}=(\det A)E$ 两端取行列式，得 $\det A\cdot\det A^{*}=(\det A)^{n}$；因 $\det A\neq0$ 可约去，得 $\det A^{*}=(\det A)^{n-1}\neq0$，故 $A^{*}$ 可逆、秩为 $n$。取 $A=\begin{pmatrix}1&amp;2\\3&amp;4\end{pmatrix}$，$\det A=-2$，$A^{*}=\begin{pmatrix}4&amp;-2\\-3&amp;1\end{pmatrix}$，$\det A^{*}=4-6=-2=(\det A)^{1}$，秩为 $2=n$，公式在最小阶上成立。</p>
+<p>第二档需要两侧夹逼。下界：$r(A)=n-1$ 意味着存在非零的 $n-1$ 阶子式，而 $A^{*}$ 的元素正是这些子式带上符号，故 $A^{*}\neq O$，即 $r(A^{*})\geq1$。上界：$\det A=0$ 使 $AA^{*}=O$，此时用一条引理——若 $m\times n$ 矩阵 $A$ 与 $n\times s$ 矩阵 $B$ 满足 $AB=O$，则 $r(A)+r(B)\leq n$。引理的证明只用零空间：$B$ 的每一列都是 $Ax=0$ 的解，故 $B$ 的列空间落在 $Ax=0$ 的解空间中，而后者维数为 $n-r(A)$（下一节将论证），于是 $r(B)\leq n-r(A)$。把引理用于 $B=A^{*}$，得 $(n-1)+r(A^{*})\leq n$，即 $r(A^{*})\leq1$。两式合并得 $r(A^{*})=1$。</p>
+<p>第三档最短：$r(A)\leq n-2$ 时一切 $n-1$ 阶子式全为零，故 $A^{*}$ 的每个元素都是零，$A^{*}=O$，秩为 $0$。</p>
+<p>三档各配一个可手算的实例。第二档取 $A=\begin{pmatrix}1&amp;2\\2&amp;4\end{pmatrix}$，秩为 $1=n-1$，$A^{*}=\begin{pmatrix}4&amp;-2\\-2&amp;1\end{pmatrix}$ 非零而两行成比例，秩为 $1$。同样在 $n=3$ 下取 $A=\begin{pmatrix}1&amp;2&amp;3\\2&amp;4&amp;6\\1&amp;0&amp;1\end{pmatrix}$，秩为 $2=n-1$，算得</p>
+<p>$$ A^{*}=\begin{pmatrix}4&amp;-2&amp;0\\4&amp;-2&amp;0\\-4&amp;2&amp;0\end{pmatrix}, $$</p>
+<p>三行依次是 $(4,-2,0)$ 的 $1,1,-1$ 倍，秩为 $1$，且 $AA^{*}=O$ 与 $A^{*}A=O$ 都成立。第三档取 $A=\begin{pmatrix}1&amp;0&amp;0\\0&amp;0&amp;0\\0&amp;0&amp;0\end{pmatrix}$，秩为 $1\leq n-2=1$，其全部二阶子式为零，故 $A^{*}=O$。</p>
+<p>这组分档澄清了一个常见误读：$\det A=0$ 只把 $A^{*}$ 从满秩里排除出去，并不说明它是零矩阵，只有 $r(A)\leq n-2$ 时 $A^{*}$ 才整体归零。反过来问「$A^{*}\neq O$ 能否推出 $r(A)=n-1$」，答案是不能一律成立：$r(A)=n$ 时 $A^{*}$ 同样非零，准确的说法是 $A^{*}\neq O$ 等价于 $r(A)\geq n-1$。与特征值联动的算例也可用作校验：三阶 $A$ 的特征值为 $1,2,-3$，则 $\det A=-6$，$A^{*}=(\det A)A^{-1}$ 的特征值为 $(\det A)/\lambda$，即 $-6,-3,2$，于是 $A^{*}+3A+2E$ 的特征值为 $-1,5,-5$，行列式为 $(-1)\times5\times(-5)=25$。</p>
+<h2>六、齐次方程组：解空间维数与基础解系的求法</h2>
+<p>$n$ 元齐次方程组 $Ax=0$ 恒有零解，故唯一的问题是它是否还有非零解。设 $r(A)=r$，则</p>
+<p>$$ Ax=0\ \text{有非零解}\iff r&lt;n,\qquad Ax=0\ \text{只有零解}\iff r=n. $$</p>
+<p>理由就是第三节的翻译：列向量组的线性相关性等价于存在非零系数使组合为零，而 $r&lt;n$ 正是「列向量个数多于秩」。当 $A$ 为方阵时，这又与 $\det A=0$ 等价。</p>
+<p>解的集合 $N(A)=\{x:Ax=0\}$ 对加法与数乘封闭，构成 $\mathbb{R}^{n}$ 的子空间，称为解空间；其一组基称为基础解系。维数公式是 $n-r(A)$，论证直接由行最简形给出。把 $A$ 经初等行变换化为行最简形 $U$，$U$ 有 $r$ 个主元列与 $n-r$ 个非主元列，且 $Ux=0$ 与 $Ax=0$ 同解。非主元列对应的未知数 $x_{i_1},\dots,x_{i_{n-r}}$ 可任取，每个主元列对应的未知数被唯一决定：$x_{\text{主元}}$ 等于自由未知量的线性组合。于是「给自由变量赋值」到「解向量」是一个线性双射，$\mathbb{R}^{n-r}$ 中依次取单位向量所得的 $n-r$ 个解向量既无关又生成全部解，即为基础解系。这个论证同时解释了为什么基础解系的向量个数等于自由变量个数、为什么它只依赖秩而不依赖方程的个数。</p>
+<p>求法固化为四步：写出系数矩阵；作初等行变换到行最简形；标出主元列与非主元列，非主元列对应自由变量；依次令某一个自由变量为 $1$、其余自由变量为 $0$，回代得基础解系的一个向量。原料连给四个四元齐次方程组并逐一给解，其中第一例值得作为标准范例走完全程。取</p>
+<p>$$ A=\begin{pmatrix}1&amp;2&amp;1&amp;-1\\3&amp;6&amp;-1&amp;-3\\5&amp;10&amp;1&amp;-5\end{pmatrix}, $$</p>
+<p>作 $r_2-3r_1$、$r_3-5r_1$，再 $r_3-r_2$、$r_2\times\bigl(-\tfrac14\bigr)$、$r_1-r_2$，得行最简形</p>
+<p>$$ \begin{pmatrix}1&amp;2&amp;0&amp;-1\\0&amp;0&amp;1&amp;0\\0&amp;0&amp;0&amp;0\end{pmatrix}, $$</p>
+<p>主元在第一、三列，故 $r=2$，自由变量是 $x_2,x_4$。由行最简形读出 $x_1=-2x_2+x_4$、$x_3=0$。令 $(x_2,x_4)=(1,0)$ 得 $\xi_1=(-2,1,0,0)^{\mathrm{T}}$，令 $(x_2,x_4)=(0,1)$ 得 $\xi_2=(1,0,0,1)^{\mathrm{T}}$，通解为 $x=c_1\xi_1+c_2\xi_2$。把 $\xi_1$ 代入原三行：$-2+2=0$、$-6+6=0$、$-10+10=0$；把 $\xi_2$ 代入：$1-1=0$、$3-3=0$、$5-5=0$，两者皆为解，且分量位置 $(2,4)$ 上的子矩阵是单位阵，故无关。原料此例相符。</p>
+<p>另两例要勘误。第一处取 $A=\begin{pmatrix}1&amp;1&amp;2&amp;-1\\2&amp;1&amp;1&amp;-1\\2&amp;2&amp;1&amp;2\end{pmatrix}$，秩为 $3$，自由变量只有一个 $x_4$。原料消到 $\begin{pmatrix}1&amp;0&amp;-1&amp;0\\0&amp;1&amp;3&amp;-1\\0&amp;0&amp;1&amp;-\frac43\end{pmatrix}$ 后作 $r_2-3r_3$，<strong>该行末元素应为 $-1-3\cdot\bigl(-\tfrac43\bigr)=3$，原料算作 $\tfrac{11}{3}$</strong>，行最简形与解随之全错，所给 $c_1\bigl(-\tfrac53,-\tfrac{11}{3},\tfrac43,1\bigr)^{\mathrm{T}}$ 代入第一行得 $-\tfrac{11}{3}\neq0$，根本不是解。正确的行最简形是</p>
+<p>$$ \begin{pmatrix}1&amp;0&amp;0&amp;-\frac43\\0&amp;1&amp;0&amp;3\\0&amp;0&amp;1&amp;-\frac43\end{pmatrix}, $$</p>
+<p>即 $x_1=\tfrac43x_4$、$x_2=-3x_4$、$x_3=\tfrac43x_4$，取 $x_4=3$ 整化得基础解系 $(4,-9,4,3)^{\mathrm{T}}$，代入三行依次得 $4-9+8-3=0$、$8-9+4-3=0$、$8-18+4+6=0$，全合。</p>
+<p>第二处的错误在方法而不是算术。取 $A=\begin{pmatrix}2&amp;3&amp;-1&amp;-7\\3&amp;1&amp;2&amp;-7\\4&amp;1&amp;-3&amp;6\\1&amp;-2&amp;5&amp;-5\end{pmatrix}$，原料把秩当作 $2$，据称行最简形为 $\begin{pmatrix}1&amp;0&amp;1&amp;-1\\0&amp;1&amp;1&amp;-1\\0&amp;0&amp;0&amp;0\\0&amp;0&amp;0&amp;0\end{pmatrix}$，又因 $x_3,x_4$ 在两个方程中的系数相同便设 $x_3=x_4=c$，得到解 $(1,1,1,1)^{\mathrm{T}}$。<strong>按定义复核，此矩阵的秩为 $3$</strong>：以 $(1,-2,5,-5)$ 为首行消元，得 $(0,7,-11,3)$、$(0,7,-13,8)$、$(0,9,-23,26)$，再由第三式减第二式得 $(0,0,-2,5)$，末式恰为它的 $\tfrac{31}{7}$ 倍，故主元在前三列。行最简形为</p>
+<p>$$ \begin{pmatrix}1&amp;0&amp;0&amp;\frac12\\0&amp;1&amp;0&amp;-\frac72\\0&amp;0&amp;1&amp;-\frac52\\0&amp;0&amp;0&amp;0\end{pmatrix}, $$</p>
+<p>只有 $x_4$ 一个自由变量，基础解系取 $(-1,7,5,2)^{\mathrm{T}}$，代入四行依次为 $-2+21-5-14=0$、$-3+7+10-14=0$、$-4+7-15+12=0$、$-1-14+25-10=0$，全合。至于「两个自由变量系数相同便可合并成一个常数」，即便秩真是 $2$ 也不成立：自由变量必须各自独立取参，把它们绑成同一常数等于人为缩小解空间，通解就会少一半。原料所给的 $(1,1,1,1)^{\mathrm{T}}$ 代入第一行得 $2+3-1-7=-3\neq0$，也说明它连解都不是。</p>
+<h2>七、非齐次方程组、矩阵方程与同解判定</h2>
+<p>对 $n$ 元非齐次方程组 $Ax=b$，记增广矩阵 $(A;b)$。解的存在性完全由两个秩的比较决定：</p>
+<p>$$ Ax=b\ \text{有解}\iff r(A)=r(A;b),\qquad \text{有解时解唯一}\iff r(A)=n. $$</p>
+<p>判据的证明不需要新工具。把 $(A;b)$ 化为行阶梯形，方程组无解当且仅当出现形如 $0=d\,(d\neq0)$ 的矛盾行，而这样的行存在当且仅当阶梯形比 $A$ 的阶梯形多一个主元，即 $r(A;b)=r(A)+1$。相容时，非主元列对应的 $n-r$ 个未知数自由取值，特解由主元未知数唯一决定，故通解是一个特解加齐次解空间中任意向量：解集是 $N(A)$ 的一个平移，本身不含零向量，因此不是子空间。含参讨论的固定流程是：先用行列式或带参消元找出使秩下降的参数值，再对每个分界点分别算 $r(A)$ 与 $r(A;b)$，最后只对降秩分支求通解；只讨论满秩一支而含糊带过降秩分支，是这类题最常见的失分处。</p>
+<p>原料给出的一组阶梯形含参方程组正好演示三个分支。增广矩阵</p>
+<p>$$ (A;b)=\begin{pmatrix}1&amp;\lambda-1&amp;-2&amp;1\\0&amp;\lambda-2&amp;\lambda+1&amp;3\\0&amp;0&amp;2\lambda+1&amp;5\end{pmatrix} $$</p>
+<p>已是行阶梯形，$\det A=(\lambda-2)(2\lambda+1)$。当 $\lambda\neq2$ 且 $\lambda\neq-\tfrac12$ 时 $r(A)=r(A;b)=3=n$，唯一解；当 $\lambda=-\tfrac12$ 时末行化为 $(0,0,0,5)$，$r(A)=2$ 而 $r(A;b)=3$，无解；当 $\lambda=2$ 时 $r(A)=r(A;b)=2$，无穷多解。<strong>原料在第三档给的通解 $\begin{pmatrix}-1\\3\\0\end{pmatrix}+c\begin{pmatrix}2\\-1\\1\end{pmatrix}$ 有误</strong>：$\lambda=2$ 时增广矩阵为 $\begin{pmatrix}1&amp;1&amp;-2&amp;1\\0&amp;0&amp;3&amp;3\\0&amp;0&amp;5&amp;5\end{pmatrix}$，第二行定出 $x_3=1$，齐次解 $(2,-1,1)^{\mathrm{T}}$ 使 $x_3$ 变化，不可能成立。化为行最简形得 $\begin{pmatrix}1&amp;1&amp;0&amp;3\\0&amp;0&amp;1&amp;1\\0&amp;0&amp;0&amp;0\end{pmatrix}$，即 $x_3=1$、$x_1+x_2=3$，以 $x_2$ 为自由变量，通解应为</p>
+<p>$$ x=\begin{pmatrix}3\\0\\1\end{pmatrix}+c\begin{pmatrix}-1\\1\\0\end{pmatrix}. $$</p>
+<p>另一个对称形式的含参方程组原料三档全对，可作范本：$A=\begin{pmatrix}\lambda&amp;1&amp;1\\1&amp;\lambda&amp;1\\1&amp;1&amp;\lambda\end{pmatrix}$，$b=(1,\lambda,\lambda^{2})^{\mathrm{T}}$，$\det A=(\lambda-1)^{2}(\lambda+2)$。$\lambda$ 不取 $1$ 与 $-2$ 时唯一解，例如 $\lambda=0$ 时解为 $\bigl(-\tfrac12,\tfrac12,\tfrac12\bigr)^{\mathrm{T}}$。$\lambda=-2$ 时三行之和为零行，故 $r(A)=2$，而相容的必要条件是 $b$ 的三个分量之和为零，实算 $1-2+4=3\neq0$，得 $r(A;b)=3$，无解。$\lambda=1$ 时 $A$ 与 $(A;b)$ 全是 $1$，$r(A)=r(A;b)=1$，方程退化为 $x_1+x_2+x_3=1$，特解 $(1,0,0)^{\mathrm{T}}$，齐次基础解系 $(-1,1,0)^{\mathrm{T}}$ 与 $(-1,0,1)^{\mathrm{T}}$，通解含两个任意常数，恰为 $n-r=3-1=2$。这里要警惕 $\lambda=1$ 是二重根这一事实被误当成「有两个自由变量」的理由：自由变量的个数只由秩决定，与 $\det A$ 的根重数没有必然联系，本例中两者巧合相等。</p>
+<p>矩阵方程是同一套判据的批量使用。先看原料专门讨论过的情形：$A$ 为 $m\times n$ 矩阵，$AX=E_m$（未知量 $X$ 为 $n\times m$）有解的充要条件是 $r(A)=m$，即 $A$ 行满秩。充分性逐列处理：对 $e_i$ 考察 $(A;e_i)$，它只有 $m$ 行故 $r(A;e_i)\leq m$，又它含 $A$ 故 $r(A;e_i)\geq r(A)=m$，夹得 $r(A)=r(A;e_i)$，于是 $Ax=e_i$ 相容，设其解为 $b_i$；把 $b_1,\dots,b_m$ 并成 $X$，则 $AX=(Ab_1,\dots,Ab_m)=(e_1,\dots,e_m)=E_m$。必要性有两条路：一条用秩不等式 $m=r(E_m)=r(AX)\leq r(A)\leq m$；另一条用相容条件 $r(A)=r(A;E_m)\geq r(E_m)=m$，其中最后一个不等式是因为 $E_m$ 是增广矩阵的子矩阵。原料两条路都提到，本文认为第一条更省，因为它不必逐列拆解。附带一个由 $r(A)=m$ 与 $r(A)\leq\min\{m,n\}$ 夹出的信息：必有 $m\leq n$，即行满秩的矩阵不可能「瘦高」，且当 $m&lt;n$ 时其列向量组必相关。</p>
+<p>一般的矩阵方程 $AX=B$（$A$ 为 $m\times n$，$X$ 为 $n\times k$，$B$ 为 $m\times k$）按列拆开即知它有解当且仅当 $B$ 的每一列都落在 $A$ 的列空间中，也就是当且仅当把 $B$ 并到 $A$ 右侧所得矩阵 $(A,B)$ 满足 $r(A)=r(A,B)$。取 $A=\begin{pmatrix}1&amp;2&amp;3\\0&amp;1&amp;4\end{pmatrix}$、$B=\begin{pmatrix}5&amp;1\\6&amp;2\end{pmatrix}$，$r(A)=2$ 为行满秩，$(A,B)$ 也只有两行故秩为 $2$，方程必有解；逐列回代得 $X=\begin{pmatrix}-7&amp;-3\\6&amp;2\\0&amp;0\end{pmatrix}$，核对第一列 $(-7+12,6)=(5,6)^{\mathrm{T}}$、第二列 $(-3+4,2)=(1,2)^{\mathrm{T}}$，与 $B$ 的列一致。$AX=E_m$ 只是它的一个特例，其行满秩条件是充分而非必要的，例如取 $A=\begin{pmatrix}1&amp;0\\0&amp;0\end{pmatrix}$、$B=\begin{pmatrix}2&amp;3\\0&amp;0\end{pmatrix}$，$r(A)=r(A,B)=1&lt;2$，方程仍有解 $X=\begin{pmatrix}2&amp;3\\0&amp;0\end{pmatrix}$。</p>
+<p>最后是用秩讨论两个方程组同解。设 $A,B$ 同为 $n$ 列，$Ax=0$ 与 $Bx=0$ 的解空间分别记作 $N(A),N(B)$。命题：两者同解当且仅当</p>
+<p>$$ r(A)=r(B)=r\!\begin{pmatrix}A\\B\end{pmatrix}, $$</p>
+<p>其中 $\begin{pmatrix}A\\B\end{pmatrix}$ 是把 $A,B$ 上下拼接所得矩阵。证明只用维数比较：恒有 $N\!\begin{pmatrix}A\\B\end{pmatrix}=N(A)\cap N(B)\subseteq N(A)$，且 $\dim N(A)=n-r(A)$。若 $r\!\begin{pmatrix}A\\B\end{pmatrix}=r(A)$，则两个零空间维数相同，包含关系迫使它们相等，从而 $N(A)\subseteq N(B)$；再加上 $r\!\begin{pmatrix}A\\B\end{pmatrix}=r(B)$ 得反向包含，同解成立。反之若同解，则交集即其本身，两秩相等，条件成立。正例取 $B_1=\begin{pmatrix}1&amp;0&amp;-1\end{pmatrix}$、$B_2=\begin{pmatrix}2&amp;0&amp;-2\\3&amp;0&amp;-3\end{pmatrix}$，三者秩都是 $1$，解空间同为 $\{x:x_1=x_3\}$，维数 $2$。反例取 $A=\begin{pmatrix}1&amp;1&amp;1\\0&amp;1&amp;0\\0&amp;0&amp;0\\0&amp;0&amp;0\end{pmatrix}$、$B=\begin{pmatrix}1&amp;2&amp;3\\2&amp;4&amp;6\\1&amp;1&amp;1\\2&amp;2&amp;2\end{pmatrix}$，$r(A)=r(B)=2$ 而拼接后秩为 $3$，两解空间都是二维却不相同，可见「秩相等」远不足以保证同解。</p>
+<p>同解这一条件还牵回列向量的结构。若 $Ax=0$ 与 $Bx=0$ 同解，则 $A$ 与 $B$ 的列向量组有完全一致的线性关系，因而 $A$ 的极大线性无关组所在的那些列，在 $B$ 中同样构成极大线性无关组——位置相同，向量本身不必相同。论证是构造性的：设 $A$ 的第 $i_1,\dots,i_r$ 列为极大无关组。若 $c_1\beta_{i_1}+\cdots+c_r\beta_{i_r}=0$，把这些系数填回一个第 $i_s$ 位为 $c_s$、其余为零的向量 $x$，则 $Bx=0$，由同解得 $Ax=0$，于是 $c_1\alpha_{i_1}+\cdots+c_r\alpha_{i_r}=0$，由无关性得全部 $c_s=0$，故 $B$ 的对应列无关。又若 $a_j=\sum_{s}k_s\alpha_{i_s}$，取第 $j$ 位为 $-1$、第 $i_s$ 位为 $k_s$ 的向量 $y$，则 $Ay=0$，同解给出 $By=0$，即 $b_j=\sum_s k_s\beta_{i_s}$，故 $B$ 的每一列都可由这些列表出。两个方向合起来正是「同解 ⟺ 列关系全同」。</p>
+<p>一个直接推论是：$A$ 列满秩时，$Bx=0$ 与 $ABx=0$ 同解。正向显然；反向若 $A(Bx)=0$，由列满秩知 $Az=0$ 只有零解，故 $Bx=0$。原料第一版在此写成「$A$ 可逆（左逆），两边左乘 $A$ 的左逆」，<strong>而 $A$ 未必是方阵，谈不上可逆，正确说法是 $A$ 的列向量组线性无关、作为线性映射是单射</strong>。这条推论的实践意义是：左乘列满秩矩阵不改变解空间，因此在一长串矩阵乘积中，可以放心地删去或保留列满秩的因子。</p>
+<h2>八、素材边界</h2>
+<p>以下四组内容原料支撑薄弱，正文所述由独立推导补全，读者不应把它们当作对话中已有的结论。第一，行秩等于列秩的完整论证与「三类初等变换不改变秩」的逐条子式证明：原料只给出思路提纲，正文的第二、三节按定义重做，其中行最简形上主元行与主元列交叉子式的行列式为非零主元之积这一步亦为本文补充。第二，解空间维数公式 $\dim N(A)=n-r(A)$ 的推导：原料在引理「$AB=O$ 则 $r(A)+r(B)\leq n$」中直接引用了这一事实，却未在任何一处证明它，本文在第五节把引理与维数公式相互对接，并在第六节给出证明。第三，用秩判定两个齐次方程组同解的充要条件 $r(A)=r(B)=r\!\begin{pmatrix}A\\B\end{pmatrix}$ 及其正例、反例，原料完全未涉及，第七节的构造与数值核验均为本文自拟；原料只支撑了同解蕴含列关系相同、以及列满秩蕴含 $Bx=0$ 与 $ABx=0$ 同解这两个方向。第四，一般矩阵方程 $AX=B$ 的秩条件与其中和式 $(A,B)$ 的秩讨论，原料只处理了 $AX=E_m$ 的特例；该行满秩结论的必要性证明原料同时给出「按列夹逼」与「秩不等式」两条路，本文择要而述，$m\leq n$ 这一附带结论则来自原料后续问答。</p>
+<p>另需说明三点取舍与勘误的对应关系。原料算例中，四元齐次方程组的第二例与含参对称方程组 $\begin{pmatrix}\lambda&amp;1&amp;1\\1&amp;\lambda&amp;1\\1&amp;1&amp;\lambda\end{pmatrix}$ 三档结论复核无误，直接采用；四元齐次的另外三例、阶梯形含参方程组的降秩分支、合同的数值算例、等价对称性的证明、初等行变换对列空间的影响、以及「一行公因式提出矩阵外」的初版说法，共八处有误，正文各按正确结论书写并标注「原料此处算作……正确应为……」。含参矩阵秩的第四档（$a\neq b$ 且 $a+(n-1)b=0$）原料只断言结果未给证明，本文补上 $n-1$ 阶子式的计算，并在 $n=3$ 的实例上核验。原料中另有一条与特征值联动的算例、以及秩为 $1$ 矩阵求高次幂的方法，前篇《矩阵秩、向量组与线性方程组》已详细展开，本篇仅在需要处简述结论，不重复其推导与表格组织；两处出现的数值题号、对话寒暄与不属于线性代数的其他学科问答，一律未予采用。</p>
+<a class="back-link" href="../../study/linear-algebra.html">← 返回 线性代数</a>
+</article>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Web开发 · Flask应用与页面布局</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
+<script id="meta" type="application/json">
+{"title":"Web开发 · Flask应用与页面布局","date":"2026-10-24","tags":["课程笔记","Web开发/前端"],"category":"课程笔记","summary":"本文围绕轻量级 Python Web 框架 Flask，先讲最小骨架（应用实例、路由、视图函数与 url_for 反向建链），再说明请求上下文与 Jinja2 的变量、控制与继承；随后介绍静态文件、蓝图拆分与表单差异、调试安全边界。末节落到布局层，阐述 HTML、CSS 盒模型与响应式，以及路由如何与前端协作，并与 Django 路由、模板和 ORM 对照。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
+<article class="article">
+<h1>Web开发 · Flask应用与页面布局</h1>
+<div class="meta">课程笔记 · Web开发/前端</div>
+<h2>一、Flask 的定位与最小应用骨架</h2>
+<p>Flask 是 Python 生态中的“微框架”（micro-framework）。所谓微，并不是功能弱小，而是核心只保留 Web 开发最不可省略的部分——路由分发、请求响应处理、模板渲染——其余能力（数据库、表单、身份认证、跨域等）都以扩展形式按需引入。这与 Django 的“全家桶”式设计形成对照：Django 一开始就内置对象关系映射、后台管理与身份认证等组件，而 Flask 把选择权交还给开发者。理解这一点，是读懂后续所有设计的前提。</p>
+<p>一个最小可运行的 Flask 应用只需要三样东西：一个应用实例、至少一条路由，以及一个返回响应的视图函数。下面给出骨架代码。</p>
+<pre><code>from flask import Flask
+
+app = Flask(__name__)
+
+@app.route(&quot;/&quot;)
+def index():
+    return &quot;你好，Flask&quot;
+
+if __name__ == &quot;__main__&quot;:
+    app.run()</code></pre>
+<p>第一行导入 Flask 类；第二行用 <code>Flask(__name__)</code> 创建应用实例，<code>__name__</code> 用于让框架推断资源所在的相对位置。第三行的 <code>@app.route(&quot;/&quot;)</code> 是路由装饰器，它把 URL 路径 <code>/</code> 与下方的视图函数 <code>index</code> 绑定起来：当用户访问根路径时，Flask 会调用 <code>index</code> 并把其返回值作为响应体。视图函数的返回值可以是纯字符串、HTML 片段，也可以是由 <code>render_template</code> 渲染的模板或由 <code>jsonify</code> 生成的 JSON。最后的 <code>app.run()</code> 启动开发服务器，默认监听本机 5000 端口。</p>
+<p><code>url_for</code> 是 Flask 中一个容易被低估但极为重要的函数，作用在于“反向建链”：不直接在模板或代码里写死 URL 字符串，而是用视图函数名生成对应的路径。例如 <code>url_for(&quot;index&quot;)</code> 会返回 <code>/</code>。这样做的好处是，当路由的路径发生改变时，所有通过 <code>url_for</code> 引用的地方都会自动更新，不必逐处修改。在模板中，通常用 <code>{{ url_for(&quot;static&quot;, filename=&quot;style.css&quot;) }}</code> 来引用静态资源，这一点在第三节展开。</p>
+<p>原料中的贪吃蛇示例正是一个典型的 Flask 最小骨架：它建立了 <code>snake_game/</code> 目录，其中 <code>app.py</code> 创建应用实例并定义根路由，视图函数返回 <code>render_template(&quot;index.html&quot;)</code>，游戏的全部逻辑都写在该模板的 JavaScript 里；运行 <code>python app.py</code> 后，浏览器访问 <code>http://127.0.0.1:5000</code> 即可游玩。这个例子直观说明：Flask 本身只负责“把请求交给正确的处理函数，再把结果送回浏览器”，真正的游戏状态完全由前端脚本维护。</p>
+<p>把这一层抽象出来，Flask 的核心循环可以概括为三步：接收请求、匹配路由、执行视图函数并返回响应。其余所有话题——模板、静态文件、蓝图、表单——都是在这个循环上叠加的扩展能力。</p>
+<p>进一步看，<code>app.run()</code> 实际上启动的是符合 WSGI 规范的开发服务器，而 <code>app</code> 这个实例本身就是一个 WSGI 可调用对象——这正是 Flask 能被 Gunicorn 等生产服务器直接托管的原因。开发阶段可以通过参数调整监听地址与端口，例如 <code>app.run(host=&quot;127.0.0.1&quot;, port=5000)</code>，也可以传入 <code>debug</code> 开关。理解实例既是“路由登记表”又是“WSGI 入口”，有助于在后续把应用接入更完整的中间件与部署链路。</p>
+<h2>二、请求上下文与 Jinja2 模板渲染</h2>
+<p>当请求进入 Flask 后，框架会把与本次请求相关的对象放进“请求上下文”（request context）。最常见的 <code>request</code> 对象携带了请求方法、URL、查询参数、表单数据、上传文件等全部信息；与之并列的还有 <code>session</code>（跨请求的用户会话）和 <code>g</code>（单次请求内的临时存储）。这些对象在视图函数里可以直接引用，而不必作为函数参数显式传入，原因是 Flask 用线程局部变量把它们绑定到了当前请求上。理解上下文，才能理解为什么视图函数里能“凭空”拿到 <code>request</code>。</p>
+<p>以 <code>session</code> 为例，它是一个类似字典的对象，用于在一次登录后的多次请求之间记住用户身份。开发者只需 <code>session[&quot;user_id&quot;] = 1</code> 即可写入，Flask 会将其序列化并存入客户端的签名 Cookie（默认情况下），后续请求再读回。由于 Cookie 可被用户查看但不可被篡改（除非知道密钥），这构成了一套轻量的状态保持方案。与之相对，<code>g</code> 对象只在单次请求内有效，常用于在请求钩子里查询一次数据库连接、供同一请求内的多个视图复用，请求结束即被销毁。</p>
+<p>视图函数最常见的返回方式之一是 <code>render_template</code>，它读取 <code>templates/</code> 目录下的模板文件，把后端数据填进去，生成最终的 HTML 字符串。模板引擎默认是 Jinja2，它提供三类语法。第一类是变量插值 <code>{{ 变量名 }}</code>，把后端传来的数据原样输出到页面；第二类是控制结构 <code>{% if 条件 %} … {% endif %}</code> 与 <code>{% for 项 in 列表 %} … {% endfor %}</code>，实现条件分支与循环；第三类是模板继承，由 <code>{% extends &quot;base.html&quot; %}</code> 与 <code>{% block 名称 %}</code> 配合完成。</p>
+<p>模板继承是组织多页面布局的关键。先写一个 <code>base.html</code> 作为“骨架页”，把站点通用的头部、导航、底部固定下来，并在需要被替换的地方留出 <code>block</code> 占位。</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;{% block title %}默认标题{% endblock %}&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;{{ url_for(&#x27;static&#x27;, filename=&#x27;style.css&#x27;) }}&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header&gt;站点头部&lt;/header&gt;
+    &lt;main&gt;{% block content %}{% endblock %}&lt;/main&gt;
+    &lt;footer&gt;站点底部&lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>子模板通过 <code>extends</code> 声明自己继承自哪个基模板，再用同名 <code>block</code> 覆盖其中的内容。</p>
+<pre><code>{% extends &quot;base.html&quot; %}
+{% block title %}文章页{% endblock %}
+{% block content %}
+    &lt;h1&gt;{{ article.title }}&lt;/h1&gt;
+    &lt;ul&gt;
+    {% for item in items %}
+        &lt;li&gt;{{ item.name }}&lt;/li&gt;
+    {% endfor %}
+    &lt;/ul&gt;
+{% endblock %}</code></pre>
+<p>渲染时，Jinja2 会把子模板中的 <code>block</code> 内容“嵌”回基模板对应的位置，从而既保证全站风格统一，又避免每个页面重复书写头部与底部。这种“一次定义、处处复用”的机制，正是现代前端框架“组件化”思想的雏形；原料中提到的 Vue 与 React 组件化，本质上也是在解决同一类问题，只是把复用粒度从整页下沉到了组件。</p>
+<p>需要强调的是，Jinja2 默认会对变量做 HTML 转义，这能防止用户输入的脚本被原样插入页面而引发跨站脚本攻击。当确实要输出可信的富文本时，才使用 <code>| safe</code> 过滤器。把“默认转义、显式放行”作为习惯，是后端渲染页面时一项基本的安全素养。</p>
+<p>除了变量与控制结构，Jinja2 还提供过滤器（filter）来对变量做轻加工，语法是 <code>{{ 变量 | 过滤器 }}</code>，例如 <code>{{ price | round(2) }}</code> 保留两位小数、<code>{{ text | truncate(20) }}</code> 截断长文本。模板里也可以定义宏（macro）来封装可复用的小片段，类似没有状态的子组件。对后端而言，合理地把“展示逻辑”留在模板、把“业务与数据逻辑”留在视图函数，是保持代码清晰的分界线；凡是能在模板里用过滤器或宏一句话解决的格式化，就不应在 Python 里先拼好再传进去。</p>
+<h2>三、静态文件与 static_folder</h2>
+<p>页面的视觉效果离不开 CSS、客户端脚本和图片，这些不被模板动态生成的文件统称为静态文件。Flask 约定把静态文件放在应用目录下的 <code>static/</code> 文件夹中，这个文件夹对应的配置项叫 <code>static_folder</code>（默认即为 <code>static</code>）。当访问 <code>http://127.0.0.1:5000/static/style.css</code> 时，Flask 会自动到 <code>static/</code> 目录里寻找 <code>style.css</code> 并返回。</p>
+<p>引用静态资源有两种写法。一种是直接写路径字符串，例如 <code>&lt;link href=&quot;/static/style.css&quot;&gt;</code>；另一种是推荐写法，用 <code>url_for</code> 反向建链：<code>&lt;link href=&quot;{{ url_for(&#x27;static&#x27;, filename=&#x27;style.css&#x27;) }}&quot;&gt;</code>。后者在静态目录前缀被修改、或应用被挂在某个子路径下时依然有效，因此更稳健。</p>
+<p>原料里“前端项目没有 index.html”的困惑，恰好可以和 Flask 的静态约定对照着理解。现代工程化前端（如基于 Vite、React 的项目）往往把 HTML 壳生成在 <code>public/</code> 或 <code>src/</code> 中，再由打包工具产出最终的 <code>index.html</code>；而传统多页面静态站点则是每个页面一个 HTML 文件，靠 <code>css/</code>、<code>js/</code> 目录存放资源。Flask 的约定介于两者之间：HTML 由 <code>templates/</code> 里的模板动态生成，CSS 与脚本等不变资源放在 <code>static/</code>。也就是说，在 Flask 项目里，看到的目录结构通常是 <code>templates/</code> 与 <code>static/</code> 并列，而不是把样式直接写死在模板内。</p>
+<p>对于更复杂的静态资源组织，可以在 <code>static/</code> 下再分子目录，例如 <code>static/css/</code>、<code>static/js/</code>、<code>static/img/</code>，然后用 <code>url_for(&#x27;static&#x27;, filename=&#x27;css/style.css&#x27;)</code> 引用。把静态资源与动态模板分离，既符合关注点分离原则，也让浏览器可以独立缓存这些不变文件、提升加载速度。</p>
+<p>需要留意的是，静态文件服务本是为开发便利而内置的能力，生产环境通常会把 <code>static/</code> 交给 Nginx 等 Web 服务器，或直接放到对象存储与 CDN 上来承载，既减轻应用进程负担，又利用边缘缓存加速。因此后端代码里只需用 <code>url_for(&#x27;static&#x27;, ...)</code> 给出稳定的引用路径，至于这些文件最终由谁发送，可以在部署时再决定。把“引用方式”与“发送方式”解耦，是静态资源管理的另一层意义。</p>
+<h2>四、用蓝图拆分大型应用</h2>
+<p>随着功能增多，把所有路由都写在同一个 <code>app.py</code> 里会迅速演变为难以维护的“巨文件”。Flask 给出的解法是蓝图（Blueprint）。蓝图本身不是一个应用，而是一组视图函数、模板和静态资源的集合，它像一张“可插拔的电路模块”，先单独定义，再注册到主应用上。</p>
+<pre><code>from flask import Blueprint
+
+bp = Blueprint(&quot;blog&quot;, __name__, url_prefix=&quot;/blog&quot;)
+
+@bp.route(&quot;/&quot;)
+def list_posts():
+    return &quot;文章列表&quot;
+
+@bp.route(&quot;/&lt;int:post_id&gt;&quot;)
+def show_post(post_id):
+    return f&quot;文章 {post_id}&quot;</code></pre>
+<p>上面的代码先创建一个名为 <code>blog</code> 的蓝图，并指定所有属于它的路由都带 <code>/blog</code> 前缀；随后像平常一样用 <code>@bp.route</code> 装饰视图函数。最后在应用实例处注册：<code>app.register_blueprint(bp)</code>。注册之后，<code>/blog/</code> 与 <code>/blog/1</code> 才会真正生效。</p>
+<p>蓝图的收益不止于“目录更干净”。第一，它让不同模块各自拥有独立的模板与静态子目录，避免命名冲突；第二，借助 <code>url_prefix</code> 可以一次性给整组路由加统一前缀，便于版本管理（例如 <code>/api/v1</code>）；第三，蓝图支持在自己的初始化函数里挂载专属的错误处理与请求钩子，使模块自成体系。对原料中提到的“把 Flask 当作前后端分离的后端、对外暴露一组 JSON 接口”的做法而言，把这些接口统一收进一个 <code>api</code> 蓝图，是非常自然的工程组织方式。</p>
+<p>当项目继续膨胀，还可以把每个蓝图放进独立子包，配合工厂函数 <code>create_app()</code> 按需装载，实现真正的模块化。这一步虽超出最小骨架，但它是从“能跑”走向“可维护”的关键转折。</p>
+<p>一个常见的演进形态是应用工厂：把创建 <code>app</code> 实例的过程封装成 <code>create_app()</code> 函数，在其中按需注册各个蓝图、加载配置、初始化扩展，最后返回配置完毕的实例。这样做的好处是，测试时可以创建多个互相隔离的应用实例，部署时也能根据环境变量切换配置（开发、测试、生产）。蓝图与应用工厂配合使用，基本构成了中大型 Flask 项目的标准骨架，也是从“脚本式小程序”迈向“工程化项目”的分水岭。</p>
+<h2>五、表单接收与 GET、POST 的差异</h2>
+<p>Web 表单是前端向后端提交数据的主要通道，而 Flask 区分两种典型的 HTTP 方法：GET 与 POST。两者在语义、数据位置与安全性上都有本质不同，理解这些不同是正确处理表单的前提。</p>
+<p>GET 请求把参数拼在 URL 的查询字符串里，形如 <code>/search?q=关键词</code>。在 Flask 中，这些参数通过 <code>request.args</code> 获取，例如 <code>request.args.get(&quot;q&quot;)</code>。GET 应当是“只读”且“幂等”的：同样一次 GET 请求重复执行，不应改变服务器状态。也正因参数暴露在地址栏，GET 适合搜索、筛选、分页这类不修改数据的操作，且结果可被收藏、分享与缓存。</p>
+<p>POST 请求把数据放在请求体里，不在地址栏暴露。在 Flask 中，表单字段通过 <code>request.form</code> 获取，例如 <code>request.form.get(&quot;username&quot;)</code>。POST 适合提交登录信息、发布内容、下单等会改变服务器状态的操作。它不幂等——重复提交可能产生重复订单——因此浏览器会提示“是否重新提交表单”。</p>
+<p>一个视图函数若要同时接受两种方法，需要在路由里声明：<code>@app.route(&quot;/login&quot;, methods=[&quot;GET&quot;, &quot;POST&quot;])</code>。随后用 <code>request.method</code> 判断当前是哪一种：若为 GET，通常返回登录页面的 HTML；若为 POST，则读取 <code>request.form</code> 中的数据做校验与处理，再重定向到结果页。</p>
+<pre><code>@app.route(&quot;/login&quot;, methods=[&quot;GET&quot;, &quot;POST&quot;])
+def login():
+    if request.method == &quot;POST&quot;:
+        username = request.form.get(&quot;username&quot;)
+        # 此处应做校验与查询，再决定跳转
+        return &quot;处理登录：&quot; + username
+    return render_template(&quot;login.html&quot;)</code></pre>
+<p>这里隐含一个安全要点：用 POST 提交的数据同样来自不可信的客户端，后端绝不能“收到就用”，必须做类型、长度与合法性校验；涉及密码等敏感字段时，传输层要走 HTTPS，且服务端只保存加盐哈希，绝不以明文存储。原料里那个登录示例，仅用于说明“后端向前端回传结果”的接口形态，真实系统中令牌的签发与校验应遵循标准的认证方案，不应在视图里随手返回一个固定字符串。</p>
+<p>此外，接受表单的视图尤其要防范跨站请求伪造：恶意站点可能诱导已登录用户 unknowingly 提交请求。Flask 通过 <code>Flask-WTF</code> 等扩展提供的 CSRF 令牌机制，要求每个表单携带一次性令牌，服务端校验通过才受理，这是生产环境表单的标配。</p>
+<p>处理完 POST 后，一个良好的习惯是返回重定向而非直接渲染结果，即“Post/Redirect/Get”模式：视图先 <code>redirect(url_for(&quot;结果页&quot;))</code>，让浏览器发起一次新的 GET 请求再展示页面，从而避免用户刷新时重复提交表单。当表单包含文件上传时，数据不在 <code>request.form</code> 而在 <code>request.files</code> 里，需要前端表单声明 <code>enctype=&quot;multipart/form-data&quot;</code>；后端用 <code>request.files[&quot;字段名&quot;]</code> 取出后落盘或转存。若后端本职是提供 JSON 接口而非页面，则用 <code>jsonify(...)</code> 把字典序列化为带正确内容类型的响应，前端再以 <code>fetch</code> 或 <code>axios</code> 调用并解析。</p>
+<h2>六、开发服务器与调试模式的注意事项</h2>
+<p><code>app.run()</code> 启动的是 Werkzeug 提供的开发服务器，它专为本地开发设计，而非生产部署。开发服务器是单线程、单进程的形态（可通过参数开多线程），并发能力弱，且缺乏生产级的安全加固，直接把它暴露到公网既不稳定也不安全。</p>
+<p>调试模式 <code>debug=True</code> 给开发带来两项便利：一是代码变动后服务器自动重载，不必手动重启；二是当视图函数抛出异常时，浏览器里会出现一个交互式回溯页面，可以查看变量、逐帧排查。原料的贪吃蛇示例正是以 <code>app.run(debug=True)</code> 收尾，这符合本地学习的场景。</p>
+<p>然而调试模式存在严重的安全边界，必须牢记：那个交互式调试页面允许在浏览器里执行任意 Python 代码，虽然 Werkzeug 默认设了一道 PIN 码保护，但这道保护远不足以抵御公网攻击。因此，绝对不能在生产环境开启 <code>debug=True</code>。正确做法是：本地开发时开启以提效；部署到生产时关闭调试，改用 Gunicorn、Waitress 等生产级服务器来托管 Flask 应用。</p>
+<p>还有两点常被忽略。其一，自动重载只监听代码文件变化，对模板与静态文件的改动通常也会触发重载，但重度依赖缓存时仍建议手动刷新。其二，开发服务器默认只监听本机回环地址，若要从同一局域网的其他设备访问，需显式传入 <code>host=&quot;0.0.0.0&quot;</code>，但这在公共网络上同样危险，只应在可信的内网临时开启。把“本地开调试、上线关调试换服务器”内化为习惯，是 Flask 开发的基本纪律。</p>
+<p>现代 Flask 也支持通过环境变量来配置，而非硬编码 <code>debug=True</code>：设置 <code>FLASK_APP</code> 指明入口模块、设置 <code>FLASK_DEBUG=1</code> 开启调试，再用 <code>flask run</code> 命令启动，这样配置与代码分离，更利于在不同环境间切换。无论采用哪种启动方式，记住“开发用调试、生产关调试并换服务器”这条红线即可，其余都是围绕它的工程化包装。</p>
+<h2>七、页面布局层：HTML 结构、CSS 盒模型与响应式</h2>
+<p>后端路由解决“请求交给谁”，页面布局层解决“页面长什么样、怎么排”。这一层由 HTML 负责结构、CSS 负责样式，二者与后端通过模板渲染衔接。即便后端选型是 Flask 还是 Django，前端的布局原理是共通的，因此本节把重点放在布局本身。</p>
+<p>HTML 的语义化结构是布局的地基。与其用一堆无意义的 <code>&lt;div&gt;</code> 堆砌，不如使用 <code>&lt;header&gt;</code>、<code>&lt;nav&gt;</code>、<code>&lt;main&gt;</code>、<code>&lt;article&gt;</code>、<code>&lt;aside&gt;</code>、<code>&lt;footer&gt;</code> 等语义标签，让结构既利于无障碍访问，也利于 CSS 与 JavaScript 精准定位。一个典型页面被划分为头部、主导航、主体内容与底部，主体内部再按内容块划分区域。语义结构清晰后，CSS 才能“对号入座”。</p>
+<p>CSS 的核心难点是盒模型。页面上每个元素都被视为一个矩形盒子，由内到外依次是内容（content）、内边距（padding）、边框（border）与外边距（margin）。默认情况下（<code>box-sizing: content-box</code>），开发者设定的宽度只指内容区，实际占据的水平空间还要加上两侧内边距与边框。</p>
+<p>在默认的 <code>content-box</code> 模型下，元素占据的水平空间为</p>
+<p>$$ W_{\text{content}} = w + 2p + 2b. $$</p>
+<p>若改用 <code>border-box</code> 模型，开发者指定的宽度 $W$ 已经包含内边距与边框，内容区域反而被压缩。</p>
+<p>$$ w_{\text{border}} = W - 2p - 2b. $$</p>
+<p>这两式说明：同一个 <code>width</code> 声明在不同盒模型下含义不同。<code>border-box</code> 让“设定宽度即所见宽度”，因此在做百分比布局或并排分栏时更不易算错，也是多数现代项目在全局重置里优先采用的模型。</p>
+<p>响应式设计解决“同一套页面如何适配从手机到桌面的不同屏幕”。其前提是在 HTML 头部声明视口元信息 <code>&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</code>，告诉移动浏览器按设备宽度渲染而非默认的桌面宽度。在此之上，常用三套手段：其一是媒体查询 <code>@media</code>，针对特定断点（如最大宽度 768 像素）改写样式；其二是弹性盒 <code>flexbox</code>，让子元素按可用空间自动伸缩与换行；其三是网格 <code>grid</code>，用行列模板精确划分区域。三者配合，使头部、侧栏与主体能在窄屏下堆叠、在宽屏下并排。</p>
+<p>在具体的布局实现上，弹性盒适合一维排列（一行或一列内的对齐与伸缩），例如让顶部导航的品牌名与菜单分别靠左、靠右，只需给容器设 <code>display: flex; justify-content: space-between</code> 即可；网格则适合二维分栏，例如把页面切成“侧栏 + 主体”两列，用 <code>grid-template-columns: 200px 1fr</code> 即可让侧栏固定 200 像素、主体占据剩余空间。两者都基于盒模型，区别在排布维度。掌握这两套原语，绝大多数页面布局都能以声明方式表达，而不必依赖过时的浮动 hack。</p>
+<p>原料中提到的单页应用（SPA）与传统多页面站点，前端布局都遵循同一套盒模型与响应式原则，区别只在于页面切换由前端路由还是整页刷新完成。</p>
+<h2>八、后端路由与前端布局的对接，以及与 Django 的对照</h2>
+<p>把前后两端连起来，关键在于“路由决定页面、模板组织布局、静态资源支撑样式”。在 Flask 这类服务端渲染方案里，一条路由对应一个视图函数，视图函数用 <code>render_template</code> 渲染某个模板，模板继承基模板获得统一布局，基模板再通过 <code>url_for(&#x27;static&#x27;, ...)</code> 引入 CSS 与脚本——于是用户访问一个 URL，就拿到了一份结构完整、样式齐全的 HTML。原料中“前端负责浏览器里的展示与交互，Flask 后端在服务器上接收请求、处理后再返回结果”的描述，正是对这种协作关系的概括。</p>
+<p>在前后端分离架构里，分工进一步清晰：Flask 不再返回完整 HTML，而是暴露一组 JSON 接口（常以 <code>/api</code> 蓝图承载），前端框架通过 HTTP 请求调用这些接口获取或提交数据，再在客户端完成渲染。此时后端路由的“返回值”从页面变成了数据，但路由、视图函数、<code>url_for</code> 反向建链这些概念依然成立。无论哪种模式，核心都是“URL 到处理函数的映射”与“后端输出与前端消费方式的约定”。</p>
+<p>为帮助把握 Flask 在 Python Web 生态中的位置，下面把它与 Django 做一简要对照。需要说明，Django 的 MVT 架构与 ORM 细节在站内另一篇笔记中已专门展开，此处只比较最易混淆的三点，不重复展开其机制。</p>
+<table>
+<tr><th>维度</th><th>Flask</th><th>Django</th></tr>
+<tr><td>路由风格</td><td>用装饰器 <code>@app.route</code> 就近绑定视图函数，直观灵活</td><td>在 <code>urls.py</code> 中集中用 <code>path()</code> 声明 URL 与视图的映射，集中管理</td></tr>
+<tr><td>模板引擎</td><td>默认 Jinja2，语法为 <code>{{ }}</code> 与 <code>{% %}</code></td><td>内置 DTL（Django 模板语言），语法同样为变量与标签，但过滤器与内置标签体系不同</td></tr>
+<tr><td>内置 ORM</td><td>无，需用 Flask-SQLAlchemy 等扩展自行引入</td><td>有，模型类直接映射数据库表并自动生成迁移，开箱即用</td></tr>
+<tr><td>定位</td><td>微框架，核心精简、按需扩展</td><td>全功能框架，内置后台、认证、ORM 等一整套组件</td></tr>
+</table>
+<p>简言之，Flask 像一张留白很多的画纸，适合想精确控制每一层的开发者与轻量服务；Django 像一套带好家具的公寓，适合希望少做基础设施、快速交付完整应用的项目。两者都遵循“路由—视图—模板”这一 Web 开发的主干，差异主要体现在“谁替你多做多少”。</p>
+<h2>素材边界</h2>
+<p>本篇的原料支撑并不均衡，按诚实原则逐项说明如下。</p>
+<p>第一，关于 Flask 自身，唯一直接相关的原料是“创建贪吃蛇 Flask 应用”这一条较短的对话，它确实提供了最小骨架（<code>Flask(__name__)</code>、<code>@app.route(&quot;/&quot;)</code>、<code>render_template</code>、以 <code>app.run(debug=True)</code> 收尾）与运行方式。但原料并未展开 <code>url_for</code> 的反向建链语义、Jinja2 的控制结构与模板继承、静态文件配置、蓝图、GET/POST 表单差异、调试模式的安全边界等内容。这些部分属于本文的教材式补全，依据是 Flask 的通用设计与 Web 开发的共识性知识，并非来自该条对话原文。</p>
+<p>第二，关于页面布局层（HTML 语义结构、CSS 盒模型、响应式），原料中“前端架构学习”仅从“学思想而非写代码”的角度提及 HTML/CSS/JS 是基础、Vue/React 是框架，并未给出盒模型的公式化说明或响应式手段；“前端项目无 index.html 原因及解决办法”提供了多页面站点与单页应用的结构差异，本文据此补充了 SPA 与 MPA 的对照，但盒模型的两式以及媒体查询、弹性盒、网格等技术细节均为教材式补全。</p>
+<p>第三，关于前后端协作与框架对比，“前端架构学习”与“后端学习路线”提到了前后端分离、Flask 属轻量后端、Django 属全功能框架，以及 FastAPI、Express 等对照对象，这些构成了第八节对照表的原料依据；而 Jinja2 与 DTL 语法差异、Django 的 <code>path()</code> 集中路由等具体机制，主要来自 Django 原料中的 <code>urls.py</code>、<code>views.py</code> 与模板片段示例。</p>
+<p>第四，原料中出现的若干环境配置细节（如 Node.js 安装、PowerShell 执行策略、虚拟环境激活、具体邮箱地址）与 Flask 应用及页面布局这一主题关联较弱，且部分涉及私人信息或下载链接，本文已按规范剔除，未纳入正文。</p>
+<p>综上，本篇真正“由原料直接支撑”的，主要是 Flask 最小骨架的形态、前后端分离的基本观念、SPA 与 MPA 的结构差异，以及 Django 作为对照对象的存在；其余关于请求上下文、静态文件、蓝图、表单方法差异、调试安全、盒模型与响应式的系统性阐述，均属于在少量原料线索上的可靠补全，读者在引用具体参数或版本相关结论时，应以官方文档为准。</p>
+<a class="back-link" href="../../study/web-frontend.html">← 返回 Web开发/前端</a>
+</article>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>
