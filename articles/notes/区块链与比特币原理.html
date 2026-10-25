@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>区块链与比特币原理 · 区块结构、哈希链接与脚本系统</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"区块链与比特币原理 · 区块结构、哈希链接与脚本系统","date":"2026-10-24","tags":["课程笔记","区块链/分布式"],"category":"课程笔记","summary":"以比特币为样本梳理区块链底层结构：区块头六个字段中的版本号、父区块哈希、默克尔根、时间戳、难度目标与 Nonce 各司其职，父哈希把区块逐个密码学绑定，改动任一历史区块都会使其后全部区块校验失败；默克尔树以交易哈希为叶子两两上推，支撑轻节点校验；UTXO 由锁定脚本与解锁脚本在栈式虚拟机中配对验证；工作量证明靠穷举 Nonce 使双重 SHA256 落入目标哈希，难度每 2016 块自动回调；四年减半由 21 万块乘以 10 分钟目标间隔推得，属理论近似。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>区块链与比特币原理 · 区块结构、哈希链接与脚本系统</h1>
-<div class="meta">课程笔记 · 区块链/分布式 · 整理自豆包对话 豆包对话 · 区块链教学模拟器介绍 / 比特币脚本系统解析</div>
+<div class="meta">课程笔记 · 区块链/分布式</div>
 <h2>一、概述</h2>
 <p>区块链在概念层面可以概括为一句话：<strong>所有人共同记账、且没人能偷偷改的公开分布式账本</strong>。它不特指某个软件，而是一套&quot;数据怎么存、共识怎么达成&quot;的规则组合。比特币是这套规则的第一个完整落地系统：白皮书发布于 2008 年 10 月 31 日，创世区块于 2009 年 1 月 3 日（UTC）产生；&quot;区块链（Blockchain）&quot;这一名词，是后人对白皮书中&quot;一串串联起来的区块（a chain of blocks）&quot;表述的浓缩命名。</p>
 <p>本文按&quot;结构—链接—校验—共识—发行—应用&quot;的顺序整理，重点是区块头字段及其相互依赖、父哈希造成的链式不可篡改、默克尔树的构造与校验用途、UTXO 与脚本的配对验证，并附减半周期推导与一次推导订正。</p>
@@ -172,10 +176,9 @@ reward   = 50 / (2 ** halvings)</code></pre>
 <ol><li><strong>把父区块哈希画反</strong>：前一区块哈希存放在<strong>当前</strong>区块头，而非父区块里。</li><li><strong>把默克尔根当区块哈希</strong>：区块哈希是对整个区块头做双重 SHA256，默克尔根只是头中一个字段。</li><li><strong>以为改完交易再改后面的数字就能篡改成功</strong>：被改动的每个区块都要重做工作量证明、找到合法 Nonce，且仍需让恶意链成为最长链。</li><li><strong>把补齐当成&quot;只看交易笔数奇偶&quot;</strong>：Coinbase 永远是第一笔交易、对应最左叶子；但复制补齐是按层进行的——任何一层节点数为奇就要复制该层末节点，6 笔交易在父层（3 个节点）同样需要补齐。</li><li><strong>认为 Bits 越大越难</strong>：关系是反向的，Bits 越小、目标哈希越小、难度越高。</li><li><strong>把时间戳当成严格有序保证</strong>：时间戳只作区间校验，不保证父块严格小于子块。</li><li><strong>把&quot;四年减半&quot;当精确周期</strong>：协议规定的是 210000 个区块，4 年由 10 分钟理想间隔换算而来，会随实际出块速度偏离。</li><li><strong>把 2140 年当成可精确到某一天的预言</strong>：它由&quot;恒定 10 分钟出块 + 奖励低于 1 聪即停&quot;的理想模型严格推得（33 轮、约 131.8 年），但真实年份会随算力与难度调整浮动；把对数解错成 36 轮则会得到 2153 年，那一步的根因是把 1 聪取成了 $10^{-9}$ BTC。</li><li><strong>高估脚本能力、错认账本原语</strong>：脚本图灵不完备，不能承担通用智能合约；链上也没有余额字段，可花费资产是 UTXO 集合。</li></ol>
 <h2>十一、总结要点</h2>
 <p>区块头六个字段构成一条自洽的因果链：默克尔根压缩校验区块体交易，父哈希向前绑定上一个区块，时间戳赋予区块时序烙印，Bits 与 Nonce 共同承载工作量证明。把&quot;改动即改哈希、哈希被子区块引用&quot;两句连起来，即可推出不可篡改的成因，以及篡改必然演化为整链重算与算力竞争的原因。UTXO 与脚本系统回答的是&quot;这笔钱在什么条件下可以被花&quot;，栈式、图灵不完备的执行模型把校验能力限制在可判定、可审计的范围内。发行机制则把总量约束交给代码：210000 块一次减半、每轮理想时长约 3.9954 年、等比级数收敛到 2100 万上限，第 33 轮后每块奖励不足 1 聪，理想模型下的终点即教科书里的 2140 年；而&quot;四年&quot;与&quot;2140&quot;都依赖恒定出块速率这一前提，真实年份会随难度调整浮动。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 区块链教学模拟器介绍 / 比特币脚本系统解析</p>
-<a class="back-link" href="../study/blockchain.html">← 返回 区块链/分布式</a>
+<a class="back-link" href="../../study/blockchain.html">← 返回 区块链/分布式</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

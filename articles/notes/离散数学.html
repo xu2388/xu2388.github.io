@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>离散数学 · 命题范式、关系、格与群</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"离散数学 · 命题范式、关系、格与群","date":"2026-10-24","tags":["课程笔记","离散数学"],"category":"课程笔记","summary":"围绕数理逻辑、关系、格与群四条主线整理。永真式的主合取范式是不含任何极大项的空范式；极小项与极大项的下标分别取自成真赋值与成假赋值，编码方向相反，同下标二者互为否定。三元素集合上共有 5 个等价关系，由划分逐条列出并按自反、对称、传递逐一验证。30 的全部正因子构成的整除哈斯图给出子集 2 与 3 的上界 6 和 30、上确界 6、下确界 1。半群、独异点、群与交换群按封闭性、结合律、幺元、逆元、交换律逐级加强，并以整数加法与幂集对称差为例。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>离散数学 · 命题范式、关系、格与群</h1>
-<div class="meta">课程笔记 · 离散数学 · 整理自豆包对话 豆包对话 · 考试之前看一遍这里的知识点</div>
+<div class="meta">课程笔记 · 离散数学</div>
 <h2>一、概述</h2>
 <p>本文整理一次离散数学考前概念串讲的记录。原始材料按提问顺序展开，层次零散，此处依知识体系重排为四条主线：命题逻辑与主范式、集合上的关系、偏序集与格、代数系统，末节附映射与图论判据。</p>
 <p>笔者当时判错并当场订正的结论有三处，本文予以保留：其一，认为永真式&quot;没有&quot;主合取范式，实际是存在且为空范式；其二，把格定义中&quot;任意两个元素都有最小上界与最大下界&quot;弱化为&quot;存在&quot;，因而误判若干偏序集为格；其三，默认子集的上界、下界必须落在子集内部，故对&quot;6 与 30 都是 $\{2,3\}$ 的上界&quot;感到不可理解。</p>
@@ -171,10 +175,9 @@
 <h2>九、总结要点</h2>
 <p>四条主线可各压缩成一句。命题逻辑：主范式由极小项或极大项构成，二者的下标分别记录成真赋值与成假赋值，$m_i \Leftrightarrow \neg M_i$，而永真式因没有成假赋值，其主合取范式是空范式。关系：等价关系与划分一一对应，$\{1,2,3\}$ 上恰有 5 个、四元素集合上恰有 15 个，验证时按自反、对称、传递逐条查，商集就是等价类的集合。格：格是任意两元素都有并（最小上界）与交（最大下界）的偏序集，幂等律由吸收律导出，确界必须先在指定全集内按偏序方向求。代数系统：封闭性、结合律、幺元、逆元、交换律五条性质逐级加强，对应半群、独异点、群、交换群四个层次，$\langle \mathbb{Z}, +, 0 \rangle$ 与 $\langle P(U), \oplus \rangle$ 分别示范了交换群的两个来源。</p>
 <p>复习中反复出错的不是定义本身，而是定义中的量词与范围限制——&quot;任意&quot;与&quot;存在&quot;之差决定是否为格，&quot;属于全集&quot;与&quot;属于子集&quot;之差决定确界算得对不对，&quot;记 1&quot;与&quot;记 0&quot;之差决定范式下标是否写反。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 考试之前看一遍这里的知识点</p>
-<a class="back-link" href="../study/discrete-math.html">← 返回 离散数学</a>
+<a class="back-link" href="../../study/discrete-math.html">← 返回 离散数学</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

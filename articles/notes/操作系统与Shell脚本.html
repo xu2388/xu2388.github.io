@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>操作系统与 Linux 上机 · 进程、权限与 Shell 脚本</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"操作系统与 Linux 上机 · 进程、权限与 Shell 脚本","date":"2026-10-24","tags":["课程笔记","操作系统/Linux"],"category":"课程笔记","summary":"进程与线程的定义差异、状态字母 R/S/D/T/Z 与四类身份标识、前后台与作业控制、信号与进程终止、用户组的四类账户文件、SUID/SGID/粘滞位的四位八进制推算与 FACL 细粒度授权、Shell 脚本的变量扩展与条件测试及五种流程结构、grep/sed/awk 的典型用法、at/batch/crontab 三类定时、gzip/tar 归档，末附 gcc 编译链与 Makefile 变量展开。最实用：`ps -u`、`jobs` 配 `bg` 与 `fg`、`kill -9`、`setfacl -m`、`test -f`。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>操作系统与 Linux 上机 · 进程、权限与 Shell 脚本</h1>
-<div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · Shell 编程速成路线 / Linux权限、ACL及进程程序相关题目解答</div>
+<div class="meta">课程笔记 · 操作系统/Linux</div>
 <h2>一、概述</h2>
 <p>本文是操作系统课程上机部分的系统笔记，与《Linux 本地存储管理》互为姊妹篇：那篇讲磁盘到挂载的纵向链路，本文覆盖同一门课的<strong>进程与作业</strong>、<strong>用户组与权限的题目层面</strong>、<strong>Shell 脚本编程</strong>；分区与 LVM、<code>fstab</code>、<code>umask</code> 推算、<code>quota</code>、<code>tar</code> 参数与 crontab 字段详解均见那篇，本文不重述。</p>
 <p>原料为一份 Shell 速成计划及逐条追问、一组课堂黑板题与其订正过程、若干套自测卷，其中不少是笔者当时真正卡住之处：脚本挂进 <code>crontab</code> 后毫无输出、函数调用报 <code>command not found</code>、权限串读错一位致整题数值全错。题号与选项字母不再保留，只留判断依据；文中路径与账号名均为示例。</p>
@@ -404,10 +408,9 @@ clean :
 <tr><td>删目录内文件但留目录</td><td><code>find /path/dir -type f -delete</code></td></tr>
 <tr><td>清除七天前的旧备份</td><td><code>find /backup -mtime +7 -delete</code></td></tr>
 </table>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Shell 编程速成路线 / Linux权限、ACL及进程程序相关题目解答</p>
-<a class="back-link" href="../study/os-linux.html">← 返回 操作系统/Linux</a>
+<a class="back-link" href="../../study/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

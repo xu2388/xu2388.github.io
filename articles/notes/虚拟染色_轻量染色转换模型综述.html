@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>虚拟染色 · 轻量染色转换模型综述</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"虚拟染色 · 轻量染色转换模型综述","date":"2026-10-24","tags":["学习笔记","虚拟染色/科研"],"category":"学习笔记","summary":"按「参数量从千到亿」的顺序梳理五个染色转换模型。StainNet 用三层 1×1 卷积加蒸馏，约一千参数，像素级映射不碰空间结构；BeerLaNet 把稀疏非负分解展开成十层网络，去掉模板依赖；AGMDT 借相邻切片做弱配对，用邻域形变场监督单个模型输出三种特殊染色；StainFuser 以条件潜扩散加零卷积锁结构，靠两百万 NST 合成对训练；StainPrompt 冻结扩散主干，只在推理时优化视觉提示。末段给出对照表与转向扩散的原因。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>虚拟染色 · 轻量染色转换模型综述</h1>
-<div class="meta">学习笔记 · 虚拟染色/科研 · 整理自豆包对话 豆包对话 · StainNet 模型及解决问题 / BeerLaNet 模型介绍 / AGMDT 模型介绍 / StainFuser 模型介绍 / StainPrompt模型损失函数</div>
+<div class="meta">学习笔记 · 虚拟染色/科研</div>
 <h2>一、概述：为什么先看轻量模型</h2>
 <p>染色转换模型的谱系很容易被讲成「GAN 时代到扩散时代」的线性进步史，但真实的工程选择比这复杂。一个模型能不能用，取决于四件事同时成立：参数量装得下、推理扛得住全切片、训练数据凑得齐、结构不被改坏。轻量模型正是在这四条约束下长出来的：它们未必是效果最好的，但往往是最先能落地的，而且它们的失败模式最能说明问题出在架构的哪一层。</p>
 <p>本文按参数量从千级到亿级的顺序，梳理五个模型：StainNet（约一千参数）、BeerLaNet（十位到百位可学习参数）、AGMDT（GAN，千万级）、StainFuser（潜扩散，亿级）、StainPrompt（冻结主干，只优化提示）。五个模型的输入输出并不完全同类：有的做同一染色类型的外观归一化，有的做 H&amp;E 到特殊染色的类型转换。这个区别决定了它们的评价方式，也决定了后面为什么要转向扩散。</p>
@@ -168,10 +172,9 @@
 <tr><td>StainPrompt</td><td>冻结主干、只调提示</td><td>测试时优化视觉提示；$\text{IST}_t$ 随 $t$ 衰减</td><td>逐图优化慢；只能输出见过的染色；结构损失公式需回原文核对</td></tr>
 </table>
 <p>五个模型连起来看，是一条「约束从架构退到损失、能力从归一化扩到生成、成本从毫秒涨到秒」的线。每一次能力扩张都伴随着成本上升，而成本最终由采样步数决定。所以下一篇要讨论的不是更大的模型，而是更少的步数：DDIM 如何把一千步压到五十步，LCM 又如何压到三到四步。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · StainNet 模型及解决问题 / BeerLaNet 模型介绍 / AGMDT 模型介绍 / StainFuser 模型介绍 / StainPrompt模型损失函数</p>
-<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
+<a class="back-link" href="../../research.html">← 返回科研</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

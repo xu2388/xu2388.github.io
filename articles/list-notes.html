@@ -6,44 +6,39 @@
 <title>学习笔记 · 教程 · 科研与学习档案</title>
 <meta name="description" content="从具体困惑出发的教程与整理。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
-<body class="hub">
-<header class="site-header">
-  <div class="container">
-    <div class="side-brand">
-      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
-      <div>
-        <h1 class="site-title">科研与学习档案</h1>
-        <p class="site-subtitle">Research &amp; Study Archive</p>
-      </div>
-    </div>
-    <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-    
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../research.html">科研</a><a class="active" href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
 
-<main class="container">
 
-<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../study.html">学习</a> <span>/</span> 学习笔记 · 教程</nav>
-<header class="list-head">
-  <p class="eyebrow">STUDY</p>
-  <h1>学习笔记 · 教程</h1>
-  <p class="lede">从具体困惑出发的教程与整理。　共 5 篇</p>
-</header>
-<ul class="article-list">
-<li><a href="../articles/004-扩散与FlowMatching教程.html">扩散模型与 Flow Matching 教程：从&quot;学习一个分布&quot;到手推速度场</a><span class="date">2026-10-24</span><span class="tag">教程</span> <span class="tag">扩散模型</span> <span class="tag">Flow Matching</span> <span class="tag">生成模型</span> <span class="tag">学习笔记</span><span class="desc">本文整理自笔者学习扩散模型与 Flow Matching 的完整问答记录，从&quot;学习一个分布是什么意思&quot;这一原始困惑出发，依次讲清生成模型的训练目标、扩散模型的逐步去噪方案、Flow Matching 的直线路径与速度场回归、ODE 的存在唯一性保证与条件生成、欧拉方法的数值求解，并说明这些概念如何衔接到 H&amp;E→IHC 虚拟染色任务。为便于理解，文中保留了骰子、导航等类比，措辞均已按书面方式重新组织。</span></li>
-<li><a href="../articles/005-VAE教程.html">VAE 教程：潜变量的形态、采样的含义与 Stable Diffusion 中的角色</a><span class="date">2026-10-24</span><span class="tag">教程</span> <span class="tag">VAE</span> <span class="tag">变分自编码器</span> <span class="tag">潜空间</span> <span class="tag">Stable Diffusion</span><span class="desc">本文从两个具体问题入手讲解 VAE：其一，潜变量并非四维向量，而是 4 通道的空间特征图（SD1.5 中为 [4, 64, 64]）；其二，VAE 编码器输出的不是一个点而是一个分布，&quot;采样&quot;正是 VAE 与普通自编码器的全部差别所在。文章从自编码器出发，依次讲清采样与重参数化、KL 规整、SD VAE 的完整损失，及其在 Stable Diffusion 中&quot;翻译官&quot;式的角色，最后落到虚拟染色任务中冻结 VAE 的容量瓶颈与&quot;灰雾&quot;问题。</span></li>
-<li><a href="../articles/006-注意力与CrossAttention教程.html">注意力与 Cross-Attention 机制解析：从&quot;软查表&quot;到 UNet 的条件注入</a><span class="date">2026-10-24</span><span class="tag">教程</span> <span class="tag">注意力机制</span> <span class="tag">Cross-Attention</span> <span class="tag">Transformer</span> <span class="tag">条件注入</span><span class="desc">本文是继 VAE 与扩散/流匹配之后的第三篇基础机制笔记。文章先将注意力还原为其最朴素的形态——&#x27;带着查询去检索&#x27;，依次讲解自注意力的 Q/K/V 与多头设计，进而引出关键分野：交叉注意力。正是交叉注意力，使文本与结构条件得以注入扩散 UNet，也是针对虚拟染色&#x27;有色调、无结构&#x27;问题的对症机制。文末回到 HistDiST + Phikon 的改造实践。</span></li>
-<li><a href="../articles/007-对比学习与CLIP教程.html">对比学习与 CLIP 机制解析：从&quot;拉近推开&quot;到虚拟染色的文本编码器选型</a><span class="date">2026-10-24</span><span class="tag">教程</span> <span class="tag">对比学习</span> <span class="tag">CLIP</span> <span class="tag">Contrastive</span> <span class="tag">文本编码器</span><span class="desc">对比学习是本文作者较晚掌握、却在项目中处处应用的方法：一半是 SD 中把文字转化为条件的 CLIP，一半是 001/002 中保持结构的 CUT/PatchNCE。本文从&#x27;把相似的拉近、把不相似的推开&#x27;这一最朴素的本质讲起，说明 CLIP 如何充当文本编码器、原生 CLIP 为何不适合病理场景、选择换用 CONCH 的依据，以及同一个思想如何同时约束&#x27;风格&#x27;与&#x27;结构&#x27;。</span></li>
-<li><a href="../articles/doubao-javaweb-notes.html">JavaWeb 手写笔记（课程学习存档）</a><span class="date">2026-10-24</span><span class="tag">JavaWeb</span> <span class="tag">HTML</span> <span class="tag">课程笔记</span> <span class="tag">豆包</span><span class="desc">我上传到豆包的 JavaWeb 手写笔记全文本，从 HTML 基础、标签、表单到后面的 Web 开发，是我课程学习的原始存档，一条未删。</span></li>
+<main class="wrap">
+  <div class="crumbs"><a href="../index.html">首页</a><span>/</span><a href="../study.html">学习</a><span>/</span>学习笔记 · 教程</div>
+  <header class="list-head">
+    <h1>学习笔记 · 教程</h1>
+    <p class="lede">从具体困惑出发的教程与整理。　共 5 篇</p>
+  </header>
+  <ul class="article-list">
+<li><a href="../articles/004-扩散与FlowMatching教程.html">扩散模型与 Flow Matching 教程：从&quot;学习一个分布&quot;到手推速度场</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">扩散模型</span><span class="tag">Flow Matching</span><span class="tag">生成模型</span><span class="tag">学习笔记</span><span class="desc">本文整理自笔者学习扩散模型与 Flow Matching 的完整问答记录，从&quot;学习一个分布是什么意思&quot;这一原始困惑出发，依次讲清生成模型的训练目标、扩散模型的逐步去噪方案、Flow Matching 的直线路径与速度场回归、ODE 的存在唯一性保证与条件生成、欧拉方法的数值求解，并说明这些概念如何衔接到 H&amp;E→IHC 虚拟染色任务。为便于理解，文中保留了骰子、导航等类比，措辞均已按书面方式重新组织。</span></li>
+<li><a href="../articles/005-VAE教程.html">VAE 教程：潜变量的形态、采样的含义与 Stable Diffusion 中的角色</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">VAE</span><span class="tag">变分自编码器</span><span class="tag">潜空间</span><span class="tag">Stable Diffusion</span><span class="desc">本文从两个具体问题入手讲解 VAE：其一，潜变量并非四维向量，而是 4 通道的空间特征图（SD1.5 中为 [4, 64, 64]）；其二，VAE 编码器输出的不是一个点而是一个分布，&quot;采样&quot;正是 VAE 与普通自编码器的全部差别所在。文章从自编码器出发，依次讲清采样与重参数化、KL 规整、SD VAE 的完整损失，及其在 Stable Diffusion 中&quot;翻译官&quot;式的角色，最后落到虚拟染色任务中冻结 VAE 的容量瓶颈与&quot;灰雾&quot;问题。</span></li>
+<li><a href="../articles/006-注意力与CrossAttention教程.html">注意力与 Cross-Attention 机制解析：从&quot;软查表&quot;到 UNet 的条件注入</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">注意力机制</span><span class="tag">Cross-Attention</span><span class="tag">Transformer</span><span class="tag">条件注入</span><span class="desc">本文是继 VAE 与扩散/流匹配之后的第三篇基础机制笔记。文章先将注意力还原为其最朴素的形态——&#x27;带着查询去检索&#x27;，依次讲解自注意力的 Q/K/V 与多头设计，进而引出关键分野：交叉注意力。正是交叉注意力，使文本与结构条件得以注入扩散 UNet，也是针对虚拟染色&#x27;有色调、无结构&#x27;问题的对症机制。文末回到 HistDiST + Phikon 的改造实践。</span></li>
+<li><a href="../articles/007-对比学习与CLIP教程.html">对比学习与 CLIP 机制解析：从&quot;拉近推开&quot;到虚拟染色的文本编码器选型</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">对比学习</span><span class="tag">CLIP</span><span class="tag">Contrastive</span><span class="tag">文本编码器</span><span class="desc">对比学习是本文作者较晚掌握、却在项目中处处应用的方法：一半是 SD 中把文字转化为条件的 CLIP，一半是 001/002 中保持结构的 CUT/PatchNCE。本文从&#x27;把相似的拉近、把不相似的推开&#x27;这一最朴素的本质讲起，说明 CLIP 如何充当文本编码器、原生 CLIP 为何不适合病理场景、选择换用 CONCH 的依据，以及同一个思想如何同时约束&#x27;风格&#x27;与&#x27;结构&#x27;。</span></li>
+<li><a href="../articles/javaweb-handwritten-notes.html">JavaWeb 手写笔记（课程学习存档）</a><span class="date">2026-10-24</span><span class="tag">JavaWeb</span><span class="tag">HTML</span><span class="tag">课程笔记</span><span class="desc">JavaWeb 课程手写笔记全文本，从 HTML 基础、标签、表单到后面的 Web 开发，按原样保留，一条未删。</span></li>
 </ul>
-<div class="subj-foot"><a class="back-link" href="../index.html">← 返回首页</a></div>
-
+  <a class="back-link" href="../index.html">← 返回首页</a>
 </main>
 
-<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

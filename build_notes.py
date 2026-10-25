@@ -1,22 +1,57 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""把 notes/*.md（正式学习笔记，带 frontmatter）批量转成站点文章页 + 学科索引。
-frontmatter: title / subject / category(课程笔记|学习笔记|研究) / source(原始对话文件名) / summary
-输出：articles/notes/{slug}.html ；articles/notes-index.html
+"""把 notes/*.md（正式学习笔记，带 frontmatter）批量转成站点文章页。
+
+frontmatter: title / subject / category(课程笔记|学习笔记|研究) / summary
+输出：articles/notes/{slug}.html
+学科索引由 build_site.py 生成（study/<学科>.html），这里只产出单篇正文页。
 """
-import os, re, glob, html as htmlmod
+import os
+import re
+import glob
+import html as htmlmod
+
 from build_knowledge_base import render_md
-from site_model import subject_slug
+from site_model import subject_slug, RESEARCH_SUBJECT
+from fix_nav import build_header, build_footer
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 NOTES_DIR = os.path.join(ROOT, "notes")
 OUT_DIR = os.path.join(ROOT, "articles", "notes")
-INDEX_OUT = os.path.join(ROOT, "articles", "notes-index.html")
 
-SUBJECT_ORDER = ["计算机网络", "计算机组成原理", "操作系统/Linux", "数据库/MySQL", "JavaWeb", "Web开发/前端",
-                 "数据结构与算法", "离散数学", "线性代数", "机器学习", "深度学习/神经网络", "大数据技术", "区块链/分布式",
-                 "信号与系统", "数字图像处理", "高等数学/最优化", "概率论/数理统计", "大学物理",
-                 "英语/雅思", "思政/毛概/近代史", "虚拟染色/科研", "其他"]
+FONT_LINK = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com" />\n'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
+    'family=Noto+Serif+SC:wght@400;600&display=swap" />'
+)
+
+PAGE = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{title}</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+{font}
+<script id="meta" type="application/json">
+{{"title":"{title_json}","date":"{date}","tags":["{cat}","{subject}"],"category":"{cat}","summary":"{summary_json}"}}
+</script>
+</head>
+<body>
+{header}
+<article class="article">
+<h1>{title}</h1>
+<div class="meta">{cat} · {subject}</div>
+{body}
+<a class="back-link" href="{back_href}">{back_text}</a>
+</article>
+{footer}
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>
+"""
+
 
 def parse(path):
     text = open(path, encoding="utf-8").read()
@@ -31,58 +66,10 @@ def parse(path):
         body = text[m.end():]
     return fm, body
 
-PAGE = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>{title}</title>
-<link rel="stylesheet" href="../../assets/style.css" />
-<script id="meta" type="application/json">
-{{"title":"{title_json}","date":"2026-10-24","tags":["{cat}","{subject}"],"category":"{cat}","summary":"{summary_json}"}}
-</script>
-</head>
-<body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav">
-<a href="../../index.html#threads">研究方向</a>
-<a href="../../index.html#articles">文章</a>
-<a href="../notes-index.html">笔记索引</a>
-</nav>
-</div></header>
-<article class="article">
-<h1>{title}</h1>
-<div class="meta">{cat} · {subject} · 整理自豆包对话 {source}</div>
-{body}
-<p class="muted" style="margin-top:28px">原始对话：{source_links}</p>
-<a class="back-link" href="../study/{slug}.html">← 返回 {subject}</a>
-</article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
-<script src="../../assets/blog.js" defer></script>
-</body>
-</html>
-"""
 
 def esc_json(s):
     return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
 
-def source_links(src):
-    """把 source 字段渲染成回链列表。
-
-    source 可能写成 "010_毛概第一章.md（另含 011_毛概第三章.md）" 这种多来源，
-    整串当文件名会生成 404 链接，所以这里逐个拆出来分别建链。
-    """
-    parts = re.findall(r"[^（）()\s]+\.md", src)
-    if not parts:
-        return htmlmod.escape(src)
-    links = []
-    for i, f in enumerate(parts):
-        stem = f[:-3] if f.endswith(".md") else f
-        sep = "" if i == 0 else "、"
-        links.append('%s<a href="../kb-doubao/%s.html">%s</a>' % (sep, htmlmod.escape(stem), htmlmod.escape(f)))
-    return "".join(links)
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -95,63 +82,31 @@ def main():
         title = fm["title"]
         subject = fm.get("subject", "其他")
         cat = fm.get("category", "课程笔记")
-        source = fm.get("source", "")
         summary = fm.get("summary", "")
         slug = os.path.splitext(os.path.basename(p))[0] + ".html"
         # 正文开头的 "# 标题" 会和模板里的 <h1> 重复，去掉一行
         body_md = re.sub(r"^\s*#\s+" + re.escape(title) + r"\s*\n+", "", body, count=1)
+        active = "科研" if subject == RESEARCH_SUBJECT else "学习"
+        # 笔记页在 articles/notes/ 下，返回链接要上溯两级；科研类回到科研页
+        if subject == RESEARCH_SUBJECT:
+            back_href, back_text = "../../research.html", "← 返回科研"
+        else:
+            back_href, back_text = "../../study/%s.html" % subject_slug(subject), "← 返回 %s" % subject
         page = PAGE.format(
             title=htmlmod.escape(title), title_json=esc_json(title),
             cat=cat, subject=subject, summary_json=esc_json(summary),
-            body=render_md(body_md), source=htmlmod.escape(source), source_links=source_links(source),
+            date="2026-10-24",
+            body=render_md(body_md),
             slug=subject_slug(subject),
+            back_href=back_href, back_text=back_text,
+            font=FONT_LINK,
+            header=build_header("../../", active),
+            footer=build_footer("../../"),
         )
         open(os.path.join(OUT_DIR, slug), "w", encoding="utf-8").write(page)
-        entries.append({"title": title, "slug": slug, "subject": subject, "cat": cat,
-                        "summary": summary, "order": os.path.basename(p)})
-    # 索引
-    by = {}
-    for e in entries:
-        by.setdefault(e["subject"], []).append(e)
-    def subj_key(s):
-        return (SUBJECT_ORDER.index(s) if s in SUBJECT_ORDER else 99, s)
-    secs = []
-    for subj in sorted(by, key=subj_key):
-        items = sorted(by[subj], key=lambda x: x["order"])
-        lis = "".join(
-            f'<li><a href="notes/{e["slug"]}">{htmlmod.escape(e["title"])}</a>'
-            f'<span class="desc">{htmlmod.escape(e["summary"])}</span></li>' for e in items)
-        secs.append(f'<section class="block"><h2>{subj}（{len(items)}）</h2><ul class="article-list">{lis}</ul></section>')
-    page = f"""<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>学习笔记 · 课程复习与科研整理</title>
-<link rel="stylesheet" href="../assets/style.css" />
-<script id="meta" type="application/json">
-{{"title":"学习笔记 · 课程复习与科研整理（{len(entries)} 篇）","date":"2026-10-24","tags":["课程笔记","学习","复习"],"category":"课程笔记","summary":"把大一大二专业课复习与科研对话整理成的系统学习笔记，按学科分组，正式书面整理，完整覆盖知识点。"}}
-</script>
-</head>
-<body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研博客 · 学习笔记</h1>
-<p class="site-subtitle">课程复习与科研 · {len(entries)} 篇系统笔记</p>
-<nav class="site-nav"><a href="../index.html">首页</a><a href="knowledge-index.html">DeepSeek 知识库</a><a href="doubao-index.html">豆包知识库</a></nav>
-</div></header>
-<main class="container">
-<nav class="crumbs"><a href="../index.html">首页</a> / 课程与科研笔记</nav>
-<h1 class="list-title">课程与科研笔记</h1>
-<p class="intro">这里把豆包对话里的大一大二专业课复习、以及科研讨论，逐条整理成系统、正式的学习笔记，按学科分组，完整覆盖知识点与结论。</p>
-{''.join(secs)}
-</main>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
-<script src="../assets/blog.js" defer></script>
-</body>
-</html>
-"""
-    open(INDEX_OUT, "w", encoding="utf-8").write(page)
-    print(f"笔记：{len(entries)} 篇 -> articles/notes/ ; 索引 -> articles/notes-index.html")
+        entries.append(slug)
+    print("笔记：%d 篇 -> articles/notes/" % len(entries))
+
 
 if __name__ == "__main__":
     main()

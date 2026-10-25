@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>计算机组成原理 · 总线、Cache 与存储层次</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"计算机组成原理 · 总线、Cache 与存储层次","date":"2026-10-24","tags":["课程笔记","计算机组成原理"],"category":"课程笔记","summary":"以总线、Cache、存储层次三条主线组织公式与算例：总线按连接范围分片内、系统、输入输出与通信四类，按传输信息分地址、数据、控制三组线，带宽计算须区分时钟周期与总线传输周期；Cache 给出命中率、平均访问时间、效率三式与两类典型算例，并逐档量化命中率对平均访问时间的影响；另含主从设备判据、三种总线仲裁对照、局部性、三种地址映射与容量换算，并订正原料中单位换算与命中率取整两处错误。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>计算机组成原理 · 总线、Cache 与存储层次</h1>
-<div class="meta">课程笔记 · 计算机组成原理 · 整理自豆包对话 豆包对话 · 四种总线的解释与对比 / 系统总线作业 / Cache 性能计算</div>
+<div class="meta">课程笔记 · 计算机组成原理</div>
 <h2>一、概述</h2>
 <p>本文把本科阶段关于计算机组成原理的几次作业与复习讨论整理为一份系统笔记，内容集中在三个衔接的模块：<strong>总线</strong>（部件如何互连、一次搬多少位、一秒搬多少次）、<strong>Cache</strong>（命中率如何度量、平均访问时间如何计算）、<strong>存储层次</strong>（为何分层、各层职责）。</p>
 <p>笔者当时的困难有三处，至今仍有代表性：一是把「总线带宽」「数据传输率」「波特率」「比特率」当作同一件事的不同说法，致使串行通信与并行总线的题目混作一团；二是分不清主设备与从设备，误以为 CPU 恒为主、内存恒为从；三是在微秒与毫秒之间换算时多乘一次 $10^{-3}$，把 $0.08\ \mu s$ 写成 $0.08\ ms$，进而把整条带宽结果抬高三个数量级。这三处困惑正对应本文的三条计算主线。原料中另有关于树与二叉树、排序与图遍历的讨论，属数据结构范围，本文不予收录。</p>
@@ -192,10 +196,9 @@
 <tr><td>容量与芯片数</td><td>跨度转字节后除以单片容量，位扩展与字扩展分别配平</td><td>例 11 至例 15</td></tr>
 </table>
 <p>模块之间的逻辑关系是：总线决定数据搬运的通道宽度与节拍，存储层次决定数据放在哪一级，Cache 的命中率与平均访问时间则把前两者的收益量化为 CPU 可感知的延迟。抓住「谁在发起传输、一次搬多少位、搬一次要几个时钟周期、命中概率多大」这四问，本门课的计算题与概念题即可一并贯通。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 四种总线的解释与对比 / 系统总线作业 / Cache 性能计算</p>
-<a class="back-link" href="../study/computer-organization.html">← 返回 计算机组成原理</a>
+<a class="back-link" href="../../study/computer-organization.html">← 返回 计算机组成原理</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

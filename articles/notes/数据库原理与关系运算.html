@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据库原理 · 关系运算、SQL 查询与权限管理</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据库原理 · 关系运算、SQL 查询与权限管理","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"以关系模型的形式化定义为主线，梳理关系、元组、属性、域与候选码、主码、外码的术语层级及三类完整性约束；给出选择、投影、连接、除法的运算对照与五种基本运算的完备性，用象集完整推演 R÷S 得 {201,202} 的算例；归纳「书写时先连接再选择投影最保险、执行层应先选择后投影」的顺序结论，并整理 SQL 侧的等值连接写法、WHERE 与 HAVING 的分工、DELETE、DROP、TRUNCATE 的五项区别与库到行的授权粒度。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据库原理 · 关系运算、SQL 查询与权限管理</h1>
-<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 豆包对话 · 数据库基础题目解答</div>
+<div class="meta">课程笔记 · 数据库/MySQL</div>
 <h2>一、概述</h2>
 <p>本笔记聚焦原理层面，与前一篇《数据库与 MySQL · 复习与实操笔记》互补：后者记录环境搭建与实验操作，本文处理关系模型的术语体系、关系代数的运算规则、SQL 查询的原理性结论与权限管理。内容源自课程复习阶段的一组问答，按知识逻辑重排，并保留了当时判断错误、事后被纠正的推理。原始对话依附于具体练习场景，本文只抽取其中的知识点，不保留练习题目与批改记录，人物与账户一律泛化。</p>
 <p>组织方式上有一条主轴：关系代数与 SQL 是同一件事的形式层与实现层——θ 连接对应 <code>FROM 多表 + WHERE 等值条件</code>，选择对应 <code>WHERE</code>，投影对应 <code>SELECT</code> 的列清单，除法对应「对全部……都满足」的查询。</p>
@@ -179,10 +183,9 @@ REVOKE UPDATE ON TABLE Student FROM U2 CASCADE;</code></pre>
 <ol><li><strong>把「交」或「连接」当基本运算</strong>。基本运算只有并、差、笛卡尔积、选择、投影五个：交由差导出，连接由笛卡尔积与选择组合，自然连接还多一步去重列的投影。</li><li><strong>除法按「相交」判定</strong>。象集与除数投影的关系是包含而非相交，否则部分匹配的元素会被误入选。</li><li><strong>投影时丢掉连接属性</strong>。为减少列数而投掉公共属性，后续自然连接在定义上不成立。</li><li><strong>把书写顺序当成执行顺序</strong>。先连接再选择投影便于书写且不易出错，优化策略却要求尽早选择；差别在逻辑计划与物理计划两个层面。</li><li><strong>行级条件写进 HAVING</strong>。<code>Grade &gt;= 60</code> 须逐行判断，只能放 <code>WHERE</code>；放进 <code>HAVING</code> 既易报错，又让不及格记录进入统计。</li><li><strong>DELETE 与 DROP 混用、误写星号或省略条件</strong>。删除列要走 <code>ALTER TABLE ... DROP COLUMN</code>；<code>DELETE</code> 后直接跟 <code>FROM</code>，且不可省略 <code>WHERE</code>。</li><li><strong>认为主码就是主属性，或用主码判定范式</strong>。主码是属性集合，主属性是其中单个属性；范式判定以全部候选码为准。</li><li><strong>混淆安全性与完整性的防范对象</strong>，或把强制存取控制的读写方向记反，或以为 <code>SELECT</code> 会激活触发器。前者防非法用户与非法操作、后者防不合语义的数据；密级规则是下读上写；触发器只响应数据修改。</li></ol>
 <h2>六、总结要点</h2>
 <ol><li>关系模型以「关系是元组的集合」为出发点，术语围绕元组、属性、域、目与四组「码」展开；码默认指候选码，主码只是人为选定的代表，范式判定只认候选码。</li><li>完整性由实体（主码非空且唯一）、参照（外码取空或等于已存在主码值）、用户定义（业务规则）三类保证，违约处理为拒绝执行、级联、置空；参照表与被参照表可为同一张表。</li><li>关系代数以集合运算为基础，五种基本运算构成完备集；并、交、差要求同目且对应属性同域；优化的首要策略是尽早做选择。</li><li>连接构成式为 $R \bowtie_{\theta} S = \sigma_{\theta}(R \times S)$；除法判据是象集包含，$\{C1,C2,C3\}$、$\{C1,C2\}$、$\{C1\}$ 对 $S = \{C1,C2\}$ 的包含判定给出 $R \div S = \{201,202\}$，结果为 1 目 2 个元组。</li><li>SQL 侧与代数一一对应：等值连接把关系并列于 <code>FROM</code>、条件写全于 <code>WHERE</code>；<code>WHERE</code> 过滤行、<code>HAVING</code> 过滤分组，聚集条件只能进 <code>HAVING</code>。</li><li><code>DELETE</code>、<code>DROP</code>、<code>TRUNCATE</code> 按五项（删除对象、表是否保留、能否恢复、自增列、权限级别）区分，口诀「DELETE 删行不删表，DROP 删表全干掉」；<code>TRUNCATE</code> 更快、重置自增且不可带条件。</li><li>权限粒度由库、表、列、行逐级变细，越小越灵活而开销越大；<code>WITH GRANT OPTION</code> 决定能否转授，<code>CASCADE</code> 与 <code>RESTRICT</code> 决定回收方式；自主存取控制灵活，强制存取控制按密级下读上写，叠加为两级防线。</li><li>原理性结论：视图承担安全、简化查询与逻辑独立性；聚簇索引一表仅一个且命中即得整行；触发器只响应数据修改，与声明式外键级联二选一，跨表全局约束须落到断言。</li></ol>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 数据库基础题目解答</p>
-<a class="back-link" href="../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

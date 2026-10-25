@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>最优化 · 线性规划与单纯形法</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"最优化 · 线性规划与单纯形法","date":"2026-10-24","tags":["课程笔记","高等数学/最优化"],"category":"课程笔记","summary":"从标准形与可行域的多面体几何出发，说明顶点与基本可行解的等价、最优解必在顶点达到以及无界性的极方向判据。随后拆解单纯形表的构造、检验数含义、入基与比值检验、退化与循环，给出一个两变量问题逐张表算到最优解的完整过程。人工变量与大 M 法、对偶问题与对偶单纯形、影子价格与右端项灵敏度范围一并整理，并纠正原料初始表未化典式的问题。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>最优化 · 线性规划与单纯形法</h1>
-<div class="meta">课程笔记 · 高等数学/最优化 · 整理自豆包对话 豆包对话 · 对偶单纯形法求解线性规划 / 线性规划例题解法与朴素思路的关系 / 最优化基础习题解答 / 最优化基础理论与方法核心知识点提取</div>
+<div class="meta">课程笔记 · 高等数学/最优化</div>
 <h2>一、概述：线性规划在优化课程中的位置</h2>
 <p>线性规划（LP）是最简单的一类约束优化：目标函数与全部约束都是线性的。它既是凸优化的特例，也是整数规划、网络流、鲁棒优化等模型的松弛基础。原料把线性规划安排在约束规划与对偶理论之后，用意很清楚：先建立「可行域是多面体、最优解在顶点」的几何直觉，再用单纯形法把「从一个顶点走到相邻顶点」变成可执行的表格运算。</p>
 <p>本篇按四条线索展开。第一条是标准形与几何：把任意线性规划化成 $\min c^{\mathrm{T}}x$、$Ax=b$、$x\geq0$，并说明可行域的顶点就是基本可行解。第二条是单纯形表：检验数、入基、比值检验、出基与换基，配一个两变量问题的完整手算。第三条是初始基：松弛变量、人工变量、大 M 法与两阶段法。第四条是对偶：对偶问题的构造、对偶单纯形法与灵敏度分析。</p>
@@ -247,10 +251,9 @@
 <p>两个等价：顶点等价于基本可行解；原问题与对偶问题在最优值上相等。</p>
 <p>三张表：原始单纯形表从可行基出发，保原可行、修对偶可行；对偶单纯形表从对偶可行基出发，保对偶可行、修原可行；灵敏度表把最优基、影子价格与右端范围排在一起。</p>
 <p>计算流程则是：化标准形—找初始基（松弛变量或人工变量）—算检验数—判最优或无界—入基与比值检验—换基—回到检验数。每一步都只做线性代数，不需要重新画图。把这条流程走熟，再回头看几何，顶点、边、极方向与影子价格就会一一对应起来。最后提醒一句：所有判据都依附于「极小化」或「极大化」的约定，做题时先在第一行写下目标方向，再决定检验数取正还是取负，能避免大半符号错误；熟练之后，一张两变量表五六分钟就能走到最优。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 对偶单纯形法求解线性规划 / 线性规划例题解法与朴素思路的关系 / 最优化基础习题解答 / 最优化基础理论与方法核心知识点提取</p>
-<a class="back-link" href="../study/math-optimization.html">← 返回 高等数学/最优化</a>
+<a class="back-link" href="../../study/math-optimization.html">← 返回 高等数学/最优化</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

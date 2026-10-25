@@ -6,53 +6,42 @@
 <title>搜索 · 科研与学习档案</title>
 <meta name="description" content="按标题搜索全站文章与笔记。" />
 <link rel="stylesheet" href="assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
-<body class="search">
-<header class="site-header">
-  <div class="container">
-    <div class="side-brand">
-      <a class="side-avatar" href="index.html" aria-label="回到首页">RS</a>
-      <div>
-        <h1 class="site-title">科研与学习档案</h1>
-        <p class="site-subtitle">Research &amp; Study Archive</p>
-      </div>
-    </div>
-    <nav class="site-nav"><a href="index.html">首页</a><a href="research.html">科研<span class="n">18</span></a><a href="study.html">学习<span class="n">75</span></a><a href="essays.html">随笔<span class="n">2</span></a><a class="active" href="search.html">搜索</a></nav>
-<div class="side-foot"><a href="articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-    
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="research.html">科研</a><a href="study.html">学习</a><a href="essays.html">随笔</a><a class="active" href="search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
 
-<main class="container">
 
-<section class="search-page">
-  <p class="eyebrow"><span class="dot"></span>SEARCH</p>
+<main class="wrap"><div class="search-page">
   <h1>搜索</h1>
-  <p class="lede">按<b>标题</b>搜索全站的文章、笔记与学科页。输入即筛选，不需要回车。</p>
-  <div class="search-box">
-    <input id="search-q" type="search" placeholder="输入标题关键词，例如「扩散」「TCP」「MySQL」" autocomplete="off" aria-label="搜索标题" />
-    <span id="search-count" class="search-count"></span>
+  <p class="lede">按标题搜索全站的文章与笔记。输入即筛选，不需要回车。</p>
+  <div class="search-field">
+    <input id="search-q" type="search" placeholder="输入标题关键词" autocomplete="off" aria-label="搜索标题" />
+    <span class="count" id="search-count"></span>
   </div>
+  <p class="search-hint">共收录 <b id="search-total">—</b> 条内容　按 <kbd>/</kbd> 可随时回到这里</p>
   <ul id="search-results" class="search-results"></ul>
-  <p id="search-hint" class="search-hint">共收录 <b id="search-total">—</b> 条内容。按 <kbd>/</kbd> 可随时回到这里。</p>
 
   <div id="search-default" class="search-default">
-    <p class="search-sec">按板块浏览</p>
-    <div class="quick-links">
-      <a class="quick-link" href="research.html"><b>科研</b><span>18 篇文章 · 80 份调研档案</span></a>
-      <a class="quick-link" href="study.html"><b>学习</b><span>75 篇笔记 · 20 门学科</span></a>
-      <a class="quick-link" href="essays.html"><b>随笔</b><span>2 篇</span></a>
-    </div>
-    <p class="search-sec">全部学科</p>
-    <div class="quick-chips"><a href="study/network.html">计算机网络<span>4</span></a><a href="study/computer-organization.html">计算机组成原理<span>4</span></a><a href="study/os-linux.html">操作系统/Linux<span>5</span></a><a href="study/data-structures.html">数据结构与算法<span>6</span></a><a href="study/discrete-math.html">离散数学<span>3</span></a><a href="study/database.html">数据库/MySQL<span>7</span></a><a href="study/javaweb.html">JavaWeb<span>7</span></a><a href="study/web-frontend.html">Web开发/前端<span>1</span></a><a href="study/machine-learning.html">机器学习<span>6</span></a><a href="study/deep-learning.html">深度学习/神经网络<span>4</span></a><a href="study/image-processing.html">数字图像处理<span>2</span></a><a href="study/big-data.html">大数据技术<span>2</span></a><a href="study/math-optimization.html">高等数学/最优化<span>5</span></a><a href="study/linear-algebra.html">线性代数<span>1</span></a><a href="study/probability.html">概率论/数理统计<span>1</span></a><a href="study/signals-systems.html">信号与系统<span>2</span></a><a href="study/physics.html">大学物理<span>2</span></a><a href="study/blockchain.html">区块链/分布式<span>3</span></a><a href="study/english.html">英语/雅思<span>5</span></a><a href="study/politics.html">思政/毛概/近代史<span>5</span></a></div>
+    <p class="search-sec">按学科</p>
+    <ul class="idx"><li><a href="study/network.html">计算机网络<b>4</b></a></li><li><a href="study/computer-organization.html">计算机组成原理<b>4</b></a></li><li><a href="study/os-linux.html">操作系统/Linux<b>5</b></a></li><li><a href="study/data-structures.html">数据结构与算法<b>6</b></a></li><li><a href="study/discrete-math.html">离散数学<b>3</b></a></li><li><a href="study/database.html">数据库/MySQL<b>7</b></a></li><li><a href="study/javaweb.html">JavaWeb<b>7</b></a></li><li><a href="study/web-frontend.html">Web开发/前端<b>1</b></a></li><li><a href="study/machine-learning.html">机器学习<b>6</b></a></li><li><a href="study/deep-learning.html">深度学习/神经网络<b>4</b></a></li><li><a href="study/image-processing.html">数字图像处理<b>2</b></a></li><li><a href="study/big-data.html">大数据技术<b>2</b></a></li><li><a href="study/math-optimization.html">高等数学/最优化<b>5</b></a></li><li><a href="study/linear-algebra.html">线性代数<b>1</b></a></li><li><a href="study/probability.html">概率论/数理统计<b>1</b></a></li><li><a href="study/signals-systems.html">信号与系统<b>2</b></a></li><li><a href="study/physics.html">大学物理<b>2</b></a></li><li><a href="study/blockchain.html">区块链/分布式<b>3</b></a></li><li><a href="study/english.html">英语/雅思<b>5</b></a></li><li><a href="study/politics.html">思政/毛概/近代史<b>5</b></a></li></ul>
+    <p class="search-sec">按板块</p>
+    <ul class="idx"><li><a href="research.html">科研<b>32</b></a></li><li><a href="study.html">学习<b>80</b></a></li><li><a href="essays.html">随笔<b>2</b></a></li></ul>
   </div>
-</section>
+</div></main>
 <script src="data/search-index.js"></script>
 
-</main>
 
-<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="assets/blog.js" defer></script>
 </body>
 </html>

@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据库与 MySQL · 复习与实操笔记</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据库与 MySQL · 复习与实操笔记","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"以学生选课数据库的四个实验为主线，梳理 MySQL 8.0 的安装配置与排错、Navicat 图形化操作、建表与约束、触发器、索引与视图、交互式 SQL 查询及用户权限管理，并归纳常见报错的成因与解决办法。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据库与 MySQL · 复习与实操笔记</h1>
-<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 012_MySQL安装指导与作业说明.md</div>
+<div class="meta">课程笔记 · 数据库/MySQL</div>
 <h2>一、概述</h2>
 <p>本笔记以&quot;学生选课数据库&quot;的四个实验为主线，记录从环境搭建到权限控制的完整实操路径：</p>
 <table>
@@ -348,10 +352,9 @@ GROUP BY Sclass, Cno;</code></pre>
 </table>
 <h2>四、小结</h2>
 <ol><li><strong>环境是第一步</strong>：安装路径必须纯英文、无空格，安装目录与数据目录分离，数据目录须为空；中文路径是初始化失败的首要原因。安装完成后以 <code>mysql&gt;</code> 提示符与服务状态双重验证。</li><li><strong>服务端与客户端分离</strong>：Navicat 只是前端，真正执行 SQL 与存储数据的是 MySQL 服务；服务未启动时任何客户端都无法连接。</li><li><strong>完整性由约束与触发器共同保证</strong>：主键与非空保证实体完整性，外键保证参照完整性，唯一、CHECK、默认值实现用户自定义完整性，触发器承担跨表、跨事件的复杂维护（如学分累加、日志登记）。</li><li><strong>插入顺序即依赖顺序</strong>：主表在前、子表在后；自引用外键需临时关闭 <code>FOREIGN_KEY_CHECKS</code>。删除则相反，先子后父。</li><li><strong>报错即约束生效</strong>：1062（主键/唯一）、1451（删除父行）、1452（引用不存在）、1406（超长）、1048（非空）都应被理解为完整性机制正常工作的证据，而非程序缺陷。</li><li><strong>权限验证必须换身份</strong>：用 root 执行无法验证权限，须以目标用户建立独立连接；MySQL 用户由&quot;用户名 + 主机&quot;标识，授权需写明&quot;库.表&quot;，修改后需 <code>FLUSH PRIVILEGES</code>。</li><li><strong>WHERE 与 HAVING 的分工</strong>：WHERE 过滤原始行、不可用聚集函数；HAVING 过滤分组结果、可用聚集函数，执行顺序为 WHERE → GROUP BY → 聚集函数 → HAVING。</li></ol>
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/012_MySQL安装指导与作业说明.html">012_MySQL安装指导与作业说明.md</a></p>
-<a class="back-link" href="../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

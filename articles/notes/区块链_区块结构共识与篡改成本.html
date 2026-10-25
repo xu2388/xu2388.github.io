@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>区块链与比特币原理 · 区块结构、共识与篡改成本</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"区块链与比特币原理 · 区块结构、共识与篡改成本","date":"2026-10-24","tags":["课程笔记","区块链/分布式"],"category":"课程笔记","summary":"区块头只有 80 字节，却通过默克尔根、父哈希、时间戳、难度目标与随机数把交易、历史与算力绑定在一起。本文拆解区块头字段与默克尔树，演算 Bits 到目标哈希的换算与难度定义，说明最长链规则与自然分叉的处理，推导落后 k 个区块被追上的赌徒破产概率，估算 51% 攻击的硬件与电力成本，并厘清难度调整、减半、2100 万上限与轻节点 SPV 的能力边界。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>区块链与比特币原理 · 区块结构、共识与篡改成本</h1>
-<div class="meta">课程笔记 · 区块链/分布式 · 整理自豆包对话 豆包对话 · 比特币区块结构与区块链篡改分析 / 比特币四年减半说法的由来分析 / 区块链比特币知识点讲解</div>
+<div class="meta">课程笔记 · 区块链/分布式</div>
 <h2>一、概述：80 字节如何锁住全部历史</h2>
 <p>一个比特币区块由区块头与区块体组成。区块体装着几百到几千笔交易，大小以兆字节计；区块头固定 80 字节，只有六个字段。所有「不可篡改」「最长链」「难度」「轻节点验证」的讨论，最终都落在这 80 字节上：默克尔根把区块体压缩成一个摘要，父哈希把上一个区块压缩成一个摘要，时间戳给出时序，Bits 给出目标，Nonce 给出工作量证明的解。区块哈希再对整个头部做一次双重 SHA256，成为下一个区块的父哈希。</p>
 <p>本文按「结构 → 默克尔树 → 工作量证明 → 分叉 → 追上概率 → 攻击成本 → 难度与减半 → 轻节点」的顺序展开。重点不是背诵六个字段的名字，而是理解每个字段<strong>改变了什么、谁有权改、改了以后谁会发现</strong>。第四节起会给出可手算的概率与成本模型，并在第十一节集中勘误原料中的三处数值与口径问题。</p>
@@ -228,10 +232,9 @@ reward   = 50 / (2 ** halvings)   # 以 BTC 计</code></pre>
 <p>区块头的六个字段构成一条自洽的因果链：默克尔根压缩区块体，父哈希绑定历史，时间戳给出时序，Bits 与 Nonce 承载工作量。区块哈希对整个头部做双重 SHA256，任何字段改动都会改变它，而子区块又引用它，于是「改一笔交易」必然升级为「重挖后续所有区块」。</p>
 <p>共识层用累计工作量最大链处理自然分叉，用确认数把概率风险量化。第六节的赌徒破产模型给出核心结论：落后 $k$ 块被追平的概率是 $(\alpha/\beta)^k$，算力越接近一半，衰减越慢；51% 不是「瞬间成功」，而是「期望时间有限」。第七节把攻击成本拆成硬件、电力、机会成本三块，说明算力控制的是历史选择权，不是签名伪造权。</p>
 <p>发行层用 210000 块的计数规则把减半与时间解耦，用等比级数把总量锁在 2100 万，用整数聪截断把实际发行压到 20 999 999.9769。难度调整每 2016 块把出块速率拉回 10 分钟，但只能锚定长期均值，且自身带有约 2.23% 的统计噪声。最后，轻节点用默克尔路径与区块头换来轻量验证，代价是把交易合法性的判断外包给算力多数——理解这一点，才能正确使用「SPV 已验证」这句话。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 比特币区块结构与区块链篡改分析 / 比特币四年减半说法的由来分析 / 区块链比特币知识点讲解</p>
-<a class="back-link" href="../study/blockchain.html">← 返回 区块链/分布式</a>
+<a class="back-link" href="../../study/blockchain.html">← 返回 区块链/分布式</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

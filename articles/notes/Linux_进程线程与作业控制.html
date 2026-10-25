@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>操作系统/Linux · 进程、线程与作业控制</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"操作系统/Linux · 进程、线程与作业控制","date":"2026-10-24","tags":["课程笔记","操作系统/Linux"],"category":"课程笔记","summary":"从资源归属与调度单位两条线区分进程和线程，梳理 task_struct 与 R/S/D/T/Z 状态迁移、fork 的写时复制与返回值、exec 换映像、wait 回收退出码，再进入会话与进程组之上的作业控制、常用信号的语义、ps/top/pgrep 的排查路径，以及僵尸、孤儿进程的成因与 Python 多进程在临时目录、共享内存和 CUDA 上的典型故障。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>操作系统/Linux · 进程、线程与作业控制</h1>
-<div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · 线程与进程核心知识点及15道题精讲 / Java多线程与进程线程基础题目 / 查看自己的进程 / Python 多进程错误 / Python进程清理方法</div>
+<div class="meta">课程笔记 · 操作系统/Linux</div>
 <h2>一、概述：两条线看同一个任务</h2>
 <p>进程与线程的区别，背定义容易，用起来难。真正有用的是两句话：进程是资源分配与隔离的单位，线程是 CPU 调度的单位。前者解释为什么两个进程的变量互不可见、一个进程崩溃通常不拖垮另一个；后者解释为什么同一进程内的线程切换比跨进程切换便宜、为什么多线程能并行。</p>
 <p>本文按「模型 → 控制 → 观测 → 故障」组织：先讲资源归属与状态机，再讲 fork、exec、wait 这三个原语，然后讲会话与作业控制、信号，最后落到 ps、top、pgrep 的排查路径和 Python 多进程的实际坑。</p>
@@ -402,10 +406,9 @@ pkill -TERM -u &quot;$(whoami)&quot; -f &#x27;train.py&#x27;</code></pre>
 <tr><td>Python 多进程</td><td>启动方式要显式；<code>__main__</code> 保护；<code>/tmp</code>、<code>/dev/shm</code>、inode 三处查；CUDA 用 spawn</td></tr>
 </table>
 <p>进程这一章的内容多，但线索只有一条：谁持有资源、谁在等、谁负责回收。把这三问套到 fork、作业控制、信号和僵尸上，零散的命令就会落到同一个模型里；排查时也不会停留在「试试 777、试试 kill -9」这种碰运气的层面。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 线程与进程核心知识点及15道题精讲 / Java多线程与进程线程基础题目 / 查看自己的进程 / Python 多进程错误 / Python进程清理方法</p>
-<a class="back-link" href="../study/os-linux.html">← 返回 操作系统/Linux</a>
+<a class="back-link" href="../../study/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

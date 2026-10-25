@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数字图像处理 · 小波变换与多尺度分析</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数字图像处理 · 小波变换与多尺度分析","date":"2026-10-24","tags":["课程笔记","数字图像处理"],"category":"课程笔记","summary":"傅里叶变换给出全局频率，却丢掉了频率出现的位置；短时傅里叶用固定窗换回局部性，又受限于时频分辨率的不确定关系。小波用可伸缩的窗解决这一矛盾。本文梳理连续与离散小波、多分辨率分析与尺度函数，手算 Haar 的分解重构与二维四子带，给出阈值去噪流程，并结合实验数据讨论小波卷积在分割网络中的作用、代价及其与金字塔和 UNet 的关系。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数字图像处理 · 小波变换与多尺度分析</h1>
-<div class="meta">课程笔记 · 数字图像处理 · 整理自豆包对话 豆包对话 · 基于小波卷积的医学图像分割模型对比实验报告</div>
+<div class="meta">课程笔记 · 数字图像处理</div>
 <h2>一、概述：傅里叶之后为什么还要小波</h2>
 <p>傅里叶变换把信号拆成一组全局的正弦波，回答「有哪些频率、各占多强」，却不回答「这个频率在什么时候出现」。对平稳信号这足够了；对图像这种处处有突变、边缘只占少数像素的信号，全局频谱把一条边缘的能量摊到所有频率上，位置信息被积分掉。短时傅里叶变换（STFT）加窗找回局部性，但窗宽固定：窗窄则时间分辨率高、频率分辨率低，窗宽则相反，而且这个取舍对所有频率一视同仁。小波变换让窗宽随频率变化——高频用窄窗、低频用宽窗——从而在同一个变换里兼顾「哪里」与「多快」。</p>
 <p>本文的写作口径需要先说明：原料中关于小波的唯一材料是一份医学图像分割实验报告，它给出了小波卷积的工程细节与实验数字，但没有小波数学推导。因此第二至七节的公式、定义与算例按数字图像处理通行教材口径整理（连续小波、多分辨率分析、Mallat 快速算法、Haar 变换、阈值去噪），第八节的实验数据来自原料报告，第九节讨论与金字塔、UNet 的关系。凡原料数值与复算不符之处，在第十节集中勘误。</p>
@@ -279,10 +283,9 @@
 <p>从傅里叶到短时傅里叶再到小波，问题链只有一句：<strong>想要频率，就失去位置；想要位置，就失去频率分辨率</strong>。STFT 用固定窗做折中，小波用随尺度伸缩的窗把折中变成「分频段定制」。连续小波给出尺度-平移平面上的冗余表示，离散二进小波用滤波器组把它变成 $O(N)$ 的正交变换；多分辨率分析用嵌套子空间 $V_j$ 与细节空间 $W_j$ 解释「近似 + 细节」的分解，双尺度方程把这一切落到一对低通/高通滤波器上。</p>
 <p>Haar 的 4 点算例说明分解只是换基：$[4,6,10,12]\to[16,-6,-1.4142,-1.4142]$，能量 296 不变，重构逐点还原。二维可分离变换把图像拆成 LL、LH、HL、HH 四个子带，$4\times4$ 斜坡图的算例给出 $HH=0$、$LH=-2$、$HL=-4$，直观展示「线性结构被压缩成常数」。阈值去噪利用稀疏性，在系数域杀小留大，硬阈值保幅、软阈值保连续，通用阈值 $T=\sigma\sqrt{2\ln N}$ 给出一个可复现的起点。</p>
 <p>小波卷积把 DWT/IDWT 塞进分割网络，用可逆下采样换掉池化，用子带卷积换更大的有效感受野。实验报告显示它在充分微调后带来约 0.6 个百分点的 Dice 提升、参数量几乎不变，但收敛慢、对插入方式敏感，且小数据上的优势需要更多重复实验支撑。把这条工程线索放回经典框架，会发现它与高斯/拉普拉斯金字塔、UNet 的跳跃连接是同一件事的不同实现：都在回答「如何在缩小尺寸的同时，不丢掉边缘与位置」。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 基于小波卷积的医学图像分割模型对比实验报告</p>
-<a class="back-link" href="../study/image-processing.html">← 返回 数字图像处理</a>
+<a class="back-link" href="../../study/image-processing.html">← 返回 数字图像处理</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

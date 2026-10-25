@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>最优化 · 无约束方法与拟牛顿 BFGS</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"最优化 · 无约束方法与拟牛顿 BFGS","date":"2026-10-24","tags":["课程笔记","高等数学/最优化"],"category":"课程笔记","summary":"从无约束问题的最优性条件与下降算法框架出发，解释搜索方向与步长的分工，比较精确线搜索、Armijo 与 Wolfe 条件的适用场合。随后分析梯度下降的线性收敛率与条件数的关系，推导牛顿方程并说明其二阶收敛与失效情形，引入阻尼牛顿。再由拟牛顿方程推出 DFP 与 BFGS 的秩二校正公式，用二变量二次函数完整演算 BFGS 两步收敛，并比较线搜索与信赖域、病态问题上的表现。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>最优化 · 无约束方法与拟牛顿 BFGS</h1>
-<div class="meta">课程笔记 · 高等数学/最优化 · 整理自豆包对话 豆包对话 · 无约束最优化方法的一般结构知识点与题目 / BFGS算法解释 / 第三章无约束规划方法试卷及答案 / 最优化答疑2</div>
+<div class="meta">课程笔记 · 高等数学/最优化</div>
 <h2>一、概述：无约束方法是优化的发动机</h2>
 <p>无约束问题写成</p>
 <p>$$ \min_{x\in\mathbb{R}^n}\ f(x), $$</p>
@@ -270,10 +274,9 @@
 <h2>勘误</h2>
 <p>原料的判断题解析把「Hesse 矩阵奇异」列为阻尼牛顿法可以修正的情形，这个说法不准确。阻尼牛顿法只把固定步长 $1$ 换成线搜索步长，方程 $H_kd=-\nabla f(x_k)$ 仍然要解；$H_k$ 奇异时方程无解或不唯一，线搜索无从进行。正确做法是给 Hesse 矩阵加正则项 $H_k+\mu I$、改用拟牛顿方向，或在奇异点退回负梯度方向。</p>
 <p>原料在介绍 BFGS 时强调必须配合精确线搜索。精确线搜索当然可以使用，但并非必要条件；满足 Wolfe 条件的非精确线搜索同样能保证 $y^{\mathrm{T}}s&gt;0$ 与超线性收敛，实际软件几乎都采用后者。把「精确线搜索」写成 BFGS 的前提，会把算法的适用范围说窄。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 无约束最优化方法的一般结构知识点与题目 / BFGS算法解释 / 第三章无约束规划方法试卷及答案 / 最优化答疑2</p>
-<a class="back-link" href="../study/math-optimization.html">← 返回 高等数学/最优化</a>
+<a class="back-link" href="../../study/math-optimization.html">← 返回 高等数学/最优化</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>计算机网络 · 应用层协议与 DNS 解析流程</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"计算机网络 · 应用层协议与 DNS 解析流程","date":"2026-10-24","tags":["课程笔记","计算机网络"],"category":"课程笔记","summary":"以「报文语义、连接复用、身份与加密、名字到地址」四条线组织应用层：列 HTTP/1.1 的方法、状态码与缓存首部，对照 HTTP/2 的二进制分帧、多路复用与 HPACK，指出它未消除传输层队头阻塞；Cookie 与 Session 给出属性表与会话困境；HTTPS 拆 TLS 1.2 与 1.3 的握手轮次与证书链五步校验；DNS 区分递归与迭代并说明 CDN 如何介入解析。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>计算机网络 · 应用层协议与 DNS 解析流程</h1>
-<div class="meta">课程笔记 · 计算机网络 · 整理自豆包对话 豆包对话 · 应用层协议与域名解析 / HTTP 长短连接与状态码 / DNS 迭代查询讲解 / FTP 与邮件协议族</div>
+<div class="meta">课程笔记 · 计算机网络</div>
 <h2>一、概述：应用层在解决哪四类问题</h2>
 <p>应用层不给上层提供服务，它直接面向应用进程。它的协议看上去五花八门，其实只在回答四个问题：<strong>说什么</strong>（报文语义）、<strong>说多久</strong>（连接复用）、<strong>凭什么相信对方</strong>（身份与加密）、<strong>怎么找到对方</strong>（名字到地址）。HTTP 与邮件协议属第一类，HTTP/1.1 与 HTTP/2 的差别集中在第二类，HTTPS 与 Cookie/Session 属第三类，DNS 与 CDN 属第四类。</p>
 <p>三篇既有笔记的分工：</p>
@@ -281,10 +285,9 @@ Accept: text/html</code></pre>
 <tr><td>5</td><td>DNS 迭代查询「最多 4 次」</td><td>该结论针对特定域名层级，计数口径（只数本地服务器外发报文）在另一篇笔记中已固定，本文不重算</td><td>层级数等于权限域层数加根一次</td></tr>
 </table>
 <p>另有两处必须标注为本文自设口径，不能当作原料数据引用：其一，第 5.6 节与第八节的往返账目表，假设为「每个往返 50 ms、忽略带宽与解析、DNS 未命中计 1 个往返、每资源 1 个往返」，原料只描述流程顺序、未给任何时延参数，故表中数字全部按该假设算出；其二，第 6.5 节的缓存回源比例按「TTL 300 秒、每秒 1000 次查询、单台本地服务器」算出，仅用于说明量级，不代表任何真实服务的命中率。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 应用层协议与域名解析 / HTTP 长短连接与状态码 / DNS 迭代查询讲解 / FTP 与邮件协议族</p>
-<a class="back-link" href="../study/network.html">← 返回 计算机网络</a>
+<a class="back-link" href="../../study/network.html">← 返回 计算机网络</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

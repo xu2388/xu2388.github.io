@@ -19,8 +19,6 @@ if [ "$DO_BUILD" = 1 ]; then
   echo "==> [1/3] 构建"
   python3 build_articles.py
   python3 build_notes.py
-  python3 build_knowledge_base.py
-  python3 build_doubao_kb.py
   python3 build_site.py
   python3 fix_nav.py
 else

@@ -6,42 +6,40 @@
 <title>机器学习 · 学习 · 科研与学习档案</title>
 <meta name="description" content="机器学习的全部笔记（6 篇）。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
-<body class="hub hub--study">
-<header class="site-header">
-  <div class="container">
-    <div class="side-brand">
-      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
-      <div>
-        <h1 class="site-title">科研与学习档案</h1>
-        <p class="site-subtitle">Research &amp; Study Archive</p>
-      </div>
-    </div>
-    <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-    
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../research.html">科研</a><a class="active" href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
 
-<main class="container">
 
-<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../study.html">学习</a> <span>/</span> 机器学习</nav>
-<header class="subj-head">
-  <p class="eyebrow">AI 与数据</p>
-  <h1>机器学习</h1>
-  <p class="lede">特征工程、模型评估与调参 · 共 6 篇</p>
-</header>
-<ul class="article-list plain">
-<li><a href="../articles/notes/机器学习_模型评估与选择.html">机器学习 · 假设空间、模型评估与选择</a><span class="desc">经典机器学习评估侧笔记。版本空间由样例筛剩的假设组成，四条西瓜样例对应恰 3 个假设；含通配符与极端假设的假设空间规模为各属性取值数加一后连乘再加一，三属性各 3 值得 65。留一法是 k 等于样本数 m 的特例，k 越大训练集越接近全集，泛化误差估计的偏差越小，代价是训练次数线性增长。F1 是查准率与查全率的调和平均，原料把 P 加 R 误算为 1.8709 使 F1 得 0.8379，复核应为 0.8852；AUC 两例 0.62 与 2/3 复核一致；代价敏感两例因代价与 FPR、FNR 配对错位而偏低。神经网络结构不在本文范围。</span></li><li><a href="../articles/notes/机器学习_决策树与贝叶斯分类器.html">机器学习 · 决策树与贝叶斯分类器</a><span class="desc">决策树用一组 8 样本数据完整走出信息增益与基尼指数两条路径（H(S)=0.811、Gain(Z)=0.311、加权基尼 0.25，得同一棵树），以 15 样本信贷数据对照增益率，并补连续属性二分（最优划分点 0.6655）与缺失值折算（0.306→0.252）；贝叶斯一侧完整推演网球数据集（0.0053 对 0.0206）与心脏病贝叶斯网（P(HD)=0.49、后验 0.8033），梳理连乘下溢取对数、拉普拉斯修正与条件风险判据。全部数值经 Python 标准库复核，附勘误清单。</span></li><li><a href="../articles/notes/机器学习_数据预处理与特征工程.html">机器学习 · 数据预处理与特征工程</a><span class="desc">预处理决定模型能看到什么样的数据。缺失值要区分完全随机、随机与不可忽略三种机制，再决定删除、填补还是把缺失本身作为特征；异常值可用三倍标准差、四分位距或中位数绝对偏差识别，处理方式取决于异常是错误还是信号。标准化、归一化与稳健缩放适用于不同分布与模型，且必须在训练集上拟合。类别编码要区分无序与有序，目标编码必须做折外平滑以防泄漏。特征选择分过滤、包裹、嵌入三类。文中以轴承故障诊断与文本情感分类两个案例说明特征工程与泄漏的代价，并勘误原料中特征维数与重复特征两处问题。</span></li><li><a href="../articles/notes/机器学习_线性模型与支持向量机.html">机器学习 · 线性模型与支持向量机</a><span class="desc">复原线性模型与支持向量机两条主线：最小二乘正规方程的闭式解及其秩亏时的正则化处理；逻辑回归以 sigmoid 拟合对数几率、负对数似然为凸且可用梯度下降求解；LDA 以类内散度逆乘类均值差实现类内紧凑、类间可分。SVM 中几何间隔与两类间隔反比于权重范数，对偶化后解仅依赖支持向量；惩罚系数趋于无穷退化为硬间隔、趋于零只剩大间隔；核函数须对称且核矩阵半正定。四则 SVM 与三则回归算例均逐步复核，附勘误。</span></li><li><a href="../articles/notes/机器学习_聚类方法与簇质量评价.html">机器学习 · 聚类方法与簇质量评价</a><span class="desc">聚类是无监督划分，簇语义由使用者命名。距离层面以闵可夫斯基家族为主（p=1 曼哈顿、p=2 欧氏、p 趋于无穷取分量最大绝对差，0≤p&lt;1 不满足直递性），量纲不一致时必须先标准化。K 均值最小化簇内平方和，靠「指派—重心更新」交替下降，原料两道算例逐轮复核为 8.00→4.00 与 0.01299→0.00649；层次聚类以最小/最大/平均三种 linkage 合并并递推更新簇间距离；高斯混合用 EM 迭代责任度与三组参数，协方差取单位阵并硬指派时退化为 K 均值。簇质量以轮廓系数、DB 指数与 Jaccard/FM/Rand、纯度联合评价。原料高斯混合算例六处数值有误，已复核勘误。</span></li><li><a href="../articles/notes/机器学习_集成学习Boosting与Bagging.html">机器学习 · 集成学习 Boosting 与 Bagging</a><span class="desc">集成学习把多个个体学习器按某种策略结合，有效前提是个体足够准且彼此有差异。Bagging 用自助采样并行训练，以投票或平均降低方差，随机森林再加入特征随机选择；Boosting 串行纠错，AdaBoost 由指数损失推出样本权重与学习器权重，GBDT 拟合负梯度，XGBoost 对损失做二阶泰勒展开并正则化叶子权重。文中给出三轮权重手算、偏差方差分解、多样性度量与 Stacking 的折外预测，并勘误原料中权重顺序与投票上界的两处问题。</span></li>
+<main class="wrap">
+  <div class="crumbs"><a href="../index.html">首页</a><span>/</span><a href="../study.html">学习</a><span>/</span>机器学习</div>
+  <header class="list-head">
+    <h1>机器学习</h1>
+    <p class="lede">特征工程、模型评估与调参 · 共 6 篇</p>
+  </header>
+  <ul class="article-list">
+<li><a href="../articles/notes/机器学习_模型评估与选择.html">机器学习 · 假设空间、模型评估与选择</a><span class="desc">经典机器学习评估侧笔记。版本空间由样例筛剩的假设组成，四条西瓜样例对应恰 3 个假设；含通配符与极端假设的假设空间规模为各属性取值数加一后连乘再加一，三属性各 3 值得 65。留一法是 k 等于样本数 m 的特例，k 越大训练集越接近全集，泛化误差估计的偏差越小，代价是训练次数线性增长。F1 是查准率与查全率的调和平均，原料把 P 加 R 误算为 1.8709 使 F1 得 0.8379，复核应为 0.8852；AUC 两例 0.62 与 2/3 复核一致；代价敏感两例因代价与 FPR、FNR 配对错位而偏低。神经网络结构不在本文范围。</span></li>
+<li><a href="../articles/notes/机器学习_决策树与贝叶斯分类器.html">机器学习 · 决策树与贝叶斯分类器</a><span class="desc">决策树用一组 8 样本数据完整走出信息增益与基尼指数两条路径（H(S)=0.811、Gain(Z)=0.311、加权基尼 0.25，得同一棵树），以 15 样本信贷数据对照增益率，并补连续属性二分（最优划分点 0.6655）与缺失值折算（0.306→0.252）；贝叶斯一侧完整推演网球数据集（0.0053 对 0.0206）与心脏病贝叶斯网（P(HD)=0.49、后验 0.8033），梳理连乘下溢取对数、拉普拉斯修正与条件风险判据。全部数值经 Python 标准库复核，附勘误清单。</span></li>
+<li><a href="../articles/notes/机器学习_数据预处理与特征工程.html">机器学习 · 数据预处理与特征工程</a><span class="desc">预处理决定模型能看到什么样的数据。缺失值要区分完全随机、随机与不可忽略三种机制，再决定删除、填补还是把缺失本身作为特征；异常值可用三倍标准差、四分位距或中位数绝对偏差识别，处理方式取决于异常是错误还是信号。标准化、归一化与稳健缩放适用于不同分布与模型，且必须在训练集上拟合。类别编码要区分无序与有序，目标编码必须做折外平滑以防泄漏。特征选择分过滤、包裹、嵌入三类。文中以轴承故障诊断与文本情感分类两个案例说明特征工程与泄漏的代价，并勘误原料中特征维数与重复特征两处问题。</span></li>
+<li><a href="../articles/notes/机器学习_线性模型与支持向量机.html">机器学习 · 线性模型与支持向量机</a><span class="desc">复原线性模型与支持向量机两条主线：最小二乘正规方程的闭式解及其秩亏时的正则化处理；逻辑回归以 sigmoid 拟合对数几率、负对数似然为凸且可用梯度下降求解；LDA 以类内散度逆乘类均值差实现类内紧凑、类间可分。SVM 中几何间隔与两类间隔反比于权重范数，对偶化后解仅依赖支持向量；惩罚系数趋于无穷退化为硬间隔、趋于零只剩大间隔；核函数须对称且核矩阵半正定。四则 SVM 与三则回归算例均逐步复核，附勘误。</span></li>
+<li><a href="../articles/notes/机器学习_聚类方法与簇质量评价.html">机器学习 · 聚类方法与簇质量评价</a><span class="desc">聚类是无监督划分，簇语义由使用者命名。距离层面以闵可夫斯基家族为主（p=1 曼哈顿、p=2 欧氏、p 趋于无穷取分量最大绝对差，0≤p&lt;1 不满足直递性），量纲不一致时必须先标准化。K 均值最小化簇内平方和，靠「指派—重心更新」交替下降，原料两道算例逐轮复核为 8.00→4.00 与 0.01299→0.00649；层次聚类以最小/最大/平均三种 linkage 合并并递推更新簇间距离；高斯混合用 EM 迭代责任度与三组参数，协方差取单位阵并硬指派时退化为 K 均值。簇质量以轮廓系数、DB 指数与 Jaccard/FM/Rand、纯度联合评价。原料高斯混合算例六处数值有误，已复核勘误。</span></li>
+<li><a href="../articles/notes/机器学习_集成学习Boosting与Bagging.html">机器学习 · 集成学习 Boosting 与 Bagging</a><span class="desc">集成学习把多个个体学习器按某种策略结合，有效前提是个体足够准且彼此有差异。Bagging 用自助采样并行训练，以投票或平均降低方差，随机森林再加入特征随机选择；Boosting 串行纠错，AdaBoost 由指数损失推出样本权重与学习器权重，GBDT 拟合负梯度，XGBoost 对损失做二阶泰勒展开并正则化叶子权重。文中给出三轮权重手算、偏差方差分解、多样性度量与 Stacking 的折外预测，并勘误原料中权重顺序与投票上界的两处问题。</span></li>
 </ul>
-<div class="subj-foot">
   <a class="back-link" href="../study.html">← 返回学习</a>
-</div>
-
 </main>
 
-<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

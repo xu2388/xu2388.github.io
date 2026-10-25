@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化","date":"2026-10-24","tags":["课程笔记","深度学习/神经网络"],"category":"课程笔记","summary":"把 Transformer 拆成六类可检验组件：给出 FFN 的升维—激活—降维公式，说明缩放点积注意力的投影、缩放因子与多头切分，写清解码器上三角置负无穷的掩码自注意力、以目标侧为 query、源侧为 key/value 的交叉注意力，以及残差与层归一化的串联次序；并给出 Base（512 维、8 头、FFN 内维 2048）与 Big（1024 维、16 头、FFN 内维 4096）两种配置对照。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</h1>
-<div class="meta">课程笔记 · 深度学习/神经网络 · 整理自豆包对话 豆包对话 · 神经网络构成要素讲解</div>
+<div class="meta">课程笔记 · 深度学习/神经网络</div>
 <h2>一、概述</h2>
 <p>本笔记只做一件事：把 Transformer 拆成若干可以单独检验的组件，逐个给出公式、张量维度与执行次序。循环神经网络语言模型、Seq2Seq 编码器—解码器、注意力机制的历史动机与束搜索等解码策略已在《循环神经网络语言模型（RNN-LM）》一篇中展开，本文不再重复，只处理其内部构件。</p>
 <p>需要说明的是，本笔记所依据的材料是一次课程幻灯片的逐页讲解记录，幻灯片图像本身并不可得。因此凡属&quot;必须看图才讲得通&quot;的内容（图示连线、热力图、架构框图的空间排布），本文只用一句话概括结论，不补写图内细节；凡是 AI 回答中自足成立的公式、结构说明与配置数值，才完整收录。材料末尾关于课程报名、选题推荐与师生往来的部分与主题无关，一律不取。</p>
@@ -187,11 +191,10 @@ return y                            # 送线性层 + Softmax</code></pre>
 <h2>十、总结要点</h2>
 <ol><li>Transformer 每层由&quot;注意力混合位置信息 + FFN 逐位置加工 + 残差与层归一化稳住数值&quot;三件事构成，组件职责互不重叠。</li><li>FFN 的公式为 $\mathrm{FFN}(x)=\max(0,\,xW_1+b_1)W_2+b_2$，形状沿 $d_{model}\rightarrow d_{ff}\rightarrow d_{model}$ 走一圈，参数在位置间共享。</li><li>缩放点积注意力先投影再匹配，除以 $\sqrt{d_k}$ 是为压制高维点积的方差、避免 Softmax 梯度消失；多头即多组独立投影后拼接再经 $W^{O}$ 融合。</li><li>掩码自注意力把分数矩阵严格上三角置 $-\infty$，Softmax 后被屏蔽位置权重恰为 0，其必要性在于让训练与推理的可见信息集合一致。</li><li>交叉注意力取 $\text{MultiHead}(Q=\tilde{S},K=H,V=H)$，与自注意力唯一区别是 Query（与 Key/Value）的来路，去掉编码器它便整体消失。</li><li>残差连接与层归一化在每个子层后各出现一次，材料给出的是&quot;相加之后再归一化&quot;的次序；pre-LN 变体未见于材料，故本文不作对照。</li><li>Base 与 Big 的差异集中在 $d_{model}$、$h$ 与 $d_{ff}$ 三项，单头维度 64 与层数 6 保持不变，$d_{ff}$ 恒为 $d_{model}$ 的 4 倍（2048 与 4096）。</li></ol>
 <h2>参考文献</h2>
-<ol><li>Vaswani A., Shazeer N., Parmar N., et al. Attention Is All You Need. NeurIPS 2017. 表 3 给出 Base 与 Big 两种配置的 $N$、$d_{model}$、$d_{ff}$、$h$、$d_k$ 与参数量。裸链接：https://arxiv.org/abs/1706.03762 ；会议版 PDF：https://papers.neurips.cc/paper/7181-attention-is-all-you-need.pdf</li><li>课程幻灯片《Components of Neural Networks / Feed-Forward Layer / Attention / Transformer》逐页讲解记录（豆包对话，193 条消息），本文公式、结构说明与配置数值均取自该记录的文字部分；幻灯片图像不可得，依赖图示的内容未予收录。</li></ol>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 神经网络构成要素讲解</p>
-<a class="back-link" href="../study/deep-learning.html">← 返回 深度学习/神经网络</a>
+<ol><li>Vaswani A., Shazeer N., Parmar N., et al. Attention Is All You Need. NeurIPS 2017. 表 3 给出 Base 与 Big 两种配置的 $N$、$d_{model}$、$d_{ff}$、$h$、$d_k$ 与参数量。裸链接：https://arxiv.org/abs/1706.03762 ；会议版 PDF：https://papers.neurips.cc/paper/7181-attention-is-all-you-need.pdf</li><li>课程幻灯片《Components of Neural Networks / Feed-Forward Layer / Attention / Transformer》逐页讲解记录，本文公式、结构说明与配置数值均取自该记录的文字部分；幻灯片图像不可得，依赖图示的内容未予收录。</li></ol>
+<a class="back-link" href="../../study/deep-learning.html">← 返回 深度学习/神经网络</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

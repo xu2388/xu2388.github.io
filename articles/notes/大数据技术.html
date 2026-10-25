@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>大数据技术原理与应用 · 复习笔记</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"大数据技术原理与应用 · 复习笔记","date":"2026-10-24","tags":["课程笔记","大数据技术"],"category":"课程笔记","summary":"系统梳理 Hadoop 的起源与五大特点、HDFS 主从架构与读写流程、MapReduce 1.x 四组件与 Shuffle 全流程，并附教材填空题、判断题、简答题的标准答案。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>大数据技术原理与应用 · 复习笔记</h1>
-<div class="meta">课程笔记 · 大数据技术 · 整理自豆包对话 008_大数据技术原理与应用和信号与系统.md</div>
+<div class="meta">课程笔记 · 大数据技术</div>
 <h2>一、概述</h2>
 <p>Hadoop 是面向海量数据的开源分布式计算平台，其技术体系由<strong>分布式存储</strong>与<strong>分布式计算</strong>两条主线构成：HDFS 负责把大文件切块后分散存放在集群各节点，MapReduce 负责把大计算任务拆分为小任务并在多节点并行执行后汇总结果。二者共同支撑起&quot;分而治之&quot;的大数据处理范式，其余组件（Hive、HBase、Pig、Mahout、ZooKeeper、Flume、Sqoop、Ambari）均建立在这两大基石之上。</p>
 <p>本笔记按&quot;平台总体—存储层—计算层—运行环境&quot;的顺序组织，重点掌握三类内容：HDFS 的角色分工与副本机制、MapReduce 的组件层级与调度关系、Shuffle 的分区排序归并过程。</p>
@@ -104,10 +108,9 @@ hdfs dfs -ls -har hdfs:///path/xxx.har</code></pre>
 <p><strong>例 10（简答）</strong> 简述 MapReduce 的完整运行流程。 答：作业提交（Client 打包 JAR 至 HDFS 并提交 JobTracker）→ 全局调度（拆分 Map/Reduce Task，按心跳上报的空闲 slot 派发）→ Map 并行计算（InputFormat 解析 → <code>map()</code> → partition → 溢写排序 → 本地有序文件）→ Shuffle（Copy 拉取 + Sort 归并分组）→ Reduce 聚合（<code>reduce()</code> → OutputFormat 写 HDFS）→ JobTracker 标记作业完成。</p>
 <h2>四、小结</h2>
 <p>Hadoop 以&quot;廉价机器 + 多副本 + 并行计算&quot;实现高可靠、高扩展、高容错、低成本的大数据处理。HDFS 用 NameNode 管元数据、DataNode 存数据块、三副本跨机架保可靠、心跳与块报告保可运维；MapReduce 用 JobTracker 统一调度、TaskTracker 分节点执行、slot 量化资源，并以 Shuffle 完成&quot;按 key 分拣、汇聚、排序、分组&quot;的关键衔接。理解&quot;谁是主、谁是从、数据在哪、按什么规则流动&quot;这四条线索，即可串起全部考点。</p>
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/008_大数据技术原理与应用和信号与系统.html">008_大数据技术原理与应用和信号与系统.md</a></p>
-<a class="back-link" href="../study/big-data.html">← 返回 大数据技术</a>
+<a class="back-link" href="../../study/big-data.html">← 返回 大数据技术</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

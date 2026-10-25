@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet","date":"2026-10-24","tags":["研究","虚拟染色/科研"],"category":"研究","summary":"面向实验室共享 GPU 服务器的上机操作路线，按「账号与环境准备 → DICOM 转 NIfTI → 预处理与配准 → GPU 侧依赖 → 排队与训练 → 容器化」的顺序，整理 dcm2niix 与 find 批量转换写法、FSL 的 bet/flirt/fast 分工、CUDA 与 cuDNN、PyTorch 安装通道的版本对应、Slurm 的 sbatch 关键参数、nnUNet 规划预处理与训练的命令顺序，以及 Docker/Singularity 镜像片段，并保留权限、软件源、pip 受限等真实卡点。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet</h1>
-<div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 豆包对话 · 医学影像实验室 Linux 学习路线</div>
+<div class="meta">研究 · 虚拟染色/科研</div>
 <h2>一、概述：这条路线要解决什么</h2>
 <p>本文整理的是一条<strong>上机工具链路线</strong>，而不是一条算法结论。它回答的问题很具体：当实验室只有一台共享的 GPU 服务器、数据以 DICOM 形式堆放、训练框架要求特定的 CUDA 版本、训练任务需要排队才能拿到卡时，一名刚接触 Linux 的研究生应当按什么顺序把这些环节逐个打通。</p>
 <p>材料来自一段以「医学影像实验室 Linux 学习路线」为题的长对话（162 条消息）。该对话的前半部分给出了一份按工具链展开的路线，涉及 dcm2niix、FSL、ITK、CUDA/cuDNN、Slurm、nnUNet、Docker 与 Singularity；中段退化为对单条基础命令的零散追问；尾部约六分之一已转向 HTTP 状态码、后端框架与容器编排等另一主题域，与本文无关，另有专篇整理，此处不取。</p>
@@ -263,10 +267,9 @@ CMD [&quot;python&quot;, &quot;/app/predict.py&quot;]</code></pre>
 <tr><td>增量备份数据</td><td><code>rsync -avz /data /backup</code></td></tr>
 </table>
 <p>最后强调两点。其一，这条路线的<strong>顺序是硬约束</strong>：格式转换与完整性检查没做完就装框架，或者框架版本没对上就提交训练作业，返工成本远高于按序推进。其二，原料中的命令多是「最小可用形式」，凡本文标注为原料未记录之处——FSL 的参数、<code>--time</code> 的格式约定、nnUNet 训练命令末位参数、队列管理命令——都应以实验室实际安装的版本与集群文档为准，而不是照抄任何一份笔记，包括这一份。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 医学影像实验室 Linux 学习路线</p>
-<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
+<a class="back-link" href="../../research.html">← 返回科研</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

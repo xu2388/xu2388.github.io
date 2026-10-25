@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>信号与系统 · 卷积机理与积分区间判定</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"信号与系统 · 卷积机理与积分区间判定","date":"2026-10-24","tags":["课程笔记","信号与系统"],"category":"课程笔记","summary":"从离散叠加原理推出卷积求和式，经\"翻转—滑动—相乘—积分\"四步过渡到连续卷积；核心方法是将阶跃函数视为时间剪刀，由 u(τ) 与 u(t-τ) 联立锁定积分区间，据此完整求解 tu(t)*u(t) 与\"矩形脉冲乘单边指数\"两道算例；并覆盖逆卷积的频域法与拉普拉斯途径、盲反卷积的无唯一解性、交换律与结合律的严格辨析，以及时域卷积对应的带宽取小规律。全部数值均经数值积分独立复核。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>信号与系统 · 卷积机理与积分区间判定</h1>
-<div class="meta">课程笔记 · 信号与系统 · 整理自豆包对话 豆包对话 · 信号与系统卷积与采样复习</div>
+<div class="meta">课程笔记 · 信号与系统</div>
 <h2>一、概述</h2>
 <p>卷积是线性时不变（LTI）系统分析的统一工具：只要知道系统的单位冲激响应 $h(t)$，任意输入 $x(t)$ 的零状态输出都由卷积给出。它同时是后续傅里叶分析、采样定理与系统设计的共同基础——时域卷积对应频域相乘，正是频域滤波的理论依据；采样后频谱的周期延拓，也由卷积性质直接导出。</p>
 <p>本文围绕一条主线展开：<strong>卷积计算的难点不在积分本身，而在积分区间从哪里来</strong>。绝大多数习题卡住的原因，是无法把 $\int_{-\infty}^{+\infty}$ 化为有限定积分。本文给出的解法是把阶跃函数当作&quot;时间剪刀&quot;，由两个阶跃条件联立锁定区间，再套用四步法计算。</p>
@@ -233,13 +237,12 @@
 <p>在此之上，卷积还有三条延伸线索：其一，逆卷积把&quot;由输出反推输入&quot;化为频域或 $s$ 域的除法，但 $H$ 为零处信息永久丢失，且 $h$ 未知时无唯一解；其二，交换律与结合律是两条独立性质，调换位置必须动用交换律，结合律只负责挪括号，由此可解释 LTI 系统串联顺序无关；其三，时域卷积对应频域相乘，故卷积后带宽取两者最小值，而采样后频谱的周期延拓同样源于卷积的冲激移位性质——卷积因此成为连接时域分析与频域分析的枢纽。</p>
 <hr />
 <h2>勘误与复核说明</h2>
-<p>原料为豆包对话记录，本文对全部解析结果做了独立复核：</p>
+<p>本文对全部解析结果做了独立复核：</p>
 <ol><li><strong>奈奎斯特条件的不等号</strong>：原料表述为 $\omega_s&gt;2\omega_m$，教材与既有笔记多写作 $\omega_s\ge2\omega_m$。临界相等时两频谱恰好相接而不重叠，按&quot;大于等于&quot;理解更稳妥，本文统一采用 $\ge$。</li><li><strong>算例一与算例二的解析结果</strong>：均用数值积分在多个 $t$ 值上独立复算，与解析式偏差在 $10^{-4}$ 量级（积分步长所致），确认无误。</li><li><strong>逆卷积验证算例</strong>：由 $Y(s)/H(s)=1/s$ 反得 $f(t)=u(t)$，与算例二中阶跃响应的来源互相印证，自洽。</li><li><strong>尺度变换带宽结论</strong>：用 $\mathrm{sinc}$ 带限信号数值计算频谱，确认截止点落在 $3\omega_m$ 处，&quot;卷积后带宽取小&quot;的结论成立。</li></ol>
 <p>除上述不等号的宽严差异外，未发现原料存在算术或推导错误。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 信号与系统卷积与采样复习</p>
-<a class="back-link" href="../study/signals-systems.html">← 返回 信号与系统</a>
+<a class="back-link" href="../../study/signals-systems.html">← 返回 信号与系统</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

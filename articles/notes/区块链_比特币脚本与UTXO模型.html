@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>区块链与比特币原理 · 比特币脚本与 UTXO 模型</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"区块链与比特币原理 · 比特币脚本与 UTXO 模型","date":"2026-10-24","tags":["课程笔记","区块链/分布式"],"category":"课程笔记","summary":"比特币账本没有余额字段，只有一串未花费交易输出。本文从 UTXO 与账户模型的差别讲起，拆开交易的输入输出、找零与手续费计算，逐步演算 P2PKH 在栈式虚拟机中的执行过程，比较 P2PK、P2PKH、P2SH、多签与 CLTV/CSV 时间锁脚本的锁定条件，说明签名承诺范围 SIGHASH 的四种类型，并解释脚本为何刻意保持非图灵完备。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>区块链与比特币原理 · 比特币脚本与 UTXO 模型</h1>
-<div class="meta">课程笔记 · 区块链/分布式 · 整理自豆包对话 豆包对话 · 比特币脚本系统解析 / 区块链比特币知识点讲解</div>
+<div class="meta">课程笔记 · 区块链/分布式</div>
 <h2>一、概述：账本里没有「余额」</h2>
 <p>比特币最容易被误解的一点，是以为链上存着每个地址的余额，转账就是把一个数字从 A 账户减掉、加到 B 账户。真实的账本原语是<strong>未花费交易输出</strong>（Unspent Transaction Output，UTXO）：一笔钱从诞生到消失，始终是某笔交易的一个输出；被花掉时，这个输出整体作废，同时产生若干个新输出。所谓「余额」，是钱包把属于自己、且尚未被花费的输出逐个挑出来相加得到的结果，是<strong>算出来的派生量，不是存储的字段</strong>。</p>
 <p>这种设计与脚本系统是同一套思路的两面：输出上不写「归谁所有」，只写「满足什么条件才能花」。条件用一段栈式脚本表达，花费时提交证据，节点执行脚本判定真假。于是「谁拥有这笔钱」被替换成「谁能让这段脚本返回真」，账本因此不需要身份、不需要账户、也不需要余额。</p>
@@ -176,10 +180,9 @@
 <h2>十、小结</h2>
 <p>UTXO 模型把「钱」还原成「一次性的、带条件的凭证」：每张凭证只能被消费一次，消费时整张作废并找零，余额由钱包汇总凭证得到。交易结构因此只有「我花哪张凭证」与「新凭证归什么条件」两件事，没有账户、没有余额、没有发送方字段。脚本系统则把「归谁」翻译成「谁能提供满足条件的证据」，用一台只有栈、没有循环的虚拟机执行；P2PKH 的七步栈表说明验证顺序不可颠倒，P2SH 的两阶段执行说明复杂脚本可以只把哈希写在输出上，多签与 CLTV/CSV 说明固定条件足以拼出托管与支付通道。</p>
 <p>签名覆盖范围是这一切的安全边界：SIGHASH 决定签名者对哪些输入输出负责，ANYONECANPAY 打开协作拼装的大门，SINGLE 的历史 bug 提醒边界条件的重要。最后，非图灵完备不是能力不足的意外，而是把「停机、成本、共识一致」三件事静态锁死的设计选择；它换来了可预测的验证与极小的攻击面，代价是复杂合约必须分层实现。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 比特币脚本系统解析 / 区块链比特币知识点讲解</p>
-<a class="back-link" href="../study/blockchain.html">← 返回 区块链/分布式</a>
+<a class="back-link" href="../../study/blockchain.html">← 返回 区块链/分布式</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

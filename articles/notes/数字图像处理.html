@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数字图像处理 · 傅里叶变换与频域 · 学习笔记</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数字图像处理 · 傅里叶变换与频域 · 学习笔记","date":"2026-10-24","tags":["课程笔记","数字图像处理"],"category":"课程笔记","summary":"从灰度变换与直方图处理出发，系统整理线性与分段线性变换、图像反转、直方图均衡化与规定化的计算流程，并梳理傅里叶变换、频谱概念、卷积定理、采样定理与二维频域处理的基本框架。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数字图像处理 · 傅里叶变换与频域 · 学习笔记</h1>
-<div class="meta">课程笔记 · 数字图像处理 · 整理自豆包对话 006_数字图像处理傅里叶.md</div>
+<div class="meta">课程笔记 · 数字图像处理</div>
 <h2>一、概述</h2>
 <p>数字图像处理中的灰度变换与频域分析回答两个不同层次的问题：<strong>空域点运算</strong>只依据像素自身灰度改变明暗分布，用于调整对比度、扩展动态范围；<strong>频域分析</strong>把图像分解为不同空间频率的正弦分量，用于分离&quot;平缓的背景&quot;与&quot;突变的边缘&quot;，是滤波、压缩、特征提取的共同基础。</p>
 <p>本笔记分两部分：第一部分整理灰度变换族（全局线性、分段线性、图像反转、直方图均衡化、直方图规定化）与一阶微分锐化，重点给出可手算的标准步骤；第二部分整理傅里叶变换的定义、频谱概念、典型信号的变换对、卷积定理与采样定理，并落到二维离散傅里叶变换与频域滤波。</p>
@@ -157,10 +161,9 @@ out = match_histograms(image, reference)   # reference 的直方图即规定直�
 <h2>四、小结</h2>
 <p>灰度变换以 $s=T(r)$ 统一描述：线性变换调节整体对比度，分段线性变换选择性拉伸目标灰度段，反转只颠倒明暗，直方图均衡化以 CDF 为变换函数自动摊平直方图，规定化以两次均衡化为桥梁实现任意目标分布。离散取整决定了均衡化必然合并灰度、只能近似均匀。</p>
 <p>傅里叶变换把信号从时域映射到频域，$X(j\omega)$ 的模与辐角分别给出幅度谱与相位谱；周期信号对应离散谱线，非周期信号对应连续谱。卷积定理把时域卷积化为频域相乘，采样定理给出频谱不重叠的条件 $f_s\ge2f_m$。在图像处理中，二维 DFT 把&quot;平缓区域&quot;集中到低频、&quot;边缘与噪声&quot;集中到高频，低通平滑、高通锐化，构成频域增强的基本范式。</p>
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/006_数字图像处理傅里叶.html">006_数字图像处理傅里叶.md</a></p>
-<a class="back-link" href="../study/image-processing.html">← 返回 数字图像处理</a>
+<a class="back-link" href="../../study/image-processing.html">← 返回 数字图像处理</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

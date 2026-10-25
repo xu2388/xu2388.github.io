@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>病理 · 肾脏染色类型与形态学术语</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"病理 · 肾脏染色类型与形态学术语","date":"2026-10-24","tags":["学习笔记","虚拟染色/科研"],"category":"学习笔记","summary":"从显色化学出发区分 H&E、PAS、PASM、Masson 与 IHC：前两者靠染料与糖类的化学反应，PASM 靠银沉积，Masson 靠分子量与大分子亲和差异，IHC 靠抗体定位。再按肾小球、肾小管、间质、血管四条线列出各染色的表现，解释系膜增生、基底膜增厚、硬化、纤维化、炎细胞浸润的判读含义与读片顺序，最后说明 Camelyon17 五个域为何全是 H&E 却仍构成域偏移。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>病理 · 肾脏染色类型与形态学术语</h1>
-<div class="meta">学习笔记 · 虚拟染色/科研 · 整理自豆包对话 豆包对话 · 肾脏PAS染色病理描述 / 肾脏病理切片染色类型判断 / Camelyon17数据集五个域的染色说明</div>
+<div class="meta">学习笔记 · 虚拟染色/科研</div>
 <h2>一、概述：虚拟染色为什么必须先懂染色</h2>
 <p>做 H&amp;E 到特殊染色的转换，模型学的是像素映射，人学的是「哪种结构被哪种化学反应用什么颜色标出来」。这两件事看起来无关，实际上是同一件事的两面：如果不知道 PAS 的品红来自糖类的过碘酸氧化，就分不清模型生成的品红是「基底膜被染对了」还是「整片均匀加了一层洋红」；如果不知道 Masson 的蓝来自胶原，就会把间质纤维化和肾小球硬化混为一谈，评价指标也就定错。</p>
 <p>这一篇要解决三个具体问题。第一，五种常用染色各自的显色原理与靶标是什么，为什么它们看见的结构不一样。第二，同一个肾脏结构在不同染色下长什么样，怎么用颜色反推结构。第三，病理报告里的那些术语（系膜增生、基底膜增厚、硬化、纤维化、炎细胞浸润）到底在描述什么，读片时按什么顺序看。最后用 Camelyon17 的五个域收尾，说明「同一种染色内部的颜色差异」为什么足以毁掉跨域泛化。</p>
@@ -174,10 +178,9 @@
 <tr><td>Camelyon17</td><td>五域全是 H&amp;E，差异来自中心、批次、扫描仪；属同质域偏移，可靠归一化缓解；跨染色是异构偏移，归一化无效</td></tr>
 </table>
 <p>最后回到虚拟染色。这一篇列的五种染色，本质上对应五种「信息通道」：H&amp;E 给形态，PAS 给糖类，PASM 给基底膜，Masson 给胶原，IHC 给分子。虚拟染色的任务是从一个通道推断另一个通道，推断的可靠性取决于两个通道之间的生物学相关性。H&amp;E 到 PAS 相对可靠，因为糖类沉积会改变形态与胞质质地；H&amp;E 到 IHC 最不可靠，因为蛋白表达可以完全没有形态学表现。评价一个虚拟染色模型，首先要问的不是「像不像」，而是「它推断的那个通道，和源通道之间到底有多少可推断的信息」。这个问题答错了，后面的指标再漂亮也没有意义。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 肾脏PAS染色病理描述 / 肾脏病理切片染色类型判断 / Camelyon17数据集五个域的染色说明</p>
-<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
+<a class="back-link" href="../../research.html">← 返回科研</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

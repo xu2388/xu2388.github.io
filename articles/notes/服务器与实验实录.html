@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>服务器、训练与实验 · 长对话整理</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"服务器、训练与实验 · 长对话整理","date":"2026-10-24","tags":["研究","虚拟染色/科研"],"category":"研究","summary":"记录 HE→IHC 虚拟染色浓度域扩散模型的服务器训练与诊断过程，梳理噪声调度的四类问题及代表性文献，报告时间步损失诊断的实测结果（早期损失仅为晚期的 0.28 倍）、Beta(2,2) 重采样实验的损失轨迹，并据此修正研究假设、确定 M0→M1→M2 的分阶段路线与论文叙事。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>服务器、训练与实验 · 长对话整理</h1>
-<div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 029_你记得刚才我给你的服务器吗.md</div>
+<div class="meta">研究 · 虚拟染色/科研</div>
 <h2>一、背景与目标</h2>
 <p>本对话（500 条）围绕 HE→IHC 虚拟染色的浓度域扩散模型展开，兼含大量远程服务器训练运维记录。研究目标是以苏木素（H）、伊红（E）、二氨基联苯胺（DAB）的浓度图替代 RGB 图像作为扩散建模对象，由 HE 浓度图条件生成 IHC 的 DAB 浓度图，再经物理染色矩阵渲染为 IHC 的 RGB 图像。</p>
 <p>核心研究问题被反复表述为一句可检验的命题：对于空间对应关系不完美的虚拟染色任务，通用扩散训练所采用的噪声水平分配是否仍然合适。该问题由一项前置观察驱动——HE 与连续切片 IHC 之间存在明显空间错位与组织形变，像素级跨图对应基本不可学，而 patch 级聚合统计量（均值、标准差、高浓度占比）仍保持中等强度相关。若&quot;目标粒度上移&quot;成立，则通用图像生成中&quot;高噪声学结构、低噪声学细节&quot;的分工假设在本任务上未必成立。</p>
@@ -100,10 +104,9 @@ t = (t_normalized * scheduler.config.num_train_timesteps).long().clamp(
 <ol><li><strong>概念与实测</strong>：噪声调度被拆为正向调度、时间步采样、损失加权与反向采样四类，分别对应 <code>ᾱ_t</code>、<code>p(t)</code>、<code>w(t)</code> 与推理轨迹，&quot;只加到 70%&quot;须区分 strength 参数与训练截断两种含义；诊断结果则否证了&quot;早期时间步是瓶颈&quot;的原假设——<code>t ≤ 200</code> 的平均损失仅为 <code>t ≥ 700</code> 的 0.28 倍，峰值位于 <code>t = 500–700</code>。</li><li><strong>假设修正</strong>：高噪声区损失高属训练常态，且该区主要负责全局均值，与&quot;生成图退化为均值&quot;一致；真正瓶颈在 <code>log SNR ≈ 0</code> 的中等噪声区。</li><li><strong>实验决策</strong>：在保持正向调度、网络结构与训练预算不变的前提下，仅将时间步采样由均匀分布改为 Beta(2,2)，聚焦 <code>t ≈ 300–600</code>，作为单因素对照。</li><li><strong>路线决策</strong>：浓度域 DAB 扩散为唯一主线，RGB／latent 路线降为对照；不改造 SD VAE；按 P0→P0.5→M1→M2 顺序推进，未通过条件有效性检验前不进入 M1／M2。</li><li><strong>评价与叙事</strong>：以聚合级 DAB 统计与条件置换实验替代单纯像素指标与训练损失，作为判断模型是否利用 H&amp;E 条件的主要依据；论文问题定位为&quot;弱配准条件下的蛋白感知浓度域生成&quot;，而非&quot;浓度域扩散&quot;本身。</li></ol>
 <h2>四、遗留问题与下一步</h2>
 <ol><li><strong>条件有效性尚未验证</strong>。四项硬门槛测试均未执行，故&quot;M0 是否成功&quot;目前无法判定，为最高优先级。</li><li><strong>诊断指标不完整</strong>。现有诊断仅算 MSE，未纳入 SSIM 与 Pearson 相关系数；配准误差存在时 MSE 会因位移急剧放大，而相关系数可能仍保持较好水平。此外仅测试 1 个样本，需扩展为多样本统计与按 SNR 区间分组的误差分布。</li><li><strong>Beta(2,2) 缺少对照结论</strong>。损失下降更快，但未与基线在同一评价体系下比较，需在相同验证集上比较聚合级指标、采样多样性与条件置换后的性能跌落幅度。</li><li><strong>额外样本批次未补</strong>。因键名不匹配与服务器失联，指定批次始终未生成；重新获得实例后须按 <code>ema</code> 键修正生成脚本并单独存放。</li><li><strong>训练—推理的调度一致性待核查</strong>。<code>squaredcos_cap_v2</code> 在 <code>t ≥ 700</code> 处 SNR 已降至 0.04 以下，若推理仍按 1000 步从纯噪声起步，需确认该区间的采样质量是否影响最终图像。</li><li><strong>创新性与工程可持续性</strong>。&quot;浓度域&quot;本身不构成新颖性（CFM-HES 与 HistDiST 已在该空间工作），需调研确认弱配准下的噪声水平分配、以及 patch 级聚合统计作为训练目标是否已有先例；临时实例的 1 小时窗口与凭据轮换亦使长周期实验难以推进，需改用长期实例或建立断点续训与自动回传流程。</li></ol>
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/029_你记得刚才我给你的服务器吗.html">029_你记得刚才我给你的服务器吗.md</a></p>
-<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
+<a class="back-link" href="../../research.html">← 返回科研</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

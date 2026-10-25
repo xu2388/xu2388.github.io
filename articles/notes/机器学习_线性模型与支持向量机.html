@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>机器学习 · 线性模型与支持向量机</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"机器学习 · 线性模型与支持向量机","date":"2026-10-24","tags":["课程笔记","机器学习"],"category":"课程笔记","summary":"复原线性模型与支持向量机两条主线：最小二乘正规方程的闭式解及其秩亏时的正则化处理；逻辑回归以 sigmoid 拟合对数几率、负对数似然为凸且可用梯度下降求解；LDA 以类内散度逆乘类均值差实现类内紧凑、类间可分。SVM 中几何间隔与两类间隔反比于权重范数，对偶化后解仅依赖支持向量；惩罚系数趋于无穷退化为硬间隔、趋于零只剩大间隔；核函数须对称且核矩阵半正定。四则 SVM 与三则回归算例均逐步复核，附勘误。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>机器学习 · 线性模型与支持向量机</h1>
-<div class="meta">课程笔记 · 机器学习 · 整理自豆包对话 豆包对话导出 · 机器学习第三章线性模型与第六章支持向量机原料（知识点整理、试卷与讲解、实验记录）</div>
+<div class="meta">课程笔记 · 机器学习</div>
 <h1>机器学习 · 线性模型与支持向量机 · 学习笔记</h1>
 <h2>一、概述</h2>
 <p>本文按「线性模型—对率回归—判别分析—支持向量机」的顺序整理课程原料。全部模型共享同一条骨架：先写出线性组合 $w^{\mathrm{T}}x+b$，再决定让它逼近什么——逼近实值标记即回归，逼近对数几率即分类，逼近间隔的倒数即支持向量机。原料中的试卷、知识点整理与实验记录互有出入之处，本文以「按公式复核」的方式统一处理，集中列在末节勘误表。</p>
@@ -194,10 +198,9 @@
 <tr><td>实验记录</td><td>加权平均 F1 记 0.97</td><td>按混淆矩阵精确值复核约 0.9647，应取 0.96</td></tr>
 </table>
 <p>综观全文，线性模型与 SVM 是同一枚硬币的两面：前者把线性组合直接解释为输出或概率的对数几率，后者把线性组合解释为到边界的距离，并以间隔最大化换取对噪声的容忍。凡原料给出数值处本文均独立复核，凡原料未给处（弹性网数学形式、LDA 广义特征值写法、Sigmoid 与拉普拉斯核表达式、学习率取值）一律注明存缺而不补写，宁可留白，不做无据之推断。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话导出 · 机器学习第三章线性模型与第六章支持向量机原料（知识点整理、试卷与讲解、实验记录）</p>
-<a class="back-link" href="../study/machine-learning.html">← 返回 机器学习</a>
+<a class="back-link" href="../../study/machine-learning.html">← 返回 机器学习</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

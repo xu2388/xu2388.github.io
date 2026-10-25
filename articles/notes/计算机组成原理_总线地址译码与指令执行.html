@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>计算机组成原理 · 总线地址译码与指令执行</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"计算机组成原理 · 总线地址译码与指令执行","date":"2026-10-24","tags":["课程笔记","计算机组成原理"],"category":"课程笔记","summary":"把总线从「分类」推进到「定时与选通」：先给出三组信号线的方向性与四类总线的层级，再逐拍拆解同步定时的读写的时序与等待周期、异步定时的三种互锁，量化等待周期对带宽的削减；随后用同一组 8K×8 芯片分别做全译码、线选与部分译码，列出三张地址表说明冲突与镜像的成因；最后沿 PC、MAR、MDR、IR 的流转写出取指与执行阶段的微操作序列，并以九拍指令周期与五段流水线收束。文末订正原料中算术左移的结论。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>计算机组成原理 · 总线地址译码与指令执行</h1>
-<div class="meta">课程笔记 · 计算机组成原理 · 整理自豆包对话 豆包对话 · 四种总线的解释与对比 / 系统总线作业 / 地址译码器及 IR、ID 寄存器</div>
+<div class="meta">课程笔记 · 计算机组成原理</div>
 <h2>一、概述与分工</h2>
 <p>总线这条线可以分成三层问题：<strong>连什么</strong>（分类与层级）、<strong>什么时候连</strong>（定时与握手）、<strong>连到谁</strong>（地址译码与片选）。已有的组成原理笔记已经做完第一层，并把带宽公式的单位纪律、主从判据与三种仲裁讲清；本文从第二层接手，一路走到第三层，最后落到 CPU 内部「地址怎么变成控制信号、指令怎么变成微操作」。</p>
 <table>
@@ -276,10 +280,9 @@
 <tr><td>5</td><td>「算术左移时符号位保持不变」</td><td>该规则只适用于算术<strong>右</strong>移；左移若冻结符号位，等于凭空构造了一个不属于原数的编码</td><td>移位与乘除 2 的等价性</td></tr>
 </table>
 <p>两处自设口径需要标注：其一，第三节的等待周期表与第四节的突发表，参数（50 MHz、100 MHz、32 位与 64 位、地址 2 拍）均为本文设定，原料只给了不带等待周期的带宽算例，未给突发参数；其二，全译码、线选、部分译码三张地址表按「8 片 8K、按字节编址、片选低有效」的统一前提推出，若改成高有效或按字编址，地址范围会随之改变，结论形态不变。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 四种总线的解释与对比 / 系统总线作业 / 地址译码器及 IR、ID 寄存器</p>
-<a class="back-link" href="../study/computer-organization.html">← 返回 计算机组成原理</a>
+<a class="back-link" href="../../study/computer-organization.html">← 返回 计算机组成原理</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

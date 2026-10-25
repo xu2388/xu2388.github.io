@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据库 · SQL 查询、视图、触发器与完整性安全性</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据库 · SQL 查询、视图、触发器与完整性安全性","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"围绕从查询到安全保护的链条梳理结论：SELECT 子句按 FROM、WHERE、GROUP BY、HAVING、ORDER BY 次序执行，故「不计不及格」只能写在 WHERE、「门数不小于四」只能写在 HAVING；自然连接会匹配并合并全部同名列，两个同名列同时相等才保留，因而李四一行被排除；NOT IN 在子查询含空值时整体返回空集，NOT EXISTS 免疫；「每门课至多 60 人选修」可用断言配 ALL 表达，但 MySQL 不支持断言，须改用 BEFORE 触发器加 SIGNAL 拦截；收回用 REVOKE 加 CASCADE。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据库 · SQL 查询、视图、触发器与完整性安全性</h1>
-<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 课程复习阶段的问答记录 · SQL 查询与连接、嵌套子查询、视图与索引、完整性与安全性专题</div>
+<div class="meta">课程笔记 · 数据库/MySQL</div>
 <h2>一、概述</h2>
 <p>本篇把 SQL 查询层的写法与对象层、约束层的机制串成一条线：查询加工次序、多表拼合、子查询两种风格、视图与索引，最后落到完整性与安全性。原料依附于课程问答与实验场景，本文只抽取知识点与可复用语句，题号、批改记录、账户与主机信息一律删除或泛化；表名、字段名与约束名均取自原料，原料的拼写与语法错误按语义修正并在第十节汇总。</p>
 <h2>二、SELECT 子句的书写顺序与执行顺序</h2>
@@ -298,10 +302,9 @@ REVOKE R1 FROM U3;</code></pre>
 <h2>十一、要点回顾</h2>
 <p>执行顺序决定子句归属：行级条件进 WHERE，聚合条件进 HAVING，聚集函数不能出现在 WHERE 中。连接一律显式写等值条件，自然连接会在多个同名列时收紧匹配。外连接保留不匹配行，左外可替代右外，MySQL 需以左外并右外实现全外。EXISTS 的驱动方向与 IN 相反，正确关联且无空值时二者等价，存在空值时只有 NOT EXISTS 可靠。视图存定义不存数据，行列子集视图可更新，聚集与多表视图不可更新，需要写入约束时加 WITH CHECK OPTION。索引既服务查询也服务完整性检查，MySQL 靠主键聚簇、二级索引需回表。三类完整性约束分别由 PRIMARY KEY、FOREIGN KEY 与 CHECK 承担，MySQL 5.x 的 CHECK 不生效。跨表跨聚集的约束在标准里归断言，在 MySQL 里只能由 BEFORE 触发器代劳。DAC 灵活、MAC 强制，安全性靠身份鉴别、存取控制、视图、审计与加密分层设防。<code>GRANT</code> 与 <code>REVOKE</code> 支持库、表、列三级粒度，转授由 <code>WITH GRANT OPTION</code> 决定，收回时的 <code>CASCADE</code> 决定转授链是否一并截断。</p>
 <p>原料以问答与实验形式给出这些内容，顺序零散且有若干笔误，本文按知识逻辑重排并逐条标注；未展开的 B+ 树内部机制与索引失效完整条件，本文未作虚构补充。</p>
-<p class="muted" style="margin-top:28px">原始对话：课程复习阶段的问答记录 · SQL 查询与连接、嵌套子查询、视图与索引、完整性与安全性专题</p>
-<a class="back-link" href="../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

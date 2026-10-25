@@ -6,42 +6,38 @@
 <title>计算机组成原理 · 学习 · 科研与学习档案</title>
 <meta name="description" content="计算机组成原理的全部笔记（4 篇）。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
-<body class="hub hub--study">
-<header class="site-header">
-  <div class="container">
-    <div class="side-brand">
-      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
-      <div>
-        <h1 class="site-title">科研与学习档案</h1>
-        <p class="site-subtitle">Research &amp; Study Archive</p>
-      </div>
-    </div>
-    <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-    
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../research.html">科研</a><a class="active" href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
 
-<main class="container">
 
-<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../study.html">学习</a> <span>/</span> 计算机组成原理</nav>
-<header class="subj-head">
-  <p class="eyebrow">计算机基础</p>
-  <h1>计算机组成原理</h1>
-  <p class="lede">存储层次、指令执行与流水线 · 共 4 篇</p>
-</header>
-<ul class="article-list plain">
-<li><a href="../articles/notes/计算机组成原理_Cache映射与命中率计算.html">计算机组成原理 · Cache 映射与命中率计算</a><span class="desc">从地址切分把 Cache 讲成可计算的机制：由块大小、块数、相联度推出三段地址位数，用同一配置对比三种映射的比较器代价；以十二条访存序列模拟 FIFO、LRU 与最优替换，命中数为 2、4、6；写策略区分写直达与写回、写分配与非写分配；AMAT 给出两级 Cache 的 1.85 ns 与 CPI 由 5.5 降到 2.28 的对照；末节量化三个参数对命中率的影响。</span></li><li><a href="../articles/notes/计算机组成原理_IO方式与主机信息交换.html">计算机组成原理 · I/O 方式与主机信息交换</a><span class="desc">按 CPU 介入的粒度把四种 I/O 方式排成一条线：程序查询逐字节轮询、中断按事件切入、DMA 按块搬运、通道按通道程序自治。先拆开接口的端口与状态位，再用同一组参数算出查询占用率随设备间隔反比变化、中断每字节一百二十五个周期只够零点八兆字节每秒、DMA 搬运一千字节块的开销低到万分之二；随后给出周期挪用的百分之六点二五与磁盘十三点二一毫秒的访问时间，并把中断向量、屏蔽与嵌套讲成可核对的流程。</span></li><li><a href="../articles/notes/计算机组成原理.html">计算机组成原理 · 总线、Cache 与存储层次</a><span class="desc">以总线、Cache、存储层次三条主线组织公式与算例：总线按连接范围分片内、系统、输入输出与通信四类，按传输信息分地址、数据、控制三组线，带宽计算须区分时钟周期与总线传输周期；Cache 给出命中率、平均访问时间、效率三式与两类典型算例，并逐档量化命中率对平均访问时间的影响；另含主从设备判据、三种总线仲裁对照、局部性、三种地址映射与容量换算，并订正原料中单位换算与命中率取整两处错误。</span></li><li><a href="../articles/notes/计算机组成原理_总线地址译码与指令执行.html">计算机组成原理 · 总线地址译码与指令执行</a><span class="desc">把总线从「分类」推进到「定时与选通」：先给出三组信号线的方向性与四类总线的层级，再逐拍拆解同步定时的读写的时序与等待周期、异步定时的三种互锁，量化等待周期对带宽的削减；随后用同一组 8K×8 芯片分别做全译码、线选与部分译码，列出三张地址表说明冲突与镜像的成因；最后沿 PC、MAR、MDR、IR 的流转写出取指与执行阶段的微操作序列，并以九拍指令周期与五段流水线收束。文末订正原料中算术左移的结论。</span></li>
+<main class="wrap">
+  <div class="crumbs"><a href="../index.html">首页</a><span>/</span><a href="../study.html">学习</a><span>/</span>计算机组成原理</div>
+  <header class="list-head">
+    <h1>计算机组成原理</h1>
+    <p class="lede">存储层次、指令执行与流水线 · 共 4 篇</p>
+  </header>
+  <ul class="article-list">
+<li><a href="../articles/notes/计算机组成原理_Cache映射与命中率计算.html">计算机组成原理 · Cache 映射与命中率计算</a><span class="desc">从地址切分把 Cache 讲成可计算的机制：由块大小、块数、相联度推出三段地址位数，用同一配置对比三种映射的比较器代价；以十二条访存序列模拟 FIFO、LRU 与最优替换，命中数为 2、4、6；写策略区分写直达与写回、写分配与非写分配；AMAT 给出两级 Cache 的 1.85 ns 与 CPI 由 5.5 降到 2.28 的对照；末节量化三个参数对命中率的影响。</span></li>
+<li><a href="../articles/notes/计算机组成原理_IO方式与主机信息交换.html">计算机组成原理 · I/O 方式与主机信息交换</a><span class="desc">按 CPU 介入的粒度把四种 I/O 方式排成一条线：程序查询逐字节轮询、中断按事件切入、DMA 按块搬运、通道按通道程序自治。先拆开接口的端口与状态位，再用同一组参数算出查询占用率随设备间隔反比变化、中断每字节一百二十五个周期只够零点八兆字节每秒、DMA 搬运一千字节块的开销低到万分之二；随后给出周期挪用的百分之六点二五与磁盘十三点二一毫秒的访问时间，并把中断向量、屏蔽与嵌套讲成可核对的流程。</span></li>
+<li><a href="../articles/notes/计算机组成原理.html">计算机组成原理 · 总线、Cache 与存储层次</a><span class="desc">以总线、Cache、存储层次三条主线组织公式与算例：总线按连接范围分片内、系统、输入输出与通信四类，按传输信息分地址、数据、控制三组线，带宽计算须区分时钟周期与总线传输周期；Cache 给出命中率、平均访问时间、效率三式与两类典型算例，并逐档量化命中率对平均访问时间的影响；另含主从设备判据、三种总线仲裁对照、局部性、三种地址映射与容量换算，并订正原料中单位换算与命中率取整两处错误。</span></li>
+<li><a href="../articles/notes/计算机组成原理_总线地址译码与指令执行.html">计算机组成原理 · 总线地址译码与指令执行</a><span class="desc">把总线从「分类」推进到「定时与选通」：先给出三组信号线的方向性与四类总线的层级，再逐拍拆解同步定时的读写的时序与等待周期、异步定时的三种互锁，量化等待周期对带宽的削减；随后用同一组 8K×8 芯片分别做全译码、线选与部分译码，列出三张地址表说明冲突与镜像的成因；最后沿 PC、MAR、MDR、IR 的流转写出取指与执行阶段的微操作序列，并以九拍指令周期与五段流水线收束。文末订正原料中算术左移的结论。</span></li>
 </ul>
-<div class="subj-foot">
   <a class="back-link" href="../study.html">← 返回学习</a>
-</div>
-
 </main>
 
-<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

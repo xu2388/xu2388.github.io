@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Linux 本地存储管理 · 分区、LVM、文件系统与挂载</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"Linux 本地存储管理 · 分区、LVM、文件系统与挂载","date":"2026-10-24","tags":["课程笔记","操作系统/Linux"],"category":"课程笔记","summary":"以「磁盘—分区—LVM—格式化—挂载—权限与配额—备份」为主线，系统整理 Linux 本地存储管理：MBR 512 字节引导扇区结构与 GPT 对比、fdisk/gdisk/parted 与 mkfs 系列、LVM 全流程（pvcreate、vgcreate、lvcreate、lvextend 加 resize2fs，PE 默认 4MB）、fstab 六字段与 mount -a 验证、fuser 解除占用、df 与 du 分工、八进制与符号两种权限写法及 umask 推算（含 666 减 033 不等于 633 的实测订正）、quota 软硬限额六步配置、tar 与 crontab 定时备份实操。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>Linux 本地存储管理 · 分区、LVM、文件系统与挂载</h1>
-<div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · Linux本地存储管理知识点总结</div>
+<div class="meta">课程笔记 · 操作系统/Linux</div>
 <h2>一、概述</h2>
 <p>本文是 Linux 本地存储管理课程的系统笔记。存储管理是 Linux 运维中最成体系的一条操作链：</p>
 <pre><code>物理磁盘 → 分区（MBR/GPT） → PV → VG → LV → 格式化（mkfs） → 挂载（mount/fstab） → 权限与配额（chmod/quota） → 备份（tar/dd/crontab）</code></pre>
@@ -272,10 +276,9 @@ repquota -augv             # 全文件系统配额汇总</code></pre>
 <ol><li><strong>逻辑分区编号</strong>：主分区占 1–4，第一个逻辑分区从 <strong>5</strong> 开始，写作 <code>/dev/sda5</code>，不存在 sda1–4 之外的第四主分区编号竞争。</li><li><strong>扩展分区不能直接格式化</strong>：它只是容纳逻辑分区的外壳，且最多一个。</li><li><strong>lvextend 之后忘记 resize2fs</strong>：逻辑卷变大而文件系统未刷新，<code>df</code> 容量不变，扩容视为未完成。</li><li><strong>缩容顺序与卸载</strong>：必须先 umount、再缩文件系统、最后缩 LV；XFS 根本不支持缩容。</li><li><strong>/boot 与 LVM</strong>：引导程序不识别逻辑卷，/boot 不能放 LVM；装机必须单独划分的是根分区与交换分区。</li><li><strong>fstab 改完直接重启</strong>：应先 <code>mount -a</code> 验证，字段顺序为设备、挂载点、类型、选项、dump、fsck 顺序，后两位常写 0 0 但要明白其含义。</li><li><strong>umount 报 busy</strong>：问题在占用进程而非设备，<code>fuser -cu</code> 查看、<code>fuser -ck</code> 清除，或 <code>lsof</code> 定位后再卸载。</li><li><strong>chmod 与 chown 混淆</strong>：chmod 管权限，chown 管属主属组；「chown 可修改文件的所有者和所属组」正确，「chmod 可修改所有者」错误。</li><li><strong>权限串判型</strong>：<code>drwxrw-r--</code> 首字符 d 表示目录，所有者权限看第 2–4 位（rwx），八进制转换按 r=4、w=2、x=1 逐段求和。</li><li><strong>umask 减法陷阱</strong>：<code>umask=033</code> 时新建文件默认权限实测为 644，而非按减法得到的 633；减法只在掩码位包含于基准位时成立，通则永远是按位与掩码取反。</li><li><strong>硬链接边界</strong>：硬链接共用 inode、不能跨分区、不能对目录创建；删除原文件后仍有效的链接是硬链接，软链接删除原文件即失效。</li><li><strong>quota 阈值倒置</strong>：软限额必须低于硬限额，否则告警逻辑失去意义；fstab 未加 usrquota/grpquota 并 remount 时，quotacheck 无从生效。</li><li><strong>脚本没加执行权限</strong>：<code>Permission denied</code> 时先 <code>chmod +x</code>；用 <code>bash script.sh</code> 方式运行则无需执行位，同时 Shebang 不生效。</li><li><strong>备份目录忘用 -a</strong>：普通 <code>cp -r</code> 会丢失权限与属主信息并跟穿软链接，含属性的整目录备份应使用 <code>cp -a</code>。</li></ol>
 <h2>十二、总结要点</h2>
 <p>存储管理知识链可以压缩为四句话。<strong>分区层</strong>：MBR 首扇区 446+64+2 的结构决定 4 个主分区上限，GPT 以备份分区表和 LBA 寻址突破限制；fdisk 对 MBR、gdisk 对 GPT、parted 通用。<strong>卷管理层</strong>：PV→VG→LV 三层加默认 4 MB 的 PE 是在线扩缩容的基础，扩容两条命令 <code>lvextend</code> 与 <code>resize2fs</code> 缺一不可，缩容则须卸载在先、文件系统先缩。<strong>挂载层</strong>：手动 mount/umount，开机靠 fstab 六字段并以 <code>mount -a</code> 当场验证，busy 时 <code>fuser -ck</code> 解占用；查看容量 df 管分区、du 管目录。<strong>权限与运维层</strong>：八进制与符号两套写法分别对应 chmod 与整体赋值、增量调整，chown 管归属，umask 决定新对象默认权限但减法有边界、以按位取反为准；quota 以「软告警、硬封顶、宽限 7 天」约束用量；备份链条上 tar 打包压缩、cp -a 保属性、dd 到扇区、crontab 定时驱动脚本，构成日常运维的完整闭环。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Linux本地存储管理知识点总结</p>
-<a class="back-link" href="../study/os-linux.html">← 返回 操作系统/Linux</a>
+<a class="back-link" href="../../study/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>操作系统/Linux · 用户权限与 ACL</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"操作系统/Linux · 用户权限与 ACL","date":"2026-10-24","tags":["课程笔记","操作系统/Linux"],"category":"课程笔记","summary":"从权限串解码出发，梳理 rwx 在文件与目录上的不同语义、属主/属组/其他三类身份的匹配顺序、chmod 的数字与符号写法、umask 的按位取反推导（含 033 与 027 的逐位复核）、SUID/SGID/粘滞位与四位八进制的换算、进程四类 ID 的取值规则，以及 getfacl 与 setfacl、mask 与默认 ACL 的继承条件，最后落到共享目录的最小权限配置与常见误判。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>操作系统/Linux · 用户权限与 ACL</h1>
-<div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · Linux权限、ACL及进程程序相关题目解答 / Linux用户与用户组知识点解答 / 远程控制桌面教程</div>
+<div class="meta">课程笔记 · 操作系统/Linux</div>
 <h2>一、概述：权限模型回答的三个问题</h2>
 <p>权限系统只回答三件事：谁（身份）、对什么（对象类型）、能做哪一类操作（读、写、执行）。Linux 传统模型把身份压缩成三类——属主、属组、其他，把操作压缩成三位——r、w、x，因此表达力有限；ACL 是在不推翻这三类槽位的前提下，给单个用户或单个组加例外，并用 mask 给例外封顶。本文按「解码权限串 → 推导默认权限 → 特殊位与进程身份 → ACL → 继承与最小权限」的顺序展开。</p>
 <p>与已有笔记的分工需要先讲清。《操作系统与 Shell 脚本》给的是命令清单与题目层面的特殊位速算，重点在「会敲、会判」；本文补的是模型、匹配顺序与可复核的推导，重点在「为什么这样判」。《Linux 本地存储管理》讲磁盘、分区、LVM 到挂载，本文只讲挂载点之上的访问控制，不重复 inode、分区表与 fstab。</p>
@@ -344,10 +348,9 @@ setfacl -m d:u::rwx,d:g::rwx,d:o::---,d:m::rwx 项目目录/共享</code></pre>
 <tr><td>最小权限</td><td>共享目录 2770 加默认 ACL；家目录 700 或 750；私钥 600；用户可写分区 nosuid</td></tr>
 </table>
 <p>权限系统的复杂度来自一个矛盾：既要让大多数情况用三个槽位快速判定，又要让少数例外能精确表达。传统三位是快路径，ACL 是慢路径，mask 是慢路径的保险丝；把这三层分开看，就不会再把叠加当成规则，也不会把 <code>s</code> 与 <code>S</code>、<code>t</code> 与 <code>T</code> 读错。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Linux权限、ACL及进程程序相关题目解答 / Linux用户与用户组知识点解答 / 远程控制桌面教程</p>
-<a class="back-link" href="../study/os-linux.html">← 返回 操作系统/Linux</a>
+<a class="back-link" href="../../study/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

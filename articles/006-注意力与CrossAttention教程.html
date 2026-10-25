@@ -18,58 +18,22 @@
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container">
-      <h1 class="site-title">科研与学习档案</h1>
-      <p class="site-subtitle">Research &amp; Study Archive</p>
-      <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </div>
-  </header>
+  <header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../research.html">科研</a><a class="active" href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 
   <article class="article">
     <h1>注意力与 Cross-Attention 机制解析：从"软查表"到 UNet 的条件注入</h1>
     <div class="meta">
-      写于 2026-10-24 · 教程篇 · 原始来源：DeepSeek 对话 [065][002][137][216][060]
+      写于 2026-10-24 · 教程篇
     </div>
 
     <p class="lead">
-      学习注意力机制时，我最初将其作为孤立的知识点逐个攻克——Q、K、V、缩放点积、多头、SENet、CBAM，抄写代码并请 AI 逐行注释。但坦率地说，当时只会"算"，不会"用"。真正使问题豁然开朗的，是回到自己的研究：针对虚拟染色任务中"生成图像具有平均色调、却缺乏实际结构"这一长期难点，DeepSeek 给出的诊断一语中的——<strong>"结构在哪里被控制？在跨注意力层里，以空间潜变量作为条件查询。"</strong> 至此才明确：注意力并非可选模块，而是<strong>条件进入模型的唯一通道</strong>。本文从"查表"这一最朴素的本质出发，逐步推导至交叉注意力，最后落回虚拟染色任务。
+      学习注意力机制时，我最初将其作为孤立的知识点逐个攻克——Q、K、V、缩放点积、多头、SENet、CBAM，抄写代码并请 AI 逐行注释。但坦率地说，当时只会"算"，不会"用"。真正使问题豁然开朗的，是回到自己的研究：针对虚拟染色任务中"生成图像具有平均色调、却缺乏实际结构"这一长期难点，当时的诊断一语中的——<strong>"结构在哪里被控制？在跨注意力层里，以空间潜变量作为条件查询。"</strong> 至此才明确：注意力并非可选模块，而是<strong>条件进入模型的唯一通道</strong>。本文从"查表"这一最朴素的本质出发，逐步推导至交叉注意力，最后落回虚拟染色任务。
     </p>
 
     <h2>一、注意力的本质：一次"带着查询的软查表"</h2>
@@ -156,7 +120,7 @@
 
     <h2>五、回到虚拟染色任务："有色调、无结构"的成因与对策</h2>
     <p>
-      主线问题——"生成的图有一个平均色调，但没有实际结构"——的成因，现在可以用 DeepSeek 的诊断复述为：<strong>条件信号太弱、注入路径太间接。</strong> 若以整张 H&amp;E 的全局嵌入作为条件，空间排列信息全部丢失，模型只能学到"平均色调"；对症的方案，是将<strong>带空间维度的结构特征通过交叉注意力作为 K/V 注入</strong>，使去噪每一步都能按位置检索到源图的结构。
+      主线问题——"生成的图有一个平均色调，但没有实际结构"——的成因，现在可以复述为：<strong>条件信号太弱、注入路径太间接。</strong> 若以整张 H&amp;E 的全局嵌入作为条件，空间排列信息全部丢失，模型只能学到"平均色调"；对症的方案，是将<strong>带空间维度的结构特征通过交叉注意力作为 K/V 注入</strong>，使去噪每一步都能按位置检索到源图的结构。
     </p>
 
     <div class="record">
@@ -187,25 +151,10 @@
       </ul>
     </div>
 
-    <div class="note">
-      <span class="tag">溯源 · 全部原始对话</span>
-      <p style="margin:.3em 0">
-        <a href="kb/065_注意力机制核心内容提取.html">[065] 注意力机制核心内容提取（QKV/多头/SE/CBAM 啃代码）</a> ·
-        <a href="kb/002_虚拟染色结构控制讨论.html">[002] 虚拟染色结构控制讨论（"有色调无结构"+跨注意力诊断）</a> ·
-        <a href="kb/137_扩散模型虚拟染色机制.html">[137] 扩散模型虚拟染色机制（StainExpert 交叉注意力）</a> ·
-        <a href="kb/216_病理图像染色转换技术讲解.html">[216] 病理图像染色转换技术讲解（HistDiST 数据流）</a> ·
-        <a href="kb/060_SD15卷积层作用.html">[060] SD1.5 卷积层作用（UNet 里的自/交叉注意力排布）</a>
-      </p>
-    </div>
-
-    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+    <a class="back-link" href="../study.html">← 返回学习</a>
   </article>
 
-  <footer class="site-footer">
-    <div class="container">
-      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
-    </div>
-  </footer>
+  <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

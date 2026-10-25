@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据库 · 关系代数与 SQL 互译</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据库 · 关系代数与 SQL 互译","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"关系代数与 SQL 是同一件事的形式层与实现层。五种基本运算为并、差、笛卡尔积、选择、投影，交、连接、除均由它们导出。翻译规则可机械执行：选择落 WHERE，投影落 SELECT，笛卡尔积落 FROM 多表，连接落 JOIN ON，并差交由集合运算承担。除运算有两种写法，双重 NOT EXISTS 对应全称语义，分组计数对应包含。外连接补空值，WHERE 与 ON 的位置决定它是否退化为内连接。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据库 · 关系代数与 SQL 互译</h1>
-<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 豆包对话 · 关系代数转 SQL 习题解答 / 数据库多表查询与关系运算练习 / 连接运算与元组数推导 / 聚合函数与分组统计</div>
+<div class="meta">课程笔记 · 数据库/MySQL</div>
 <h2>一、概述：形式层与实现层</h2>
 <p>同一句「查出选修了 1 号课程的学生姓名」，在关系代数里写作投影与连接的复合，在 SQL 里写作 <code>SELECT</code> 与 <code>JOIN</code>。两者不是两套知识，而是同一件事的两个层次：关系代数给出<strong>语义</strong>（结果应当是什么集合），SQL 给出<strong>可执行的表达</strong>（用哪些子句拼出来）。把两者对齐，查询题就不再需要「凭感觉写」，而可以按规则逐步翻译。</p>
 <p>翻译之所以能机械化，是因为两边的构造几乎一一对应：选择对 <code>WHERE</code>、投影对 <code>SELECT</code>、笛卡尔积对 <code>FROM</code> 的多表并列、连接对 <code>JOIN ... ON</code>、并对 <code>UNION</code>、差对「不在」类子查询。真正需要动脑的只有三处：<strong>集合语义与多重集语义的落差</strong>、<strong>空值让比较变成三值逻辑</strong>、<strong>除运算没有直接的 SQL 关键字</strong>。</p>
@@ -346,10 +350,9 @@ HAVING COUNT(DISTINCT Cno) = 2;</code></pre>
 <tr><td>执行顺序</td><td>书写顺序不等于物理顺序；驱动表看过滤后行数；投影须保留连接属性</td></tr>
 </table>
 <p>把全文压成一条翻译链：先确认运算是否合法（并相容），再确认结果的目数与元组数（估算规模），然后按对照表逐层落成 SQL 子句，最后处理三处落差——去重、空值、属性名作用域。前三步是机械的，后一步是判断的；能把这两类分开，查询题就从「凭感觉」变成了「按步骤验收」。原料提供了这条链的大部分环节与两组算例，也留下了漏写连接条件、以属性名判定相容性两处需要修正的地方——把它们标出来，比照抄一遍结论更有价值。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 关系代数转 SQL 习题解答 / 数据库多表查询与关系运算练习 / 连接运算与元组数推导 / 聚合函数与分组统计</p>
-<a class="back-link" href="../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

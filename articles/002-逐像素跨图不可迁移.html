@@ -18,54 +18,18 @@
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container">
-      <h1 class="site-title">科研与学习档案</h1>
-      <p class="site-subtitle">Research &amp; Study Archive</p>
-      <nav class="site-nav"><a href="../index.html">首页</a><a class="active" href="../research.html">科研<span class="n">18</span></a><a href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </div>
-  </header>
+  <header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a class="active" href="../research.html">科研</a><a href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 
   <article class="article">
     <h1>为什么 H&amp;E 到 DAB 的逐像素预测不可行：一份归因报告的关键数据</h1>
     <div class="meta">
-      写于 2026-10-24 · 归因篇 · 原始来源：DeepSeek 对话 [013] M0归因报告解读（23 条）
+      写于 2026-10-24 · 归因篇
     </div>
 
     <p class="lead">
@@ -136,12 +100,12 @@
 
     <div class="note">
       <span class="tag">补充解释 · 改 CNN 是不是就「改变了」</span>
-      我当时追问：报告建议先改任务、不要改模型，但轨道 A 又提出使用 CNN，这是否矛盾？DeepSeek 的解释很直接——<strong>更换 CNN 本身不会改变数据中的信息量</strong>。若只是把 M0 的 UNet 换成 CNN 继续做 128×128 逐像素预测，并无意义，因为报告已排除架构是主因（同一 UNet 的路径回归分支可达 r=0.99，扩散分支仅有 0.02；cross-attention 无差别；各尺度 r 仅从 0.183 升至 0.293）。CNN 在轨道 A 中扮演的是「探针」角色——用于在 32px 块均值的新口径上检验「目标是否仍存在」。一个贴切的类比是：无论用毛笔还是钢笔，纸上本来就没有那个字；换笔不改变纸上是否有字，报告建议的是换纸，而 CNN 只是用来检查新纸上有没有字。
+      我当时追问：报告建议先改任务、不要改模型，但轨道 A 又提出使用 CNN，这是否矛盾？当时的解释很直接——<strong>更换 CNN 本身不会改变数据中的信息量</strong>。若只是把 M0 的 UNet 换成 CNN 继续做 128×128 逐像素预测，并无意义，因为报告已排除架构是主因（同一 UNet 的路径回归分支可达 r=0.99，扩散分支仅有 0.02；cross-attention 无差别；各尺度 r 仅从 0.183 升至 0.293）。CNN 在轨道 A 中扮演的是「探针」角色——用于在 32px 块均值的新口径上检验「目标是否仍存在」。一个贴切的类比是：无论用毛笔还是钢笔，纸上本来就没有那个字；换笔不改变纸上是否有字，报告建议的是换纸，而 CNN 只是用来检查新纸上有没有字。
     </div>
 
     <h2>五、领域内 H&amp;E→IHC 已有成功案例，与报告结论矛盾吗？</h2>
     <p>
-      这是我最后一个、也是最执着的追问。DeepSeek 的回答化解了矛盾：并不冲突，是口径不同。领域内绝大多数 H&amp;E→IHC 工作的评估方式是<strong>分布级指标（FID、JSD、LPIPS、SSIM）</strong>、<strong>病理医生盲评</strong>、<strong>下游任务验证（检验 HER2 分类器性能是否下降）</strong>，并不要求逐像素对应。有研究报告称，病理医生区分真实与虚拟 IHC 的准确率仅为 52%、区分真实与合成 Ki-67 仅为 60%，接近随机水平——这说明<strong>在临床可用的标准下，虚拟染色是成立的</strong>。
+      这是我最后一个、也是最执着的追问。后来的回答化解了矛盾：并不冲突，是口径不同。领域内绝大多数 H&amp;E→IHC 工作的评估方式是<strong>分布级指标（FID、JSD、LPIPS、SSIM）</strong>、<strong>病理医生盲评</strong>、<strong>下游任务验证（检验 HER2 分类器性能是否下降）</strong>，并不要求逐像素对应。有研究报告称，病理医生区分真实与虚拟 IHC 的准确率仅为 52%、区分真实与合成 Ki-67 仅为 60%，接近随机水平——这说明<strong>在临床可用的标准下，虚拟染色是成立的</strong>。
     </p>
     <p>
       而报告否定的，是「BCI 连续切片 + 128×128 逐像素 + 完全不微调跨图」这一严苛组合。领域内的默认做法是未配对/弱配对训练（CycleGAN、Star-Diff 不要求逐像素对应），或主动进行弹性配准（DGR 框架、Spatial Transformer、BiReC）；而报告的全平移扫描只测试了<strong>刚性平移</strong>——真实组织形变是非刚性的，平移无法挽回并不代表弹性配准也无法挽回。概括而言：领域内的成功源于未在报告所限定的组合条件下工作；报告否定的正是这一组合，而非扩散模型本身。
@@ -162,14 +126,10 @@
       </ul>
     </div>
 
-    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+    <a class="back-link" href="../research.html">← 返回科研</a>
   </article>
 
-  <footer class="site-footer">
-    <div class="container">
-      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
-    </div>
-  </footer>
+  <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

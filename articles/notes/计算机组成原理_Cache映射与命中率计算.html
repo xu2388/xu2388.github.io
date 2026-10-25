@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>计算机组成原理 · Cache 映射与命中率计算</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"计算机组成原理 · Cache 映射与命中率计算","date":"2026-10-24","tags":["课程笔记","计算机组成原理"],"category":"课程笔记","summary":"从地址切分把 Cache 讲成可计算的机制：由块大小、块数、相联度推出三段地址位数，用同一配置对比三种映射的比较器代价；以十二条访存序列模拟 FIFO、LRU 与最优替换，命中数为 2、4、6；写策略区分写直达与写回、写分配与非写分配；AMAT 给出两级 Cache 的 1.85 ns 与 CPI 由 5.5 降到 2.28 的对照；末节量化三个参数对命中率的影响。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>计算机组成原理 · Cache 映射与命中率计算</h1>
-<div class="meta">课程笔记 · 计算机组成原理 · 整理自豆包对话 豆包对话 · Cache 性能计算及相关公式 / Cache 命中率的含义及影响因素 / 主存与 Cache 地址结构讨论</div>
+<div class="meta">课程笔记 · 计算机组成原理</div>
 <h2>一、概述与分工</h2>
 <p>Cache 的题目看似花样繁多，其实只有三个变量在动：<strong>地址怎么切</strong>、<strong>块往哪放</strong>、<strong>放不下时换谁</strong>。三者确定之后，命中率与平均访问时间就只是算术。已有笔记已经把这三个变量的定义、三道地址划分算例与平均访问时间的三类情形写完，本文不重复定义，而是把每一层都推到「可以逐项核对」的程度：地址段位数由公式推、替换过程逐次列表、写策略的代价算出字节数、命中率随参数的变化用明确模型量化。</p>
 <table>
@@ -286,10 +290,9 @@
 <tr><td>5</td><td>「LRU 通常表现最优」</td><td>在四路以内近似最优；相联度很高时 LRU 的维护成本与近似算法（如伪 LRU）的差距会被其他因素掩盖</td><td>实现代价与命中收益的权衡</td></tr>
 </table>
 <p>三处自设口径需标明：其一，第四节的替换模拟序列 $1,2,3,4,1,2,5,1,2,3,4,5$ 与容量扫描表为本文设定，原料只给了「LRU 通常优于 FIFO」的定性结论，未给任何序列；其二，第六、七节的所有 AMAT 与 CPI 数值按 $t_1=1\ \text{ns}$、$t_2=5\ \text{ns}$、$t_3=60\ \text{ns}$、$m_1=5\%$、$m_2=20\%$、时钟 1 GHz 统一算出，换参数后数值变、结论形态不变；其三，块大小表的「缺失率 $=4/B$」是纯顺序扫描、无重复访问的模型，只用于说明两个相反作用，不代表任何实测曲线。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Cache 性能计算及相关公式 / Cache 命中率的含义及影响因素 / 主存与 Cache 地址结构讨论</p>
-<a class="back-link" href="../study/computer-organization.html">← 返回 计算机组成原理</a>
+<a class="back-link" href="../../study/computer-organization.html">← 返回 计算机组成原理</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>约束最优化：最优性条件、KKT 与对偶理论 · 学习笔记</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"约束最优化：最优性条件、KKT 与对偶理论 · 学习笔记","date":"2026-10-24","tags":["课程笔记","高等数学/最优化"],"category":"课程笔记","summary":"沿「下降方向集—可行方向集—切锥—F1 集合—约束规格—Farkas 引理」的层级复原 KKT 一阶必要条件的推导线索，落实互补松弛、乘子灵敏度、凸性充分条件与临界方向集上的二阶充分条件；对偶部分由拉格朗日函数下确界定义对偶函数与对偶问题，给出弱对偶、Slater 强对偶、对偶函数恒凹，并以对偶单纯形法与凸二次规划 KTT 条件、有效集法作算法引子。两则算例经独立复核：线性规划一次换基得最优解 (1/3,0,5/3) 与最优值 16/3；仅非负约束的凸二次规划唯一 KTT 点为 (0,4/3) 与最优值 −16/3。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>约束最优化：最优性条件、KKT 与对偶理论 · 学习笔记</h1>
-<div class="meta">课程笔记 · 高等数学/最优化 · 整理自豆包对话 豆包对话 · 约束最优化理论（一）最优性条件 知识点全解析</div>
+<div class="meta">课程笔记 · 高等数学/最优化</div>
 <h2>一、概述</h2>
 <p>本文研究的一般约束优化问题写作</p>
 <p>$$ \min \ f(x),\quad x\in\mathbb{R}^{n},\qquad \text{s.t. } \ g_i(x)\le 0\ (i=1,\dots,m),\ h_j(x)=0\ (j=1,\dots,l), $$</p>
@@ -191,10 +195,9 @@
 <tr><td>算例结果</td><td>线性规划 $x^{*}=(1/3,0,5/3)$、$f^{*}=16/3$；二次规划 $x^{*}=(0,4/3)$、$f^{*}=-16/3$</td></tr>
 </table>
 <p>贯穿全文的一条主线是：最优性判定最初以方向集的不相交形式表述，经约束规格换成梯度可计算的形式，再由 Farkas 引理落地为乘子方程组；对偶理论把同一组乘子解释为下界族的最优参数，算法则把「找满足 KKT 的点」具体化为换基（对偶单纯形）或维护有效集（有效集法）。理解了这条链，各节内容不再是并列的定理条目，而是同一件事在几何、代数与算法三个层面的重复呈现。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 约束最优化理论（一）最优性条件 知识点全解析</p>
-<a class="back-link" href="../study/math-optimization.html">← 返回 高等数学/最优化</a>
+<a class="back-link" href="../../study/math-optimization.html">← 返回 高等数学/最优化</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

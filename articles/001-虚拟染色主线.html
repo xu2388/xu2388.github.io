@@ -18,54 +18,18 @@
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container">
-      <h1 class="site-title">科研与学习档案</h1>
-      <p class="site-subtitle">Research &amp; Study Archive</p>
-      <nav class="site-nav"><a href="../index.html">首页</a><a class="active" href="../research.html">科研<span class="n">18</span></a><a href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </div>
-  </header>
+  <header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a class="active" href="../research.html">科研</a><a href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 
   <article class="article">
     <h1>虚拟染色研究一年记：从扩散模型到 CUT 的路线演进与结论</h1>
     <div class="meta">
-      写于 2026-10-24 · 主线 · 原始来源：DeepSeek 对话 [002] 虚拟染色结构控制讨论（174 条）、[010] 虚拟染色浓度域先例（32 条）
+      写于 2026-10-24 · 主线
     </div>
 
     <p class="lead">
@@ -86,7 +50,7 @@
     </p>
 
     <div class="record">
-      <span class="tag">原始记录 · DeepSeek 的分析</span>
+      <span class="tag">当时的分析</span>
       你遇到的「有平均色调但无实际结构」是虚拟染色扩散模型中一个非常典型的问题，说明模型学到了<strong>全局的颜色分布</strong>，但去噪过程没有被有效地约束在输入 H&amp;E 的<strong>空间结构</strong>上。在扩散模型里，结构控制不是通过损失函数「希望」模型保留结构，而是通过<strong>在去噪过程中注入来自 H&amp;E 的条件信号</strong>来实现的。近期几项工作给出了不同层面的结构控制方案：
       <ul>
         <li><strong>PST-Diff 的 CFG 模块</strong>：Conditional Frequency Guidance，在频率恢复过程中精确控制结构，配非对称注意力（AAM）和潜在迁移（LT）。</li>
@@ -103,7 +67,7 @@
 
     <div class="note">
       <span class="tag">补充解释 · 为什么扩散里没有「CUT」</span>
-      CUT 的精髓是<strong>单侧翻译 + patch 级对比学习（PatchNCE/InfoNCE）</strong>，用一个极简的「结构保持」假设统一了非配对图像翻译。而扩散模型的训练目标是<strong>生成式</strong>的——学的是怎么从噪声一步步还原分布，每一步的中间产物都不是最终图像，所以很难像 CUT 那样「直接施加一个 patch 级对比约束」。结构信息在扩散里需要<strong>贯穿整个去噪链条</strong>持续注入（频域引导、残差通路、跨注意力），框架重心从「设计一个损失」变成了「设计一种迭代注入机制」。二者的训练范式根本不同，因此扩散领域的对应物「有实无名」——并非不存在对标物，而是尚未演化成单一的标准框架。（来源：DeepSeek 对 [002] 的分析）
+      CUT 的精髓是<strong>单侧翻译 + patch 级对比学习（PatchNCE/InfoNCE）</strong>，用一个极简的「结构保持」假设统一了非配对图像翻译。而扩散模型的训练目标是<strong>生成式</strong>的——学的是怎么从噪声一步步还原分布，每一步的中间产物都不是最终图像，所以很难像 CUT 那样「直接施加一个 patch 级对比约束」。结构信息在扩散里需要<strong>贯穿整个去噪链条</strong>持续注入（频域引导、残差通路、跨注意力），框架重心从「设计一个损失」变成了「设计一种迭代注入机制」。二者的训练范式根本不同，因此扩散领域的对应物「有实无名」——并非不存在对标物，而是尚未演化成单一的标准框架。
     </div>
 
     <h2>三、最接近「扩散版 CUT」的工作：MIU-Diff 与一步扩散</h2>
@@ -123,7 +87,7 @@
     </p>
 
     <div class="record">
-      <span class="tag">原始记录 · DeepSeek 给的 CUT 落地建议</span>
+      <span class="tag">当时的判断 · CUT 落地建议</span>
       <ul>
         <li><strong>优先用 FastCUT 而不是原版 CUT</strong>：去掉 identity loss，训练更快、显存更省，虚拟染色里 identity 本来就不是必需项。</li>
         <li><strong>结构保持的核心是 NCE（PatchNCE/InfoNCE）</strong>，重点调它的权重和特征层：从默认开始做一次小范围消融（1、2、5、10），作用在<strong>多个尺度</strong>特征上（浅层保边缘纹理、深层保语义布局）。</li>
@@ -156,7 +120,7 @@
     </p>
 
     <div class="record">
-      <span class="tag">原始记录 · DeepSeek 对浓度域先例的梳理</span>
+      <span class="tag">当时的梳理 · 浓度域先例</span>
       <ul>
         <li><strong>Agilent 专利 WO2026030747A1</strong>（唯一明确以浓度图为中间输出的方案）：U-Net 从输入推断单通道<strong>虚拟染色浓度图</strong>，再与 3 维吸收系数向量在<strong>光密度（OD）域</strong>相乘，严格遵循 <strong>Beer-Lambert 定律</strong>生成染色图。关键优势是浓度图与颜色<strong>解耦</strong>——推理时换吸收系数就能换染色色调，不用重训。但该专利<strong>只有专利、没有对应论文</strong>，也没公开具体网络细节（层数、损失函数都保密，留作 know-how）。</li>
         <li><strong>Menning et al.</strong>（非扩散，物理建模）：耦合扩散-反应方程直接模拟染料局部浓度演化，结合 Beer-Lambert 实现虚拟（再）染色，有严格物理基础但计算贵。</li>
@@ -180,14 +144,10 @@
       </ul>
     </div>
 
-    <a class="back-link" href="../index.html#articles">← 返回首页</a>
+    <a class="back-link" href="../research.html">← 返回科研</a>
   </article>
 
-  <footer class="site-footer">
-    <div class="container">
-      <span>用 WorkBuddy 搭建 · 静态博客，零依赖，可随意托管</span>
-    </div>
-  </footer>
+  <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

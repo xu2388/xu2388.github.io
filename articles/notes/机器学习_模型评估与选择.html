@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>机器学习 · 假设空间、模型评估与选择</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"机器学习 · 假设空间、模型评估与选择","date":"2026-10-24","tags":["课程笔记","机器学习"],"category":"课程笔记","summary":"经典机器学习评估侧笔记。版本空间由样例筛剩的假设组成，四条西瓜样例对应恰 3 个假设；含通配符与极端假设的假设空间规模为各属性取值数加一后连乘再加一，三属性各 3 值得 65。留一法是 k 等于样本数 m 的特例，k 越大训练集越接近全集，泛化误差估计的偏差越小，代价是训练次数线性增长。F1 是查准率与查全率的调和平均，原料把 P 加 R 误算为 1.8709 使 F1 得 0.8379，复核应为 0.8852；AUC 两例 0.62 与 2/3 复核一致；代价敏感两例因代价与 FPR、FNR 配对错位而偏低。神经网络结构不在本文范围。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>机器学习 · 假设空间、模型评估与选择</h1>
-<div class="meta">课程笔记 · 机器学习 · 整理自豆包对话 豆包对话 · 机器学习版本空间与归纳偏好问答 / 机器学习绪论试卷与题库 / 第二章模型评估与选择试卷与题库 / K折交叉验证代码解释 / scikit-learn 交叉验证方法辨析 / 复习题知识点梳理 / 期末复习问答</div>
+<div class="meta">课程笔记 · 机器学习</div>
 <h2>一、范围与素材</h2>
 <p>本文只覆盖经典机器学习里「学什么」与「怎么评」两侧：归纳假设与版本空间、训练/测试划分、性能度量、代价敏感、过拟合与偏差-方差、比较检验的直觉，以及 scikit-learn 的对应入口；神经网络结构另有专门笔记。原料为课程复习阶段的问答记录，成文时剥去题号与选项外壳。所有数值均用纯标准库脚本复核，与原料不一致处以「原料得数为…，按公式复核应为…」标注并汇入文末勘误表。</p>
 <h2>二、归纳假设、版本空间与归纳偏好</h2>
@@ -264,10 +268,9 @@ scores.mean()</code></pre>
 <tr><td>比较检验</td><td>阈值检验用二项；两算法用 t 或 McNemar；多集多算法用 Friedman</td></tr>
 </table>
 <p>全文是同一条逻辑链：数据只能缩小候选范围，选哪个靠归纳偏好，而偏好没有先验保证，于是「选得对不对」只能由一套可复现的评估协议回答——划分方式决定估计的偏差与稳定性，度量选择定义什么叫好，代价结构把业务后果写进目标，比较检验把两次跑分的差距还原成抽样波动。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 机器学习版本空间与归纳偏好问答 / 机器学习绪论试卷与题库 / 第二章模型评估与选择试卷与题库 / K折交叉验证代码解释 / scikit-learn 交叉验证方法辨析 / 复习题知识点梳理 / 期末复习问答</p>
-<a class="back-link" href="../study/machine-learning.html">← 返回 机器学习</a>
+<a class="back-link" href="../../study/machine-learning.html">← 返回 机器学习</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

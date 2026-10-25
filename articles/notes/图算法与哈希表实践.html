@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>最短路、传递闭包、哈希表与栈队列 · 算法与数据结构（二）</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"最短路、传递闭包、哈希表与栈队列 · 算法与数据结构（二）","date":"2026-10-24","tags":["课程笔记","数据结构与算法"],"category":"课程笔记","summary":"以原料算例为线索，逐步跑通 Dijkstra 的每轮选点与松弛、Floyd 的三重循环与矩阵快照、Warshall 的布尔矩阵迭代，并给出链地址法与公共溢出区两种散列表实现、装填因子与平均查找长度公式，最后落到循环队列判满判空的三种方案与括号匹配、中缀转后缀求值的完整代码。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>最短路、传递闭包、哈希表与栈队列 · 算法与数据结构（二）</h1>
-<div class="meta">课程笔记 · 数据结构与算法 · 整理自豆包对话 豆包对话 · Dijkstra 算法求解最短路径 / 编写哈希表代码 / 栈与队列学习及实践</div>
+<div class="meta">课程笔记 · 数据结构与算法</div>
 <h2>一、概述</h2>
 <p>本篇是算法与数据结构主题的第二篇笔记，内容限于三块：<strong>图的最短路与传递闭包算法</strong>（Dijkstra、Floyd、Warshall）、<strong>哈希表（散列表）的冲突处理与代码实现</strong>、<strong>栈与队列的应用实践</strong>。</p>
 <p>与此前已发布笔记的分工如下：堆与 <code>priority_queue</code>、AVL 平衡因子、二分查找的区间写法、0-1 背包的状态设计已在《算法与数据结构》中整理，本篇不再重复，只在需要处引用其结论；欧拉图与哈密顿图的判定、握手定理、图的度数与连通性等纯图论概念属于《离散数学》的范围，本篇只讨论<strong>算法与实现</strong>，图的输入一律直接给出邻接矩阵。原料中散见的拓扑序列唯一性判定、二叉排序树查找序列合法性、Prim 与 Kruskal 最小生成树等问答，因归属其他专题，本篇不予收录。</p>
@@ -561,10 +565,9 @@ int evaluatePostfix(const std::string&amp; postfix) {
 <p>三种矩阵型算法共享同一套&quot;放开中间点&quot;的动态规划思想，差别只在代数结构与循环次序：Dijkstra 以贪心把中间点限制逐步外推为最终答案，代价是必须非负权；Floyd 用 $O(n^3)$ 换取全点对最短路，并能容纳负权边、检出负权回路；Warshall 把&quot;取小&quot;换成&quot;或&quot;、&quot;相加&quot;换成&quot;且&quot;，只求可达性。手算时 Dijkstra 看 <code>dist</code> 与 <code>path</code> 两个数组的逐轮变化，Floyd 与 Warshall 看矩阵快照逐 $k$ 的变化，两者的不变式都是&quot;内部顶点不超过当前 $k$&quot;。</p>
 <p>哈希表的三条主线是散列函数、冲突处理与性能度量：链地址法与公共溢出区法在代码上分别是&quot;链表摘挂&quot;与&quot;两段查找 + 前移整理&quot;，开放定址法在删除上必须用逻辑删除；性能用装填因子 $\alpha$ 而非 $n$ 来刻画，$\alpha$ 越接近 1，线性探测的 ASL 增长越剧烈，这也是实践中设定阈值扩容的理由。</p>
 <p>栈与队列的要点集中在两处判据与两类应用。判据是循环队列的满空区分（牺牲一个单元、<code>size</code>、<code>tag</code> 三选一），应用是括号匹配与表达式求值（中缀转后缀用运算符栈，求值用操作数栈），它们的共同结构特征是&quot;最近打开的最先闭合&quot;，因此必须用栈；凡是&quot;先进来的先处理&quot;就应交给队列。原料中三处 ASL 与一处表达式结果的偏差均已按算法重跑并逐处标注，其余表格与原对话保持一致。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Dijkstra 算法求解最短路径 / 编写哈希表代码 / 栈与队列学习及实践</p>
-<a class="back-link" href="../study/data-structures.html">← 返回 数据结构与算法</a>
+<a class="back-link" href="../../study/data-structures.html">← 返回 数据结构与算法</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据库 · 函数依赖、候选码与范式分解</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据库 · 函数依赖、候选码与范式分解","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"从函数依赖与 Armstrong 公理切入，梳理完全/部分/传递三个层次，给出属性闭包算法与按 L/R/LR 分类速判候选码的通用步骤；以 F={A→B, A→C, D→A}、F={BCD→A, A→C} 两组字母算例演示候选码由「AD」修正为「D」、由「仅 BCD」补全为「ABD、BCD」；沿 1NF→2NF→3NF→BCNF 逐级给出「在防什么」对照，并用学生-选课-课程与图书-作者-出版社两组语义算例演示保持依赖且无损的 3NF 分解，同时整理 chase 表格法与规范化取舍。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据库 · 函数依赖、候选码与范式分解</h1>
-<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 豆包对话 · 数据库函数依赖与候选码求解、范式综合练习</div>
+<div class="meta">课程笔记 · 数据库/MySQL</div>
 <h2>一、概述</h2>
 <p>本笔记承接《数据库原理与关系运算》，把关系模型的另一半——模式设计层——独立梳理。前者回答「关系如何被查询」，本文回答「一个关系模式怎样才算合理、如何把一张大表拆成若干张表且不丢信息」。内容源自一组围绕函数依赖、候选码与范式判定的复习问答，按定义顺序重排，保留原始算例并给出必要的勘误；人物、题号与选项字母一律泛化。</p>
 <p>范式理论只有一条主线：<strong>决定因素</strong>。属性组 $X$ 是否函数决定 $Y$，$X$ 是否构成超键，$X$ 是否是候选码——所有分级定义都在追问这三件事，所以每一级的判定都只需回到依赖集本身。</p>
@@ -187,10 +191,9 @@
 <p>原料本身也贡献了四条反面案例：候选码 $AD$（其实是超键）、只列 $BCD$ 漏掉 $ABD$、把 $(BC)$ 误列为候选码、在语义题里把 教师号 加进候选码。四处都属违反「L∪N 起点 + LR 递增 + 最小性回检」的流程，本文按定义重述，未做静默改数。</p>
 <h2>九、小结</h2>
 <p>回到范式主线：所有分级定义都在追问「决定因素是否等价于候选码」。1NF 管字段是否原子，2NF 管非主属性是否整块依赖候选码，3NF 管非主属性是否被别的非主属性拐了一道弯，BCNF 管任何非平凡依赖的左部是否已是超键。求解路径同一条：写出 $F$、按 L/R/LR/N 分类、算闭包、验最小，剩下的都是判定。分解算法给出两个独立判据（无损、保持依赖），3NF 综合法用「按左部合成 + 必要时追加候选码关系」一次同时满足两者；BCNF 二分法则要以「是否保持依赖」为额外代价衡量。规范化不是终点，只是把冗余与异常压到工程可接受的水平，之后再按读侧热点做局部反规范化，才是模式设计的完整回路。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 数据库函数依赖与候选码求解、范式综合练习</p>
-<a class="back-link" href="../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

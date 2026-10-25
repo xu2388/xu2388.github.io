@@ -322,4 +322,4 @@ return y                            # 送线性层 + Softmax
 ## 参考文献
 
 1. Vaswani A., Shazeer N., Parmar N., et al. Attention Is All You Need. NeurIPS 2017. 表 3 给出 Base 与 Big 两种配置的 $N$、$d_{model}$、$d_{ff}$、$h$、$d_k$ 与参数量。裸链接：https://arxiv.org/abs/1706.03762 ；会议版 PDF：https://papers.neurips.cc/paper/7181-attention-is-all-you-need.pdf
-2. 课程幻灯片《Components of Neural Networks / Feed-Forward Layer / Attention / Transformer》逐页讲解记录（豆包对话，193 条消息），本文公式、结构说明与配置数值均取自该记录的文字部分；幻灯片图像不可得，依赖图示的内容未予收录。
+2. 课程幻灯片《Components of Neural Networks / Feed-Forward Layer / Attention / Transformer》逐页讲解记录，本文公式、结构说明与配置数值均取自该记录的文字部分；幻灯片图像不可得，依赖图示的内容未予收录。

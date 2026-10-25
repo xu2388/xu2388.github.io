@@ -6,42 +6,39 @@
 <title>操作系统/Linux · 学习 · 科研与学习档案</title>
 <meta name="description" content="操作系统/Linux的全部笔记（5 篇）。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
-<body class="hub hub--study">
-<header class="site-header">
-  <div class="container">
-    <div class="side-brand">
-      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
-      <div>
-        <h1 class="site-title">科研与学习档案</h1>
-        <p class="site-subtitle">Research &amp; Study Archive</p>
-      </div>
-    </div>
-    <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-    
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../research.html">科研</a><a class="active" href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
 
-<main class="container">
 
-<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../study.html">学习</a> <span>/</span> 操作系统/Linux</nav>
-<header class="subj-head">
-  <p class="eyebrow">计算机基础</p>
-  <h1>操作系统/Linux</h1>
-  <p class="lede">进程线程、内存管理与命令行 · 共 5 篇</p>
-</header>
-<ul class="article-list plain">
-<li><a href="../articles/notes/Linux存储管理.html">Linux 本地存储管理 · 分区、LVM、文件系统与挂载</a><span class="desc">以「磁盘—分区—LVM—格式化—挂载—权限与配额—备份」为主线，系统整理 Linux 本地存储管理：MBR 512 字节引导扇区结构与 GPT 对比、fdisk/gdisk/parted 与 mkfs 系列、LVM 全流程（pvcreate、vgcreate、lvcreate、lvextend 加 resize2fs，PE 默认 4MB）、fstab 六字段与 mount -a 验证、fuser 解除占用、df 与 du 分工、八进制与符号两种权限写法及 umask 推算（含 666 减 033 不等于 633 的实测订正）、quota 软硬限额六步配置、tar 与 crontab 定时备份实操。</span></li><li><a href="../articles/notes/Linux_用户权限与ACL.html">操作系统/Linux · 用户权限与 ACL</a><span class="desc">从权限串解码出发，梳理 rwx 在文件与目录上的不同语义、属主/属组/其他三类身份的匹配顺序、chmod 的数字与符号写法、umask 的按位取反推导（含 033 与 027 的逐位复核）、SUID/SGID/粘滞位与四位八进制的换算、进程四类 ID 的取值规则，以及 getfacl 与 setfacl、mask 与默认 ACL 的继承条件，最后落到共享目录的最小权限配置与常见误判。</span></li><li><a href="../articles/notes/Linux_进程线程与作业控制.html">操作系统/Linux · 进程、线程与作业控制</a><span class="desc">从资源归属与调度单位两条线区分进程和线程，梳理 task_struct 与 R/S/D/T/Z 状态迁移、fork 的写时复制与返回值、exec 换映像、wait 回收退出码，再进入会话与进程组之上的作业控制、常用信号的语义、ps/top/pgrep 的排查路径，以及僵尸、孤儿进程的成因与 Python 多进程在临时目录、共享内存和 CUDA 上的典型故障。</span></li><li><a href="../articles/notes/Linux_远程连接与文件传输.html">操作系统/Linux · 远程连接与文件传输</a><span class="desc">从 SSH 握手的几个阶段讲起，说明首次连接的主机密钥确认、公钥认证的权限要求与 ssh_config 的写法，再对比 scp、sftp 与 rsync 的能力边界和断点续传、校验做法，并给出跳板机、本地与远程端口转发、VNC 与 RDP 经 SSH 隧道的配置思路，以及断线重连、校验和核对与常见报错的完整排查顺序。</span></li><li><a href="../articles/notes/操作系统与Shell脚本.html">操作系统与 Linux 上机 · 进程、权限与 Shell 脚本</a><span class="desc">进程与线程的定义差异、状态字母 R/S/D/T/Z 与四类身份标识、前后台与作业控制、信号与进程终止、用户组的四类账户文件、SUID/SGID/粘滞位的四位八进制推算与 FACL 细粒度授权、Shell 脚本的变量扩展与条件测试及五种流程结构、grep/sed/awk 的典型用法、at/batch/crontab 三类定时、gzip/tar 归档，末附 gcc 编译链与 Makefile 变量展开。最实用：`ps -u`、`jobs` 配 `bg` 与 `fg`、`kill -9`、`setfacl -m`、`test -f`。</span></li>
+<main class="wrap">
+  <div class="crumbs"><a href="../index.html">首页</a><span>/</span><a href="../study.html">学习</a><span>/</span>操作系统/Linux</div>
+  <header class="list-head">
+    <h1>操作系统/Linux</h1>
+    <p class="lede">进程线程、内存管理与命令行 · 共 5 篇</p>
+  </header>
+  <ul class="article-list">
+<li><a href="../articles/notes/Linux存储管理.html">Linux 本地存储管理 · 分区、LVM、文件系统与挂载</a><span class="desc">以「磁盘—分区—LVM—格式化—挂载—权限与配额—备份」为主线，系统整理 Linux 本地存储管理：MBR 512 字节引导扇区结构与 GPT 对比、fdisk/gdisk/parted 与 mkfs 系列、LVM 全流程（pvcreate、vgcreate、lvcreate、lvextend 加 resize2fs，PE 默认 4MB）、fstab 六字段与 mount -a 验证、fuser 解除占用、df 与 du 分工、八进制与符号两种权限写法及 umask 推算（含 666 减 033 不等于 633 的实测订正）、quota 软硬限额六步配置、tar 与 crontab 定时备份实操。</span></li>
+<li><a href="../articles/notes/Linux_用户权限与ACL.html">操作系统/Linux · 用户权限与 ACL</a><span class="desc">从权限串解码出发，梳理 rwx 在文件与目录上的不同语义、属主/属组/其他三类身份的匹配顺序、chmod 的数字与符号写法、umask 的按位取反推导（含 033 与 027 的逐位复核）、SUID/SGID/粘滞位与四位八进制的换算、进程四类 ID 的取值规则，以及 getfacl 与 setfacl、mask 与默认 ACL 的继承条件，最后落到共享目录的最小权限配置与常见误判。</span></li>
+<li><a href="../articles/notes/Linux_进程线程与作业控制.html">操作系统/Linux · 进程、线程与作业控制</a><span class="desc">从资源归属与调度单位两条线区分进程和线程，梳理 task_struct 与 R/S/D/T/Z 状态迁移、fork 的写时复制与返回值、exec 换映像、wait 回收退出码，再进入会话与进程组之上的作业控制、常用信号的语义、ps/top/pgrep 的排查路径，以及僵尸、孤儿进程的成因与 Python 多进程在临时目录、共享内存和 CUDA 上的典型故障。</span></li>
+<li><a href="../articles/notes/Linux_远程连接与文件传输.html">操作系统/Linux · 远程连接与文件传输</a><span class="desc">从 SSH 握手的几个阶段讲起，说明首次连接的主机密钥确认、公钥认证的权限要求与 ssh_config 的写法，再对比 scp、sftp 与 rsync 的能力边界和断点续传、校验做法，并给出跳板机、本地与远程端口转发、VNC 与 RDP 经 SSH 隧道的配置思路，以及断线重连、校验和核对与常见报错的完整排查顺序。</span></li>
+<li><a href="../articles/notes/操作系统与Shell脚本.html">操作系统与 Linux 上机 · 进程、权限与 Shell 脚本</a><span class="desc">进程与线程的定义差异、状态字母 R/S/D/T/Z 与四类身份标识、前后台与作业控制、信号与进程终止、用户组的四类账户文件、SUID/SGID/粘滞位的四位八进制推算与 FACL 细粒度授权、Shell 脚本的变量扩展与条件测试及五种流程结构、grep/sed/awk 的典型用法、at/batch/crontab 三类定时、gzip/tar 归档，末附 gcc 编译链与 Makefile 变量展开。最实用：`ps -u`、`jobs` 配 `bg` 与 `fg`、`kill -9`、`setfacl -m`、`test -f`。</span></li>
 </ul>
-<div class="subj-foot">
   <a class="back-link" href="../study.html">← 返回学习</a>
-</div>
-
 </main>
 
-<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

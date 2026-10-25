@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>概率论与数理统计 · 事件运算、常见分布与数字特征</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"概率论与数理统计 · 事件运算、常见分布与数字特征","date":"2026-10-24","tags":["课程笔记","概率论/数理统计"],"category":"课程笔记","summary":"从期末复习实战整理的基础笔记：事件记法上互斥与独立、空集与零概率不可混为一谈，且零概率推不出互斥；分布函数按分段、积分、汇总三步求得；超几何（不放回）与二项（放回）以 52 张扑克题完整代入；期望方差线性性质、样本方差无偏性的五步证明、矩估计与极大似然、中心极限定理与 t 检验置信区间均有算例。原料六处数值不一致，已按公式统一重算。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>概率论与数理统计 · 事件运算、常见分布与数字特征</h1>
-<div class="meta">课程笔记 · 概率论/数理统计 · 整理自豆包对话 豆包对话 · 数学题求解及分布函数等相关内容 / 概率论中 AB 的正确表示及与概率的关系 / 超几何分布题目讲解</div>
+<div class="meta">课程笔记 · 概率论/数理统计</div>
 <h2>一、概述</h2>
 <p>本文整理笔者在期末复习阶段与 AI 助手围绕一套概率论与数理统计期末试卷（含选择、古典概型、分布函数、二维连续型、参数估计与假设检验六大题块）反复追问的对话记录，主题集中在四块基础考点：<strong>事件关系与运算、分布函数与常见分布、数字特征、抽样统计</strong>。原料中若干处当时真正卡住的概念——$AB$ 的记法与含义、由密度反求分布函数、&quot;无偏估计&quot;到底指什么、指数分布与泊松分布的均值方差反复混淆——本文均原样保留困惑脉络并给出书面化澄清。</p>
 <p>需要特别说明：原料两条对话对同一道超几何分布题给出过两个不同的方差值，另有四处推导与结果自相矛盾。本文所有数值均以公式重新验算为准，各处随文标注，并集中列于文末勘误表。</p>
@@ -208,10 +212,9 @@
 <tr><td>检验与区间</td><td>方差未知小样本用 t；区间 $\bar x\pm t_{\alpha/2}(n-1)\dfrac{s}{\sqrt n}$</td></tr>
 </table>
 <p>概率论基础考题的解法高度程式化：事件题先定&quot;用对立还是直接数&quot;，分布函数题走&quot;分段—积分—验证&quot;，数字特征题把 $E(X^{2})=D+(E)^{2}$ 与线性性质用熟，统计题认准&quot;矩估计配期望方程、似然取对数求导、小样本方差未知找 t&quot;。真正需要长期警惕的是几处概念级易错点：$AB=\varnothing$ 与 $P(AB)=0$ 的分层、互斥与独立的区分、放回与不放回的选型、样本方差 $n-1$ 的前提。本文六处勘误也提示：参考答案并非天然可靠，凡数值都应回到公式本身复核。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 数学题求解及分布函数等相关内容 / 概率论中 AB 的正确表示及与概率的关系 / 超几何分布题目讲解</p>
-<a class="back-link" href="../study/probability.html">← 返回 概率论/数理统计</a>
+<a class="back-link" href="../../study/probability.html">← 返回 概率论/数理统计</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

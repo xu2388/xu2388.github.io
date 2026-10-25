@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Web开发 · Django 路由、ORM 与模板</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"Web开发 · Django 路由、ORM 与模板","date":"2026-10-24","tags":["课程笔记","Web开发/前端"],"category":"课程笔记","summary":"Django 把一次请求拆成 URL 解析、视图处理、模型取数、模板渲染四段，MTV 是它对 MVC 的改写。路由用 path 与 include 分层，命名后可用 reverse 反向生成；ORM 以模型类描述表结构，迁移文件是 Python 脚本而非 SQL；QuerySet 惰性求值，filter 与 Q 对象负责筛选，select_related 与 prefetch_related 负责减少查询次数。模板靠 extends 与 block 继承，POST 表单必须带 CSRF token。多数报错可按「路由名、模板路径、迁移状态」三步定位。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>Web开发 · Django 路由、ORM 与模板</h1>
-<div class="meta">课程笔记 · Web开发/前端 · 整理自豆包对话 豆包对话 · Django URL 配置困惑及解决 / 创建 Django 项目用于学习 ORM / Django 报错处理 / Django 第二周学习任务明确 / Django 模板继承报错排查</div>
+<div class="meta">课程笔记 · Web开发/前端</div>
 <h2>一、概述：MTV 与 MVC 的对应关系</h2>
 <p>Django 官方把架构称为 MTV：Model（模型）、Template（模板）、View（视图）。它与 MVC 的对应关系常被误解，准确的说法是：</p>
 <table>
@@ -492,10 +496,9 @@ class PostForm(forms.ModelForm):
 <tr><td>表不存在</td><td><code>showmigrations</code></td><td><code>migrate</code>、数据库配置</td></tr>
 </table>
 <p>MTV 的分工可以压成一句话：<strong>URL 决定「找谁」，View 决定「做什么」，Model 决定「数据从哪来」，Template 决定「长什么样」</strong>。四者各守边界，项目才能在小规模时简单、大规模时可维护。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Django URL 配置困惑及解决 / 创建 Django 项目用于学习 ORM / Django 报错处理 / Django 第二周学习任务明确 / Django 模板继承报错排查</p>
-<a class="back-link" href="../study/web-frontend.html">← 返回 Web开发/前端</a>
+<a class="back-link" href="../../study/web-frontend.html">← 返回 Web开发/前端</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

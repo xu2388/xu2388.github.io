@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据结构与算法 · 排序与查找方法对比</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据结构与算法 · 排序与查找方法对比","date":"2026-10-24","tags":["课程笔记","数据结构与算法"],"category":"课程笔记","summary":"以八种内部排序的复杂度与稳定性总表为主线，比较插入、希尔、冒泡、快速、选择、堆、归并和基数排序的适用场景；逐步演示快速排序的中间元素枢轴划分与最坏情况、大根堆的建堆插入删除和堆排序；再讨论折半查找判定树的高度与成功失败平均查找长度、分块查找的组织方式，以及散列表与折半查找在有序性、时间复杂度和适用范围上的取舍。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据结构与算法 · 排序与查找方法对比</h1>
-<div class="meta">课程笔记 · 数据结构与算法 · 整理自豆包对话 豆包对话 · 快速排序中间元素枢轴 / 堆的插入和删除操作 / 大根堆构建步骤讲解 / 折半查找判定树高度计算及说明</div>
+<div class="meta">课程笔记 · 数据结构与算法</div>
 <h2>一、概述</h2>
 <p>排序与查找是数据结构课程里最容易“背了表格却不会做题”的两章。原因通常不是算法本身复杂，而是几个关键量没有分清：比较次数与移动次数、平均情况与最坏情况、时间复杂度与空间复杂度、稳定性与有序性。把这些量分开记录，再放到具体数据上走一遍，表格才会变成可用的工具。</p>
 <p>本笔记先给出八种内部排序的总表，再按插入、交换、选择、归并、基数五类逐一说明机制和典型步骤；快速排序部分重点讨论枢轴选择为什么会影响最坏情况，以及“取中间元素”到底解决了什么问题、又没有解决什么问题；堆部分完整走一遍建堆、插入、删除和堆排序；查找部分从折半查找判定树推出高度与平均查找长度，再补充分块查找和散列表，并比较散列表与折半查找的适用边界。</p>
@@ -343,10 +347,9 @@
 <tr><td>散列表</td><td>平均 $O(1)$，最坏 $O(n)$，不要求有序</td><td>装填因子控制在 0.75 以下</td></tr>
 </table>
 <p>把排序与查找放在一起看，会发现它们共享同一套权衡：是否要求有序、是否允许额外空间、是否要求稳定、是否要求最坏情况有保证。快速排序用“平均快”换“最坏慢”，归并排序用“空间”换“稳定与最坏保证”，堆排序用“常数与缓存”换“原地与最坏保证”，散列表用“无序与空间”换“平均常数时间”。题目给出的约束不同，最优选择就不同；先认清约束，再查表，才不会把“平均”当成“最坏”，也不会把“比较次数”当成“总时间”。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 快速排序中间元素枢轴 / 堆的插入和删除操作 / 大根堆构建步骤讲解 / 折半查找判定树高度计算及说明</p>
-<a class="back-link" href="../study/data-structures.html">← 返回 数据结构与算法</a>
+<a class="back-link" href="../../study/data-structures.html">← 返回 数据结构与算法</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

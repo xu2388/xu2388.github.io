@@ -6,42 +6,41 @@
 <title>数据库/MySQL · 学习 · 科研与学习档案</title>
 <meta name="description" content="数据库/MySQL的全部笔记（7 篇）。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
-<body class="hub hub--study">
-<header class="site-header">
-  <div class="container">
-    <div class="side-brand">
-      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
-      <div>
-        <h1 class="site-title">科研与学习档案</h1>
-        <p class="site-subtitle">Research &amp; Study Archive</p>
-      </div>
-    </div>
-    <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-    
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../research.html">科研</a><a class="active" href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
 
-<main class="container">
 
-<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../study.html">学习</a> <span>/</span> 数据库/MySQL</nav>
-<header class="subj-head">
-  <p class="eyebrow">编程与开发</p>
-  <h1>数据库/MySQL</h1>
-  <p class="lede">SQL、索引、事务与范式 · 共 7 篇</p>
-</header>
-<ul class="article-list plain">
-<li><a href="../articles/notes/数据库_SQL视图触发器与完整性安全性.html">数据库 · SQL 查询、视图、触发器与完整性安全性</a><span class="desc">围绕从查询到安全保护的链条梳理结论：SELECT 子句按 FROM、WHERE、GROUP BY、HAVING、ORDER BY 次序执行，故「不计不及格」只能写在 WHERE、「门数不小于四」只能写在 HAVING；自然连接会匹配并合并全部同名列，两个同名列同时相等才保留，因而李四一行被排除；NOT IN 在子查询含空值时整体返回空集，NOT EXISTS 免疫；「每门课至多 60 人选修」可用断言配 ALL 表达，但 MySQL 不支持断言，须改用 BEFORE 触发器加 SIGNAL 拦截；收回用 REVOKE 加 CASCADE。</span></li><li><a href="../articles/notes/数据库_事务并发控制与恢复.html">数据库 · 事务、并发控制与恢复</a><span class="desc">事务是不可分割的操作序列，ACID 分别由锁与日志支撑。并发带来丢失更新、脏读、不可重复读与幻读，四级隔离级别划定允许范围，三级封锁协议与两段锁保证可串行化，意向锁与间隙锁细化封锁粒度。MVCC 用隐藏事务号与回滚指针串成版本链，由 ReadView 判定可见性。redo 重放已提交修改，undo 支持回滚与旧版本，WAL 要求日志先落盘，恢复按分析、重做、回滚推进。文末对原料结论作限定与勘误。</span></li><li><a href="../articles/notes/数据库_关系代数与SQL互译.html">数据库 · 关系代数与 SQL 互译</a><span class="desc">关系代数与 SQL 是同一件事的形式层与实现层。五种基本运算为并、差、笛卡尔积、选择、投影，交、连接、除均由它们导出。翻译规则可机械执行：选择落 WHERE，投影落 SELECT，笛卡尔积落 FROM 多表，连接落 JOIN ON，并差交由集合运算承担。除运算有两种写法，双重 NOT EXISTS 对应全称语义，分组计数对应包含。外连接补空值，WHERE 与 ON 的位置决定它是否退化为内连接。</span></li><li><a href="../articles/notes/数据库_函数依赖与范式分解.html">数据库 · 函数依赖、候选码与范式分解</a><span class="desc">从函数依赖与 Armstrong 公理切入，梳理完全/部分/传递三个层次，给出属性闭包算法与按 L/R/LR 分类速判候选码的通用步骤；以 F={A→B, A→C, D→A}、F={BCD→A, A→C} 两组字母算例演示候选码由「AD」修正为「D」、由「仅 BCD」补全为「ABD、BCD」；沿 1NF→2NF→3NF→BCNF 逐级给出「在防什么」对照，并用学生-选课-课程与图书-作者-出版社两组语义算例演示保持依赖且无损的 3NF 分解，同时整理 chase 表格法与规范化取舍。</span></li><li><a href="../articles/notes/数据库_索引原理与查询优化.html">数据库 · 索引原理与查询优化</a><span class="desc">索引以写代价换取定位能力，B+ 树因高扇出、数据集中在叶子、叶子成链而适配磁盘。InnoDB 以主键建聚簇索引，二级索引叶子存主键，取整行需回表，查询列全在索引内即覆盖索引。复合索引按最左前缀匹配，范围列会截断后续列；列上函数、隐式转换、前导通配符是失效写法。IN 与 EXISTS 差别在值匹配与存在判断，NOT IN 遇空值整体为空。执行计划看扫描行数与回表次数，优化是否成立须对照实验验证。</span></li><li><a href="../articles/notes/MySQL.html">数据库与 MySQL · 复习与实操笔记</a><span class="desc">以学生选课数据库的四个实验为主线，梳理 MySQL 8.0 的安装配置与排错、Navicat 图形化操作、建表与约束、触发器、索引与视图、交互式 SQL 查询及用户权限管理，并归纳常见报错的成因与解决办法。</span></li><li><a href="../articles/notes/数据库原理与关系运算.html">数据库原理 · 关系运算、SQL 查询与权限管理</a><span class="desc">以关系模型的形式化定义为主线，梳理关系、元组、属性、域与候选码、主码、外码的术语层级及三类完整性约束；给出选择、投影、连接、除法的运算对照与五种基本运算的完备性，用象集完整推演 R÷S 得 {201,202} 的算例；归纳「书写时先连接再选择投影最保险、执行层应先选择后投影」的顺序结论，并整理 SQL 侧的等值连接写法、WHERE 与 HAVING 的分工、DELETE、DROP、TRUNCATE 的五项区别与库到行的授权粒度。</span></li>
+<main class="wrap">
+  <div class="crumbs"><a href="../index.html">首页</a><span>/</span><a href="../study.html">学习</a><span>/</span>数据库/MySQL</div>
+  <header class="list-head">
+    <h1>数据库/MySQL</h1>
+    <p class="lede">SQL、索引、事务与范式 · 共 7 篇</p>
+  </header>
+  <ul class="article-list">
+<li><a href="../articles/notes/数据库_SQL视图触发器与完整性安全性.html">数据库 · SQL 查询、视图、触发器与完整性安全性</a><span class="desc">围绕从查询到安全保护的链条梳理结论：SELECT 子句按 FROM、WHERE、GROUP BY、HAVING、ORDER BY 次序执行，故「不计不及格」只能写在 WHERE、「门数不小于四」只能写在 HAVING；自然连接会匹配并合并全部同名列，两个同名列同时相等才保留，因而李四一行被排除；NOT IN 在子查询含空值时整体返回空集，NOT EXISTS 免疫；「每门课至多 60 人选修」可用断言配 ALL 表达，但 MySQL 不支持断言，须改用 BEFORE 触发器加 SIGNAL 拦截；收回用 REVOKE 加 CASCADE。</span></li>
+<li><a href="../articles/notes/数据库_事务并发控制与恢复.html">数据库 · 事务、并发控制与恢复</a><span class="desc">事务是不可分割的操作序列，ACID 分别由锁与日志支撑。并发带来丢失更新、脏读、不可重复读与幻读，四级隔离级别划定允许范围，三级封锁协议与两段锁保证可串行化，意向锁与间隙锁细化封锁粒度。MVCC 用隐藏事务号与回滚指针串成版本链，由 ReadView 判定可见性。redo 重放已提交修改，undo 支持回滚与旧版本，WAL 要求日志先落盘，恢复按分析、重做、回滚推进。文末对原料结论作限定与勘误。</span></li>
+<li><a href="../articles/notes/数据库_关系代数与SQL互译.html">数据库 · 关系代数与 SQL 互译</a><span class="desc">关系代数与 SQL 是同一件事的形式层与实现层。五种基本运算为并、差、笛卡尔积、选择、投影，交、连接、除均由它们导出。翻译规则可机械执行：选择落 WHERE，投影落 SELECT，笛卡尔积落 FROM 多表，连接落 JOIN ON，并差交由集合运算承担。除运算有两种写法，双重 NOT EXISTS 对应全称语义，分组计数对应包含。外连接补空值，WHERE 与 ON 的位置决定它是否退化为内连接。</span></li>
+<li><a href="../articles/notes/数据库_函数依赖与范式分解.html">数据库 · 函数依赖、候选码与范式分解</a><span class="desc">从函数依赖与 Armstrong 公理切入，梳理完全/部分/传递三个层次，给出属性闭包算法与按 L/R/LR 分类速判候选码的通用步骤；以 F={A→B, A→C, D→A}、F={BCD→A, A→C} 两组字母算例演示候选码由「AD」修正为「D」、由「仅 BCD」补全为「ABD、BCD」；沿 1NF→2NF→3NF→BCNF 逐级给出「在防什么」对照，并用学生-选课-课程与图书-作者-出版社两组语义算例演示保持依赖且无损的 3NF 分解，同时整理 chase 表格法与规范化取舍。</span></li>
+<li><a href="../articles/notes/数据库_索引原理与查询优化.html">数据库 · 索引原理与查询优化</a><span class="desc">索引以写代价换取定位能力，B+ 树因高扇出、数据集中在叶子、叶子成链而适配磁盘。InnoDB 以主键建聚簇索引，二级索引叶子存主键，取整行需回表，查询列全在索引内即覆盖索引。复合索引按最左前缀匹配，范围列会截断后续列；列上函数、隐式转换、前导通配符是失效写法。IN 与 EXISTS 差别在值匹配与存在判断，NOT IN 遇空值整体为空。执行计划看扫描行数与回表次数，优化是否成立须对照实验验证。</span></li>
+<li><a href="../articles/notes/MySQL.html">数据库与 MySQL · 复习与实操笔记</a><span class="desc">以学生选课数据库的四个实验为主线，梳理 MySQL 8.0 的安装配置与排错、Navicat 图形化操作、建表与约束、触发器、索引与视图、交互式 SQL 查询及用户权限管理，并归纳常见报错的成因与解决办法。</span></li>
+<li><a href="../articles/notes/数据库原理与关系运算.html">数据库原理 · 关系运算、SQL 查询与权限管理</a><span class="desc">以关系模型的形式化定义为主线，梳理关系、元组、属性、域与候选码、主码、外码的术语层级及三类完整性约束；给出选择、投影、连接、除法的运算对照与五种基本运算的完备性，用象集完整推演 R÷S 得 {201,202} 的算例；归纳「书写时先连接再选择投影最保险、执行层应先选择后投影」的顺序结论，并整理 SQL 侧的等值连接写法、WHERE 与 HAVING 的分工、DELETE、DROP、TRUNCATE 的五项区别与库到行的授权粒度。</span></li>
 </ul>
-<div class="subj-foot">
   <a class="back-link" href="../study.html">← 返回学习</a>
-</div>
-
 </main>
 
-<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

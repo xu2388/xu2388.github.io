@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>大数据技术 · Kafka 架构与消息可靠性</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"大数据技术 · Kafka 架构与消息可靠性","date":"2026-10-24","tags":["课程笔记","大数据技术"],"category":"课程笔记","summary":"以分区日志为主线，说明 Topic、Partition、Replica 与 offset 的关系，拆解生产者三种分区策略与 acks=all 的可靠性边界、消费者组的一分区一消费者约束与重平衡代价、ISR 选举与故障转移流程，并给出顺序、重复以及至少一次、至多一次的判断方法，最后标明材料未覆盖的事务与选型数字边界。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>大数据技术 · Kafka 架构与消息可靠性</h1>
-<div class="meta">课程笔记 · 大数据技术 · 整理自豆包对话 豆包对话 · Kafka相关知识测试题 / 医学影像实验室 Linux 学习路线</div>
+<div class="meta">课程笔记 · 大数据技术</div>
 <h2>一、概述：先把 Kafka 当成一份日志</h2>
 <p>Kafka 常被归入消息队列，但它的存储模型更像一份可追加、可回溯的分区日志。理解这一点，后面的副本、offset、消费者组才有统一解释：消息不是被「消费掉」的，而是被消费者按位置读取；消息何时删除由保留策略决定，不由读取动作决定。也正因为如此，Kafka 才能支持多个消费者组各自从头读、支持故障后从 offset 续读、支持把历史数据重新灌进下游。</p>
 <p>本文的材料是一套 Kafka 专项练习，覆盖发布订阅模型、核心组件、分区与副本、ISR、生产者分区策略、消费者组与重平衡、KRaft、零拷贝以及典型场景。材料没有给出配置默认值、性能数字、事务与幂等生产者的实现细节，也没有展开 RabbitMQ 的对比。本文按材料能支撑的范围写：机制讲透，数字不编，缺的部分在第十节明确标注为边界，而不是用通用印象补成结论。</p>
@@ -239,10 +243,9 @@ Consumer Group B: C3 读 P0、P1、P2</code></pre>
 <tr><td>KRaft</td><td>元数据用内部日志与控制器仲裁，去掉 ZooKeeper 依赖</td></tr>
 </table>
 <p>Kafka 的概念很多，但主线只有一条：分区决定并行与顺序，副本决定可用与持久，offset 决定消费进度，消费者组决定分工。把这条主线记住，再去看 acks、ISR、重平衡，它们都能落到「在哪个环节、用什么代价、换什么保证」上；遇到材料没写的参数与数字，也知道该去查官方文档或做压测，而不是凭印象补一个。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Kafka相关知识测试题 / 医学影像实验室 Linux 学习路线</p>
-<a class="back-link" href="../study/big-data.html">← 返回 大数据技术</a>
+<a class="back-link" href="../../study/big-data.html">← 返回 大数据技术</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

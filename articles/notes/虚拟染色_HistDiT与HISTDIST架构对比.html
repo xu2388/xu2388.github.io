@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>虚拟染色 · HistDiT 与 HISTDIST 架构对比</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"虚拟染色 · HistDiT 与 HISTDIST 架构对比","date":"2026-10-24","tags":["学习笔记","虚拟染色/科研"],"category":"学习笔记","summary":"两个名字相近的病理扩散模型，结构路线不同。HistDiT 把 H&E 经 VAE 压到 64×64 潜空间，切成 1024 个 token 当作空间条件，用交叉注意力锁结构，语义条件经 AdaLN 调制注入，主干是 DiT。HISTDIST 走潜扩散加双条件（病理自监督 ViT 全局特征与 VAE 潜码），关键是 v-prediction、重标定噪声调度与 DDIM 反演。本文比较 patchify 与 UNet 的取舍、条件注入位置的差异、结构保持与染色准确的侧重，并估算显存与步数代价。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>虚拟染色 · HistDiT 与 HISTDIST 架构对比</h1>
-<div class="meta">学习笔记 · 虚拟染色/科研 · 整理自豆包对话 豆包对话 · HistDiT架构介绍 / HISTDIST扩散模型工作梳理 / 扩散模型与训练方案</div>
+<div class="meta">学习笔记 · 虚拟染色/科研</div>
 <h2>一、概述：两个近名模型，两条结构路线</h2>
 <p>病理虚拟染色里有两个名字只差几个字母的模型：HistDiT 与 HistDiST。它们都把 H&amp;E 映射到 IHC，都用潜扩散，都强调结构保真，但技术路线并不相同。把两者放在一起比较，价值不在于分出高下，而在于看清「结构约束可以放在哪几个位置」这个问题有多少种答案。</p>
 <p>粗略地说，HistDiT 把结构写进<strong>主干的形式</strong>：用 DiT 替换 UNet，把 H&amp;E 的潜特征 patch 化成 token，作为空间条件的键值，让每一步去噪都对着这些 token 做交叉注意力。HISTDIST 把结构写进<strong>采样的轨迹</strong>：主干仍是潜扩散 UNet，但用病理自监督 ViT 的全局特征做语义条件，并在推理时从 H&amp;E 反演出初始潜码，让采样从源图出发而不是从纯噪声出发。</p>
@@ -160,10 +164,9 @@
 <tr><td>主要风险</td><td>patchify 丢高频、VAE 解码糊</td><td>反演误差累积、条件弱时漂移</td></tr>
 </table>
 <p>两个模型其实回答了同一个问题的两种问法。HistDiT 问的是「怎样让每一步去噪都看着源图」，答案是把它做成注意力里的键值；HistDiST 问的是「怎样让采样从源图出发」，答案是反演。前者在结构上更彻底，后者在工程上更省事（不用改主干）。真正决定成败的，往往不是这两个选择，而是更朴素的两件事：VAE 有没有在病理数据上训好，以及评价指标有没有测到「阳性信号落在正确的细胞上」。这两件事没做好，换什么骨干都救不回来。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · HistDiT架构介绍 / HISTDIST扩散模型工作梳理 / 扩散模型与训练方案</p>
-<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
+<a class="back-link" href="../../research.html">← 返回科研</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

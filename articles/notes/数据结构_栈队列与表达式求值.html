@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据结构与算法 · 栈、队列与表达式求值</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据结构与算法 · 栈、队列与表达式求值","date":"2026-10-24","tags":["课程笔记","数据结构与算法"],"category":"课程笔记","summary":"从顺序栈、链栈与循环队列的判空判满讲起，用模拟法和 Catalan 数讨论栈操作序列的合法性；给出中缀转后缀、后缀求值与表达式树的完整流程，说明括号匹配的边界条件；再回到递归调用栈与汉诺塔，最后整理用链表实现多项式加法的指针归属与易错点。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据结构与算法 · 栈、队列与表达式求值</h1>
-<div class="meta">课程笔记 · 数据结构与算法 · 整理自豆包对话 豆包对话 · 栈与队列学习及实践 / 逆波兰表达式求值 / 括号配对判断 / 判断栈操作序列合法性 / 分析多项式链表代码</div>
+<div class="meta">课程笔记 · 数据结构与算法</div>
 <h2>一、概述</h2>
 <p>栈和队列是两种操作受限的线性表。栈只允许在一端插入和删除，后进先出；队列允许在一端插入、另一端删除，先进先出。限制带来的是确定性：一旦知道操作序列，栈和队列的内部状态就可以被精确模拟。因此这两类结构既是程序设计的工具，也是考查“过程模拟”能力的载体。</p>
 <p>本笔记不满足于复述 <code>push</code>、<code>pop</code> 的代码，而是围绕四个能明显加深理解的问题展开。第一，顺序栈、链栈和循环队列的判空判满条件为什么各不相同，循环队列为什么要牺牲一个单元。第二，给定入栈次序，哪些出栈序列合法，合法序列为什么恰好是 Catalan 数，如何用一次扫描判定。第三，中缀表达式怎样转成后缀，后缀怎样求值，表达式树如何把三种遍历串起来。第四，递归在机器层面如何借助调用栈运行，链表多项式加法中指针到底应该接到哪个节点。</p>
@@ -483,10 +487,9 @@ void Apply(StackInt *num, char op) {
 <tr><td>多项式加法</td><td>按指数归并，相等系数相加</td><td>明确节点归属，及时释放</td></tr>
 </table>
 <p>栈、队列、表达式和递归看似分散，实际上都在处理“顺序”与“嵌套”两个维度。栈擅长嵌套：括号、表达式、递归、深度优先搜索，都是“后遇到的事情先处理”。队列擅长顺序：层序遍历、广度优先搜索、任务调度，都是“先遇到的事情先处理”。把这两个维度分清，再复杂的模拟题也可以拆成“当前状态”“待处理集合”“下一步动作”三部分，代码自然就写得出来。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 栈与队列学习及实践 / 逆波兰表达式求值 / 括号配对判断 / 判断栈操作序列合法性 / 分析多项式链表代码</p>
-<a class="back-link" href="../study/data-structures.html">← 返回 数据结构与算法</a>
+<a class="back-link" href="../../study/data-structures.html">← 返回 数据结构与算法</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

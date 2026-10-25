@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>共轭梯度法、可行方向法与有效集法 · 例题精讲笔记</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"共轭梯度法、可行方向法与有效集法 · 例题精讲笔记","date":"2026-10-24","tags":["课程笔记","高等数学/最优化"],"category":"课程笔记","summary":"围绕无约束与约束优化三类算法展开：共轭梯度法给出 FR 与 PRP 的 β 公式及其在正定二次函数上等价性的证明、精确步长闭式公式的完整推导，并以 min x1²+2x2² 逐步算出两步收敛；可行方向法（Zoutendijk 型）给出下降性与可行性双重条件及方向判别例；有效集法按\"解等式子问题—删负乘子—加新约束\"循环求解凸二次规划，完整算例经五步迭代收敛于 (0.5, 1.5)。原始对话中若干数值（步长、β 系数）与所列表式矛盾，全文按公式统一重算修订。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>共轭梯度法、可行方向法与有效集法 · 例题精讲笔记</h1>
-<div class="meta">课程笔记 · 高等数学/最优化 · 整理自豆包对话 豆包对话 · 最优化：共轭梯度法与可行方向法例题讲解</div>
+<div class="meta">课程笔记 · 高等数学/最优化</div>
 <h2>一、概述</h2>
 <p>无约束优化与约束优化各有一类以&quot;梯度&quot;为核心信息的迭代算法。本文整理的三种方法正好覆盖了从无条件到线性约束、再到凸二次规划的完整链条：</p>
 <ul><li><strong>共轭梯度法</strong>：用于无约束优化，针对二次凸函数具有有限步收敛性（$n$ 维问题至多 $n$ 步），核心是构造关于 Hesse 矩阵共轭的搜索方向，用以克服最速下降法的锯齿现象；</li><li><strong>可行方向法</strong>（Zoutendijk 型）：用于约束优化（以线性约束为主），核心是在当前可行点上寻找<strong>既下降又可行</strong>的方向，沿该方向一维搜索迭代直至满足 KKT 条件；</li><li><strong>有效集法</strong>（可行集法，Active Set Method）：专门求解带不等式约束的凸二次规划，核心是逐步识别最优解处的起作用约束集合，把原问题化为一系列等式约束子问题。</li></ul>
@@ -168,10 +172,9 @@
 <tr><td>算例四结论</td><td>五步收敛，$x^{*}=(0.5,1.5)^{\mathrm{T}}$，$f^{*}=-4.5$，最优乘子 $\lambda_1=1$</td></tr>
 </table>
 <p>三种方法共享同一套底层语言：方向由梯度（或子问题）给出，步长由一维条件或可行域决定，终止由梯度为零或 KKT 条件刻画。把&quot;方向从哪来、步长听谁的、何时收手&quot;三个问题对每个方法各答一遍，这一章的计算题即可全部覆盖。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 最优化：共轭梯度法与可行方向法例题讲解</p>
-<a class="back-link" href="../study/math-optimization.html">← 返回 高等数学/最优化</a>
+<a class="back-link" href="../../study/math-optimization.html">← 返回 高等数学/最优化</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

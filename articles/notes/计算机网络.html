@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>计算机网络 · 系统复习笔记</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"计算机网络 · 系统复习笔记","date":"2026-10-24","tags":["课程笔记","计算机网络"],"category":"课程笔记","summary":"以五层体系结构为纲，系统梳理数据链路层的帧定界、差错控制、可靠传输与介质访问，网络层的IP编址、子网划分、CIDR与路由，以及传输层TCP连接管理与窗口计算等核心考点与典型例题。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>计算机网络 · 系统复习笔记</h1>
-<div class="meta">课程笔记 · 计算机网络 · 整理自豆包对话 005_计算机网络.md</div>
+<div class="meta">课程笔记 · 计算机网络</div>
 <h2>一、概述</h2>
 <p>本笔记以 OSI 与 TCP/IP 折中得到的<strong>五层原理体系结构</strong>为组织框架，覆盖计算机网络课程与 408 统考的主体考点，重点集中在<strong>数据链路层</strong>与<strong>网络层</strong>，并补充物理层的设备与定理、传输层的连接管理与流量控制。</p>
 <p>五层结构自下而上为：<strong>物理层 → 数据链路层 → 网络层 → 传输层 → 应用层</strong>。发送方数据自上而下逐层封装，接收方自下而上逐层解封装；下层为上层提供服务，各层保持相对独立。</p>
@@ -239,10 +243,9 @@
 </table>
 <h2>四、小结</h2>
 <ol><li>数据链路层的核心是“<strong>成帧—透明—检错—控流—接入</strong>”五件事。零比特填充与字节填充解决透明传输；CRC 只检错、海明码可纠一位错；GBN 累计确认、整窗重传，SR 逐帧确认、单帧重传，窗口上限分别为 $2^n-1$ 与 $2^{n-1}$。</li><li>CSMA/CD 的全部结论都源自争用期 $2\tau$：最长检测时间、最小帧长 64 字节、二进制指数退避的上界 $(2^k-1)\times 2\tau$。</li><li>MAC 地址标识接口而非设备，交换机按“源 MAC 学习、目的 MAC 转发、未知则泛洪”工作；冲突域由交换机端口隔离，广播域由 VLAN 与路由器隔离。</li><li>IP 编址的三代方案层层递进：分类编址固定边界 → 子网划分向主机位借位（前缀变长）→ CIDR 任意前缀（既可切分也可聚合）。所有计算围绕 $2^{\text{主机位}}$、$2^{\text{主机位}}-2$ 与块大小 $256-$ 掩码字节展开。</li><li>端到端传输中 <strong>IP 地址不变、MAC 地址逐跳重写</strong>；路由器依据逻辑地址转发，交换机依据物理地址转发。</li><li>TCP 的序号消耗规则（SYN、FIN 各占 1 个序号，纯 ACK 不占）与发送窗口 $\min(\text{cwnd},\text{rwnd})$ 减去已发未确认量的计算，是传输层最易失分的两处。</li></ol>
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/005_计算机网络.html">005_计算机网络.md</a></p>
-<a class="back-link" href="../study/network.html">← 返回 计算机网络</a>
+<a class="back-link" href="../../study/network.html">← 返回 计算机网络</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>多尺度注意力机制 · 论文论述与整理</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"多尺度注意力机制 · 论文论述与整理","date":"2026-10-24","tags":["研究","虚拟染色/科研"],"category":"研究","summary":"梳理多尺度注意力的综述与理论文献脉络，逐层推导 Haar 小波变换的卷积化实现（正/逆变换与正交性），并以 SegNeXt 的 MSCA 为例说明多分支带状深度卷积如何在 O(n) 复杂度下同时获得多尺度感受野与空间注意力。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>多尺度注意力机制 · 论文论述与整理</h1>
-<div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 004_多尺度注意力论文论述001.md</div>
+<div class="meta">研究 · 虚拟染色/科研</div>
 <h2>一、研究背景与问题</h2>
 <p>多尺度注意力（multi-scale attention）指在同一模块内自适应融合空间、时序或语义上不同粒度的特征，同时建模局部细节与全局上下文。围绕这一主题的文献可分为三类。</p>
 <p>第一类是专题综述。2025 年出现的 <em>Multi-Scale Attention Mechanisms</em> 是目前首篇完全以多尺度注意力为唯一主题的独立综述，其内容覆盖定义、架构分类、跨领域应用、复杂度分析与轻量化方案，并把现有方法归为四大范式：多分支尺度融合型、并行多内核注意力型、层级深度聚合型、级联窗口多尺度注意力。中文期刊亦有《多尺度注意力机制研究综述》一类文章，梳理 CNN 时代到 Transformer 时代的演化，罗列 MSA、HAM、MSWA、Hierarchical Attention 等变体，便于中文写作引用。</p>
@@ -63,10 +67,9 @@
 <p>小波路线并无统一的定量结论可比，其价值在于结构性：以固定正交核实现无损下采样，替代池化或跨步卷积，避免下采样过程中的高频信息丢失；以多级分解形成层级化多尺度特征，作用类似特征金字塔但计算量更低；分解出的低频与高频可分别送入不同分支或施加不同注意力权重，为&quot;结构—细节&quot;分离提供显式接口。</p>
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>多尺度注意力的四类范式可作为综述骨架</strong>：多分支尺度融合、并行多内核、层级深度聚合、级联窗口。写作时按此分类比按时间罗列更清晰。</li><li><strong>小波卷积的本质是&quot;正交基投影 + 转置重构&quot;</strong>。正逆变换共用同一组核，是因为 Haar 基正交；这一性质使无损下采样在网络中可实现，且无需学习参数。</li><li><strong>整图卷积与分块计算等价</strong>，前提是核尺寸等于步长且无填充。理解这一点可避免在实现时误写循环分块。</li><li><strong>带状分解的收益是 $2/k$ 量级</strong>。核越大收益越高，这是大核卷积在密集预测中可用的关键前提；同时带状核天然适配细长目标。</li><li><strong>恒等分支不可省</strong>。多尺度大核叠加会过度平滑，恒等分支提供细粒度残差，是多尺度聚合的必要组成。</li><li><strong>归一化选择应与任务统计特性匹配</strong>。BN 按通道统计，适合通道语义一致的视觉密集预测；LN 跨通道统计，适合序列建模。此处不应照搬 Transformer 默认配置。</li><li><strong>对虚拟染色的迁移思路</strong>：小波分解可把 H&amp;E 的低频（核位置、组织架构）与高频（边界、纹理）显式分离，从而对二者施加不同强度的约束；但须注意 IHC 的膜结构在 H&amp;E 中不可见，高频不能无条件由源图拷贝，而应按蛋白阳性区域加权。</li></ol>
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/004_多尺度注意力论文论述001.html">004_多尺度注意力论文论述001.md</a></p>
-<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
+<a class="back-link" href="../../research.html">← 返回科研</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

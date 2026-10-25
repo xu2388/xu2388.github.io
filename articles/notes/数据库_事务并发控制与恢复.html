@@ -5,21 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>数据库 · 事务、并发控制与恢复</title>
 <link rel="stylesheet" href="../../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"数据库 · 事务、并发控制与恢复","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"事务是不可分割的操作序列，ACID 分别由锁与日志支撑。并发带来丢失更新、脏读、不可重复读与幻读，四级隔离级别划定允许范围，三级封锁协议与两段锁保证可串行化，意向锁与间隙锁细化封锁粒度。MVCC 用隐藏事务号与回滚指针串成版本链，由 ReadView 判定可见性。redo 重放已提交修改，undo 支持回滚与旧版本，WAL 要求日志先落盘，恢复按分析、重做、回滚推进。文末对原料结论作限定与勘误。"}
 </script>
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
-<header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">Research &amp; Study Archive</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
-<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-</div></header>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../../index.html">科研与学习档案</a>
+    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
 <article class="article">
 <h1>数据库 · 事务、并发控制与恢复</h1>
-<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 豆包对话 · 数据库基础概念问答 / 完整性检查与事务提交 / 冲突可串行化讨论 / Django 项目事务与查询优化</div>
+<div class="meta">课程笔记 · 数据库/MySQL</div>
 <h2>一、概述：事务为什么是恢复与并发的共同单位</h2>
 <p>事务（transaction）是用户定义的一个数据库操作序列，这些操作<strong>要么全做，要么全不做</strong>，是一个不可分割的工作单位。这个定义是全部讨论的起点：正因为「不可分割」，才需要日志在崩溃后把做了一半的动作补完或撤掉；也正因为多个事务可以交错执行，才需要封锁与多版本机制把交错约束成等价于串行的效果。</p>
 <p>DBMS 的数据控制功能包含安全性、完整性、<strong>并发控制</strong>与<strong>数据库恢复</strong>四项。事务正好横跨后两项：并发控制管「同时跑不乱」，恢复管「崩了能回来」，两者共用同一套日志与事务标识。理解这一点，比背下四条英文缩写更有用。</p>
@@ -270,10 +274,9 @@ COMMIT;                -- 两条更新一起生效</code></pre>
 <tr><td>恢复</td><td>分析、重做（含未提交）、回滚；检查点缩短扫描范围；介质故障需备份兜底</td></tr>
 </table>
 <p>把全文压成一条线：事务给出「不可分割」的边界，ACID 说明这个边界要维护哪四件事；并发异常说明边界被同时执行破坏的四种方式；可串行化给出正确性标准，隔离级别是标准与吞吐之间的刻度；封锁与 MVCC 是达到该刻度的两条技术路线，前者用等待换取顺序，后者用空间换取并行；日志则在两条路线之下兜底，保证无论怎么并发、怎么崩溃，最终都能回到一个一致状态。原料提供了这条线的起点（定义、一致性三层、冲突可串行化、故障分类），其余环节按通用机制补齐并标注口径——把「哪句来自对话、哪句来自教材」分开，比把两者混成一段更难被记错。</p>
-<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 数据库基础概念问答 / 完整性检查与事务提交 / 冲突可串行化讨论 / Django 项目事务与查询优化</p>
-<a class="back-link" href="../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>
