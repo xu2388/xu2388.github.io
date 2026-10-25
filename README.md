@@ -7,30 +7,37 @@
 
 ```
 科研博客/
-├── index.html                  首页（研究方向地图 + 分类文章列表，自动生成）
-├── assets/style.css            全站样式
-├── build_index.py              首页索引生成器（扫 articles/*.html 的 meta，按类分组重建首页）
+├── index.html                  首页（导语 + 各栏目预览 + 「全部 N 篇」入口，自动生成）
+├── assets/
+│   ├── style.css               全站样式（Yilia 式浅色双栏：左侧固定目录 + 右侧内容）
+│   └── blog.js                 交互增强（侧栏粒子、移动端抽屉、悬浮目录、阅读进度、公式渲染）
+├── build_index.py              索引生成器：生成各栏目归档页 articles/list-*.html，并重建首页
+├── fix_nav.py                  统一全站左侧目录，按页面深度改写相对路径（每次构建后跑一次）
 ├── md_to_html.py               Markdown → 文章页转换器（内嵌 meta，供索引收录）
-├── build_knowledge_base.py     全量知识库生成器（把 270 条对话转成问答页）
-├── articles/                   文章页
-│   ├── 001-虚拟染色主线.html        （研究，手写深度文）
-│   ├── 002-逐像素跨图不可迁移.html  （研究，手写深度文）
-│   ├── 深度学习到底在干什么*.html   （随笔，作者原文）
-│   ├── knowledge-index.html        （知识库索引，按 8 主题分组）
-│   ├── source_audit.html           （资料库：全量资料源审计）
-│   ├── deepseek_inventory.html     （资料库：270 条对话全量清单）
-│   └── kb/                          （270 个对话问答页，一条不丢）
+├── build_articles.py           articles_src/*.md → articles/*.html（长研究文章）
+├── build_notes.py              notes/*.md → articles/notes/ + 笔记索引
+├── build_knowledge_base.py     DeepSeek 270 条对话 → articles/kb/
+├── build_doubao_kb.py          豆包 98 条对话 → articles/kb-doubao/
+├── articles/
+│   ├── 001~003、008~010        研究文章（手写 / 由研究笔记升级）
+│   ├── 004~007                 学习笔记 · 教程（扩散/Flow Matching、VAE、注意力、对比学习）
+│   ├── list-*.html             各栏目归档页（自动生成）
+│   ├── notes/                  25 篇课程与科研笔记
+│   ├── kb/                     DeepSeek 270 条问答页
+│   └── kb-doubao/              豆包 98 条问答页
+├── notes/                      笔记的 Markdown 源（带 frontmatter）
+├── articles_src/               长研究文章的 Markdown 源
 ├── data/                       审计与清单的 Markdown 源
-└── raw_exports/
-    ├── deepseek_raw/           270 个对话的原始 Markdown 档案（未删减，含 AI 思考过程）
-    └── doubao_agent_raw/       豆包 agent 会话还原
+└── raw_exports/                原始对话档案（未删减）
 ```
 
-## 内容三层
+## 内容分层
 
-1. **研究文章**：我手写的高质量深度文，保留原始数据、公式、当时的困惑和自我推翻。
-2. **随笔**：我自己写的科普。
-3. **知识库**：DeepSeek 全部 270 条学习对话的问答存档，按主题浏览，每条可溯源到未删减原始档案。
+1. **研究文章**：深度长文，保留原始数据、公式、当时的困惑和自我推翻。
+2. **学习笔记 · 教程**：从具体困惑出发的教程，讲清机制并接回主线。
+3. **课程与科研笔记**：大一到大二专业课复习 + 科研整理，正式书面，按学科分组。
+4. **知识库**：DeepSeek 270 条 + 豆包 98 条学习对话的问答存档，可溯源到原始档案。
+5. **论文分享屋 / 资料库**：论文导读清单、全量审计与溯源。
 
 ## 本地启动
 
@@ -38,6 +45,15 @@
 cd 科研博客
 python3 -m http.server 8000
 # 浏览器打开 http://localhost:8000
+```
+
+## 构建流程（改完内容跑这一串）
+
+```bash
+python3 build_articles.py        # 如有新的 articles_src/*.md
+python3 build_notes.py           # 如有新的 notes/*.md
+python3 build_index.py           # 生成归档页 + 重建首页（含数据条）
+python3 fix_nav.py               # 统一左侧目录的相对路径（必须在 build_index 之后）
 ```
 
 ## 新增一篇文章
@@ -48,8 +64,8 @@ python3 md_to_html.py <你的.md> <分类:研究/随笔/知识库/资料库> "<�
 
 # 方式二：手写 HTML（在 <head> 里放一段 <script id="meta" type="application/json">{...}</script> 描述 title/date/tags/category/summary）
 
-# 最后重建首页索引
-python3 build_index.py
+# 最后重建索引
+python3 build_index.py && python3 fix_nav.py
 ```
 
 ## 重新生成知识库

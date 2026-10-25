@@ -330,6 +330,8 @@ def write_index(entries):
 <nav class="site-nav"><a href="../index.html">首页</a></nav>
 </div></header>
 <main class="container">
+<nav class="crumbs"><a href="../index.html">首页</a> / 知识库 · DeepSeek 全部对话</nav>
+<h1 class="list-title">知识库 · DeepSeek 全部对话</h1>
 <p class="intro">这里收录了我（DeepSeek）全部 {len(entries)} 条对话，按主题分组。每条点进去是完整的「我问 + AI 回答」，并链接回未删减的原始档案。科研、课程、数学、雅思、考试、论文调研……都在。</p>
 {''.join(sections)}
 </main>

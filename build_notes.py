@@ -120,6 +120,8 @@ def main():
 <nav class="site-nav"><a href="../index.html">首页</a><a href="knowledge-index.html">DeepSeek 知识库</a><a href="doubao-index.html">豆包知识库</a></nav>
 </div></header>
 <main class="container">
+<nav class="crumbs"><a href="../index.html">首页</a> / 课程与科研笔记</nav>
+<h1 class="list-title">课程与科研笔记</h1>
 <p class="intro">这里把豆包对话里的大一大二专业课复习、以及科研讨论，逐条整理成系统、正式的学习笔记，按学科分组，完整覆盖知识点与结论。</p>
 {''.join(secs)}
 </main>

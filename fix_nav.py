@@ -33,9 +33,19 @@ TITLE_RE = re.compile(r'<h1 class="site-title">.*?</h1>', re.DOTALL)
 SITE_TITLE = "科研与学习档案"
 
 
+LIST_FILE = {"研究文章": "list-research.html", "学习笔记": "list-notes.html", "课程笔记": "list-courses.html",
+             "随笔": "list-essays.html", "知识库": "list-kb.html", "论文分享屋": "list-papers.html",
+             "资料库": "list-archive.html"}
+
+
 def build_nav(prefix, active=None):
     parts = []
     for label, path in NAV:
+        # 在某个栏目的归档页上，当前栏目直接指向归档页本身，而不是首页锚点
+        if active and label == active and label in LIST_FILE:
+            href = prefix + "articles/" + LIST_FILE[label]
+            parts.append('<a class="active" href="%s">%s</a>' % (href, label))
+            continue
         href = prefix + path
         cls = ' class="active"' if active and label == active else ""
         parts.append('<a%s href="%s">%s</a>' % (cls, href, label))

@@ -169,6 +169,8 @@ def write_index(entries):
 <nav class="site-nav"><a href="../index.html">首页</a><a href="knowledge-index.html">DeepSeek 知识库</a></nav>
 </div></header>
 <main class="container">
+<nav class="crumbs"><a href="../index.html">首页</a> / 豆包知识库 · 学习与科研对话</nav>
+<h1 class="list-title">豆包知识库 · 学习与科研对话</h1>
 <p class="intro">这里收录我豆包账号里的 {len(entries)} 条学习与科研对话（从分享链接还原），按主题分组。每条点进去是完整的「我问 + 豆包回答」。虚拟染色、论文调研、计算机课程、思政……都在。</p>
 {''.join(secs)}
 </main>
