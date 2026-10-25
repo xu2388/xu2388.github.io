@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DGR：面向错位鲁棒的虚拟染色——论文深度解读</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"DGR：面向错位鲁棒的虚拟染色——论文深度解读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "H&E→IHC"],"category":"研究","summary":"解读 DGR（Misalignment-Resistant Virtual Staining）如何用解耦与区域对齐放弃逐点对应，在配准误差下仍保持结构可判读，并讨论其对本项目结构控制路线的可借鉴之处。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1 class="site-title">我的个人博客</h1>
+    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+  </div>
+</header>
+<article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
+<h1>DGR：面向错位鲁棒的虚拟染色——论文深度解读</h1>
+<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<blockquote><strong>论文</strong>：<em>Generative AI for Misalignment-Resistant Virtual Staining to Accelerate Histopathology Workflows</em> <strong>作者</strong>：Jiabo Ma†, Wenqiang Li†, Jinbang Li, Ziyi Liu, Linshan Wu, Fengtao Zhou, Li Liang, Ronald Cheong Kin Chan, Terence T. W. Wong, Hao Chen*（香港科技大学、南方医科大学南方医院、香港中文大学等） <strong>发表</strong>：arXiv:2509.14119v1 [cs.CV]，2025-09-17 <strong>代码</strong>：&lt;https://github.com/birkhoffkiki/DTR&gt; <strong>方法名</strong>：<strong>DGR</strong>（<strong>D</strong>ecoupled <strong>G</strong>eneration and <strong>R</strong>egistration，生成与配准解耦）</blockquote>
+<hr />
+<h2>0. 先澄清一个命名问题</h2>
+<p>很多人在读这篇论文时会把方法名记混（比如记成 &quot;Mac&quot; 或 &quot;MUSTARD&quot;）。这里先明确：</p>
+<blockquote>本文提出的框架叫 <strong>DGR</strong>，全称 <strong>Decoupled Generation and Registration（生成与配准解耦）</strong>。它不是 Mac，也不是 MUSTARD。</blockquote>
+<p>DGR 由两个模块组成：</p>
+<table>
+<tr><th>模块</th><th>缩写</th><th>作用</th></tr>
+<tr><td>用于降噪的配准</td><td><strong>RNR</strong>（Registration for Noise Reduction）</td><td>用配准网络 $R_1$ 把生成图像对齐到&quot;含噪&quot;真值，让重建损失可信</td></tr>
+<tr><td>位置一致性生成</td><td><strong>PcG</strong>（Position-consistency Generation）</td><td>用配准网络 $R_2$ 强制&quot;生成图像 = 输入的逐像素风格翻译&quot;，把生成与配准解耦</td></tr>
+</table>
+<blockquote>有意思的是，代码仓库名字叫 <code>DTR</code>，论文里叫 <code>DGR</code>，注意别被绕晕。</blockquote>
+<hr />
+<h2>1. 背景：虚拟染色是什么，为什么值得做</h2>
+<p>组织病理学诊断的黄金标准是<strong>看片子</strong>。但一张片子往往不够——诊断常常需要同一样本的<strong>多张不同染色切片</strong>：</p>
+<ul><li><strong>H\&amp;E</strong>（苏木精-伊红）：区分细胞核与细胞外基质，最通用的染色；</li><li><strong>PAS / PAS-AB</strong>（过碘酸-雪夫 / 阿尔新蓝）：特异性靶向糖蛋白，肾脏病理常用；</li><li><strong>mIHC</strong>（多重免疫组化）：在同一张切片上同时可视化多种蛋白标志物（如 DAPI 标细胞核、panCK 标肿瘤区、CD3 标 T 细胞）。</li></ul>
+<p>问题在于，<strong>化学染色这套流程代价很高</strong>：</p>
+<ol><li><strong>耗时耗力</strong>：每加一种染色，就要多一轮染色—扫描；</li><li><strong>耗组织</strong>：连续切片（serial sectioning）会消耗掉宝贵的组织样本，而同一张切片又<strong>无法在不损伤、不丢失信息的前提下反复染色</strong>；</li><li><strong>不环保</strong>：大量化学试剂对环境有负担。</li></ol>
+<p><strong>虚拟染色（virtual staining）</strong> 就是冲着这三条来的：把一张无标记图像或某一种染色图像，<strong>用算法直接转换成另一种染色图像</strong>。它快、省组织、几乎不产生化学废物。</p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/fig1.jpg" alt="图 1：虚拟染色总览。a 为完整工作流（组织制备 → 染色 → 成像 → 虚拟染色）；b 为本文使用的五个数据集；c-e 为各方法在五个测试集上的平均性能；f 为严重人工错位下不同 DGR 模块的鲁棒性对比；g-h 为病理医师的盲法鉴别评估" loading="lazy" /></p>
+<p><em>图 1：虚拟染色总览。a 为完整工作流（组织制备 → 染色 → 成像 → 虚拟染色）；b 为本文使用的五个数据集；c-e 为各方法在五个测试集上的平均性能；f 为严重人工错位下不同 DGR 模块的鲁棒性对比；g-h 为病理医师的盲法鉴别评估。</em></p>
+<hr />
+<h2>2. 前人工作，以及它们共同的&quot;阿喀琉斯之踵&quot;</h2>
+<p>虚拟染色这条线上，前人工作大致可以分成四派，每一派都被同一个问题卡住。</p>
+<h3>2.1 监督派：Pix2Pix —— 前提是&quot;完美对齐&quot;</h3>
+<p>Isola 等（Pix2Pix）的思路最直接：训练一个生成器 $G$，用<strong>像素级 $L_1$ 损失</strong>逼着 $G(x)$ 逼近目标 $y$。这类方法在虚拟染色中被大量使用。</p>
+<p><strong>它的死穴</strong>：$L_1$ 损失是<strong>逐像素</strong>比较的。一旦输入 $x$ 与目标 $y$ 之间存在哪怕几个像素的错位，损失就会&quot;惩罚正确的内容&quot;——生成器学到的不是&quot;该怎么染色&quot;，而是&quot;该怎么把图像挪一挪去凑对齐&quot;。所以 Pix2Pix 的性能<strong>严重依赖配对图像的对齐程度</strong>。</p>
+<h3>2.2 非配对派：CycleGAN —— 不要求配对，但保不住内容</h3>
+<p>Zhu 等的 Cycle-GAN 用循环一致性（cycle-consistency）训练两个生成器，<strong>不需要配对数据</strong>，因此在非配对场景下通常比 Pix2Pix 表现更好。</p>
+<p><strong>它的死穴</strong>：循环一致性约束本质上是让模型<strong>更关注图像风格（style）而不是内容（content）</strong>。结果就是可能把内容丢掉甚至编造——对虚拟染色这种&quot;必须忠实还原细胞结构&quot;的任务来说，这是致命的。</p>
+<h3>2.3 抗错位派：Pyramid Pix2Pix / BCI —— 缓解，但不解决</h3>
+<p>Liu 等（后文表格中的 BCI）提出<strong>多尺度（pyramid）损失</strong>，通过在不同尺度上计算损失来增强对结构错位的鲁棒性。这是&quot;抗错位&quot;思路的第一次尝试，但它<strong>只是让损失对错位没那么敏感</strong>，并没有显式地把错位&quot;消掉&quot;。</p>
+<h3>2.4 配准派：RegGAN —— 引入了配准，却留下了耦合</h3>
+<p>Kong 等提出的 RegGAN 引入了&quot;<strong>损失校正（loss correction）</strong>&quot;思想：加一个配准网络 $R$，估计生成图像 $G(x)$ 与含噪真值 $y$ 之间的形变场 $\phi$，先用 $\phi$ 把 $G(x)$ 扭曲（warp）到对齐，<strong>再</strong>计算损失。这比 Pyramid Pix2Pix 又进了一步。</p>
+<p><strong>但它的漏洞恰恰是本文的切入点</strong>：RegGAN 只保证了「<strong>配准之后</strong>的生成图像 $\phi \circ G(x)$ 与 $y$ 对齐」，<strong>没有</strong>显式保证「生成图像本身 $G(x)$ 与理想真值 $\hat{y}$ 对齐」。由于 $\hat{y}$ 与输入 $x$ 是对齐的，这就等价于：<strong>没有任何约束保证 $G(x)$ 与 $x$ 对齐</strong>。</p>
+<p>后果很严重——生成器学会了&quot;<strong>把结构错位藏进自己的输出里</strong>&quot;，反正后面有 $R$ 会去纠正它。生成与配准因此<strong>紧耦合（tightly coupled）</strong>，必须小心翼翼地平衡调参才能work。</p>
+<h3>2.5 一句话总结&quot;为什么现有方法都不行&quot;</h3>
+<blockquote><strong>错位本来是&quot;数据采集&quot;带来的问题，但前人都把它当成&quot;生成模型&quot;的问题在治。</strong> 而这个问题的根源是绕不开的：化学染色过程本身就会让组织发生形变，加上&quot;一张切片不能反复染色&quot;的物理限制，现实中<strong>根本拿不到严格像素级对齐的配对数据</strong>——能拿到的只有 <strong>non-paired（非配对）</strong> 或 <strong>roughly paired（粗略配对）</strong> 数据。</blockquote>
+<hr />
+<h2>3. 这篇文章要解决的核心问题</h2>
+<blockquote><strong>在只有&quot;粗略配对&quot;数据的前提下，训练出像素级准确、且对错位鲁棒的虚拟染色模型；并且这个框架要能&quot;即插即用&quot;地装到现有虚拟染色模型上，不改动它们原本的网络结构。</strong></blockquote>
+<p>最终结果：在五个数据集上显著优于 SOTA，内部数据集平均提升 <strong>3.2%</strong>，外部数据集平均提升 <strong>10.1%</strong>；在严重错位数据上 PSNR 提升 <strong>23.8%</strong>。</p>
+<hr />
+<h2>4. 方法：DGR 的完整推导（本文最核心的部分）</h2>
+<h3>4.0 问题设定与符号</h3>
+<p>先把记号定清楚，后面所有公式都基于这套符号：</p>
+<table>
+<tr><th>符号</th><th>含义</th></tr>
+<tr><td>$x_n$</td><td>第 $n$ 个<strong>输入图像</strong>（源模态，如自发荧光 AF、H\&amp;E）</td></tr>
+<tr><td>$y_n$</td><td>$x_n$ 对应&amp;#x7684;<strong>&quot;含噪&quot;真值</strong>，即化学染色的<strong>粗略配对</strong>图像（与 $x_n$ 存在空间错位）</td></tr>
+<tr><td>$\hat{y}_n$</td><td>与 $x_n$ <strong>严格对齐</strong>的理想真值（现实不可得，仅用于理论分析）</td></tr>
+<tr><td>$N$</td><td>配对样本总数</td></tr>
+<tr><td>$G$</td><td>生成器（虚拟染色网络）</td></tr>
+<tr><td>$R_1, R_2$</td><td>两个配准网络</td></tr>
+<tr><td>$\circ$</td><td>重采样算子（按形变场对图像做网格采样/warping）</td></tr>
+</table>
+<p><strong>目标</strong>：用<strong>错位数据集</strong> $\{(x_1,y_1),\dots,(x_N,y_N)\}$ 训练模型，达到与用<strong>对齐数据集</strong> $\{(x_1,\hat{y}_1),\dots,(x_N,\hat{y}_N)\}$ 训练<strong>相当的性能</strong>。</p>
+<hr />
+<h3>4.1 基线：Pix2Pix 的 $L_1$ 损失（式 1）</h3>
+<p>$$\min_G \; L(x,y) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, G(x_n) - y_n \,\bigr\|_1 \tag{1}$$</p>
+<p><strong>怎么理解这个式子的脆弱性？</strong> 假设 $y_n$ 相对 $x_n$ 平移了 $\delta$ 个像素。那么 $G$ 想最小化 $\|G(x_n)-y_n\|_1$，最&quot;省事&quot;的办法就是<strong>让输出也跟着平移 $\delta$</strong>——于是生成器学会的不是&quot;染色&quot;，而是&quot;复制错位&quot;。这就是错位会毁掉像素级监督的根本原因。</p>
+<hr />
+<h3>4.2 RegGAN 的 loss correction（式 2、式 3）——以及它的漏洞</h3>
+<p>RegGAN 引入配准网络 $R$，先估计形变场，再 warp 之后再算损失：</p>
+<p>$$\phi_n = R\bigl(G(x_n),\, y_n\bigr) \tag{2}$$</p>
+<p>$$\min_{G,R} \; L(x,y) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, \phi_n \circ G(x_n) - y_n \,\bigr\|_1 \tag{3}$$</p>
+<p>RegGAN 的假设是&quot;含噪真值 = 理想真值的位移误差&quot;，即 $y = \phi \circ \hat{y}$。</p>
+<p><strong>关键观察（本文的&quot;发现问题&quot;时刻）</strong>：式 3 只保证</p>
+<p>$\phi \circ G(x) \approx y \quad\text{（配准后的生成图像 ≈ 含噪真值）}$</p>
+<p><strong>却完全没有</strong>保证</p>
+<p>$G(x) \approx \hat{y} \quad\text{（生成图像本身 ≈ 理想真值）}$</p>
+<p>而 $\hat{y}$ 是与 $x$ 对齐的，所以「$G(x)$ 与 $\hat{y}$ 错位」等价于「<strong>$G(x)$ 与输入 $x$ 错位</strong>」。</p>
+<blockquote><strong>直觉比喻</strong>：RegGAN 请了一个&quot;事后修图师&quot; $R$ 来纠正 $G$ 的错位，但<strong>没有告诉 $G$ &quot;你不许动像素位置&quot;</strong>。于是 $G$ 干脆摆烂——我随便挪，反正有人帮我挪回来。</blockquote>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/figA1.jpg" alt="图 A1：DGR 的架构与可视化。a 用一张示意图对比了&quot;只有配准&quot;与&quot;理想情况&quot;下的错位程度差异；b 是 DGR 的完整框架（蓝色虚线框 = RNR 模块，紫色虚线框 = PcG 模块）；c 是解耦效果的可视化与误差图" loading="lazy" /></p>
+<p><em>图 A1：DGR 的架构与可视化。a 用一张示意图对比了&quot;只有配准&quot;与&quot;理想情况&quot;下的错位程度差异；b 是 DGR 的完整框架（蓝色虚线框 = RNR 模块，紫色虚线框 = PcG 模块）；c 是解耦效果的可视化与误差图。</em></p>
+<p>图 A1a 左边画的就是这个病灶：只靠配准，$G(x)$ 会滑到一个&quot;既不在 $x$ 也不在 $\hat{y}$&quot;的中间态（图中标注的 <strong>Potential misalignment</strong>）；右边是理想情况——$G(x)$ 老老实实落在 $x$ 正上方，只改外观、不改位置。</p>
+<hr />
+<h3>4.3 DGR 的核心：把生成与配准解耦</h3>
+<p>本文的结论是：<strong>生成与配准本质上是相互依赖的</strong>，因为校正损失只作用在 $\phi \circ G(x)$ 上，$G(x)$ 自身没有强约束。所以两者必须小心平衡才能达到最优——这很脆弱。</p>
+<p>受 GAN 的启发，作者引入一个<strong>对抗式配准过程</strong>，把两者彻底解耦。下面拆开讲两个模块。</p>
+<hr />
+<h4>(A) RNR：用于降噪的配准（Registration for Noise Reduction）</h4>
+<p><strong>第一步，用一个配准网络 $R_1$ 把 $G(x)$ 对齐到&quot;含噪&quot;真值 $y$</strong>，让重建损失变得可信。</p>
+<p><strong>① 校正后的 $L_1$ 重建损失（式 4）</strong></p>
+<p>$$L_{L1}(x,y) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, R_1\bigl(G(x_n), y_n\bigr) \circ G(x_n) - y_n \,\bigr\|_1 \tag{4}$$</p>
+<ul><li>$R_1(G(x_n), y_n)$：输入是「生成图像，含噪真值」这一对，输出是二者之间的<strong>形变场 $M_1$</strong>；</li><li>$\circ$：按 $M_1$ 对 $G(x_n)$ 做重采样（warp）；</li><li>含义：<strong>先把生成图像 warp 对齐，再算 $L_1$</strong>，这样损失就不会因为错位而惩罚正确内容。</li></ul>
+<p><strong>② 结构相似性损失（式 5）</strong></p>
+<p>为了提升结构层面的相似度，再加入 SSIM 项：</p>
+<p>$$L_{ssim}(x,y) = -\,\frac{1}{N}\sum_{n=1}^{N} \log\Bigl(1 + \mathrm{ssim}\bigl(R_1(G(x_n), y_n) \circ G(x_n),\; y_n\bigr)\Bigr) \tag{5}$$</p>
+<ul><li>$\mathrm{ssim}(\cdot,\cdot)$ 值域约 $[-1,1]$，越大越相似；</li><li>加 1 再取对数是为了<strong>保证对数内为正</strong>；</li><li>前面加负号，把&quot;<strong>最大化</strong>结构相似性&quot;变成&quot;<strong>最小化</strong>损失&quot;。</li></ul>
+<p><strong>③ 形变场平滑正则（式 6）</strong></p>
+<p>$$L_{smooth}(x,y) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, \nabla R_1\bigl(G(x_n), y_n\bigr) \,\bigr\|_2 \tag{6}$$</p>
+<ul><li>$\nabla$ 是空间梯度算子，$\|\cdot\|_2$ 是 $L_2$ 范数；</li><li>作用是<strong>惩罚剧烈、非物理的形变</strong>，防止形变场过拟合出乱七八糟的位移。</li></ul>
+<p><strong>④ 对抗损失（式 7、式 8）</strong></p>
+<p>为了让生成图像足够逼真，还要上 GAN：</p>
+<p>$$L_{adv}(x) = -\,\frac{1}{N}\sum_{n=1}^{N} \log\bigl(D(G(x_n))\bigr) \tag{7}$$</p>
+<p>$$L_{dis}(x,y) = -\,\frac{1}{N}\sum_{n=1}^{N} \Bigl[\log\bigl(1 - D(G(x_n))\bigr) + \log\bigl(D(y_n)\bigr)\Bigr] \tag{8}$$</p>
+<ul><li>$D$ 是判别器，$D(\cdot)$ 表示&quot;判为真实化学染色图像&quot;的概率；</li><li>式 7 是生成器损失（骗过判别器）；式 8 是判别器的非饱和损失。</li></ul>
+<p><strong>⑤ RNR 总损失（式 9）</strong></p>
+<p>$$L_{RNR}(x,y) = \alpha\, L_{L1}(x,y) + \beta\, L_{ssim}(x,y) + \gamma\, L_{smooth}(x,y) + \delta\, L_{adv}(x) \tag{9}$$</p>
+<p>权重取值（论文表 A2）：$\alpha=10$，$\beta=0.5$，$\gamma=10$，$\delta=0.1$。</p>
+<blockquote><strong>RNR 解决了什么</strong>：让「$G(x)$ 与 $y$」的错位不再污染损失——<strong>但它没有解决「$G(x)$ 与 $x$」的错位</strong>。这正是 PcG 要补上的洞。</blockquote>
+<hr />
+<h4>(B) PcG：位置一致性生成（Position-consistency Generation）</h4>
+<p><strong>先讲清楚&quot;为什么生成器不许动像素&quot;这个论证</strong>，这是全文最漂亮的一段逻辑：</p>
+<blockquote>输入图像 $x$（如自发荧光）与目标染色 $y$（如 H\&amp;E）取自<strong>完全同一张物理组织切片</strong>。它们天然成对，<strong>共享完全相同的底层生物结构</strong>，主要差别在于<strong>视觉外观（模态），而非几何形状</strong>。  因此，一个<strong>正确</strong>生成的图像 $G(x)$ 必须是输入 $x$ 到目标染色风格的<strong>逐像素翻译</strong>。  所以——<strong>$G(x)$ 与 $x$ 之间的任何空间错位，都不是数据的属性，而是&quot;训练不到位的生成器&quot;带来的伪影。</strong>  目标是强制这种空间一致性，让生成器<strong>只改染色外观，不扭曲图像</strong>——类似于加一个不会让图像变形的<strong>颜色滤镜</strong>。</blockquote>
+<p>这个论证很关键：它把&quot;生成器不得移动像素&quot;从一句直觉，变成了一个<strong>可以写成损失函数的显式归纳偏置</strong>。</p>
+<p><strong>① 恒等性约束（式 10）——用来优化 $R_2$</strong></p>
+<p>$$L_{T1}(x) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, R_2\bigl(x_n, G(x_n)\bigr) \circ G(x_n) - G(x_n) \,\bigr\|_1 \tag{10}$$</p>
+<ul><li>$R_2$ 是<strong>同模态（same-stain）</strong>&amp;#x914D;准网络，输入是「输入 $x$，生成图像 $G(x)$」，输出形变场 $M_2$；</li><li>这个式子的含义是：<strong>用 $M_2$ 把 $G(x)$ warp 之后，还应该等于 $G(x)$ 自己</strong>——也就是说 $M_2$ 应该近似<strong>恒等映射</strong>；</li><li><strong>反推逻辑</strong>：如果 $R_2$ 在 $(x, G(x))$ 这对图像上算出来的形变场是恒等映射，那说明 $G(x)$ 和 $x$ <strong>本来就已经对齐了</strong>。</li></ul>
+<p><strong>② 但恒等约束有个致命漏洞</strong></p>
+<p>如果只有式 10，$R_2$ &amp;#x4F1A;<strong>&quot;偷懒&quot;</strong>：对任何输入对都输出恒等形变场，损失就恒为 0，于是什么也学不到。必须再加一个约束，<strong>逼 $R_2$ 去预测真实形变场</strong>。</p>
+<p><strong>③ 跨模态一致性约束（式 11）——堵上漏洞</strong></p>
+<p>推理链条是：既然式 10 保证了 $G(x)$ 与 $x$ 对齐，那么「<strong>$x$ 到 $y$ 的形变场</strong>」应当与「<strong>$G(x)$ 到 $y$ 的形变场</strong>」是同一个形变场。把这个性质写下来就是：</p>
+<p>$$L_{T2}(x,y) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, R_2(x_n, y_n) \circ G(x_n) - R_1\bigl(G(x_n), y_n\bigr) \circ G(x_n) \,\bigr\|_1 \tag{11}$$</p>
+<ul><li>$R_2(x_n, y_n)$：跨模态（输入—目标）形变场 $M_3$；</li><li>$R_1(G(x_n), y_n)$：生成图像—含噪真值形变场 $M_1$；</li><li>含义：<strong>两条配准路径 warp 出来的结果应该一致</strong>。这就迫使 $R_2$ 真的去学&quot;如何对齐跨模态图像&quot;，而不能靠输出恒等蒙混过关。</li></ul>
+<blockquote>至此，$R_1$ 和 $R_2$ 形成了一个<strong>对抗关系</strong>：$G$ 想让 $R_2$ 认为自己已经对齐了（输出恒等），$R_2$ 则要努力找出真实的形变。</blockquote>
+<p><strong>④ 两个平滑正则（式 12、式 13）</strong></p>
+<p>$$L_{T1R}(x) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, \nabla R_2\bigl(x_n, G(x_n)\bigr) \,\bigr\|_2 \tag{12}$$</p>
+<p>$$L_{T2R}(x,y) = \frac{1}{N}\sum_{n=1}^{N} \bigl\|\, \nabla R_2\bigl(x_n, y_n\bigr) \,\bigr\|_2 \tag{13}$$</p>
+<p>式 12 约束同模态形变场 $M_2$ 平滑，式 13 约束跨模态形变场 $M_3$ 平滑——和式 6 是一个道理。</p>
+<hr />
+<h4>(C) 训练策略：两个对抗过程（式 14、式 15）</h4>
+<p>整个框架包含四个网络：生成器 $G$、判别器 $D$、配准网络 $R_1$ 与 $R_2$。训练被拆成<strong>两个对抗过程</strong>：</p>
+<p><strong>第一步：更新 $G$ 和 $R_1$</strong></p>
+<p>$$\min_{G,\,R_1} L(x,y) = L_{RNR}(x,y) + \epsilon\, L_{T1}(x) \tag{14}$$</p>
+<ul><li>$\epsilon = 5$（表 A2）；</li><li>$L_{RNR}$ 提供&quot;配准校正后的重建 / 结构 / 对抗&quot;监督；</li><li>$\epsilon L_{T1}$ 把「<strong>生成图像与输入图像位置一致</strong>」的信号<strong>回传给生成器 $G$</strong>——这一步是解耦的关键。</li></ul>
+<p><strong>第二步：更新 $R_2$</strong></p>
+<p>$$\min_{R_2} L(x,y) = L_{T1}(x) + \gamma\, L_{T1R}(x) + L_{T2}(x,y) + \gamma\, L_{T2R}(x,y) \tag{15}$$</p>
+<ul><li>只更新 $R_2$，同时用上恒等性约束（式 10）、跨模态一致性（式 11）和两个平滑约束（式 12、13）；</li><li>目的就是<strong>防止 $R_2$ 偷懒</strong>——如果它总输出恒等，$L_{T2}$ 会把它拉回来。</li></ul>
+<p><strong>第三步：更新判别器 $D$</strong>，用式 8。</p>
+<blockquote><strong>为什么要这样拆？</strong> 如果 $G$ 和 $R_2$ 一起更新，两者会&quot;串通&quot;（$G$ 不动，$R_2$ 也输出恒等，双方损失都为零）。拆成两步交替优化，就构成了真正的对抗，$G$ 必须真的对齐才能让 $R_2$ 满意。</blockquote>
+<hr />
+<h3>4.4 解耦效果的可视化验证</h3>
+<p>作者刻意在配对数据中人为引入错位，然后把各个误差图可视化出来（图 A1c）：</p>
+<table>
+<tr><th>误差图</th><th>MAE</th><th>说明</th></tr>
+<tr><td>$\lvert G(x)-y \rvert$</td><td><strong>39.8</strong></td><td>未配准时，生成图像与含噪真值错位严重</td></tr>
+<tr><td>$\lvert G(x)_{M_1}-y \rvert$</td><td><strong>29.5</strong></td><td>用 $R_1$ 的形变场 $M_1$ warp 后误差下降 → <strong>$R_1$ 有效</strong></td></tr>
+<tr><td>$\lvert G(x)-G(x)_{M_2} \rvert$</td><td><strong>0.1</strong></td><td>$R_2$ 在 $(x,G(x))$ 上输出的 $M_2$ 几乎是恒等映射 → <strong>$G(x)$ 与 $x$ 已对齐</strong>（符合设计目标）</td></tr>
+<tr><td>$\lvert G(x)_{M_1}-G(x)_{M_3} \rvert$</td><td><strong>13.3</strong></td><td>跨模态两条路径的差异，说明 $R_2$ 的跨模态配准仍有提升空间</td></tr>
+</table>
+<p>其中 $G(x)_{M_1}$、$G(x)_{M_2}$、$G(x)_{M_3}$ 分别表示用形变场 $M_1$（由 $R_1$ 在 $G(x)$ 与 $y$ 上估计）、$M_2$（由 $R_2$ 在 $x$ 与 $G(x)$ 上估计）、$M_3$（由 $R_2$ 在 $x$ 与 $y$ 上估计）对 $G(x)$ 重采样得到的图像。</p>
+<p>$M_2$ 那个 <strong>0.1</strong> 的 MAE 特别有说服力：它直接证明了生成器<strong>没有把错位藏进输出</strong>。</p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/figA3.jpg" alt="图 A3：DGR 学到的形变场可视化。a 为输入 H\&amp;E 与生成图像 G(x) 之间的形变场（强对齐说明 G(x) 是对输入的忠实变换）；b 为 G(x) 与目标真值之间的形变场（由 R1 产生，说明 R1 的配准机制有效）" loading="lazy" /></p>
+<p><em>图 A3：DGR 学到的形变场可视化。a 为输入 H\&amp;E 与生成图像 $G(x)$ 之间的形变场（强对齐说明 $G(x)$ 是对输入的忠实变换）；b 为 $G(x)$ 与目标真值之间的形变场（由 $R_1$ 产生，说明 $R_1$ 的配准机制有效）。</em></p>
+<h3>5.2 实验类型一：SOTA 横向对比（跨任务性能对比实验）</h3>
+<p><strong>实验设计</strong>：与 9 个方法对比——Pix2Pix（监督）、CycleGAN（非配对）、BCI/Pyramid Pix2Pix（抗错位）、RegGAN（配准）等，覆盖四类技术路线。</p>
+<p><strong>总体结果（五个数据集平均，图 1c-e）</strong>：</p>
+<table>
+<tr><th>指标</th><th>DGR</th><th>相对提升</th></tr>
+<tr><td>PSNR ↑</td><td><strong>22.914 dB</strong></td><td>+4.4%</td></tr>
+<tr><td>SSIM ↑</td><td><strong>0.676</strong></td><td>+4.0%</td></tr>
+<tr><td>LPIPS ↓</td><td><strong>0.180</strong></td><td>+7.7%</td></tr>
+</table>
+<p><strong>分任务结果</strong>：</p>
+<table>
+<tr><th>任务</th><th>DGR 表现</th><th>对比次优模型（RegGAN）</th></tr>
+<tr><td><strong>AF → H\&amp;E</strong></td><td>PSNR <strong>27.803</strong>，SSIM 0.766，LPIPS 0.159</td><td><strong>+1.4 dB（+5.3%）</strong></td></tr>
+<tr><td><strong>H\&amp;E → PAS-AB（内部）</strong></td><td>PSNR <strong>18.677</strong>，SSIM 0.547，LPIPS 0.168</td><td>+0.2 dB（+1.2%）</td></tr>
+<tr><td><strong>H\&amp;E → PAS-AB（外部）</strong></td><td>PSNR <strong>16.961</strong>，SSIM 0.502，LPIPS 0.220</td><td><strong>+1.6 dB（+10.1%）</strong></td></tr>
+<tr><td><strong>H\&amp;E → mIHC（HEMIT）</strong></td><td>PSNR <strong>27.306</strong>，SSIM 0.830，LPIPS 0.248</td><td><strong>+1.3 dB（+5.1%）</strong></td></tr>
+<tr><td><strong>染色归一化（A2H）</strong></td><td>PSNR <strong>23.823</strong>，SSIM 0.734，LPIPS 0.107</td><td>+0.4 dB（+1.7%）</td></tr>
+</table>
+<p><strong>几个值得注意的细节</strong>：</p>
+<ol><li><strong>CycleGAN（无监督）在所有任务上基本垫底</strong>——它在 AF→H\&amp;E 上只有 18.538 dB，在 H\&amp;E→PAS-AB 上甚至掉到 13.336 dB。这印证了&quot;循环一致性保风格不保内容&quot;的判断。</li><li><strong>外部数据集上的提升（+10.1%）远大于内部（+1.2%）</strong>，说明 DGR 的收益主要来自<strong>泛化能力</strong>而非&quot;在训练分布上过拟合&quot;。</li><li>作者还做了<strong>强度剖面（intensity profile）分析</strong>：沿图像上的线取像素强度曲线，与真值对比算皮尔逊相关系数（PCC）。DGR 在 H\&amp;E→PAS-AB 任务上 PCC 达到 <strong>0.908</strong> 和 <strong>0.745</strong>，为所有方法中最高，说明它恢复精细细节的能力最强。</li></ol>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/fig2.jpg" alt="图 2：AF → H\&amp;E 的各方法对比。a 为各方法生成结果与 MAE 热力图；b 为强度剖面与 PCC；c-e 为 LPIPS/SSIM/PSNR 的分布" loading="lazy" /></p>
+<p><em>图 2：AF → H\&amp;E 的各方法对比。a 为各方法生成结果与 MAE 热力图；b 为强度剖面与 PCC；c-e 为 LPIPS/SSIM/PSNR 的分布。</em></p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/fig3.jpg" alt="图 3：H\&amp;E → PAS-AB 的结果。注意 c-e 分列了内部与外部测试集" loading="lazy" /></p>
+<p><em>图 3：H\&amp;E → PAS-AB 的结果。注意 c-e 分列了内部与外部测试集。</em></p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/fig4.jpg" alt="图 4：H\&amp;E → mIHC 的结果。DGR 在 panCK（红通道）与 DAPI（蓝通道）上都更可靠" loading="lazy" /></p>
+<p><em>图 4：H\&amp;E → mIHC 的结果。DGR 在 panCK（红通道）与 DAPI（蓝通道）上都更可靠。</em></p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/fig5.jpg" alt="图 5：染色风格归一化的结果，DGR 的 PCC 达到 0.982" loading="lazy" /></p>
+<p><em>图 5：染色风格归一化的结果，DGR 的 PCC 达到 0.982。</em></p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/figA2.jpg" alt="图 A2：四种较弱方法（ASP、UNSB、ST、StegoGAN）在四个数据集上的可视化，可直观看出它们与真值的差距" loading="lazy" /></p>
+<p><em>图 A2：四种较弱方法（ASP、UNSB、ST、StegoGAN）在四个数据集上的可视化，可直观看出它们与真值的差距。</em></p>
+<hr />
+<h3>5.3 实验类型二：抗错位鲁棒性实验（<strong>本文最重要的实验</strong>）</h3>
+<p>这是全文最有分量的实验，<strong>专门验证 DGR 的核心主张</strong>。</p>
+<p><strong>实验设计</strong>：</p>
+<ol><li>准备一个<strong>良好对齐</strong>的数据集：从 H\&amp;E 与 PAS-AB 的 WSI 中提取 <strong>11,918 对</strong> 256×256 的配对图块；</li><li>人为施加 <strong>5 档错位</strong>（旋转 + 平移 + 缩放）：</li></ol>
+<table>
+<tr><th>错位等级</th><th>旋转</th><th>平移</th><th>重缩放</th></tr>
+<tr><td>Level 1</td><td>±1°</td><td>±2%</td><td>±2%</td></tr>
+<tr><td>Level 2</td><td>±2°</td><td>±4%</td><td>±4%</td></tr>
+<tr><td>Level 3</td><td>±3°</td><td>±6%</td><td>±6%</td></tr>
+<tr><td>Level 4</td><td>±4°</td><td>±8%</td><td>±8%</td></tr>
+<tr><td>Level 5</td><td>±5°</td><td>±10%</td><td>±10%</td></tr>
+</table>
+<ol><li>训练时输入与目标图像中心裁剪至 128×128；</li><li><strong>关键设定：在&quot;错位数据&quot;上训练，在&quot;良好对齐数据&quot;上测试</strong>——这才能真正检验模型有没有把错位&quot;内化&quot;掉；</li><li><strong>三组消融</strong>：</li></ol>
+<ul><li><strong>Baseline</strong>：Bai 等的模型，不含任何配准组件；</li><li><strong>Baseline + RNR</strong>：加入 $R_1$ 配准模块（等价于 RegGAN 的做法）；</li><li><strong>Baseline + DGR</strong>：同时含 RNR 与 PcG，实现生成与配准解耦。</li></ul>
+<p><strong>实验结果</strong>：</p>
+<table>
+<tr><th>策略</th><th>Level 1 PSNR</th><th>Level 3 PSNR</th><th>Level 5 PSNR</th></tr>
+<tr><td>Baseline</td><td>17.702</td><td>15.694</td><td><strong>14.324</strong></td></tr>
+<tr><td>Baseline + RNR</td><td>18.228</td><td>18.031</td><td>17.095</td></tr>
+<tr><td><strong>Baseline + DGR</strong></td><td><strong>18.414</strong></td><td><strong>18.460</strong></td><td><strong>17.730</strong></td></tr>
+</table>
+<p><strong>三条结论</strong>：</p>
+<ol><li><strong>Baseline 随错位急剧退化</strong>（Level 1 → Level 5 掉了 3.4 dB），说明它面对错位数据毫无鲁棒性；</li><li><strong>加入 RNR 后性能大幅回稳</strong>（Level 5 提升到 17.095），说明配准模块确实能缓解错位；</li><li><strong>再加 PcG 后进一步提升</strong>，且在 <strong>Level 1 到 Level 4 之间 PSNR 始终超过 18 dB</strong>，全程优于前两者。</li></ol>
+<blockquote><strong>在最大错位（Level 5，±5° 旋转 + ±10% 平移 + ±10% 缩放）下，DGR 相比基线取得 3.4 dB（23.8%）的 PSNR 提升。</strong></blockquote>
+<p>作者还专门强调：这个结果<strong>凸显了通过 PcG 模块施加&quot;显式空间一致性约束&quot;的重要性</strong>——也就是说，光有配准（RNR）不够，必须再加上&quot;不许动像素&quot;的硬约束（PcG）才能真正解耦。</p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/fig6.jpg" alt="图 6：DGR 的抗错位能力。a 为五档错位设置；b-d 为三组消融在 PSNR/SSIM/LPIPS 上的对比（蓝=Baseline，紫=Baseline+RNR，红=Baseline+DGR）" loading="lazy" /></p>
+<p><em>图 6：DGR 的抗错位能力。a 为五档错位设置；b-d 为三组消融在 PSNR/SSIM/LPIPS 上的对比（蓝=Baseline，紫=Baseline+RNR，红=Baseline+DGR）。</em></p>
+<hr />
+<h3>5.4 实验类型三：盲法人工评估（<strong>临床可信度实验</strong>）</h3>
+<p><strong>实验设计</strong>：定量指标再好，也不能说明病理医师分辨不出来。所以作者做了一次盲法测试：</p>
+<ul><li>随机选取 <strong>250 张虚拟染色 H\&amp;E + 250 张化学染色 H\&amp;E</strong>（共 500 张），随机打乱；</li><li>同理再来一组 <strong>250 + 250 的 PAS-AB</strong>；</li><li>请<strong>资深病理医师</strong>判断每张图&quot;是真实的化学染色，还是虚拟染色&quot;。</li></ul>
+<p><strong>实验结果</strong>：</p>
+<table>
+<tr><th>任务</th><th>判读准确率</th><th>灵敏度</th><th>特异度</th><th>Kappa</th><th>卡方检验 P 值</th></tr>
+<tr><td>H\&amp;E</td><td><strong>52.4%</strong></td><td>57.2%</td><td>47.6%</td><td>0.048</td><td><strong>P = 0.323</strong></td></tr>
+<tr><td>PAS-AB</td><td><strong>52.4%</strong></td><td>31.2%</td><td>73.6%</td><td>0.048</td><td><strong>P = 0.277</strong></td></tr>
+</table>
+<p><strong>52.4% 基本就是抛硬币的水平</strong>，卡方检验 P 值均大于 0.05，说明<strong>化学染色与虚拟染色图像之间没有统计学显著差异</strong>——病理医师无法可靠区分二者。</p>
+<blockquote>这是本文最有冲击力的一个结果：它把&quot;模型指标好&quot;升级成了&quot;<strong>临床专家看不出来</strong>&quot;。</blockquote>
+<hr />
+<h3>5.5 实验类型四：细胞结构保真度（下游任务实验）</h3>
+<p><strong>实验设计</strong>：用 <strong>Cellpose</strong> 做细胞核分割，以化学染色的真值作为参照，计算 <strong>Dice 系数（DICE）</strong>。DICE 越高，说明虚拟染色图像保留细胞结构的能力越强。</p>
+<p><strong>结果（表 A13，平均 DICE）</strong>：</p>
+<table>
+<tr><th>模型</th><th>DICE</th></tr>
+<tr><td>CycleGAN</td><td>0.265</td></tr>
+<tr><td>ST</td><td>0.270</td></tr>
+<tr><td>UNSB</td><td>0.291</td></tr>
+<tr><td>ASP</td><td>0.290</td></tr>
+<tr><td>StegoGAN</td><td>0.303</td></tr>
+<tr><td>Pix2Pix</td><td>0.363</td></tr>
+<tr><td>BCI</td><td>0.396</td></tr>
+<tr><td>Her2</td><td>0.397</td></tr>
+<tr><td>RegGAN</td><td>0.421</td></tr>
+<tr><td><strong>DGR</strong></td><td><strong>0.422</strong></td></tr>
+</table>
+<p>DGR 与 RegGAN 基本持平（0.422 vs 0.421），并列最优。这说明 DGR 在<strong>提升对齐鲁棒性的同时，并没有牺牲结构保真度</strong>。</p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/figA6.jpg" alt="图 A6：Cellpose 细胞分割结果对比，各子图标注了该样本的 DICE 值" loading="lazy" /></p>
+<p><em>图 A6：Cellpose 细胞分割结果对比，各子图标注了该样本的 DICE 值。</em></p>
+<hr />
+<h3>5.6 实验类型五：计算效率（工程可用性实验）</h3>
+<p>作者用 NVIDIA L20 测了各模型的显存与速度（batch size 1 测显存，batch 32 测推理速度）：</p>
+<table>
+<tr><th>模型</th><th>推理显存</th><th>推理速度</th><th>训练显存</th><th>训练速度</th></tr>
+<tr><td>Pix2Pix</td><td>245.94 MB</td><td>0.501 ms</td><td>1051.48 MB</td><td>11.912 ms</td></tr>
+<tr><td>CycleGAN</td><td>104.73 MB</td><td>4.042 ms</td><td>448.14 MB</td><td>29.926 ms</td></tr>
+<tr><td>RegGAN</td><td>108.73 MB</td><td>4.040 ms</td><td>448.14 MB</td><td>28.870 ms</td></tr>
+<tr><td><strong>DGR</strong></td><td>602.78 MB</td><td>9.616 ms</td><td>1441.39 MB</td><td>70.139 ms</td></tr>
+</table>
+<p><strong>代价是真实的</strong>：DGR 因为多了一个配准网络 $R_2$，训练速度约 70 ms/图，比 Pix2Pix（11.9 ms）慢约 6 倍。作者在讨论里也坦诚地把这一点列为局限。</p>
+<hr />
+<h3>5.7 实验类型六：全切片（WSI）拼接可视化</h3>
+<p>作者还把虚拟染色图块<strong>拼回整张全切片图像（WSI）</strong>，验证大规模部署时的视觉效果：</p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/figA4.jpg" alt="图 A4：AF → H\&amp;E 的全切片可视化。a 为 AF WSI（输入），b 为 H\&amp;E WSI（真值），c 为放大的 AF，d 为由 256 个虚拟染色图块拼接而成的大幅 H\&amp;E，e 为放大的 H\&amp;E 真值" loading="lazy" /></p>
+<p><em>图 A4：AF → H\&amp;E 的全切片可视化。a 为 AF WSI（输入），b 为 H\&amp;E WSI（真值），c 为放大的 AF，d 为由 256 个虚拟染色图块拼接而成的大幅 H\&amp;E，e 为放大的 H\&amp;E 真值。</em></p>
+<p><img src="assets/011-DGR抗错位虚拟染色精读/figA5.jpg" alt="图 A5：H\&amp;E → PAS-AB 的全切片可视化，同样由 256 个虚拟染色图块拼接而成" loading="lazy" /></p>
+<p><em>图 A5：H\&amp;E → PAS-AB 的全切片可视化，同样由 256 个虚拟染色图块拼接而成。</em></p>
+<hr />
+<h2>6. 讨论、局限与展望</h2>
+<p>作者在讨论部分坦诚列了两个局限：</p>
+<ol><li><strong>泛化能力</strong>：应用到外部数据集时，所评估方法的泛化能力仍有改进空间（不过 DGR 的外部提升 +10.1% 已是最好）；</li><li><strong>计算资源</strong>：DGR 相比部分基线需要更高的计算资源（多一个配准网络），可能限制其在资源受限场景的部署。</li></ol>
+<p><strong>未来方向</strong>：</p>
+<ul><li>构建<strong>大规模、多样化的数据集</strong>来增强鲁棒性与适应性；</li><li>优化模型架构以提升效率；</li><li>引入更先进的生成式 AI 模型——<strong>作者明确点名了扩散模型（diffusion model）</strong>，认为这是推动各类染色虚拟染色流程标准化的一个有前景的方向。</li></ul>
+<hr />
+<h2>7. 这篇工作最值得记住的三点</h2>
+<p><strong>① 问题的重新定义。</strong> 前人把&quot;错位&quot;当成生成模型的问题来治（多尺度损失、配准校正），本文指出：错位是<strong>数据采集</strong>的固有限制（化学染色导致形变 + 单张切片无法反复染色），因此正确的做法不是在生成端&quot;硬扛&quot;，而是<strong>在损失端把错位显式地消掉，同时把生成器锁死在&quot;不许动像素&quot;上</strong>。</p>
+<p><strong>② 解耦这个动作本身。</strong> RegGAN 的失败不在于&quot;配准&quot;这个想法错，而在于<strong>生成与配准耦合</strong>——生成器可以把错位甩锅给配准器。DGR 用&quot;两个对抗过程 + 一个恒等性约束 + 一个跨模态一致性约束&quot;把这层耦合彻底切断。这是本文真正的技术贡献。</p>
+<p><strong>③ 论证的漂亮之处。</strong> &quot;$G(x)$ 与 $x$ 的错位不是数据属性，而是训练不到位的伪影&quot;——这一句把生物学的先验（同一张切片、同一套结构）转成了可写进损失函数的数学约束。<strong>先有物理论证，再有公式</strong>，这个顺序值得学习。</p>
+<hr />
+<h2>8. 附：公式速查表</h2>
+<table>
+<tr><th>编号</th><th>公式</th><th>作用</th></tr>
+<tr><td>(1)</td><td>$\min_G L=\frac1N\sum\|G(x_n)-y_n\|_1$</td><td>Pix2Pix 基线，对错位敏感</td></tr>
+<tr><td>(2)</td><td>$\phi_n=R(G(x_n),y_n)$</td><td>RegGAN 估计形变场</td></tr>
+<tr><td>(3)</td><td>$\min_{G,R}L=\frac1N\sum\|\phi_n\circ G(x_n)-y_n\|_1$</td><td>RegGAN 校正损失（<strong>漏洞所在</strong>）</td></tr>
+<tr><td>(4)</td><td>$L_{L1}=\frac1N\sum\|R_1(G(x_n),y_n)\circ G(x_n)-y_n\|_1$</td><td>RNR：校正后 $L_1$ 重建损失</td></tr>
+<tr><td>(5)</td><td>$L_{ssim}=-\frac1N\sum\log(1+\mathrm{ssim}(\cdot,\cdot))$</td><td>RNR：结构相似性损失</td></tr>
+<tr><td>(6)</td><td>$L_{smooth}=\frac1N\sum\|\nabla R_1(\cdot,\cdot)\|_2$</td><td>RNR：形变场平滑正则</td></tr>
+<tr><td>(7)</td><td>$L_{adv}=-\frac1N\sum\log D(G(x_n))$</td><td>生成器对抗损失</td></tr>
+<tr><td>(8)</td><td>$L_{dis}=-\frac1N\sum[\log(1-D(G(x_n)))+\log D(y_n)]$</td><td>判别器损失</td></tr>
+<tr><td>(9)</td><td>$L_{RNR}=\alpha L_{L1}+\beta L_{ssim}+\gamma L_{smooth}+\delta L_{adv}$</td><td>RNR 总损失</td></tr>
+<tr><td>(10)</td><td>$L_{T1}=\frac1N\sum\|R_2(x_n,G(x_n))\circ G(x_n)-G(x_n)\|_1$</td><td>PcG：恒等性约束（逼 $G(x)$ 与 $x$ 对齐）</td></tr>
+<tr><td>(11)</td><td>$L_{T2}=\frac1N\sum\|R_2(x_n,y_n)\circ G(x_n)-R_1(G(x_n),y_n)\circ G(x_n)\|_1$</td><td>PcG：跨模态一致性（防止 $R_2$ 偷懒）</td></tr>
+<tr><td>(12)(13)</td><td>$L_{T1R},L_{T2R}$</td><td>$R_2$ 形变场平滑正则</td></tr>
+<tr><td>(14)</td><td>$\min_{G,R_1}L=L_{RNR}+\epsilon L_{T1}$</td><td>训练第 1 步</td></tr>
+<tr><td>(15)</td><td>$\min_{R_2}L=L_{T1}+\gamma L_{T1R}+L_{T2}+\gamma L_{T2R}$</td><td>训练第 2 步</td></tr>
+</table>
+<p><strong>超参数</strong>：$\alpha=10$，$\beta=0.5$，$\gamma=10$，$\delta=0.1$，$\epsilon=5$；判别器与两个配准网络学习率均为 1e-5；训练 200 epoch。</p>
+<hr />
+<h2>9. 资源</h2>
+<ul><li><strong>论文</strong>：arXiv:2509.14119v1（2025-09-17）</li><li><strong>代码与权重</strong>：&lt;https://github.com/birkhoffkiki/DTR&gt;</li><li><strong>数据集</strong>：</li><li>HEMIT：&lt;https://github.com/BianChang/HEMIT-DATASET&gt;</li><li>A2H（StainNet）：&lt;https://github.com/khtao/StainNet&gt;</li><li>AF2HE：&lt;https://github.com/TABLAB-HKUST/U-Frame（可能需要申请）&gt;</li><li>HE2PAS-AB / HE2PAS-AB-EXT：来自香港威尔斯亲王医院，因隐私原因不公开，需联系通讯作者</li><li><strong>伦理审批</strong>：香港科技大学 HAREC，编号 HREP-2024-0212</li></ul>
+<hr />
+<p><em>本文为论文解读博客，所有图表均截取自原论文（arXiv:2509.14119）。</em></p>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

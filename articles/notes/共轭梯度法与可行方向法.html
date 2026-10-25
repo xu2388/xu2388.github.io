@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>共轭梯度法、可行方向法与有效集法 · 例题精讲笔记</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"共轭梯度法、可行方向法与有效集法 · 例题精讲笔记","date":"2026-10-24","tags":["课程笔记","高等数学/最优化"],"category":"课程笔记","summary":"围绕无约束与约束优化三类算法展开：共轭梯度法给出 FR 与 PRP 的 β 公式及其在正定二次函数上等价性的证明、精确步长闭式公式的完整推导，并以 min x1²+2x2² 逐步算出两步收敛；可行方向法（Zoutendijk 型）给出下降性与可行性双重条件及方向判别例；有效集法按\"解等式子问题—删负乘子—加新约束\"循环求解凸二次规划，完整算例经五步迭代收敛于 (0.5, 1.5)。原始对话中若干数值（步长、β 系数）与所列表式矛盾，全文按公式统一重算修订。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>共轭梯度法、可行方向法与有效集法 · 例题精讲笔记</h1>
+<div class="meta">课程笔记 · 高等数学/最优化 · 整理自豆包对话 豆包对话 · 最优化：共轭梯度法与可行方向法例题讲解</div>
+<h1>共轭梯度法、可行方向法与有效集法 · 例题精讲笔记</h1>
+<h2>一、概述</h2>
+<p>无约束优化与约束优化各有一类以&quot;梯度&quot;为核心信息的迭代算法。本文整理的三种方法正好覆盖了从无条件到线性约束、再到凸二次规划的完整链条：</p>
+<ul><li><strong>共轭梯度法</strong>：用于无约束优化，针对二次凸函数具有有限步收敛性（$n$ 维问题至多 $n$ 步），核心是构造关于 Hesse 矩阵共轭的搜索方向，用以克服最速下降法的锯齿现象；</li><li><strong>可行方向法</strong>（Zoutendijk 型）：用于约束优化（以线性约束为主），核心是在当前可行点上寻找<strong>既下降又可行</strong>的方向，沿该方向一维搜索迭代直至满足 KKT 条件；</li><li><strong>有效集法</strong>（可行集法，Active Set Method）：专门求解带不等式约束的凸二次规划，核心是逐步识别最优解处的起作用约束集合，把原问题化为一系列等式约束子问题。</li></ul>
+<p>三者的适用范围与核心对象对照如下：</p>
+<table>
+<tr><th>方法</th><th>问题类型</th><th>核心对象</th><th>步长规则</th><th>终止判据</th></tr>
+<tr><td>共轭梯度法</td><td>无约束（二次凸函数最优）</td><td>共轭方向 $d^{k+1}=-g^{k+1}+\beta_k d^k$</td><td>精确线搜索闭式解</td><td>梯度为零</td></tr>
+<tr><td>可行方向法</td><td>线性约束优化</td><td>下降可行方向 $d$</td><td>一维搜索（可行域内）</td><td>满足 KKT 条件</td></tr>
+<tr><td>有效集法</td><td>凸二次规划</td><td>等式约束子问题的方向 $d^k$</td><td>$\min\{\text{可行上限},\,1\}$</td><td>方向为零且乘子非负</td></tr>
+</table>
+<p>值得先做一对概念辨析：<strong>可行方向法与可行集（有效集）法是两种不同的方法</strong>，笔者在复习初期曾将两者混为一谈。可行方向法直接在原空间中找&quot;下降 + 可行&quot;的方向；有效集法维护的是&quot;当前取等号的约束集合&quot;，每一步要解的是一个等式约束二次规划子问题，方向只是子问题的解。本文分别展开。</p>
+<h2>二、核心概念与公共公式</h2>
+<h3>2.1 正定二次函数与共轭方向</h3>
+<p>本文讨论的无约束算例均为标准正定二次函数</p>
+<p>$$ f(x)=\frac{1}{2}x^{\mathrm{T}}Gx+r^{\mathrm{T}}x+\delta,\qquad G \text{ 对称正定}, $$</p>
+<p>其梯度为 $\nabla f(x)=Gx+r$。若两个非零方向 $d^i,d^j$ 满足</p>
+<p>$$ (d^i)^{\mathrm{T}}Gd^j=0\quad (i\neq j), $$</p>
+<p>则称它们关于 $G$ <strong>共轭</strong>。几何上，共轭即&quot;$G$ 定义的内积下的正交&quot;：在 $G$ 把坐标轴按椭圆等高轴长拉伸后，两个方向变成垂直方向。沿一组互相共轭的方向各做一次精确线搜索，$n$ 维二次函数至多 $n$ 步即可到达极小点，这是共轭梯度法的<strong>二次终止性</strong>；而最速下降法（每次取负梯度方向）在长轴比大的等高椭圆上呈锯齿形前进，收敛缓慢。</p>
+<h3>2.2 精确线搜索：一维条件与闭式步长</h3>
+<p>设当前迭代点为 $x^k$、搜索方向为 $d^k$，构造一维函数</p>
+<p>$$ \phi(\alpha)=f(x^k+\alpha d^k),\qquad \alpha\ge 0. $$</p>
+<p>精确线搜索即求 $\alpha_k=\arg\min_{\alpha&gt;0}\phi(\alpha)$。由一元函数极值的一阶必要条件 $\phi&#x27;(\alpha_k)=0$，对 $\phi$ 用链式法则求导：</p>
+<p>$$ \phi&#x27;(\alpha)=\nabla f(x^k+\alpha d^k)^{\mathrm{T}}d^k, $$</p>
+<p>于是精确线搜索的<strong>一维最优性条件</strong>为</p>
+<p>$$ \nabla f(x^{k+1})^{\mathrm{T}}d^k=0, $$</p>
+<p>即新点处的梯度与刚走过的搜索方向正交——沿该方向已降到谷底，梯度在该方向上的分量必为零。</p>
+<p>对正定二次函数，此条件可以解出闭式步长。推导如下（原料给出完整链条，本文逐行重排）：</p>
+<p>第一步，代入梯度公式：</p>
+<p>$$ \big[G(x^k+\alpha d^k)+r\big]^{\mathrm{T}}d^k=0. $$</p>
+<p>第二步，利用 $\nabla f(x^k)=Gx^k+r$ 展开：</p>
+<p>$$ \nabla f(x^k)^{\mathrm{T}}d^k+\alpha\,(Gd^k)^{\mathrm{T}}d^k=0, $$</p>
+<p>即 $\nabla f(x^k)^{\mathrm{T}}d^k+\alpha\,(d^k)^{\mathrm{T}}Gd^k=0$。第三步，解出</p>
+<p>$$ \alpha_k=-\frac{(d^k)^{\mathrm{T}}\nabla f(x^k)}{(d^k)^{\mathrm{T}}Gd^k}. $$</p>
+<p>分母 $(d^k)^{\mathrm{T}}Gd^k&gt;0$（$G$ 正定且 $d^k\neq 0$），分子当 $d^k$ 为下降方向时为负，故 $\alpha_k&gt;0$，公式良定。</p>
+<p><strong>最速下降法是它的特例</strong>：取 $d^k=-\nabla f(x^k)$（相当于共轭梯度修正系数 $\beta=0$），代入即得</p>
+<p>$$ \alpha_k=\frac{\nabla f(x^k)^{\mathrm{T}}\nabla f(x^k)}{\nabla f(x^k)^{\mathrm{T}}G\,\nabla f(x^k)}. $$</p>
+<p>同一公式还解释了一个经典结论：若初始点与极小点之差恰沿 Hesse 矩阵的某个特征向量 $p$（特征值 $\lambda$），则精确线搜索步长为 $\alpha^{*}=1/\lambda$，最速下降一步即达极小点——&quot;锯齿&quot;只在梯度方向与多个特征方向混杂时才出现。</p>
+<h3>2.3 FR 与 PRP：两个 β 公式及其等价性</h3>
+<p>共轭梯度法不显式构造共轭方向系，而是由上一步方向加当前负梯度递推：</p>
+<p>$$ d^{k+1}=-\nabla f(x^{k+1})+\beta_k d^k, $$</p>
+<p>不同 $\beta_k$ 公式对应不同算法变体：</p>
+<table>
+<tr><th>变体</th><th>$\beta_k$ 公式</th><th>特点</th></tr>
+<tr><td>FR（Fletcher–Reeves）</td><td>$\lVert g^{k+1}\rVert^{2}/\lVert g^{k}\rVert^{2}$</td><td>理论性质好，二次函数上严格共轭</td></tr>
+<tr><td>PRP（Polak–Ribière–Polyak）</td><td>$(g^{k+1})^{\mathrm{T}}(g^{k+1}-g^{k})/\lVert g^{k}\rVert^{2}$</td><td>梯度趋零时 $\beta_k$ 自动趋零，方向退回负梯度，实际表现常优于 FR</td></tr>
+</table>
+<p>原料中还提到 Dixon、GW 等其余 $\beta$ 变体，此处不录其式。本文关心的核心命题是：<strong>在正定二次函数 + 精确线搜索的框架下，FR 与 PRP 相等</strong>。证明只依赖一步相邻梯度正交：</p>
+<p>$$ (g^{k})^{\mathrm{T}}g^{k-1}=0. $$</p>
+<p>其推导链条为（这是笔者当时反复卡住、后来按四步补全的一处证明）：</p>
+<ol><li>二次函数梯度差性质：由 $x^k=x^{k-1}+\alpha_{k-1}d^{k-1}$ 得 $g^k=g^{k-1}+\alpha_{k-1}Gd^{k-1}$；</li><li>方向构造式移项：$g^{k-1}=-d^{k-1}+\beta_{k-2}d^{k-2}$；</li><li>于是 $(g^k)^{\mathrm{T}}g^{k-1}=-(g^k)^{\mathrm{T}}d^{k-1}+\beta_{k-2}(g^k)^{\mathrm{T}}d^{k-2}$。第一项为零（精确线搜索一维条件）；第二项中 $(g^k)^{\mathrm{T}}d^{k-2}=(g^{k-1})^{\mathrm{T}}d^{k-2}+\alpha_{k-1}(d^{k-1})^{\mathrm{T}}Gd^{k-2}$，其中前一项由上一步精确线搜索条件为零，后一项由方向共轭性为零，故整个第二项也为零；</li><li>基础情形：第一步 $d^0=-g^0$，精确线搜索直接给出 $(g^1)^{\mathrm{T}}g^0=-(g^1)^{\mathrm{T}}d^0=0$。</li></ol>
+<p>相邻梯度正交后，PRP 的分子展开为</p>
+<p>$$ (g^{k})^{\mathrm{T}}(g^{k}-g^{k-1})=\lVert g^{k}\rVert^{2}-(g^{k})^{\mathrm{T}}g^{k-1}=\lVert g^{k}\rVert^{2}, $$</p>
+<p>与 FR 分子完全相同，分母亦同为 $\lVert g^{k-1}\rVert^{2}$，故 $\beta_k^{\mathrm{FR}}=\beta_k^{\mathrm{PRP}}$。这个等价只在精确线搜索的二次函数上成立；一般非线性函数上两者自此分道，PRP 因自动&quot;重启&quot;机制而更稳健。</p>
+<h2>三、共轭梯度法：算法流程与数值算例</h2>
+<h3>3.1 算法流程（FR 格式）</h3>
+<p>对无约束问题 $\min f(x)$，$x\in\mathbb{R}^n$：</p>
+<ol><li>取初始点 $x^0$，计算 $g^0=\nabla f(x^0)$，若 $g^0=0$ 停止；置 $d^0=-g^0$；</li><li>一维搜索求步长 $\alpha_k=\arg\min_{\alpha&gt;0}f(x^k+\alpha d^k)$（二次函数用 2.2 节闭式公式）；</li><li>更新 $x^{k+1}=x^k+\alpha_k d^k$，计算 $g^{k+1}=\nabla f(x^{k+1})$，若 $g^{k+1}=0$ 停止；</li><li>计算 $\beta_k$（FR 或 PRP 公式），更新 $d^{k+1}=-g^{k+1}+\beta_k d^k$，返回第 2 步。</li></ol>
+<h3>3.2 算例一：$\min x_1^2+2x_2^2$，$x^{(0)}=(1,1)^{\mathrm{T}}$</h3>
+<p>梯度 $\nabla f(x)=(2x_1,\,4x_2)^{\mathrm{T}}$，$G=\operatorname{diag}(2,4)$。</p>
+<p><strong>第 0 步。</strong> $g^0=(2,4)^{\mathrm{T}}$，$d^0=(-2,-4)^{\mathrm{T}}$。一维函数</p>
+<p>$$ \phi(\alpha)=f(x^0+\alpha d^0)=(1-2\alpha)^2+2(1-4\alpha)^2=36\alpha^2-20\alpha+3, $$</p>
+<p>令 $\phi&#x27;(\alpha)=72\alpha-20=0$，得 $\alpha_0=5/18$，于是</p>
+<p>$$ x^{(1)}=x^0+\alpha_0 d^0=\left(\frac{4}{9},\,-\frac{1}{9}\right)^{\mathrm{T}}. $$</p>
+<p><strong>校验。</strong> 用闭式步长公式复核：$(d^0)^{\mathrm{T}}g^0=-20$，$(d^0)^{\mathrm{T}}Gd^0=2\times 4+4\times 16=72$，$\alpha_0=20/72=5/18$，两法一致。另可验证精确线搜索条件成立：$g^1=(8/9,-4/9)^{\mathrm{T}}$ 与 $d^0$ 内积为 $-16/9+16/9=0$。</p>
+<p><strong>第 1 步。</strong> $g^1=\nabla f(x^{(1)})=(8/9,\,-4/9)^{\mathrm{T}}$，$\lVert g^1\rVert^2=80/81$，$\lVert g^0\rVert^2=20$。FR 系数</p>
+<p>$$ \beta_0=\frac{\lVert g^1\rVert^2}{\lVert g^0\rVert^2}=\frac{80/81}{20}=\frac{4}{81}. $$</p>
+<p>按 PRP 公式计算：$(g^1)^{\mathrm{T}}(g^1-g^0)=\frac{8}{9}\left(-\frac{10}{9}\right)+\left(-\frac{4}{9}\right)\left(-\frac{40}{9}\right)=\frac{80}{81}$，与 FR 分子相同，$\beta_0^{\mathrm{PRP}}=4/81$，与 2.3 节的等价性证明互相印证。</p>
+<p>共轭方向</p>
+<p>$$ d^{(1)}=-g^{(1)}+\beta_0 d^{(0)}=\left(-\frac{8}{9},\frac{4}{9}\right)^{\mathrm{T}}+\frac{4}{81}(-2,-4)^{\mathrm{T}}=\left(-\frac{80}{81},\,\frac{20}{81}\right)^{\mathrm{T}}. $$</p>
+<p>（可直接验证共轭性：$(d^0)^{\mathrm{T}}Gd^1=2\times(-2)(-\frac{80}{81})+4\times(-4)(\frac{20}{81})=0$。）</p>
+<p><strong>第 2 步。</strong> 闭式步长：</p>
+<p>$$ \alpha_1=-\frac{(d^{(1)})^{\mathrm{T}}g^{(1)}}{(d^{(1)})^{\mathrm{T}}Gd^{(1)}}=-\frac{-\frac{640}{729}-\frac{80}{729}}{\frac{12800}{6561}+\frac{1600}{6561}}=\frac{720/729}{14400/6561}=\frac{9}{20}, $$</p>
+<p>于是</p>
+<p>$$ x^{(2)}=x^{(1)}+\alpha_1 d^{(1)}=\left(\frac{4}{9}-\frac{9}{20}\cdot\frac{80}{81},\;-\frac{1}{9}+\frac{9}{20}\cdot\frac{20}{81}\right)^{\mathrm{T}}=(0,0)^{\mathrm{T}}, $$</p>
+<p>此处 $g^{(2)}=0$，算法两步终止：<strong>最优解 $x^{*}=(0,0)^{\mathrm{T}}$，最优值 $f^{*}=0$</strong>，符合二维问题两步收敛的二次终止性。</p>
+<p><strong>关于原料数值的勘误。</strong> 原始对话在此例中给出 $\alpha_0=3/14$、$x^{(1)}=(4/7,1/7)^{\mathrm{T}}$ 与 $\beta_0=1/49$，但这两处与其自己列出的式子矛盾：$3/14$ 不满足驻点方程 $72\alpha-20=0$（代回得 $-32/7\neq 0$），而按 $x^{(1)}=(4/7,1/7)$ 计算 FR 系数也应得 $(80/49)/20=4/49$ 而非 $1/49$；沿该错误链条继续，两步之内无法到达原点。原料此处有两处不一致，本文按公式统一重算，采用上文中可自洽验证的数值链。</p>
+<h3>3.3 算例二：$\min x_1^2+3x_2^2$，$x^{(0)}=(3,1)^{\mathrm{T}}$（PRP 重算）</h3>
+<p>此例源于原料一份练习解答，原答案给出 $\alpha_0=11/36$、$\beta_0^{\mathrm{PRP}}=1067/1296$，本文复核后两者均不成立，按公式重算如下。</p>
+<p>梯度 $\nabla f=(2x_1,6x_2)^{\mathrm{T}}$，$G=\operatorname{diag}(2,6)$。$g^0=(6,6)^{\mathrm{T}}$，$d^0=(-6,-6)^{\mathrm{T}}$。</p>
+<p>$$ \phi(\alpha)=(3-6\alpha)^2+3(1-6\alpha)^2=144\alpha^2-72\alpha+12, $$</p>
+<p>令 $\phi&#x27;=288\alpha-72=0$，得 $\alpha_0=1/4$（原答案 $11/36$ 不满足此方程），$x^{(1)}=(3/2,\,-1/2)^{\mathrm{T}}$，$g^{(1)}=(3,-3)^{\mathrm{T}}$。于是</p>
+<p>$$ \beta_0^{\mathrm{FR}}=\frac{\lVert g^{(1)}\rVert^2}{\lVert g^{(0)}\rVert^2}=\frac{18}{72}=\frac{1}{4},\qquad \beta_0^{\mathrm{PRP}}=\frac{(g^{(1)})^{\mathrm{T}}(g^{(1)}-g^{(0)})}{\lVert g^{(0)}\rVert^2}=\frac{3\times(-3)+(-3)\times(-9)}{72}=\frac{1}{4}, $$</p>
+<p>两者相等且均为 $1/4$，并非原答案所记 $1067/1296$。后续：$d^{(1)}=-g^{(1)}+\beta_0 d^{(0)}=(-9/2,\,3/2)^{\mathrm{T}}$，$\alpha_1=-\frac{(d^{(1)})^{\mathrm{T}}g^{(1)}}{(d^{(1)})^{\mathrm{T}}Gd^{(1)}}=\frac{18}{54}=\frac{1}{3}$，$x^{(2)}=(0,0)^{\mathrm{T}}=x^{*}$，$f^{*}=0$，仍是两步收敛。</p>
+<h2>四、可行方向法（Zoutendijk 型）</h2>
+<h3>4.1 下降可行方向的判别条件</h3>
+<p>对约束问题 $\min f(x)$，s.t. $a_i^{\mathrm{T}}x\le b_i$（$i\in I$）及等式约束，在可行点 $x$ 处搜索方向 $d$ 须同时满足两类条件：</p>
+<table>
+<tr><th>条件</th><th>数学表述</th><th>含义</th></tr>
+<tr><td>下降性</td><td>$\nabla f(x)^{\mathrm{T}}d&lt;0$</td><td>沿 $d$ 移动目标函数瞬时下降</td></tr>
+<tr><td>可行（有效不等式约束，$c_i(x)=0$）</td><td>$\nabla c_i(x)^{\mathrm{T}}d\le 0$</td><td>不即刻穿出可行域</td></tr>
+<tr><td>可行（等式约束）</td><td>$\nabla c_i(x)^{\mathrm{T}}d=0$</td><td>保持在约束面上</td></tr>
+<tr><td>可行（松弛不等式约束，$c_i(x)&lt;0$）</td><td>无限制</td><td>步长足够小时自然满足</td></tr>
+</table>
+<p>Zoutendijk 型方法把&quot;找方向&quot;本身化为一个关于 $d$ 的辅助规划（常加 $\nabla f^{\mathrm{T}}d\le -\xi$、$\lVert d\rVert\le 1$ 之类的归一化约束），解出下降可行方向后沿其作可行域内的一维搜索，直至找不到下降可行方向（即满足 KKT 条件）为止。</p>
+<h3>4.2 算例三：线性约束下的方向判别</h3>
+<p>设 $f(x)=x_1^2+x_1x_2+2x_2^2-6x_1-2x_2-12x_3$，约束为 $x_1+x_2+x_3=2$，$-x_1+2x_2\le 3$，$x\ge 0$，考察点 $\hat{x}=(1,1,0)^{\mathrm{T}}$。</p>
+<p><strong>第一步，判有效约束。</strong> 等式约束恒有效；$x_3=0$ 取等号，为有效不等式约束；$-1+2=1&lt;3$ 与 $x_1,x_2&gt;0$ 均松弛，对方向无限制。</p>
+<p><strong>第二步，写可行条件。</strong> $\nabla c_{=}=(1,1,1)^{\mathrm{T}}$ 给出 $d_1+d_2+d_3=0$；$c_5(\hat{x})=-x_3\le 0$ 的梯度 $(0,0,-1)^{\mathrm{T}}$ 给出 $-d_3\le 0$，即 $d_3\ge 0$。</p>
+<p><strong>第三步，写下降条件。</strong> 按偏导 $\nabla f=(2x_1+x_2-6,\ x_1+4x_2-2,\ -12)^{\mathrm{T}}$ 代入得 $\nabla f(\hat{x})=(-3,3,-12)^{\mathrm{T}}$，下降条件为 $-3d_1+3d_2-12d_3&lt;0$。</p>
+<p><strong>第四步，取方向验证。</strong> 取 $d=(1,-1,0)^{\mathrm{T}}$：$d_1+d_2+d_3=0$ 满足，$d_3=0\ge 0$ 满足，$\nabla f(\hat{x})^{\mathrm{T}}d=-3-3=-6&lt;0$ 满足，故 $d$ 是一个下降可行方向。</p>
+<p>作为流程收口的极简线性例子：$\min f=2x_1+x_2$，s.t. $x_1+x_2\ge 1$，$x\ge 0$，自 $x^0=(1,0)^{\mathrm{T}}$ 出发，有效约束 $x_1+x_2=1$ 要求 $d_1+d_2\ge 0$，下降要求 $2d_1+d_2&lt;0$，取 $d=(-1,1)^{\mathrm{T}}$ 即同时满足；沿 $d$ 最多走到 $\alpha=1$ 处 $x^{*}=(0,1)^{\mathrm{T}}$，$f^{*}=1$。（原料曾取 $d=(-1,2)^{\mathrm{T}}$，但 $2\times(-1)+1\times 2=0$，只满足非增而不满足严格下降，本文改用 $(-1,1)^{\mathrm{T}}$。）</p>
+<h2>五、有效集法</h2>
+<h3>5.1 适用问题与标准流程</h3>
+<p>凸二次规划标准形式：</p>
+<p>$$ \min f(x)=\frac{1}{2}x^{\mathrm{T}}Gx+c^{\mathrm{T}}x,\qquad \text{s.t. } a_i^{\mathrm{T}}x\le b_i\ (i=1,\dots,m), $$</p>
+<p>$G$ 对称正定。<strong>有效集</strong> $I^k$ 指点 $x^k$ 处取等号（$\boldsymbol{a}_i^{\mathrm{T}}x^k=b_i$）的约束索引集。教材标准迭代：</p>
+<ol><li>取初始可行点 $x^0$，定初始有效集 $I^0$；</li><li>解关于方向 $d$ 的<strong>等式约束子问题</strong>（见 5.2）；</li><li>若 $d^k=0$：当前点已是子问题极小点，计算有效约束的拉格朗日乘子 $\lambda_i$。全部 $\lambda_i\ge 0$ 则已达 KKT 点（凸 QP 下即全局最优），终止；存在 $\lambda_j&lt;0$ 则把该约束<strong>移出</strong>有效集（习惯上删最负者），返回第 2 步；</li><li>若 $d^k\neq 0$：求最大可行步长并更新（见 5.3）；</li><li>$\alpha_k&lt;1$ 说明途中碰到新约束，将其<strong>加入</strong>有效集；$\alpha_k=1$ 有效集不变。返回第 2 步。</li></ol>
+<p>对凸二次规划，有效集组合有限且每步目标严格下降或有效集变化，算法<strong>有限步收敛</strong>。</p>
+<h3>5.2 子问题从何而来：二阶展开与等式化</h3>
+<p>这是笔者当时追问&quot;为什么解子问题得到的是方向 $d$&quot;的一处，其逻辑是：设下一步为 $x^k+\alpha d$（步长由 $\alpha$ 控制，方向由 $d$ 承担），把二次目标在 $x^k$ 处展开（二次函数展开无误差）：</p>
+<p>$$ f(x^k+d)=f(x^k)+(Gx^k+c)^{\mathrm{T}}d+\frac{1}{2}d^{\mathrm{T}}Gd, $$</p>
+<p>其中 $f(x^k)$ 是常数，极小化即等价于极小化后两项；而&quot;不离开有效约束面&quot;要求 $\boldsymbol{a}_i^{\mathrm{T}}(x^k+d)=b_i$，结合 $\boldsymbol{a}_i^{\mathrm{T}}x^k=b_i$ 化为 $\boldsymbol{a}_i^{\mathrm{T}}d=0$。于是子问题为</p>
+<p>$$ \min_d\ (g^k)^{\mathrm{T}}d+\frac{1}{2}d^{\mathrm{T}}Gd,\qquad \text{s.t. } \boldsymbol{a}_i^{\mathrm{T}}d=0,\ i\in I^k, $$</p>
+<p>其中 $g^k=\nabla f(x^k)=Gx^k+c$。它仍是等式约束二次规划，可用拉格朗日线性方程组法求解：令 $L=\frac{1}{2}d^{\mathrm{T}}Gd+(g^k)^{\mathrm{T}}d-\lambda^{\mathrm{T}}(Ad-b)$，求导得联立式 $Gd+g^k-A^{\mathrm{T}}\lambda=0$，$Ax=b$（对 $d$ 形式时右端为 $Ad=0$），解 $d$ 即搜索方向。原料中的最小示范：$\min\ x_1^2+x_2^2-2x_1-4x_2$，s.t. $x_1+x_2=3$，由方程组 $2x_1-\lambda=2$、$2x_2-\lambda=4$、$x_1+x_2=3$ 消去 $\lambda$ 得 $x_1=1$、$x_2=2$，即无约束极小点恰在约束线上（$\lambda=0$）。</p>
+<h3>5.3 步长公式的推导与一处关键辨析</h3>
+<p>子问题给出 $d^k\neq 0$ 后，步长要回答两件事，<strong>这两件事在原料中一度被混为一谈，是笔者追问后才拆清的</strong>：</p>
+<p>其一，<strong>最大可行步长</strong>（只管边界，不管下降）：对不在有效集中的约束 $\boldsymbol{a}_i^{\mathrm{T}}x\le b_i$，要求 $\boldsymbol{a}_i^{\mathrm{T}}(x^k+\alpha d^k)\le b_i$，移项得 $\alpha(\boldsymbol{a}_i^{\mathrm{T}}d^k)\le b_i-\boldsymbol{a}_i^{\mathrm{T}}x^k$。只有 $\boldsymbol{a}_i^{\mathrm{T}}d^k&gt;0$（朝该边界走）才构成限制，每个这样的约束给出上限 $\frac{b_i-\boldsymbol{a}_i^{\mathrm{T}}x^k}{\boldsymbol{a}_i^{\mathrm{T}}d^k}$，取其最小为 $\alpha_{\max}$。</p>
+<p>$$ \alpha_k=\min\left\{1,\ \min_{i\notin I^k,\ \boldsymbol{a}_i^{\mathrm{T}}d^k&gt;0}\frac{b_i-\boldsymbol{a}_i^{\mathrm{T}}x^k}{\boldsymbol{a}_i^{\mathrm{T}}d^k}\right\}. $$</p>
+<p>其二，<strong>上限 1 的来历</strong>（只管下降）：$d^k$ 是二次子问题的精确极小方向，$\alpha=1$ 恰好走到子问题极小点，再多走没有意义。因此有效集法每步<strong>不需要再做一次独立的一维精确线搜索</strong>——这与共轭梯度法里 $\alpha^{*}=\arg\min f(x+\alpha d)$ 是两个不同的量，原料早期把二者写混，正是笔者质疑&quot;这不是一维精确线搜索的公式吗&quot;所引发的更正。另需注意符号约定：把约束统一写成 $\ge$ 型时，构成限制的符号条件相应变为 $\boldsymbol{a}_i^{\mathrm{T}}d^k&lt;0$，上限式 $\frac{b_i-\boldsymbol{a}_i^{\mathrm{T}}x^k}{\boldsymbol{a}_i^{\mathrm{T}}d^k}$ 形式不变但推导中要除以负数、不等号反向，两套写法的判别符号正好相反，务必与自己的标准化形式一致。</p>
+<h3>5.4 算例四：完整五步迭代</h3>
+<p>$$ \min f(x)=x_1^2+x_2^2-2x_1-4x_2,\qquad \text{s.t. } x_1+x_2\le 2,\ x_1\ge 0,\ x_2\ge 0. $$</p>
+<p>标准化：$G=\begin{pmatrix}2&amp;0\\0&amp;2\end{pmatrix}$，$c=(-2,-4)^{\mathrm{T}}$；三条约束取 $A$ 行 $\boldsymbol{a}_1=(1,1)^{\mathrm{T}},b_1=2$；$\boldsymbol{a}_2=(-1,0)^{\mathrm{T}},b_2=0$；$\boldsymbol{a}_3=(0,-1)^{\mathrm{T}},b_3=0$。初始可行点 $x^0=(0,0)^{\mathrm{T}}$，$I^0=\{2,3\}$。全过程：</p>
+<table>
+<tr><th>步</th><th>当前点 $x^k$</th><th>有效集 $I^k$</th><th>子问题与解 $d^k$</th><th>步长</th><th>操作</th></tr>
+<tr><td>$k=0$</td><td>$(0,0)^{\mathrm{T}}$</td><td>$\{2,3\}$</td><td>$d_1=0,d_2=0\Rightarrow d^0=0$</td><td>—</td><td>乘子 $\lambda_2=-2,\lambda_3=-4$，删最负的约束 3</td></tr>
+<tr><td>$k=1$</td><td>$(0,0)^{\mathrm{T}}$</td><td>$\{2\}$</td><td>$\min d_1^2+d_2^2-2d_1-4d_2$，s.t. $d_1=0$，得 $d^1=(0,2)^{\mathrm{T}}$</td><td>$\alpha_1=\min\{1,\frac{2-0}{2}\}=1$</td><td>$x^2=(0,2)^{\mathrm{T}}$，$c_1$ 取等号，加入约束 1</td></tr>
+<tr><td>$k=2$</td><td>$(0,2)^{\mathrm{T}}$</td><td>$\{1,2\}$</td><td>$g^2=(-2,0)^{\mathrm{T}}$，两等式钉死 $d^2=0$</td><td>—</td><td>乘子 $\lambda_1=0,\lambda_2=-2$，删约束 2</td></tr>
+<tr><td>$k=3$</td><td>$(0,2)^{\mathrm{T}}$</td><td>$\{1\}$</td><td>$\min 2d_1^2-2d_1$（代入 $d_2=-d_1$），$d^3=(0.5,-0.5)^{\mathrm{T}}$</td><td>$\alpha_3=\min\{1,\frac{0-(-2)}{0.5}\}=1$</td><td>$x^4=(0.5,1.5)^{\mathrm{T}}$，未碰新约束</td></tr>
+<tr><td>$k=4$</td><td>$(0.5,1.5)^{\mathrm{T}}$</td><td>$\{1\}$</td><td>$g^4=(-1,-1)^{\mathrm{T}}$，子问题化为 $\min 2d_1^2$，$d^4=0$</td><td>—</td><td>乘子 $\lambda_1=1\ge 0$，KKT 满足，终止</td></tr>
+</table>
+<p>第三行的子问题 $d_1^2+d_2^2-2d_1-4d_2$ 在 $d_1=0$ 下化为 $d_2^2-4d_2$，求导 $2d_2-4=0$ 得 $d_2=2$，即 $d^1=(0,2)^{\mathrm{T}}$；沿它从 $f(0,0)=0$ 走到 $f(0,2)=-4$，确为下降可行方向。终解</p>
+<p>$$ x^{*}=(0.5,\,1.5)^{\mathrm{T}},\qquad f^{*}=0.25+2.25-1-6=-4.5, $$</p>
+<p>最优处唯一有效约束 $x_1+x_2=2$，乘子 $\lambda_1=1$。上表五个节点（删约束、加约束、乘子判负、步长取 1、KKT 终止）恰好覆盖有效集法全部机制，全部数值经公式复核与原料一致。</p>
+<h2>六、常见误区</h2>
+<ol><li><strong>概念混淆</strong>：可行方向法（找下降可行方向的通用框架）与可行集法／有效集法（维护取等号约束集、解等式子问题的凸 QP 专用算法）名字相近而机理不同，复习时宜先按&quot;问题类型&quot;再按&quot;方法&quot;归类。</li><li><strong>两种步长不分</strong>：有效集法中由约束推得的上限 $\alpha_{\max}$ 只管&quot;不越界&quot;，与&quot;让 $f$ 沿 $d$ 降到最低&quot;的一维精确线搜索 $\alpha^{*}$ 是两个无关的量；该法取 $\min\{\alpha_{\max},1\}$，其中 $1$ 来自 $d^k$ 已是子问题精确极小方向这一事实。若自行改用精确线搜索定 $\alpha$，结果可能小于 1，属于另一套变体，不能与上限公式混写。</li><li><strong>FR 与 PRP 的等价有条件</strong>：等价依赖&quot;精确线搜索 + 正定二次函数&quot;推出的相邻梯度正交；一般非线性函数上两式不等，算法表现亦分岔，不能笼统写&quot;PRP 就是 FR&quot;。</li><li><strong>数值链要自洽</strong>：原料的 $\alpha_0=3/14$ 与 $\beta_0=1/49$ 都不满足其自己列出的方程与公式（正确为 $5/18$ 与 $4/81$；即便沿用原料的 $x^{(1)}$，FR 系数也应是 $4/49$），$\beta_0^{\mathrm{PRP}}=1067/1296$ 经重算应为 $1/4$。手算最优化例题时应随时用&quot;步长代回一维函数&quot;&quot;梯度与方向正交&quot;&quot;两步到达原点&quot;三条内在一致性做交叉校验。</li><li><strong>符号约定随标准化而变</strong>：有效集步长公式中&quot;$\boldsymbol{a}_i^{\mathrm{T}}d&gt;0$ 才构成限制&quot;是对 $\le$ 型约束而言；把约束统一成 $\ge$ 型后判别符号取反，两套记法在资料中并存，照抄容易出错。</li><li><strong>乘子删谁的细节</strong>：$d^k=0$ 且有负乘子时，标准做法是删去最负的乘子对应的约束（原料五步算例即 $\lambda_3=-4$ 先于 $\lambda_2=-2$ 被删）；$\lambda=0$ 属于非负、不触发删除。松弛约束不产生乘子。</li></ol>
+<h2>七、总结要点</h2>
+<table>
+<tr><th>知识块</th><th>必须记住的式子／结论</th></tr>
+<tr><td>共轭方向</td><td>$(d^i)^{\mathrm{T}}Gd^j=0$；$n$ 维正定二次函数至多 $n$ 步收敛</td></tr>
+<tr><td>精确线搜索</td><td>$\phi&#x27;(\alpha)=\nabla f(x+\alpha d)^{\mathrm{T}}d=0$；新梯度与刚走方向正交</td></tr>
+<tr><td>闭式步长</td><td>$\alpha_k=-\,(d^k)^{\mathrm{T}}\nabla f(x^k)\,/\,(d^k)^{\mathrm{T}}Gd^k$；取 $d=-\nabla f$ 退化为最速下降步长</td></tr>
+<tr><td>FR 与 PRP</td><td>二次函数 + 精确线搜索下 $\beta^{\mathrm{FR}}=\beta^{\mathrm{PRP}}$，枢纽是相邻梯度正交</td></tr>
+<tr><td>算例一链条</td><td>$\alpha_0=5/18$，$x^{(1)}=(4/9,-1/9)^{\mathrm{T}}$，$\beta_0=4/81$，$\alpha_1=9/20$，$x^{(2)}=(0,0)^{\mathrm{T}}$</td></tr>
+<tr><td>下降可行方向</td><td>$\nabla f^{\mathrm{T}}d&lt;0$ 且有效约束 $\nabla c_i^{\mathrm{T}}d\le 0$（等式取 $=0$），松弛约束不管</td></tr>
+<tr><td>有效集循环</td><td>解子问题出方向；$d=0$ 查乘子（删负），$d\neq 0$ 算 $\min\{\alpha_{\max},1\}$（碰界加约束）</td></tr>
+<tr><td>算例四结论</td><td>五步收敛，$x^{*}=(0.5,1.5)^{\mathrm{T}}$，$f^{*}=-4.5$，最优乘子 $\lambda_1=1$</td></tr>
+</table>
+<p>三种方法共享同一套底层语言：方向由梯度（或子问题）给出，步长由一维条件或可行域决定，终止由梯度为零或 KKT 条件刻画。把&quot;方向从哪来、步长听谁的、何时收手&quot;三个问题对每个方法各答一遍，这一章的计算题即可全部覆盖。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 最优化：共轭梯度法与可行方向法例题讲解</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

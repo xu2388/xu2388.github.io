@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfcfd">
+<meta name="format-detection" content="telephone=no">
+<title>CUT 架构五条改动方案：逐条可行性审查</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:14px 0}.cite{font-size:12.5px;color:var(--muted);border-left:3px solid var(--strong);padding-left:12px}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){html{scroll-padding-top:12px}body{font-size:16px;line-height:1.75;overflow-x:hidden}.wrap{display:block;width:100%;max-width:none}nav.toc{display:block;position:sticky;top:0;z-index:10;width:100%;height:auto;max-height:52px;overflow-x:auto;overflow-y:hidden;padding:9px 12px;border-right:0;border-bottom:1px solid var(--border);background:rgba(251,252,253,.96);-webkit-overflow-scrolling:touch;white-space:nowrap}nav.toc .brand{display:inline-block;margin:0 14px 0 0;font-size:12px}nav.toc .sub{display:none}nav.toc a{display:inline-block;margin:0 4px 0 0;padding:5px 9px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:12px;white-space:nowrap}nav.toc a.l1{margin-top:0;font-weight:700;color:var(--text)}nav.toc a.l2{padding-left:9px;font-size:12px;color:var(--muted)}main{width:100%;max-width:none;padding:22px 14px 72px}header.doc{padding-bottom:18px;margin-bottom:26px}header.doc .kicker{font-size:11px;letter-spacing:.08em}header.doc h1{font-size:25px;line-height:1.38;margin:8px 0 12px;overflow-wrap:anywhere}header.doc .desc{font-size:15px;line-height:1.7}.meta{gap:6px;margin-top:14px}.meta span{font-size:11.5px;padding:4px 8px;line-height:1.45}h2{font-size:21px;line-height:1.4;margin:40px 0 14px;padding-bottom:7px}h3{font-size:17px;line-height:1.5;margin:26px 0 9px}h4{font-size:15px}p{margin:8px 0}ul,ol{margin-left:20px}.box{padding:13px 14px;margin:14px 0;border-radius:9px}.box .bt{font-size:13px}.card{margin:14px 0}.card .ch{padding:10px 13px}.card .body{padding:7px 13px 13px}.grid2{grid-template-columns:1fr;gap:12px}.mini{padding:11px 12px}.scroll{margin:13px 0;border-radius:8px;-webkit-overflow-scrolling:touch}.scroll:after{content:"左右滑动查看表格";display:block;padding:5px 10px;color:var(--muted);font-size:11px;background:var(--softer);border-top:1px solid var(--border)}table{min-width:700px;font-size:13px}thead th{padding:9px 9px;font-size:12px}td{padding:8px 9px}.flow{margin:13px 0;padding:11px 12px;overflow:hidden}.flow pre,pre{margin:10px 0;padding:11px 12px;font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}.formula{margin:11px 0;padding:11px 12px;font-size:12px;line-height:1.65;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.b{font-size:10.5px;padding:2px 6px}.cite{font-size:12px}a{overflow-wrap:anywhere}}@media(max-width:380px){main{padding-left:11px;padding-right:11px}header.doc h1{font-size:22px}h2{font-size:19px}.meta span{font-size:11px}nav.toc{padding-left:9px;padding-right:9px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">CUT 改动 · 可行性审查</div>
+<div class="sub">五条方案逐条判定 · 逐字源码取证<br>截至 2026-10-16</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 与既有报告的分工</a>
+<a class="l1" href="#s2">2 · 已核实的硬事实（CUT 源码逐字）</a>
+<a class="l1" href="#s3">3 · ★ 先更正我此前的一处错误</a>
+<a class="l1" href="#s4">4 · 第 1 条：小波卷积做下采样</a>
+<a class="l1" href="#s5">5 · 第 2 条：动态上采样</a>
+<a class="l1" href="#s6">6 · 第 3 条：门控解梯度冲突（最需修正）</a>
+<a class="l1" href="#s7">7 · 第 4 条：H 通道生成再反推 RGB</a>
+<a class="l1" href="#s8">8 · 第 5 条：再去模块仓库找</a>
+<a class="l1" href="#s9">9 · 修正后的推荐方案</a>
+<a class="l1" href="#s10">10 · 可执行实验路线与自查命令</a>
+<a class="l1" href="#s11">11 · 未核实清单与证据边界</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Feasibility review · CUT architecture modification</div>
+<h1>CUT 架构五条改动方案：逐条可行性审查</h1>
+<p class="desc">你给出了五条改动：① 小波卷积替换下采样 ② 动态上采样替换上采样 ③ 门控改善对抗损失与 PatchNCE 的梯度冲突 ④ H 通道生成再反推 RGB ⑤ 再去模块仓库找可用的。本文逐条判定，并对 <code>cut_model.py</code> 做了逐字取证。结论是：<b>两条方向对但需要拆档/改理由，一条机制不匹配（这是全方案最大的问题），一条你的顾虑其实是错的（好消息），一条收益递减。</b></p>
+<div class="meta"><span>对象：PSPStain（CUT 骨架）</span><span>取证：<code>cut_model.py</code> 逐字</span><span>未能取证：<code>networks.py</code>（55 KB，抓取四次全失败）</span><span>报告日期：2026-10-16</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="scroll"><table><thead><tr><th>#</th><th>你的方案</th><th>判定</th><th>必须做的修正</th></tr></thead><tbody>
+<tr><td>1</td><td>下采样换成小波卷积（仿 MSCW）</td><td><span class="b medium">方向对，但有误读</span></td><td><b>MSCW 里的 WTConv 不是下采样算子</b>（池化负责降分辨率，WTConv 在已降分辨率上做卷积）。要拆成 3 档消融；且「去掉 antialias」和「加 WTConv」是两件不同的事</td></tr>
+<tr><td>2</td><td>上采样换成 DySample</td><td><span class="b good">★ 填空格（五条里最强）</span></td><td>你库里<b>已核实</b>：<b>可学习上采样（CARAFE / FADE / SAPA / DySample）无一篇进入 GAN 生成器</b> ⇒ 你是第一个。<b>但不能直接「替换」</b>——可学习上采样无频域保证，必须「固定抗混叠打底 + 可学习采样做残差补偿」</td></tr>
+<tr><td>3</td><td>门控改善梯度冲突</td><td><span class="b bad">机制不匹配</span></td><td><b>门控在特征路径上，梯度冲突在参数空间。</b>已核实 CUT 是两个损失先相加再一次 backward，门控无法把两条梯度分开。<b>工具应是 λ 调度/梯度手术，而且你代码里可能已经有现成的</b></td></tr>
+<tr><td>4</td><td>H 通道生成再反推 RGB</td><td><span class="b good">顾虑是错的（好消息）</span></td><td><b>CUT 的 <code>input_nc</code>/<code>output_nc</code> 完全独立，2 通道输入直接能跑。</b>真障碍是你库里查过的「IHC 复染弱 10×」「DAB 饱和区污染苏木素 65%」⇒ 建议改成在有监督的 3 通道浓度域生成</td></tr>
+<tr><td>5</td><td>再去模块仓库找</td><td><span class="b medium">收益递减</span></td><td>合集被镜像 ≥10 次。改为<b>按「落点」定向找</b>（下采样/上采样/门控），不再泛搜</td></tr>
+</tbody></table></div>
+<div class="box good"><div class="bt">★ 五条里最强的是第 2 条，不是第 3 条</div><p>你原本以为最有价值的是第 3 条（门控解梯度冲突），但那条机制不匹配。<b>真正站得住的是第 2 条</b>——你库里已核实「<b>可学习上采样（CARAFE/FADE/SAPA/DySample）无一篇进入 GAN 生成器</b>」，<b>你是第一个</b>。这条不需要你发明算子，只需要你把「固定抗混叠打底 + 可学习采样补偿」做出来并给出受控证据。</p></div>
+<div class="box key"><div class="bt">最该先做的一件事</div><p><b>把第 3 条「门控解梯度冲突」的表述改掉。</b>按现在的写法，审稿人只要问一句「门控怎么改变两个损失在同一组参数上的梯度方向」，这条就塌了。</p></div>
+<div class="box good"><div class="bt">最该先跑的一个实验</div><p><b>不是任何一条改动，而是先量出梯度冲突到底存不存在、有多大。</b>用你库里 <code>MEMORY_梯度冲突.md</code> 的判据 <code>gᵀg &lt; −‖g_diff‖²</code> 与 <code>λ_crit</code>，跑 3 个 seed 记录。<b>量级小 ⇒ 第 3 条整个不必要；量级大 ⇒ 你会知道该用 λ 调度而不是门控。</b></p></div>
+
+<h2 id="s1"><span class="num">1</span>与既有报告的分工</h2>
+<div class="scroll"><table><thead><tr><th>既有文件</th><th>它回答的问题</th><th>本文新增</th></tr></thead><tbody>
+<tr><td><code>01_调研报告/CUT骨架_频域缝合清单_代码接口级.html</code></td><td>CUT 骨架的四个缝合接口；可 fork 的仓库；PSPStain 与 ASP 的同源关系</td><td>本文把接口落到<b>你的具体五条改动</b>上，逐条判定可行性</td></tr>
+<tr><td><code>01_调研报告/GAN频域_小众开源仓库清单_缝合素材库.html</code></td><td>模块原始出处、DySample / WTConv 的归属与许可</td><td>本文只引用结论，<b>不重复</b>模块归属判定</td></tr>
+<tr><td><code>05_伪影与失败模式/GAN棋盘格伪影_底层成因_卷积信号处理与频域机制.html</code></td><td>棋盘格的成因是<b>转置卷积的多相增益不平衡</b>；<b>混叠 ≠ 棋盘格</b></td><td>本文用它判定<b>第 1、2 条的前提是否成立</b>——这正是本次审查的关键</td></tr>
+<tr><td><code>01_调研报告/扩散模型门控机制_文献地图与频域交汇.html</code></td><td>门控四位置总表；<b>MoE 路由 = 负结果</b>；<b>浅网络里门控 = 稳定性保险，必须乘在残差侧</b></td><td>本文用它判定<b>第 3 条</b>：门控能做，但不是为了解梯度冲突</td></tr>
+<tr><td><code>06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html</code></td><td>频域×GAN、门控×GAN 先例地图；F-Drop 是固定死区不是真门控</td><td>本文与它同属 06 类，分工是：那份查<b>先例</b>，本文查<b>你的五条具体方案</b></td></tr>
+<tr><td><code>MEMORY_梯度冲突.md</code></td><td>判据 <code>gᵀg &lt; −‖g_diff‖²</code>、<code>λ_crit = ‖g₁‖²/|g₁ᵀg₂|</code>、逐变量 Jacobian 表</td><td>本文<b>引用它</b>作为第 3 条的替代工具，不重新推导</td></tr>
+<tr><td><code>MEMORY_H通道共享.md</code></td><td>H 通道四层拆解；IHC 复染弱约 10×；DAB 饱和区污染苏木素 IOD 平均 65%</td><td>本文用它指出<b>第 4 条的真障碍</b>不是通道数</td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>已核实的硬事实（CUT 源码逐字）</h2>
+<p class="cite">以下全部来自本轮抓取的 <code>taesungp/contrastive-unpaired-translation</code> 的 <code>models/cut_model.py</code> 逐字源码。<b>这是本次审查的地基</b>——第 2、3、4 条的判定都建立在它上面。</p>
+
+<h3>2.1 三个网络的定义（逐字）</h3>
+<pre><code>self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG,
+                              opt.normG, not opt.no_dropout, opt.init_type, opt.init_gain,
+                              opt.no_antialias, opt.no_antialias_up, self.gpu_ids, opt)
+self.netF = networks.define_F(opt.input_nc, opt.netF, opt.normG, not opt.no_dropout,
+                              opt.init_type, opt.init_gain, opt.no_antialias, self.gpu_ids, opt)
+
+if self.isTrain:
+    self.netD = networks.define_D(opt.output_nc, opt.ndf, opt.netD, opt.n_layers_D,
+                                  opt.normD, opt.init_type, opt.init_gain, opt.no_antialias,
+                                  self.gpu_ids, opt)</code></pre>
+<div class="box key"><div class="bt">三条直接可用的推论</div><ol>
+<li><b><code>input_nc</code> 与 <code>output_nc</code> 是完全独立的两个 CLI 参数</b> —— <code>--input_nc 2 --output_nc 3</code> 是合法配置（<b>第 4 条的直接依据</b>）。</li>
+<li><b><code>netF</code> 用 <code>input_nc</code></b> —— 特征网络接的是<b>源域</b>的通道数。</li>
+<li><b><code>netD</code> 用 <code>output_nc</code></b> —— 判别器接的是<b>目标域</b>的通道数。所以你若改成 2→3，<b>判别器不用动</b>，它本来就按 <code>output_nc</code> 建。</li>
+</ol></div>
+
+<h3>2.2 损失结构与反向传播（逐字）</h3>
+<pre><code>def compute_G_loss(self):
+    fake = self.fake_B
+    if self.opt.lambda_GAN > 0.0:
+        pred_fake = self.netD(fake)
+        self.loss_G_GAN = self.criterionGAN(pred_fake, True).mean() * self.opt.lambda_GAN
+    else:
+        self.loss_G_GAN = 0.0
+
+    if self.opt.lambda_NCE > 0.0:
+        self.loss_NCE = self.calculate_NCE_loss(self.real_A, self.fake_B)
+    ...
+    self.loss_G = self.loss_G_GAN + loss_NCE_both
+    return self.loss_G
+
+def calculate_NCE_loss(self, src, tgt):
+    feat_q = self.netG(tgt, self.nce_layers, encode_only=True)
+    feat_k = self.netG(src, self.nce_layers, encode_only=True)
+    feat_k_pool, sample_ids = self.netF(feat_k, self.opt.num_patches, None)
+    feat_q_pool, _ = self.netF(feat_q, self.opt.num_patches, sample_ids)
+    total_nce_loss = 0.0
+    for f_q, f_k, crit, nce_layer in zip(feat_q_pool, feat_k_pool, self.criterionNCE, self.nce_layers):
+        loss = crit(f_q, f_k) * self.opt.lambda_NCE
+        total_nce_loss += loss.mean()
+    return total_nce_loss / n_layers</code></pre>
+<div class="box stop"><div class="bt">★ 这张代码决定第 3 条的判定</div><ol>
+<li><b>两个损失是「先相加、再一次 backward」</b>：<code>self.loss_G = self.loss_G_GAN + loss_NCE_both</code>，然后 <code>self.loss_G.backward()</code>。<b>CUT 里没有任何梯度手术（gradient surgery / PCGrad）机制。</b></li>
+<li><b>PatchNCE 的梯度必须回流到 netG 的编码器</b>：<code>feat_k</code> 与 <code>feat_q</code> 都来自 <code>self.netG(..., encode_only=True)</code>。</li>
+<li>而 GAN 的梯度也回流到 netG（经 <code>netD(fake_B)</code> → <code>fake_B</code>）。<br><b>⇒ 两条梯度作用在<b>同一组参数</b>（netG）上，在 backward 时被求和。这是梯度冲突的定义位置。</b></li>
+</ol></div>
+
+<h3>2.3 优化器划分（逐字）</h3>
+<pre><code>self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, ...)
+self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, ...)
+...
+if self.opt.lambda_NCE > 0.0:
+    self.optimizer_F = torch.optim.Adam(self.netF.parameters(), lr=self.opt.lr, ...)</code></pre>
+<p><b>关键细节：<code>netF</code> 不参与 GAN 损失</b>（GAN 损失只经 netG → netD）。所以「用门控把两条损失的梯度引到不相交参数子集上」这个思路<b>不成立</b>——因为 PatchNCE <b>同时</b>更新 netG 与 netF，而 GAN 更新 netG，<b>两者在 netG 上重叠</b>。</p>
+
+<h3>2.4 其余已核实的默认值</h3>
+<div class="scroll"><table><thead><tr><th>参数</th><th>默认值</th><th>含义</th></tr></thead><tbody>
+<tr><td><code>nce_layers</code></td><td><code>'0,4,8,12,16'</code></td><td>取编码器第 0/4/8/12/16 层共 5 层特征</td></tr>
+<tr><td><code>num_patches</code></td><td>256</td><td>每层采样 patch 数</td></tr>
+<tr><td><code>nce_T</code></td><td>0.07</td><td>InfoNCE 温度</td></tr>
+<tr><td><code>netF</code></td><td><code>'mlp_sample'</code></td><td>特征网络类型</td></tr>
+<tr><td><code>netF_nc</code></td><td>256</td><td>投影头输出维度</td></tr>
+<tr><td><code>lambda_GAN</code> / <code>lambda_NCE</code></td><td>1.0 / 1.0（基类默认）</td><td>两个损失的权重</td></tr>
+<tr><td><code>no_antialias</code> / <code>no_antialias_up</code></td><td>False / False</td><td><b>默认开启抗混叠（下采样与上采样各有独立开关）</b>——第 1 条的相关参数</td></tr>
+</tbody></table></div>
+<div class="box teal"><div class="bt">★ 一个此前没注意到的细节</div><p><code>define_G</code> 的签名里，<code>no_antialias</code> 和 <code>no_antialias_up</code> 是<b>两个独立参数</b>。⇒ <b>CUT 的抗混叠同时作用在下采样和上采样两处。</b>所以你第 1 条说「下采样不用那个混叠」时，要知道<b>上采样那一路也有抗混叠</b>，而第 2 条要动上采样——<b>这两条会互相干扰</b>，消融必须拆开。</p></div>
+<h2 id="s3"><span class="num">3</span>★ 先更正我此前的一处错误</h2>
+<div class="box stop"><div class="bt">我在前面几轮说过一句错话，必须先撤回</div><p>我说过：「<b>FastCUT 在 <code>L = L_GAN + λ_NCE·L_PatchNCE</code> 之外，再加一项 <code>λ_NCE·L_PatchNCE_Y</code></b>（real_B 与 idt_B 之间的 NCE）。所以 PSPStain 名义上是 2 项 NCE。」<b>这是反的。</b></p></div>
+<p><b>逐字源码（<code>cut_model.py</code> 的 <code>modify_commandline_options</code>）：</b></p>
+<pre><code>if opt.CUT_mode.lower() == "cut":
+    parser.set_defaults(nce_idt=True, lambda_NCE=1.0)
+elif opt.CUT_mode.lower() == "fastcut":
+    parser.set_defaults(
+        nce_idt=False, lambda_NCE=10.0, flip_equivariance=True,
+        n_epochs=150, n_epochs_decay=50
+    )</code></pre>
+<p>以及 <code>flip_equivariance</code> 的 help 逐字：<code>"Enforce flip-equivariance as additional regularization. It's used by FastCUT, but not CUT"</code>。</p>
+<div class="scroll"><table><thead><tr><th>模式</th><th><code>nce_idt</code></th><th><code>lambda_NCE</code></th><th>额外正则</th><th>NCE 项数</th><th>G 损失</th></tr></thead><tbody>
+<tr><td><b>CUT</b>（默认）</td><td><b>True</b></td><td>1.0</td><td>—</td><td><b>2 项</b></td><td><code>L_GAN + 0.5·(L_NCE + L_NCE_Y)</code></td></tr>
+<tr><td><b>FastCUT</b>（<b>PSPStain 用的</b>）</td><td><b>False</b></td><td>10.0</td><td><code>flip_equivariance=True</code></td><td><b>1 项</b></td><td><code>L_GAN + L_NCE</code></td></tr>
+</tbody></table></div>
+<p><b>逐字证据（<code>compute_G_loss</code>）：</b></p>
+<pre><code>if self.opt.nce_idt and self.opt.lambda_NCE > 0.0:
+    self.loss_NCE_Y = self.calculate_NCE_loss(self.real_B, self.idt_B)
+    loss_NCE_both = (self.loss_NCE + self.loss_NCE_Y) * 0.5    # ← 只有 nce_idt=True 才走这支
+else:
+    loss_NCE_both = self.loss_NCE                              # ← FastCUT 走这支</code></pre>
+<div class="box key"><div class="bt">更正后的准确说法</div><p><b>FastCUT 不是「加回 identity」，而是「去掉 identity NCE，改用 flip-equivariance 正则 + 更高的 NCE 权重（10.0）+ 更长的训练（150+50 epoch）」。</b><br>⇒ <b>PSPStain 用的是 FastCUT，所以它只有一项 NCE，不是两项。</b>「三项 NCE」是 PPT 的做法（<code>loss_contrast = loss_NCE + loss_NCE_Y + loss_NCE_Y_hat</code>，且不取平均）。</p></div>
+<div class="box warn"><div class="bt">这个更正对第 3 条有直接影响</div><p>如果 PSPStain 只有 <code>L_GAN</code> + <code>L_NCE</code> 两项（外加 MLPA/CTPC 两个自己的损失），那么「梯度冲突」的对象比你以为的更简单：<b>主要就是 GAN 与 NCE 这一对</b>。<br>但注意：<b>PSPStain 还有 MLPA / CTPC 两个自己的损失，以及 ASP 的高斯金字塔损失</b>——真正在打架的可能是四项而不是两项。这一点你比我清楚，<b>请以你 launcher 里的实际 loss 列表为准</b>。</p></div>
+
+<h2 id="s4"><span class="num">4</span>第 1 条：用小波卷积做下采样</h2>
+<h3>4.1 你的表述里有一处误读</h3>
+<p>你说「下采样我们不用那个混叠，就用小波卷积吧，就仿照这个 MSCW 的写法」。但 <b>MSCW 里的 WTConv 不是下采样算子</b>。逐字源码（<code>MSCWNet.py</code>）：</p>
+<pre><code>class Down(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        self.maxpool_conv = nn.Sequential(
+            nn.MaxPool2d(2),                    # ← 降分辨率的是它
+            WTConv(in_channels, in_channels),   # ← 小波卷积，stride=1，在已降分辨率上做
+            DoubleConv(in_channels, out_channels))</code></pre>
+<p>而 WTConv 的 <code>do_stride</code> 分支只在 <code>stride &gt; 1</code> 时激活（官方实现是 <code>nn.AvgPool2d(kernel_size=1, stride=stride)</code>，MSCW 版重写成了带 <code>ones</code> 核的 <code>F.conv2d</code>）。<b>MSCW 用的是默认 <code>stride=1</code>，所以 WTConv 在那里完全不做降采样。</b></p>
+<div class="box warn"><div class="bt">你的方案其实混合了三件不同的事</div><div class="scroll"><table><thead><tr><th>改法</th><th>怎么做</th><th>改变了什么</th></tr></thead><tbody>
+<tr><td><b>(a) 用小波卷积「做」下采样</b></td><td><code>WTConv(..., stride=2)</code>，走 <code>do_stride</code> 分支</td><td>下采样算子本体</td></tr>
+<tr><td><b>(b) 在下采样后「加」小波卷积</b>（MSCW 做法）</td><td><code>MaxPool → WTConv(stride=1) → Conv</code></td><td>降分辨率后的特征提取</td></tr>
+<tr><td><b>(c) 去掉 CUT 的抗混叠</b></td><td><code>--no_antialias</code></td><td>降采样前的低通滤波</td></tr>
+</tbody></table></div>
+<p><b>(a) 和 (b) 是两种完全不同的改动，(c) 又是第三件事。三者必须分开做消融</b>，否则结果变化无法归因。</p></div>
+<h3>4.2 为什么「去掉混叠」不等于「加小波卷积」</h3>
+<div class="box stop"><div class="bt">你自己库里的报告已经论证过这一点</div><p><code>05_伪影与失败模式/GAN棋盘格伪影_底层成因_卷积信号处理与频域机制.html</code> 的结论之一是：<b>混叠 ≠ 棋盘格</b>。抗混叠（blurpool）的作用是<b>在跨步下采样前做低通，防止高频折叠回低频</b>。它和小波卷积解决的不是同一个问题：</p><ul>
+<li><b>去掉 antialias</b> ⇒ 可能<b>引入</b>混叠（高频折叠）。而病理图像的细胞核边界、染色颗粒都是强高频，<b>混叠风险不低</b>。</li>
+<li><b>加 WTConv</b> ⇒ 改变感受野与频带分解方式。</li>
+</ul><p>⇒ <b>「因为要加小波卷积，所以去掉混叠」这个因果链不成立。</b>如果去掉 antialias 后图像变差，你无法判断是小波卷积的错还是混叠的错。</p></div>
+<div class="box teal"><div class="bt">★ 还有一个容易漏掉的点</div><p>第 2 条说 CUT 有 <b>两个</b>独立的抗混叠开关：<code>no_antialias</code>（下采样）与 <code>no_antialias_up</code>（上采样）。<b>上采样那一路也有抗混叠。</b>所以第 1 条和第 2 条会互相干扰——两条都动，就同时改了上下两条路径的混叠行为。</p></div>
+<h3>4.3 判定与建议</h3>
+<div class="box key"><div class="bt">判定：方向对，但必须拆成 4 档</div><div class="scroll"><table><thead><tr><th>档位</th><th>唯一改动</th><th>回答的问题</th></tr></thead><tbody>
+<tr><td><b>D0</b></td><td>原版（antialias 开，无 WTConv）</td><td>基线</td></tr>
+<tr><td><b>D1</b></td><td>只 <code>--no_antialias</code></td><td>混叠是否真的出现？量级多大？（<b>这一档可能直接否掉整条线</b>）</td></tr>
+<tr><td><b>D2</b></td><td>只加 WTConv（<code>stride=1</code>，MSCW 式，antialias 保留）</td><td>小波卷积本身有没有增益？</td></tr>
+<tr><td><b>D3</b></td><td>WTConv 直接做降采样（<code>stride=2</code>，antialias 保留）</td><td>小波卷积「替代」跨步卷积成不成立？</td></tr>
+</tbody></table></div><p><b>先跑 D1。</b>如果去掉 antialias 后结构指标明显退化，那么「用小波卷积替代混叠」这个前提就不成立，你要么保留 antialias，要么把理由改成「小波卷积提供更好的多尺度特征」。</p></div>
+<div class="box warn"><div class="bt">实现提醒</div><p>若用 <code>stride=2</code>，<b>建议用官方 <code>BGU-CS-VIL/WTConv</code> 的版本，不要用 MSCW 那份</b>——MSCW 把官方 <code>nn.AvgPool2d</code> 的 stride 分支重写成了自定义 <code>conv2d</code>（细节见 <code>GAN频域_小众开源仓库清单_缝合素材库.html</code> §12.8 的逐行比对）。官方版是 <b>MIT</b>，可放心用。</p></div>
+
+<h2 id="s5"><span class="num">5</span>第 2 条：动态上采样替换上采样</h2>
+<h3>5.1 这条的成立与否，取决于一个我未能核实的事实</h3>
+<div class="box stop"><div class="bt">诚实标注：CUT 的上采样算子我没抓到</div><p>CUT 的 <code>models/networks.py</code> 约 <b>55 KB</b>，本轮<b>四次抓取全部返回空</b>（raw 的 master/main 分支、CDN 代理、GitHub blob 页都试过）。<b>所以我不能断言 CUT 用的是 <code>ConvTranspose2d</code> 还是 <code>nn.Upsample</code>+conv。</b></p></div>
+<p>这个事实直接决定你这条的<b>理由能不能写</b>：</p>
+<div class="scroll"><table><thead><tr><th>如果 CUT 的上采样是…</th><th>你的论证</th><th>结论</th></tr></thead><tbody>
+<tr><td><b><code>nn.ConvTranspose2d</code></b>（转置卷积）</td><td>「转置卷积的多相增益不平衡造成棋盘格，我们用 DySample 绕开」</td><td><span class="b high">成立</span> 机制明确，理由干净</td></tr>
+<tr><td><b><code>nn.Upsample</code> + <code>Conv2d</code></b>（nearest/bilinear 插值再卷积）</td><td>同上</td><td><span class="b bad">不成立</span> <b>前提不存在</b>——nearest 插值没有多相增益不平衡。理由必须改成「nearest 产生块状伪影 + 插值不学习，DySample 是学出来的采样」</td></tr>
+</tbody></table></div>
+<p><b>我倾向于第二种</b>（CUT 保留了 <code>--upsample_mode</code> 这类插值模式选项，且 <code>no_antialias_up</code> 的存在暗示上采样走的是「插值 + 卷积 + 可选模糊」的结构），<b>但这只是倾向，不是核实。</b>请用 §10 的命令自查。</p>
+<h3>5.2 无论哪种情况，DySample 都值得试——但理由不同</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">情形 A：转置卷积 ⇒ 强理由</div><p>「<b>修已知故障</b>」。你库里《GAN棋盘格伪影》已论证成因是多相增益不平衡；DySample 用「学出来的偏移 + <code>grid_sample</code>」完全绕开转置卷积。这是<b>第 ③ 层贡献</b>（有诊断的改动），审稿里站得住。</p></div>
+<div class="mini"><div class="mt">情形 B：插值 + conv ⇒ 弱理由</div><p>「<b>提质</b>」。nearest 上采样不学习插值、产生块状边界；DySample 让上采样可学习。这是<b>第 ② 层贡献</b>（搬运 + 换位置），需要在指标上给出明确增益才写得住。</p></div>
+</div>
+<h3>5.3 一个必须注意的干扰项</h3>
+<div class="box warn"><div class="bt">换 DySample 会同时移除上采样路径的抗混叠</div><p>CUT 的上采样有独立的 <code>no_antialias_up</code> 开关（默认 False ⇒ <b>抗混叠是开着的</b>）。把上采样块换成 DySample，等于<b>同时</b>移除了抗混叠。<b>这又是一个双变量改动</b>——和第 1 条同样的问题。</p><p><b>建议</b>：先把 DySample 与原有抗混叠路径<b>并联</b>（DySample 后再接原有的模糊层），或者至少记录「有无抗混叠」两档，否则归因失败。</p></div>
+<h3>5.4 判定</h3>
+<div class="box key"><div class="bt">判定：方向对，先核实前提，再拆两档</div><ol>
+<li><b>先 grep 自己的仓库</b>，确认 PSPStain 的上采样到底是哪种算子（命令见 §10）。</li>
+<li>若是转置卷积 ⇒ 按「修棋盘格」写，理由最强。</li>
+<li>若是插值 + conv ⇒ 按「可学习上采样提质」写，并把指标重心放在<b>结构级</b>（边界、膜连续性）而不是 FID。</li>
+<li>不管哪种，<b>DySample 与抗混叠要分两档</b>（DySample + 抗混叠 / 只有 DySample）。</li>
+</ol></div>
+
+<h3>5.5 ★ 库里已有的一条结论，直接改变本条的判定</h3>
+<div class="box key"><div class="bt">我在写本节时扫索引，发现你自己的报告已经查过这件事了</div><p><code>06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html</code> 的结论里有这么一句（<b>原文</b>）：</p><p style="border-left:3px solid #cdd3dc;padding-left:12px;color:#3d444d"><b>「『门控约束上采样防棋盘格』——此具体机制无先例，因为抗棋盘格谱系（Odena 2016 → Aitken 2017 → Kinoshita 2020 → StyleGAN2 双线性 → StyleGAN3 窗化 sinc → blur-pool）全部是固定滤波或初始化，而可学习上采样（CARAFE / FADE / SAPA / DySample）全部用于分割 / 检测 / 抠图，无一篇进入 GAN 生成器。」</b></p></div>
+<p><b>这条结论把你的第 2 条从「方向对」升级为「填空格」：</b></p>
+<div class="scroll"><table><thead><tr><th>维度</th><th>你库里已核实的事实</th><th>对你第 2 条的含义</th></tr></thead><tbody>
+<tr><td><b>先例密度</b></td><td><b>可学习上采样（含 DySample）无一篇进入 GAN 生成器</b></td><td><span class="b high">你是第一个</span> —— 这本身就是可发表的贡献，不需要你再发明算子</td></tr>
+<tr><td><b>既有抗棋盘格谱系</b></td><td>Odena 2016 → Aitken 2017 → Kinoshita 2020 → StyleGAN2 双线性 → StyleGAN3 窗化 sinc → blur-pool，<b>全部是固定滤波或初始化</b></td><td>你面对的是一个<b>方法族上的空档</b>，不是没人做过的重复劳动</td></tr>
+<tr><td><b>理论保证在哪边</b></td><td><b>理论保证站在固定滤波那边</b>：棋盘格是「核尺寸与步长不整除 ⇒ 重叠不均」的确定性后果，有解析解；抗混叠低通有 Nyquist 意义上的保证</td><td><span class="b bad">可学习上采样不提供任何频域保证，甚至可能学出新的伪影</span> ⇒ <b>不能直接「替换」，必须配固定抗混叠打底</b></td></tr>
+</tbody></table></div>
+<div class="box good"><div class="bt">⇒ 第 2 条的定位因此要改</div><p><b>不是</b>「用 DySample 替换上采样」，<b>而是</b>「<b>固定抗混叠重采样打底（有频域保证）+ 可学习上采样在其上做残差式的细节补偿（自适应）</b>」。<br>这正是你库里那份报告给出的修正方向（它原话是针对门控的，但同一个逻辑适用于上采样）：<b>「固定抗混叠重采样打底（有保证）+ 有界机制控制高频残差注入量（自适应）」</b>。</p><p><b>这样表述有三个好处</b>：① 保住了频域保证（不被审稿人用「可学习上采样可能学出新伪影」打回）；② 仍然填补了「可学习上采样未进 GAN 生成器」这个空格；③ 天然给出一个清晰的消融分水岭：<b>纯固定滤波 / 纯可学习 / 两者组合</b>。</p></div>
+<div class="box warn"><div class="bt">同时修正 §5.1 的判定权重</div><p>原来我把第 2 条押在「CUT 上采样是不是转置卷积」这个未核实的事实上。<b>现在不必了</b>：无论 CUT 用的是哪种算子，「可学习上采样进入 GAN 生成器」这个空格都成立。<br><b>那个事实仍然重要，但它决定的是「理由怎么写」，不再是「这条成不成立」。</b></p></div>
+
+<h2 id="s6"><span class="num">6</span>第 3 条：门控改善梯度冲突（<span class="b bad">最需修正</span>）</h2>
+<h3>6.1 为什么这条机制不匹配</h3>
+<p>这是全方案里<b>唯一一条我认为方向性错误</b>的。理由是一条很硬的结构性事实：</p>
+<div class="box stop"><div class="bt">门控在「特征路径」上，梯度冲突在「参数空间」里 —— 两者不在同一层</div><div class="scroll"><table><thead><tr><th></th><th>门控做的事</th><th>梯度冲突发生的地方</th></tr></thead><tbody>
+<tr><td>位置</td><td>网络内部的特征流（<code>h' = h + γ·Δh</code> 或 <code>h' = a(x)⊙h</code>）</td><td>两个损失对<b>同一组参数</b>的梯度方向</td></tr>
+<tr><td>作用对象</td><td>「哪些特征、以多大强度进入下一层」</td><td>「<code>∂L_GAN/∂θ</code> 与 <code>∂L_NCE/∂θ</code> 是否反向」</td></tr>
+<tr><td>能否把两条梯度分开</td><td><b>不能</b></td><td>—</td></tr>
+</tbody></table></div></div>
+<p><b>已核实的代码依据（§2.2、§2.3）：</b></p>
+<ol>
+<li><code>self.loss_G = self.loss_G_GAN + loss_NCE_both</code>，然后<b>一次</b> <code>loss_G.backward()</code>。两条梯度在 backward 时<b>被求和</b>。</li>
+<li>PatchNCE 的 <code>feat_k</code> / <code>feat_q</code> 都来自 <code>self.netG(..., encode_only=True)</code> ⇒ <b>PatchNCE 的梯度必然回流到 netG 编码器</b>。</li>
+<li>GAN 的梯度也经 netG（<code>fake_B</code> 是 netG 的输出）⇒ <b>两条梯度在 netG 上重叠</b>。</li>
+</ol>
+<p><b>⇒ 只要两条梯度在 netG 上重叠，网络内部加任何门控都无法阻止它们求和。门控改变的是特征的取值，不是梯度的组合方式。</b></p>
+<div class="box warn"><div class="bt">唯一的理论例外，而这个例外在 CUT 里不成立</div><p>门控能解梯度冲突的<b>唯一情形</b>是：两条损失作用在<b>不相交的参数子集</b>上（这样门控可以把梯度「路由」开）。但 §2.3 显示：<b>netF 不参与 GAN 损失</b>，而 <b>PatchNCE 同时更新 netG 与 netF</b> ⇒ 参数子集<b>不是</b>不相交的，重叠就在 netG 上。<b>例外不成立。</b></p></div>
+<h3>6.2 正确的工具在哪 —— 而且你代码里可能已经有现成的</h3>
+<div class="box good"><div class="bt">★ 先查这个：ASP 的权重调度可能还在你的 launcher 里</div><p>ASP（PSPStain 的直接上游）的 launcher 里有这两行（<b>逐字，上一轮已核实</b>）：</p><pre><code>lambda_asp=10.0,
+asp_loss_mode='lambda_linear',</code></pre><p>而 <code>asp_loss_mode</code> 的机制（<code>models/asp_loss.py</code> 逐字已读）是：<b>按 epoch 在「监督权重」与「无监督权重」之间平滑过渡</b>——调度器 <code>sigmoid / linear / lambda / zero</code> × 查表函数 <code>top / linear / bell / uniform</code>。</p><p><b>这就是一个现成的梯度冲突缓解机制</b>（它原本是为了缓解错位 groundtruth 的噪声监督）。<b>先用 grep 确认它还在不在、还在不在跑</b>，再谈加门控。</p></div>
+<div class="scroll"><table><thead><tr><th>工具</th><th>在哪一层生效</th><th>对你是否可用</th></tr></thead><tbody>
+<tr><td><b>λ 调度</b>（<code>asp_loss_mode</code> 式）</td><td>损失权重随时间变化</td><td><span class="b high">可能已在你的代码里</span></td></tr>
+<tr><td><b><code>λ_crit</code> 上界</b></td><td>给 <code>lambda_NCE</code> 设上限</td><td><span class="b high">你库里有公式</span> <code>λ_crit = ‖g₁‖²/|g₁ᵀg₂|</code></td></tr>
+<tr><td><b>PCGrad / 梯度投影</b></td><td>backward 之后、step 之前</td><td><span class="b medium">可用</span> 需改 <code>optimize_parameters</code></td></tr>
+<tr><td><b>门控</b></td><td>网络内部特征路径</td><td><span class="b bad">不解决本问题</span></td></tr>
+</tbody></table></div>
+<h3>6.3 门控仍然可以做，但理由要换</h3>
+<div class="box teal"><div class="bt">换成一个站得住的表述</div><p>你库里 <code>扩散模型门控机制_文献地图与频域交汇.html</code> 的结论是：<b>「浅网络里门控 = 稳定性保险」，且「必须乘在残差侧」</b>；同时 <b>MoE 路由是负结果</b>，「存在」≠「有用」。</p><p>所以门控的正确用法是：</p><ul>
+<li><b>目的</b>：抑制 G/D 失衡带来的训练不稳定（不是「解梯度冲突」）。</li>
+<li><b>形式</b>：残差门控 <code>h' = h + γ(x)·Δh</code>，<code>γ</code> 有界（sigmoid/softplus），且<b>只控制新增分支，不乘在 backbone 上</b>。</li>
+<li><b>必做反事实</b>：gate 全 1 / gate 取均值 / gate 随机打乱 / 记录 gate 的均值·方差·近零比例。<b>如果三档结果几乎相同，就不能声称「学到了有用的门控」。</b></li>
+</ul></div>
+<div class="box pur"><div class="bt">如果你坚持要把门控和梯度冲突挂钩，唯一站得住的版本</div><p>可以这样表述（<b>弱得多，但机制上说得通</b>）：</p><p><b>「门控改变的是『哪些特征参与对比』，从而间接改变了 PatchNCE 梯度的方向；我们用反事实实验检验这一假设。」</b></p><p>注意措辞差别：<br>❌ 「门控解决梯度冲突」—— <b>错的</b>，审稿人一问就塌。<br>✅ 「门控改变对比特征的构成，进而影响梯度方向；这是假设，需反事实验证」—— <b>可证伪，站得住</b>。</p></div>
+<h3>6.4 判定</h3>
+<div class="box key"><div class="bt">判定：机制不匹配，必须改表述</div><ol>
+<li><b>把「门控解梯度冲突」这个因果去掉。</b>按现在的写法，这条是审稿人最容易一击致命的地方。</li>
+<li><b>先量冲突是否存在</b>：用 <code>gᵀg &lt; −‖g_diff‖²</code> 与 <code>λ_crit</code> 跑 3 个 seed。<b>这一步不花新代码，只加记录。</b></li>
+<li><b>先查 <code>asp_loss_mode</code> 是否还在跑</b>——如果还在，你可能已经有一个（被忽略的）冲突缓解机制。</li>
+<li>门控若要做，理由写成「训练稳定性保险」，形式用<b>残差门控</b>，配<b>反事实实验</b>。</li>
+</ol></div>
+<h2 id="s7"><span class="num">7</span>第 4 条：H 通道生成再反推 RGB</h2>
+<h3>7.1 你的顾虑是错的 —— 这是个好消息</h3>
+<p>你说「CUT 框架下大概率这种 2 通道的输入不能兼容」。<b>这个担心不成立。</b>逐字证据（§2.1）：</p>
+<pre><code>self.netG = networks.define_G(opt.input_nc, opt.output_nc, ...)   # 两个参数完全独立
+self.netD = networks.define_D(opt.output_nc, ...)                 # 判别器用 output_nc
+self.netF = networks.define_F(opt.input_nc, ...)                  # 特征网用 input_nc</code></pre>
+<div class="box good"><div class="bt">结论：<code>--input_nc 2 --output_nc 3</code> 直接就能跑</div><div class="scroll"><table><thead><tr><th>组件</th><th>需要改吗</th><th>原因</th></tr></thead><tbody>
+<tr><td><code>netG</code></td><td><b>不用改</b></td><td>首层卷积按 <code>input_nc</code> 建，末层按 <code>output_nc</code> 建，本来就是参数化的</td></tr>
+<tr><td><code>netD</code></td><td><b>不用改</b></td><td>它按 <code>output_nc</code> 建（<b>你输出仍是 3 通道 RGB，所以判别器无感</b>）</td></tr>
+<tr><td><code>netF</code></td><td><b>不用改</b></td><td>按 <code>input_nc</code> 建，会自动跟着变成 2 通道</td></tr>
+<tr><td><b>数据加载器</b></td><td><span class="b medium">要改</span></td><td><code>aligned_dataset</code> 读 RGB ⇒ 需改成只取 H（或 H/E）两个通道</td></tr>
+</tbody></table></div><p><b>改动量比你预估的小得多：只有一个数据加载器 + 两个命令行参数。</b></p></div>
+<h3>7.2 但真正的障碍在别处 —— 而且你库里已经查过了</h3>
+<div class="box stop"><div class="bt">障碍不是通道数，是「另外两路没有监督」</div><p>「生成 H 通道再反推 RGB」的难点在于：<b>从 H 反推 RGB 需要 E 和 DAB 两路，而这两路你在输入侧没有、在监督侧也没有。</b>H 那一路你有，另外两路是凭空补的。</p><p>而你库里的 <code>MEMORY_H通道共享.md</code> 已经给出两条对你不利的结论：</p><ol>
+<li><b>IHC 复染的苏木素比 H&amp;E 弱约 10×</b> ⇒ 不能把 H&amp;E 的 <code>C_H</code> 直接拷到 IHC 侧；</li>
+<li><b>DAB 饱和区污染「苏木素」IOD，平均 65%</b> ⇒ <b><code>C_H^IHC</code> 在阳性区本身不可信</b>——而阳性区恰恰是你最关心的地方。</li>
+</ol><p>⇒ <b>就算通道数问题解决了，你的目标通道（IHC 的 H）本身就测不准。</b>用测不准的量当监督，模型学到的是噪声。</p></div>
+<h3>7.3 更好的表述：换成「有监督的 3 通道浓度域」</h3>
+<div class="box key"><div class="bt">把「2 通道 H」改成「3 通道浓度/OD 域」</div><p>不要生成 2 通道 H，而是<b>在你有监督的通道空间里生成</b>，例如 3 通道 OD / 浓度域 <code>[C_H, C_DAB, C_res]</code>。这样同时解决两个问题：</p><ul>
+<li><b>通道数问题</b>：3→3 或 3→3，CUT 天然支持；</li>
+<li><b>无监督通道问题</b>：三路都有对应的监督或约束（<code>C_DAB</code> 有 FOD/表达量监督，<code>C_H</code> 有结构监督，<code>C_res</code> 是残差）。</li>
+</ul><p>你库里 <code>MEMORY_StainFuser审查.md</code> 已经给出这个结论：<b>「唯一推荐 <code>Z=[C_H, C_DAB, C_res]</code>」</b>。而 <code>MEMORY_GAN频域.md</code> / 潜空间通道那份报告也记了：<b>RGB 加性噪声 vs OD 乘性噪声，两者的噪声几何不同</b>——所以从 RGB 换到 OD 域不是一个「通道数调整」，而是<b>换了生成空间的几何</b>，这本身就是一个可写的点。</p></div>
+<h3>7.4 判定</h3>
+<div class="box good"><div class="bt">判定：技术上比你想的容易，但方向建议调整</div><ol>
+<li><b>「2 通道不兼容」这个顾虑可以删掉</b>——CUT 完全参数化，一行参数就能跑。</li>
+<li><b>但「2 通道 H」这个目标空间选得不好</b>：IHC 的 H 通道在阳性区不可信（污染 65%），你会用一个测不准的量当监督。</li>
+<li><b>建议改成 3 通道 OD/浓度域</b>（<code>[C_H, C_DAB, C_res]</code>），既解决通道数也解决监督缺失，还顺带把「加性 vs 乘性噪声」变成可写的机制差异。</li>
+<li>如果一定要保留 H 通道这条线，<b>至少要在阳性区做 mask-weighted 损失</b>（避开被 DAB 污染的区域），否则监督信号本身是脏的。</li>
+</ol></div>
+
+<h2 id="s8"><span class="num">8</span>第 5 条：再去模块仓库找</h2>
+<div class="box warn"><div class="bt">泛搜已经收益递减</div><p>我上一轮查过：那份「全网最全即插即用模块」<b>是同一份文档被至少 10 个账号镜像</b>（<code>ai-dawang/PlugNPlay-Modules</code> 5,122★ · <code>AIFengheshu</code> 1,633★ · <code>BoyCO3</code> · <code>weidaoquan</code> · <code>Hurric0s</code> · <code>Thomas-403</code> · <code>CCC0090</code> · <code>KD-design229</code>）。<b>再搜一遍拿到的是同一批东西的第 N 个副本。</b></p></div>
+<p><b>有意义的做法：按「落点」定向找，不按「仓库」找。</b>你现在已经确定要动三个落点，那就按落点去找对应的模块：</p>
+<div class="scroll"><table><thead><tr><th>落点</th><th>候选模块</th><th>出处</th><th>状态</th></tr></thead><tbody>
+<tr><td rowspan="2"><b>下采样</b></td><td><b>WTConv</b></td><td>ECCV 2024，<code>BGU-CS-VIL/WTConv</code>（<b>MIT</b>）</td><td><span class="b high">已有</span></td></tr>
+<tr><td><b>PWD</b>（小波下采样）</td><td>TGRS 2025，输入分解为 LL/LH/HL/HH 后重组为 4C</td><td><span class="b medium">在 PlugNPlay 合集里，需查原始仓库</span></td></tr>
+<tr><td rowspan="3"><b>上采样</b></td><td><b>DySample</b></td><td>ICCV 2023，<code>tiny-smart/dysample</code></td><td><span class="b high">已有</span></td></tr>
+<tr><td><b>CARAFE</b></td><td>ICCV 2019，内容感知重组上采样</td><td><span class="b medium">经典，需查原仓库</span></td></tr>
+<tr><td><b>FADE / SAPA</b></td><td>较新的可学习上采样变体</td><td><span class="b low">未核实</span></td></tr>
+<tr><td rowspan="2"><b>门控</b></td><td><b>Gated Convolution</b></td><td>ICCV 2019，<code>Free-Form Image Inpainting</code>：<code>y = φ(W_f*x) ⊙ σ(W_g*x)</code></td><td><span class="b high">机制最清晰的「真门控」先例</span></td></tr>
+<tr><td><b>ReZero / LayerScale</b> 式残差门控</td><td>零初始化 <code>γ</code>，<code>h' = h + γ·Δh</code></td><td><span class="b high">你库里《门控机制》报告已定位为「唯一被单独消融证明有效的一类」</span></td></tr>
+</tbody></table></div>
+<div class="box teal"><div class="bt">判定</div><p><b>这一条不是「去找更多」，而是「去确认已有的那几个够不够」。</b>按你现在的三个落点，手上已有的模块（WTConv + DySample + 残差门控）<b>已经够了</b>。真正缺的不是模块，是<b>每个模块在你自己数据上的单因素证据</b>。</p></div>
+
+<h2 id="s9"><span class="num">9</span>修正后的推荐方案</h2>
+<div class="scroll"><table><thead><tr><th>#</th><th>原方案</th><th>改成</th><th>理由怎么写</th><th>消融怎么拆</th></tr></thead><tbody>
+<tr><td>1</td><td>小波卷积替代下采样 + 去混叠</td><td><b>拆成 3 档</b>：只去 antialias / 只加 WTConv / WTConv 做 stride=2 降采样</td><td>「小波卷积提供多尺度频带分解」（<b>不要</b>写「替代抗混叠」）</td><td>D0 基线 · D1 只去 antialias · D2 只加 WTConv · D3 stride=2</td></tr>
+<tr><td>2</td><td>DySample 替换上采样</td><td><b>「固定抗混叠打底 + 可学习上采样做残差补偿」</b>（不是纯替换）</td><td>「<b>首次把可学习上采样引入 GAN 生成器</b>；既有抗棋盘格谱系全是固定滤波，可学习上采样此前只用于分割/检测/抠图」（<b>你库里已核实</b>）</td><td>三档分水岭：纯固定滤波 / 纯可学习 / 两者组合</td></tr>
+<tr><td>3</td><td>门控解梯度冲突</td><td><b>换成 λ 调度 / <code>λ_crit</code> 上界</b>；门控只作稳定性保险</td><td>「门控抑制 G/D 失衡的训练不稳定」（<b>不要</b>写「解梯度冲突」）</td><td>先量冲突（E0）→ 再决定要不要门控 → 门控必配反事实（全 1 / 均值 / 随机）</td></tr>
+<tr><td>4</td><td>2 通道 H 生成再反推 RGB</td><td><b>3 通道 OD/浓度域</b> <code>[C_H, C_DAB, C_res]</code></td><td>「在 OD 域生成 ⇒ 噪声几何从加性变乘性」（机制级差异）</td><td>两档：RGB 3 通道 vs OD 3 通道（同一架构，只换空间）</td></tr>
+<tr><td>5</td><td>再去模块仓库找</td><td><b>停止泛搜</b>，按落点定向确认</td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+<div class="box pur"><div class="bt">一句话概括修正后的方案</div><p><b>把「四个改动一起上」改成「一条一条来，每条都先证明前提取成立」。</b>你现在最大的风险不是选错模块，而是<b>同时改了上下两条路径的算子 + 加门控 + 换生成空间</b>——四件事一起做，结果无论好坏都无法归因。</p></div>
+
+<h2 id="s10"><span class="num">10</span>可执行实验路线与自查命令</h2>
+<h3>10.1 五条自查命令（先跑这个，再动手）</h3>
+<pre><code># ① ★ 最关键：确认 CUT/PSPStain 的上采样到底是哪种算子
+grep -n "ConvTranspose2d\|nn.Upsample\|Upsample(\|upsample_mode" models/networks.py | head -40
+
+# ② 确认下采样与抗混叠的实际结构
+grep -n "no_antialias\|antialias\|Antialiasing\|stride=2" models/networks.py options/base_options.py
+
+# ③ ★ 确认 ASP 的权重调度是否还在跑（可能是一个被忽略的冲突缓解机制）
+grep -rn "asp_loss_mode\|lambda_asp" experiments/ options/ models/
+
+# ④ 确认你实际的 loss 列表（决定「几个损失在打架」）
+grep -n "self.loss_G = \|loss_G =" -A 3 models/*.py
+
+# ⑤ 确认 FastCUT 模式下 nce_idt 的实际取值
+grep -rn "nce_idt\|CUT_mode" options/ experiments/ models/ | head -20</code></pre>
+<h3>10.2 梯度冲突的测量（不改结构，只加记录）</h3>
+<pre><code># 在 compute_G_loss 之后、backward 之前插入（示意）
+g_gan = torch.autograd.grad(loss_G_GAN, netG_params, retain_graph=True, allow_unused=True)
+g_nce = torch.autograd.grad(loss_NCE,  netG_params, retain_graph=True, allow_unused=True)
+
+dot   = sum((a*b).sum() for a, b in zip(g_gan, g_nce) if a is not None and b is not None)
+n1    = sum((a**2).sum() for a in g_gan if a is not None)
+n2    = sum((b**2).sum() for b in g_nce if b is not None)
+cos   = dot / (n1.sqrt() * n2.sqrt() + 1e-12)
+lambda_crit = n1 / (dot.abs() + 1e-12)
+
+# 判据（来自 MEMORY_梯度冲突.md）：
+#   冲突成立   ⇔  gᵀg &lt; −‖g_diff‖²      （注意不是 &lt; 0）
+#   λ 的临界值  =  λ_crit = ‖g₁‖² / |g₁ᵀg₂|
+# 记录：cos 的均值/方差、λ_crit 随 epoch 的曲线、3 个 seed 的一致性</code></pre>
+<h3>10.3 推荐的实验顺序</h3>
+<div class="flow"><pre><code>E0 ★ 先做这个：基线 + 梯度冲突记录（3 seed）
+   └─ 只加记录，不改任何结构
+   └─ 输出：cos 分布、λ_crit 曲线
+   └─ 判定：cos 长期接近 0 或为正 ⇒ 第 3 条整条不必要
+            cos 显著为负且 |cos| 大 ⇒ 需要 λ 调度，不是门控
+
+E1  只去掉下采样抗混叠（--no_antialias）
+   └─ 判定：结构指标是否退化？退化 ⇒ 第 1 条的前提不成立
+
+E2  只加 WTConv（stride=1，MSCW 式，antialias 保留）
+   └─ 判定：小波卷积本身有没有增益？
+
+E3  上采样换 DySample（先确认前提，再分两档：含/不含抗混叠）
+   └─ 判定：结构级指标（边界、膜连续性）是否改善
+
+E4（条件性）门控作为稳定性保险
+   └─ 前置：E0 显示冲突显著，或 D/G 失衡明显
+   └─ 形式：残差门控 h' = h + γ(x)·Δh，γ 有界，只控新增分支
+   └─ 必配：gate 全 1 / 均值 / 随机 三档反事实
+
+E5（独立线）RGB 3 通道 vs OD 3 通道（同一架构只换空间）
+   └─ 与上面四条完全解耦，可并行</code></pre></div>
+<h3>10.4 四类必须同时记录的指标</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">分布级</div><p>FID / KID、precision / recall。<b>单独用 FID 会掩盖表达量退化。</b></p></div>
+<div class="mini"><div class="mt">表达级</div><p>DAB / OD / FOD mean、p90 / IOD、阳性面积、细胞级 precision / recall。</p></div>
+<div class="mini"><div class="mt">结构级</div><p>细胞核 / 膜边界、membrane continuity。<b>第 1、2 条（下采样/上采样改动）的主要战场。</b></p></div>
+<div class="mini"><div class="mt">训练稳定性</div><p>D/G logits、两条梯度范数、cos 曲线、<code>λ_crit</code>。<b>第 3 条的主要战场。</b></p></div>
+</div>
+
+<h2 id="s11"><span class="num">11</span>未核实清单与证据边界</h2>
+<div class="box stop"><div class="bt">明确未核实的事项（不要当作事实引用）</div><ol>
+<li><b>★ CUT 的 <code>models/networks.py</code>（约 55 KB）—— 本轮四次抓取全部返回空</b>（raw 的 <code>master</code>/<code>main</code> 分支、CDN 代理 <code>cdn.statically.io</code>、GitHub blob 页都试过）。⇒ <b>「CUT 的上采样是 <code>ConvTranspose2d</code> 还是 <code>nn.Upsample</code>+conv」这一点我无法下结论。</b>我在 §5.1 给的倾向（<code>nn.Upsample</code>+conv）是<b>基于间接线索的推断，不是核实</b>。</li>
+<li><b>CUT 的 <code>ResnetGenerator</code> 下采样是否 strided conv + blurpool</b> —— 同上，未读到源码。§4 关于抗混叠的论证依赖「<code>no_antialias</code> 是 blurpool 式的降采样前低通」，这一条来自 <code>define_G</code> 的签名与选项名，<b>未读到实现</b>。</li>
+<li><b>PSPStain 自身的 <code>networks.py</code> 与 launcher</b> —— 本轮<b>未读</b>。§5 的判定是条件性的，<b>请用 §10.1 的命令自查</b>。</li>
+<li><b>PSPStain 实际的 loss 列表</b> —— §3 说「可能四项在打架」，这是基于「FastCUT 一项 NCE + 你另有 MLPA/CTPC + ASP 金字塔」的推断，<b>未核实</b>。</li>
+<li><b><code>asp_loss_mode</code> 是否仍在 PSPStain 的 launcher 里</b> —— 只在 ASP 的 <code>mist_launcher.py</code> 里逐字见过，<b>未核实 PSPStain 是否保留</b>。</li>
+<li><b>PWD / CARAFE / FADE / SAPA 的原始仓库与许可</b> —— §8 表格里标注为「需查原仓库」，本轮<b>未核实</b>。</li>
+<li><b>DySample 在 <code>scale=2</code>、<code>groups=4</code> 下能否直接接你的通道数</b> —— 需确认 <code>in_channels % groups == 0</code>，未核实你的通道配置。</li>
+</ol></div>
+<p class="cite"><b>证据标记：</b><span class="b high">[VERIFIED]</span> 本轮实际抓取到逐字源码；<span class="b medium">[INFERENCE]</span> 基于已核实证据的工程推断，需实测；<span class="b bad">[UNVERIFIED]</span> 抓取受阻或未做，不应作为强事实引用。</p>
+<h3>11.1 本文明确没有做的事</h3>
+<ul>
+<li><b>没有跑任何实验。</b>所有判定都是<b>结构性与机制性</b>的，不是实测结果。</li>
+<li><b>没有读 CUT 的 <code>networks.py</code>。</b>第 1、2 条里关于「抗混叠的实现形式」「上采样算子」的部分都受此限制。</li>
+<li><b>没有重复既有报告的结论。</b>棋盘格成因、门控四位置、H 通道四层拆解、梯度冲突判据，全部引用你库里已有报告，本文不另立证据。</li>
+<li><b>没有评估「这几条改动值不值得做」。</b>本文只回答「成不成立、理由怎么改、怎么拆消融」，不回答「能涨多少点」。</li>
+</ul>
+<hr>
+<p class="cite">本报告所有「逐字源码」引文来自本轮抓取的 <code>taesungp/contrastive-unpaired-translation</code> 的 <code>models/cut_model.py</code>。抓取受阻的项目已全部列入 §11。<b>报告日期：2026-10-16。</b></p>
+</main></div></body></html>

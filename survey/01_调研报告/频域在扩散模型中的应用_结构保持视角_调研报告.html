@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>频域在扩散模型中的应用 · 结构保持视角 · H&amp;E→IHC 调研</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.route{border:1px solid var(--border);border-radius:10px;padding:14px 17px;margin:14px 0;background:var(--softer)}.route .rt{font-weight:750;font-size:15px;margin-bottom:5px}.route .rmeta{font-size:12px;color:var(--muted)}.cite{font-size:11.5px;color:var(--muted)}.tag{font-size:11px;font-weight:700;color:var(--muted);background:#eef0f3;padding:2px 6px;border-radius:4px}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc"><div class="brand">Frequency domain × Diffusion</div><div class="sub">以「结构保持」为主线<br>含底层原理讲解<br>2026-10-06</div><a class="l1" href="#s0">0 · 先给结论</a><a class="l1" href="#s1">1 · 底层原理（从零讲）</a><a class="l2" href="#s11">1.1 频率是什么：三种基</a><a class="l2" href="#s12">1.2 低频=结构？三条定理</a><a class="l2" href="#s13">1.3 扩散的谱偏置</a><a class="l2" href="#s14">1.4 频域能插在六个位置</a><a class="l2" href="#s15">1.5 相位 vs 幅度</a><a class="l1" href="#s2">2 · 文献地图（按位置）</a><a class="l2" href="#s21">2.1 位置① 生成域</a><a class="l2" href="#s22">2.2 位置② 噪声调度</a><a class="l2" href="#s23">2.3 位置③ U-Net 特征</a><a class="l2" href="#s24">2.4 位置④ 条件注入</a><a class="l2" href="#s25">2.5 位置⑤ 损失/监督</a><a class="l2" href="#s26">2.6 位置⑥ 采样期修正</a><a class="l1" href="#s3">3 · 结构证据清算</a><a class="l2" href="#s31">3.1 正结果</a><a class="l2" href="#s32">3.2 负结果（最值钱）</a><a class="l2" href="#s33">3.3 结构还是纹理</a><a class="l1" href="#s4">4 · 你引的 AIRPNet/LFP</a><a class="l1" href="#s5">5 · 对本项目的可迁移性</a><a class="l1" href="#s6">6 · 最小验证实验与止损</a><a class="l1" href="#s7">7 · 证据边界</a></nav>
+<main>
+<header class="doc"><div class="kicker">Frequency domain in diffusion · structure preservation · literature research</div><h1>频域在扩散模型中的应用<br>——以「结构保持」为主线的调研 + 底层原理</h1><p class="desc">从「为什么低频管结构」讲到「频域能插在扩散管线的哪六个位置」，再逐个清算谁真的有结构证据、谁是负结果</p><div class="meta"><span>报告日期 2026-10-06</span><span>覆盖 30+ 篇</span><span>六个注入位置</span><span>面向 H&amp;E→IHC 潜扩散</span></div></header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="box key"><div class="bt">一句话判定</div><p><strong>频域在扩散模型里真正能改善「结构」的用法，不是把扩散搬到频域去做（那是效率手段），而是「在扩散的某个环节显式地控制频带」。</strong>而在所有位置中，对你这个项目唯一同时满足「改动小 + 免训练 + 可复现」的入口是<strong>条件层/采样期的低频锚定</strong>——用输入的 H&amp;E 的低频分量去锚定生成的 DAB 的全局布局。</p></div>
+
+<div class="box warn"><div class="bt">★ 三个必须先纠正的认识（否则会做反）</div>
+<ol><li><strong>「低频 = 结构、高频 = 细节」有实证，但两篇论文给出了相反方向的权重。</strong>原因不是谁错了，而是「结构」这个词在文献里指<strong>两种不同的东西</strong>：<em>全局布局</em>（低频）与<em>边缘/边界</em>（高频，也正是 SSIM 奖励的东西）。引用任何一篇之前，先看它用的是哪种定义、什么指标。</li>
+<li><strong>「扩散天生先低频后高频，所以对抗这个先验是徒劳的」——这条理由已经被显著削弱。</strong>两篇 2025 年的工作分别从「噪声调度」和「网络结构」两个方向证明这个层级<strong>不是必然</strong>（详见 <a href="#s13">§1.3</a>）。这意味着「用频域干预去改变学习顺序」在理论上不再是禁区。</li>
+<li><strong>频域方法在医学翻译里改善的主要是 FID/纹理，不是结构。</strong>目前拿到最硬结构数字（DICE / ASSD / Edge-HD95）的方法 <em>ContourDiff</em> <strong>恰恰不用频域</strong>。频域的结构证据几乎全是 SSIM，而 SSIM 混入亮度/对比度，且在病理配准误差下不可靠。</li></ol></div>
+
+<div class="box stop"><div class="bt">★ 关于你引的那篇（AIRPNet / LFP）：三处需要纠正</div><p>我核到了这篇论文（TPAMI 2026，DOI 10.1109/TPAMI.2026.3669584，北航徐迈/邓欣组），但有三点和你转述的不一样：<strong>① 它不是频域模块</strong>——从你贴的代码看，LFP 内部只有 GAP + SE 通道注意力 + 密集卷积 + 残差，<strong>没有 DWT/FFT</strong>（小波提升在它外部的分解步骤里）；<strong>② 它不是扩散模型</strong>，是前馈复原网络；<strong>③ 「低频决定真实」是文章的措辞，不是论文原话</strong>（论文的说法是「精准修复高频细节的同时有效恢复全局结构」）。而且你贴的 0.86 dB 是<strong>四个任务里最小的那个</strong>——去模糊那一项掉 2.33 dB。详见 <a href="#s4">§4</a>。</p></div>
+
+<div class="grid2">
+<div class="mini"><div class="mt">最值得先做的（零训练，&lt;50 行）</div><p><strong>采样期低频锚定</strong>：不重训，每一步把模型预测 x̂₀ 的低频分量（LL 子带或高斯低通）替换成输入 H&amp;E 的同频分量。<strong>判据不是 PSNR/FID，而是下游结构分割的 DICE</strong>（核/膜）。若 DICE 不动而只有 PSD/纹理指标动 ⇒ 频域对你的结构目标无收益，就此收手。详见 <a href="#s6">§6</a>。</p></div>
+<div class="mini"><div class="mt">明确不要做的</div><p><strong>不要把生成域换成小波/DCT。</strong>证据很清楚：WaveDiff 的多尺度渐进上采样直接失败（FID 13.11 vs 5.94）、WDM 的小波 U-Net 在医学 3D 上反而变差（FID 0.154→0.259）、DCTdiff 根本不报结构指标。这条路的卖点全是 FLOPs/显存，不是结构。</p></div>
+</div>
+
+<div class="box good"><div class="bt">对当前项目的直接决策</div><p><strong>顺序：① 先做 §6 的零训练低频锚定实验 → ② 只有 DICE 显著上升，才考虑把低频锚定写进训练（作为条件或损失）→ ③ 永远不要动生成域。</strong>这条顺序同时满足你的优先级（可复现 &gt; 可解释 &gt; 改动小 &gt; 有实验收益），且阴性结果本身就有价值——它能替你挡掉后续所有「要不要上小波」的反复摇摆。</p></div>
+
+<h2 id="s1"><span class="num">1</span>底层原理：从零讲清楚</h2>
+<p>这一节是给「以前没怎么接触过频域」的人写的。如果你只想看文献结论，可以跳到 <a href="#s2">§2</a>；但 <a href="#s14">§1.4</a> 那张「六个注入位置」的表是全文骨架，建议无论如何都看一遍。</p>
+
+<h3 id="s11">1.1 「频率」到底是什么：三种基</h3>
+<p>一张灰度图可以看成一个空间信号 <code>I(x, y)</code>。<strong>空间频率 = 亮度在空间上变化的快慢</strong>：</p>
+<ul>
+<li><strong>低频</strong>：大片区域内缓慢变化的成分。在病理图上对应<em>整体亮度、组织密度、大尺度布局、伊红充盈的胞质/间质</em>。</li>
+<li><strong>高频</strong>：局部剧烈变化的成分。对应<em>细胞核轮廓、膜边界、腺体边缘、染色质颗粒、扫描噪声</em>。</li>
+</ul>
+<p>「变换到频域」就是选一组<strong>基函数</strong>，把图像表示成这些基的加权和。三种基的差别，决定了它们各自能干什么：</p>
+
+<div class="scroll"><table>
+<thead><tr><th>基</th><th>基函数长什么样</th><th>空间定位</th><th>多尺度</th><th>可完美重建</th><th>典型用途</th></tr></thead>
+<tbody>
+<tr><td><strong>FFT</strong>（傅里叶）</td><td>铺满整张图的平面正弦波</td><td><span class="b bad">无</span> 一个系数对应整幅图</td><td><span class="b bad">无</span></td><td>是（无截断时）</td><td>全局谱分析、PSD 度量、相位操作</td></tr>
+<tr><td><strong>DCT</strong>（离散余弦）</td><td>块内实数余弦基</td><td><span class="b medium">块内</span></td><td><span class="b bad">无</span></td><td>是</td><td>JPEG 压缩、DCTdiff 的生成域</td></tr>
+<tr><td><strong>DWT</strong>（小波）</td><td>局部化的「小波」基</td><td><span class="b high">有</span> 系数带位置</td><td><span class="b high">有</span> 递归分解 LL</td><td>是（正交小波）</td><td>多尺度结构分析、U-Net 内上下采样</td></tr>
+</tbody></table></div>
+
+<p>Haar 小波是最简单的一级：对 2×2 邻域做四个滤波器，得到四个子带——</p>
+<div class="formula">L = (1/√2)[1, 1] &nbsp;&nbsp; H = (1/√2)[−1, 1] &nbsp;&nbsp;（步长 2）</div>
+<ul>
+<li><strong>LL</strong>：低频近似（大尺度布局、组织密度、整体染色强度）</li>
+<li><strong>LH</strong>：水平细节（垂直方向的边缘）</li>
+<li><strong>HL</strong>：垂直细节（水平方向的边缘）</li>
+<li><strong>HH</strong>：对角细节（高频纹理、染色质颗粒、噪声）</li>
+</ul>
+<p>把 LL 再分解一次，就得到第二级——这就是「多尺度」。<strong>两级 DWT 会给出 1/2 与 1/4 分辨率两个自然尺度</strong>，这一点对扩散模型特别有用，因为它和 U-Net 的分辨率层级是天然对齐的。</p>
+
+<div class="box teal"><div class="bt">一个值得记住的理论理由：DWT 不是「外部强加」的分解</div><p>Falck 等（arXiv 2505.11278）指出：<strong>U-Net 的平均池化与 Haar 小波投影是共轭的</strong>。也就是说，DWT 子带不是我们从外面塞进网络的一个额外结构，而是<em>与 U-Net 自身分辨率层级同构的基</em>。这是选择 DWT 而不是 FFT/DCT 的最强理论理由——也是「在 U-Net 里用小波上下采样」看起来自然的原因（但注意：<strong>看起来自然 ≠ 有效</strong>，§3.2 有两个反例）。</p></div>
+
+<h3 id="s12">1.2 「低频=结构」的三条定理，以及它为什么还是会误导你</h3>
+<p>「低频管结构、高频管纹理」这句话不是玄学，它背后站着三条严格的信号处理定理：</p>
+<div class="box key"><div class="bt">三条严格定理（教科书内容，无需引用特定论文）</div>
+<p><strong>① 维纳–辛钦定理</strong>：功率谱密度 = 自相关函数的傅里叶变换。<br>⇒ <em>一幅图的功率谱形状，由它的空间自相关决定。</em></p>
+<p><strong>② 相关长度 ↔ 频谱重心</strong>：<br>空间自相关长度<strong>大</strong>（成片、平滑、弥散）⇒ 能量集中在<strong>低频</strong>；<br>自相关长度<strong>小</strong>（细线、稀疏、高对比）⇒ 能量集中在<strong>高频</strong>。<br>⇒ 这正是「伊红 → 低频、DAB → 高频」的严格版本：<em>伊红是成片弥散的（相关长度大），DAB 是细线稀疏的（相关长度小）</em>。</p>
+<p><strong>③ 帕塞瓦尔定理</strong>：同一幅图的空间域能量 = 频域能量。<br>⇒ 变化的不是「能量总量」，而是<strong>能量的分布</strong>。注意：它只保证<em>同一幅图内</em>守恒，<strong>不保证 H&amp;E 与 IHC 之间守恒</strong>。</p></div>
+
+<div class="box stop"><div class="bt">★ 陷阱：文献里的「结构」指两种不同的东西，这是最大的混淆源</div>
+<p>两篇论文的消融给出了<strong>方向相反</strong>的结论，而且<strong>两个都对</strong>：</p>
+<ul>
+<li><strong>FGDM</strong>（TMI 2023, arXiv 2304.02742）在 CBCT→CT 上：去掉<strong>高频</strong>引导，SSIM 从 <strong>0.908 崩到 0.748</strong>；去掉低频引导只掉到 0.890 ⇒ <em>高频才是 SSIM 的承重件</em>。</li>
+<li><strong>FDG</strong>（arXiv 2506.19713, 2025）在文生图上：<em>「low-frequency guidance governs global structure and condition alignment, while high-frequency guidance mainly enhances visual fidelity」</em> ⇒ <em>低频管全局结构</em>。</li>
+</ul>
+<p><strong>为什么不矛盾</strong>：FGDM 的「结构」= <em>解剖边界/边缘</em>（高空间频率，Sobel 内容），用 <strong>SSIM</strong> 度量——而 SSIM 是局部窗口的对比度/结构相似度，<strong>天然奖励边缘</strong>。FDG 的「结构」= <em>全局布局/物体位置/几何</em>（低空间频率），用条件对齐与布局定性判断度量。</p>
+<p><strong>实践含义</strong>：引用「低频管结构」时，必须同时说清楚<strong>是哪种结构、用什么指标量的</strong>。否则同一个说法在两篇论文里指向相反的实验结论。</p></div>
+
+<h3 id="s13">1.3 扩散模型为什么「先低频后高频」——证据链，以及它的三处松动</h3>
+<p>这条「coarse-to-fine 谱偏置」是频域干预的<strong>全部动机来源</strong>，所以值得把证据链完整摆出来。它由四环构成，每一环的证据强度不同：</p>
+
+<div class="scroll"><table>
+<thead><tr><th>环节</th><th>主张</th><th>证据强度</th></tr></thead>
+<tbody>
+<tr><td><strong>Rissanen et al.</strong><br><span class="cite">ICLR 2023, arXiv 2206.13397</span></td><td>§2.2 标题即「Implicit Coarse-to-Fine Generation in Diffusion Models」。标准扩散加各向同性高斯噪声时，<em>噪声 PSD 与图像 PSD 在期望意义下相加</em> ⇒ <strong>高频因自然图像 1/f<sup>α</sup> 谱能量低而被噪声「淹没」，低频保留完好</strong>。这是<strong>前向过程 × 数据谱</strong>共同作用的结果，是<em>隐式</em>归纳偏置，不是他们自家模型的专属性质。</td><td><span class="b high">谱可加性：形式化证明（in expectation）</span><br><span class="b medium">偏置解释：有实验支撑</span></td></tr>
+<tr><td><strong>Dieleman 博客</strong><br><span class="cite">sander.ai, 2024-09-02（非同行评审）</span></td><td>实测自然图像 RAPSD 斜率 <strong>α̂ = 2.454</strong>，并给出可直接使用的工具 <code>f_max(t)</code>：对 rectified flow 化简为 <strong>R[x₀](f) &gt; (t/(1−t))²</strong>——即时刻 t 的「尚未被噪声淹没的最高频率」。</td><td><span class="b high">α̂ 测量：有实验支撑（附可复现 notebook）</span></td></tr>
+<tr><td><strong>DCTdiff Thm 5.1</strong><br><span class="cite">ICML 2025, arXiv 2412.15032</span></td><td>用 Itô 等距给出形式化恒等式：<br><code>E[|x̂_t(ω)|²] = |x̂_0(ω)|² + ∫|g(s)|²ds</code><br>右侧第二项<strong>与 ω 无关</strong>（谱图上的水平线）且随 t 单调增；第一项是幂律 <code>|x̂_0(ω)|² = K|ω|^(−α)</code>。⇒ 高频信号能量小，被噪声主导得更早。</td><td><span class="b high">恒等式：形式化证明</span><br><span class="b bad">但「低频先被学到」它并不证明</span></td></tr>
+<tr><td><strong>Wang &amp; Pehlevan</strong><br><span class="cite">NeurIPS 2025 Spotlight, arXiv 2503.03206</span></td><td>学习动力学上的逆方差谱定律：<strong>τ ∝ λ⁻¹</strong>——高方差（粗）结构比低方差（细）细节早若干个数量级被掌握。但关键补充：<em>「weight sharing merely multiplies learning rates… whereas local convolution introduces a qualitatively different bias」</em>，以及<em>「<strong>Convolutional U-Nets, however, display rapid near-simultaneous emergence of many modes</strong>, implicating local convolution in reshaping learning dynamics.」</em></td><td><span class="b high">线性/循环网络：形式化证明</span><br><span class="b medium">U-Net：经验观察（作者列为开放问题）</span></td></tr>
+</tbody></table></div>
+
+<div class="box stop"><div class="bt">★ 三处松动——这是本节最重要的一段</div>
+<p><strong>① DCTdiff 的定理只讲前向，不讲学习。</strong>它证的是<em>前向过程在期望意义下的静态 PSD 恒等式</em>，不涉及去噪器、不涉及反向过程。论文由「前向先毁高频」<strong>推断</strong>出「反向先重建低频」——把前向的毁灭顺序等同于反向的学习顺序，<strong>是推断而非证明</strong>。</p>
+<p><strong>② Falck 等（arXiv 2505.11278, 2025）证明频率层级不是必需的。</strong>DDPM 的 SNR 是 <code>ᾱ_t·C_i/(1−ᾱ_t)</code>（高频 C_i 小 ⇒ SNR 低 ⇒ 先被毁）；把噪声协方差改成 <strong>Σ_ii = c·C_i（EqualSNR）</strong>后，所有频率坐标 SNR 相等，<strong>层级被移除</strong>。频带分类器实验（CIFAR-10，隔离高频 top 5%/15%/25%，两参数谱幅回归 + 逻辑回归判别真/假）：</p>
+<div class="scroll"><table><thead><tr><th>方法</th><th>5% 频带</th><th>15%</th><th>25%</th></tr></thead><tbody>
+<tr><td>DDPM</td><td><span class="b bad">99%</span></td><td><span class="b bad">100%</span></td><td><span class="b bad">100%</span></td></tr>
+<tr><td>EqualSNR</td><td><span class="b high">13%</span></td><td><span class="b high">16%</span></td><td><span class="b high">10%</span></td></tr>
+</tbody></table></div>
+<p class="small">（数值为在 0.05 显著水平下判定为「假」的比例。DDPM 生成的高频几乎 100% 可被判假，EqualSNR 只有 10–16%。）且 LSUN Church 上 Clean-FID <strong>23.22 → 19.80</strong>（EqualSNR 更好）。⇒ <strong>「频率层级」是一个设计选择，不是必然。</strong></p>
+<p><strong>③ Wang &amp; Pehlevan 表明真实卷积 U-Net 并不是强 coarse-first。</strong>τ ∝ λ⁻¹ 的「粗先细后」在<strong>线性/循环网络</strong>上被证明；但真实局部卷积 U-Net 经验上表现为<strong>多模态近乎同时涌现</strong>。⇒ 把「扩散必然先低频后高频」当作硬约束去设计，前提已经被削弱。</p></div>
+
+<div class="box good"><div class="bt">这对你意味着什么</div><p>「不要对抗扩散的谱偏置」这条曾经的反对意见，现在<strong>站不住了</strong>。你完全可以：<em>(a)</em> 让频带 gate 成为 t 的温和可学习函数；<em>(b)</em> 在高 t 阶段不要过度约束高频（那正是标准调度被证明会劣化的区域）；<em>(c)</em> 甚至考虑改变噪声调度本身（但这对已预训练的 SD2.1 不现实，见 §5）。</p></div>
+<h3 id="s14">1.4 ★ 频域能插在扩散管线的六个位置（全文骨架）</h3>
+<p>「把频域加进扩散」这句话本身是含糊的——文献里「频域」被用在<strong>六个完全不同的位置</strong>，混淆它们是这个方向最常见的错误。每个位置改的东西、需要的代价、以及对「结构」的语义都不一样：</p>
+
+<div class="scroll"><table>
+<thead><tr><th class="c">#</th><th>位置</th><th>具体改什么</th><th>代表工作</th><th>要重训吗</th><th>对「结构」的语义</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>①</strong></td><td><strong>生成域</strong><br><span class="cite">diffuse what</span></td><td>扩散的对象从像素/latent 换成 DCT 系数或小波系数</td><td>DCTdiff (ICML'25)、WaveDiff (CVPR'23)、WDM (2024)、cWDM、FADM</td><td><span class="b bad">要</span></td><td><strong>主要是效率</strong>（FLOPs/显存/步数），<em>不是结构</em>——见 §3.2 的负结果</td></tr>
+<tr><td class="c"><strong>②</strong></td><td><strong>噪声调度</strong><br><span class="cite">how it's destroyed</span></td><td>让不同频率以不同速率加噪（或让所有频率 SNR 相等）</td><td>Blurring Diffusion (ICLR'23)、Falck EqualSNR、FCDM</td><td><span class="b medium">看情况</span> EqualSNR 改前向</td><td>直接决定「<strong>哪些频率先被毁 / 先被学</strong>」，是谱偏置的旋钮</td></tr>
+<tr><td class="c"><strong>③</strong></td><td><strong>U-Net 内部特征</strong><br><span class="cite">inside the net</span></td><td>对 backbone / skip 特征做频域加权；或把 CNN 上下采样换成小波上下采样</td><td><strong>FreeU (CVPR'24) ★</strong>、FCDM、HDW-SR、WDM 的 WavU-Net</td><td><span class="b high">否</span> FreeU 免训练<br><span class="b bad">是</span> 换采样层</td><td>直接决定<strong>细节强度与过平滑</strong>；FreeU 是这条线上唯一「免训练 + 零参数」的</td></tr>
+<tr><td class="c"><strong>④</strong></td><td><strong>条件注入</strong><br><span class="cite">as input</span></td><td>把源图/目标图的某个频带作为条件喂进网络</td><td><strong>FGDM (TMI'23) ★</strong>、FDDM、HDW-SR、3D-WLDM、FeatStainDiff</td><td><span class="b bad">要</span></td><td>把<strong>结构分量「喂」进去</strong>；对结构最直接，但需要训练</td></tr>
+<tr><td class="c"><strong>⑤</strong></td><td><strong>损失 / 监督</strong><br><span class="cite">as penalty</span></td><td>对输出的频谱或小波系数加惩罚项</td><td>Focal Frequency Loss (ICCV'21)、SC-Flow、HDW-SR 的 L_HE、FADM 的 HFSM</td><td><span class="b bad">要</span></td><td>治「<strong>系统性丢高频能量</strong>」；但权重极敏感（§3.2）</td></tr>
+<tr><td class="c"><strong>⑥</strong></td><td><strong>采样期修正</strong><br><span class="cite">training-free</span></td><td>每一步对预测的 x̂₀ / 潜码做频带替换或校正</td><td><strong>FDG (2025) ★</strong>、FGD (ICCV'25)、HiWave、DCW、Fourier Phase Diffusion (IJCAI'25)</td><td><span class="b high">否</span></td><td>免训练、可解释、改动最小；<strong>本项目唯一现实的入口</strong></td></tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">怎么用这张表</div><p>看任何一篇「频域 + 扩散」的论文，先定位它落在<strong>哪一格</strong>。落在①的工作，其收益几乎都是效率；落在③⑥的才可能免训练；落在④⑤的结构收益最直接但要训练。<strong>你的项目当前处在「阶段 1 最小改动 baseline」，所以只该看③和⑥。</strong></p></div>
+
+<h3 id="s15">1.5 相位 vs 幅度：为什么「相位=结构」是启发式而不是定理</h3>
+<p>傅里叶谱可以写成幅度 + 相位：<code>F = |F|·e^(iφ)</code>。「幅度管风格、相位管结构」在图像翻译圈流传很广，但它的证据基础比想象中弱：</p>
+<div class="scroll"><table>
+<thead><tr><th>主张</th><th>最强证据</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td><strong>相位承载结构</strong></td><td><strong>Oppenheim &amp; Lim, "The importance of phase in signals", Proc. IEEE 1981</strong>——只保留相位、丢掉幅度，重建图仍<em>可辨认</em>；只保留幅度则不可辨认。这是该主张的经典引文，确实很强。</td><td><span class="b high">强</span></td></tr>
+<tr><td><strong>幅度对应风格</strong></td><td>Style Spectroscope (Machine Learning, 2023) 把<strong>幅度 ↔ Gram 矩阵（风格损失）</strong>、<strong>相位 ↔ 内容重建损失</strong>形式化地连起来。但它同时显示<em>幅度也影响结构保持行为</em>。</td><td><span class="b medium">部分</span></td></tr>
+<tr><td><strong>「幅度 = 纯风格」</strong></td><td><span class="b bad">被高估</span> Oppenheim–Lim 证明的是相位的<em>主导性</em>，<strong>不是幅度的无关性</strong>；而且对单幅图，相位与幅度是<strong>耦合</strong>的（物理有效的图像要求二者互相一致，任意换相位会产生伪影）。</td><td><span class="b bad">过度简化</span></td></tr>
+</tbody></table></div>
+<p><strong>正确的表述</strong>：<em>「相位是结构的主要载体；把全部风格都归给幅度则是一个启发式。」</em></p>
+<div class="box stop"><div class="bt">★ 一个必须知道的空白（同时也是机会）</div><p>我检索了相位/幅度操作在<strong>病理</strong>与虚拟染色上的工作：<strong>没有任何研究检验过「相位=结构 / 幅度=风格」这个二分在病理图像上成立</strong>。相邻工作（Fourier stain normalization / FSA，IEEE 2023）用傅里叶空间做<em>染色归一化</em>，但不是相位-结构语义。<br>⇒ 所以把相位机制搬到 H&amp;E→IHC，是<strong>一个开放的经验问题，不是一个有支撑的结论</strong>。而且对你更不利的一点：<strong>你的数据本身弱配准，H&amp;E 与 IHC 的相位本就不该匹配</strong>——直接注入源图相位可能反而有害。</p></div>
+
+<h2 id="s2"><span class="num">2</span>文献地图：按注入位置逐个清算</h2>
+<p>下面按 §1.4 的六个位置组织。<strong>每篇都给出：机制 → 数字 → 证据等级 → 对你是否可用。</strong>证据等级的含义：<span class="b high">A</span> 一手论文正文/表格数字已核实 · <span class="b medium">B</span> 摘要或部分数字已核实 / venue 来自二手 · <span class="b low">C</span> 仅二手来源或未能核实。</p>
+
+<h3 id="s21">2.1 位置①：把扩散搬到频率/小波域（生成域改变）</h3>
+<p><strong>结论先行：这条路的收益是效率，不是结构保真。</strong>证据链有三条：卖点全是 FLOPs/显存/步数；显式的结构路线（WaveDiff 渐进上采样）直接失败；而 FADM 显示真正的 SSIM 增益来自<em>频域条件/监督模块</em>，而不是「在小波域扩散」这个动作本身。</p>
+
+<div class="scroll"><table>
+<thead><tr><th>工作</th><th>扩散对象</th><th>动机</th><th>关键数字</th><th>结构证据</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td><strong>WaveDiff</strong><br><span class="cite">CVPR 2023, arXiv 2211.16152</span></td><td>图像层 + 特征层的小波分解，另加 L1 重建项</td><td>缩小与 GAN 的<strong>推理速度</strong>差</td><td>CelebA-HQ 256 FID <strong>5.94</strong>（DDGAN 7.64）；显存 1.07G vs 3.21G；FLOPs 28.54G vs 70.82G</td><td><span class="b bad">无</span>（仅 FID/速度）</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>WDM</strong><br><span class="cite">DGM4MICCAI 2024, arXiv 2402.19043</span></td><td><strong>全部 8 个 3D 小波系数</strong>联合扩散（不是只扩散 LL）</td><td>效率 + 高分辨率 3D 生成</td><td>BraTS 128³ FID 0.154、显存 2.55GB</td><td><span class="b bad">仅 FID/MS-SSIM</span></td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>cWDM</strong><br><span class="cite">BraTS 2024, arXiv 2411.17203</span></td><td>DWT 8 子带替代 VAE 做降维 + 条件空间</td><td>三模态条件合成</td><td>PSNR 28.72 / SSIM 0.946</td><td>SSIM（混入亮度/对比度）</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>FADM</strong><br><span class="cite">J. Imaging 2025, 11(5):152</span></td><td>每步 Haar DWT（4 子带）+ 小波上下采样</td><td>多模态 MRI 合成</td><td>1.5T→3T 矢状 PSNR 31.90 / SSIM 0.951（vs I²SB 0.914）</td><td>SSIM，<strong>但增益来自 HFSM 条件而非小波域扩散</strong></td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>DCTdiff</strong><br><span class="cite">ICML 2025, arXiv 2412.15032</span></td><td>块 DCT 系数（免 VAE）</td><td>效率 + 质量</td><td>CIFAR-10 FID 5.02 vs UViT 6.23；FFHQ 512 FID <strong>7.07</strong> vs 潜扩散 10.89；训练成本 1/4</td><td><span class="b bad">不报结构指标</span></td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>ResShift</strong><br><span class="cite">NeurIPS 2023, arXiv 2307.12348</span></td><td><strong>不是频域</strong>——像素残差 e₀ = y₀ − x₀</td><td>效率（15 步）</td><td>×4 PSNR 25.01 / SSIM 0.677</td><td>—</td><td><span class="b high">A</span></td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">⚠ 一处常见误引</div><p><strong>ResShift 常被误列为「频域工作」，它其实是「残差域扩散」。</strong>它没有任何 DCT/小波/傅里叶组件。引用时请注意。</p></div>
+
+<h3 id="s22">2.2 位置②：噪声调度（决定「什么先被毁」）</h3>
+<ul>
+<li><strong>Blurring Diffusion Models</strong>（Hoogeboom &amp; Salimans, ICLR 2023, arXiv 2209.05557）：证明「模糊/热扩散」等价于<em>非各向同性噪声的高斯扩散</em>，即按频率各向异性地加噪。它在理论上桥接了逆热耗散（IHDM）与 DDPM 两大家族。<span class="b medium">等价性：形式化证明</span></li>
+<li><strong>Falck EqualSNR</strong>（arXiv 2505.11278）：把 Σ_ii 设为 c·C_i，让所有频率 SNR 相等。<strong>这是本节最实用的一条</strong>——它证明频率层级非必需，且在高频为主的数据上反而更好。但它改的是<em>前向过程</em>，意味着要重训。<span class="b high">有实验支撑（预印本）</span></li>
+<li><strong>FCDM</strong>（arXiv 2409.06714）：稀疏视角 CT 的<strong>物理引导双向频域扩散</strong>，含「频率自适应噪声调度」（高频早加噪、低频晚加噪）。消融：去掉频域卷积，SSIM <strong>0.959→0.796</strong>、PSNR 32.1→26.8；且<em>放在 latent 里优于放在 encoder 前</em>（SSIM 0.987 vs 0.962）。<span class="b high">A（其自身任务）</span></li>
+</ul>
+<h3 id="s23">2.3 位置③：U-Net 内部特征——<strong>FreeU 是这条线上最重要的一篇</strong></h3>
+<div class="card"><div class="ch"><div><div class="title">FreeU: Free Lunch in Diffusion U-Net</div><div class="v">Chenyang Si, Ziqi Huang, Yuming Jiang, Ziwei Liu · CVPR 2024 · arXiv 2309.11497</div></div><div><span class="b high">免训练</span> <span class="b blue">零参数</span> <span class="b high">A</span></div></div>
+<div class="body">
+<p><strong>它同时改两处，而且改的恰好是「结构 vs 细节」的接口：</strong></p>
+<p><strong>① backbone 特征 —— 空间域放大（结构相关缩放）。</strong>先沿通道求均值得到 <code>x̄_l</code>，再用它自己的 min-max 归一化值构造因子图（所以是<em>逐样本自适应</em>的，不是固定常数）：</p>
+<div class="formula">α_l = (b_l − 1)·(x̄_l − Min)/(Max − Min) + 1</div>
+<p>然后<strong>只对前一半通道</strong>做缩放（<code>i &lt; C/2</code>）。论文明确说：<em>不加区分地放大全部通道会导致纹理过平滑</em>，所以限制在一半通道。</p>
+<p><strong>② skip 特征 —— 傅里叶域<em>抑制低频</em>。</strong>FFT → 乘掩码 → IFFT：</p>
+<div class="formula">β(r) = s_l &nbsp;(r &lt; r_thresh) &nbsp;&nbsp;|&nbsp;&nbsp; β(r) = 1 &nbsp;(其他)</div>
+<p>注意方向：<strong>被抑制的是低频（r &lt; r_thresh），高频原样保留。</strong></p>
+<p><strong>论文自己的机理解释（逐字）</strong>：</p>
+<ul>
+<li><em>「Our investigation reveals that the main backbone of the U-Net primarily contributes to denoising. Conversely, the skip connections are observed to introduce high-frequency features into the decoder module.」</em></li>
+<li><em>「low-frequency components change slowly, whereas high-frequency components exhibit more significant variations during the denoising process.」</em></li>
+<li>skip 特征「primarily constitute high-frequency information」，会「inadvertently expedite the convergence toward noise prediction within the decoder module」，从而<em>削弱 backbone 的去噪能力</em>。</li>
+</ul>
+<p><strong>效果</strong>：人类评测（35 人）文生图 <strong>85.88% vs 14.12%</strong>、文生视频 <strong>84.71% vs 15.29%</strong>。免训练、零新增参数、无显存/时间开销。</p>
+</div></div>
+<div class="box key"><div class="bt">★ 为什么这一篇对你特别重要</div><p>它是<strong>唯一一条「免训练 + 零参数 + 有明确频域机制」</strong>的扩散内部改动，而且它给出的结论对你的方案有直接含义：<em>backbone 管去噪（低频/全局），skip 管高频细节</em>。如果你打算在 U-Net 里加一个「低频保护」块，<strong>必须先对照 FreeU</strong>——因为低频/全局结构本来就已经由 backbone 承担，再强化它可能<em>加重</em>过平滑，而 FreeU 修的恰恰是过平滑。</p></div>
+
+<p><strong>同位置的其他工作：</strong></p>
+<ul>
+<li><strong>HDW-SR</strong>（arXiv 2511.13175）：把扩散 U-Net 的 CNN 上下采样<strong>换成 Haar DWT/IDWT</strong>，只扩散残差 <code>HR − PreSR</code>，并用稀疏交叉注意力注入 PreSR 的高频。去掉引导 PSNR <strong>25.71→22.15</strong>；小波采样比 CNN 采样 <strong>+0.55 dB</strong>。<span class="b medium">B（β 极敏感）</span></li>
+<li><strong>WDM 的 WavU-Net</strong>：在特征空间做小波上/下采样——<strong>没有提升</strong>（BraTS 128³ FID 0.259 vs 0.154，LIDC 5.019 vs 4.989）。⚠ 注意原文措辞是「does not increase the model's performance」，<strong>不是「有害」</strong>，引用时不要加重。</li>
+</ul>
+
+<h3 id="s24">2.4 位置④：条件注入（结构收益最直接，但必须重训）</h3>
+<div class="card"><div class="ch"><div><div class="title">FGDM：Zero-shot Medical Image Translation via Frequency-Guided Diffusion Models</div><div class="v">IEEE TMI 2023 · arXiv 2304.02742</div></div><div><span class="b bad">要重训</span> <span class="b high">A</span></div></div>
+<div class="body">
+<p><strong>它的理论前提值得单独记</strong>：论文证明<strong>前向扩散等价于一个低通滤波器</strong> ⇒ 低频 = 结构/语义，Sobel 高通 = 边缘/轮廓。于是它的做法是：</p>
+<ul>
+<li>反向扩散<strong>从源图的低通版本起步</strong>（而不是从纯噪声起步）；</li>
+<li>Sobel 高通作为<strong>每一步的条件</strong>注入；</li>
+<li>让模型去生成「域间差异集中」的中频段。</li>
+</ul>
+<p><strong>数字</strong>：Head&amp;Neck FID 24.0 / PSNR 27.8 / SSIM 0.908；Lung FID 42.4 / SSIM 0.906。推理约 0.2 s/图。</p>
+<p><strong>★ 关键消融（也是全文最常被引的一组）</strong>：</p>
+<div class="scroll"><table><thead><tr><th>配置</th><th>FID ↓</th><th>SSIM（w/ source）↑</th></tr></thead><tbody>
+<tr><td>完整 FGDM</td><td>24.0</td><td><strong>0.908</strong></td></tr>
+<tr><td>去掉<strong>低频</strong>引导</td><td>30.2</td><td>0.890</td></tr>
+<tr><td>去掉<strong>高频</strong>引导</td><td>38.2</td><td><strong>0.748</strong></td></tr>
+</tbody></table></div>
+<p>⇒ 在 CBCT→CT 上，<strong>高频（Sobel 边缘）条件才是 SSIM 的承重件</strong>。</p>
+<p><strong>⚠ 但作者自己在 Limitations 里写明</strong>：该假设对「低频和高频都差异巨大」的任务<em>不成立</em>，并建议「先把低频和高频在模态间转换，再让 FGDM 填补中间频率」。<strong>H&amp;E → HER2-DAB 正好落在 FGDM 说它会失败的那一类</strong>——H&amp;E 的低频是伊红胞质 + 苏木素核 + 组织密度，DAB 的低频是透明背景 + 棕色膜信号，两者低频不匹配。所以<strong>不能照搬「复用源低频 + 复用源高频 + 生成中频」</strong>。</p>
+</div></div>
+
+<div class="scroll"><table>
+<thead><tr><th>工作</th><th>任务</th><th>频域角色</th><th>数字</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td><strong>FDDM</strong><br><span class="cite">MLST 2025, DOI 10.1088/2632-2153/adc656</span></td><td>MR→CT</td><td>低/高频<strong>双路径</strong>反向扩散；高频边界条件化以保解剖</td><td>brain FID <strong>25.9</strong>、pelvis 29.2</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>3D-WLDM</strong><br><span class="cite">arXiv 2507.11557</span></td><td>全身 MR→CT</td><td>⚠ <strong>扩散在学到的潜空间</strong>，小波只是编码/解码器内的特征增强（Wavelet Residual Module）；结构/模态解耦并<strong>锚定结构分量</strong></td><td>PSNR 25.33 / SSIM 0.81 / NCC 0.97；下游 Dice：肝 89.7、脾 81.4</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>FeatStainDiff</strong><br><span class="cite">Med. Image Anal. 112 (2026) 104138</span></td><td>H&amp;E→IHC<br><strong>特征级</strong></td><td><strong>Frequency-domain Mixture of Experts (FMoE)</strong> 自适应去噪器 + Contrastive Semantic Bridging</td><td><strong>已核实为 DCT</strong>：FMoE expert = <code>IDCT(MHSA(DCT(F)⊙W_i))</code>；核心 <code>model.py</code> 当前仍暂 withheld，无法核对代码细节</td><td><span class="b medium">B</span></td></tr>
+<tr><td><strong>One-to-Many LDM</strong><br><span class="cite">MICCAI 2025, LNCS 15975, pp.258–267</span></td><td>一对多模态合成</td><td>小波 + 傅里叶<strong>混合频率处理器</strong>，同时保局部纹理与全局解剖</td><td>数值未提取</td><td><span class="b low">C</span></td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">★ 关于病理侧的准确表述（别说过头）</div><p>我原先以为「虚拟染色里完全没有频域工作」——<strong>这个说法需要修正</strong>：</p>
+<ul>
+<li><strong>像素级 H&amp;E→IHC 的频域工作：基本没有。</strong></li>
+<li><strong>特征级已有 1 篇</strong>：FeatStainDiff（Med. Image Anal. 2026, DOI 10.1016/j.media.2026.104138，大连理工 Zhong 等）——但它<strong>明确「does not generate IHC images」</strong>，是把 H&amp;E patch 特征翻译成 IHC-like 特征服务下游 MIL/生物标志物预测；而且它<strong>需要配对特征</strong>（「Each H&amp;E row must match the IHC row at the same tissue location」），用 RegWSI 配准了 IMPRESS 与 NSCLC。<strong>它不是非配对设定。</strong></li>
+<li>其他 H&amp;E→IHC 主流工作均非频域：UNIStainNet（arXiv 2603.12716，SPADE-UNet + 冻结 UNI 基础模型）、StainDiffuser（arXiv 2403.11340）、Score-based Unpaired（arXiv 2506.23184，互信息引导）。</li>
+</ul>
+<p>⇒ 所以可 claim 的空白应该表述为：<strong>「非配对 H&amp;E→IHC 的像素级生成中，没有任何工作把频域分量作为条件或结构锚定」</strong>。</p></div>
+
+<h3 id="s25">2.5 位置⑤：损失 / 监督（治「系统性丢高频能量」，但权重极敏感）</h3>
+<ul>
+<li><strong>Focal Frequency Loss</strong>（ICCV 2021）：在幅度谱上做动态加权的频域损失，是这一类工作的起点。</li>
+<li><strong>SC-Flow</strong>（arXiv 2607.10627）：谱一致性校正器（可学习频域增益调制 PSD），针对潜均速场的「隐式低通调制」导致的过平滑。其动机值得引用：<em>不加谱损失时生成 PSD 会衰减到 GT 的 1/100</em>。<span class="b low">C（数值未提取）</span></li>
+<li><strong>HDW-SR 的 L_HE</strong>：<code>L = β·L_HE + (1−β)·L_HA</code>。<span class="b medium">B</span></li>
+<li><strong>FADM 的 HFSM</strong>：交叉注意力取 X_hl / X_hh / X_lh 做高频特征监督。其消融很有信息量：<em>加小波后 SSIM 0.914→0.913（几乎无变化），加条件 0.936，加 HFSM 0.939，全模型 0.951</em> ⇒ <strong>SSIM 增益来自频域监督/条件，而不是「在小波域扩散」本身</strong>。<span class="b high">A</span></li>
+</ul>
+
+<h3 id="s26">2.6 位置⑥：采样期修正——<strong>免训练，本项目唯一现实入口</strong></h3>
+<div class="card"><div class="ch"><div><div class="title">FDG：Guidance in the Frequency Domain Enables High-Fidelity Sampling at Low CFG Scales</div><div class="v">Sadat, Vontobel (ETH) · Salehi, Weber (DisneyResearch) · arXiv 2506.19713, 2025</div></div><div><span class="b high">免训练</span> <span class="b blue">即插即用</span> <span class="b high">A</span></div></div>
+<div class="body">
+<p><strong>它做的事极简单</strong>：标准 CFG 用<strong>一个</strong>引导尺度 w 同时作用于低频和高频分量；FDG 把它拆成<strong>两个</strong>尺度：</p>
+<div class="formula">D̂<sub>CFG</sub><sup>low</sup> = ψ<sub>low</sub>[D_u] + w<sub>low</sub>·(ψ<sub>low</sub>[D_c] − ψ<sub>low</sub>[D_u])<br>D̂<sub>CFG</sub><sup>high</sup> = ψ<sub>high</sub>[D_u] + w<sub>high</sub>·(ψ<sub>high</sub>[D_c] − ψ<sub>high</sub>[D_u])</div>
+<p>并推荐<strong>非对称引导 w<sub>low</sub> &lt; w<sub>high</sub></strong>。</p>
+<p><strong>核心发现（摘要逐字）</strong>：</p>
+<blockquote><em>「low-frequency guidance governs global structure and condition alignment, while high-frequency guidance mainly enhances visual fidelity.」</em></blockquote>
+<p>并且它把<strong>有害效应归给低频</strong>：<em>「excessive guidance in the low-frequency domain leads to reduced diversity and oversaturation, whereas high-frequency components usually benefit from higher guidance scales.」</em></p>
+<p><strong>数字</strong>：</p>
+<div class="scroll"><table><thead><tr><th>模型</th><th>CFG FID ↓</th><th>FDG FID ↓</th><th>Recall（CFG → FDG）↑</th></tr></thead><tbody>
+<tr><td>EDM2-S</td><td>9.77</td><td><strong>5.44</strong></td><td>0.52 → 0.68</td></tr>
+<tr><td>EDM2-XXL</td><td>8.65</td><td><strong>4.99</strong></td><td>0.56 → 0.68</td></tr>
+<tr><td>DiT-XL/2</td><td>9.31</td><td><strong>5.33</strong></td><td>0.54 → 0.65</td></tr>
+<tr><td>SDXL</td><td>25.23</td><td><strong>24.60</strong></td><td>0.49 → 0.52</td></tr>
+</tbody></table></div>
+<p><strong>实现细节（可直接抄）</strong>：频率变换用 <strong>Laplacian 金字塔</strong>（消融中略优于 DWT：FID 5.12 vs 5.26）；把模型输出先转成 x̂₀，再做引导，再转回。论文说「is not sensitive to this design choice as long as the operation provides an informative low- and high-frequency component」。</p>
+</div></div>
+
+<div class="scroll"><table>
+<thead><tr><th>工作</th><th>机制</th><th>数字 / 证据</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td><strong>FGD</strong><br><span class="cite">ICCV 2025, pp.19195–19205</span></td><td>文本驱动翻译。低频引导（风格）：把采样潜码的低频分量<strong>替换</strong>为源图反演的低频并归一化；高频引导（结构）：高频对齐（调预测噪声）+ 高频注入</td><td>具体数值未提取。<strong>精神上与 RePaint 的局部校正同源，但在频域</strong>——最贴近「采样期低频锚定」这个想法</td><td><span class="b medium">B</span></td></tr>
+<tr><td><strong>HiWave</strong><br><span class="cite">arXiv 2506.20452, 2025</span></td><td>免训练零样本超分。采样期小波细节增强器：<strong>保留基图低频以保结构一致</strong>，引导高频丰富纹理</td><td>用户研究 &gt;80% 偏好</td><td><span class="b medium">B</span></td></tr>
+<tr><td><strong>DCW</strong><br><span class="cite">arXiv 2604.16044</span></td><td>免训练 plug-in。每步在<strong>各小波子带内</strong>计算残差并按动态系数校正，修复 SNR-t 偏差</td><td>CIFAR-10：IDDPM FID 13.19→7.57；EDM 5.91→<strong>3.37</strong>；DiT-ImageNet256 12.83→7.99。开销 ≈ 每步一次 DWT/iDWT。⚠ 已知风险：高频过校正会过锐化/引入频率伪影</td><td><span class="b medium">B</span></td></tr>
+<tr><td><strong>Fourier Phase Diffusion</strong><br><span class="cite">IJCAI 2025 (Oral), pp.2386–2394, DOI 10.24963/ijcai.2025/266</span></td><td>免训练风格迁移。<strong>内容图的傅里叶相位谱</strong>在选定 timestep 调制中间采样样本；<code>--phase_fusion_steps 2 5 8</code>、<code>--fusion_alpha 0.5</code>。基于 SDXL + FreeStyle</td><td>定性 + 对比 SOTA，<strong>无干净消融</strong></td><td><span class="b medium">B</span></td></tr>
+</tbody></table></div>
+<h2 id="s3"><span class="num">3</span>结构保持的证据清算</h2>
+<p>这一节回答一个具体问题：<strong>频域方法到底有没有被证明改善「结构」？</strong>答案分三层——有真证据的很少，负结果很多，而且大部分「结构」证据其实测的是纹理。</p>
+
+<h3 id="s31">3.1 正结果：只有两条链是硬的</h3>
+<div class="scroll"><table>
+<thead><tr><th>主张</th><th>关键数字</th><th>出处</th><th>位置</th><th>要重训</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td>低频引导管<strong>全局结构</strong>与条件对齐</td><td>EDM2-XXL FID 8.65→<strong>4.99</strong></td><td>FDG, arXiv 2506.19713</td><td>⑥ 采样期</td><td><span class="b high">否</span></td><td><span class="b high">A</span></td></tr>
+<tr><td>高频引导管<strong>边缘/SSIM</strong></td><td>去高频引导 SSIM <strong>0.908→0.748</strong></td><td>FGDM, TMI 2023</td><td>④ 条件</td><td><span class="b bad">是</span></td><td><span class="b high">A</span></td></tr>
+<tr><td>抑制 skip 低频可治<strong>过平滑</strong></td><td>人评 85.88% vs 14.12%</td><td>FreeU, CVPR 2024</td><td>③ U-Net</td><td><span class="b high">否</span></td><td><span class="b high">A</span></td></tr>
+<tr><td>latent 里的频域卷积显著影响结构</td><td>SSIM <strong>0.959→0.796</strong></td><td>FCDM, arXiv 2409.06714</td><td>②③</td><td><span class="b bad">是</span></td><td><span class="b high">A</span>（其自身任务）</td></tr>
+<tr><td>谱损失可阻止高频能量系统性衰减</td><td>不加谱损失时 PSD 衰减到 GT 的 <strong>1/100</strong></td><td>SC-Flow, arXiv 2607.10627</td><td>⑤ 损失</td><td><span class="b bad">是</span></td><td><span class="b low">C（数值未提取）</span></td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">★ 注意两条硬链的「结构」不是一回事</div><p>FDG 的「结构」= 全局布局（低频）；FGDM 的「结构」= 边缘/边界（高频，SSIM 奖励）。<strong>两条都对，只是指的东西不同。</strong>这在 §1.2 已经解释过，这里再强调一次，因为它是你设计实验时必须先选定的一件事：<em>你要保的是「布局」还是「边缘」？</em></p></div>
+
+<h3 id="s32">3.2 ★ 负结果：这一节最值钱</h3>
+<p>我特意把失败案例集中在这里。它们比正结果更能帮你省时间。</p>
+<div class="scroll"><table>
+<thead><tr><th>失败</th><th>原文 / 数字</th><th>含义</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td><strong>WaveDiff 的渐进多尺度上采样</strong></td><td>附录 D 逐字：<em>「We actually tried this direction first, but it produced quite poor results. On CelebA-HQ 256, the FID score of the 2-level upsampling network is <strong>13.11</strong>, much higher than ours (<strong>5.94</strong>). We suspect a discrepancy in conditional distribution between low and high-frequency p(x_hi|x_lo), causing mismatching between generated subbands.」</em></td><td><strong>「先低后高、逐级生成」这条最直觉的小波路线，直接失败了。</strong>不要重新发明它</td><td><span class="b high">A（逐字核实）</span></td></tr>
+<tr><td><strong>WDM：在小波域预测噪声</strong></td><td>逐字：<em>「We also experimented with predicting the noise to be removed from corrupted wavelet coefficients, which led to the generation of images showing <strong>checkerboard artifacts</strong>.」</em>⇒ 改成预测 x̃₀</td><td>小波域里<strong>不能预测噪声</strong>（棋盘伪影）。这是硬技术约束</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>WDM：小波 U-Net（特征空间小波上下采样）</strong></td><td>BraTS 128³ FID <strong>0.259 vs 0.154</strong>（变差）；LIDC 5.019 vs 4.989。原文措辞是「does not increase the model's performance」</td><td>在<strong>医学 3D</strong> 上，把 U-Net 换小波<strong>没有收益</strong>，与 2D 自然图像的结论相反</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>HDW-SR 的谱损失权重</strong></td><td>β=0.2 → PSNR <strong>24.52</strong>（最优）；β=0.1 → 18.39；<strong>β≥0.5 → 10.30（崩塌）</strong></td><td><strong>频域损失的权重是脆的</strong>，最优区间很窄（≈0.2–0.3）</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>FFTformer：频域注意力放错位置</strong></td><td>FSAS 放 encoder+decoder = 33.56 dB；<strong>只放 decoder = 33.73 dB</strong>（更好）</td><td>「更早注入频域」不一定更好；<em>位置本身</em>就是变量</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>FSNet：模块增益很小</strong></td><td>基线 31.20；+MDSF +0.22；+MCSF +0.25；全模型 <strong>+0.55 dB</strong>；MSL 只 +0.07；更多 MCSF <strong>饱和</strong></td><td>频域模块的收益常在 <strong>&lt;0.6 dB</strong> 量级，且会饱和</td><td><span class="b high">A</span></td></tr>
+<tr><td><strong>WaveDiff：同时处理低+高子带</strong></td><td>STL-10 FID 12.96 vs 12.93（≈无变化）</td><td>「全都要」往往等于「都没做」</td><td><span class="b high">A</span></td></tr>
+</tbody></table></div>
+
+<div class="box stop"><div class="bt">★ 一条我必须诚实说明的边界</div><p>我<strong>没有找到</strong>一个受控研究能干净地证明「频域损失会普遍性地让扩散训练失稳」，也<strong>没有找到</strong>「频域增益在强 baseline 下会完全消失」的跨任务证据。上面 HDW-SR 的 β 崩塌和 WDM/WaveDiff 的失败<strong>都是任务特定的</strong>——<strong>不要过度推广它们</strong>。它们的价值是：告诉你<em>风险窗口很窄</em>，而不是<em>这条路必然不通</em>。</p></div>
+
+<h3 id="s33">3.3 关键分辨：频域改善的是「结构」还是「纹理」？</h3>
+<p>这是本报告最实用的一张表。同一个指标在不同论文里被用来声称「结构变好了」，但它们对结构和纹理的敏感性差别极大：</p>
+<div class="scroll"><table>
+<thead><tr><th>指标</th><th>度量对象</th><th>对结构 vs 纹理的敏感性</th></tr></thead>
+<tbody>
+<tr><td><strong>边缘/梯度图</strong>（Sobel、Laplacian、Canny）</td><td>边缘位置与强度</td><td><span class="b high">真·结构敏感</span></td></tr>
+<tr><td><strong>PSD / RAPSD 距离</strong></td><td>功率谱形状</td><td><span class="b high">真·结构/统计敏感</span></td></tr>
+<tr><td><strong>相位相干</strong></td><td>相位（承载边缘位置）</td><td><span class="b high">真·结构敏感</span></td></tr>
+<tr><td><strong>HF-PSNR / 频带 PSNR</strong></td><td>高频带能量误差</td><td><span class="b high">结构/细节敏感</span></td></tr>
+<tr><td><strong>下游分割 DICE / ASSD / HD95</strong></td><td>解剖/细胞结构的位置与形状</td><td><span class="b high">最硬</span>（但需要分割器）</td></tr>
+<tr><td><strong>SSIM</strong></td><td>局部亮度/对比/结构</td><td><span class="b medium">偏结构（局部）</span>——<strong>奖励边缘</strong>，但混入亮度/对比度，且<strong>对全局布局位移不敏感</strong></td></tr>
+<tr><td><strong>PSNR</strong></td><td>逐像素 MSE</td><td><span class="b bad">低频/大尺度误差主导</span>，不是结构专用</td></tr>
+<tr><td><strong>LPIPS</strong></td><td>深度感知特征</td><td><span class="b medium">偏纹理/语义</span>；小结构位移可能不敏感</td></tr>
+<tr><td><strong>FID / KID</strong></td><td>分布统计、多样性</td><td><span class="b bad">偏纹理/统计</span>；<strong>结构变差时反而可能改善</strong></td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">★ 两条有实证的警告</div>
+<p><strong>① FID 与结构指标可以反向。</strong>Cold Diffusion（Bansal et al., NeurIPS 2023, arXiv 2208.09392）明确展示了 <em>PSNR/SSIM 变差但 FID 改善</em>（图更锐、更「真实」）。所以「FID 降了」不能作为结构变好的证据。</p>
+<p><strong>② 病理场景下 SSIM 更不可靠。</strong>CVPR 2026 的虚拟 IHC 工作明确指出 <em>SSIM 对 VIS（虚拟染色）不可靠</em>——因为配对的 H&amp;E–IHC 本就错位。H&amp;E→IHC 的「结构」最好用<strong>下游任务</strong>（细胞核/膜分割 DICE、生物标志物分类）来量，而不是 SSIM。</p>
+<p><strong>③ 最硬的结构数字来自一个非频域方法。</strong><em>ContourDiff</em>（MELBA 2025, arXiv 2403.10786）用 Canny 轮廓引导、非配对/零样本做 CT→MRI，拿到 Dice 0.705 / 0.655 / 0.769，较最优基线 <strong>+7.5%~+23.4%</strong>，ASSD 1.677/1.570/2.625，Edge-HD95 3.396/3.578。<strong>它完全不用频率</strong>——这是对「频域是否必要」最强的反证，也是你设计实验时该盯的指标口径。</p></div>
+<h2 id="s4"><span class="num">4</span>你引的那篇（AIRPNet / LFP）的准确解读</h2>
+<p>你转述的文章说「TPAMI 2026，LFP 低频保留模块，高频负责清晰，低频决定真实，一个小模块改变图像恢复效果」。我核到了论文，但有三处需要纠正。<strong>先说结论：这是一篇好论文，但它不是频域模块，也不是扩散模型，把它当作「低频在扩散里管结构」的证据是不成立的。</strong></p>
+
+<h3>4.1 论文确实存在，但任务和你可能想的不一样</h3>
+<div class="scroll"><table>
+<thead><tr><th>项</th><th>核实结果</th></tr></thead>
+<tbody>
+<tr><td><strong>标题</strong></td><td><em>AIRPNet: Adaptive Image Restoration With Privacy Protection in Steganographic Domain</em></td></tr>
+<tr><td><strong>作者 / 单位</strong></td><td>Fangyuan Gao, Chao Gao, Xin Deng, Chenxiao Zhang, Junjie Huang, Mai Xu —— 北京航空航天大学（徐迈、邓欣组）</td></tr>
+<tr><td><strong>出处</strong></td><td>IEEE TPAMI 2026，DOI <code>10.1109/TPAMI.2026.3669584</code>，IEEE Xplore doc <strong>11419884</strong>，computer.org CSDL <code>tp/2026/07</code></td></tr>
+<tr><td><strong>代码</strong></td><td><code>github.com/gclonghorn/AIRPNet</code></td></tr>
+<tr><td><strong>任务</strong></td><td>把一张<strong>低质秘密图像藏在 stego 载体图里</strong>，然后在<strong>隐写域</strong>做复原——秘密图从不显式暴露（隐私保护）。两个模块：<strong>AIH</strong>（可逆隐藏，小波提升）+ <strong>ASR</strong>（隐写域复原）</td></tr>
+<tr><td><strong>是不是扩散</strong></td><td><span class="b bad">不是</span> 前馈复原网络（可逆网络架构）</td></tr>
+</tbody></table></div>
+
+<h3>4.2 ★ 三处必须纠正的地方</h3>
+<div class="box stop"><div class="bt">① LFP 不是频域模块——它里面没有 DWT/FFT</div><p>这一点从<strong>你自己贴的代码</strong>就能看出来：<code>SELayer</code> 是 <code>AdaptiveAvgPool2d(1) → Linear(c, c//16) → ReLU → Linear(c//16, c) → Sigmoid</code>，也就是<strong>全局平均池化 + SE 通道注意力</strong>；<code>AttentionBlock</code> 是 3 层密集卷积（渐进拼接）+ SELayer；<code>LFP</code> 把 <code>attn_block</code> 产生的引导图<strong>反复拼进主干</strong>，配 PReLU 与残差，<code>conv5</code> 用 1×1 回到原通道数（且 <code>conv3</code> 零初始化 ⇒ 初始为恒等）。<br><strong>整个 LFP 内部没有任何频率变换。</strong>「低频」是通过<em>全局平均池化（一个低通）+ 密集卷积 + 残差引导</em>操作性实现的。<br>小波提升确实在，但它在<strong>外部</strong>——按论文描述，<strong>AIH 与 ASR 两个模块都用了小波提升</strong>（原文用「同样」连接），ASR 把图像逐级分解后，<strong>TAR 块处理高频子带、LP 块处理低频子带</strong>。所以「分解是小波的，LP 只是作用在低频子带上的一个注意力块」。</p></div>
+
+<div class="box stop"><div class="bt">② 「高频负责清晰，低频决定真实」是文章的措辞，不是论文原话</div><p>我在论文可及的表述里找不到这句口号。论文最接近的说法是（创新点第三条）：<em>「通过任务自适应修复（TAR）块及低频保护（LP）块同步复原高低频子带信息，<strong>在精准修复高频细节的同时有效恢复全局结构</strong>，大幅提升修复保真度。」</em><br>⇒ <strong>请把「低频决定真实」当作自媒体编辑框架，不要作为论文主张引用。</strong></p></div>
+
+<div class="box warn"><div class="bt">③ 那个 0.86 dB 是四个任务里最小的一个，而且我无法从原文核实</div><p>你贴的「去掉 LP 后混合退化 PSNR 30.21 → 29.35 dB（−0.86 dB）」与二手来源给出的 LP 移除消融表一致，但那张表在我能访问到的公开材料里<strong>没有以文字形式出现</strong>（论文结果只以图片呈现），所以：<br><strong>去噪 −1.0 dB · 去模糊 −2.33 dB · 超分 −0.35 dB · 混合退化 −0.86 dB</strong> —— <span class="b low">C 级，二手来源，未能从原文核实</span>。<br>注意含义：<strong>去模糊那一项掉了 2.33 dB</strong>，比 0.86 大得多。用 0.86 作为「这个小模块很有效」的论据是<strong>挑了对它最不利（也最保守）的数字</strong>；反过来说，单任务、单数据集量级的消融本身证据强度就有限。</p></div>
+
+<h3>4.3 它是「动态感受野 / 动态卷积」吗？—— 不是</h3>
+<p>判据很简单：<strong>动态卷积（CondConv、DynamicConv）与动态感受野方法（Deformable Conv、CARAFE）会<em>生成</em>空间变化的滤波器核或偏移量</strong>。而 LFP 生成的是<strong>一张引导图</strong>，然后把它<em>拼接</em>进特征流；卷积权重是静态的；SE 是全局通道门控。所以它的数学身份最接近 <strong>「带残差注入的空间/通道门控」</strong>，不是动态卷积。<br>⇒ 这一点很重要：<strong>它不改变「用什么去计算」，只给已有特征加了一个重要性判断。</strong>你如果按「动态感受野」去理解它，会期待错误的效果。</p>
+
+<h3>4.4 迁移到扩散模型：诚实的评估</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">能带走的（弱）</div><p>「零初始化 + 残差注入的全局引导图」这个<strong>通用工程模式</strong>是便宜且即插即用的，理论上可以塞进扩散 U-Net 的某个 block 作为额外条件通路。</p></div>
+<div class="mini"><div class="mt">带不走的（强）</div><p><strong>① 前馈 ≠ 扩散</strong>：AIRPNet 作用于干净的确定性特征；扩散 backbone 的特征是<em>随 t 变化、被噪声污染</em>的，在<strong>高 t 上对噪声特征图做全局平均池化在语义上是无意义的</strong>。<br><strong>② 你的低频问题已经被条件解决了</strong>：H&amp;E→IHC 里，输入的 H&amp;E 本身就是低频结构先验。AIRPNet 要恢复的「隐藏图的全局结构」不是你的问题；你的挑战在<strong>染色特异的高频</strong>，是频谱的另一端。<br><strong>③ 与已知结论冲突</strong>：FreeU 表明 <em>backbone 管去噪（低频/全局）、skip 注入高频</em>。再加一个「低频保护」块<strong>与 backbone 的角色冗余，可能加重过平滑</strong>——而 FreeU 修的正是过平滑。<br><strong>④ 没有真正的频带控制</strong>：没有 DWT/FFT，就无法声称「频带选择性的结构保持」。</p></div>
+</div>
+<div class="box warn"><div class="bt">结论</div><p><strong>LP 块本身是个还不错的通用注意力块，但它不是频域机制，它的证据也不能干净地迁移到扩散。</strong>如果你要引用它，请引用为「隐写域复原网络中的一个注意力/门控模块」——<strong>不要</strong>引用为「低频在扩散中决定真实性的证据」。</p></div>
+
+<h2 id="s5"><span class="num">5</span>对本项目（H&amp;E→IHC 潜扩散）的可迁移性判定</h2>
+<p>按 §1.4 的六个位置逐个判定。表格里的「改动成本」与「可复现性」是你最关心的两列。</p>
+
+<div class="scroll"><table>
+<thead><tr><th class="c">#</th><th>位置</th><th>判定</th><th>改动成本</th><th>可复现性</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td class="c">①</td><td>生成域换小波/DCT</td><td><span class="b bad">否决</span></td><td>极高（换 backbone）</td><td>低</td><td>收益是效率不是结构；WaveDiff 渐进上采样失败、WDM 小波 U-Net 变差、DCTdiff 不报结构指标。而且你<strong>必须保留 SD2.1 VAE 权重</strong>（E0.4 已确认 VAE 全冻、改输出=换解码器），换生成域等于推翻整个阶段 1</td></tr>
+<tr><td class="c">②</td><td>改噪声调度（EqualSNR 等）</td><td><span class="b bad">否决</span></td><td>极高（改前向=重训）</td><td>低</td><td>理论上最有意思（Falck 证明层级非必需），但对<strong>已预训练的 SD2.1 不可行</strong>，且它解决的是「无条件生成的高频质量」，不是「翻译任务的结构」</td></tr>
+<tr><td class="c">③</td><td>U-Net 内部特征（FreeU 式）</td><td><span class="b medium">可试，但要先想清楚方向</span></td><td>极低（免训练）</td><td>高</td><td>FreeU 是唯一「免训练+零参数+有频域机制」的。但<strong>它治的是过平滑，它<em>抑制</em> skip 的低频</strong>。你的问题是 HER2 膜细节（高频）不足还是过平滑？<strong>先看图判断</strong>，方向反了会更糟</td></tr>
+<tr><td class="c">④</td><td>频域条件注入</td><td><span class="b medium">中期选项（阶段 2 之后）</span></td><td>中（改 condition）</td><td>中</td><td>唯一能同时保结构+蛋白表达的位置，也是你已有报告的主战场。但<strong>FGDM 的「复用源低频」逻辑对 H&amp;E→IHC 不成立</strong>（FGDM 自己写明了），必须反向设计：用 H&amp;E 的高频做结构先验，让模型生成 DAB 自己的低频</td></tr>
+<tr><td class="c">⑤</td><td>频域损失</td><td><span class="b medium">有条件上</span></td><td>低（加一项 loss）</td><td>中</td><td>只在有明确证据「生成图高频能量系统性丢失」时才上。且 β 必须扫描——HDW-SR 的 β≥0.5 直接崩塌（24.52 → 10.30）。<strong>同时开频域条件 + 频域损失会让实验无法归因</strong></td></tr>
+<tr><td class="c">⑥</td><td>采样期修正</td><td><span class="b high">★ 唯一立即可做</span></td><td>极低（&lt;50 行）</td><td>高</td><td>免训练、可解释、改动最小。FDG 已证明这条路上有真收益（FID 8.65→4.99）。<strong>但必须按 §5.2 做项目特化，不能直接用 RGB 低频</strong></td></tr>
+</tbody></table></div>
+
+<h3>5.2 ★ 一个项目特化的关键修正：不要锚定 RGB 的低频</h3>
+<div class="box stop"><div class="bt">直白地说：把 H&amp;E 的 RGB 低频注入到生成的 IHC 上，会注入伊红，而不是结构</div>
+<p>这是本项目最容易踩的坑，而且它来自你自己已经确立的物理事实。回顾一下：</p>
+<ul>
+<li><strong>H&amp;E 的低频</strong> = <em>伊红充盈的胞质与间质（暗、高光密度）+ 组织密度 + 背景</em>；</li>
+<li><strong>IHC 的低频</strong> = <em>近乎透明的背景（亮）+ 棕色膜性信号</em>；</li>
+<li>两者的<strong>低频强度分布差异巨大</strong>（H&amp;E 组织暗、IHC 背景亮）。</li>
+</ul>
+<p>所以「复用源图低频」在强度上会把伊红的暗灌进 IHC 的透明背景里。<strong>这正是 FGDM 在 Limitations 里说它会失败的那一类任务。</strong></p>
+<p><strong>但项目里有一条现成的出路</strong>：H&amp;E 与 IHC <strong>共享苏木素通道</strong>（标准 IHC 协议都要做苏木素复染）。所以：</p>
+<div class="formula">要锚定的不是 RGB 的低频，而是 <strong>C_H（苏木素浓度）的低频</strong></div>
+<p>苏木素承载细胞核位置与组织构筑，是<strong>两个域真正的共享成分</strong>；而伊红 ↔ DAB 的置换才是必须生成的部分。所以低频锚定应当发生在<strong>染色浓度空间（OD / C_H）</strong>，而不是 RGB 空间。<strong>这一条同时也是对你已有主线（浓度空间扩散 + Beer–Lambert 可微前向）的直接复用</strong>，不需要新增任何机制。</p></div>
+
+<div class="box key"><div class="bt">两条可证伪的预测（做完 §6 的实验就能判）</div>
+<p><strong>P1</strong>：如果在 <strong>C_H 空间</strong>做低频锚定，下游核分割 DICE 会上升；如果在 <strong>RGB 空间</strong>做同样的操作，DICE 不会上升甚至下降（因为注入的是伊红）。<br><strong>P2</strong>：无论哪种锚定，<strong>PSD/高频指标都会改善</strong>（因为操作本身改变了频谱），所以<em>只看 PSD 无法区分这两者</em>——必须看 DICE。<br>⇒ 这两个预测合起来，正好把「频域有没有用」和「该在哪个空间用」分开检验。</p></div>
+<h2 id="s6"><span class="num">6</span>最小验证实验与止损</h2>
+<p>这个实验的设计目标很明确：<strong>用最少的代价回答「频域能不能改善<em>结构</em>（而不是纹理）」</strong>，并且<strong>阴性结果也有价值</strong>——它能替你挡掉后续所有「要不要上小波」的反复摇摆。</p>
+
+<h3>6.1 实验设计</h3>
+<div class="card"><div class="ch"><div><div class="title">E1：采样期低频锚定（零训练）</div><div class="v">不改网络、不重训、不动 VAE；只在采样循环里加一段</div></div><div><span class="b high">免训练</span> <span class="b blue">&lt;50 行</span> <span class="b high">可复现</span></div></div>
+<div class="body">
+<p><strong>做法</strong>：在反向采样的每一步，取模型预测的 x̂₀，做一级 DWT（或高斯低通），把它的 <strong>LL 子带</strong>替换为输入 H&amp;E 的对应分量，再 IDWT 回去，继续采样。</p>
+<pre><code># 伪代码：只加这一个函数 + 采样循环里一行调用
+def lf_anchor(x0_hat, src_lf, t, t_start=0.6, alpha=1.0):
+    """把 x0_hat 的低频替换为源图低频。
+    t_start: 只在 t/T &lt; t_start 的阶段锚定（早期噪声大，锚定无意义）
+    alpha:   0 不锚定，1 完全替换
+    """
+    LL_p, LH, HL, HH = dwt2(x0_hat)      # Haar 一级
+    LL_n = (1 - alpha) * LL_p + alpha * src_lf
+    return idwt2(LL_n, LH, HL, HH)
+
+# 采样循环里：
+for t in timesteps:
+    x0_hat = predict_x0(eps_hat, x_t, t)
+    if t / T &lt; t_start:
+        x0_hat = lf_anchor(x0_hat, SRC_LF, t)   # ★ 唯一新增的一行
+    x_t = ddim_step(x0_hat, x_t, t)</code></pre>
+<p><strong>★ 关键：<code>SRC_LF</code> 取什么？</strong>按 §5.2，做<strong>两个 arm</strong>：</p>
+<ul>
+<li><strong>Arm-RGB</strong>：<code>SRC_LF = dwt2(H&amp;E_rgb)</code> 的 LL —— 预期<strong>失败</strong>（注入伊红）。</li>
+<li><strong>Arm-C_H</strong>：先把 H&amp;E 与预测的 IHC 都解卷积到 OD/浓度空间，<code>SRC_LF = dwt2(C_H_HE)</code> 的 LL，锚定后再渲染回 RGB —— 预期<strong>成功</strong>（注入共享的苏木素构筑）。</li>
+</ul>
+<p><strong>对照</strong>：原模型（alpha=0）。<strong>共 3 个 arm，零训练。</strong></p>
+</div></div>
+
+<h3>6.2 判据（这是全报告最重要的一段）</h3>
+<div class="scroll"><table>
+<thead><tr><th>指标</th><th>类型</th><th>判据</th></tr></thead>
+<tbody>
+<tr><td><strong>下游核/膜分割 DICE</strong></td><td><span class="b high">真·结构</span></td><td><strong>主判据。</strong>用现成分割器（核：HoVer-Net / CellViT；膜：任一 HER2 膜分割模型）对生成图跑，比较 DICE</td></tr>
+<tr><td><strong>边缘/梯度图相关性</strong></td><td><span class="b high">真·结构</span></td><td>Sobel/Laplacian 与真值 IHC 的相关（注意：只在配准可信的瓦片上算）</td></tr>
+<tr><td><strong>PSD / RAPSD 距离</strong></td><td><span class="b high">真·结构/统计</span></td><td>径向平均功率谱与真值的 L1/L2 距离</td></tr>
+<tr><td><strong>SSIM</strong></td><td><span class="b medium">偏结构</span></td><td>辅助，<strong>不作为主判据</strong>（混入亮度/对比度，且对布局位移不敏感）</td></tr>
+<tr><td><strong>FID / KID</strong></td><td><span class="b bad">偏纹理</span></td><td>记录，<strong>不作为结构判据</strong>（可与结构指标反向）</td></tr>
+<tr><td><strong>DAB-IOD / H-score 代理量</strong></td><td>表达保真</td><td><strong>必须同时记录</strong>：锚定低频有可能改变 DAB 的总量，若 H-score 明显漂移则说明锚定污染了表达信号</td></tr>
+</tbody></table></div>
+
+<h3>6.3 决策树与止损</h3>
+<pre><code>跑 3 个 arm（原模型 / Arm-RGB / Arm-C_H），零训练
+│
+├─ Arm-C_H 的 DICE 显著上升（比如 +2 个点以上）
+│   ├─ 且 H-score 代理量漂移 &lt; 5%
+│   │   └─ ▼ 值得把低频锚定「写进训练」——作为条件（位置④）或损失（位置⑤）
+│   └─ 但 H-score 明显漂移
+│       └─ ▼ 锚定污染了表达信号 ⇒ 只在早期 timestep 锚定，或改用更窄的频带
+│
+├─ 只有 PSD/高频指标上升，DICE 不动
+│   └─ ▼ ★ 停：频域对你的「结构」目标无收益，改善的只是纹理
+│        把这条结论写进记录，以后不再讨论「上小波」
+│
+└─ Arm-RGB 也上升，且与 Arm-C_H 差不多
+    └─ ▼ 说明「共享苏木素」这条推理不成立 ⇒ 回到 E0.3 的染色空间结论重新检查</code></pre>
+
+<div class="box stop"><div class="bt">止损线（写死，不给自己留余地）</div>
+<ol>
+<li><strong>若 DICE 不显著上升，就不进训练阶段。</strong>不要把「采样期没用」解读为「训练一下就好了」——这正是最容易被自己说服的地方。</li>
+<li><strong>任何频域损失一旦要上，β 必须扫描（至少 0.05/0.1/0.2/0.3/0.5）。</strong>HDW-SR 的 β≥0.5 崩塌（24.52 → 10.30）是现成的警告。</li>
+<li><strong>不追求「频域 + 条件 + 损失」同时开。</strong>三项同开会让你无法归因，且你已有报告里已经写明这一点。</li>
+<li><strong>不为了「频域」这个标签而改生成域。</strong>如果最后的结论是「频域没用」，那也是一个可发表的阴性结论——它比一个说不清归因的正结果更有价值。</li>
+</ol></div>
+
+<h2 id="s7"><span class="num">7</span>证据边界：哪些我核实了、哪些没有</h2>
+<p>这份报告的结论会进入你的论文 related work，所以把边界写清楚比多写结论更重要。</p>
+
+<div class="grid2">
+<div class="mini"><div class="mt">已从一手来源核实</div><p>
+FreeU 机制与全部引文、人评 85.88%/14.12%（arXiv HTML 逐字）<br>
+FDG 的完整数字表与「low-frequency guidance governs global structure」逐字（arXiv HTML）<br>
+FGDM 的消融 0.908/0.890/0.748（arXiv 2304.02742）<br>
+Falck EqualSNR 的 99–100% vs 10–16%（arXiv 2505.11278）<br>
+Wang &amp; Pehlevan NeurIPS 2025 + U-Net 逐字引文（arXiv 2503.03206）<br>
+WaveDiff FID 13.11 vs 5.94（附录 D 逐字）<br>
+WDM 棋盘伪影与 WavU-Net 无收益<br>
+AIRPNet 的标题/作者/DOI/任务（IEEE Xplore + BUAA 页面）<br>
+FeatStainDiff 的期刊/DOI/「does not generate IHC images」/需配对特征（GitHub + ScienceDirect）<br>
+ContourDiff 的 DICE/ASSD/Edge-HD95
+</p></div>
+<div class="mini"><div class="mt">未能核实 / 请勿直接引用</div><p>
+<strong>AIRPNet 的 LP 块消融数字</strong>（−1.0/−2.33/−0.35/−0.86 dB）——仅二手来源，论文结果以图片呈现<br>
+<strong>AIRPNet 的「低频决定真实」</strong>——自媒体措辞，非论文原话<br>
+<strong>FeatStainDiff 的 FMoE 代码细节</strong>（论文已核实为 DCT+MHSA+IDCT；核心 <code>model.py</code> 暂 withheld，因此 DCT 轴、层数、精确实现仍未核实）<br>
+<strong>SC-Flow / Med-D3CG / One-to-Many LDM 的具体数值</strong>——未能提取<br>
+<strong>DCW 的 venue（CVPR 2026）</strong>——来自二手页面，arXiv 页面未标注<br>
+<strong>CNS / PreSS 的 venue</strong>——仅预印本，未见同行评审确认<br>
+<strong>HWD 的具体 mIoU 增益</strong>——公开源只复现方法，未给结果表
+</p></div>
+</div>
+
+<div class="box warn"><div class="bt">三条方法论提醒（也是我自己的踩坑记录）</div>
+<p><strong>① 不要把「摘要级数字」当正文数字引用。</strong>本报告里凡标 <span class="b low">C</span> 的条目都只到摘要或二手来源。<br>
+<strong>② 引用「低频管结构」时，必须同时说清是哪种结构、用什么指标量的。</strong>FDG 与 FGDM 的「结构」指两种东西（§1.2）。<br>
+<strong>③ 「频域」这个词被用在六个完全不同的位置。</strong>看到任何「频域 + 扩散」的工作，先定位它落在 §1.4 的哪一格，再判断它的收益能不能迁移。</p></div>
+
+<div class="box good"><div class="bt">一句话收尾</div><p><strong>频域值得做的不是「把扩散搬进频域」，而是「在扩散的某个环节显式控制频带」。</strong>对你这个项目，唯一立即可做、可解释、可复现的动作是<strong>在苏木素浓度空间做采样期低频锚定</strong>，判据是下游结构分割 DICE 而不是 PSNR/FID。若 DICE 不动，就干净地放弃这条路——这本身就是一个值得写进论文的阴性结论。</p></div>
+
+<div class="foot">
+<p><strong>报告信息</strong>：2026-10-06 生成 · 覆盖 30+ 篇文献 · 六个注入位置分类 · 面向 H&amp;E→IHC 潜扩散（StainFuser 改造 + 浓度空间）。</p>
+<p><strong>与前序报告的关系</strong>：本报告与《PSPStain_频域条件注入_文献综述报告》（01_调研报告）互补——那一份按「频域作为条件注入」的工程细节展开，本报告按<strong>「结构保持」</strong>这一条主轴重组，并补上了<strong>底层原理讲解</strong>与<strong>负结果清单</strong>。两份合并看，覆盖位置③④⑤⑥；位置①②在本报告中判定为否决。</p>
+<p><strong>诚实声明</strong>：本报告所有数字均标注了证据等级。<span class="b high">A</span> = 一手论文正文/表格已核实；<span class="b medium">B</span> = 摘要或部分数字已核实 / venue 来自二手；<span class="b low">C</span> = 仅二手来源或未能核实。<strong>标 C 的条目请勿直接引用。</strong>凡我推断而非文献结论之处，已显式写成「推断」。</p>
+<p><strong>本项目相关的两个待确认问题</strong>：① 当前的 HER2 生成图，主要缺陷是<em>膜细节（高频）不足</em>还是<em>过平滑</em>？这决定 FreeU 式改动（位置③）的方向对不对。② 核/膜分割器用哪个——这决定 §6 的主判据能不能立刻算。</p>
+</div>
+</main></div></body></html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>机器学习 · 线性模型与支持向量机</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"机器学习 · 线性模型与支持向量机","date":"2026-10-24","tags":["课程笔记","机器学习"],"category":"课程笔记","summary":"复原线性模型与支持向量机两条主线：最小二乘正规方程的闭式解及其秩亏时的正则化处理；逻辑回归以 sigmoid 拟合对数几率、负对数似然为凸且可用梯度下降求解；LDA 以类内散度逆乘类均值差实现类内紧凑、类间可分。SVM 中几何间隔与两类间隔反比于权重范数，对偶化后解仅依赖支持向量；惩罚系数趋于无穷退化为硬间隔、趋于零只剩大间隔；核函数须对称且核矩阵半正定。四则 SVM 与三则回归算例均逐步复核，附勘误。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>机器学习 · 线性模型与支持向量机</h1>
+<div class="meta">课程笔记 · 机器学习 · 整理自豆包对话 豆包对话导出 · 机器学习第三章线性模型与第六章支持向量机原料（知识点整理、试卷与讲解、实验记录）</div>
+<h1>机器学习 · 线性模型与支持向量机 · 学习笔记</h1>
+<h2>一、概述</h2>
+<p>本文按「线性模型—对率回归—判别分析—支持向量机」的顺序整理课程原料。全部模型共享同一条骨架：先写出线性组合 $w^{\mathrm{T}}x+b$，再决定让它逼近什么——逼近实值标记即回归，逼近对数几率即分类，逼近间隔的倒数即支持向量机。原料中的试卷、知识点整理与实验记录互有出入之处，本文以「按公式复核」的方式统一处理，集中列在末节勘误表。</p>
+<table>
+<tr><th>模型</th><th>线性部分的用途</th><th>求解方式（原料写法）</th></tr>
+<tr><td>一元线性回归</td><td>直接逼近标记 $y$</td><td>均方误差最小化，闭式解</td></tr>
+<tr><td>多元线性回归</td><td>逼近向量形式的标记</td><td>正规方程，需 $X^{\mathrm{T}}X$ 满秩</td></tr>
+<tr><td>对数线性回归</td><td>逼近 $\ln y$</td><td>广义线性模型，联系函数为对数</td></tr>
+<tr><td>对数几率回归</td><td>逼近对数几率</td><td>极大似然，梯度下降或牛顿法</td></tr>
+<tr><td>线性判别分析</td><td>找最优投影方向</td><td>散度比最大化，闭式解</td></tr>
+<tr><td>支持向量机</td><td>决定法向量 $w$</td><td>凸二次规划，对偶化后核化</td></tr>
+</table>
+<h2>二、线性模型</h2>
+<h3>2.1 一元线性回归与最小二乘</h3>
+<p>线性模型的向量形式为 $f(x)=w^{\mathrm{T}}x+b$，其中 $w$ 为权重向量、$b$ 为偏置。一元情形 $f(x)=wx+b$ 的参数由最小二乘法估计，目标是最小化预测值与真实值之差的平方和：</p>
+<p>$$ E_{(w,b)}=\sum_{i=1}^{m}\bigl(wx_i+b-y_i\bigr)^{2}. $$</p>
+<p>推导思路即「对 $w$、$b$ 分别求导置零」。原料给出完整链条：先由 $\partial E/\partial b=0$ 得 $b=\overline{y}-w\overline{x}$；将其代回 $\partial E/\partial w=0$，利用 $\overline{x}\sum x_i=m\overline{x}^{2}$ 与 $\overline{y}\sum x_i=m\overline{x}\overline{y}$ 整理，即得闭式解</p>
+<p>$$ w=\frac{\sum_{i=1}^{m}(x_i-\overline{x})(y_i-\overline{y})}{\sum_{i=1}^{m}(x_i-\overline{x})^{2}},\qquad b=\overline{y}-w\overline{x}. $$</p>
+<p><strong>算例一</strong>（原料数据 $D=\{(1,2),(2,3),(3,5)\}$）：$\overline{x}=2$，$\overline{y}=10/3$；分子 $\sum y_i(x_i-\overline{x})=-2+0+5=3$，分母 $\sum x_i^{2}-\frac{1}{3}(\sum x_i)^{2}=14-12=2$，故 $w=3/2=1.5$，$b=10/3-3=1/3\approx0.33$。复核一致。</p>
+<p><strong>算例二</strong>（原料的消费—收入数据，$x=[6.7,7.0,7.4,7.7,7.6]$，$y=[7.5,7.8,8.1,8.6,8.6]$）：原料逐项给出 $\sum x_i=36.4$、$\sum y_i=40.6$、$\sum x_iy_i=296.37$、$\sum x_i^{2}=265.7$，复核全部正确；进而 $\overline{x}=7.28$、$\overline{y}=8.12$，</p>
+<p>$$ w=\frac{296.37-5\times7.28\times8.12}{265.7-5\times7.28^{2}}=\frac{0.802}{0.708}\approx1.133. $$</p>
+<p>原料由四舍五入后的 $w=1.133$ 算出 $b=8.12-1.133\times7.28\approx-0.128$；以未舍入的 $w\approx1.13277$ 回代则得 $b\approx-0.1266$，两种写法差在中间舍入，本文保留原值 $-0.128$ 并注明。</p>
+<h3>2.2 多元线性回归与正规方程</h3>
+<p>把偏置并入参数向量 $\hat{w}=(w_1;\dots;w_d;b)$，令设计矩阵 $X$ 最后一列全为 $1$，模型输出即 $\hat{y}=X\hat{w}$。均方误差写成矩阵形式 $E_{\hat{w}}=(y-X\hat{w})^{\mathrm{T}}(y-X\hat{w})$。原料的推导逐项使用三条矩阵求导公式 $\partial Ax/\partial x=A^{\mathrm{T}}$、$\partial x^{\mathrm{T}}A/\partial x=A$、$\partial x^{\mathrm{T}}Ax/\partial x=(A^{\mathrm{T}}+A)x$，展开后得梯度</p>
+<p>$$ \frac{\partial E_{\hat{w}}}{\partial\hat{w}}=2X^{\mathrm{T}}(X\hat{w}-y). $$</p>
+<p>令梯度为零得正规方程 $X^{\mathrm{T}}X\hat{w}=X^{\mathrm{T}}y$；当 $X^{\mathrm{T}}X$ 满秩（可逆）时，</p>
+<p>$$ \hat{w}^{*}=(X^{\mathrm{T}}X)^{-1}X^{\mathrm{T}}y. $$</p>
+<p>秩亏时正规方程不可直接解。原料的处理口径是：此时存在多个最优解，合理的做法是<strong>引入正则化项，结合归纳偏好选出最优解</strong>（岭回归即在损失上加 $\lambda\lVert\hat{w}\rVert_2^{2}$，闭式解变为 $(X^{\mathrm{T}}X+\lambda I)^{-1}X^{\mathrm{T}}y$）；原料同时强调，直接取伪逆求解也仍需归纳偏好兜底，「无需额外处理」的说法不成立。</p>
+<p><strong>算例三</strong>（原料数据 $x=[2,3,4,5,6]$，$y=[4,5,7,8,10]$）：$\overline{x}=4$、$\overline{y}=6.8$、$\sum x_iy_i=151$、$\sum x_i^{2}=90$，故 $w=(151-5\times4\times6.8)/(90-5\times16)=15/10=1.5$，$b=6.8-1.5\times4=0.8$，回归方程 $\hat{y}=1.5x+0.8$。复核一致。</p>
+<h3>2.3 对数线性模型与广义线性模型</h3>
+<p>对数线性回归写作 $\ln y=w^{\mathrm{T}}x+b$，其本质是让 $e^{w^{\mathrm{T}}x+b}$ 逼近真实标记 $y$。把它放进广义线性模型框架 $y=g^{-1}(w^{\mathrm{T}}x+b)$，则联系函数 $g(\cdot)$ 取对数。原料强调联系函数须连续且充分光滑，单位阶跃函数因不连续、不可导而不能直接充当 $g^{-1}(\cdot)$，这正是下节对数几率函数登场的动机。</p>
+<h2>三、逻辑回归（对数几率回归）</h2>
+<h3>3.1 sigmoid 与对数几率</h3>
+<p>对数几率函数是一种 sigmoid 函数：</p>
+<p>$$ y=\sigma(z)=\frac{1}{1+e^{-z}},\qquad z=w^{\mathrm{T}}x+b, $$</p>
+<p>值域 $(0,1)$、任意阶可导、导数在 $z=0$ 处取最大值（原料明确指出这一点，「最小值」的说法不成立），且在零附近变化陡峭，形态上最接近单位阶跃。令 $y$ 为样本为正例的后验概率，原料给出（式 3.23 写法）</p>
+<p>$$ p(y=1\mid x)=\frac{e^{w^{\mathrm{T}}x+b}}{1+e^{w^{\mathrm{T}}x+b}},\qquad p(y=0\mid x)=\frac{1}{1+e^{w^{\mathrm{T}}x+b}}. $$</p>
+<p>对上式取比值再取对数（教材标准形，原料由该分式直接反解）即得</p>
+<p>$$ \ln\frac{p(y=1\mid x)}{p(y=0\mid x)}=w^{\mathrm{T}}x+b. $$</p>
+<p>可见所谓「线性」并非指概率线性，而是指<strong>对数几率是属性的线性函数</strong>；几率 $p/(1-p)$ 之比取对数后与 $x$ 成线性，这是「对数几率回归」名称的由来。原料亦点明：对率回归虽名为回归，实为分类方法，是用回归思想（极大似然）做分类。</p>
+<h3>3.2 极大似然、交叉熵与梯度下降</h3>
+<p>原料给出两条等价的损失叙述。其一是负对数似然（交叉熵）形式：设样本服从伯努利分布，写出似然后取负对数平均，</p>
+<p>$$ L=-\frac{1}{n}\sum_{i=1}^{n}\bigl[y_i\log\hat{y}_i+(1-y_i)\log(1-\hat{y}_i)\bigr],\qquad \hat{y}_i=\sigma(w^{\mathrm{T}}x_i+b). $$</p>
+<p>其二是原料试卷里称作「对数似然函数」的那个式子（对 $p$ 取参数 $\beta$、增广向量记 $\hat{x}_i$）。由下文的导数方向即可判定，它实际是<strong>负对数似然</strong>；本文沿用原料的记号 $\ell$，但结论按负对数似然表述：</p>
+<p>$$ \ell(\beta)=\sum_{i=1}^{m}\Bigl(-y_i\beta^{\mathrm{T}}\hat{x}_i+\ln\bigl(1+e^{\beta^{\mathrm{T}}\hat{x}_i}\bigr)\Bigr). $$</p>
+<p>原料的证明题给出了它的一阶与二阶导数：</p>
+<p>$$ \frac{\partial\ell(\beta)}{\partial\beta}=-\sum_{i=1}^{m}\hat{x}_i\bigl(y_i-p_1(\hat{x}_i;\beta)\bigr),\qquad \frac{\partial^{2}\ell(\beta)}{\partial\beta\,\partial\beta^{\mathrm{T}}}=\sum_{i=1}^{m}\hat{x}_i\hat{x}_i^{\mathrm{T}}p_1(1-p_1), $$</p>
+<p>其中 $p_1=e^{\beta^{\mathrm{T}}\hat{x}}/(1+e^{\beta^{\mathrm{T}}\hat{x}})$。对任意非零向量 $v$，$v^{\mathrm{T}}\bigl(\partial^{2}\ell\bigr)v=\sum_i p_1(1-p_1)(v^{\mathrm{T}}\hat{x}_i)^{2}\ge0$，Hessian 半正定，故 $\ell$ 是凸函数，<strong>最小化 $\ell$ 是凸问题</strong>，而最小化负对数似然与极大化对数似然 $\sum_i\bigl[y_i\beta^{\mathrm{T}}\hat{x}_i-\ln(1+e^{\beta^{\mathrm{T}}\hat{x}_i})\bigr]$ 是同一件事。这一点也可以从更新式自检：下面写的是梯度<strong>下降</strong>（带负号），只有当 $\ell$ 为负对数似然时方向才正确。梯度下降的更新式按教材标准形写为</p>
+<p>$$ \beta\leftarrow\beta-\eta\,\frac{\partial\ell(\beta)}{\partial\beta}, $$</p>
+<p>原料明确「参数估计用极大似然，数值求解用梯度下降或牛顿法」，另在实验记录中注明 sklearn 默认使用 L-BFGS 拟牛顿法；学习率 $\eta$ 的具体取值原料未统一，本文不予虚构。判决阈值取 $\sigma(z)\ge0.5$ 判正例。</p>
+<h3>3.3 与线性回归的适用差别</h3>
+<table>
+<tr><th>对比维度</th><th>线性回归</th><th>逻辑回归</th></tr>
+<tr><td>任务类型</td><td>回归，预测连续值</td><td>分类，预测离散标签</td></tr>
+<tr><td>输出范围</td><td>整个实数轴</td><td>$(0,1)$ 内的概率</td></tr>
+<tr><td>损失函数</td><td>均方误差</td><td>对数损失（交叉熵）</td></tr>
+<tr><td>求解</td><td>最小二乘闭式解</td><td>极大似然加迭代优化</td></tr>
+<tr><td>典型应用</td><td>房价、温度预测</td><td>邮件过滤、疾病诊断</td></tr>
+<tr><td>评估可视化</td><td>散点图、MSE、R方</td><td>混淆矩阵、精确率、召回率</td></tr>
+</table>
+<h2>四、线性模型的三个延伸</h2>
+<h3>4.1 多分类：OvR、OvO 与 softmax</h3>
+<table>
+<tr><th>策略</th><th>分类器个数</th><th>训练样本用法</th><th>原料要点</th></tr>
+<tr><td>一对一 OvO</td><td>$N(N-1)/2$</td><td>每次仅取两类</td><td>单个分类器训练负担小，但存储与测试开销大</td></tr>
+<tr><td>一对其余 OvR</td><td>$N$</td><td>一类为正、其余为反</td><td>开销小，但每类训练集正负不均衡，易偏向多数类</td></tr>
+<tr><td>多对多 MvM</td><td>视编码而定</td><td>若干类为正、若干为反</td><td>纠错输出码 ECOC 为典型，分编码、解码两步</td></tr>
+</table>
+<p>ECOC 的编码有二元码（取值 $+1,-1$）与三元码（含 $0$）两类；原料指出编码越长、码字距离越远，纠错能力越强，其核心价值是对分错的学习器具有一定容忍与修正能力。逻辑回归推广到多分类用 softmax：</p>
+<p>$$ \sigma(z)_j=\frac{e^{z_j}}{\sum_{c=1}^{C}e^{z_c}}. $$</p>
+<p>类别不平衡方面，原料将欠采样、过采样与阈值移动统归为「再缩放」策略，其核心公式为</p>
+<p>$$ \frac{y&#x27;}{1-y&#x27;}=\frac{y}{1-y}\times\frac{m^{-}}{m^{+}}, $$</p>
+<p>即把训练集扭曲的先验比「转置」回真实分布；代表性算法 EasyEnsemble 通过多次欠采样再集成来避免丢失信息。</p>
+<h3>4.2 正则化：岭回归、LASSO 与几何直觉</h3>
+<table>
+<tr><th>项目</th><th>L2 正则（岭回归）</th><th>L1 正则（LASSO）</th></tr>
+<tr><td>惩罚项</td><td>$\lambda\lVert\hat{w}\rVert_2^{2}$</td><td>$\lambda\lVert\hat{w}\rVert_1$</td></tr>
+<tr><td>闭式解</td><td>$(X^{\mathrm{T}}X+\lambda I)^{-1}X^{\mathrm{T}}y$</td><td>无闭式解，需坐标下降类方法</td></tr>
+<tr><td>解的形态</td><td>分量取值均衡、稠密</td><td>分量稀疏，可作特征选择</td></tr>
+<tr><td>几何直觉</td><td>约束域为圆形，交点一般不在坐标轴上</td><td>约束域为菱形，顶点恰在坐标轴上，易使部分分量为零</td></tr>
+</table>
+<p>L1 稀疏的几何直觉为原料所给：等高线与菱形约束区的交点更常落在顶点，顶点处恰有分量为零；L2 的圆与等高线交点处参数只趋近于零而不为零。原料又引 LASSO 的定位是「以 L1 范数近似 L0 范数」的稀疏化技术。弹性网 ElasticNet 仅出现在课程实验代码中，以 l1_ratio 混合 L1 与 L2、alpha 控制强度，书面原料未给出统一的数学表达，本文不展开。</p>
+<h3>4.3 线性判别分析 LDA</h3>
+<p>LDA 的思想是把样本投影到一条直线，使同类投影点尽可能接近、异类投影点尽可能远离，即「类内散度最小、类间散度最大」。二分类下原料给出两个散度矩阵（$\Sigma_i$ 为第 $i$ 类示例的协方差矩阵）：</p>
+<p>$$ S_b=(\mu_0-\mu_1)(\mu_0-\mu_1)^{\mathrm{T}},\qquad S_w=\Sigma_0+\Sigma_1=\sum_{x\in X_0}(x-\mu_0)(x-\mu_0)^{\mathrm{T}}+\sum_{x\in X_1}(x-\mu_1)(x-\mu_1)^{\mathrm{T}}. $$</p>
+<p>由拉格朗日乘数法解散度比最大化，得最优投影方向的闭式解</p>
+<p>$$ w=S_w^{-1}(\mu_0-\mu_1), $$</p>
+<p>并满足总体散度 $S_t=S_b+S_w$。多分类情形原料写到目标为最大化广义瑞利商 $\mathrm{tr}(W^{\mathrm{T}}S_bW)/\mathrm{tr}(W^{\mathrm{T}}S_wW)$ 为止，未再展开成广义特征值方程 $S_b w=\lambda S_w w$ 的写法，本文从原料、不补写该形式。LDA 达到最优分类的前提（原料明示）：两类数据同先验、满足高斯分布且协方差矩阵相等。原料另给出向量范数与余弦相似度的练习：$a=[1,2,3]$ 的 L1 范数为 $6$、L2 范数为 $\sqrt{14}$，与 $b=[-1,3,4]$ 的余弦相似度为 $17/\sqrt{364}$，复核一致。</p>
+<h2>五、支持向量机</h2>
+<h3>5.1 间隔：函数间隔与几何间隔</h3>
+<p>划分超平面为 $w^{\mathrm{T}}x+b=0$，$w$ 决定方向、$b$ 决定与原点的关系。原料反复给出点 $x$ 到超平面的距离</p>
+<p>$$ r=\frac{\lvert w^{\mathrm{T}}x+b\rvert}{\lVert w\rVert}. $$</p>
+<p>原料未单列「函数间隔 / 几何间隔」术语，本文按教材标准形补齐：记函数间隔 $\hat{\gamma}=y(w^{\mathrm{T}}x+b)$，几何间隔 $\gamma=\hat{\gamma}/\lVert w\rVert$，二者相差一个比例因子 $\lVert w\rVert$；对 $(w,b)$ 同乘常数，函数间隔随之缩放而几何间隔不变。将全部样本的几何间隔最小者作为间隔，取比例 $\hat{\gamma}=1$ 规范化后，两类支持向量间的间隔为 $2/\lVert w\rVert$，单侧距离即 $1/\lVert w\rVert$（原料填空题与简答题均给出 $2/\lVert w\rVert$）。</p>
+<h3>5.2 最大化间隔与标准二次规划</h3>
+<p>最大间隔超平面对训练样本局部扰动的容忍性最好，故选择它；形式化为</p>
+<p>$$ \min_{w,b}\ \frac{1}{2}\lVert w\rVert^{2}\quad \text{s.t.}\quad y_i(w^{\mathrm{T}}x_i+b)\ge1,\ i=1,\dots,m. $$</p>
+<p>原料解释转化原因：最大化 $2/\lVert w\rVert$ 等价于最小化 $\lVert w\rVert^{2}$，乘 $1/2$ 不改最优位置，却使目标成为凸二次函数、便于求导并转入对偶，这是标准的凸二次规划形式。</p>
+<h3>5.3 对偶化、KKT 条件与支持向量</h3>
+<p>对每条约束引入乘子 $\alpha_i\ge0$，原料给出拉格朗日函数</p>
+<p>$$ L(w,b,\alpha)=\frac{1}{2}\lVert w\rVert^{2}+\sum_{i=1}^{m}\alpha_i\bigl[1-y_i(w^{\mathrm{T}}x_i+b)\bigr]. $$</p>
+<p>分别对 $w$、$b$ 求偏导置零得 $w=\sum_i\alpha_iy_ix_i$ 与 $\sum_i\alpha_iy_i=0$，代回后化为只含内积的对偶问题：</p>
+<p>$$ \max_{\alpha}\ \sum_{i=1}^{m}\alpha_i-\frac{1}{2}\sum_{i=1}^{m}\sum_{j=1}^{m}\alpha_i\alpha_jy_iy_jx_i^{\mathrm{T}}x_j\quad \text{s.t.}\quad \sum_{i=1}^{m}\alpha_iy_i=0,\ \alpha_i\ge0. $$</p>
+<p>对偶化的动机（原料归纳）：优化变量个数由特征维数转为样本数、约束更简单、且式中只出现内积，可顺手替换为核函数。KKT 条件在此充当原始问题与对偶问题等价的枢纽，并用来筛选支持向量、回代求 $b$；其一般理论已在笔记《约束最优化：KKT 条件与对偶理论》中系统整理，本文不重复推导，只引用其在 SVM 中特化出的互补松弛式 $\alpha_i\bigl(y_if(x_i)-1\bigr)=0$。由它可见：$y_if(x_i)&gt;1$ 的样本必 $\alpha_i=0$，而最终预测函数</p>
+<p>$$ f(x)=\sum_{i=1}^{m}\alpha_iy_i\,\kappa(x,x_i)+b $$</p>
+<p>中被求和真正保留的只有 $\alpha_i&gt;0$ 的样本，即<strong>支持向量</strong>——解只依赖少数落在间隔边界上的点，这便是 SVM 的稀疏性；非支持向量对参数与分类结果均无贡献。偏置可由任一 $\alpha_j&gt;0$ 的样本按 $b=y_j-\sum_i\alpha_iy_ix_i^{\mathrm{T}}x_j$ 算出（原料写法）。</p>
+<h3>5.4 软间隔与惩罚参数 C</h3>
+<p>硬间隔要求所有样本满足约束，只对完全线性可分数据成立；现实数据含噪声，硬间隔会无解或被迫复杂化。原料的处理是引入松弛变量 $\xi_i\ge0$，度量样本偏离约束的程度：</p>
+<p>$$ \min_{w,b,\xi}\ \frac{1}{2}\lVert w\rVert^{2}+C\sum_{i=1}^{m}\xi_i\quad \text{s.t.}\quad y_i(w^{\mathrm{T}}x_i+b)\ge1-\xi_i,\ \xi_i\ge0. $$</p>
+<p>$C\ge0$ 为惩罚参数（正则化常数），作用是把最大间隔（结构风险）与训练误差（经验风险）放在同一目标里加权，这正是结构风险最小化的具体形态。两种极端取值（原料明示）：$C\to+\infty$ 时误分类惩罚无穷大，软间隔退化为硬间隔，模型强拟合全部样本、易过拟合；$C\to0$ 时惩罚趋于零，模型只顾把间隔推到无穷大而无法正确分类、易欠拟合。对偶问题中 $\alpha_i$ 的取值被压进区间 $[0,C]$，这是软间隔与硬间隔对偶的核心区别。软间隔常用 hinge 损失 $l_{\mathrm{hinge}}(z)=\max(0,1-z)$ 作替代损失，原料同时指出 0-1 损失非凸不连续不可用，指数损失与对率损失亦可替换。按 KKT 条件，样本依乘子位置分三类：</p>
+<table>
+<tr><th>乘子位置</th><th>样本位置</th><th>是否支持向量</th></tr>
+<tr><td>$\alpha_i=0$</td><td>$y_if(x_i)\ge1$，间隔边界外侧</td><td>否</td></tr>
+<tr><td>$0&lt;\alpha_i&lt;C$</td><td>$y_if(x_i)=1$，恰在间隔边界上</td><td>是</td></tr>
+<tr><td>$\alpha_i=C$</td><td>$y_if(x_i)\le1$，落入间隔内甚至错分</td><td>是（边界支持向量）</td></tr>
+</table>
+<h3>5.5 核技巧与 Mercer 条件</h3>
+<p>核函数把高维内积折叠进低维计算：$\kappa(x_i,x_j)=\phi(x_i)^{\mathrm{T}}\phi(x_j)$，其中 $\phi$ 为样本从原始空间到高维特征空间的隐式映射，该高维空间即再生核希尔伯特空间。原料给出 Mercer 型判定（定理 6.1 口径）：$\kappa$ 为核函数的充要条件是对任意样本集其核矩阵半正定，且核函数须对称；核矩阵只要求半正定而非正定。原料附三则封闭性证明：核函数的正线性组合 $\gamma_1\kappa_1+\gamma_2\kappa_2$ 仍是核函数（因半正定矩阵的非负组合半正定）、直积 $\kappa_1\otimes\kappa_2=\kappa_1\kappa_2$ 是核函数、$g(x)\kappa_1(x,z)g(z)$ 是核函数（因 $K=GK_1G^{\mathrm{T}}$）。常用核（原料实际列出的五种）如下：</p>
+<p>$$ \text{线性核：}\ \kappa(x_i,x_j)=x_i^{\mathrm{T}}x_j;\qquad \text{多项式核：}\ \kappa(x_i,x_j)=(x_i^{\mathrm{T}}x_j+c)^{d}; $$</p>
+<p>$$ \text{高斯核（RBF）：}\ \kappa(x_i,x_j)=\exp\Bigl(-\frac{\lVert x_i-x_j\rVert^{2}}{2\delta^{2}}\Bigr)=\exp\bigl(-\gamma\lVert x_i-x_j\rVert^{2}\bigr); $$</p>
+<p>$$ \text{拉普拉斯核与 Sigmoid 核：原料仅列名称，未给表达式，本文不补写.} $$</p>
+<table>
+<tr><th>核</th><th>适用场景（原料口径）</th></tr>
+<tr><td>线性核</td><td>线性可分数据，如文本分类；计算快、可解释</td></tr>
+<tr><td>多项式核</td><td>中等复杂度非线性数据，$d$ 控制复杂度</td></tr>
+<tr><td>高斯核 RBF</td><td>非线性强、分布复杂的数据；灵活性高、适用范围广</td></tr>
+</table>
+<p>参数对边界的影响（原料明示）：高斯核的 $\gamma$ 控制局部性，$\gamma$ 过大（等价带宽 $\delta$ 过小）核函数尖锐，模型只盯着近邻样本、边界扭曲，易过拟合；$\gamma$ 过小则趋于欠拟合。$C$ 与 $\gamma$ 同向叠加时（都大）过拟合风险最高，原料的多选题把「$C$ 取值过大」与「$\delta$ 取值过小」并列为过拟合诱因。</p>
+<h3>5.6 支持向量回归 SVR</h3>
+<p>SVR 用 $\epsilon$-不敏感损失：预测与真实之差不超过 $\epsilon$ 时不计损失，超出部分线性计损，</p>
+<p>$$ \ell_\epsilon(z)=\begin{cases}0, &amp; \lvert z\rvert\le\epsilon,\\[4pt]\lvert z\rvert-\epsilon, &amp; \text{否则}.\end{cases} $$</p>
+<p>间隔带宽为 $2\epsilon$，落入带内的样本不产生损失也不进入模型，故 SVR 的解同样稀疏；对偶问题含两组乘子 $\alpha_i,\hat{\alpha}_i\in[0,C]$，满足 $\sum_i(\hat{\alpha}_i-\alpha_i)=0$，解形如 $f(x)=\sum_i(\hat{\alpha}_i-\alpha_i)\kappa(x,x_i)+b$（原料写法）。与传统回归的核心区别：后者只要偏差就计损失、解稠密，SVR 允许「容忍带」存在、只拟合带外样本。</p>
+<h2>六、SVM 算例逐个走通</h2>
+<p><strong>算例四（硬间隔，二维三点）</strong>：$x_1=(1,1)^{\mathrm{T}},x_2=(2,2)^{\mathrm{T}}$ 为正例，$x_3=(0,0)^{\mathrm{T}}$ 为负例。原料按 $y_i(w^{\mathrm{T}}x_i+b)\ge1$ 列出三条约束并判断 $x_1,x_3$ 为支持向量（取等号）：$w_1+w_2+b=1$ 与 $b=-1$，得 $w_1+w_2=2$；在约束下线性和最小化 $w_1^{2}+w_2^{2}$ 由均值不等式取 $w_1=w_2=1$。于是超平面 $x_1+x_2-1=0$，$\lVert w\rVert=\sqrt{2}$，间隔 $2/\sqrt{2}=\sqrt2$。复核：三点函数间隔分别为 $1,3,1$，支持向量几何距离各为 $1/\sqrt{2}\approx0.7071$，间隔 $\sqrt2\approx1.4142$，与原料一致；$x_2$ 约束取不到等号，确非支持向量。</p>
+<p><strong>算例五（硬间隔，一维四点）</strong>：正例 $x=1,2$、负例 $x=3,4$。原料断定支持向量为 $(2,+1)$ 与 $(3,-1)$，列 $2w+b=1$、$3w+b=-1$（注意负例代入 $y(wx+b)=1$ 即 $wx+b=-1$），解得 $w=-2,b=5$，超平面 $2x-5=0$，间隔 $2/\lvert w\rvert=1$。复核全部约束：四点的 $y_if(x_i)$ 依次为 $3,1,1,3$，成立且恰在两点取等，最大间隔 $1$ 正确。但原料末尾「所有支持向量满足 $\alpha_iy_i=0$」一句应为 KKT 互补松弛式 $\alpha_i\bigl(y_if(x_i)-1\bigr)=0$ 的笔误，本文保留原句并勘误。</p>
+<p><strong>算例六（对偶算法完整走一遍）</strong>：正例 $x_1=(3,3)^{\mathrm{T}},x_2=(4,3)^{\mathrm{T}}$，负例 $x_3=(1,1)^{\mathrm{T}}$。原料先算六项内积：$x_1^{\mathrm{T}}x_1=18$、$x_1^{\mathrm{T}}x_2=21$、$x_1^{\mathrm{T}}x_3=6$、$x_2^{\mathrm{T}}x_2=25$、$x_2^{\mathrm{T}}x_3=7$、$x_3^{\mathrm{T}}x_3=2$，全部复核正确。由 $\sum\alpha_iy_i=0$ 得 $\alpha_3=\alpha_1+\alpha_2$，代入对偶目标化简为原料形式</p>
+<p>$$ \max\ \Bigl(2\alpha_1+2\alpha_2\Bigr)-\Bigl(4\alpha_1^{2}+\tfrac{13}{2}\alpha_2^{2}+10\alpha_1\alpha_2\Bigr), $$</p>
+<p>等价于最小化 $S=4\alpha_1^{2}+\tfrac{13}{2}\alpha_2^{2}+10\alpha_1\alpha_2-2\alpha_1-2\alpha_2$。原料写「求偏导置零解得 $\alpha_1=1/4,\alpha_2=0$」，按公式复核：联立 $8\alpha_1+10\alpha_2-2=0$ 与 $10\alpha_1+13\alpha_2-2=0$ 的无约束驻点实为 $\alpha_1=3/2,\alpha_2=-1$，违反非负约束；真正的最优来自原料下一段的边界讨论——$\alpha_2=0$ 时 $S(\alpha_1,0)=4\alpha_1^{2}-2\alpha_1$ 在 $\alpha_1=1/4$ 处取最小值 $-1/4=-0.25$，$\alpha_1=0$ 时 $S(0,\alpha_2)=\tfrac{13}{2}\alpha_2^{2}-2\alpha_2$ 在 $\alpha_2=2/13$ 处取值 $-2/13\approx-0.154&gt;-0.25$，故取前者。本文以密集网格重扫目标函数，最大值 $0.25$ 恰在 $(\alpha_1,\alpha_2)=(0.25,0)$ 处取得，原料终值无误。于是 $\alpha^{*}=(1/4,0,1/4)$，</p>
+<p>$$ w^{*}=\tfrac14(3,3)^{\mathrm{T}}-\tfrac14(1,1)^{\mathrm{T}}=(\tfrac12,\tfrac12)^{\mathrm{T}},\qquad b^{*}=1-\Bigl(\tfrac14\cdot18-\tfrac14\cdot6\Bigr)=-2, $$</p>
+<p>分离超平面 $x_1+x_2-4=0$，支持向量为 $x_1,x_3$。复核三点 $y_if(x_i)$ 为 $1,1.5,1$，约束成立且仅 $x_1,x_3$ 取等。</p>
+<p><strong>算例七（同结构变式）</strong>：原料另一套题以正例 $x_1=(4,4)^{\mathrm{T}},x_2=(5,3)^{\mathrm{T}}$、负例 $x_3=(1,1)^{\mathrm{T}}$ 给出 $\alpha^{*}=(1/9,0,1/9)$、$w^{*}=(1/3,1/3)^{\mathrm{T}}$、$b^{*}=-5/3$，超平面 $\tfrac13x_1+\tfrac13x_2-\tfrac53=0$。复核：$w^{*}$ 与 $b^{*}$ 的代入过程无误（内积 $x_1^{\mathrm{T}}x_1=32$、$x_3^{\mathrm{T}}x_1=8$，$b^{*}=1-(32/9-8/9)=-5/3$），对偶目标在 $\alpha_2=0$ 时为 $W(\alpha_1,0)=2\alpha_1-9\alpha_1^{2}$，最大值 $1/9$ 恰在 $\alpha_1=1/9$ 处，网格重扫一致。值得补充一处退化现象：原料只把 $x_1,x_3$ 列为支持向量，但按求得的解计算 $f(x_2)=\tfrac13\cdot5+\tfrac13\cdot3-\tfrac53=1$，即 $x_2=(5,3)^{\mathrm{T}}$ 也恰好落在间隔边界上，只是对应乘子 $\alpha_2=0$。「边界点未必以正乘子出现」是退化解的已知现象，原料未议及，本文按复核结果注明。</p>
+<p><strong>算例八（高斯核取值）</strong>：$x_1=(1,2)$、$x_2=(3,4)$，$\kappa(x_i,x_j)=\exp(-\gamma\lVert x_i-x_j\rVert^{2})$ 取 $\gamma=1/2$。$\lVert x_1-x_2\rVert^{2}=4+4=8$，非对角元 $\exp(-4)\approx0.0183$（复核 $0.018316$），核矩阵为对称矩阵 $\begin{pmatrix}1&amp;e^{-4}\\ e^{-4}&amp;1\end{pmatrix}$。原料进一步令 $\alpha_1=0.5,\alpha_2=-0.5,y_1=+1,y_2=-1,b=0$ 写预测函数，得</p>
+<p>$$ f(x)=0.5\,\kappa(x,x_1)+0.5\,\kappa(x,x_2), $$</p>
+<p>代入化简复核无误。需要点明：$\alpha_2=-0.5$ 违反 $\alpha\ge0$，此问只是代数练习，并非任何 SVM 优化问题的解。原料第三问「$\gamma$ 大则局部性强易过拟合、$\gamma$ 小易欠拟合」与前文一致。</p>
+<p><strong>算例九（多项式核的显式映射）</strong>：$\kappa(x,z)=(x^{\mathrm{T}}z+1)^{2}$ 对应 $c=1,d=2$。原料展开并匹配内积得</p>
+<p>$$ \phi(x)=\bigl(x_1^{2},\ \sqrt2\,x_1x_2,\ x_2^{2},\ \sqrt2\,x_1,\ \sqrt2\,x_2,\ 1\bigr)^{\mathrm{T}}, $$</p>
+<p>本文以随机取值多点复核 $\phi(x)^{\mathrm{T}}\phi(z)=(x^{\mathrm{T}}z+1)^{2}$ 恒成立。它具体演示了核技巧的承诺：二维样本被隐式抬到六维空间后，原本非线性的问题在高维变成线性内积运算。</p>
+<p><strong>算例十（SVR 不敏感损失）</strong>：$\epsilon=0.5$，样本 $(x_i,y_i)=(2,3)$，预测 $f(x_i)=2.3$。差值 $z=-0.7$，$\lvert z\rvert=0.7&gt;\epsilon$，损失 $\ell=0.7-0.5=0.2$，样本落在间隔带外，是 SVR 的支持向量。复核一致。</p>
+<p><strong>算例十一（软间隔乘子范围）</strong>：$C=1$，样本 $(1,+1),(0,-1),(2,+1)$，给定 $\xi_1=0,\xi_2=0.5,\xi_3=0$。原料推得：$\xi_2&gt;0$ 结合 $(C-\alpha_2)\xi_2=0$ 逼出 $\alpha_2=C=1$，$x_2$ 必为支持向量；再由 $\sum\alpha_iy_i=0$ 得 $\alpha_1-\alpha_2+\alpha_3=0$，即 $\alpha_1+\alpha_3=1$，且三者同落区间 $[0,1]$。复核代数关系成立；$x_1,x_3$ 是否为支持向量取决于其约束是否取等，原料亦只作条件性论断。</p>
+<h2>七、课程实验记录摘录</h2>
+<p>原料含三段在课程数据集（sklearn 内置公开数据集）上完成的实验，指标为记录值而非本文重跑所得，仅做内部一致性复核。</p>
+<p><strong>线性回归（加州房价数据集，样本 20640、特征 8，训练与测试按 80% 与 20% 划分，复核样本数为 16512 与 4128）</strong>：记录输出 MSE 约 $0.5559$、R方约 $0.5757$，部分特征回归系数如下。</p>
+<table>
+<tr><th>特征</th><th>回归系数（记录值）</th><th>影响方向</th></tr>
+<tr><td>MedInc 平均收入</td><td>0.4373</td><td>正向</td></tr>
+<tr><td>HouseAge 房龄</td><td>0.0093</td><td>正向</td></tr>
+<tr><td>AveRooms 平均房间数</td><td>-0.1076</td><td>负向</td></tr>
+<tr><td>AveBedrms 平均卧室数</td><td>0.6245</td><td>正向</td></tr>
+<tr><td>Latitude 纬度</td><td>-0.4198</td><td>负向</td></tr>
+<tr><td>Longitude 经度</td><td>-0.4339</td><td>负向</td></tr>
+</table>
+<p><strong>逻辑回归（乳腺癌数据集，样本 569、特征 30，训练 455、测试 114）</strong>：记录准确率 $96.49\%$，混淆矩阵为实际恶性 43 例中判对 40、判错 3，实际良性 71 例中判对 70、判错 1。由该矩阵复核：准确率 $(40+70)/114=0.9649$ 与记录吻合；恶性类精确率 $40/41\approx0.98$、召回率 $40/43\approx0.93$、F1 约 $0.95$；良性类 $0.96$、$0.99$、$0.97$，均与记录一致。唯加权平均一列，原料记 F1 为 $0.97$，而按混淆矩阵精确值加权得 $(43\times0.9524+71\times0.9722)/114\approx0.9647$，应舍入为 $0.96$，本文保留原值并勘误。实验还记录了默认迭代上限不足触发收敛警告、将 max_iter 增至 10000 后解决的过程，原料归因于 30 个特征间的共线性。</p>
+<p><strong>SVM（鸢尾花数据集，先标准化、80% 与 20% 划分）</strong>：原料记录线性核与高斯核（RBF，gamma 取 scale 默认）准确率均约 $0.9667$，复核即 $29/30$、恰一个样本判错；因该数据集近似线性可分，两种核打平，原料注明一般非线性数据上 RBF 应优于线性核。实验心得中与原料多处呼应：SVM 对特征尺度敏感，标准化是必需步骤。</p>
+<h2>八、勘误汇总</h2>
+<table>
+<tr><th>位置</th><th>原料原文/得数</th><th>复核意见</th></tr>
+<tr><td>算例二</td><td>偏置取 -0.128</td><td>系用舍入后的 w=1.133 回代；以精确 w 回代约为 -0.1266</td></tr>
+<tr><td>3.1 节导数</td><td>（常见误区）sigmoid 导数在 z=0 取最小值</td><td>原料判其错误、应为最大值，本文采纳</td></tr>
+<tr><td>算例五</td><td>所有支持向量满足 αᵢyᵢ=0</td><td>应为 KKT 互补松弛式 αᵢ(yᵢf(xᵢ)-1)=0 之笔误</td></tr>
+<tr><td>算例六</td><td>求偏导置零解得 α₁=1/4、α₂=0</td><td>无约束驻点实为 α₁=3/2、α₂=-1，越界不可用；最优点来自原料后续的边界比较，终值正确</td></tr>
+<tr><td>算例七</td><td>支持向量为 x₁、x₃</td><td>x₂ 亦落在间隔边界上（乘子为零的退化情形），原料未议及</td></tr>
+<tr><td>算例八</td><td>α₂=-0.5 参与写预测函数</td><td>违反对偶问题 α≥0，仅作代数练习理解</td></tr>
+<tr><td>实验记录</td><td>加权平均 F1 记 0.97</td><td>按混淆矩阵精确值复核约 0.9647，应取 0.96</td></tr>
+</table>
+<p>综观全文，线性模型与 SVM 是同一枚硬币的两面：前者把线性组合直接解释为输出或概率的对数几率，后者把线性组合解释为到边界的距离，并以间隔最大化换取对噪声的容忍。凡原料给出数值处本文均独立复核，凡原料未给处（弹性网数学形式、LDA 广义特征值写法、Sigmoid 与拉普拉斯核表达式、学习率取值）一律注明存缺而不补写，宁可留白，不做无据之推断。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话导出 · 机器学习第三章线性模型与第六章支持向量机原料（知识点整理、试卷与讲解、实验记录）</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

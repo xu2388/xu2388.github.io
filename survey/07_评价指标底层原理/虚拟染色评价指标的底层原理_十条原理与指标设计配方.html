@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>虚拟染色评价指标的底层原理 · 十条原理与指标设计配方</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.principle{border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:10px;padding:16px 20px;margin:20px 0;background:var(--softer)}
+.principle .pt{font-weight:700;font-size:15px;margin-bottom:8px}
+.principle .pt .pn{display:inline-block;background:var(--blue);color:#fff;font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 8px;margin-right:8px;vertical-align:1px}
+.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:11px 16px;margin:11px 0;font-family:var(--mono);font-size:12.8px;color:#22262c;overflow-x:auto}
+.foot{border-top:2px solid var(--strong);margin-top:46px;padding-top:16px;font-size:12.5px;color:var(--muted)}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">评价指标 · 底层原理</div>
+<div class="sub">虚拟染色 / H&amp;E→IHC<br>从「为什么成立」到「怎么设计新指标」<br>2026-10-12</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 本报告在库内的分工</a>
+<a class="l1" href="#s2">2 · 检索方法与核实等级</a>
+<a class="l1" href="#s3">3 · 统一视角：指标 = 空间 × 算子 × 参照</a>
+<a class="l2" href="#s31">3.1 三个坐标轴</a>
+<a class="l2" href="#s32">3.2 位置总表：原理就是三轴的一个组合</a>
+<a class="l1" href="#s4">4 · 十条底层原理</a>
+<a class="l2" href="#s41">P1 信号保真原理</a>
+<a class="l2" href="#s42">P2 结构相似原理</a>
+<a class="l2" href="#s43">P3 学习表征 / 感知原理</a>
+<a class="l2" href="#s44">P4 分布匹配原理</a>
+<a class="l2" href="#s45">P5 任务相关原理</a>
+<a class="l2" href="#s46">P6 生物分子真值原理</a>
+<a class="l2" href="#s47">P7 物理光学原理</a>
+<a class="l2" href="#s48">P8 信息可识别性原理</a>
+<a class="l2" href="#s49">P9 自洽与不变性原理</a>
+<a class="l2" href="#s410">P10 不确定性与鲁棒性原理</a>
+<a class="l1" href="#s5">5 · 元层：公理化与元评价</a>
+<a class="l2" href="#s51">5.1 度量公理</a>
+<a class="l2" href="#s52">5.2 不变性与敏感性公理</a>
+<a class="l2" href="#s53">5.3 元评价：与人类判断的相关性</a>
+<a class="l2" href="#s54">5.4 合成失真 vs 真实失真</a>
+<a class="l2" href="#s55">5.5 统计显著性与可比性</a>
+<a class="l1" href="#s6">6 · ★ 设计一个新指标的配方</a>
+<a class="l2" href="#s61">6.1 五个必须回答的问题</a>
+<a class="l2" href="#s62">6.2 决策树</a>
+<a class="l2" href="#s63">6.3 三个可行的创新切入点</a>
+<a class="l1" href="#s7">7 · 具体例子：领域已提出的新指标</a>
+<a class="l1" href="#s8">8 · 未核实清单与证据边界</a>
+<a class="l1" href="#s9">9 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Underlying principles of evaluation metrics · virtual staining</div>
+<h1>虚拟染色评价指标的底层原理<br>十条原理与一份指标设计配方</h1>
+<p class="desc">不讲「有哪些指标」，只讲「每个指标凭什么成立」——以及当你要提出一个新指标时，可以从哪些原理上找到合法性</p>
+<div class="meta"><span>报告日期 2026-10-12</span><span>原理 10 条</span><span>元层公理 4 类</span><span>具体例子 8 个</span><span>面向 H&amp;E→IHC 扩散/流匹配</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key"><div class="bt">一句话回答你的问题</div><p><strong>虚拟染色里所有评价指标，本质上都是在回答三个问题的选择：在什么空间里表示图像、用什么算子比较、拿什么当参照。你数得出来的「底层原理」一共十条，每一条都是对这三个问题的一种特定回答的合法性来源。想提出新指标，创新点几乎不可能出在「发明一个新算子」上，而是出在<u>把某个已有算子搬到别人没搬过的空间、或换一个别人没换过的参照</u>。</strong></p></div>
+
+<h3>十条原理一览（这就是你问的「都有哪些」）</h3>
+<div class="scroll"><table>
+<thead><tr><th>编号</th><th>原理</th><th>一句话核心命题</th><th>它的合法性来自</th><th>在虚拟染色里的典型代表</th><th>成熟度</th></tr></thead>
+<tbody>
+<tr><td><strong>P1</strong></td><td>信号保真</td><td>把图像当信号，误差能量就是保真度</td><td>范数公理 + 高斯最大似然</td><td>MSE / MAE / PSNR</td><td><span class="b high">最成熟·最不可信</span></td></tr>
+<tr><td><strong>P2</strong></td><td>结构相似</td><td>人眼提取的是结构，质量应度量结构退化</td><td>HVS 局部统计假设</td><td>SSIM / MS-SSIM / FSIM / VIF</td><td><span class="b medium">成熟·域不匹配</span></td></tr>
+<tr><td><strong>P3</strong></td><td>学习表征 / 感知</td><td>距离应在语义特征空间而非像素空间测量</td><td>深度特征的涌现性</td><td>LPIPS / DISTS / PaPIS / HAPS</td><td><span class="b high">当前主流创新区</span></td></tr>
+<tr><td><strong>P4</strong></td><td>分布匹配</td><td>无配对 GT 时，评价 = 两个分布的距离</td><td>两样本检验 / 积分概率度量</td><td>FID / KID / MMD / CMMD</td><td><span class="b medium">成熟·争议大</span></td></tr>
+<tr><td><strong>P5</strong></td><td>任务相关</td><td>输出的价值 = 它支撑的决策的价值</td><td>决策论 + 信息瓶颈 + 观察者模型</td><td>分割 Dice / 分类 AUROC / V-info</td><td><span class="b high">理论最完备</span></td></tr>
+<tr><td><strong>P6</strong></td><td>生物分子真值</td><td>目标不是像素像，是分子内容对</td><td>一致性分析（ICC/κ/Bland-Altman）</td><td>HER2 分级一致性 / Ki67 指数</td><td><span class="b medium">临床意义最高</span></td></tr>
+<tr><td><strong>P7</strong></td><td>物理光学</td><td>图像是物理测量，指标应尊重成像物理</td><td>Beer–Lambert / 颜色反卷积</td><td>OD 空间一致性（多为约束而非指标）</td><td><span class="b low">★ 明显空缺</span></td></tr>
+<tr><td><strong>P8</strong></td><td>信息可识别性</td><td>输入信息有上界，不存在的信息不该罚</td><td>病态逆问题 + 互信息</td><td>幻觉检测（AQuA）/ MI 解耦</td><td><span class="b low">★ 明显空缺</span></td></tr>
+<tr><td><strong>P9</strong></td><td>自洽与不变性</td><td>对无关变换不变、对相关变换敏感</td><td>公理化设计（invariance/sensitivity）</td><td>循环一致性 / 位置一致性</td><td><span class="b medium">工具性强</span></td></tr>
+<tr><td><strong>P10</strong></td><td>不确定性与鲁棒性</td><td>平均好 ≠ 可靠</td><td>校准 + OOD 检测理论</td><td>ECE / ensemble 分歧 / OOD</td><td><span class="b low">★ 明显空缺</span></td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">三个必须先纠正的认知</div>
+<ol>
+<li><strong>「提出一个新指标」的门槛，比你以为的低，也比你以为的高。</strong>低在：现有十条原理里，P7/P8/P10 三条在虚拟染色里几乎是空的，随便占一个都算新。高在：新指标必须通过元层检验（§5）——它得和专家判断有秩相关、得对合成失真和真实失真都成立、得满足你声称的公理。少了这一步，它只是「我们自己的数字」。</li>
+<li><strong>PSNR/SSIM 在虚拟染色上不只是「弱」，而是「错得方向不对」。</strong>SSIM 的结构-对比度-亮度分解，会把染色差异当「非结构失真」自动补偿掉——但染色<u>正是</u> H&amp;E→IHC 要传递的信号。这不是精度问题，是原理性错配（§4·P2）。</li>
+<li><strong>领域里「自创指标」的现象已经是公开批评的对象。</strong>PaPIS 与 HAPS 两篇的摘要都逐字点名「SSIM/PSNR/LPIPS 原本是为自然图像设计的、无法捕捉病理特征」，2026 年还出现了专门谈标准化的综述。你的新指标如果只是换一个特征提取器，已经不算新鲜；真正的空档在<u>物理一致性、可识别性上界、可靠性</u>这三条轴上。</li>
+</ol></div>
+
+<div class="box good"><div class="bt">给你的直接建议（一句话版）</div><p>不要从「我要造一个指标」出发，要从「当前所有指标都默认了某个前提，而这个前提在 H&amp;E→IHC 上是假的」出发。本报告 §6.3 给了三个这样的前提：<strong>(a) 假设「输出唯一」</strong>（忽略 one-to-many）→ 走 P8；<strong>(b) 假设「颜色相似 = 分子正确」</strong>（忽略 Beer–Lambert 与浓度域）→ 走 P7；<strong>(c) 假设「平均指标好 = 临床可用」</strong>（忽略可靠性）→ 走 P10。这三条都还没有被虚拟染色领域占据，而且都有成熟的理论可以借用。</p></div>
+
+<h2 id="s1"><span class="num">1</span>本报告在库内的分工</h2>
+<p>资料库已有 50 份报告，其中至少四份与「评价」相邻。本报告与它们的分工必须说清楚，避免重复劳动、也避免引用时张冠李戴。</p>
+<div class="scroll"><table>
+<thead><tr><th>既有报告</th><th>它回答的问题</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><strong>04_IHC评价与分级 / 弱配准下蛋白表达保真_评价与训练路线调研</strong></td><td>「弱配准下，蛋白表达保真<u>应该评价什么</u>」——给出 L0–L5 六层、Route A/B/C/D 四条路线</td><td><span class="b blue">本报告是它的上游</span>：那份讲「评什么」（对象层），本报告讲「为什么这个评价方式成立」（原理层）。它的 L0/L1/L5 正好对应本报告的 P1+P2 / P4 / P6。</td></tr>
+<tr><td><strong>01_调研报告 / protein-expression-representation-survey</strong></td><td>「蛋白表达有哪些表示方式」——物理/统计/频域/细胞级 taxonomy，并区分训练约束 vs 评价指标</td><td><span class="b blue">本报告复用其分类</span>，但把它从「表示的清单」升级为「表示 + 算子 + 参照」的三轴合法性分析。它的 §9「训练约束 vs 评价指标」在本报告 §5.1 被给出公理级理由。</td></tr>
+<tr><td><strong>01_调研报告 / HE2IHC_Physical_Fidelity_and_Trustworthiness_Report</strong></td><td>「物理规律能否作为硬真值」「无 GT 的评价体系」「幻觉检测」「不确定性」</td><td><span class="b purple">高度重叠，本报告是其原理层版本</span>。它的 Part 3–6 对应本报告的 P7 / P8 / P10。本报告补充了它在原理侧缺的一环：<u>为什么</u>物理一致性是合法的评价依据（Beer–Lambert 的成立条件与失效边界）。</td></tr>
+<tr><td><strong>01_调研报告 / 扩散模型虚拟染色_蛋白表达约束_约束位置地图 §6</strong></td><td>「训练约束 vs 评价指标」的位置总表</td><td><span class="b blue">正交</span>：它按「约束挂在扩散的哪一格」组织，本报告按「指标凭什么成立」组织。</td></tr>
+<tr><td><strong>06_方案可行性审查 / 全部</strong></td><td>审查用户<u>自己的方案</u>是否成立</td><td><span class="b blue">正交</span>：那类报告的对象是具体架构，本报告的对象是评价方法论。本报告可为未来的方案审查提供「评价口径」的判据。</td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>检索方法与核实等级</h2>
+<p>本报告的承重引用（决定结论方向的少数几篇）全部由我本人逐条抓取原文核实，不用二手转述。核实等级逐条标注：</p>
+<div class="grid2">
+<div class="mini"><div class="mt">[VERIFIED] 已读原文/摘要</div><p>我实际抓取了该页面并读到了所引结论。引用原文措辞时标引号。对 PDF 类（MSE、SSIM 公理）我下载后用文本抽取逐字核对。</p></div>
+<div class="mini"><div class="mt">[UNVERIFIED] 只见二手</div><p>仅见于搜索摘要、二手博客、或未读到正文。这类结论在报告中一律标注，<strong>不得当作事实引用</strong>。</p></div>
+</div>
+<div class="box stop"><div class="bt">纪律声明</div><p>本报告区分三种陈述：<strong>① 数学/理论事实</strong>（可推导，如「SSIM 不满足三角不等式」）；<strong>② 有原文支撑的实证事实</strong>（标 [VERIFIED]）；<strong>③ 我的判断/推测</strong>（明确写「这是判断」）。凡我未能核实的，进 §8 未核实清单，不写进结论。凡「未找到某类工作」的，一律注明是<u>定向检索的否定结果</u>，不等于逻辑上不存在。</p></div>
+
+<h2 id="s3"><span class="num">3</span>统一视角：任何评价指标 = 空间 × 算子 × 参照物</h2>
+<p>要「全面」地讲清底层原理，最有效的办法不是把指标列成一张长表，而是先建立一个能把它们全部装进去的坐标系。因为指标之间看似五花八门，其实都在回答同样三个问题。</p>
+
+<h3 id="s31">3.1 三个坐标轴</h3>
+<div class="scroll"><table>
+<thead><tr><th>轴</th><th>问题</th><th>可选值（从「低层」到「高层」）</th></tr></thead>
+<tbody>
+<tr><td><strong>轴 1 · 表示空间</strong><br><span class="small">在哪儿比</span></td><td>把图像映射成什么再比较？</td><td>像素 RGB → 光学密度 OD / 染色浓度 → HVS 局部统计量 → 深度特征（自然图像）→ 深度特征（病理域）→ 任务变量（分割/分类标签）→ 生物量（HER2 等级、Ki67 指数、H-score）</td></tr>
+<tr><td><strong>轴 2 · 比较算子</strong><br><span class="small">怎么比</span></td><td>两个表示之间怎么算差异？</td><td>逐点 Lp 范数 → 局部统计相关 → 分布距离（Wasserstein/MMD/JSD）→ 两样本检验统计量 → 信息量差（互信息/条件熵）→ 决策风险差（ROC/AUC）→ 一致性系数（ICC/κ）</td></tr>
+<tr><td><strong>轴 3 · 参照物</strong><br><span class="small">和谁比</span></td><td>拿什么当「正确」？</td><td>配对金标准 GT → 无配对的真实分布 → 下游任务性能 → 人类专家判断 → 自洽性（无 GT，靠往返一致）→ 物理定律（无数据，靠先验）</td></tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">为什么这个视角有用</div><p>一个指标 = 从三根轴上各取一个值。而「一个指标凭什么成立」，就是问：<strong>这个「空间 × 算子 × 参照」的组合，其合法性来源是什么？</strong>于是「底层原理」不再是一堆零散的说法，而是对「哪些组合有合法性、合法性从哪来」的系统回答。这也是为什么下面十条原理可以穷尽——它们对应的是三轴上被证明过可行的组合。</p></div>
+
+<h3 id="s32">3.2 位置总表：原理就是三轴的一个组合</h3>
+<div class="scroll"><table>
+<thead><tr><th>原理</th><th>表示空间（轴1）</th><th>比较算子（轴2）</th><th>参照物（轴3）</th><th>合法性来源</th></tr></thead>
+<tbody>
+<tr><td><strong>P1 信号保真</strong></td><td>像素</td><td>Lp 范数</td><td>配对 GT</td><td>范数公理 + 高斯 ML</td></tr>
+<tr><td><strong>P2 结构相似</strong></td><td>HVS 局部统计（均值/方差/协方差）</td><td>三项乘积（l·c·s）</td><td>配对 GT</td><td>HVS 结构敏感假设</td></tr>
+<tr><td><strong>P3 学习表征</strong></td><td>深度特征（自然 or 病理域）</td><td>特征距离</td><td>配对 GT 或专家评分</td><td>深度特征涌现性 + 元评价对齐</td></tr>
+<tr><td><strong>P4 分布匹配</strong></td><td>深度特征</td><td>分布距离 / 两样本检验</td><td>真实分布（无配对）</td><td>积分概率度量 + 假设检验</td></tr>
+<tr><td><strong>P5 任务相关</strong></td><td>任务变量</td><td>决策风险差 / 信息量</td><td>下游任务性能</td><td>决策论 + 信息瓶颈 + 观察者模型</td></tr>
+<tr><td><strong>P6 生物分子真值</strong></td><td>生物量</td><td>一致性系数</td><td>真实 IHC 算出的同一生物量</td><td>测量学一致性理论</td></tr>
+<tr><td><strong>P7 物理光学</strong></td><td>OD / 浓度</td><td>范数或单调性/一致性</td><td>物理定律（Beer–Lambert）</td><td>成像物理正演模型</td></tr>
+<tr><td><strong>P8 信息可识别性</strong></td><td>互信息 / 后验分布</td><td>信息量差</td><td>输入可达的信息上界</td><td>病态逆问题 + 信息论</td></tr>
+<tr><td><strong>P9 自洽与不变性</strong></td><td>任意（定义在指标上）</td><td>往返误差 / 不变性检验</td><td>自洽（无 GT）</td><td>公理化设计</td></tr>
+<tr><td><strong>P10 不确定性</strong></td><td>预测分布 / 集成分歧</td><td>校准误差 / 分歧度</td><td>可靠性（而非均值）</td><td>概率校准 + OOD 理论</td></tr>
+</tbody></table></div>
+
+<div class="box pur"><div class="bt">读法</div><p>看这张表要横向读：<strong>同一根轴上相邻的两个值之间的「跳跃」，就是一次创新机会</strong>。例如轴 3 从「配对 GT」跳到「真实分布」（P1→P4）催生了 FID；从「配对 GT」跳到「专家判断」（P1→P3）催生了 LPIPS。而你若把轴 1 从「深度特征」跳到「生物量」、轴 2 保持「一致性系数」，就得到 P6——这就是虚拟染色里最该做、但目前做得最零散的一类。</p></div>
+
+<h2 id="s4"><span class="num">4</span>十条底层原理</h2>
+<p>下面每条原理按同一结构展开：<strong>核心命题 → 形式化 → 依据（为什么合法）→ 在虚拟染色的具体化 → 失效条件 → 创新机会</strong>。失效条件那一栏是重点，因为<u>别人没注意到的失效条件，就是你的新指标的立足点</u>。</p>
+
+<div class="principle" id="s41">
+<div class="pt"><span class="pn">P1</span>信号保真原理（Signal Fidelity）</div>
+<p><strong>核心命题：</strong>把图像视为信号，两个信号之间的「保真度」就是它们的误差能量。这背后隐含一个信息论式的判断——误差越小，信息损失越少。</p>
+<p><strong>形式化：</strong></p>
+<div class="formula">MSE(x,y) = (1/N) Σ (xᵢ − yᵢ)² &nbsp;&nbsp;·&nbsp;&nbsp; PSNR = 10·log₁₀(MAX²/MSE) &nbsp;&nbsp;·&nbsp;&nbsp; MAE = (1/N) Σ |xᵢ − yᵢ|</div>
+<p><strong>依据（为什么合法）：</strong>它的合法性来自两个独立的地方。</p>
+<ul>
+<li><strong>范数公理。</strong>Wang &amp; Bovik 在 <em>Mean Squared Error: Love It or Leave It?</em>（IEEE Signal Processing Magazine, 2009）中逐字给出 Lp 范数作为「距离度量」必须满足的四条：<code>nonnegativity: dp(x,y) ≥ 0</code>；<code>identity: dp(x,y) = 0 当且仅当 x = y</code>；<code>symmetry: dp(x,y) = dp(y,x)</code>；<code>triangular inequality: dp(x,z) ≤ dp(x,y) + dp(y,z)</code>。MSE 的平方根（即 p=2）是 R^N 中的标准欧氏距离。<span class="b high">[VERIFIED]</span></li>
+<li><strong>统计估计论。</strong>同一文献指出 MSE 的另一个合法性：<code>当平方误差函数与源/噪声的高斯假设结合时，最优信号估计是线性的</code>（Wiener 滤波即此框架的产物）。也就是说，<strong>MSE 的隐含前提是「误差服从高斯」且「各像素独立」</strong>。此外 MSE 还具备凸性、对称性、可微性、正交变换下能量保持、以及对独立失真源可加（MSE(x,y_K) = Σ MSE 分量）。<span class="b high">[VERIFIED]</span></li>
+</ul>
+<p><strong>在虚拟染色的具体化：</strong>PSNR / MAE / RMSE 是所有虚拟染色论文的默认 baseline 指标。它们的优点是无需任何模型、可复现性满分；缺点是<u>与「这张 IHC 是否可用于诊断」几乎无关</u>。</p>
+<div class="box stop"><div class="bt">失效条件（三条，都可被写成论文的 motivation）</div>
+<ol>
+<li><strong>隐含的高斯/独立假设不成立。</strong>原文措辞：这些假设「<em>not one of them holds (even roughly) in the context of measuring the visual perception of image fidelity</em>」——逐字引用，指像素独立、误差与信号独立等假设在视觉保真场景下全部不成立。<span class="b high">[VERIFIED]</span></li>
+<li><strong>奖励模糊解（regression to the mean）。</strong>原文用一张图直接展示：对「模糊 + 加噪」的图，<u>MSE-最优的线性滤波器输出是模糊的，而 SSIM-最优滤波器输出更锐利</u>（Figure 12）。这是 MSE 类目标函数在生成任务里系统性偏向均值解的机制性证据。<span class="b high">[VERIFIED]</span></li>
+<li><strong>对配准误差极端敏感。</strong>H&amp;E/IHC 连续切片存在 10–50 px 量级的错位，逐像素指标会把「错位」当成「错误」。这一点在虚拟染色综述与多个工作中被反复指出。<span class="b medium">[部分核实]</span></li>
+</ol></div>
+<p><strong>创新机会：</strong>低。P1 已经饱和，除非你能证明某个新场景下「误差能量」恰好等价于临床风险（那其实是 P5 的活）。</p>
+</div>
+
+<div class="principle" id="s42">
+<div class="pt"><span class="pn">P2</span>结构相似原理（Structural Similarity）</div>
+<p><strong>核心命题：</strong>人类视觉系统（HVS）高度适应于从场景中<u>提取结构信息</u>，因此图像质量应由「结构信息的退化」来度量，而不是由误差的可见性来度量。</p>
+<p><strong>依据（为什么合法）：</strong>SSIM 原文（Wang, Bovik, Sheikh, Simoncelli, <em>Image Quality Assessment: From Error Visibility to Structural Similarity</em>, IEEE TIP 2004）摘要逐字：<em>“Under the assumption that human visual perception is highly adapted for extracting structural information from a scene, we introduce an alternative complementary framework for quality assessment based on the degradation of structural information.”</em> <span class="b high">[VERIFIED]</span> 这句话就是 P2 的全部合法性来源——它是一个<strong>关于 HVS 的假设</strong>，不是一个数学定理。</p>
+<p><strong>形式化：</strong>SSIM 把局部相似度分解为三项之积：</p>
+<div class="formula">SSIM(x,y) = [l(x,y)]^α · [c(x,y)]^β · [s(x,y)]^γ
+&nbsp;&nbsp; l = 亮度项（比较局部均值 μ）
+&nbsp;&nbsp; c = 对比度项（比较局部标准差 σ）
+&nbsp;&nbsp; s = 结构项（比较归一化后的相关系数）</div>
+<p>这个分解的理论依据是：<strong>把「亮度变化」「对比度变化」这两类 HVS 会自动补偿的非结构失真单独拆出来，只让结构项承担质量判断。</strong>MS-SSIM 加多尺度是因为 HVS 在不同观察距离下工作在多尺度；FSIM 用 phase congruency（相位一致性）作为低层特征，依据是「人眼对相位一致点（边缘、角点）最敏感」；VIF 走信息论路线，度量「参考图像中能被 HVS 提取的信息有多少仍存在于失真图像中」。</p>
+<div class="box warn"><div class="bt">★ 关键理论事实：SSIM 不是度量（not a metric）</div>
+<p>Brunet, Vrscay &amp; Wang, <em>On the Mathematical Properties of the Structural Similarity Index</em>（IEEE TIP 2012）证明：原文逐字 <em>“Clearly, the SSIM index is not a metric.”</em> 并给出原因：<em>“It is not a metric since the triangular inequality does not hold.”</em> 作者随后构造了基于 SSIM 成分的归一化 RMSE（NRMSE），<u>只有修改后的形式才是合法的距离度量</u>，并具有拟凸性（quasi-convexity）、最优点附近的凸区域、以及正交/酉变换下的距离保持性。<span class="b high">[VERIFIED]</span></p>
+<p><strong>这条事实有两个直接后果：</strong>(a) 把原始 SSIM 直接当 loss 反传，缺乏优化理论保障（它不满足三角不等式、非凸）；(b) 反过来，如果你要设计一个新指标并希望它能当 loss 用，你必须显式证明它（或它的单调变换）是 distance，或至少是 quasi-convex 的。见 §5.1。</p>
+</div>
+<div class="box stop"><div class="bt">失效条件（在虚拟染色上，P2 是「错得方向不对」）</div>
+<ol>
+<li><strong>域错配。</strong>PaPIS 原文：FR-IQA 指标 <em>“originally designed for natural images and often fail to capture pathology-relevant features”</em>。<span class="b high">[VERIFIED]</span></li>
+<li><strong>SSIM 会主动补偿染色差异。</strong>这是最致命的一条：SSIM 的设计<u>就是要</u>把亮度/对比度这类变化当作 HVS 可补偿的「非结构失真」剥离出去。但 H&amp;E→IHC 里，<strong>染色本身（颜色、色调、DAB 强度）正是要被传递的信号</strong>。于是 SSIM 会把「染色完全错了但结构还在」判为高分。HAPS 摘要逐字印证这一点：这些指标 <em>“fail to capture tissue morphology preservation and biomarker expression patterns”</em>。<span class="b high">[VERIFIED]</span></li>
+<li><strong>对局部形态细节不敏感。</strong>这是结构相似类指标的通病，在病理上尤其致命（细胞核形态、膜染色模式都在局部）。</li>
+</ol></div>
+<p><strong>创新机会：</strong>中。P2 本身已老，但「<u>把 SSIM 的 l·c·s 分解重新定义为染色域的三项分解</u>」这个思路还没有人做过——即：不剥离颜色，而是把颜色当成第一等公民。这是一个可以利用 §5.2 不变性公理来论证的新指标。</p>
+</div>
+
+<div class="principle" id="s43">
+<div class="pt"><span class="pn">P3</span>学习表征 / 感知原理（Learned Representation / Perceptual）</div>
+<p><strong>核心命题：</strong>两个图像的「相似」不应在像素空间测，而应在<u>深度网络学到的语义特征空间</u>里测。因为深度特征携带的正是人类感知所依据的语义内容。</p>
+<p><strong>依据（为什么合法）：</strong>LPIPS（Zhang et al., CVPR 2018）的核心发现是：用预训练网络中间层的特征距离度量相似度，<u>大幅优于</u> PSNR/SSIM/LPIPS 之前的所有指标；而且这一优势跨越不同网络架构、不同监督形式稳定出现。作者的解释是——<strong>感知相似性是深度视觉表征共有的一种「涌现」属性（emergent property shared across deep visual representations）</strong>。<span class="b high">[VERIFIED]</span></p>
+<p>后续发展：DISTS（TPAMI 2021）显式把相似度拆成「结构相似」（特征图相关）与「纹理相似」（特征图空间均值相关），从而获得对纹理重采样的容忍性。<span class="b high">[VERIFIED]</span></p>
+<p><strong>在虚拟染色的具体化：</strong>这是当前最活跃的创新区，已经有至少两个专门的指标：</p>
+<ul>
+<li><strong>PaPIS</strong>（arXiv 2507.12624, 2025）：用<u>细胞形态分割网络</u>训练出的深度特征，并加入 <em>Retinex 启发的特征分解</em>。动机原文：现有 FR-IQA 指标「无法捕捉病理相关特征」，而专家评审「主观且耗时」。<span class="b high">[VERIFIED]</span></li>
+<li><strong>HAPS</strong>（arXiv 2605.20362, 2026）：在<u>病理数据上预训练的冻结编码器</u>的特征空间里算距离，再加一个线性头把特征级差异聚合成一个分数，该线性头用<u>专家相似度评分</u>监督。它还把 HAPS 反过来用于训练数据清洗（过滤 MIST 里低分样本，训练集更干净，模型更好）。<span class="b high">[VERIFIED]</span></li>
+</ul>
+<div class="box warn"><div class="bt">★ 隐含的哲学：特征空间的选择 = 价值判断</div>
+<p>选哪个特征空间，等于回答「什么算好」。同一批模型在不同特征空间里的排名会变。这一点在通用生成模型领域有因果分析支撑：<em>F?D: On understanding the role of deep feature spaces</em>（arXiv 2305.20048, 2023）逐字结论是 <em>“the FD is heavily influenced by its feature space's training dataset and objective function”</em>。<span class="b high">[VERIFIED]</span> 在医学影像上还有一条反直觉的实证：<em>Feature Extraction for Generative Medical Imaging Evaluation</em>（MICCAI 2024）发现 <em>“medical image-trained feature extractors do not inherently improve FDs and can even compromise their reliability”</em>——即<u>用医学数据训练的提取器并不天然更好</u>。<span class="b high">[VERIFIED]</span></p>
+</div>
+<p><strong>失效条件：</strong>(1) 特征空间与下游任务不对齐——特征空间的训练目标决定它「看得见」什么；(2) 缺乏元评价——必须证明新特征空间与专家判断的秩相关<u>确实</u>更高，而不是假设；(3) 无配对 GT 时不能用（P3 本质是 full-reference）。</p>
+<p><strong>创新机会：</strong>中高，但已拥挤。PaPIS/HAPS 已经把「换成病理特征」这条路占了。若要走，必须走更细的差异：例如<u>用病理基础模型（UNI/CONCH 等）的哪一层、哪种聚合</u>，或者<u>把特征空间与染色化学绑定</u>（见 P7）。注意：本轮检索<strong>未找到</strong>明确以 UNI/CONCH/CTransPath 等命名基础模型的特征空间构造虚拟染色评价指标的工作（PaPIS 用的是细胞形态分割网络，UNIStainNet 是把 UNI 当生成条件而非评价空间）——这是一条可查证的空档。<span class="b medium">[阴性结果]</span></p>
+</div>
+
+<div class="principle" id="s44">
+<div class="pt"><span class="pn">P4</span>分布匹配原理（Distribution Matching）</div>
+<p><strong>核心命题：</strong>当没有逐像素配对的 GT 时（虚拟染色的常态），评价可以退一步：不问「这张生成图和那张真图像不像」，而问「<u>生成图的整体分布</u>和<u>真实图的整体分布</u>是否一致」。这把评价变成统计学的两样本检验问题。</p>
+<p><strong>依据（为什么合法）：</strong></p>
+<ul>
+<li><strong>MMD</strong>（Gretton et al., <em>A Kernel Two-Sample Test</em>, JMLR 2012）：MMD 定义为「RKHS 单位球内函数的期望差的最大值」，是一种积分概率度量（IPM），可直接构造分布无关的两样本检验。原文逐字：<em>“largest difference in expectations over functions in the unit ball of a RKHS... called the maximum mean discrepancy (MMD)”</em>。<span class="b high">[VERIFIED]</span></li>
+<li><strong>FID</strong>（Heusel et al., NeurIPS 2017）：把图像经 Inception-v3 映射成特征，<u>假设特征服从多元高斯</u>，然后取两个高斯之间的 Fréchet 距离（即 Wasserstein-2，含均值项 + 协方差项）。<span class="b high">[VERIFIED]</span></li>
+<li><strong>KID</strong>：用核 MMD 的无偏估计替代高斯拟合，不假设分布形状。</li>
+</ul>
+<div class="box stop"><div class="bt">★ FID 的三条被证明的缺陷（都能直接写进你的 motivation）</div>
+<ol>
+<li><strong>高斯假设是错的，且后果严重。</strong>CMMD 论文（arXiv 2401.09603, 2024）逐字：<em>“incorrectly modeling Inception embeddings… as coming from a multivariate normal distribution”</em>；并给出一个关键实验现象——<u>当分布逐渐偏离高斯时，基于正态假设的 Fréchet 距离会误导性地保持为零</u>。<span class="b high">[VERIFIED]</span></li>
+<li><strong>FID 是有偏估计，且偏差依模型而异。</strong>原文逐字：<em>“FID is a biased estimator, where the bias depends on the model being evaluated. MMD, on the other hand, is an unbiased estimator”</em>。<span class="b high">[VERIFIED]</span> 另一篇 CVPR 2020 工作（arXiv 1911.07023）把后果说透：<em>“the bias term depends on the particular model being evaluated… cannot be fixed by evaluating at a fixed number of samples… all comparisons using FID or IS as currently computed are unreliable”</em>。<span class="b high">[VERIFIED]</span></li>
+<li><strong>没有指标与人类判断强相关。</strong>NeurIPS 2023 一篇工作（OpenReview 08zf7kTOoh）逐字：<em>“no existing metric strongly correlates with human evaluations… one cause is over-reliance on Inception-V3”</em>。<span class="b high">[VERIFIED]</span></li>
+</ol></div>
+<p><strong>在虚拟染色的具体化：</strong>FID/KID 是虚拟染色论文的第二标配（与 PSNR/SSIM 并列）。采用它的<u>实际理由</u>不是「FID 好」，而是「连续切片的固有错位让逐像素指标不可信，而 FID 在特征空间聚合、对错位更鲁棒」。但它的根本弱点在虚拟染色里被放大：<strong>FID 看不见实例级错误</strong>——把阳性区域整体搬到错误位置，FID 可能几乎不变。</p>
+<p><strong>创新机会：</strong>中。可行方向：病理域特征下的分布距离（但见 P3 的拥挤警告）；或<u>把分布匹配与实例级约束组合</u>，构造一个既对错位鲁棒、又对实例错误敏感的量。后者正是资料库 04 报告 Route A 的诉求。</p>
+</div>
+
+<div class="principle" id="s45">
+<div class="pt"><span class="pn">P5</span>任务相关原理（Task-based / Downstream Utility）</div>
+<p><strong>核心命题：</strong>一个生成输出的价值，取决于它<u>支撑的决策</u>的价值。像素级完美如果对诊断无用，就等于零；像素级有瑕疵如果诊断不受影响，就不该被判死刑。</p>
+<p><strong>依据（为什么合法）：</strong>这是十条原理里理论最完备的一条，有三条独立的理论支柱。</p>
+<ul>
+<li><strong>决策论。</strong>医学影像领域长期主张「task-based measures of image quality」——评价应针对特定任务（检测/判别），用观察者的决策性能（如 AUC）来度量。经典框架是 model observer / ideal observer（信号检测论）。</li>
+<li><strong>信息论。</strong>这是最漂亮的一条。<em>Observer-Usable Information as a Task-specific Image Quality Metric</em>（Lu, Sengupta, Li, Anastasio；arXiv 2510.00298；已被 IEEE TMI 接收）给出精确定义：<strong>TSI（task-specific information）= 图像与任务变量之间的互信息</strong>，代表「一张图对完成指定任务有多信息化」的最优度量。但它有一个关键限制，原文逐字：<em>“like the ideal observer from signal detection theory, TSI does not quantify the amount of task-relevant information in an image that can be exploited by a sub-ideal observer.”</em> 为此作者引入 <strong>predictive V-information（V-info）</strong>——TSI 的一种松弛，可以量化「<u>在指定的次优观察者族下</u>，图像中可被利用的任务相关信息量」。实验显示 V-info 与二分类任务的 AUC 相关，且<u>可推广到 AUC 难以处理的多分类任务</u>，在传统指标饱和的场景下更敏感。<span class="b high">[VERIFIED]</span></li>
+<li><strong>信息瓶颈 / 充分统计量。</strong>一个好的表征应当保留「任务相关信息」而丢弃其余。这解释了为什么「像素完美 ≠ 任务有用」：像素空间包含大量与任务无关的信息，也可能丢掉与任务相关的细节。</li>
+</ul>
+<div class="box good"><div class="bt">实证：为什么「no-reference 指标」靠不住</div>
+<p><em>Metrics that matter: Evaluating image quality metrics for medical image generation</em>（Deo et al., arXiv 2505.07175, 2025）在脑 MRI 上系统评估了常用 no-reference 指标，逐字结论：<em>“many widely-used no-reference image quality metrics correlate poorly with downstream task suitability and exhibit a profound insensitivity to localised anatomical details crucial for clinical validity.”</em> 更进一步：这些指标<u>在分布偏移上会给出误导性分数</u>（例如数据记忆/memorisation），从而「可能误判模型就绪度，导致部署有缺陷的工具」。<span class="b high">[VERIFIED]</span></p>
+</div>
+<p><strong>在虚拟染色的具体化：</strong>两类做法。① <u>下游任务</u>：DGR（Nature Communications 2026）报告 nucleus segmentation Dice = 0.422、下游分类提升（UniToPatho +2.4%）。② <u>语义保真</u>：Star-Diff 的 <strong>Semantic Fidelity Score（SFS）</strong>，论文原文动机是「为了在 H&amp;E 与 IHC 不可避免的空间错位下进行公平评价」（Computers in Biology and Medicine, 2025）。<span class="b high">[VERIFIED]</span></p>
+<p><strong>失效条件：</strong>(1) 下游模型本身有偏，会引入「评价器偏置」；(2) 生成器与评价器可能循环论证（见 §6.1 问题 5）；(3) 下游任务与临床终点未必等价。</p>
+<p><strong>创新机会：</strong>高，且理论工具现成。把 V-info 从 MRI 修复搬到虚拟染色，本身就是一个可发表的、有严格理论支撑的新指标——而且它天然解决「多分类任务（HER2 0/1+/2+/3+）下 AUC 难用」的问题，这在虚拟染色里是真实痛点。</p>
+</div>
+
+<div class="principle" id="s46">
+<div class="pt"><span class="pn">P6</span>生物分子真值原理（Biological / Molecular Ground Truth）</div>
+<p><strong>核心命题：</strong>虚拟染色（尤其 H&amp;E→IHC）的最终目标<u>不是</u>像素像，而是<u>分子内容正确</u>。因此指标应定义在生物量上：蛋白表达、biomarker 状态、空间表型。这是唯一一条把「评价」直接连到「临床用途」的原理。</p>
+<p><strong>形式化与依据：</strong>核心是<strong>测量学一致性分析</strong>。用虚拟 IHC 算出的生物量 Ê，与真实 IHC 算出的同一生物量 E，做一致性检验。不同尺度对应不同的合法工具：</p>
+<div class="scroll"><table>
+<thead><tr><th>测量尺度</th><th>合适的工具</th><th>底层假设</th><th>适用对象</th></tr></thead>
+<tbody>
+<tr><td><strong>连续</strong>（DAB-IOD、H-score 代理、Ki67 指数）</td><td>ICC（组内相关系数）、Bland–Altman</td><td>ICC 要求可加性/近似正态、方差成分可分解；Bland–Altman 要求差值近似正态且度量同一构念</td><td>表达强度、比例、指数</td></tr>
+<tr><td><strong>有序等级</strong>（HER2 0/1+/2+/3+、弱/中/强）</td><td>weighted κ（线性/二次加权）、Spearman</td><td>κ 要求标注者独立、类别互斥；加权 κ 假设相邻类别差异小于跨类别差异</td><td>分级评分</td></tr>
+<tr><td><strong>无序分类</strong>（阳性/阴性、亚型）</td><td>Cohen's κ、MCC、准确率</td><td>κ 对类别不平衡敏感，需同时报混淆矩阵</td><td>二分类状态</td></tr>
+<tr><td><strong>单调关系</strong>（表达随形态变化）</td><td>Spearman / Kendall</td><td>只假设单调、不假设线性</td><td>排序保真</td></tr>
+</tbody></table></div>
+<div class="box stop"><div class="bt">★ 这条原理最容易被忽略的陷阱：天花板效应</div>
+<p>真实 IHC 的 HER2 分级，<u>病理学家之间的kappa本身就低</u>。这意味着「与真实 IHC 的一致性」这个指标有一个<strong>由人际一致性决定的上界</strong>。后果有两条，方向相反：</p>
+<ul>
+<li><strong>坏消息：</strong>如果你的模型一致性「超过了」人类人际一致性，这通常不是模型好，而是指标/样本出了问题（例如样本偏易、或模型学到了批次的捷径）。</li>
+<li><strong>好消息：</strong>这给了你一个<u>天然的参照基线</u>——「pathologist-vs-pathologist ceiling」。一个诚实的新指标应当报告这个上界，并说明自己距离上界有多远。这本身就是方法学贡献。</li>
+</ul>
+<p>资料库 04 报告已经把这条列为风险项（「HER2 0/1+/2+/3+ 人际一致性很低 → 需共识标注、weighted κ、pathologist-vs-pathologist ceiling」），本报告在原理层确认其合法性来源。</p>
+</div>
+<p><strong>在虚拟染色的具体化：</strong>已有零散先例——TA-GAN（2026）报告 DAB positive-area ratio、ICC 与回归斜率；PGVMS（2026）用 OD 阈值分类并请病理学家打 1–5 分；PixCell（2025）报 ER/PR/Ki67 的 κ / weighted κ / MCC。<span class="b medium">[部分核实·来自资料库既有报告]</span></p>
+<p><strong>失效条件：</strong>(1) 天花板效应（见上）；(2) 「生物量」本身是染色代理量，不是绝对蛋白丰度——H-score/DAB-IOD 是<u>染色代理</u>，需要固定的 stain matrix 与 white point 才可比（见 P7）；(3) 一致性高不等于因果正确，可能共同受某个混杂因素驱动。</p>
+<p><strong>创新机会：</strong>高。目前没有统一的「弱配准表达保真 benchmark」。把 P6 的多种一致性工具组合成一个<u>分层协议</u>（分布 + 形态条件 + 排序 + 空间组织），是资料库 04 报告 Route A/B/C 的核心诉求，而本报告为其提供了原理合法性。</p>
+</div>
+
+<div class="principle" id="s47">
+<div class="pt"><span class="pn">P7</span>物理光学原理（Physics-based Metric）<span class="b low" style="margin-left:8px">★ 明显空缺</span></div>
+<p><strong>核心命题：</strong>染色图像是<u>物理测量的结果</u>，不是自然图像。好的评价指标应当尊重成像物理——在光学密度（OD）空间而非 RGB 空间比较、要求浓度单调性、要求颜色混合关系正确。</p>
+<p><strong>依据（为什么合法）：</strong>Beer–Lambert 定律给出染色成像的正演模型：</p>
+<div class="formula">OD = −log₁₀(I / I₀) = Σ_k ε_k(λ) · c_k · l
+&nbsp;&nbsp; I₀ = 空场（white point）；ε_k = 染色 k 的吸收系数；c_k = 浓度；l = 光程</div>
+<p>关键推论：<strong>RGB 强度与染色浓度是非线性耦合的（指数关系），只有转到 OD 空间后才近似线性可加。</strong>因此「在 RGB 上比较」与「在浓度上比较」不是同一个问题。颜色反卷积（color deconvolution）就是把 RGB 分解为各染色通道浓度图——它本质是求解上式。</p>
+<div class="box warn"><div class="bt">这个正演模型自己也有失效边界（这点必须诚实写）</div>
+<p>Oshina &amp; Spigulis, <em>Beer–Lambert law for optical tissue diagnostics: current state of the art and the main limitations</em>（J. Biomed. Opt. 26(10), 2021）逐字：<em>“The basic assumptions of this law may not be fulfilled in real measurement conditions… anisotropy, scattering, fluorescence, chemical equilibria, interference, dichroism, spectral bandwidth disagreements, stray radiation, and instrumental effects”</em>。<span class="b high">[VERIFIED]</span> 另一个直接相关的技术限制：<em>当染色通道数 K&gt;3 时，经典 Beer–Lambert 颜色反卷积会欠定且不稳定</em>（Beer-Lambert Autoencoder 论文，arXiv 2601.11336, 2026，逐字：<em>“becomes under-determined and unstable for multiplex IHC (mIHC) with K&gt;3 chromogens”</em>）。<span class="b high">[VERIFIED]</span></p>
+</div>
+<p><strong>在虚拟染色的具体化（关键观察）：</strong>OD 空间的一致性<u>已经被用，但几乎都用作训练约束，而不是独立评价指标</u>。例如：</p>
+<ul>
+<li><strong>CCPL</strong>（arXiv 2506.07559, 2025）：把 HER2 IHC 分解成 Hematoxylin 与 DAB 两个通道，对两个单通道的<u>焦点光密度图</u>做统计分析，以保证染色分布与强度一致。<span class="b high">[VERIFIED]</span></li>
+<li><strong>PGLStain</strong>（OpenReview ICLR 2027 投稿 #32050）：用连续的 OD 兼容性作为「条件特征关系」的信号。<span class="b high">[VERIFIED]</span></li>
+</ul>
+<div class="box stop"><div class="bt">★ 空缺就在这里</div>
+<p>本轮定向检索<strong>未找到</strong>把「物理一致性（OD/浓度图一致）」命名为独立<u>评价指标</u>的论文——现有工作都把 OD 一致性当训练约束。这是一个可查证的空档：<u>把 Beer–Lambert 一致性形式化为一个评价指标</u>（而不是 loss），既解释了「为什么在 OD 空间比较是合法的」，又补上了领域缺的一环。<span class="b medium">[阴性结果]</span></p>
+</div>
+<p><strong>失效条件：</strong>(1) Beer–Lambert 的线性假设在真实组织上不成立（见上，散射/荧光/二色性等）；(2) K&gt;3 时反卷积欠定；(3) 需要固定的 stain matrix 与 white point 才有可比性——否则不同批次不可比（资料库 E0.3/E0.3b 已实测证实这点）。</p>
+<p><strong>创新机会：</strong>高。这是十条里最「干净」的空档之一。</p>
+</div>
+
+<div class="principle" id="s48">
+<div class="pt"><span class="pn">P8</span>信息可识别性原理（Identifiability &amp; Information Content）<span class="b low" style="margin-left:8px">★ 明显空缺</span></div>
+<p><strong>核心命题：</strong>虚拟染色是<u>病态逆问题</u>——一个 label-free 输入可能对应多个合理的 IHC 输出（one-to-many）。因此<strong>输入模态的信息含量有上界</strong>，对「输入里根本不存在的信息」不应在评价中惩罚模型。</p>
+<p><strong>依据（为什么合法）：</strong></p>
+<ul>
+<li><strong>信息论上界。</strong>形式上，评价应针对「给定输入 x 后，输出 y 的可达信息」，即条件熵 H(y|x) 或互信息 I(x;y) 所界定的可达集合。理想情况下，一个完美的评价指标应当在 H(y|x) 很大（输入确实没信息）时「宽容」，在 H(y|x) 很小（输入有信息、模型却没用）时「严厉」。这与 P5 的 TSI 是同一族理论。</li>
+<li><strong>互信息作为训练/解耦工具已被使用。</strong>MIU-Diff（arXiv 2506.23184, 2025）逐字：用 <em>“mutual-information (MI)-guided score-based diffusion model… global MI-guided energy function that disentangles the tissue structure and staining characteristics across modalities… local MI-driven contrastive learning”</em>。<span class="b high">[VERIFIED]</span> 注意：它把 MI 用作<u>训练目标</u>，不是「可达上界」的量化。</li>
+<li><strong>无 GT 时的幻觉检测。</strong>这是 P8 最实用的落地形式。AQuA（Huang et al.，arXiv 2404.18458；Nature Biomedical Engineering 2025）逐字：<em>“AQuA autonomously achieves 99.8% accuracy when detecting acceptable and unacceptable virtually stained tissue images without access to histochemically stained ground truth, and presents an agreement of 98.5% with the manual assessments made by board-certified pathologists, including identifying realistic-looking images that could mislead diagnosticians.”</em> <span class="b high">[VERIFIED]</span></li>
+</ul>
+<div class="box stop"><div class="bt">两个必须诚实标注的点</div>
+<ol>
+<li><strong>AQuA 的具体机制我没有读到原文正文。</strong>二手解读称它用「虚拟染色 ↔ 虚拟自荧光」的循环一致性、通过 T 次循环的误差累积来检测幻觉，但 AQuA 摘要<u>未提</u>该机制。因此本报告只把「99.8% / 98.5%」当作已核实的<u>结果</u>，「循环一致性」当作<u>未核实</u>的机制说明。见 §8。</li>
+<li><strong>「以互信息/条件熵量化 label-free 输入关于染色的信息上界」这项工作，本轮未检索到。</strong>这是定向检索的否定结果，不等于不存在。<span class="b medium">[阴性结果]</span></li>
+</ol></div>
+<p><strong>创新机会：</strong>最高。理由：(a) one-to-many 是虚拟染色的<u>本质属性</u>，但现有指标几乎都默认「输出唯一」；(b) 理论工具（互信息、条件熵、V-info）现成且严格；(c) 一旦做出「可达上界」的量化，你就能回答一个领域内无人能答的问题——<strong>「这个模型已经达到输入信息允许的上限了吗？」</strong>。这比「我们的指标更高」有说服力得多。</p>
+</div>
+
+<div class="principle" id="s49">
+<div class="pt"><span class="pn">P9</span>自洽与不变性原理（Consistency / Invariance）</div>
+<p><strong>核心命题：</strong>一个好指标应当<u>对无关变换不变</u>（invariance）、<u>对相关变换敏感</u>（sensitivity）。这条原理与其他九条不同：它不是「某种比较方式」，而是一个<u>可以施加在任何指标上的设计约束</u>。</p>
+<p><strong>依据（为什么合法）：</strong>它来自公理化设计传统（§5.2 详述）。在虚拟染色里，它有三种具体形态：</p>
+<div class="scroll"><table>
+<thead><tr><th>形态</th><th>形式化</th><th>为什么合法</th><th>领域证据</th></tr></thead>
+<tbody>
+<tr><td><strong>循环一致性</strong></td><td>F(G(x)) ≈ x（正/逆模型往返稳定）</td><td>真实内容往返应稳定，幻觉则误差累积</td><td>AQuA 声称使用（<span class="b low">机制未核实</span>）；DGR 的 R2 位置一致性</td></tr>
+<tr><td><strong>位置/平移一致性</strong></td><td>指标应对小位移稳定</td><td>连续切片的错位是<u>物理必然</u>，不是错误</td><td>Star-Diff 报告 SFS 在 5 px 平移下稳定</td></tr>
+<tr><td><strong>单调性</strong></td><td>浓度 ↑ ⇒ OD ↑（或指标单调响应）</td><td>由 Beer–Lambert 保证（P7 的下游推论）</td><td>多为隐含要求，未作为显式指标</td></tr>
+</tbody></table></div>
+<p><strong>为什么这条原理对你特别有用：</strong>因为它让你<u>可以「定义」什么是不变、什么是敏感</u>。当你要论证一个新指标时，「它满足 X 不变性与 Y 敏感性」往往比「它的数值更高」更有说服力——前者是可证明的，后者是可调的。而且它直接给出消融实验的设计：<u>把 X 变换施加到输入，看指标是否不变</u>；<u>把 Y 变换施加到输入，看指标是否响应</u>。</p>
+<p><strong>失效条件：</strong>不变性设计过头会「不变掉」真正的信号（例如对颜色不变的指标，在 H&amp;E→IHC 上就是废的——这正是 SSIM 的病，见 P2）。所以不变性与敏感性必须<u>成对</u>声明。</p>
+<p><strong>创新机会：</strong>中高，但更适合作为「新指标的附加论证」而非独立创新点。</p>
+</div>
+
+<div class="principle" id="s410">
+<div class="pt"><span class="pn">P10</span>不确定性与鲁棒性原理（Uncertainty &amp; Robustness）<span class="b low" style="margin-left:8px">★ 明显空缺</span></div>
+<p><strong>核心命题：</strong>一个只在平均意义上好的模型可能是<u>不可靠的</u>。评价应当衡量可靠性，而不只是平均性能。</p>
+<p><strong>依据（为什么合法）：</strong></p>
+<ul>
+<li><strong>三条轴近乎独立。</strong>BMVC 2026 一篇关于虚拟染色可靠性的工作（arXiv 2608.24626）逐字：<em>“visually plausible outputs may not faithfully reproduce the underlying tissue structure”</em>；并且 <em>“perceptual quality, task-specific error, and ensemble agreement measure largely independent axes… No single metric captures these differences.”</em> <span class="b high">[VERIFIED]</span> 这句话是 P10 存在的全部理由：<u>感知质量、任务误差、集成一致性是三条独立轴</u>，没有单一指标能覆盖。</li>
+<li><strong>OOD 是数字病理里被忽视的挑战。</strong><em>Are We Ready for Out-of-Distribution Detection in Digital Pathology?</em>（MICCAI 2024, arXiv 2407.13708）逐字：<em>“detection of semantic and covariate out-of-distribution (OOD) examples is a critical yet overlooked challenge in digital pathology”</em>。<span class="b high">[VERIFIED]</span></li>
+<li><strong>校准</strong>（calibration / ECE）：预测置信度应与实际正确率匹配。</li>
+</ul>
+<p><strong>在虚拟染色的具体化：</strong>已有的是 <u>ensemble 分歧</u>与<u>不确定性图</u>（多为可视化，少为量化指标）。资料库 04 报告把 uncertainty 列为 L5 层的一个维度。</p>
+<div class="box stop"><div class="bt">★ 空缺</div>
+<p>本轮检索<strong>未找到</strong>虚拟染色专用的校准（ECE）/ 置信度校准指标工作——只有泛医学的 OOD/不确定性研究。<span class="b medium">[阴性结果]</span> 这是一个明确可占的空档。</p>
+</div>
+<p><strong>创新机会：</strong>高。一个「虚拟染色可靠性指标」——把感知质量、任务误差、集成分歧三条轴显式组合，并对「看起来逼真但结构幻觉」的样本给出低分——既有理论依据（BMVC 2026 的独立性论断），又有临床动机（防止部署有缺陷的工具，见 P5 的 Metrics that Matter）。</p>
+</div>
+
+<div class="box key"><div class="bt">§4 小结：十条原理的「拥挤度」地图</div>
+<div class="flow"><pre><code>已经拥挤（别人占满了）        尚可进入（需更细的差异）        明显空缺（可占）
+─────────────────────────    ──────────────────────────    ──────────────────────
+P1 信号保真  ████████████      P3 学习表征   ██████░░░░░░      P7 物理光学   ░░░░░░░░░░░░
+P2 结构相似  ████████░░░░      P5 任务相关   █████░░░░░░░      P8 可识别性   ░░░░░░░░░░░░
+P4 分布匹配  ████████░░░░      P6 生物真值   █████░░░░░░░      P10 不确定性  ░░░░░░░░░░░░
+                              P9 自洽不变性 ████░░░░░░░░
+                              （更适合当附加论证，不当主创新点）</code></pre></div>
+<p>判据：<strong>看这条原理下「已有多少个被明确命名的指标」</strong>。P1/P2/P4 各有 3+ 个成熟命名指标；P3 有 LPIPS/DISTS/PaPIS/HAPS；P5/P6 有先例但无统一命名；<strong>P7/P8/P10 在虚拟染色里几乎没有被命名的独立指标</strong>。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>元层：公理化与元评价（怎么证明你的新指标是个好指标）</h2>
+<p>§4 讲的是「指标可以建立在什么原理上」。但<strong>仅仅建立一个指标是不够的</strong>——你必须能论证它<u>配得上</u>被称为一个指标。这一层是「指标的指标」，也是绝大多数自创指标论文最薄弱、因而最容易超越的地方。</p>
+
+<h3 id="s51">5.1 度量公理（metric axioms）</h3>
+<p>把一个量称为「距离/度量」，需要满足四条公理。Wang &amp; Bovik 2009 逐字给出这四条（作为 Lp 范数合法性的依据）：<span class="b high">[VERIFIED]</span></p>
+<div class="formula">nonnegativity:        d(x,y) ≥ 0
+identity:             d(x,y) = 0  ⇔  x = y
+symmetry:             d(x,y) = d(y,x)
+triangular inequality: d(x,z) ≤ d(x,y) + d(y,z)</div>
+<p>为什么这四条重要？因为它们决定了你的指标<u>能不能当 loss 用</u>：</p>
+<div class="scroll"><table>
+<thead><tr><th>你的指标用途</th><th>必须满足</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>仅作<strong>评价</strong>（报告数字）</td><td>不必是 metric；但需单调、有界、可复现</td><td>只要求它有序、可比</td></tr>
+<tr><td>作<strong>训练损失</strong>（反传）</td><td>最好是 distance，或至少 quasi-convex / 有凸区域</td><td>否则优化无保障，可能越训越差</td></tr>
+<tr><td>作<strong>早停/模型选择</strong>依据</td><td>需对超参稳定、方差可控</td><td>否则选择的模型不可复现</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">反例：SSIM 不是 metric，但它被当 loss 用</div>
+<p>Brunet 2012 已证明 SSIM 不满足三角不等式（§4·P2 逐字）。作者构造的 NRMSE 才具有 quasi-convexity 与「最优点附近的凸区域」。<strong>实践含义：</strong>如果你的新指标直接由若干项相乘/相除构成（像 SSIM 那样），它大概率不是 metric；这时你要么声明它「只用于评价」，要么给出它的单调变换是 distance 的证明。这一步做了，你的论文在方法学上就比大多数自创指标扎实。</p>
+</div>
+<div class="box pur"><div class="bt">一个常被混淆的点：similarity vs distance</div>
+<p>SSIM 是<u>相似度</u>（越大越好，上界 1），MSE 是<u>距离</u>（越小越好，下界 0）。二者转换不是简单取负。设计为 distance 时，公理化要求更严（三角不等式必须成立）；设计为 similarity 时，通常只要求<u>唯一最大值</u>（unique maximum：d(x,x) 是全局最大且唯一）与有界性。选择哪种形式，会影响你能否给出证明、以及能否直接当 loss。建议：<strong>若能设计成 distance，优先 distance。</strong></p>
+</div>
+
+<h3 id="s52">5.2 不变性与敏感性公理（invariance &amp; sensitivity）</h3>
+<p>这是设计新指标时<u>最有力的工具</u>，也是最容易被忽略的一层。它的逻辑是：</p>
+<div class="box key"><div class="bt">核心原则</div><p>任何一个评价指标，都隐含地声明了两张清单：<strong>① 我对哪些变换不变（invariance）</strong>；<strong>② 我对哪些变换敏感（sensitivity）</strong>。一张指标的质量，取决于这两张清单<u>是否与任务的实际需求匹配</u>。</p></div>
+<p>把这条原则用在虚拟染色上，立刻能看清所有旧指标的病灶：</p>
+<div class="scroll"><table>
+<thead><tr><th>变换</th><th>它是什么性质</th><th>指标应当</th><th>旧指标实际</th></tr></thead>
+<tbody>
+<tr><td>整体平移 10 px（切片错位）</td><td>无关（物理必然）</td><td><span class="b high">不变</span></td><td>PSNR/SSIM <span class="b bad">剧烈变化</span></td></tr>
+<tr><td>染色色调偏移（DAB 偏深/偏浅）</td><td><strong>相关</strong>（正是要传递的信号）</td><td><span class="b high">敏感</span></td><td>SSIM <span class="b bad">主动补偿掉</span></td></tr>
+<tr><td>旋转 90°</td><td>无关</td><td>不变</td><td>多数指标 <span class="b bad">敏感</span></td></tr>
+<tr><td>局部细胞核形态改变</td><td><strong>相关</strong>（诊断依据）</td><td><span class="b high">敏感</span></td><td>全局指标 <span class="b bad">不敏感</span></td></tr>
+<tr><td>亮度整体缩放</td><td>无关（扫描仪差异）</td><td>不变</td><td>SSIM 部分不变 ✓</td></tr>
+<tr><td>阳性区域被搬到错误位置（总量不变）</td><td><strong>相关</strong></td><td><span class="b high">敏感</span></td><td>FID <span class="b bad">几乎不敏感</span></td></tr>
+</tbody></table></div>
+<div class="box good"><div class="bt">为什么这是你的机会</div>
+<p>看这张表的第 2 行与第 6 行：<strong>「对染色敏感」与「对实例位置敏感」这两条，现有主流指标全部失败，而且失败方向正好相反</strong>——SSIM 对染色过敏（错在把它当噪声），FID 对位置过敏不足（错在看不见实例错误）。一个<u>同时</u>满足「对染色敏感 + 对错位不变 + 对实例错误敏感」的指标，在这张表上就是无懈可击的，而且它的合法性完全来自公理层，不依赖任何单一实验。这就是「理解底层原理」能带来的创新。</p>
+</div>
+
+<h3 id="s53">5.3 元评价：与人类判断的相关性（meta-evaluation）</h3>
+<p>任何新指标都必须证明自己与人类判断相关。标准做法：</p>
+<div class="scroll"><table>
+<thead><tr><th>方法</th><th>测什么</th><th>注意</th></tr></thead>
+<tbody>
+<tr><td><strong>SROCC</strong>（Spearman 秩相关）</td><td>指标与 MOS 的<u>单调</u>关系</td><td>最常用，不假设线性</td></tr>
+<tr><td><strong>KROCC</strong>（Kendall 秩相关）</td><td>同上，对并列更稳健</td><td>样本少时更合适</td></tr>
+<tr><td><strong>PLCC</strong>（Pearson 线性相关）</td><td>线性关系</td><td>需先做非线性拟合（logistic）</td></tr>
+<tr><td><strong>MOS / DMOS</strong></td><td>主观评分均值 / 差分均值</td><td>需要足够多标注者，报标注者间一致性</td></tr>
+</tbody></table></div>
+<p><strong>HAPS 是这条路线的标准示范：</strong>它先用专家相似度评分训练一个线性头（把特征级差异聚合成分数），再验证该分数与专家评估的对齐。<span class="b high">[VERIFIED]</span> 换句话说，HAPS 的合法性不来自「我们用了病理特征」，而来自「我们证明了它和专家一致」。</p>
+<p>标准 IQA 数据集（LIVE / TID2013 / CSIQ / PieAPP / KADID）都带 MOS/DMOS 标注，但<strong>它们的失真大多是合成失真</strong>——这直接引出下一条。</p>
+
+<h3 id="s54">5.4 合成失真 vs 真实失真（synthetic-to-real gap）</h3>
+<p>这是一个必须知道的方法学陷阱：<strong>在合成失真（加噪、模糊、压缩）上表现好的指标，在真实/生成失真上可能失败。</strong></p>
+<ul>
+<li>通用 IQA 领域已有专门工作处理这一鸿沟，例如 <em>Bridging the Synthetic-to-Authentic Gap: Distortion-Guided Unsupervised Domain Adaptation for Blind Image Quality Assessment</em>（CVPR 2024, arXiv 2405.04167）。<span class="b high">[VERIFIED·标题与摘要]</span></li>
+<li>虚拟染色的失真<u>不是</u>加噪/模糊，而是<strong>结构幻觉、染色偏移、实例错位</strong>。因此，用合成失真数据集验证出来的指标，直接搬到虚拟染色上是可疑的。</li>
+</ul>
+<div class="box warn"><div class="bt">对你的直接含义</div><p>HAPS 的做法值得抄：<strong>不要用通用 IQA 数据集验证你的指标，要用<u>病理专家标注的真实相似度评分</u>验证。</strong>HAPS 正是构造了一个「H&amp;E–IHC patch 对 + 专家相似度评分」的数据集来做的。你若能构造或复用一个病理域的主观评分集，你的元评价就成立了——这本身也可以成为论文的一部分。</p></div>
+
+<h3 id="s55">5.5 统计显著性与可比性</h3>
+<p>最后一条方法学要求：<strong>报告一个指标差异时，必须说明它在统计上是否显著。</strong></p>
+<ul>
+<li><strong>配对检验</strong>：同一组测试样本上比较两个模型，用配对检验（paired t-test / Wilcoxon 符号秩）。</li>
+<li><strong>Bootstrap 置信区间</strong>：对指标本身做 bootstrap 重采样，报 95% CI。这对 FID 类指标尤其必要（因为 FID 有偏且方差大，见 P4）。</li>
+<li><strong>多次重复</strong>：至少 3 个随机种子，报告均值 ± 标准差。资料库既有报告反复强调「至少同一 seed/数据/steps 的消融」。</li>
+<li><strong>非劣效性设计</strong>（non-inferiority）：在临床评价里，「不差于」比「优于」更合适——因为虚拟染色的目标是替代而非超越真实染色。EMA 有专门的非劣效性/等效性指南；医学 AI 试验里也已有非劣效性设计的讨论（例如 Gastroenterology 2021 的 AI 试验设计文章给出「非劣效界值 10% ⇒ 每组需 322 例」这类样本量计算）。<span class="b high">[VERIFIED·标题与摘要]</span></li>
+</ul>
+<div class="box pur"><div class="bt">一个常被忽略的统计事实</div><p>DGR 的盲法病理学家实验报告「专家区分虚拟与真实染色的准确率约 52.4%，差异无统计学意义」。<strong>52.4% 本身几乎无意义——有意义的是「与 50% 相比不显著」这个统计判断。</strong>很多论文只报准确率不报检验，这是设计缺陷。你若在自己的评价协议里坚持报「点估计 + 区间 + 检验」，方法学上立刻高出一档。</p></div>
+
+<h2 id="s6"><span class="num">6</span>★ 设计一个新指标的配方</h2>
+<p>把 §3–§5 组装成可执行流程。这一节是给「我也要提出一个指标」用的。</p>
+
+<h3 id="s61">6.1 五个必须回答的问题</h3>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>问题</th><th>答错的后果</th></tr></thead>
+<tbody>
+<tr><td><strong>Q1</strong></td><td><strong>参照物是什么？</strong>配对 GT、真实分布、下游任务、专家判断、还是自洽/物理先验？</td><td>参照物错 = 指标整体无效。弱配准下选「配对 GT」是最常见的错。</td></tr>
+<tr><td><strong>Q2</strong></td><td><strong>表示空间选在哪？</strong>像素 / OD 浓度 / HVS 统计 / 深度特征 / 任务变量 / 生物量？</td><td>空间错 = 测的不是你要的东西（如 SSIM 在染色域）。</td></tr>
+<tr><td><strong>Q3</strong></td><td><strong>它对什么不变、对什么敏感？</strong>（§5.2 的两张清单）</td><td>清单不匹配 = 系统性偏置（如对错位过敏、对染色不敏感）。</td></tr>
+<tr><td><strong>Q4</strong></td><td><strong>它是 distance 吗？</strong>要当 loss 还是只当评价？（§5.1）</td><td>当 loss 却不是 metric = 优化无保障。</td></tr>
+<tr><td><strong>Q5</strong></td><td><strong>谁评价评价器？</strong>你的指标如何与专家判断对齐？会不会和生成器循环论证？</td><td>循环论证 = 你的「提升」不可信。</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">Q5 是自创指标最常见的死因</div><p>「我们提出了指标 M，在 M 上我们的模型更好」——如果 M 是用<u>同一批数据、同一个模型族</u>设计出来的，这是循环论证。破法有三：(a) 用<u>第三方</u>专家评分验证 M；(b) 报告 M 与<u>独立</u>的下游任务/临床终点的一致性；(c) 在一个<u>留出</u>的数据集上验证 M。HAPS 用 (a)，DGR 用 (b)。</p></div>
+
+<h3 id="s62">6.2 决策树</h3>
+<div class="flow"><pre><code>你要提出一个新指标
+        │
+        ├─ Q1: 有可靠配对 GT 吗？
+        │     ├─ 有（高配准子集）→ 可走 P1/P2/P3（full-reference）
+        │     │       └─ 但别停在 P1：加 P3 的病理特征空间 + §5.3 元评价
+        │     └─ 没有 / 弱配准（你的常态）
+        │           ├─ 有真实 IHC 的分布（无配对）→ P4 分布匹配
+        │           ├─ 有生物量（H-score / HER2 等级）→ P6 一致性分析 ★
+        │           ├─ 有下游任务标签 → P5 任务相关（可上 V-info）★★
+        │           └─ 都没有 → P8 可识别性 / P9 自洽 / P10 可靠性 ★★
+        │
+        ├─ Q2: 表示空间
+        │     ├─ 像素 → 已饱和，别做
+        │     ├─ OD / 浓度 → ★ P7，空档，且有物理合法性
+        │     ├─ 病理深度特征 → 已被 PaPIS/HAPS 占，需更细差异
+        │     └─ 任务变量 / 生物量 / 信息量 → ★★ 空档
+        │
+        ├─ Q3: 写出你的不变性/敏感性两张清单
+        │     └─ 必须同时满足：对错位不变 + 对染色敏感 + 对实例错误敏感
+        │           （现有指标无人同时满足三条 → 这是你的立论点）
+        │
+        ├─ Q4: 要当 loss 吗？
+        │     ├─ 是 → 证明 distance 或 quasi-convex（§5.1）
+        │     └─ 否 → 只需单调、有界、可复现
+        │
+        └─ Q5: 元评价设计
+              ├─ 与专家评分做 SROCC/KROCC（§5.3）
+              ├─ 在病理域真实失真上验证，不用合成失真（§5.4）
+              └─ 报 CI + 配对检验 + 多 seed（§5.5）</code></pre></div>
+
+<h3 id="s63">6.3 三个可行的创新切入点（按推荐度排序）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">切入点 A · 可识别性感知的评价（Identifiability-aware）</div><div class="v">占 P8，回答「模型是否已达输入信息允许的上限」</div></div><span class="b purple">最高潜力</span></div>
+<div class="body">
+<p><strong>要攻击的隐含前提：</strong>所有现有指标都默认「输出唯一」——即存在一个「正确」的 IHC 图像，模型偏离它就是错。但虚拟染色是 one-to-many 的病态逆问题：H&amp;E 里没有的蛋白信息，模型不可能凭空变出来；强行要求它「像」，等于奖励编造。</p>
+<p><strong>怎么做：</strong>把评价写成「条件信息可达性」——给定输入 x，量化输出 y 中<u>真正由 x 决定</u>的部分与<u>由先验/幻觉填充</u>的部分。可直接借用的理论：TSI / predictive V-information（P5）、互信息解耦（P8）、幻觉检测（AQuA）。</p>
+<p><strong>为什么可复现：</strong>V-info 有严格定义与开源思路；MI 有现成估计器（MINE、InfoNCE 下界）。不需要新数据标注。</p>
+<p><strong>风险：</strong>互信息估计在高维图像上不稳定，需要设计低维任务变量（这正是 V-info 的思路）。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">切入点 B · 物理一致性指标（Physics-consistency）</div><div class="v">占 P7，把 Beer–Lambert 从「训练约束」升级为「评价指标」</div></div><span class="b high">最干净</span></div>
+<div class="body">
+<p><strong>要攻击的隐含前提：</strong>「颜色相似 = 分子正确」。实际上 RGB 相似与浓度正确不是一回事（P7 的非线性耦合）。现有工作（CCPL、PGLStain）都把 OD 一致性当<u>训练约束</u>，没有人把它做成<u>独立评价指标</u>。</p>
+<p><strong>怎么做：</strong>定义一组物理一致性检验：① 生成 IHC 反卷积后的浓度图与真实浓度图在 OD 空间的一致性；② 单调性（浓度 ↑ ⇒ OD ↑）；③ 染色混合关系正确（在固定 stain matrix 下）。</p>
+<p><strong>前置条件（资料库已实测）：</strong>必须固定 stain matrix、white point 与 log convention——否则不同批次不可比。资料库 E0.3/E0.3b 已经证明这会系统性改变 DAB 与 H-score。</p>
+<p><strong>风险：</strong>Beer–Lambert 线性假设本身在真实组织上不成立（Oshina 2021 逐字），所以你的指标必须<u>明确声明适用边界</u>，否则会被审稿人用同一篇文献打回。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">切入点 C · 可靠性指标（Reliability / 三轴组合）</div><div class="v">占 P10，把感知质量、任务误差、集成分歧显式组合</div></div><span class="b high">临床动机最强</span></div>
+<div class="body">
+<p><strong>要攻击的隐含前提：</strong>「平均指标好 = 临床可用」。BMVC 2026 已证明感知质量、任务误差、集成一致性是<u>三条近乎独立的轴</u>，没有单一指标能覆盖；且「视觉上逼真的输出未必忠实再现组织结构」。</p>
+<p><strong>怎么做：</strong>构造一个显式组合三条轴的可靠性分数，重点惩罚「看起来逼真但结构幻觉」的样本——即那些 perceptual 高、task 低、ensemble 分歧大的样本。</p>
+<p><strong>为什么可复现：</strong>三条轴各自都有现成实现（LPIPS/HAPS、Dice/AUC、deep ensemble）。组合权重可用专家评分拟合（同 HAPS 的思路）。</p>
+<p><strong>风险：</strong>组合权重引入超参，需报告敏感性；否则会被质疑「调出来的」。</p>
+</div></div>
+
+<div class="box stop"><div class="bt">不要做的事</div>
+<ul>
+<li><strong>不要只换特征提取器。</strong>PaPIS/HAPS 已占位，且 MICCAI 2024 已证明「用医学数据训练的提取器并不天然更好」。</li>
+<li><strong>不要提出一个「更复杂的 SSIM」。</strong>SSIM 的病灶是「主动补偿颜色」（P2），加更多项不解决方向性错误。</li>
+<li><strong>不要用合成失真验证。</strong>虚拟染色的失真是结构幻觉与实例错位，不是加噪（§5.4）。</li>
+<li><strong>不要只报 PSNR/SSIM 的提升。</strong>资料库既有报告已反复强调：只让 PSNR 变好不构成「保真提升」的证据。</li>
+</ul></div>
+
+<h2 id="s7"><span class="num">7</span>具体例子：领域里已经提出的新指标</h2>
+<p>按你的要求，原理讲完了，最后给具体例子。下面这张表是「虚拟染色领域自己提出的新指标」清单，每条都标注了它建立在<u>哪条原理</u>上——你可以直接看出哪条原理已经拥挤、哪条还有位置。</p>
+<div class="scroll"><table>
+<thead><tr><th>指标</th><th>提出工作（venue / 年）</th><th>测什么</th><th>建在哪条原理</th><th>核实</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>PaPIS</strong><br><span class="small">Pathology-Aware Perceptual Image Similarity</span></td>
+<td>Wang, Tweel, Reza, Layton；arXiv 2507.12624（2025）；投稿 Journal of Imaging Informatics in Medicine</td>
+<td>虚拟染色图的病理感知质量：用<u>细胞形态分割网络</u>的特征 + Retinex 启发的特征分解；还反过来当 loss 用</td>
+<td><span class="b purple">P3 学习表征</span></td>
+<td><span class="b high">[VERIFIED]</span></td>
+</tr>
+<tr>
+<td><strong>HAPS</strong><br><span class="small">Histology-Aware Perceptual Similarity</span></td>
+<td>Gubanov et al.（9 作者）；arXiv 2605.20362（2026-05）</td>
+<td>在<u>病理数据预训练的冻结编码器</u>特征空间里算距离，加一个用<u>专家相似度评分</u>监督的线性头聚合成分数；并用于训练集清洗</td>
+<td><span class="b purple">P3 学习表征</span> + <span class="b blue">P5 元评价</span></td>
+<td><span class="b high">[VERIFIED]</span></td>
+</tr>
+<tr>
+<td><strong>SFS</strong><br><span class="small">Semantic Fidelity Score</span></td>
+<td>Star-Diff 团队；<em>From Pixels to Pathology: Restoration Diffusion for Diagnostic-Consistent Virtual IHC</em>；Computers in Biology and Medicine（2025）；arXiv 2508.02528</td>
+<td>诊断一致性；动机原文是「为了在 H&amp;E 与 IHC 不可避免的空间错位下进行公平评价」</td>
+<td><span class="b blue">P5 任务相关</span> + <span class="b tealb">P9 平移不变性</span></td>
+<td><span class="b high">[VERIFIED]</span></td>
+</tr>
+<tr>
+<td><strong>AQuA</strong></td>
+<td>Huang, Li, Pillar, Haran, Wallace, Ozcan；arXiv 2404.18458；Nature Biomedical Engineering（2025）</td>
+<td>无 GT 的自主质量与<u>幻觉检测</u>：99.8% 准确率区分可接受/不可接受虚拟染色图；与 board-certified 病理学家人工评估一致率 98.5%</td>
+<td><span class="b tealb">P8 可识别性</span> + <span class="b tealb">P9 自洽</span></td>
+<td><span class="b high">[VERIFIED·结果]</span><span class="b low">机制未核实</span></td>
+</tr>
+<tr>
+<td><strong>V-info</strong><br><span class="small">（非虚拟染色，但可直接迁移）</span></td>
+<td>Lu, Sengupta, Li, Anastasio；arXiv 2510.00298；已被 <strong>IEEE TMI</strong> 接收</td>
+<td>用 <u>predictive V-information</u>（TSI 的松弛）量化「次优观察者族下图像可被利用的任务相关信息量」；与二分类 AUC 相关，且可用于多分类</td>
+<td><span class="b blue">P5 任务相关</span> + <span class="b tealb">P8 可识别性</span></td>
+<td><span class="b high">[VERIFIED]</span></td>
+</tr>
+<tr>
+<td><strong>盲法读片准确率</strong><br><span class="small">（评价协议而非新指标）</span></td>
+<td>DGR：Ma, Li, Chen 等；Nature Communications（2026）；DOI 10.1038/s41467-026-71038-2；arXiv 2509.14119</td>
+<td>250 虚拟 + 250 真实 H&amp;E（及 PAS-AB）盲法读片：专家区分准确率约 52.4%，差异无统计学意义</td>
+<td><span class="b blue">P6 人类仲裁</span> + <span class="b blue">P5 任务相关</span></td>
+<td><span class="b high">[VERIFIED]</span></td>
+</tr>
+<tr>
+<td><strong>PGVMS 评价组</strong></td>
+<td>PGVMS（2026，多 marker）</td>
+<td>IOD、累计 OD、OD 阈值分类、病理学家 1–5 分</td>
+<td><span class="b medium">P6 生物真值</span> + <span class="b tealb">P7 物理</span></td>
+<td><span class="b medium">[部分核实·库内报告]</span></td>
+</tr>
+<tr>
+<td><strong>TA-GAN 评价组</strong></td>
+<td>Topology-aware Pathological Consistency Matching（2026，弱配对）</td>
+<td>DAB positive-area ratio、ICC、回归斜率</td>
+<td><span class="b medium">P6 生物真值</span> + 图拓扑</td>
+<td><span class="b medium">[部分核实·库内报告]</span></td>
+</tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">从这张表能读出什么</div>
+<ol>
+<li><strong>P3（学习表征）已经被两篇专门论文占据</strong>（PaPIS 2025、HAPS 2026），而且第二篇比第一篇更规范（HAPS 做了专家评分对齐）。再走这条路，你需要比 HAPS 更细的差异。</li>
+<li><strong>P5/P6 有先例但没有「被命名的指标」</strong>——大家都是「报一组数」，没人把它形式化成一个指标。这是可以做的：把一组临床一致性量（ICC + κ + Bland-Altman + ranking）形式化为一个分层的、有公理声明的协议。</li>
+<li><strong>P7/P8/P10 在这张表里完全缺席</strong>（AQuA 算 P8 的邻居，但它是幻觉检测器不是相似度指标）。这三条就是 §6.3 推荐给你的三个切入点。</li>
+<li><strong>注意「评价协议」与「评价指标」的区别。</strong>DGR 的盲法读片不是新指标，但它是<u>最有说服力</u>的评价。这提示你：与其造一个数字，不如造一个<u>协议</u>——数字容易被质疑是调出来的，协议不容易。</li>
+</ol></div>
+
+<div class="box pur"><div class="bt">顺带回答你开头的那句话</div>
+<p>你说「几乎都会自己提出一个新的评价指标，都说在这个指标下我们的模型效果得到了提升」。从上面的例子看，这个现象的<u>结构</u>是：<strong>作者发现某个旧指标在虚拟染色上失效（多为 SSIM/PSNR/FID 的域错配），于是针对这个失效提出一个新指标，然后自然在这个指标上表现更好。</strong>这本身不是学术不端——只要新指标<u>通过了元评价</u>（与专家判断相关、在真实失真上验证、非循环论证）。真正的问题是：<strong>大多数自创指标止步于「我们定义了一个指标」，没有走到「我们证明了这个指标配得上」。</strong>你若在 §5 那一层做扎实，就已经赢过大部分同类工作。</p></div>
+
+<h2 id="s8"><span class="num">8</span>未核实清单与证据边界</h2>
+<p>按纪律，凡我没能读到一手材料的，集中列在这里，<strong>不要当作事实引用</strong>。</p>
+<div class="scroll"><table>
+<thead><tr><th>条目</th><th>状态</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><strong>AQuA 的幻觉检测机制</strong></td><td><span class="b low">未核实</span></td><td>二手解读称使用「虚拟染色 ↔ 虚拟自荧光」循环一致性、T 次循环误差累积；但 AQuA 摘要<u>未提</u>该机制。本报告只采信其 99.8%/98.5% 的结果。</td></tr>
+<tr><td><strong>BeerLaNet</strong>（MICCAI 2025）</td><td><span class="b low">未核实</span></td><td>仅见 GitHub / 搜索摘要，未读论文原文。</td></tr>
+<tr><td><strong>PGLStain</strong>（OpenReview #32050）</td><td><span class="b medium">部分核实</span></td><td>读到了 OD 兼容性作为条件信号的表述，但未确认其最终发表状态与完整方法。</td></tr>
+<tr><td><strong>「虚拟染色专用校准（ECE）指标」</strong></td><td><span class="b low">阴性结果</span></td><td>定向检索未找到；不等于不存在。</td></tr>
+<tr><td><strong>「以互信息/条件熵量化 label-free 输入信息上界」</strong></td><td><span class="b low">阴性结果</span></td><td>定向检索未找到；MIU-Diff 用 MI 作训练目标，非可达上界量化。</td></tr>
+<tr><td><strong>「以病理基础模型（UNI/CONCH）特征构造虚拟染色评价指标」</strong></td><td><span class="b low">阴性结果</span></td><td>未找到；PaPIS 用细胞形态分割网络，UNIStainNet 把 UNI 当生成条件。</td></tr>
+<tr><td><strong>UNI / CONCH / CTransPath 的题录</strong></td><td><span class="b low">未核实</span></td><td>仅见检索摘要，未抓正文。报告中未把这些模型的题录写成已证实事实。</td></tr>
+<tr><td><strong>npj Digital Medicine 综述（s41746-025-01741-9）正文</strong></td><td><span class="b low">未核实</span></td><td>抓取被 Cloudflare 拦截，未读到。其关于指标批评的段落未采信。</td></tr>
+<tr><td><strong>Springer 标准化综述（s13534-026-00597-6）正文</strong></td><td><span class="b low">未核实</span></td><td>重定向到身份认证页，未读到正文。仅作为「领域已出现标准化综述」的线索。</td></tr>
+<tr><td><strong>PGVMS / TA-GAN 的评价组细节</strong></td><td><span class="b medium">二手</span></td><td>来自资料库既有报告（04 报告），本报告未重新核实原始论文。</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">证据边界声明</div>
+<p>① 本报告所有 <span class="b high">[VERIFIED]</span> 标注的结论，均由我本人抓取原文（arXiv abs/HTML、期刊落地页、或下载 PDF 后文本抽取）后逐字核对；引号内为原文措辞。② 标 <span class="b medium">[部分核实]</span> / <span class="b low">[未核实]</span> 的，不得在写作中当作事实。③ 所有「未找到」均为<u>定向检索的否定结果</u>，不代表逻辑上不存在。④ §6.3 的三个切入点是<strong>我的判断</strong>（基于 §4 的拥挤度地图），不是文献结论。</p></div>
+
+<h2 id="s9"><span class="num">9</span>参考文献</h2>
+<p>仅列本报告实际抓取并用于承重论证的文献。标 ★ 为承重引用（决定结论方向）。</p>
+<ol>
+<li>★ Wang Z., Bovik A.C. <em>Mean Squared Error: Love It or Leave It? A New Look at Signal Fidelity Measures.</em> IEEE Signal Processing Magazine, 26(1):98–117, 2009. DOI 10.1109/MSP.2008.930649. <span class="small">（Lp 范数四公理逐字、MSE 高斯/凸性/可加性、MSE-最优滤波器的模糊性）</span></li>
+<li>★ Wang Z., Bovik A.C., Sheikh H.R., Simoncelli E.P. <em>Image Quality Assessment: From Error Visibility to Structural Similarity.</em> IEEE TIP, 13(4), 2004. <span class="small">（SSIM 的 HVS 结构敏感假设逐字）</span></li>
+<li>★ Brunet D., Vrscay E.R., Wang Z. <em>On the Mathematical Properties of the Structural Similarity Index.</em> IEEE TIP, 21(4):1488–1505, 2012. DOI 10.1109/TIP.2011.2173206. <span class="small">（SSIM 不是 metric、三角不等式不成立、NRMSE 才是合法度量）</span></li>
+<li>★ Zhang R. et al. <em>The Unreasonable Effectiveness of Deep Features as a Perceptual Metric (LPIPS).</em> CVPR 2018. arXiv:1801.03924.</li>
+<li>Ding K. et al. <em>Image Quality Assessment: Unifying Structure and Texture Similarity (DISTS).</em> IEEE TPAMI 2021. arXiv:2004.07728.</li>
+<li>★ Gretton A. et al. <em>A Kernel Two-Sample Test.</em> JMLR 13:723–773, 2012. <span class="small">（MMD 的 RKHS 定义逐字）</span></li>
+<li>Heusel M. et al. <em>GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium (FID).</em> NeurIPS 2017. arXiv:1706.08500.</li>
+<li>Binkowski M. et al. <em>Demystifying MMD GANs (KID).</em> ICLR 2018. arXiv:1801.01401.</li>
+<li>★ Jayasumana S. et al. <em>Rethinking FID: Towards a Better Evaluation Metric for Image Generation (CMMD).</em> arXiv:2401.09603, 2024. <span class="small">（FID 高斯假设错误、有偏估计逐字）</span></li>
+<li>Chong M.J., Forsyth D. <em>Effectively Unbiased FID and Inception Score and Where to Find Them.</em> CVPR 2020. arXiv:1911.07023.</li>
+<li>Kynkäänniemi T. et al. <em>Improved Precision and Recall Metric for Assessing Generative Models.</em> NeurIPS 2019. arXiv:1904.06991.</li>
+<li>Stein A. et al. <em>Exposing flaws of generative model evaluation metrics and their unfair treatment of diffusion models.</em> NeurIPS 2023. OpenReview 08zf7kTOoh.</li>
+<li>Jiralerspong M. et al. <em>F?D: On understanding the role of deep feature spaces on similarity and image quality assessment.</em> arXiv:2305.20048, 2023.</li>
+<li>Wang Y. et al. <em>Feature Extraction for Generative Medical Imaging Evaluation: New Evidence Against an Evolving Trend.</em> MICCAI 2024. arXiv:2311.13717.</li>
+<li>★ Wang Q., Tweel J.E.D., Reza P.H., Layton A. <em>Pathology-Guided Virtual Staining Metric for Evaluation and Training (PaPIS).</em> arXiv:2507.12624, 2025.</li>
+<li>★ Gubanov F. et al. <em>HAPS: Rethinking Image Similarity for Virtual Staining.</em> arXiv:2605.20362, 2026.</li>
+<li>★ Lu C., Sengupta S., Li H., Anastasio M.A. <em>Observer-Usable Information as a Task-specific Image Quality Metric.</em> IEEE TMI（接收）；arXiv:2510.00298, 2025/2026.</li>
+<li>★ Deo Y. et al. <em>Metrics that matter: Evaluating image quality metrics for medical image generation.</em> arXiv:2505.07175, 2025.</li>
+<li>★ Huang L., Li Y., Pillar N., Haran T.K., Wallace W.D., Ozcan A. <em>A robust and scalable framework for hallucination detection in virtual tissue staining and digital pathology (AQuA).</em> Nature Biomedical Engineering, 2025；arXiv:2404.18458.</li>
+<li>★ Ma J., Li W. et al. <em>Generative AI for misalignment-resistant virtual staining to accelerate histopathology workflows (DGR).</em> Nature Communications, 2026. DOI 10.1038/s41467-026-71038-2；arXiv:2509.14119.</li>
+<li>Star-Diff 团队. <em>From Pixels to Pathology: Restoration Diffusion for Diagnostic-Consistent Virtual Immunohistochemistry (Semantic Fidelity Score).</em> Computers in Biology and Medicine, 2025；arXiv:2508.02528. DOI 10.1016/j.compbiomed.2025.111264.</li>
+<li>Oshina I., Spigulis J. <em>Beer–Lambert law for optical tissue diagnostics: current state of the art and the main limitations.</em> J. Biomed. Opt. 26(10):100901, 2021. <span class="small">（BL 假设失效清单逐字）</span></li>
+<li>Beer-Lambert Autoencoder 论文. arXiv:2601.11336, 2026. <span class="small">（K&gt;3 时 BL 反卷积欠定且不稳定逐字）</span></li>
+<li>CCPL 团队. <em>Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining.</em> arXiv:2506.07559, 2025.</li>
+<li>MIU-Diff 团队. <em>Score-based Diffusion Model for Unpaired Virtual Histology Staining.</em> arXiv:2506.23184, 2025.</li>
+<li>BMVC 2026 虚拟染色可靠性工作. arXiv:2608.24626. <span class="small">（感知质量/任务误差/集成分歧三轴独立逐字）</span></li>
+<li>MICCAI 2024. <em>Are We Ready for Out-of-Distribution Detection in Digital Pathology?</em> arXiv:2407.13708.</li>
+<li>CVPR 2024. <em>Bridging the Synthetic-to-Authentic Gap: Distortion-Guided Unsupervised Domain Adaptation for Blind Image Quality Assessment.</em> arXiv:2405.04167.</li>
+<li>Gastroenterology 2021. <em>Noninferiority Design in Trials Involving Artificial Intelligence.</em> <span class="small">（AI 试验非劣效性设计与样本量）</span></li>
+<li>EMA. <em>Guideline on non-inferiority and equivalence comparisons in clinical trials.</em></li>
+<li>资料库内部：<code>04_IHC评价与分级/弱配准下蛋白表达保真_评价与训练路线调研.html</code>、<code>01_调研报告/protein-expression-representation-survey.html</code>、<code>01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Physical_Fidelity_and_Trustworthiness_Report.html</code>、<code>01_调研报告/扩散模型虚拟染色_蛋白表达约束_约束位置地图.html</code>。</li>
+</ol>
+
+<div class="foot">
+<p><strong>本报告的位置：</strong>这是资料库的第 51 份文档、第 7 个分类（<code>07_评价指标底层原理</code>）的首篇。它与 <code>04_IHC评价与分级</code> 构成「原理层 → 对象层」的上下游关系：04 回答「评什么」，本报告回答「为什么这样评成立」。若要动手设计指标，建议先读本报告 §3（统一视角）与 §6（设计配方），再用 04 报告的 Route A/B/C 落地。</p>
+<p><strong>一句话总结：</strong>评价指标的底层原理一共十条，但真正的创新空间不在原理本身，而在<u>原理 × 表示空间 × 参照物</u>的未被占据的组合上。虚拟染色里最空的三个格子是 <strong>物理一致性（P7）</strong>、<strong>信息可识别性（P8）</strong>、<strong>可靠性（P10）</strong>——而把任何一格占住之后，<u>元层（§5）才是决定它能否被称为「指标」的关口</u>。</p>
+</div>
+
+</main></div></body></html>

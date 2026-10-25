@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>竖纹与轮廓光晕 · 成因诊断、文献综述与实验设计</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#1f2933;--mut:#6b7280;--line:#e5e7eb;--accent:#2563eb;--green:#0f6e56;--red:#a32d2d;--amber:#854f0b;--purple:#534ab7;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.65;font-size:14px;}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 22px 70px;}
+  h1{font-size:23px;margin:0 0 6px;}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+  h2{font-size:18px;margin:26px 0 8px;border-left:4px solid var(--accent);padding-left:10px;}
+  h3{font-size:15px;margin:16px 0 6px;color:var(--accent);}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12.5px;}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top;}
+  th{background:#eef2f7;font-weight:600;}
+  code{background:#eef1f5;padding:1px 5px;border-radius:4px;font-size:12px;font-family:"SFMono-Regular",Consolas,monospace;}
+  pre{background:#0f172a;color:#e2e8f0;padding:13px 15px;border-radius:10px;overflow:auto;font-size:12px;line-height:1.5;}
+  .badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;}
+  .b-strong{background:#d1fae5;color:#065f46;}
+  .b-mid{background:#fef3c7;color:#854f0b;}
+  .b-weak{background:#fee2e2;color:#7f1d1d;}
+  .b-ref{background:#e0e7ff;color:#3730a3;}
+  .note{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:13px;}
+  .warn{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:13px;}
+  .ok{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:13px;}
+  ul{margin:6px 0 6px 18px;padding:0;} li{margin:3px 0;}
+  .toc{font-size:13px;columns:2;column-gap:28px;}
+  .toc a{color:var(--accent);text-decoration:none;}
+  .key{color:var(--green);font-weight:600;}
+  .red{color:var(--red);font-weight:600;}
+  .small{font-size:12px;color:var(--mut);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>竖纹与轮廓光晕 · 成因诊断、文献综述与实验设计</h1>
+  <div class="sub">任务：PSPStain / CUT 生成器 + H/E→H/DAB 浓度域 · 仅文献调研 + 代码只读 + 实验设计（不训练、不改代码、不覆盖文件） · 2026-10-17</div>
+
+  <div class="card">
+    <h3>目录</h3>
+    <div class="toc">
+      <a href="#s0">0 · 代码核查结果（诚实声明）</a><br>
+      <a href="#s1">1 · 结论摘要</a><br>
+      <a href="#s2">2 · 伪影分类与鉴别方法</a><br>
+      <a href="#s3">3 · 相关研究对照表</a><br>
+      <a href="#s4">4 · PSPStain 场景排查顺序</a><br>
+      <a href="#s5">5 · ResBlk 逐层实验设计</a><br>
+      <a href="#s6">6 · 最小改进方案</a><br>
+      <a href="#s7">7 · 消融实验计划</a><br>
+      <a href="#s8">8 · 可量化成功标准</a><br>
+      <a href="#s9">9 · 最终建议</a><br>
+      <a href="#s10">附录 · 指标公式与检查清单</a>
+    </div>
+  </div>
+
+  <h2 id="s0">0 · 代码核查结果（诚实声明）</h2>
+  <div class="card">
+    <div class="warn"><b>先说清楚：</b>任务指定的 <code>/root/autodl-tmp/psp_diffusion</code> 在本机<b>不可访问</b>（<code>/root</code> 不存在）。我在本机找到 <code>/Users/hua/psp_diffusion_export.tar.gz</code>，但解包后确认它是 <b>diffusion 项目</b>（<code>models.py</code> / <code>train.py</code> / <code>sample.py</code> / VAE / latent_cache），<b>不含 <code>ResnetGenerator</code></b>。因此下面关于生成器的结论，来自本机 <b>PSPStain 官方仓库</b> <code>/Users/hua/Desktop/pspstain /PSPStain/</code> 与 <code>.../contrastive-unpaired-translation/</code> 的只读核查；<b>2 通道浓度域的 data/model/重建代码不在可访问文件里</b>，需你在服务器上按 §0.3 清单确认。所有读取均为只读，未修改任何文件。</div>
+
+    <h3>0.1 已核实的生成器事实（PSPStain 官方仓库）</h3>
+    <table>
+      <tr><th>项目</th><th>实际实现</th><th>证据（文件:行）</th></tr>
+      <tr><td>生成器</td><td><code>resnet_6blocks</code>；<code>ResnetGenerator</code>，2 级下采样 + 6 个 ResBlock + 2 级上采样</td><td><code>experiments/PSPStain_launcher.py:22</code>；<code>models/networks.py:910</code></td></tr>
+      <tr><td>下采样（默认）</td><td><b>抗混叠</b>：<code>Conv3×3 stride=1 + Downsample([1,2,1] blur, stride=2)</code>；只有 <code>--no_antialias</code> 才改成 <code>stride=2</code> 普通卷积</td><td><code>models/networks.py:949-957</code></td></tr>
+      <tr><td>上采样（默认）</td><td><b>抗混叠</b>：<code>Upsample([1,3,3,1] blur × stride², conv_transpose) + Conv3×3</code>；只有 <code>--no_antialias_up</code> 才改成普通 <code>ConvTranspose2d</code></td><td><code>models/networks.py:966-980</code>；<code>Upsample</code> 类见 <code>:73-93</code></td></tr>
+      <tr><td>归一化</td><td><code>normG='instance'</code> → <code>InstanceNorm2d(affine=False, track_running_stats=False)</code></td><td><code>PSPStain_launcher.py:24</code>；<code>models/networks.py:124-125</code></td></tr>
+      <tr><td>权重归一化</td><td><code>weight_norm='spectral'</code> → G/D 卷积全部 spectral norm</td><td><code>PSPStain_launcher.py:26</code>；<code>models/networks.py:936-939</code></td></tr>
+      <tr><td>ResBlock</td><td><code>ReflectionPad2d(1)+Conv3×3+norm+ReLU (+Dropout) + ReflectionPad2d(1)+Conv3×3+norm</code>，<code>out=x+conv(x)</code></td><td><code>models/networks.py:1123-1185</code></td></tr>
+      <tr><td>输出头</td><td><code>ReflectionPad2d(3)+Conv7×7(ngf→output_nc)+Tanh</code></td><td><code>models/networks.py:981-983</code></td></tr>
+      <tr><td>预处理</td><td><code>resize_and_crop</code>：<code>Resize([load_size,load_size], Image.BICUBIC)</code> → <code>Crop(crop_size)</code>；训练 <code>load_size=1024, crop_size=512</code>，测试 <code>crop_size=1024</code></td><td><code>data/base_dataset.py:82-92</code>；<code>PSPStain_launcher.py:45-47,65</code></td></tr>
+      <tr><td>张量→图像</td><td><code>clamp(-1,1)</code> → <code>(x+1)/2*255</code>，无额外滤波</td><td><code>util/util.py:45-63</code></td></tr>
+    </table>
+
+    <div class="ok"><b>最重要的一条修正：</b>PSPStain/CUT 的<b>默认</b>上采样<b>不是</b>普通反卷积，也<b>不是</b> nearest；而是 <b>[1,3,3,1] 模糊核 + conv_transpose</b> 的抗混叠上采样；下采样也是 <b>[1,2,1] BlurPool</b>。所以「经典反卷积棋盘格」<b>不是默认成因</b>——除非官方/你的训练命令显式加了 <code>--no_antialias_up</code>（launcher 里没有加）。这把排查重点从「换反卷积」移到了 <b>预处理 BICUBIC resize、训练/测试分辨率不一致、InstanceNorm 低方差放大、以及弱模糊核的残余混叠</b>。</div>
+
+    <h3>0.2 已核实的关键运行参数</h3>
+    <table>
+      <tr><th>参数</th><th>官方 launcher 取值</th><th>含义 / 风险</th></tr>
+      <tr><td><code>CUT_mode</code></td><td><code>FastCUT</code></td><td>只有 1 项 NCE（<code>nce_idt=False</code>）</td></tr>
+      <tr><td><code>dataset_mode</code></td><td><code>aligned</code></td><td>PSPStain 实际用<b>配对</b>数据（非 unpaired）</td></tr>
+      <tr><td><code>load_size / crop_size</code></td><td>训练 1024 / 512；测试 1024 / 1024</td><td><b>训练 512、测试 1024</b> → 分辨率不一致，是重点嫌疑</td></tr>
+      <tr><td><code>preprocess</code></td><td><code>resize_and_crop</code> + <code>Image.BICUBIC</code></td><td>BICUBIC 有负瓣 → 边缘 overshoot / 光晕的经典来源</td></tr>
+      <tr><td><code>normG / normD</code></td><td><code>instance</code> / <code>instance</code></td><td>IN 在低方差背景区放大残差</td></tr>
+      <tr><td><code>netD / ndf / n_layers_D</code></td><td><code>n_layers</code> / 32 / 5</td><td>PatchGAN 判别器</td></tr>
+      <tr><td><code>weight_norm</code></td><td><code>spectral</code></td><td>G/D 都用 spectral norm</td></tr>
+    </table>
+
+    <h3>0.3 需要在服务器上确认的 2 通道清单（我无法读到）</h3>
+    <ul>
+      <li><code>input_nc=2</code> 的数据加载：H/E 是<b>浓度图</b>还是已归一化的 RGB 投影？归一化范围是 [0,1]、[-1,1] 还是 z-score？</li>
+      <li>H/E 的分离方式：Macenko / Vahadane / 固定矩阵？分离矩阵是否逐图估计（会引入列方向偏差）？</li>
+      <li>输出 <code>output_nc=2</code> 是 H/DAB 浓度；<b>浓度→RGB 的重建代码</b>：<code>I = I0·exp(-M·C)</code> 的 <code>I0</code>、<code>M</code> 从哪来？是否 clamp？是否在 OD 域做反归一化？</li>
+      <li>推理是否 <b>tiling / stitching</b>？tile 大小、重叠、blending 方式？</li>
+      <li>训练命令是否加了 <code>--no_antialias</code> / <code>--no_antialias_up</code>？</li>
+      <li>测试时的 <code>load_size / crop_size / preprocess</code> 是否与训练一致？</li>
+      <li>是否有 JPEG 压缩、扫描线、或 WSI 级别的列方向照明校正？</li>
+    </ul>
+  </div>
+
+  <h2 id="s1">1 · 结论摘要</h2>
+  <div class="card">
+    <h3>1.1 竖纹：最值得怀疑的成因（按证据强度排序）</h3>
+    <table>
+      <tr><th>候选成因</th><th>机制</th><th>证据强度</th><th>如何证伪/证实</th></tr>
+      <tr><td><b>① 预处理 BICUBIC resize + 训练/测试分辨率不一致</b></td><td><code>Resize(1024, BICUBIC)</code> 的负瓣在边缘产生 overshoot；训练 512、测试 1024 使生成器看到不同的空间频率内容，混叠/周期纹理被放大</td><td><span class="badge b-mid">中–强</span>（代码确证参数，未做实验）</td><td>同一图分别用 <code>preprocess='none'</code> / <code>resize</code> / <code>resize_and_crop</code>，512 vs 1024 出图对比</td></tr>
+      <tr><td><b>② InstanceNorm(affine=False) 低方差放大</b></td><td>背景/纯色区某通道 σ≈0 → <code>(x−μ)/σ</code> 把微小周期残差放大成可见竖条</td><td><span class="badge b-mid">中</span></td><td>常量输入（全 0 / 均值图）过 G；背景区 CSS；<code>normG='batch'</code> 对照</td></tr>
+      <tr><td><b>③ 弱抗混叠核的残余混叠</b></td><td>默认 <code>[1,2,1]</code>（下）/ <code>[1,3,3,1]</code>（上）是弱低通，仍可能残留周期分量；<code>no_antialias_up=True</code> 时直接变普通转置卷积</td><td><span class="badge b-mid">中</span></td><td>对比 <code>--no_antialias_up</code> 开关；换 <code>filt_size=5/7</code>；频谱看峰值</td></tr>
+      <tr><td><b>④ 推理 tiling / stitching 接缝</b></td><td>分块推理 + 重叠融合，接缝处出现固定间隔的竖线</td><td><span class="badge b-mid">中</span>（若你用了 tiling）</td><td>关闭 tiling / 改 tile 大小 / 单图整图推理；看条纹间距是否随 tile 变</td></tr>
+      <tr><td><b>⑤ 数据/扫描/JPEG 列方向伪影</b></td><td>WSI 扫描条带、JPEG 8×8 块、染色不均</td><td><span class="badge b-weak">弱–中</span></td><td>直接看原始输入；对输入做同样的 CSS/DSR；换数据集</td></tr>
+      <tr><td><b>⑥ 经典反卷积棋盘格</b></td><td>转置卷积不均匀重叠</td><td><span class="badge b-weak">弱</span>（默认已抗混叠）</td><td>确认训练命令是否 <code>--no_antialias_up</code>；否则基本排除</td></tr>
+    </table>
+    <p class="small">结论：<b>不要先改生成器</b>。先证明竖纹是「管线/预处理」还是「生成器内部」，再决定改哪。</p>
+
+    <h3>1.2 轮廓发亮 / 白边 / 浮雕：最值得怀疑的成因</h3>
+    <table>
+      <tr><th>候选成因</th><th>机制</th><th>证据强度</th><th>如何证伪/证实</th></tr>
+      <tr><td><b>① BICUBIC resize 的 overshoot</b></td><td>BICUBIC 核有负瓣，强边缘两侧出现亮/暗过冲（halo / ringing）</td><td><span class="badge b-mid">中–强</span></td><td>把 <code>preprocess</code> 换成 <code>none</code> 或 <code>INTER_AREA</code> 下采样，比较边缘剖面</td></tr>
+      <tr><td><b>② 上采样 + 卷积 + IN 的边缘过冲</b></td><td>模糊上采样后接 conv，强边缘处产生 overshoot；IN 进一步放大局部反差</td><td><span class="badge b-mid">中</span></td><td>逐层 tap 的 EHS；<code>no_antialias_up</code> 对照；<code>normG</code> 对照</td></tr>
+      <tr><td><b>③ 浓度→RGB 的 exp 非线性放大</b></td><td><code>I=I0·exp(−M·C)</code>：C 的小过冲经 exp/矩阵映射后变成可见亮边；clamp 会截断成硬边</td><td><span class="badge b-mid">中</span></td><td>对比「原始 H/DAB 输出」与「重建 RGB」；用合成浓度斜坡过重建器看是否自带过冲</td></tr>
+      <tr><td><b>④ 感知/对抗损失鼓励边缘锐化</b></td><td>GAN/perceptual 目标偏好高频锐利边缘，可能学出 overshoot</td><td><span class="badge b-mid">中</span></td><td>看训练曲线/不同 epoch 的 EHS；换 loss 权重对照</td></tr>
+      <tr><td><b>⑤ 真·振铃（sinc/Lanczos）</b></td><td>插值核振荡</td><td><span class="badge b-weak">弱</span>（除非用了 Lanczos/sinc）</td><td>确认 resize 核；BICUBIC 也会振铃但幅度较小</td></tr>
+    </table>
+    <div class="note"><b>关键区分：</b>「亮边」不一定等于振铃。BICUBIC overshoot、上采样过冲、exp 非线性、GAN 锐化都会产生亮边，但频谱与剖面不同（见 §2）。先定位它出现在<b>浓度图</b>还是<b>RGB</b>，再谈抑制。</div>
+  </div>
+
+  <h2 id="s2">2 · 伪影分类与鉴别方法</h2>
+  <div class="card">
+    <table>
+      <tr><th>类型</th><th>视觉表现</th><th>频谱特征</th><th>典型来源</th></tr>
+      <tr><td><b>周期性条纹（periodic stripe）</b></td><td>等间距、方向一致的细线；空白区更明显</td><td>频谱中出现<b>离散亮点/亮线</b>，沿某一方向（竖纹 → <code>f_y≈0</code> 的水平线）</td><td>上采样/下采样混叠、tiling 接缝、扫描条带</td></tr>
+      <tr><td><b>棋盘格（checkerboard）</b></td><td>2D 网格状、块状明暗交替</td><td>频谱在<b>两个方向</b>都有谐波峰（<code>f_x≈f_y</code> 附近）</td><td>转置卷积不均匀重叠（Odena 2016）</td></tr>
+      <tr><td><b>一般方向性纹理（directional texture）</b></td><td>沿某一方向的连续纹理，不一定是等间距</td><td>频谱在某个方向有<b>宽带</b>能量，而非离散峰</td><td>数据本身、GAN 学到的纹理、卷积核方向性</td></tr>
+      <tr><td><b>边缘过冲（overshoot/undershoot）</b></td><td>强边缘两侧出现亮/暗带</td><td>空间域看边缘剖面；频域表现为高频相位/幅度异常，不一定是离散峰</td><td>BICUBIC/上采样、锐化、IN、GAN 锐化</td></tr>
+      <tr><td><b>Halo（光晕）</b></td><td>边缘外侧一圈浅色/发亮的宽带</td><td>空间域：边缘外 <code>+d</code> 处正过冲；频域不突出</td><td>边缘保持滤波、tone mapping、过冲</td></tr>
+      <tr><td><b>Ringing（振铃）</b></td><td>边缘两侧出现多条明暗交替的“鬼影”</td><td>空间域：边缘剖面<b>多次</b>符号反转；频域：靠近截止频率的振铃</td><td>sinc/Lanczos/bicubic 插值、去卷积</td></tr>
+    </table>
+    <div class="ok"><b>鉴别口诀：</b>「等间距 + 频谱离散峰」= 周期条纹；「2D 网格 + 双向谐波」= 棋盘格；「单侧宽带亮边」= halo/overshoot；「多次明暗交替」= ringing。不要看到亮边就判振铃。</div>
+  </div>
+
+  <h2 id="s3">3 · 相关研究对照表</h2>
+  <div class="card">
+    <p class="small">说明：以下为真实检索到的核心工作；「代码」列标「有 / 未确认 / 无」；「可迁移性」按<b>我们的 PSPStain + H/E→H/DAB 浓度域</b>判断，不把「相关」等同于「有效」。</p>
+    <table>
+      <tr><th>论文（作者/年/出处）</th><th>DOI / arXiv</th><th>伪影类型</th><th>归因</th><th>核心方法</th><th>代码</th><th>可迁移性</th></tr>
+      <tr>
+        <td>Odena, Dumoulin, Olah (2016), <i>Deconvolution and Checkerboard Artifacts</i>, Distill</td>
+        <td>10.23915/distill.00003</td>
+        <td>棋盘格 / 周期条纹</td>
+        <td>转置卷积不均匀重叠</td>
+        <td>resize-convolution（先上采样再卷积），避免转置卷积</td>
+        <td>无（教程）</td>
+        <td><span class="badge b-mid">中</span> 直接相关，但 PSPStain 默认已用抗混叠 Upsample；先确认是否 <code>--no_antialias_up</code></td>
+      </tr>
+      <tr>
+        <td>Karras et al. (2020), <i>Analyzing and Improving the Image Quality of StyleGAN</i>, CVPR</td>
+        <td>arXiv 1912.04958</td>
+        <td>水滴/棋盘格</td>
+        <td>归一化 + 上采样</td>
+        <td>demodulation、blur-upsampling</td>
+        <td>有（NVlabs/stylegan2）</td>
+        <td><span class="badge b-mid">中</span> blur-up 思路可借；StyleGAN 架构不同，不能整套搬</td>
+      </tr>
+      <tr>
+        <td>Karras et al. (2021), <i>Alias-Free Generative Adversarial Networks</i>, NeurIPS</td>
+        <td>arXiv 2106.12423</td>
+        <td>纹理粘滞 / 周期 / 混叠</td>
+        <td>上采样 + 卷积未低通</td>
+        <td>alias-free operators（低通滤波）</td>
+        <td>有（NVlabs/stylegan3）</td>
+        <td><span class="badge b-mid">中–高</span> 机制最贴，但改造大；可只借「卷积前也低通」</td>
+      </tr>
+      <tr>
+        <td>Zhang (2019), <i>Making Convolutional Networks Shift-Invariant Again</i>, ICML</td>
+        <td>arXiv 1904.11486</td>
+        <td>混叠 / 平移敏感</td>
+        <td>stride/maxpool 下采样</td>
+        <td>antialiased downsampling（BlurPool）</td>
+        <td>有（richzhang/antialiased-cnns）</td>
+        <td><span class="badge b-strong">高</span> PSPStain 已内置同类 <code>Downsample</code>；可加强核</td>
+      </tr>
+      <tr>
+        <td>Durall, Keuper, Keuper (2020), <i>Watch your Up-Convolution</i>, CVPR</td>
+        <td>arXiv 2003.01826</td>
+        <td>频谱分布失真 / 高频缺失</td>
+        <td>上卷积</td>
+        <td>spectral regularization</td>
+        <td>有（cc-hpc-itwm/UpConv）</td>
+        <td><span class="badge b-mid">中</span> 频谱正则可借；目标是分布匹配，不是条纹</td>
+      </tr>
+      <tr>
+        <td>Jiang, Dai, Wu, Loy (2021), <i>Focal Frequency Loss</i>, ICCV</td>
+        <td>arXiv 2012.12821</td>
+        <td>频谱差异 / 高频伪影</td>
+        <td>重建/合成的频域差异</td>
+        <td>FFL（动态频谱权重）</td>
+        <td>有（EndlessSora/focal-frequency-loss）</td>
+        <td><span class="badge b-mid">中</span> 可加在浓度域，但必须<b>方向性 mask</b>，别抹真实高频</td>
+      </tr>
+      <tr>
+        <td>Fuoli, Van Gool, Timofte (2021), <i>Fourier Space Losses for Efficient Perceptual Image SR</i>, ICCV</td>
+        <td>arXiv 2106.00783</td>
+        <td>高频缺失 / 感知质量</td>
+        <td>仅像素损失</td>
+        <td>Fourier space losses</td>
+        <td>未确认</td>
+        <td><span class="badge b-mid">中</span> 频域损失设计可借鉴</td>
+      </tr>
+      <tr>
+        <td>Wang et al. (2021), <i>Real-ESRGAN</i>, ICCVW</td>
+        <td>arXiv 2107.10833</td>
+        <td>overshoot / ringing</td>
+        <td>上采样 / 锐化</td>
+        <td>高阶退化 + perceptual loss</td>
+        <td>有（xinntao/Real-ESRGAN）</td>
+        <td><span class="badge b-mid">中</span> overshoot 诊断与抑制思路可借</td>
+      </tr>
+      <tr>
+        <td>Thévenaz, Blu, Unser (2000), <i>Image Interpolation and Resampling</i>, Handbook of Medical Imaging</td>
+        <td>书章（无 arXiv）</td>
+        <td>ringing</td>
+        <td>插值核振荡</td>
+        <td>选择核 / 加窗</td>
+        <td>无</td>
+        <td><span class="badge b-strong">高</span> 直接解释 BICUBIC resize 的 overshoot</td>
+      </tr>
+      <tr>
+        <td>He, Sun, Tang (2013), <i>Guided Image Filtering</i>, TPAMI</td>
+        <td>10.1109/TPAMI.2012.213</td>
+        <td>halo（边缘保持滤波）</td>
+        <td>局部滤波边缘泄漏</td>
+        <td>guided filter</td>
+        <td>有</td>
+        <td><span class="badge b-mid">中</span> 后处理可减 halo，但可能抹细节</td>
+      </tr>
+      <tr>
+        <td>PSPStain (2024), MICCAI</td>
+        <td>arXiv 2407.03655</td>
+        <td>染色质量 / 结构</td>
+        <td>—</td>
+        <td>pyramid loss + MLPA/CTPC + aux seg</td>
+        <td>有</td>
+        <td><span class="badge b-strong">基线</span></td>
+      </tr>
+      <tr>
+        <td>CCPL (2025), ICME</td>
+        <td>arXiv 2506.07559</td>
+        <td>通道关系</td>
+        <td>—</td>
+        <td>DCP / FD / NMCC</td>
+        <td>有</td>
+        <td><span class="badge b-mid">中</span> 通道约束思路可借；NMCC 已知失效</td>
+      </tr>
+      <tr>
+        <td>VirtualMultiplexer (Pati et al., 2024), Nature Machine Intelligence</td>
+        <td>10.1038/s42256-024-00889-5</td>
+        <td>虚拟多重染色质量</td>
+        <td>—</td>
+        <td>CUT + neighborhood/global/local losses</td>
+        <td>部分/未确认</td>
+        <td><span class="badge b-strong">强基线</span></td>
+      </tr>
+      <tr>
+        <td>UNIStainNet (2026)</td>
+        <td>arXiv 2603.12716</td>
+        <td>虚拟染色质量</td>
+        <td>—</td>
+        <td>SPADE-UNet + UNI + FiLM</td>
+        <td>未确认</td>
+        <td><span class="badge b-mid">中</span> 条件调制参考</td>
+      </tr>
+    </table>
+    <div class="note"><b>分类提醒：</b>① 直接针对竖纹/周期伪影：Odena、StyleGAN2/3、BlurPool、Durall；② 直接针对 halo/ringing：Real-ESRGAN、Thévenaz、Guided Filter；③ 只做一般频域损失、未证明能解决条纹：FFL、Fuoli——<b>不要把「用了频域损失」当成「能治竖纹」</b>。</div>
+  </div>
+
+  <h2 id="s4">4 · PSPStain 场景的成因排查顺序</h2>
+  <div class="card">
+    <p>原则：<b>从最便宜、最可能共享的环节往上查</b>；每一步只改一个变量，并记录 CSS/DSR/PPS/EHS。</p>
+    <table>
+      <tr><th>步</th><th>检查</th><th>怎么做</th><th>若指标变化 → 结论</th></tr>
+      <tr><td>0</td><td>复现基线</td><td>固定输入、固定 seed、固定 tile，保存官方 RGB 与 2 通道各一张</td><td>建立可比基线</td></tr>
+      <tr><td>1</td><td><b>预处理 resize</b></td><td>同一图：<code>preprocess='none'</code> vs <code>'resize'</code> vs <code>'resize_and_crop'</code>；下采样用 <code>INTER_AREA</code> 对照</td><td>竖纹/亮边随 resize 变 → 预处理是主因</td></tr>
+      <tr><td>2</td><td><b>训练/测试分辨率</b></td><td>同图分别以 <code>crop_size=512</code> 与 <code>1024</code> 推理（整图或滑窗）</td><td>只在 1024 出现 → 尺度/混叠</td></tr>
+      <tr><td>3</td><td><b>常量输入</b></td><td>全 0 / 均值 H/E 图过 G，输出做 CSS/DSR</td><td>常量输入仍有竖纹 → 生成器固有</td></tr>
+      <tr><td>4</td><td><b>绕过浓度→RGB</b></td><td>保存原始 H/DAB 输出与重建 RGB，分别算指标</td><td>只在 RGB 有 → 重建/映射；只在浓度有 → 生成器</td></tr>
+      <tr><td>5</td><td><b>tiling/stitching</b></td><td>关闭 tiling / 改 tile 大小 / 整图推理</td><td>条纹间距随 tile 变 → 接缝</td></tr>
+      <tr><td>6</td><td><b>逐层 tap</b></td><td>6 个 ResBlock 输出做 CSS/DSR/PPS（§5）</td><td>某层指标突增 → 该阶段引入</td></tr>
+      <tr><td>7</td><td><b>数据</b></td><td>直接对原始输入算 CSS/DSR；看 JPEG/扫描线</td><td>输入本身有 → 数据/扫描</td></tr>
+    </table>
+    <div class="ok"><b>两个一行诊断（最便宜）：</b><br>
+    ① 常量输入过 G：<code>G(torch.zeros(1,2,256,256))</code> 与 <code>G(torch.ones(...)*mean)</code>；<br>
+    ② 只跑重建器：把一张合成浓度斜坡（含硬边）过 <code>C→RGB</code>，看是否自带 overshoot。</div>
+  </div>
+
+  <h2 id="s5">5 · ResBlk 逐层实验设计</h2>
+  <div class="card">
+    <h3>5.1 要保存什么</h3>
+    <ul>
+      <li>输入 H/E（或 RGB）与最终输出（浓度 + RGB）。</li>
+      <li>6 个 <code>ResnetBlock</code> 的输出 <code>f_1…f_6</code>，形状均为 <code>[B,256,H/4,W/4]</code>。</li>
+      <li>每个 tap 的<b>通道均值图</b> <code>m_i = mean_c f_i</code>（用于指标），以及<b>同一解码器</b>解出的可视化图（仅定性）。</li>
+      <li>最终 head 前的特征（可选）。</li>
+    </ul>
+
+    <h3>5.2 如何公平解码（避免投影头差异被误判为 ResBlk 差异）</h3>
+    <table>
+      <tr><th>方案</th><th>做法</th><th>公平性</th><th>建议</th></tr>
+      <tr><td>A · 共享解码器（零训练）</td><td>所有 tap 用<b>同一个</b>已训练 decoder（权重完全相同）</td><td>中：decoder 为最终块分布而训，浅层会糊</td><td>仅定性看「糊→清」</td></tr>
+      <tr><td>B · 共享 1×1 线性探针（轻训练）</td><td>每个 tap 接同一个 1×1 conv→3ch，<b>共享权重</b>，用同一损失训少量步</td><td>较高：无独立投影头</td><td>推荐做定量</td></tr>
+      <tr><td>C · 特征空间直接统计（零训练）</td><td>不解码，直接对 <code>m_i</code> 算 CSS/DSR/PPS/HFER</td><td><b>最高</b>：完全无 decoder 混淆</td><td><b>首选</b></td></tr>
+    </table>
+    <div class="warn"><b>关键：</b>不要给每个 tap 各训一个不同的 decoder/head——那会把「投影头差异」混进「ResBlk 差异」。要么共享权重，要么直接在特征空间算指标。</div>
+
+    <h3>5.3 指标定义（可直接实现）</h3>
+    <pre>预处理：转灰度 Y=0.299R+0.587G+0.114B（或直接用 H/DAB 单通道）
+        I = (I-mean)/std；裁掉 16px 边框；FFT 前乘 Hann 窗
+
+1) CSS  列方向条纹强度
+   I_hp = I - gaussian_blur(I, sigma=3)
+   col  = mean_y I_hp                     # 长度 W
+   CSS  = std(col) / (std(I_hp)+eps)
+   平区域版本：只在 |∇I|<τ 的背景像素上算 std(col_flat)
+
+2) DSR  方向性能量占比（竖纹）
+   F=fft2(I*hann); P=|fftshift(F)|^2
+   band_v = { 0.05<=|fx|<=0.5, |fy|<=0.02 }   # 竖纹 → fx 方向、fy≈0
+   DSR_v  = sum(P[band_v]) / (sum(P)-P[DC])
+   同理 DSR_h（|fx|<=0.02, 0.05<=|fy|<=0.5）
+
+3) PPS  周期性峰值
+   col = mean_y(I-mean(I))
+   A   = |rfft(col-mean(col))|^2
+   PPS = max(A[k]) / (median(A[k])+eps)   # k 在条纹带内
+
+4) HFER 高频能量占比（不是越低越好！）
+   r=sqrt(fx^2+fy^2); HFER=sum(P[r>0.25])/sum(P)
+
+5) EHS  边缘光晕/过冲
+   在输入 H 通道上取 Sobel/Canny 强边缘；沿梯度法线取 ±d (d=6px) 剖面
+   plateau_L/R = 两侧外侧 2px 的中位数
+   overshoot  = max(0, max(profile)-max(plateau_L,plateau_R))
+   undershoot = max(0, min(plateau_L,plateau_R)-min(profile))
+   EHS = mean(overshoot+undershoot) over strong edges
+   配准不完美时：允许 ±3px 搜索最大梯度；或直接在输出自身边缘上算（免配准版）</pre>
+
+    <h3>5.4 相邻 ResBlk 的变化量</h3>
+    <pre>Δ_i = metric(f_i) - metric(f_{i-1}),  i=2..6
+找 argmax_i Δ_i(CSS) 与 argmax_i Δ_i(DSR_v)：
+  若突增在 f_1→f_2：浅层（编码/第一次下采样后）引入
+  若突增在 f_5→f_6：深层/上采样前引入
+  若全程平缓、只在最终输出突增：head 或 C→RGB 重建引入</pre>
+
+    <h3>5.5 若某阶段显著增强，如何做消融验证</h3>
+    <ul>
+      <li>只替换该阶段的算子（如该级上采样 <code>Upsample</code> ↔ <code>no_antialias_up</code> 的 <code>ConvTranspose2d</code>），其余不动，重训/微调，比较 CSS/DSR。</li>
+      <li>或冻结其它层，只对该阶段做短微调（adapter），看指标是否回落。</li>
+      <li>用<b>同一 seed、同一数据、同一评估</b>；每次只改一个变量。</li>
+    </ul>
+  </div>
+
+  <h2 id="s6">6 · 最小改进方案</h2>
+  <div class="card">
+    <h3>6.1 优先方案 P1：先修「管线/分辨率 + 低方差归一化」（零/短训练，低风险）</h3>
+    <table>
+      <tr><th>项</th><th>内容</th></tr>
+      <tr><td><b>设计依据</b></td><td>代码已证实：默认抗混叠、<code>normG=instance(affine=False)</code>、<code>preprocess=BICUBIC</code>、训练 512/测试 1024。这四项里，<b>预处理与分辨率不一致</b>是唯一能同时解释「官方权重也有竖纹」的共享环节；<b>IN 低方差放大</b>解释「空白区更明显」。</td></tr>
+      <tr><td><b>实现位置</b></td><td>① 推理统一到训练分辨率（512 滑窗 + 重叠融合），或至少在 512/1024 两档都测；② resize 下采样改 <code>INTER_AREA</code>，上采样避免 BICUBIC 直接放大（先 <code>INTER_AREA</code> 下/最近邻上，再做轻模糊）；③ 若确认 IN 主导：把 <code>InstanceNorm2d</code> 换成<b>方差下限 IN</b> <code>(x−μ)/sqrt(σ²+ε)</code>（ε=1e-2）或 SafeIN（方差门控）。</td></tr>
+      <tr><td><b>预计收益</b></td><td>若竖纹来自 resize/分辨率，CSS/DSR 可显著下降且<b>零训练</b>；若来自 IN，短微调后背景条纹明显减弱。</td></tr>
+      <tr><td><b>风险</b></td><td>改推理分辨率会改变输出观感；IN 改动需短微调，可能轻微影响染色强度。</td></tr>
+      <tr><td><b>参数开销</b></td><td>0（IN 方差下限）或极小（SafeIN 的 1×1 门控）。</td></tr>
+    </table>
+
+    <h3>6.2 备选方案 B1：方向性频域约束 + 结构保持（需训练，中风险）</h3>
+    <table>
+      <tr><th>项</th><th>内容</th></tr>
+      <tr><td><b>设计依据</b></td><td>FFL（Jiang 2021）证明频域损失能补高频；但<b>普通高频惩罚会抹掉细胞核/膜纹理</b>（你已明确警告）。因此只惩罚<b>竖纹对应的窄带</b>（<code>|fy|≈0, 0.05≤|fx|≤0.5</code>），并配结构保持项。</td></tr>
+      <tr><td><b>实现位置</b></td><td>加在<b>H/DAB 浓度输出</b>（不是最终 RGB）：<code>L_stripe = || M_stripe ⊙ (FFT(Ĉ)−FFT(C)) ||</code>，<code>M_stripe</code> 只覆盖条纹带；权重 0.01–0.05；同时加 <code>L_edge</code>（梯度/SSIM）保结构。</td></tr>
+      <tr><td><b>预计收益</b></td><td>若条纹在浓度域已存在，可定向压低而不伤真实高频；对 DAB 通道可单独设权重。</td></tr>
+      <tr><td><b>风险</b></td><td>mask 设计不当会误伤真实竖直线（如纤维）；需配合 HFER 监控，避免过度平滑。</td></tr>
+      <tr><td><b>参数开销</b></td><td>0 新增参数（纯损失）。</td></tr>
+    </table>
+
+    <div class="warn"><b>不要同时上：</b>DySample + 小波下采样 + H/E 注意力 + 频域损失 + DAB 增强。你现在的首要任务是<b>定位</b>，不是堆模块。等 §4 的结论出来，再决定 P1 还是 B1。</div>
+  </div>
+
+  <h2 id="s7">7 · 消融实验计划</h2>
+  <div class="card">
+    <table>
+      <tr><th>编号</th><th>配置</th><th>只改这一项</th><th>要回答</th></tr>
+      <tr><td>A0</td><td>官方 RGB 基线（512 / 1024 两档）</td><td>—</td><td>官方权重是否也有竖纹/亮边</td></tr>
+      <tr><td>A1</td><td>2 通道基线（当前 epoch 50）</td><td>—</td><td>2 通道改造是否加重</td></tr>
+      <tr><td>A2</td><td>A1 + 预处理/分辨率修正</td><td>resize/分辨率</td><td>管线是否主因</td></tr>
+      <tr><td>A3</td><td>A1 + 方差下限 IN</td><td>norm</td><td>IN 低方差放大是否主因</td></tr>
+      <tr><td>A4</td><td>A1 + 更强抗混叠核</td><td>filt_size 5/7</td><td>残余混叠是否主因</td></tr>
+      <tr><td>A5</td><td>A1 + 方向性频域损失</td><td>loss</td><td>定向频域约束是否有效</td></tr>
+      <tr><td>A6</td><td>A1 + H/E 形态特征注入</td><td>前端模块</td><td>注入本身的贡献（与伪影分开）</td></tr>
+      <tr><td>A7</td><td>A1 + DAB 强度增强</td><td>DAB 约束</td><td>增强是否放大条纹/光晕</td></tr>
+    </table>
+    <p class="small">顺序建议：A0/A1 → A2 → A3 → A4 →（若仍不够）A5 → A6/A7。每次只动一个；A6 与 A5 不要同轮。</p>
+  </div>
+
+  <h2 id="s8">8 · 可量化成功标准</h2>
+  <div class="card">
+    <table>
+      <tr><th>维度</th><th>指标</th><th>目标</th><th>失效模式</th></tr>
+      <tr><td>竖纹</td><td>CSS</td><td>相对 A1 下降 ≥30%</td><td>过度平滑导致 CSS 假性下降</td></tr>
+      <tr><td>方向性</td><td>DSR_v / DSR_h</td><td>DSR_v 下降 ≥30%，且 DSR_v/DSR_h → 1</td><td>把真实竖向纤维当条纹压掉</td></tr>
+      <tr><td>周期性</td><td>PPS</td><td>下降 ≥50%</td><td>条纹变宽但仍在</td></tr>
+      <tr><td>高频</td><td>HFER</td><td><b>不追求最低</b>；与 A1 相差 ≤±10%，同时结构指标不降</td><td>HFER 过低 = 纹理被抹</td></tr>
+      <tr><td>光晕</td><td>EHS</td><td>下降 ≥30%</td><td>边缘被钝化，EHS 假性下降</td></tr>
+      <tr><td>结构</td><td>核/膜分割 Dice、SSIM/LPIPS（若有配准 GT）</td><td>不下降（相对 A1）</td><td>只优化伪影、牺牲结构</td></tr>
+      <tr><td>DAB</td><td>FOD 直方图距离（Wasserstein）、DAB 强度分布</td><td>不恶化，最好改善</td><td>DAB 过增强/色偏</td></tr>
+    </table>
+    <div class="note"><b>必须成对报告：</b>伪影指标 + 结构/DAB 指标。单看 CSS 下降可能是「把图糊了」。</div>
+  </div>
+
+  <h2 id="s9">9 · 最终建议</h2>
+  <div class="card">
+    <div class="ok">
+      <p><b>下一步只做一件事：</b>用<b>官方 3 通道权重</b>和<b>你的 2 通道权重</b>，在同一张图上跑这 4 个零训练条件，算 CSS / DSR_v / PPS / EHS：</p>
+      <ol>
+        <li><b>512</b> 推理（训练分辨率）；</li>
+        <li><b>1024</b> 推理（官方测试分辨率）；</li>
+        <li><code>preprocess='none'</code>（不 resize）；</li>
+        <li><b>常量输入</b>（全 0 / 均值图）。</li>
+      </ol>
+      <p>这 4 个条件能一次性回答「竖纹是管线还是生成器」：</p>
+      <ul>
+        <li>512 有、1024 更重 → <b>分辨率/混叠</b>；</li>
+        <li><code>none</code> 明显减轻 → <b>BICUBIC resize</b>；</li>
+        <li>常量输入仍有 → <b>生成器固有（IN / 弱抗混叠）</b>；</li>
+        <li>都没有、只有重建 RGB 有 → <b>浓度→RGB 映射</b>。</li>
+      </ul>
+    </div>
+    <p><b>在这个结果出来之前，暂缓：</b>DySample、小波下采样、H/E 注意力注入、频域损失、DAB 强度增强。它们都可能「对症但不对因」，会把你现在最宝贵的诊断信号掩盖掉。</p>
+    <p><b>结果出来之后：</b>若是管线 → 直接做 P1（零训练）；若是生成器 → 先做 A3（方差下限 IN）或 A4（更强抗混叠），再考虑 B1（方向性频域）。H/E 形态注入（A6）留到伪影定位之后单独消融，避免和伪影抑制混在一起说不清贡献。</p>
+    <p class="small">诚实边界：以上代码结论基于本机 PSPStain 官方仓库；你的 2 通道 <code>psp_diffusion</code> 代码不可访问，§0.3 的清单需你在服务器上核对后再下最终判断。</p>
+  </div>
+
+  <h2 id="s10">附录 · 指标公式与检查清单</h2>
+  <div class="card">
+    <h3>A. 指标速查</h3>
+    <pre>CSS  = std(mean_y(I - blur(I))) / (std(I - blur(I)) + eps)
+DSR_v= ΣP[0.05≤|fx|≤0.5, |fy|≤0.02] / (ΣP - P[0,0])
+PPS  = max|FFT(col)|² / median|FFT(col)|²   (col=列均值，去直流)
+HFER = ΣP[r>0.25] / ΣP          # 只作相对比较，不追求最低
+EHS  = mean(overshoot + undershoot) over strong edges</pre>
+    <h3>B. 代码只读检查清单（服务器上补）</h3>
+    <ul>
+      <li><code>grep -rn "no_antialias" .</code>：训练命令是否显式关闭抗混叠？</li>
+      <li><code>grep -rn "load_size\|crop_size\|preprocess" .</code>：训练/测试是否一致？</li>
+      <li><code>grep -rn "InstanceNorm\|normG" .</code>：是否 <code>affine=False</code>？</li>
+      <li>找 <code>C→RGB</code> 重建函数：<code>exp</code>、<code>clamp</code>、<code>I0</code>、<code>M</code> 的来源。</li>
+      <li>找 tiling/stitching：tile 大小、overlap、blending。</li>
+      <li>保存原始 H/DAB 输出与重建 RGB，分别算指标。</li>
+    </ul>
+    <h3>C. 一句话总结</h3>
+    <p><b>PSPStain 默认已经是抗混叠的，所以「加抗混叠」不是第一刀；第一刀是证明竖纹到底来自 BICUBIC resize/分辨率、InstanceNorm 低方差放大，还是生成器内部——用 4 个零训练条件就能分开。</b></p>
+  </div>
+</div>
+</body>
+</html>

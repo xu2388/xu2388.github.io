@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>病理图像中蛋白/分子表达的表示、量化、保持与约束 —— 深度文献调研</title>
+<style>
+:root{
+  --bg:#f7f8fa;
+  --panel:#ffffff;
+  --panel-2:#f1f3f7;
+  --ink:#1a1d24;
+  --ink-2:#414854;
+  --ink-3:#6b7383;
+  --line:#e2e6ee;
+  --line-2:#cfd6e2;
+  --accent:#1d4ed8;
+  --accent-soft:#e8efff;
+  --teal:#0d7c6b;
+  --teal-soft:#e2f5f1;
+  --amber:#9a6400;
+  --amber-soft:#fdf1dc;
+  --red:#b3261e;
+  --red-soft:#fdecea;
+  --green:#1d6f42;
+  --green-soft:#e6f4ec;
+  --purple:#6b3fa0;
+  --purple-soft:#f1e9fb;
+  --slate:#4b5563;
+  --slate-soft:#eceff4;
+  --brown:#8a4b08;
+  --brown-soft:#fbeedd;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:15px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{display:flex;max-width:1560px;margin:0 auto;gap:0;align-items:flex-start}
+
+/* ---------- NAV ---------- */
+nav.toc{
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  width:288px;flex:0 0 288px;
+  background:var(--panel);border-right:1px solid var(--line);
+  padding:22px 16px 60px 20px;font-size:13px;
+}
+nav.toc h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 14px;font-weight:700}
+nav.toc a{display:block;color:var(--ink-2);text-decoration:none;padding:4px 8px;border-radius:5px;line-height:1.45;margin-bottom:1px}
+nav.toc a:hover{background:var(--accent-soft);color:var(--accent)}
+nav.toc a.sub{padding-left:18px;font-size:12.2px;color:var(--ink-3)}
+nav.toc .grp{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2)}
+nav.toc .meta{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:var(--ink-3);font-size:11.5px;line-height:1.6}
+
+/* ---------- MAIN ---------- */
+main{flex:1 1 auto;min-width:0;padding:0 46px 120px;max-width:1220px}
+
+header.hero{
+  padding:56px 0 34px;border-bottom:2px solid var(--ink);
+  margin-bottom:38px;
+}
+header.hero .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px}
+header.hero h1{font-size:34px;line-height:1.28;margin:0 0 16px;letter-spacing:-.01em;font-weight:750}
+header.hero .sub{font-size:16.5px;color:var(--ink-2);max-width:920px;margin:0 0 22px}
+header.hero .qbox{
+  background:var(--panel);border:1px solid var(--line-2);border-left:4px solid var(--accent);
+  padding:16px 20px;border-radius:0 8px 8px 0;font-size:15px;color:var(--ink);
+}
+header.hero .qbox b{color:var(--accent)}
+
+h2.sec{
+  font-size:25px;margin:64px 0 8px;padding-top:20px;border-top:2px solid var(--ink);
+  letter-spacing:-.01em;font-weight:730;
+}
+h2.sec .num{color:var(--accent);font-variant-numeric:tabular-nums;margin-right:10px;font-weight:800}
+h3{font-size:18.5px;margin:36px 0 10px;font-weight:700;color:var(--ink)}
+h4{font-size:15.5px;margin:24px 0 8px;font-weight:700;color:var(--ink-2)}
+h5{font-size:14px;margin:18px 0 6px;font-weight:700;color:var(--ink-3);letter-spacing:.02em}
+p{margin:11px 0}
+ul,ol{margin:11px 0;padding-left:24px}
+li{margin:5px 0}
+code{background:var(--panel-2);padding:1.5px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.8px;color:#7a2f6b}
+a{color:var(--accent)}
+hr{border:none;border-top:1px solid var(--line);margin:34px 0}
+
+/* ---------- CALLOUTS ---------- */
+.callout{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin:20px 0;font-size:14.5px;
+}
+.callout.key{border-left:4px solid var(--accent);background:linear-gradient(90deg,var(--accent-soft) 0%,var(--panel) 55%)}
+.callout.warn{border-left:4px solid var(--amber);background:linear-gradient(90deg,var(--amber-soft) 0%,var(--panel) 55%)}
+.callout.neg{border-left:4px solid var(--red);background:linear-gradient(90deg,var(--red-soft) 0%,var(--panel) 55%)}
+.callout.pos{border-left:4px solid var(--green);background:linear-gradient(90deg,var(--green-soft) 0%,var(--panel) 55%)}
+.callout .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--ink-3);display:block;margin-bottom:6px}
+
+/* ---------- MATH ---------- */
+.m{font-family:"Latin Modern Math","Cambria Math",Cambria,"Times New Roman",serif;font-style:italic;font-size:15.4px;white-space:nowrap}
+.m .op{font-style:normal}
+.mathblock{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+  padding:13px 18px;margin:14px 0;text-align:center;overflow-x:auto;
+  font-family:"Latin Modern Math","Cambria Math",Cambria,"Times New Roman",serif;
+  font-size:16px;font-style:italic;
+}
+.mathblock .op{font-style:normal}
+.mathblock .lbl{font-style:normal;font-family:inherit;font-size:12px;color:var(--ink-3);display:block;margin-top:8px}
+
+/* ---------- BADGES ---------- */
+.badge{
+  display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.05em;
+  padding:2px 7px;border-radius:4px;white-space:nowrap;vertical-align:1px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.ev-strong{background:var(--green-soft);color:var(--green);border:1px solid #bfe0cd}
+.ev-mod{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb2}
+.ev-weak{background:var(--slate-soft);color:var(--slate);border:1px solid #d8dee8}
+.ev-spec{background:var(--red-soft);color:var(--red);border:1px solid #f3c9c4}
+
+.r-train{background:#e7efff;color:#1b3fa8;border:1px solid #c3d5fb}
+.r-aux{background:var(--purple-soft);color:var(--purple);border:1px solid #ddcbf3}
+.r-eval{background:var(--teal-soft);color:var(--teal);border:1px solid #bfe6de}
+.r-bio{background:#fdeee0;color:var(--brown);border:1px solid #f2d5b4}
+.r-phys{background:#e9ecef;color:#333a44;border:1px solid #d3d8de}
+
+/* ---------- TABLES ---------- */
+.tw{overflow-x:auto;margin:20px 0;border:1px solid var(--line-2);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:12.6px;min-width:900px}
+table.wide{min-width:1750px}
+th{
+  background:var(--panel-2);text-align:left;padding:9px 11px;font-weight:750;font-size:11.6px;
+  letter-spacing:.03em;border-bottom:2px solid var(--line-2);color:var(--ink-2);position:sticky;top:0;z-index:2;
+  white-space:nowrap;
+}
+td{padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fbfcfe}
+td.nm{font-weight:650;color:var(--ink);min-width:180px}
+.small{font-size:12.3px;color:var(--ink-3)}
+
+/* ---------- TAXONOMY LADDER ---------- */
+.ladder{margin:22px 0}
+.lvl{
+  background:var(--panel);border:1px solid var(--line-2);border-radius:10px;
+  padding:14px 18px;margin-bottom:9px;position:relative;overflow:hidden;
+}
+.lvl::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
+.lvl.l1::before{background:#1d4ed8}
+.lvl.l2::before{background:#0d7c6b}
+.lvl.l3::before{background:#9a6400}
+.lvl.l4::before{background:#b3261e}
+.lvl.l5::before{background:#6b3fa0}
+.lvl.l6::before{background:#1d6f42}
+.lvl.l7::before{background:#8a4b08}
+.lvl .hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:5px}
+.lvl .tag{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+.lvl .ttl{font-weight:750;font-size:15.5px}
+.lvl .body{font-size:13.6px;color:var(--ink-2)}
+.lvl .verdict{font-size:12.6px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line-2)}
+
+/* ---------- MISC ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1180px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.card h4{margin-top:0}
+.pill{display:inline-block;background:var(--panel-2);border:1px solid var(--line-2);border-radius:20px;padding:2px 11px;font-size:11.6px;color:var(--ink-2);margin:2px 4px 2px 0}
+.paper{
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:13px 16px;margin:11px 0;
+}
+.paper .t{font-weight:700;font-size:14.3px}
+.paper .meta{font-size:12.2px;color:var(--ink-3);margin:3px 0 7px}
+.paper .why{font-size:13.4px;color:var(--ink-2)}
+.qanswer{
+  background:var(--panel);border:1px solid var(--line-2);border-radius:11px;padding:20px 24px;margin:24px 0;
+  box-shadow:0 1px 3px rgba(20,30,60,.04);
+}
+.qanswer .qh{font-size:17px;font-weight:750;margin-bottom:4px;display:flex;gap:11px;align-items:baseline}
+.qanswer .qn{background:var(--ink);color:#fff;font-size:12px;font-weight:800;border-radius:6px;padding:2px 9px;letter-spacing:.05em}
+.verdictbox{
+  background:var(--panel-2);border:1px dashed var(--line-2);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px;
+}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12.2px;color:var(--ink-2);margin:14px 0 6px}
+.legend span{display:flex;align-items:center;gap:6px}
+footer{margin-top:70px;padding-top:24px;border-top:2px solid var(--ink);font-size:12.5px;color:var(--ink-3)}
+@media print{nav.toc{display:none}main{padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <h2>目录</h2>
+  <a href="#s0">核心问题与阅读指引</a>
+  <a href="#s1">1 · Executive Summary</a>
+  <a href="#s2">2 · 蛋白表达表示的分类体系</a>
+  <a href="#s3">3 · 物理/光学定量路线</a>
+  <a class="sub" href="#s3-1">3.1 OD / IOD / MOD / AOD</a>
+  <a class="sub" href="#s3-2">3.2 Beer–Lambert 与染色浓度</a>
+  <a class="sub" href="#s3-3">3.3 色解卷积与 stain vector</a>
+  <a class="sub" href="#s3-4">3.4 FOD：它到底是什么</a>
+  <a class="sub" href="#s3-5">3.5 荧光 / 光谱 / 高光谱</a>
+  <a class="sub" href="#s3-6">3.6 其他物理量</a>
+  <a href="#s4">4 · 数学统计 / 图像统计路线</a>
+  <a class="sub" href="#s4-a">4.A 一阶统计</a>
+  <a class="sub" href="#s4-b">4.B 分布统计</a>
+  <a class="sub" href="#s4-c">4.C 空间统计</a>
+  <a href="#s5">5 · 频域 / 多尺度 / 形态学</a>
+  <a href="#s6">6 · 细胞级 / 区域级 / 空间生物学</a>
+  <a href="#s7">7 · 虚拟染色中如何保持蛋白表达</a>
+  <a href="#s8">8 · 物理量 + 数学约束的混合路线</a>
+  <a href="#s9">9 · 训练约束 vs 评价指标</a>
+  <a href="#s10">10 · 总对比表</a>
+  <a href="#s11">11 · Research Landscape</a>
+  <a href="#s12">12 · 最值得精读的论文</a>
+  <a href="#s13">13 · 核心疑问逐条回答</a>
+  <a href="#s14">14 · 总范式判断</a>
+  <a href="#refs">15 · 参考文献</a>
+  <div class="grp">
+    <a href="#s0"><b>证据等级</b></a>
+    <div class="legend" style="flex-direction:column;gap:5px;padding:0 8px">
+      <span><span class="badge ev-strong">Strong</span> 多篇原始研究支持</span>
+      <span><span class="badge ev-mod">Moderate</span> 少量原始研究</span>
+      <span><span class="badge ev-weak">Weak</span> 零散/间接证据</span>
+      <span><span class="badge ev-spec">Speculative</span> 未找到直接文献</span>
+    </div>
+  </div>
+  <div class="meta">
+    检索时间：2026-09<br>
+    覆盖：1998–2026<br>
+    来源：原始论文 / MICCAI / CVPR / IEEE TMI / Med Image Anal / Nat Med / Nat Commun / Nat Biomed Eng / Lab Invest / Bioinformatics / Front Oncol 等
+  </div>
+</nav>
+
+<main>
+
+<header class="hero">
+  <div class="kicker">Deep Literature Survey · Computational Pathology</div>
+  <h1>病理图像中「蛋白/分子表达」如何被<br>表示、量化、保持与约束</h1>
+  <p class="sub">一份围绕单一问题的文献调研：当目标染色携带蛋白/分子表达信息时，已有研究究竟用什么手段把「蛋白表达」从视觉颜色变成可测量、可比较、可约束、可验证的数学/物理对象。</p>
+  <div class="qbox">
+    <b>唯一核心问题：</b>面对一张包含蛋白表达信息的病理染色图像，科学界如何把「蛋白表达」转成物理量或统计对象？这些对象之间是什么关系？在虚拟染色中，已有方法究竟在哪一层保持蛋白表达？<br><br>
+    <span class="small">本报告<b>不</b>评价模型结构优劣（GAN / Diffusion / U-Net / Transformer），<b>不</b>预设 FOD/OD 是正确方向，把 FOD 当作候选方法之一，与 OD、IOD、fluorescence、stain concentration、cell-level expression、spatial statistics、frequency-domain 表示平等比较。</span>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s0"><span class="num">§0</span>核心问题与阅读指引</h2>
+
+<p>你的调研需求可以拆成四个递进的问题：</p>
+<ol>
+  <li><b>表示</b>（Representation）：蛋白表达被写成什么数学/物理对象？</li>
+  <li><b>测量</b>（Measurement）：这些对象有没有物理/光学基础？</li>
+  <li><b>约束</b>（Constraint）：在虚拟染色训练中，它们进不进入 loss？</li>
+  <li><b>验证</b>（Validation）：怎么证明"生成的蛋白表达是对的"？</li>
+</ol>
+
+<div class="callout warn">
+  <span class="lbl">本报告最重要的一条方法论警告</span>
+  文献中大量论文使用 perceptual loss / feature loss / cycle consistency，并声称"preserves pathology semantics"。<b>这不等于约束了蛋白表达。</b>本报告对每篇论文都单独判断：它有没有真正针对 biomarker / protein expression 的量。凡是只用 perceptual/feature loss 的，本报告一律标记为 <span class="badge ev-weak">非表达约束</span>，不把它算作"蛋白表达约束方法"。
+</div>
+
+<div class="callout key">
+  <span class="lbl">关于 FOD 的先行结论</span>
+  <b>FOD（Focal Optical Density）不是病理学界的标准物理量。</b>它由 PSPStain（Chen et al., MICCAI 2024, arXiv:2407.03655）提出，定义为 <span class="m">FOD = (OD)<sup>α</sup></span>（<span class="m">α</span> 取 1.8），本质是<b>对光密度做的一次幂次重加权</b>，目的是让 loss 更关注肿瘤区（高 OD 区）。目前可检索到的使用 FOD 的论文只有同一研究组的 3 篇（PSPStain → PGVMS → Cross-channel Perception Learning）。它是一个<b>很有参考价值的"物理量 + 数学约束"实例</b>，但把它当成领域主流物理量会严重误判 landscape。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s1"><span class="num">1</span>Executive Summary</h2>
+
+<p>这个领域总体采用的思路，可以用一句话概括：</p>
+
+<div class="mathblock">
+RGB 染色图像 <span class="op">→</span> 反演光学模型得到「染色浓度类物理量」 <span class="op">→</span> 在该物理量上做统计/空间描述 <span class="op">→</span> 用病理学评分或下游临床结局验证
+</div>
+
+<p>但现实中的文献<b>并不均匀地分布在这条链上</b>。真实的 landscape 是三条彼此脱节的路线：</p>
+
+<div class="grid2">
+  <div class="card">
+    <h4>A. 定量病理学路线（成熟，1990s–今）</h4>
+    <p class="small">OD / IOD / MOD、色解卷积、AQUA 荧光定量、H-score、多重光谱解混、空间点过程统计。这条路把蛋白表达做成<b>可测量对象</b>，做得非常扎实，但基本不涉及生成模型。</p>
+    <p><span class="badge ev-strong">Strong</span> 证据充分，是真正的"物理 + 数学"传统。</p>
+  </div>
+  <div class="card">
+    <h4>B. 虚拟染色路线（活跃，2019–今）</h4>
+    <p class="small">H&E→IHC、label-free→IHC、IHC→IHC。绝大多数用 adversarial + L1 + perceptual/feature + contrastive loss，<b>目标是"像"</b>；评价主要用 SSIM/PSNR/FID。2024 年起才出现少量显式使用 OD/DAB 物理量的 loss。</p>
+    <p><span class="badge ev-strong">Strong</span> 主流是 image/feature 级约束，<b>不是</b>表达量级约束。</p>
+  </div>
+  <div class="card">
+    <h4>C. 空间生物学 / 空间蛋白组路线（快速上升，2020–今）</h4>
+    <p class="small">把表达放到细胞级/区域级，用 Ripley's K、共现矩阵、Shannon 熵、拓扑数据分析刻画"表达在空间上如何组织"。这条路线在<b>真实</b>多重染色上很成熟，在虚拟染色上刚刚开始（ROSIE、HEX）。</p>
+    <p><span class="badge ev-mod">Moderate</span> 用于虚拟染色时证据较少。</p>
+  </div>
+  <div class="card">
+    <h4>D. 频域 / 小波路线（几乎空白）</h4>
+    <p class="small">Fourier / 小波 / 多尺度 loss 在通用图像翻译里很常见，在虚拟染色里只有<b>图像级</b>的 Gaussian Pyramid / Sobel / 频域注意力，<b>没有任何论文把 OD/FOD 表达图送进频域</b>。</p>
+    <p><span class="badge ev-spec">未检索到</span> 直接文献。见 §5、§11。</p>
+  </div>
+</div>
+
+<h4>最关键的三个发现</h4>
+<ol>
+  <li><b>物理量的"入口"高度统一，但"出口"高度分散。</b>几乎所有方法都以 OD（Beer–Lambert）作为从 RGB 到物理量的入口；但从 OD 出发之后，有人走一阶统计（IOD/MOD）、有人走 H-score、有人走细胞级 OD、有人走光谱解混——<b>没有统一范式</b>。</li>
+  <li><b>「物理量 + 数学约束」确实存在，而且是 2024 年后才真正出现在虚拟染色的训练 loss 里。</b>代表：PSPStain/PGVMS 的 MLPA loss（OD→FOD→均值 + 20-bin 直方图 + 16-block 均值）、UNIStainNet 的 DAB stain loss（Beer–Lambert 解卷积 → top-10% DAB 强度）。这是一个<b>正在形成、但尚未成为主流</b>的方向。<span class="badge ev-strong">Strong</span></li>
+  <li><b>「物理表达图 + 真空间统计 / 频域 / 形态学约束」在虚拟染色中基本不存在。</b>空间统计只出现在定量病理（Failmezger 2022 的共现矩阵作用于膜 OD；Chervoneva 2021 的标记点过程作用于 CSI）。频域作用于表达图：未检索到。形态学描述子（阳性区形状/尺寸/连通性）作为 loss：未检索到。<span class="badge ev-weak">Weak / 未检索到</span></li>
+</ol>
+
+<div class="callout neg">
+  <span class="lbl">必须诚实说明的边界</span>
+  "未检索到"<b>不等于</b>"从未被提出"。本报告的检索以英文文献为主，覆盖 PubMed / arXiv / Nature / IEEE / Elsevier / Springer / MICCAI / CVPR / AAAI / ICLR 等；可能遗漏非英文文献、非常新的预印本、以及把频域约束写在 supplementary 里的工作。凡属此类，本报告一律标注为 <span class="badge ev-spec">未检索到（不等于不存在）</span>。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s2"><span class="num">2</span>Protein-expression representation taxonomy</h2>
+
+<p>下面这张表是文献中<b>真实出现过</b>的蛋白表达表示方式，按"从光子到语义"的层级排列。每一行都注明代表性论文与证据强度。</p>
+
+<div class="tw">
+<table class="wide">
+<thead><tr>
+<th>层级</th><th>表示方式</th><th>数学形式 / 定义</th><th>物理含义</th><th>直接测量 or Proxy</th><th>代表论文</th><th>证据</th>
+</tr></thead>
+<tbody>
+<tr><td>L0 光学</td><td class="nm">透射光强 I</td><td class="m">I<sub>C</sub>(x,y)</td><td>穿过标本后的光强</td><td>直接测量</td><td>任意明场扫描仪原始输出</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L0 光学</td><td class="nm">吸光度 / Absorbance</td><td class="m">A = −log<sub>10</sub>(I/I<sub>0</sub>)</td><td>标本对光的衰减</td><td>直接（由 I 计算）</td><td>Ruifrok &amp; Johnston 2001</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Optical Density (OD)</td><td class="m">OD<sub>C</sub> = −log<sub>10</sub>(I<sub>C</sub>/I<sub>0,C</sub>)</td><td>与染色剂浓度成正比（Beer–Lambert）</td><td>物理量（含假设）</td><td>Ruifrok 2001；Vahadane 2016</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Stain-specific OD</td><td class="m">OD = M · c</td><td>解卷积后每种染料的 OD 分量</td><td>物理量（模型反演）</td><td>Ruifrok 2001；Macenko 2009</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Stain concentration / density</td><td class="m">c = M<sup>−1</sup>·OD</td><td>估计的染料浓度（非负、稀疏）</td><td>Proxy（有物理基础）</td><td>Vahadane 2016 (TMI)；NLTD 2.0 (2025)</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">DAB OD / DAB intensity</td><td class="m">OD<sub>DAB</sub></td><td>DAB 显色剂浓度代理</td><td>Proxy</td><td>UNIStainNet 2026；Wei et al. 2024</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Integrated OD (IOD)</td><td class="m">IOD = Σ<sub>Ω</sub> OD(x,y)</td><td>区域内染色剂总量（积分吸光度）</td><td>物理量</td><td>图像细胞术传统；PSPStain 2024；PGVMS 2026</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Mean OD (MOD) / AOD</td><td class="m">MOD = IOD / |Ω|</td><td>区域平均染色剂浓度</td><td>物理量</td><td>IHC OD Score (Seyed Jafari 2016)</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">FOD (Focal OD)</td><td class="m">FOD = OD<sup>α</sup>, α=1.8</td><td>OD 的幂次重加权，非新物理量</td><td>重加权物理量</td><td>PSPStain 2024；PGVMS 2026；Cross-channel 2025</td><td><span class="badge ev-mod">Moderate（单组 3 篇）</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Fluorescence intensity</td><td class="m">F(x,y)</td><td>荧光团发射强度 ∝ 浓度</td><td>物理量（含淬灭/漂白假设）</td><td>Camp 2002 (AQUA, Nat Med)</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Spectral abundance</td><td class="m">S = Σ a<sub>i</sub> R<sub>i</sub></td><td>光谱解混后的每标记丰度</td><td>物理量（线性混合模型）</td><td>Lab Invest 2020 多重明场 IHC</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Autofluorescence intensity</td><td class="m">AF<sub>λ</sub>(x,y)</td><td>内源荧光团信号</td><td>物理量（间接）</td><td>Rivenson 2019；Loo 2025 (Verily/Genmab)</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L1 物理</td><td class="nm">Optical path length / phase</td><td class="m">Δφ ∝ 干质量</td><td>定量相位 → 生物量</td><td>物理量</td><td>PhaseStain 2019 (LSA)</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L2 像素</td><td class="nm">Pixel intensity map</td><td class="m">I(x,y)</td><td>像素级强度图</td><td>Proxy</td><td>几乎所有方法</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L3 统计</td><td class="nm">Mean / Median / SD / CV</td><td class="m">μ, σ, CV=σ/μ</td><td>一阶矩统计</td><td>统计量</td><td>广泛</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L3 统计</td><td class="nm">Positive pixel ratio / area fraction</td><td class="m">%Pos</td><td>阳性面积占比</td><td>统计量</td><td>Rizzardi 2012 (Diagn Pathol)</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L3 统计</td><td class="nm">Histogram / distribution</td><td class="m">p(OD)</td><td>表达的经验分布</td><td>统计量</td><td>PSPStain 2024；UNIStainNet 2026</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L3 统计</td><td class="nm">H-score</td><td class="m">Σ i·P<sub>i</sub> , i∈{0,1,2,3}</td><td>强度加权阳性细胞比例，0–300</td><td>半定量评分</td><td>McCarty 1985；Deep H-score 2024</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L3 统计</td><td class="nm">Allred / IRS / Quick score</td><td class="m">比例分+强度分</td><td>半定量评分体系</td><td>半定量评分</td><td>Allred 1998；Remmele &amp; Stegner 1987</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L4 空间</td><td class="nm">Spatial autocorrelation</td><td class="m">Moran's I, Geary's C</td><td>表达的邻域相似性</td><td>空间统计量</td><td>空间统计通用；病理中见 Chervoneva 2021</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L4 空间</td><td class="nm">Point-pattern / clustering</td><td class="m">Ripley's K, pair correlation</td><td>细胞/表达簇的空间聚集</td><td>空间统计量</td><td>Spatiopath 2025 (Nat Commun)</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L4 空间</td><td class="nm">Co-occurrence on OD</td><td class="m">p(i,j) on OD pairs</td><td>相邻细胞 OD 对的联合分布</td><td>空间统计量</td><td>Failmezger 2022 (Front Oncol)</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L4 空间</td><td class="nm">Entropy / heterogeneity</td><td class="m">H = −Σ p log p</td><td>局部表达异质性</td><td>空间统计量</td><td>Failmezger 2022；EDI 指数</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L4 空间</td><td class="nm">Block / region mean</td><td class="m">mean over block<sub>i</sub></td><td>粗粒度空间分布</td><td>统计量（粗空间）</td><td>PSPStain 2024 (16 blocks)</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L5 频域</td><td class="nm">Fourier / power spectrum</td><td class="m">ℱ{I}(u,v)</td><td>表达纹理的空间频率成分</td><td>变换域</td><td>虚拟染色中未见；通用 I2IT 见 Focal Frequency Loss 2021</td><td><span class="badge ev-spec">未检索到（表达图）</span></td></tr>
+<tr><td>L5 频域</td><td class="nm">Wavelet / multi-scale</td><td class="m">W{I}</td><td>多尺度表达结构</td><td>变换域</td><td>LapLoss 2025；PyramidP2P 2022（图像级）</td><td><span class="badge ev-spec">未检索到（表达图）</span></td></tr>
+<tr><td>L6 对象</td><td class="nm">Cell-level expression</td><td class="m">c<sub>k</sub> → e<sub>k</sub></td><td>每个细胞的表达强度</td><td>对象级统计</td><td>DeepLIIF；AQUA；Loo 2025</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L6 对象</td><td class="nm">Compartment-level</td><td class="m">e<sup>nuc</sup>, e<sup>cyt</sup>, e<sup>mem</sup></td><td>核/浆/膜分区表达</td><td>对象级统计</td><td>Camp 2002 (AQUA)；HER2 膜评分</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L6 对象</td><td class="nm">Positive-cell proportion</td><td class="m">N<sup>+</sup>/N</td><td>阳性细胞比例（Ki67 LI 等）</td><td>对象级统计</td><td>Ki67 LI 临床标准</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L6 对象</td><td class="nm">Region-level</td><td class="m">e(gland/tubule/ROI)</td><td>腺体/肾小球/肿瘤区表达</td><td>区域统计</td><td>PD-L1 TPS/CPS；Loo 2025</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L7 语义</td><td class="nm">Biomarker status</td><td class="m">HER2 0/1+/2+/3+</td><td>临床分型</td><td>语义标签</td><td>ASCO/CAP 指南；BCI 数据集</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td>L7 语义</td><td class="nm">Cell phenotype</td><td class="m">T cell / B cell / TAM</td><td>细胞表型（由多标记定义）</td><td>语义标签</td><td>ROSIE 2025 (Nat Commun)</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L7 语义</td><td class="nm">TME / spatial niche</td><td class="m">niche composition</td><td>肿瘤微环境空间生态位</td><td>语义标签</td><td>HEX 2026 (Nat Med)</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td>L7 语义</td><td class="nm">Clinical outcome</td><td class="m">HR, p-value, C-index</td><td>与预后/疗效关联</td><td>临床终点</td><td>Failmezger 2022；HEX 2026</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>层级是否真的存在？——对用户提出 7 层的核查</h3>
+<div class="ladder">
+  <div class="lvl l1"><div class="hd"><span class="tag">Level 1</span><span class="ttl">物理 / 光学表达</span><span class="badge ev-strong">真实存在，成熟</span></div>
+  <div class="body"><span class="m">RGB → OD</span>、<span class="m">RGB → stain concentration</span>、<span class="m">fluorescence → molecular intensity</span>。这是整个领域最扎实的一层，有明确的 Beer–Lambert 物理基础与 20 年以上的工程传统。</div>
+  <div class="verdict">✔ 文献完全支持。补充：还应有 <b>光谱丰度</b>（spectral unmixing）与 <b>定量相位</b>两个子类，文献中真实存在。</div></div>
+
+  <div class="lvl l2"><div class="hd"><span class="tag">Level 2</span><span class="ttl">像素级表达</span><span class="badge ev-strong">真实存在</span></div>
+  <div class="body"><span class="m">I(x,y)</span>，包括 OD map、FOD map、DAB intensity map、荧光强度图。</div>
+  <div class="verdict">✔ 支持。注意：像素级"表达图"在文献中<b>很少被单独命名</b>，多数论文直接把它叫 OD image / DAB channel。</div></div>
+
+  <div class="lvl l3"><div class="hd"><span class="tag">Level 3</span><span class="ttl">统计表达</span><span class="badge ev-strong">真实存在</span></div>
+  <div class="body"><span class="m">mean, variance, histogram, distribution</span>。IOD/MOD/%Pos/H-score 都属于这一层。</div>
+  <div class="verdict">✔ 支持。<b>但要注意术语歧义</b>：文献中 "intensity" 可能指 RGB gray value、OD、或归一化强度，三者不可混用（见 §9 术语歧义表）。</div></div>
+
+  <div class="lvl l4"><div class="hd"><span class="tag">Level 4</span><span class="ttl">空间表达</span><span class="badge ev-mod">真实存在，但在虚拟染色中很浅</span></div>
+  <div class="body"><span class="m">P(I(x), I(x+Δ))</span>：Moran's I、Geary's C、Ripley's K、共现矩阵、Haralick。</div>
+  <div class="verdict">⚠ 部分支持。在<b>定量病理 / 空间生物学</b>中非常成熟（Chervoneva 2021；Failmezger 2022；Spatiopath 2025）。但在<b>虚拟染色训练</b>中，最"空间"的约束只是 16-block 均值与肿瘤 prototype 一致性，<b>没有论文把 Moran's I / Ripley's K 写进 loss</b>。</div></div>
+
+  <div class="lvl l5"><div class="hd"><span class="tag">Level 5</span><span class="ttl">频域 / 多尺度表达</span><span class="badge ev-spec">未检索到（作用于表达图）</span></div>
+  <div class="body"><span class="m">ℱ{I}</span>、<span class="m">Wavelet(I)</span>。频域/多尺度 loss 在通用 I2IT 与部分病理任务中存在，但作用对象是 RGB 图像，不是 OD/FOD 表达图。</div>
+  <div class="verdict">✘ 就"作用于物理表达图的频域/小波约束"而言，检索中<b>没有</b>找到直接文献。详见 §5 与 §11。</div></div>
+
+  <div class="lvl l6"><div class="hd"><span class="tag">Level 6</span><span class="ttl">对象级表达</span><span class="badge ev-strong">真实存在，且是临床主流</span></div>
+  <div class="body"><span class="m">cell → expression</span>、<span class="m">nucleus → expression</span>、<span class="m">region → expression</span>。</div>
+  <div class="verdict">✔ 强支持。AQUA（2002）、DeepLIIF、Ki67 LI、PD-L1 TPS/CPS 全是这一层。这是临床真正认账的粒度。</div></div>
+
+  <div class="lvl l7"><div class="hd"><span class="tag">Level 7</span><span class="ttl">生物学语义级表达</span><span class="badge ev-mod">真实存在，但主要作为评价/下游任务</span></div>
+  <div class="body">biomarker status、cell phenotype、tissue compartment、TME、downstream clinical phenotype。</div>
+  <div class="verdict">⚠ 部分支持。ROSIE / HEX 用 cell phenotype 与 TME niche 作为输出与验证；但作为 <b>loss</b> 出现时通常退化为"下游分类器一致性"（TDKStain、PGVMS）。</div></div>
+</div>
+
+<div class="callout pos">
+  <span class="lbl">核查结论</span>
+  你提出的 7 层结构<b>基本被文献支持</b>，不需要人为制造。唯一需要修正的是：<b>Level 5（频域）在"表达图"这个作用对象上缺乏直接文献</b>；而 Level 4（空间）虽然真实存在，但在虚拟染色语境下被严重简化。此外建议补充两个文献真实存在、你的列表里没有的子层：<b>光谱丰度层</b>（spectral unmixing abundance）与<b>拓扑层</b>（persistent homology / TDA）。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s3"><span class="num">3</span>Physical / optical quantification —— 物理与光学定量路线</h2>
+
+<p>这一章逐项回答你列出的 20 个物理量，每一项都按同一套问题展开：物理含义 / 与蛋白表达的关系 / 直接测量还是 proxy / 需要什么假设 / 是否与染色剂浓度有关 / 是否依赖 protocol / 受不受厚度-光照-扫描仪-批次影响 / 是否用于真实定量 / 是否进入虚拟染色 / 是否用于 loss / 是否只用于 evaluation / 经典论文。</p>
+
+<h3 id="s3-1">3.1 OD / IOD / MOD / AOD —— 最核心的物理量族</h3>
+
+<h4>3.1.1 Optical Density（OD）</h4>
+<div class="mathblock">
+OD<sub>C</sub> <span class="op">=</span> −log<sub>10</sub>( I<sub>C</sub> / I<sub>0,C</sub> ) <span class="op">=</span> ε<sub>C</sub> · c · l
+<span class="lbl">Beer–Lambert 形式：OD 与吸收体浓度 c 成正比，比例系数含摩尔吸光系数 ε 与光程 l</span>
+</div>
+
+<ul>
+  <li><b>物理含义</b>：标本在通道 C 上对光的衰减（吸收为主）。它是<b>可以直接由像素值计算的物理量</b>，不需要任何模型。</li>
+  <li><b>与蛋白表达的关系</b>：<span class="m">OD ∝ c<sub>chromogen</sub></span>。而 <span class="m">c<sub>chromogen</sub> ← 酶放大 ← 一抗结合量 ← 抗原（蛋白）量</span>。这条链<b>每一环都不是线性的</b>，所以 OD 是"染色剂浓度"的直接测量，是"蛋白量"的 <b>proxy</b>，不是直接测量。</li>
+  <li><b>必要假设</b>：① 纯吸收、无散射；② <span class="m">I<sub>0</sub></span>（背景白光）可准确估计；③ 组织厚度/切片厚度均匀（<span class="m">l</span> 恒定）；④ 在探测器线性范围内（深色区不饱和）；⑤ 染色 protocol 一致。</li>
+  <li><b>是否依赖 protocol</b>：<b>强依赖</b>。一抗浓度、孵育时间、显色时间、复染强度都会整体平移 OD 尺度。McCabe 2005（JNCI）用 AQUA 直接证明：<b>抗体浓度从 1:500 改到 1:8000，HER2 高表达与死亡风险的关系方向会反转</b>（RR 从 0.47 变成 1.98）。这是 OD/荧光定量最著名的警示性结果。</li>
+  <li><b>易受干扰因素</b>：组织厚度、光照不均（vignetting）、扫描仪色彩响应、染色批次、盖玻片折射、DAB 过染饱和。</li>
+  <li><b>是否用于真实定量</b>：是，且是定量 IHC 的默认入口。</li>
+  <li><b>是否用于虚拟染色</b>：<b>是</b>，但方式很不同：多数论文只是"用色解卷积把 DAB 通道拆出来做可视化/评价"，少数才把它写进 loss。</li>
+  <li><b>经典论文</b>：Ruifrok &amp; Johnston 2001（色解卷积原始论文，Anal Quant Cytol Histol 23:291–299，PMID 11531144）；Vahadane et al. 2016（IEEE TMI 35:1962–1971，DOI 10.1109/TMI.2016.2529665）。</li>
+</ul>
+
+<h4>3.1.2 Integrated Optical Density（IOD）</h4>
+<div class="mathblock">
+IOD <span class="op">=</span> Σ<sub>(x,y)∈Ω</sub> OD(x,y)
+<span class="lbl">Ω 可为全图、阳性区域、或某个细胞/腺体</span>
+</div>
+<ul>
+  <li><b>物理含义</b>：区域内的"积分吸光度"，物理上正比于<b>该区域染色剂的总量</b>（总量 = 浓度 × 面积 × 光程）。</li>
+  <li><b>历史根源</b>：源自图像细胞术（image cytometry）的 DNA 倍体分析（Feulgen 染色 + IOD），后来被中国及国际 IHC 定量文献广泛采纳。<b>它不是 2024 年的新概念</b>，而是几十年的老工具。</li>
+  <li><b>在虚拟染色中的用法</b>：PSPStain（MICCAI 2024）把 IOD 与 mIOD 作为<b>评价指标</b>，报告"生成图 IOD − 真值 IOD"的偏差，并明确说 <b>越接近 0 越好</b>。PGVMS（TMI 2026）同样用 IOD。USIGAN（arXiv 2507.05843）用 IoD 与 Pearson-R 作为"临床显著性指标"。</li>
+  <li><b>关键陷阱</b>：IOD 同时混合了"浓度"和"面积"两个因素。阳性区面积变大但浓度不变，IOD 也会变大。<b>所以 IOD 不能单独用来判断"表达强度"</b>，这是文献中反复出现的争论（见 §3.1.4）。</li>
+</ul>
+
+<h4>3.1.3 Mean / Average Optical Density（MOD / AOD）</h4>
+<div class="mathblock">
+MOD <span class="op">=</span> IOD / |Ω|
+<span class="lbl">Ω 的取法决定一切：是"阳性区域"还是"全部区域"？</span>
+</div>
+<ul>
+  <li><b>物理含义</b>：区域平均染色剂浓度。</li>
+  <li><b>必须注意的术语歧义</b>：文献与软件（ImageJ / IPP）中 "Mean Density"、"Average Optical Density"、"Mean Gray Value" 经常混用，但数值完全不同：
+    <ul>
+      <li>ImageJ 的 <b>Mean Gray Value</b> 是 0–255 的亮度值，<b>不是</b> OD；</li>
+      <li><b>AOD</b> 常定义为 <span class="m">log(255 / mean gray)</span>，是真实 OD；</li>
+      <li>若用 <span class="m">IOD / 阳性面积</span> 得"阳性区平均浓度"，若用 <span class="m">IOD / 全图面积</span> 则等价于"阳性面积占比 × 平均浓度"，含义完全不同。</li>
+    </ul>
+  </li>
+  <li><b>代表性文献</b>：Seyed Jafari &amp; Hunger, "IHC Optical Density Score: A New Practical Method for Quantitative Immunohistochemistry Image Analysis"（Appl Immunohistochem Mol Morphol 2017，PMID 27093452）。该文明确指出 OD 与抗原表达程度成比例，并提出用 OD 替代人工半定量评分。</li>
+</ul>
+
+<h4>3.1.4 IOD/MOD 的选择争论（重要）</h4>
+<div class="callout warn">
+  <span class="lbl">领域内真实存在的争论</span>
+  中文与部分国际 IHC 定量实践中长期存在"IOD 派 vs MOD 派 vs 阳性面积占比派"的争论。核心矛盾是：<b>IOD 反映总量（面积×强度），MOD 反映平均强度，%Pos 反映阳性范围</b>。三者对同一张切片可以给出方向相反的结论。这直接说明：<b>"蛋白表达"在文献中从来不是一个单一的量</b>，而是一族互相不可替代的量。<br>
+  相关讨论可见 Rizzardi et al. 2012（Diagn Pathol 7:42，DOI 10.1186/1746-1596-7-42），该文系统比较了数字图像分析指标（%Pos、平均强度）与病理医生目视评分的一致性。
+</div>
+
+<h3 id="s3-2">3.2 Beer–Lambert 定律与染色浓度估计</h3>
+
+<p>Beer–Lambert 是整个物理路线的公理。它的<b>正确形式</b>与<b>在组织学中的失效边界</b>必须讲清楚。</p>
+
+<div class="mathblock">
+I <span class="op">=</span> I<sub>0</sub> · exp( −Σ<sub>k</sub> ε<sub>k</sub> c<sub>k</sub> l )
+<span class="op">⇒</span>
+OD <span class="op">=</span> Σ<sub>k</sub> ε<sub>k</sub> c<sub>k</sub> l <span class="op">=</span> ( M · c ) · l
+<span class="lbl">多染料情形：总 OD 是各染料 OD 之和（线性叠加）—— 这正是色解卷积的数学基础</span>
+</div>
+
+<h4>3.2.1 关键假设与失效</h4>
+<table>
+<thead><tr><th>假设</th><th>组织学中的现实</th><th>后果</th></tr></thead>
+<tbody>
+<tr><td>纯吸收、无散射</td><td>组织强散射</td><td>OD 不再是浓度的线性函数；深色区被系统性低估</td></tr>
+<tr><td>光程 l 恒定</td><td>切片厚度不均、细胞核比胞浆厚</td><td>同一浓度在不同厚度处给出不同 OD</td></tr>
+<tr><td>染料 OD 线性叠加</td><td>DAB 聚合物、染料间相互作用</td><td>解卷积出现负浓度、串扰（crosstalk）</td></tr>
+<tr><td>背景 I₀ 已知</td><td>光照不均、玻片脏污</td><td>OD 整体偏移</td></tr>
+<tr><td>线性动态范围</td><td>强 DAB 区饱和</td><td>高表达被压缩，H-score 3+ 与 2+ 无法区分</td></tr>
+</tbody>
+</table>
+
+<p><b>权威综述</b>：Jacques et al., "Beer–Lambert law for optical tissue diagnostics: current state of the art and the main limitations"（J Biomed Opt 2021，PMC8553265）。该综述系统列举了 BLL 在组织光学中的失效模式，是做物理路线时必读的一篇。</p>
+
+<h4>3.2.2 Stain concentration（染色浓度 / 染色密度）</h4>
+<p>这是物理路线上<b>最接近"蛋白量"的量</b>：</p>
+<div class="mathblock">
+c <span class="op">=</span> M<sup>−1</sup> · OD &nbsp;&nbsp;<span class="op">s.t.</span>&nbsp;&nbsp; c ≥ 0 , &nbsp; c sparse
+</div>
+<ul>
+  <li><b>Vahadane et al. 2016（IEEE TMI）</b>是这条路线的奠基工作之一。它明确把"stain density maps"（染色密度图）作为核心中间表示，并用两个物理先验约束求解：① <b>浓度不能为负</b>（非负性）；② <b>每个组织区域通常只被一种染料主导</b>（稀疏性）。然后用 NMF + 稀疏正则求解。论文的验证方式值得注意：<b>用"染色密度与 ground truth 的相关性"以及病理医生偏好度来证明方法更好</b>——也就是说，它在 2016 年就已经在做"物理量相关性验证"。</li>
+  <li><b>Macenko et al. 2009（ISBI）</b>：用 SVD 在 OD 空间估计 stain vector，是另一个被广泛使用的经典。</li>
+  <li><b>NLTD 2.0（Selaru et al., bioRxiv 2025）</b>：指出线性解卷积在 >3 种染料时失效，提出<b>非线性</b>色解卷积框架，用于多重 IHC 的精确分离。</li>
+  <li><b>BeerLaNet（Chen et al., MICCAI 2025, arXiv:2510.06592）</b>：把 Beer–Lambert 与 NMF 的求解过程<b>展开（unrolling）成可训练网络</b>，实现物理感知的自适应染色归一化。这是"物理模型 + 深度学习"最干净的结合形式之一。</li>
+  <li><b>Beer-Lambert Autoencoder（arXiv:2601.11336, 2026）</b>：用 Beer–Lambert 结构约束的自编码器做<b>无监督</b>染色解混，面向多重 IHC。说明这条路线在 2026 年仍在活跃发展。</li>
+</ul>
+
+<div class="callout key">
+  <span class="lbl">物理路线的一个关键判断</span>
+  <b>stain concentration 是"染色剂浓度"的物理量，不是"蛋白浓度"。</b>从染色剂浓度到蛋白量之间隔着抗体亲和力、酶放大非线性、protocol 差异。因此：
+  <ul style="margin-bottom:0">
+    <li>说 "OD ∝ 蛋白表达" 是<b>过度声明</b>；</li>
+    <li>说 "OD ∝ 染色剂浓度，且在 protocol 固定时与蛋白表达单调相关" 才是<b>准确表述</b>；</li>
+    <li>这也是为什么所有严肃的定量 IHC 论文都强调 <b>protocol 标准化</b>（CAP IHC 验证指南、Taylor &amp; Levenson 2006）。</li>
+  </ul>
+</div>
+
+<h3 id="s3-3">3.3 色解卷积、stain vector 与 DAB 通道分离</h3>
+
+<p>Ruifrok &amp; Johnston 2001 的色解卷积是"物理路线"的技术入口，几乎所有 IHC 定量与虚拟染色论文都间接依赖它。它的数学是：</p>
+
+<div class="mathblock">
+OD<sub>RGB</sub> <span class="op">=</span> M · c &nbsp;&nbsp;<span class="op">⇒</span>&nbsp;&nbsp; c <span class="op">=</span> M<sup>−1</sup> · OD<sub>RGB</sub>
+<span class="lbl">M 为 3×3 stain matrix，每列是一种染料的单位 OD 向量（stain vector）</span>
+</div>
+
+<ul>
+  <li><b>物理含义</b>：把混合的 RGB 吸光度分解为各染料独立的吸光度分量（H、E、DAB…）。</li>
+  <li><b>必要假设</b>：只有 3 种染料（3 通道）；染料 OD 向量已知或可估计；线性叠加成立。</li>
+  <li><b>stain vector 的估计方法</b>：手工指定（Ruifrok 原始做法）、SVD 极值法（Macenko 2009）、稀疏 NMF（Vahadane 2016）、非线性方法（NLTD 2.0）。</li>
+  <li><b>受什么影响</b>：扫描仪色彩响应、染色批次、组织厚度、染料批次。文献中关于"国际间染色变异"的研究（如 J Pathol Inform 2025 的跨国 stain variability 研究）显示不同中心的同一染色在色空间里差异显著。</li>
+  <li><b>虚拟染色中的实际用法</b>：
+    <ul>
+      <li><b>H-DAB 分离作为输入分解</b>：Cross-channel Perception Learning（arXiv 2506.07559）把 RGB HER2 图转换到 HED 空间，分别得到 hematoxylin（核）与 DAB（膜）通道，再分别做感知损失与跨通道一致性。</li>
+      <li><b>DAB 通道作为 loss 目标</b>：UNIStainNet（arXiv 2603.12716）用 Beer–Lambert 色解卷积提取 DAB 强度，构造 <code>L_DAB</code> 匹配生成图与真值图的 top-10% DAB 强度均值。</li>
+      <li><b>DAB 膜区掩膜作为任务先验</b>：TDKStain（Peng et al.）从 DAB 通道提取<b>染色膜区域</b>、从 hematoxylin 通道提取<b>核密度图</b>，用密度估计网络预测膜染色强度掩膜。</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="s3-4">3.4 FOD —— 它到底是什么，处在什么位置</h3>
+
+<div class="callout warn">
+  <span class="lbl">先把事实钉死</span>
+  <b>FOD = Focal Optical Density（焦点光密度）</b>，出自 Chen et al., "Pathological Semantics-Preserving Learning for H&E-to-IHC Virtual Staining (PSPStain)"，MICCAI 2024，arXiv:2407.03655。<b>它不是病理学既有术语，不在任何定量 IHC 经典文献中出现。</b>
+</div>
+
+<h4>定义</h4>
+<div class="mathblock">
+OD<sub>C</sub> <span class="op">=</span> −log<sub>10</sub>( I<sub>C</sub> / I<sub>0,C</sub> ) <span class="op">=</span> A · c<sub>C</sub>
+<br>
+FOD<sub>C</sub> <span class="op">=</span> ( OD<sub>C</sub> )<sup>α</sup> &nbsp;&nbsp; <span class="op">with</span> α &gt; 1
+<br>
+<span class="lbl">α 是"聚焦参数"，论文消融实验得出 α = 1.8 最优（比较了 1.0 / 1.4 / 1.8 / 2.2）</span>
+</div>
+
+<h4>物理含义 —— 老实说</h4>
+<p><b>FOD 没有新的物理含义。</b>它只是把 OD 做了一次幂次变换。它的作用完全是<b>优化层面的</b>：由于肿瘤区面积通常远小于非肿瘤区，普通 OD map 里绝大多数像素是低 OD 的背景/间质，这些"容易像素"提供不了有效梯度。取 <span class="m">α&gt;1</span> 后，高 OD 像素被放大、低 OD 像素被压缩，等价于把 focal loss 的思想搬到 OD 域。<b>它是"物理量 × 优化重加权"，不是"新的物理测量"。</b></p>
+
+<h4>在方法体系中的位置</h4>
+<div class="tw">
+<table>
+<thead><tr><th>论文</th><th>年份/会议</th><th>FOD 的用法</th><th>是否进 loss</th></tr></thead>
+<tbody>
+<tr><td class="nm">PSPStain (Chen et al.)</td><td>MICCAI 2024, arXiv:2407.03655</td><td>FOD 图 → MLPA loss（avg + 20-bin histo + 16-block）</td><td><span class="badge r-train">Training</span></td></tr>
+<tr><td class="nm">PGVMS (Chen et al.)</td><td>IEEE TMI 2026, arXiv:2602.23292</td><td>FOD (α=1.8) → MLPA + CPPC，多标记统一框架</td><td><span class="badge r-train">Training</span></td></tr>
+<tr><td class="nm">Cross-channel Perception (Yang et al.)</td><td>arXiv 2506.07559, 2025</td><td>H 通道与 D 通道各自的 FOD → 双通道感知损失 + 跨通道一致性</td><td><span class="badge r-train">Training</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>检索结论</b>：截至检索时点，FOD 这个术语<b>只出现在上述 3 篇、同一研究组（SIAT / 秦文健组）的论文中</b>。<span class="badge ev-mod">Moderate evidence</span>（有原始研究支持其有效，但只有一组人、三个工作）。<b>把 FOD 当成"领域公认物理量"是错误的；把它当成"一个已被验证有效的、把物理量带进 loss 的工程技巧"是准确的。</b></p>
+
+<h3 id="s3-5">3.5 荧光、光谱解混、多光谱/高光谱</h3>
+
+<h4>3.5.1 Fluorescence intensity 与 AQUA</h4>
+<p><b>AQUA（Automated Quantitative Analysis）</b>是荧光路线最重要的经典，由 Yale 团队提出：</p>
+<ul>
+  <li><b>Camp et al. 2002, Nature Medicine 8:1323–1327, DOI 10.1038/nm791</b>：首次提出 AQUA 算法，实现组织微阵列上蛋白表达的自动化、连续、亚细胞定位定量。</li>
+  <li><b>McCabe et al. 2005, JNCI 97(24):1808–1815, DOI 10.1093/jnci/dji427</b>：用 AQUA 揭示抗体浓度会反转 biomarker 与预后的关系。</li>
+</ul>
+<p><b>AQUA 的核心机制（值得单独强调）</b>：它不是简单地测"整张图的荧光强度"，而是：</p>
+<ol>
+  <li>用 <b>DAPI 或细胞角蛋白</b> 构建<b>区室掩膜</b>：nuclear / cytoplasmic / membrane 分别一个 mask；</li>
+  <li>在每个区室内计算目标标记的<b>平均荧光强度</b>，得到 <span class="m">AQUA score</span>；</li>
+  <li>用肿瘤掩膜限定只测肿瘤细胞。</li>
+</ol>
+<p><b>这一点对你的研究极其重要</b>：AQUA 早在 2002 年就已经实现了"<b>区室级（核/浆/膜）表达定量</b>"，而这正是虚拟染色论文中大多只停留在像素级的那个层次。它是一个"被虚拟染色社区忽略的、现成的对象级表达表示"。</p>
+
+<h4>3.5.2 多光谱 / 高光谱成像与光谱解混</h4>
+<ul>
+  <li><b>物理基础</b>：线性混合模型 <span class="m">S(λ) = Σ<sub>i</sub> a<sub>i</sub> R<sub>i</sub>(λ) + noise</span>，其中 <span class="m">R<sub>i</sub></span> 是各染料的参考光谱，<span class="m">a<sub>i</sub></span> 是丰度。解混得到每个标记的<b>独立丰度图</b>。</li>
+  <li><b>代表性工作</b>：<i>Brightfield multiplex immunohistochemistry with multispectral imaging</i>（Laboratory Investigation 2020, DOI 10.1038/s41374-020-0429-0）。该工作用窄带 LED 多光谱成像 + 光谱解混，在<b>明场</b>下实现多重 IHC 定量，并<b>把解混后的每个 biomarker 图与对应的单标 DAB 图做比较</b>来验证准确性。这是"物理解混 + 定量验证"的范例。</li>
+  <li><b>高光谱用于虚拟染色</b>：Zhu et al., Comput Biol Med 2024（DOI 10.1016/j.compbiomed.2024.108958）用高光谱成像 + 深度学习做 label-free 胶质瘤虚拟 H&E；Loo et al. 2025（Cancer Res Commun 5:54, DOI 10.1158/2767-9764.CRC-24-0327）用 20 通道自发荧光高光谱做 H&E + 多重免疫荧光虚拟染色。</li>
+  <li><b>光谱解混作为 loss 的一部分</b>：在检索范围内<b>没有</b>找到把光谱解混残差写进虚拟染色 loss 的工作。<span class="badge ev-spec">未检索到</span></li>
+</ul>
+
+<h3 id="s3-6">3.6 其他具有物理意义的表达量（你没列但文献真用的）</h3>
+<table>
+<thead><tr><th>物理量</th><th>定义 / 含义</th><th>代表文献</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td class="nm">Autofluorescence (AF) intensity</td><td>内源荧光团（NADH、FAD、胶原、弹性蛋白）发射强度，作为形态学代理</td><td>Rivenson 2019 (Nat Biomed Eng)；Loo 2025</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">Quantitative phase / optical path length</td><td>相位差 ∝ 细胞内干质量（dry mass），物理意义明确</td><td>Rivenson et al. 2019, PhaseStain, Light Sci Appl</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">UV-PARS 信号</td><td>紫外光声遥感，label-free 形态学信号</td><td>Zhu et al. 2024; PaPIS 2025</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">X-ray attenuation</td><td>X 射线虚拟组织学中的衰减系数，与染色对应</td><td><i>Quantitative Stain Mapping in X-Ray Virtual Histology</i>, Adv Sci 2026</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">Absolute protein concentration (fluorescence)</td><td>用荧光测量反推绝对蛋白浓度（细胞生物学，非组织学）</td><td>FPCountR, Nat Commun 2022, DOI 10.1038/s41467-022-34232-6</td><td><span class="badge ev-mod">Moderate（不同领域）</span></td></tr>
+<tr><td class="nm">Top-k% DAB intensity</td><td>DAB 强度分布的高分位统计，作为"最强表达区"的代理</td><td>UNIStainNet 2026</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">Cellular Signal Intensity (CSI)</td><td>每个细胞的信号强度，作为点过程的"标记（mark）"</td><td>Chervoneva et al. 2021, Bioinformatics 37:1452–1459</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+</tbody>
+</table>
+
+<div class="callout key">
+  <span class="lbl">§3 小结：物理量的"入口—出口"图谱</span>
+  <b>入口高度统一</b>：几乎所有路线都从 <span class="m">RGB → OD</span>（Beer–Lambert）开始，或从 <span class="m">fluorescence intensity</span> 开始。<br>
+  <b>出口高度分散</b>：OD 之后可以走 ① IOD/MOD（总量/均值）② H-score（强度加权比例）③ stain concentration（解卷积浓度）④ DAB OD（单标记通道）⑤ FOD（重加权）⑥ 光谱丰度（解混）⑦ CSI（细胞级标记）。<br>
+  <b>结论</b>：不存在"唯一正确的物理量"。选择哪个，取决于你要回答的是"总量"、"平均强度"、"空间分布"还是"亚细胞定位"。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s4"><span class="num">4</span>Statistical / mathematical quantification —— 数学统计路线</h2>
+
+<p>一旦得到代表表达的物理量（OD map / DAB map / 荧光强度图），研究者如何从数学上约束、比较、描述它？下面按你要求的 A / B / C 三类展开，并明确标注每一种在虚拟染色中到底是<b>训练约束</b>、<b>辅助约束</b>、<b>评价指标</b>还是<b>生物学验证</b>。</p>
+
+<h3 id="s4-a">4.A 一阶统计（First-order statistics）</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>统计量</th><th>定义</th><th>在病理中的角色</th><th>代表文献</th><th>在虚拟染色中的角色</th></tr></thead>
+<tbody>
+<tr><td class="nm">mean</td><td class="m">μ = (1/N)Σ OD</td><td>平均表达强度</td><td>通用；PSPStain 的 <code>L_MLPA-avg</code></td><td><span class="badge r-train">Training</span>（FOD 均值 L2，容差 β=0.2）</td></tr>
+<tr><td class="nm">median</td><td class="m">P(OD ≤ m) = 0.5</td><td>抗离群的平均表达</td><td>通用</td><td>少见</td></tr>
+<tr><td class="nm">variance / SD</td><td class="m">σ²</td><td>表达离散度</td><td>通用</td><td><span class="badge r-eval">Eval</span> 间接（异质性）</td></tr>
+<tr><td class="nm">quantile / percentile</td><td class="m">Q<sub>p</sub></td><td>分位数阈值（阳性判定）</td><td>UNIStainNet 的 top-10% DAB</td><td><span class="badge r-train">Training</span>（DAB top-10% 均值匹配）</td></tr>
+<tr><td class="nm">coefficient of variation</td><td class="m">CV = σ/μ</td><td>相对异质性</td><td>通用</td><td>少见</td></tr>
+<tr><td class="nm">integrated intensity</td><td class="m">Σ I</td><td>总量</td><td>IOD 传统</td><td><span class="badge r-eval">Eval</span>（IOD/mIOD 偏差）</td></tr>
+<tr><td class="nm">total positive intensity</td><td class="m">Σ<sub>Ω+</sub> OD</td><td>阳性区总量</td><td>IHC 定量常规</td><td><span class="badge r-eval">Eval</span></td></tr>
+<tr><td class="nm">positive pixel ratio</td><td class="m">N<sup>+</sup>/N</td><td>阳性面积占比</td><td>Rizzardi 2012（%Pos）</td><td><span class="badge r-eval">Eval</span>；PCPA（人评）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <span class="lbl">一阶统计的根本局限</span>
+  一阶统计（尤其是 mean）会<b>丢弃全部空间信息</b>。两个表达分布完全不同（一个均匀、一个高度成簇）的样本可以有完全相同的均值。这正是为什么需要 B 类（分布）与 C 类（空间）统计。<b>PSPStain 的 MLPA 恰好把这三类都用了：avg（一阶）+ histo（分布）+ block（粗空间）</b>，这是一个设计上值得学习的组合。
+</div>
+
+<h3 id="s4-b">4.B 分布统计（Distribution statistics）</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>方法</th><th>数学形式</th><th>作用</th><th>代表文献</th><th>角色</th></tr></thead>
+<tbody>
+<tr><td class="nm">histogram</td><td class="m">p<sub>i</sub> = Σ<sub>j∈bin<sub>i</sub></sub> OD<sub>j</sub></td><td>表达的经验分布</td><td>PSPStain（20 bins）；UNIStainNet（256 bins）</td><td><span class="badge r-train">Training</span>（PSPStain）<br><span class="badge r-eval">Eval</span>（UNIStainNet）</td></tr>
+<tr><td class="nm">KL divergence</td><td class="m">D<sub>KL</sub>(p‖q)</td><td>两个表达分布的差异</td><td>UNIStainNet 的 <b>DAB KL</b>（256-bin）</td><td><span class="badge r-eval">Evaluation</span></td></tr>
+<tr><td class="nm">Jensen–Shannon</td><td class="m">JSD = ½D<sub>KL</sub>(p‖m)+½D<sub>KL</sub>(q‖m)</td><td>对称化分布距离</td><td>通用</td><td>少见</td></tr>
+<tr><td class="nm">Wasserstein / EMD</td><td class="m">W<sub>1</sub>(p,q)</td><td>分布搬运代价（对分布形状敏感）</td><td>USIGAN 用 Unbalanced OT consistency</td><td><span class="badge r-train">Training</span>（OT 一致性）</td></tr>
+<tr><td class="nm">MMD</td><td class="m">‖μ<sub>p</sub>−μ<sub>q</sub>‖²<sub>ℋ</sub></td><td>核均值嵌入距离</td><td>风格迁移/域适应通用</td><td>病理虚拟染色中少见</td></tr>
+<tr><td class="nm">Histogram Loss</td><td class="m">由直方图定义的排序损失</td><td>约束特征分布</td><td>Ustinova &amp; Lempitsky 2016；被 MVFStain 用于风格特征分布</td><td><span class="badge r-train">Training</span>（但对风格特征，非物理量）</td></tr>
+<tr><td class="nm">Differentiable histogram loss</td><td class="m">可微 1D/2D 直方图层</td><td>端到端约束强度分布</td><td><b>HueNet</b>（IEEE 2023, Xplore 10133915）</td><td><span class="badge r-train">Training</span>（通用 I2IT，未用于病理）</td></tr>
+<tr><td class="nm">moment matching</td><td class="m">E[z<sup>k</sup>]<sub>p</sub> = E[z<sup>k</sup>]<sub>q</sub></td><td>匹配高阶矩</td><td>AdaIN 类方法（风格迁移）</td><td>病理中少见</td></tr>
+<tr><td class="nm">Entropy</td><td class="m">H = −Σ p log p</td><td>局部异质性</td><td>Failmezger 2022（tile-level 熵）</td><td><span class="badge r-eval">Biomarker</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>关键区分：HueNet 的 histogram loss vs PSPStain 的 histo loss</h4>
+<div class="grid2">
+  <div class="card">
+    <h4>HueNet（通用 I2IT）</h4>
+    <p class="small">提出<b>可微直方图层</b>，使直方图可以端到端反向传播，从而定义 1D（强度）与 2D（联合）直方图损失。<b>它是纯图像域方法</b>，论文场景是自然图像翻译/对比度增强，<b>没有</b>与蛋白表达或 OD 建立联系。</p>
+    <p class="small">价值：它证明了"分布约束可以直接当 loss"，为"在 OD/FOD 上做分布约束"提供了现成的可微实现参考。</p>
+  </div>
+  <div class="card">
+    <h4>PSPStain 的 <code>L_MLPA-histo</code>（物理域）</h4>
+    <p class="small">把 FOD 取值范围 <span class="m">[0, e]</span> 分成 <span class="m">N<sub>h</sub>=20</span> 个区间，对生成图与真值图<b>逐 bin 求 L2</b>：</p>
+    <div class="mathblock" style="font-size:14px;padding:9px">L<sub>histo</sub> = (1/N<sub>h</sub>) Σ<sub>i</sub> ‖ O<sup>F</sup><sub>histo,i</sub> − O<sup>R</sup><sub>histo,i</sub> ‖<sub>2</sub></div>
+    <p class="small">关键差别：它的作用对象是 <b>FOD（物理量）</b>，而不是 RGB。这就是"物理表示 + 分布约束"的具体实例。</p>
+  </div>
+</div>
+
+<h3 id="s4-c">4.C 空间统计（Spatial statistics）—— 本章重点</h3>
+
+<p>这是回答"这些方法是在表达'某区域有多少蛋白'，还是进一步表达'蛋白在空间上如何组织'"的关键。</p>
+
+<h4>4.C.1 方法清单与真实文献</h4>
+
+<div class="tw">
+<table>
+<thead><tr><th>方法</th><th>数学定义</th><th>它在问什么问题</th><th>病理中的真实文献</th><th>证据</th></tr></thead>
+<tbody>
+<tr>
+  <td class="nm">Moran's I</td>
+  <td class="m">I = (N/W)·(Σ<sub>ij</sub> w<sub>ij</sub>z<sub>i</sub>z<sub>j</sub>)/(Σ<sub>i</sub>z<sub>i</sub>²)</td>
+  <td>相邻位置的表达值是否相似（全局自相关）</td>
+  <td>空间统计通用；<b>在 IHC 表达图上直接使用 Moran's I 的原始论文在检索中很少见</b>，更多用等价的对象级方法（见下）</td>
+  <td><span class="badge ev-weak">Weak</span></td>
+</tr>
+<tr>
+  <td class="nm">Geary's C</td>
+  <td class="m">C = ((N−1)Σ<sub>ij</sub>w<sub>ij</sub>(z<sub>i</sub>−z<sub>j</sub>)²)/(2W Σ<sub>i</sub>z<sub>i</sub>²)</td>
+  <td>局部差异（与 Moran's I 互补）</td>
+  <td>同上</td>
+  <td><span class="badge ev-weak">Weak</span></td>
+</tr>
+<tr>
+  <td class="nm">Ripley's K / L</td>
+  <td class="m">K(r) = (1/λ)E[#points within r]</td>
+  <td>细胞/表达簇的空间聚集程度与尺度</td>
+  <td><b>Spatiopath</b>（Nat Commun 2025, DOI 10.1038/s41467-025-57943-y）：把 Ripley's K 扩展到细胞轮廓与肿瘤区域；<i>A robust, scalable K-statistic</i>（arXiv 2412.08498）</td>
+  <td><span class="badge ev-mod">Moderate</span></td>
+</tr>
+<tr>
+  <td class="nm">Pair correlation / mark correlation</td>
+  <td class="m">g(r), k<sub>mm</sub>(r)</td>
+  <td>带"表达值标记"的点过程空间结构</td>
+  <td><b>Chervoneva et al. 2021</b>（Bioinformatics 37:1452–1459）：把 CSI 作为标记点过程的 mark，定义条件空间指标</td>
+  <td><span class="badge ev-mod">Moderate</span></td>
+</tr>
+<tr>
+  <td class="nm">Co-occurrence on OD</td>
+  <td class="m">p(i,j)：相邻细胞 OD 对的联合分布</td>
+  <td>相邻细胞的表达是否相似（对象级 Haralick）</td>
+  <td><b>Failmezger et al. 2022</b>（Front Oncol 12:964716）：细胞邻域图 + 255×255 OD 共现矩阵，导出 Homogeneity / Contrast / Correlation / ASM</td>
+  <td><span class="badge ev-mod">Moderate</span></td>
+</tr>
+<tr>
+  <td class="nm">GLCM / Haralick</td>
+  <td class="m">像素级共现矩阵的 14 个纹理特征</td>
+  <td>表达纹理</td>
+  <td>病理纹理分析通用（Haralick 1973 原始）</td>
+  <td><span class="badge ev-strong">Strong（通用）</span></td>
+</tr>
+<tr>
+  <td class="nm">Shannon entropy（tile 级）</td>
+  <td class="m">H = −Σ p log p per tile</td>
+  <td>局部表达是否混杂</td>
+  <td>Failmezger 2022：250×250 μm² 网格 tile，熵阈值 0.61 划分 homogeneous/heterogeneous</td>
+  <td><span class="badge ev-mod">Moderate</span></td>
+</tr>
+<tr>
+  <td class="nm">Ecosystem Diversity Index (EDI)</td>
+  <td class="m">GMM 分量数（BIC 选择）</td>
+  <td>整体表达生态的多样性</td>
+  <td>Failmezger 2022（新提出）</td>
+  <td><span class="badge ev-mod">Moderate</span></td>
+</tr>
+<tr>
+  <td class="nm">Persistent homology / TDA</td>
+  <td class="m">H<sub>k</sub>(filtration)</td>
+  <td>表达场的拓扑结构（连通性、孔洞、簇）</td>
+  <td><i>Topological Data Analysis of Spatial Protein Expression in Multiplexed Spatial Proteomics</i>（bioRxiv 2026）；TDA in single cell biology（review, PMC12436302）</td>
+  <td><span class="badge ev-weak">Weak（新）</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>4.C.2 直接回答："多少蛋白" vs "蛋白如何组织"</h4>
+
+<div class="callout key">
+  <span class="lbl">答案分两半</span>
+  <b>① 在定量病理 / 空间生物学里：文献确实在做第二层。</b><br>
+  Failmezger et al. 2022 是一个干净的范例：它把"膜 OD"作为细胞图的节点值，构造对象级共现矩阵，计算 Homogeneity / Contrast / Correlation / ASM 四个 Haralick 特征 × 4 个邻域半径 = <b>16 个空间分数</b>；再加上基于 tile 熵的 <b>37 个 tessellation 分数</b>。它的核心结论是：<b>这些空间分数在预后上显著优于"平均表达"</b>（CMET：空间分数 p=0.01，而平均表达 p=0.3；HER2 的多元回归 LR-test p=2.9e-06）。也就是说，<b>空间统计捕捉到了平均表达捕捉不到的信息</b>。<br><br>
+  Chervoneva et al. 2021 同理：把 CSI 当作 marked point process 的 mark，构造条件空间指标，明确表达"细胞信号强度在空间上如何分布"。<br><br>
+  <b>② 在虚拟染色里：几乎完全停留在第一层。</b><br>
+  检索到的虚拟染色工作中，最"空间"的约束是：
+  <ul style="margin-bottom:0">
+    <li>PSPStain / PGVMS 的 <code>L_MLPA-block</code>：把图切成 16 个 block，每 block 求 FOD 均值 → 这是<b>粗粒度的空间分布</b>，不是空间统计；</li>
+    <li>PSPStain 的 CTPC / PGVMS 的 CPPC：在肿瘤掩膜上做 prototype 一致性 → <b>区域级</b>而非空间统计；</li>
+    <li>USIGAN：用最优传输构造图像级/组内相关矩阵 → <b>集合级</b>对齐。</li>
+  </ul>
+  <b>没有任何检索到的虚拟染色论文把 Moran's I / Geary's C / Ripley's K / GLCM 写进 loss 或用作评价指标。</b>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s5"><span class="num">5</span>Frequency / wavelet / multi-scale / morphology</h2>
+
+<p>这一章要回答的是一个非常具体的问题：<b>有没有人把代表蛋白表达的图像 / intensity map / OD map 进一步转换到其他数学表示域？</b></p>
+
+<h3>5.1 Fourier / frequency domain</h3>
+
+<h4>通用图像翻译中确实存在</h4>
+<table>
+<thead><tr><th>工作</th><th>年份/会议</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td class="nm">Focal Frequency Loss</td><td>ICCV 2021, arXiv:2012.12821</td><td>在频域对幅度/相位做加权损失，解决图像重建中的频谱偏差</td></tr>
+<tr><td class="nm">Frequency-guided diffusion</td><td>arXiv:2304.02742</td><td>zero-shot 医学图像翻译，用频域引导保留解剖结构</td></tr>
+<tr><td class="nm">SC-Flow spectral consistency</td><td>ECCV 2026</td><td>单步 3D 医学图像翻译的频谱一致性校正器</td></tr>
+<tr><td class="nm">GL2T-Diff</td><td>Pattern Recognition 2026</td><td>卷积通道 + Laplacian 空间频率融合的扩散翻译模型</td></tr>
+</tbody>
+</table>
+
+<h4>病理领域中的频域方法</h4>
+<table>
+<thead><tr><th>工作</th><th>年份</th><th>作用对象</th><th>与蛋白表达的关系</th></tr></thead>
+<tbody>
+<tr><td class="nm">FDA-UNet</td><td>Springer 2024</td><td>RGB 染色图</td><td>频域注意力用于<b>染色归一化</b>，非表达约束</td></tr>
+<tr><td class="nm">Frequency-spatial domain feature interaction</td><td>Biomed Signal Process Control 2026</td><td>多重免疫荧光图像</td><td>用于<b>细胞检测</b>，不是表达约束</td></tr>
+<tr><td class="nm">Attribute-modulated spatial-frequency network</td><td>KBS 2026</td><td>通用</td><td>幅度谱融合</td></tr>
+</tbody>
+</table>
+
+<div class="callout neg">
+  <span class="lbl">关于"OD/FOD 表达图 → 频域"的直接结论</span>
+  <b>检索未发现</b>任何论文把 OD map、FOD map、DAB intensity map 或荧光表达图送进 Fourier / FFT / power spectrum / 频域 loss 来约束或评价蛋白表达。<br>
+  现有的频域方法，作用对象<b>全部是 RGB 图像本身</b>（用于去染色差异、结构保持、细胞检测），而不是"物理表达图"。<br>
+  <span class="badge ev-spec">Speculative / 未检索到（不等于不存在）</span>
+</div>
+
+<h3>5.2 Wavelet / multi-scale</h3>
+
+<h4>多尺度监督在虚拟染色中确实存在，但层次是"图像级"</h4>
+<ul>
+  <li><b>PyramidP2P / BCI benchmark（Liu et al., CVPRW 2022, arXiv:2204.11425）</b>：用 <b>4 层 pyramid</b> 对生成图做多尺度监督。这是虚拟染色里最早也最常被引用的多尺度设计。注意：<b>它监督的是 RGB 图像的多尺度重建，不是表达量的多尺度结构。</b></li>
+  <li><b>Gaussian Pyramid (GP) loss</b>：在 BCI 提出后成为事实标准，被后续大量工作沿用。PSPStain 的 <code>L_GP</code>（权重 λ_G = 10.0）、PGVMS 的 <code>L_GP</code>、UNIStainNet 的多尺度 edge encoder 都属于这一类。<b>它们都是图像级多尺度，不是物理量多尺度。</b></li>
+  <li><b>LapLoss（ICLR 2025, arXiv:2503.05974）</b>：Laplacian pyramid 多尺度损失，用于 I2IT 对比度增强。通用方法，未被用于病理表达约束。</li>
+  <li><b>Steerable pyramid / scale-space</b>：在检索到的虚拟染色文献中未发现。</li>
+</ul>
+
+<div class="callout warn">
+  <span class="lbl">一个重要但容易被忽略的区别</span>
+  文献里常见的说法"多尺度保留表达结构"<b>通常名不副实</b>。GP loss 作用在 RGB 上，它保留的是<b>图像的多尺度外观</b>（包括染色风格），而不是"表达区域在不同尺度上的组织方式"。把 GP loss 当作"表达多尺度约束"是错误的归因。
+</div>
+
+<h3>5.3 Gradient / edge / morphology</h3>
+
+<h4>文献中真实存在的形态学约束</h4>
+<table>
+<thead><tr><th>约束类型</th><th>具体形式</th><th>代表文献</th><th>作用对象</th><th>是否针对表达</th></tr></thead>
+<tbody>
+<tr><td class="nm">Edge / Sobel consistency</td><td class="m">L<sub>edge</sub></td><td>UNIStainNet 2026（H&E 边缘 → 生成图边缘）</td><td>图像结构</td><td><span class="badge ev-weak">否（结构，非表达）</span></td></tr>
+<tr><td class="nm">Membrane region mask</td><td>从 DAB 通道提取膜区，密度估计网络预测膜染色强度掩膜</td><td><b>TDKStain</b>（Peng et al., 见 npj Digit Med 2025 综述）</td><td><b>DAB 膜区</b></td><td><span class="badge ev-mod">是（区域级表达）</span></td></tr>
+<tr><td class="nm">Nuclei density map</td><td>从 hematoxylin 通道提取核密度</td><td>TDKStain</td><td>核</td><td><span class="badge ev-mod">是（间接）</span></td></tr>
+<tr><td class="nm">Joint nucleus segmentation</td><td>虚拟染色 + 分割联合训练，用分割精度反向约束表达质量</td><td><b>AdvLIF</b>（J Digit Imaging 2026, DOI 10.1007/s10278-026-02320-4）</td><td>细胞核</td><td><span class="badge ev-mod">是（IHC Quantification Difference 指标 0.092）</span></td></tr>
+<tr><td class="nm">Segmentation consistency</td><td>分割一致 → 细胞级表达一致</td><td>DeepLIIF 系列</td><td>细胞</td><td><span class="badge ev-mod">是</span></td></tr>
+<tr><td class="nm">Prototype / tumor-mask consistency</td><td>在肿瘤掩膜上做跨图 prototype 一致性</td><td>PSPStain (CTPC)、PGVMS (CPPC)</td><td>肿瘤区域</td><td><span class="badge ev-mod">是（区域级）</span></td></tr>
+<tr><td class="nm">Connected components / object size / cluster size / compactness / eccentricity</td><td>阳性区的形状描述子</td><td><b>检索未发现用于虚拟染色 loss 的工作</b></td><td>—</td><td><span class="badge ev-spec">未检索到</span></td></tr>
+</tbody>
+</table>
+
+<div class="verdictbox">
+  <b>直接回答你的问题："蛋白表达强度之外，研究者是否会约束表达区域的形状、大小、边界、聚集状态？"</b><br>
+  <b>部分会。</b>边界与区域：TDKStain（膜区掩膜）、AdvLIF（核分割）、DeepLIIF（细胞分割）确实约束了"区域"。<br>
+  <b>但"形状 / 大小 / 连通性 / 分簇状态"这些形态学描述子，作为虚拟染色的训练约束或评价指标，在检索范围内没有找到。</b><br>
+  最接近的是 Failmezger 2022 的共现/熵分数，但它是<b>预后 biomarker</b>，不是虚拟染色的约束。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s6"><span class="num">6</span>细胞级 / 区域级 / 空间生物学表达</h2>
+
+<p>这一章回答：文献是否先做 <span class="m">image → cell/nucleus/tissue segmentation → expression quantification</span>，然后在单细胞 / 核 / 膜 / 浆 / 腺体 / 肾小球 / 组织区室 / 肿瘤区等尺度上定义表达。</p>
+
+<h3>6.1 定量病理中的对象级表达：非常成熟</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>尺度</th><th>表达定义</th><th>代表方法/文献</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td class="nm">细胞（single cell）</td><td>每个细胞的平均 OD / 荧光强度</td><td>DeepLIIF；CellVisioner（Research 2023, DOI 10.34133/research.0285）；Cytoland（Nat Mach Intell 2025）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">核（nucleus）</td><td>核内 OD；核阳性判定</td><td>AQUA 的 nuclear mask；Ki67 LI（核增殖指数）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">膜（membrane）</td><td>膜区 OD / 完整性</td><td>AQUA membrane mask；HER2 膜评分（ASCO/CAP）；Failmezger 2022（膜 OD）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">胞浆（cytoplasm）</td><td>胞浆区 OD</td><td>AQUA cytoplasmic mask</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">腺体 / 肾小球</td><td>结构级表达</td><td>GramGAN 的下游肾小球分割任务（见 npj Digit Med 2025 综述）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">肿瘤区 / ROI</td><td>区域级表达</td><td>PD-L1 TPS（tumor proportion score）、CPS（combined positive score）；Loo 2025</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">微环境 / niche</td><td>细胞组成 + 空间邻接</td><td>Spatiopath 2025；HEX 2026；ROSIE 2025</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">细胞-细胞空间关系</td><td>共定位、邻接富集</td><td>Loo 2025（CD3+CD8、CD3+PD-L1 共定位）；Summers et al. 2022（Cell Rep Methods）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>6.2 虚拟染色中的对象级表达：存在，但主要是"评价"而非"约束"</h3>
+
+<div class="grid2">
+  <div class="card">
+    <h4>① 作为训练约束（少见）</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><b>DeepLIIF</b>：把染色解卷积 + 分割 + 单细胞定量做成一个多任务框架，分割任务与生成任务联合训练 → 这是少数把"细胞级"真正带进训练的框架。</li>
+      <li><b>AdvLIF</b>：联合虚拟染色与核分割，用 <b>IHC Quantification Difference = 0.092</b>（最低）证明定量保真度。</li>
+      <li><b>TDKStain</b>：用膜染色强度掩膜 + 核密度图作为任务特定先验。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>② 作为评价指标（较多）</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><b>Loo et al. 2025（Cancer Res Commun）</b>：用 Visiopharm 在 DAPI 上分割细胞、在 PanCK 上定肿瘤区，计算<b>阳性细胞密度、阳性细胞百分比、TPS、CPS</b>，再算真实 vs 虚拟的 Pearson 相关。结果：PanCK 阳性面积 r=0.96；CD3 阳性细胞密度 r=0.89；<b>PD-L1 TPS r=0.46，CPS r=0.71</b>。这是目前公开文献中最完整的"虚拟染色细胞级表达验证"。</li>
+      <li><b>Cross-channel Perception Learning</b>：由 3 位病理医生按 HER2 评分指南做 1–5 分制评价，提出 <b>PCPA（阳性细胞比例准确度）</b>与 <b>SIA（染色强度准确度）</b>两个人工指标。</li>
+      <li><b>PGVMS</b>：用 DeepLIIF 做阳性/阴性细胞可视化，但仅定性；另用 ViT-B/32 下游分类，HER2 用 OD 阈值 500/2000/5000 分 4 类。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="verdictbox">
+  <b>直接回答："相比 pixel-level expression，cell-level / region-level representation 在虚拟染色中有没有用于保持蛋白表达？"</b><br>
+  <b>有，但非常少，且绝大多数只用于评价而非训练约束。</b><br>
+  训练约束层面：DeepLIIF、AdvLIF、TDKStain（3 篇量级）。<br>
+  评价层面：Loo 2025、Cross-channel、PGVMS、UNIStainNet（per-class DAB quantification）等。<br>
+  <b>不存在</b>把"每个细胞的表达向量分布"或"细胞级表达的直方图"作为 loss 的虚拟染色工作。<span class="badge ev-weak">Weak</span>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s7"><span class="num">7</span>Virtual staining / stain translation 中如何保持蛋白表达</h2>
+
+<p>本章只收录<b>真正与虚拟染色和蛋白表达有关</b>的工作，并与普通定量病理严格区分。</p>
+
+<h3>7.1 任务图谱：输入 → 输出</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>任务族</th><th>输入</th><th>输出</th><th>代表工作</th></tr></thead>
+<tbody>
+<tr><td class="nm">组织形态染色互转</td><td>H&E</td><td>特殊染色（PAS、Masson、Jones 等）</td><td>de Haan et al., Nat Commun 2021</td></tr>
+<tr><td class="nm">H&E → IHC（蛋白）</td><td>H&E</td><td>HER2 / Ki67 / ER / PR / PD-L1</td><td>PyramidP2P(BCI)、ASP、TDKStain、GramGAN、MVFStain、ODA-GAN、PSPStain、PGVMS、UNIStainNet、USIGAN、Cross-channel、Wei et al.、HistoStainAlign</td></tr>
+<tr><td class="nm">label-free → H&E/IHC</td><td>自发荧光 / 定量相位 / UV-PARS / 高光谱</td><td>H&E、IHC、mIF</td><td>Rivenson 2019、PhaseStain 2019、Wu et al. 2022（Virtual HER2）、Zhu 2024、Loo 2025</td></tr>
+<tr><td class="nm">IHC → IHC / 计算多重</td><td>单标 IHC</td><td>多重 IHC / mIF</td><td>DeepLIIF（IHC→mIF）、DiffVS（AAAI 2026，标记条件化）、PGVMS（prompt 引导多重）</td></tr>
+<tr><td class="nm">H&E → 空间蛋白组</td><td>H&E</td><td>数十个蛋白的细胞级表达</td><td><b>ROSIE</b>（Nat Commun 2025）、<b>HEX</b>（Nat Med 2026）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.2 文献用什么机制防止模型"幻觉式地改变"蛋白表达？</h3>
+
+<p>下面把机制按"是否真正针对 biomarker"分成两组。<b>这是本章最重要的判断。</b></p>
+
+<h4>组 A：通用图像/特征约束（<span class="badge ev-weak">不针对蛋白表达</span>）</h4>
+<div class="tw">
+<table>
+<thead><tr><th>机制</th><th>数学/形式</th><th>代表工作</th><th>为何不能算作表达约束</th></tr></thead>
+<tbody>
+<tr><td class="nm">pixel / reconstruction loss</td><td class="m">L<sub>1</sub>, L<sub>2</sub></td><td>几乎所有</td><td>约束的是 RGB 像素，不是表达量；在序列切片错位时甚至有害</td></tr>
+<tr><td class="nm">adversarial loss</td><td class="m">L<sub>adv</sub></td><td>几乎所有（PatchGAN）</td><td>只约束"看起来像 IHC"，不约束表达正确性</td></tr>
+<tr><td class="nm">perceptual / LPIPS</td><td class="m">L<sub>percept</sub></td><td>UNIStainNet、多数 GAN</td><td>特征来自自然图像网络，与蛋白无关</td></tr>
+<tr><td class="nm">feature matching</td><td class="m">L<sub>FM</sub></td><td>UNIStainNet</td><td>判别器特征，仍是外观</td></tr>
+<tr><td class="nm">contrastive / PatchNCE</td><td class="m">L<sub>NCE</sub></td><td>CUT、ASP、PSPStain、PGVMS</td><td>约束 patch 内容对应，非表达量</td></tr>
+<tr><td class="nm">cycle consistency</td><td class="m">L<sub>cyc</sub></td><td>CycleGAN 系、GramGAN</td><td>可逆性约束，与表达无关</td></tr>
+<tr><td class="nm">SSIM / MS-SSIM loss</td><td class="m">1−SSIM</td><td>PSPStain、PGVMS</td><td>结构相似度，非表达</td></tr>
+<tr><td class="nm">Gaussian Pyramid loss</td><td class="m">L<sub>GP</sub></td><td>BCI/PyramidP2P 系</td><td>图像多尺度外观</td></tr>
+<tr><td class="nm">edge / Sobel</td><td class="m">L<sub>edge</sub></td><td>UNIStainNet</td><td>结构边缘</td></tr>
+<tr><td class="nm">PaPIS（病理感知感知度量）</td><td class="m">L<sub>papis</sub></td><td>Wang et al. 2025, arXiv:2507.12624</td><td>用细胞形态分割模型特征 + Retinex 分解，<b>但它自己承认未与病理医生评分或蛋白表达建立相关性</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>组 B：真正针对蛋白表达 / 染色的约束（<span class="badge ev-mod">对表达有针对性</span>）</h4>
+<div class="tw">
+<table>
+<thead><tr><th>机制</th><th>数学形式</th><th>作用对象</th><th>代表工作</th><th>角色</th></tr></thead>
+<tbody>
+<tr>
+  <td class="nm">Multi-Level Protein Awareness (MLPA)</td>
+  <td class="m">L<sub>avg</sub> + L<sub>histo</sub> + L<sub>block</sub></td>
+  <td><b>FOD（物理量）</b></td>
+  <td>PSPStain (MICCAI 2024)、PGVMS (TMI 2026)</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">Dual-channel FOD perception</td>
+  <td class="m">L<sub>dual</sub> = αL<sub>H</sub>+(1−α)L<sub>D</sub></td>
+  <td>H 通道与 D 通道的 FOD</td>
+  <td>Cross-channel Perception Learning (2025)</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">DAB stain loss</td>
+  <td class="m">L<sub>DAB</sub> = ‖mean(top10%(DAB<sub>gen</sub>)) − mean(top10%(DAB<sub>gt</sub>))‖</td>
+  <td>Beer–Lambert 解卷积后的 DAB 强度</td>
+  <td><b>UNIStainNet</b> (2026)，λ<sub>DAB</sub>=0.2</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">DAB channel L1</td>
+  <td class="m">‖DAB<sub>virt</sub> − DAB<sub>gt</sub>‖<sub>1</sub></td>
+  <td>DAB 通道</td>
+  <td>Wei et al.（DeStainer/ReStainer）</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">HER2 grade focal loss</td>
+  <td class="m">L<sub>focal</sub></td>
+  <td>HER2 分级</td>
+  <td>Wei et al.：从 H&E 的 hematoxylin 通道估计 HER2 分级</td>
+  <td><span class="badge r-aux">Auxiliary</span></td>
+</tr>
+<tr>
+  <td class="nm">Membrane staining intensity mask</td>
+  <td>密度估计网络预测膜染色强度</td>
+  <td>DAB 膜区</td>
+  <td>TDKStain</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">Cross-image tumor prototype consistency (CTPC/CPPC)</td>
+  <td class="m">L<sub>CTPC</sub></td>
+  <td>肿瘤掩膜上的表达 prototype</td>
+  <td>PSPStain、PGVMS</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">Unbalanced Optimal Transport consistency</td>
+  <td class="m">UOT-CTM, PC-SCM</td>
+  <td>H&E 与生成 IHC 的集合级相关矩阵</td>
+  <td>USIGAN (arXiv 2507.05843)</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">Joint segmentation + quantification</td>
+  <td>多任务损失</td>
+  <td>细胞核 / 细胞</td>
+  <td>DeepLIIF、AdvLIF</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">pseudo-IHC (Beer–Lambert) 作为训练目标</td>
+  <td>由 mIF 反渲染成 pIHC 再训练</td>
+  <td>IHC 外观 + 表达</td>
+  <td>Loo et al. 2025</td>
+  <td><span class="badge r-train">Training</span></td>
+</tr>
+<tr>
+  <td class="nm">Histogram loss on style features</td>
+  <td class="m">L<sub>hist</sub></td>
+  <td>风格特征分布</td>
+  <td>MVFStain（Zhang et al. 2022）</td>
+  <td><span class="badge r-train">Training（但对风格，非表达）</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.3 一个重要的时间趋势</h3>
+<div class="callout key">
+  <span class="lbl">2022 → 2026 的真实演变</span>
+  <b>2022–2023</b>：几乎全部是图像/特征级约束。BCI/PyramidP2P（2022）、ASP（2023）、GramGAN、MVFStain、ODA-GAN。评价指标是 SSIM/PSNR/FID。<br>
+  <b>2024</b>：出现转折。PSPStain 首次把 <b>OD→FOD 的统计量写进 loss</b>（MICCAI 2024），并首次在评价中引入 IOD/mIOD/Pearson-R 这一组"表达级指标"。<br>
+  <b>2025–2026</b>：迅速扩散。UNIStainNet 的 DAB stain loss、Cross-channel 的双通道 FOD、PGVMS 的统一多重框架、USIGAN 的 OT 一致性、AdvLIF 的物理启发。<b>同时评价体系也从 SSIM/PSNR 转向 DAB KL、Pearson-r、IOD、TPS/CPS。</b><br>
+  <br>
+  <b>结论</b>："把物理量带进虚拟染色的 loss/评价"是一个<b>2024 年才出现、2025–2026 正在快速增长的活跃方向</b>，不是空白，也远未成熟。
+</div>
+
+<h3>7.4 一个被明确指出的方法论问题：SSIM/PSNR 不可靠</h3>
+<p>多篇论文独立指出，<b>SSIM/PSNR 与虚拟染色的生物学正确性不相关</b>，原因是相邻切片存在固有结构错位：</p>
+<ul>
+  <li><b>PGVMS（TMI 2026）</b>：明确指出"加入高斯模糊会<b>提高</b> PSNR/SSIM，同时降低生物学保真度"，因此把 PSNR/SSIM 只当参考。</li>
+  <li><b>UNIStainNet（2026）</b>：指出不同论文对同一方法（ASP on MIST-HER2）报告的 FID 有 51.4 / 89.3 / 177 三个值，<b>超过 3 倍差异</b>，说明跨论文比较不可靠；并明确说"不同工作用不同的光密度相关性定义（raw IoD 差 / per-pixel Pearson-r / integrated density correlation），使跨论文比较失效"。</li>
+  <li><b>npj Digit Med 2025 综述</b>：系统梳理了这一点，并因此把评价重心转向临床相关指标。</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s8"><span class="num">8</span>Physical + mathematical hybrid approaches —— 本章重点</h2>
+
+<p>这一章回答你最关心的问题：<b>是否存在</b></p>
+<div class="mathblock">
+RGB <span class="op">→</span> physical representation <span class="op">→</span> statistical / spatial / distribution constraint
+</div>
+<p><b>答案：存在。而且已经形成了一条可辨识（但尚窄）的技术脉络。</b>下面逐条列出具体论文，并明确判断"这是物理测量 → 数学统计吗？是哪一种？"</p>
+
+<h3>8.1 已确认存在的组合（按出现时间）</h3>
+
+<div class="tw">
+<table class="wide">
+<thead><tr>
+<th>论文</th><th>年份/venue</th><th>物理表示</th><th>数学操作</th><th>组合形式</th><th>是训练约束还是评价</th><th>是否针对蛋白表达</th>
+</tr></thead>
+<tbody>
+
+<tr>
+<td class="nm">PSPStain<br><span class="small">Chen et al.</span></td>
+<td>MICCAI 2024<br>arXiv:2407.03655</td>
+<td><b>OD → FOD</b><br><span class="m">FOD = OD<sup>1.8</sup></span></td>
+<td><b>三重</b>：<br>① 全局均值<br>② 20-bin 直方图 L2<br>③ 16-block 区域均值 L2</td>
+<td><span class="m">RGB → DAB OD → FOD → {mean, hist, block}</span></td>
+<td><span class="badge r-train">Training</span>（L_MLPA，λ=1.0）</td>
+<td><b>是</b>（HER2 蛋白表达）</td>
+</tr>
+
+<tr>
+<td class="nm">PGVMS<br><span class="small">Chen et al.</span></td>
+<td>IEEE TMI 2026<br>arXiv:2602.23292</td>
+<td><b>OD → FOD</b>（α=1.8）</td>
+<td>MLPA（avg + 20-bin histo + 16-block）+ CPPC</td>
+<td><span class="m">RGB → FOD → {mean, hist, block, prototype}</span></td>
+<td><span class="badge r-train">Training</span> + <span class="badge r-eval">IOD/Pearson-R 评价</span></td>
+<td><b>是</b>（HER2/ER/PR/Ki67）</td>
+</tr>
+
+<tr>
+<td class="nm">Cross-channel Perception Learning<br><span class="small">Yang et al.</span></td>
+<td>arXiv 2506.07559<br>(2025)</td>
+<td><b>H 通道 FOD + D 通道 FOD</b><br>（HED 色解卷积后）</td>
+<td>通道级：FOD 均值 + block + <b>累积 FOD 直方图</b> L2；跨通道：<span class="m">R<sub>g</sub> vs R<sub>r</sub></span> 一致性</td>
+<td><span class="m">RGB → HED → FOD<sub>H</sub>, FOD<sub>D</sub> → {mean, hist, block} + cross-channel</span></td>
+<td><span class="badge r-train">Training</span></td>
+<td><b>是</b>（HER2，且区分核/膜）</td>
+</tr>
+
+<tr>
+<td class="nm">UNIStainNet<br><span class="small">Saurav et al.</span></td>
+<td>arXiv 2603.12716<br>(2026)</td>
+<td><b>Beer–Lambert 色解卷积 → DAB 强度</b></td>
+<td>训练：<b>top-10% DAB 强度均值</b>匹配<br>评价：<b>256-bin DAB KL 散度</b>、per-image Pearson-r</td>
+<td><span class="m">RGB → DAB OD → {quantile mean} → loss；→ {histogram} → KL eval</span></td>
+<td><span class="badge r-train">Training</span>(L_DAB, λ=0.2)<br><span class="badge r-eval">Evaluation</span>(DAB KL)</td>
+<td><b>是</b>（HER2/Ki67/ER/PR，且做 per-class DAB 分级验证）</td>
+</tr>
+
+<tr>
+<td class="nm">USIGAN<br><span class="small">Peng et al.</span></td>
+<td>arXiv 2507.05843<br>(2025)</td>
+<td>图像/特征集合（非显式 OD）</td>
+<td><b>Unbalanced Optimal Transport</b> 相关矩阵 + 病理自对应机制</td>
+<td><span class="m">RGB → feature set → OT consistency</span></td>
+<td><span class="badge r-train">Training</span> + <span class="badge r-eval">IoD / Pearson-R</span></td>
+<td><b>是</b>（评价用 IoD/Pearson-R）</td>
+</tr>
+
+<tr>
+<td class="nm">Failmezger et al.<br><span class="small">AstraZeneca</span></td>
+<td>Front Oncol 2022<br>DOI 10.3389/fonc.2022.964716</td>
+<td><b>膜 OD</b>（每细胞）</td>
+<td><b>对象级共现矩阵</b>（Haralick 式）→ Homogeneity/Contrast/Correlation/ASM × 4 半径 = 16 分数；<b>tile 级 Shannon 熵</b> + GMM → EDI = 37 分数</td>
+<td><span class="m">IHC → cell membrane OD → co-occurrence matrix → Haralick features → Cox model</span></td>
+<td><span class="badge r-eval">Biomarker / Prognosis</span>（非训练）</td>
+<td><b>是</b>（HER2/CMET/CD44/EGFR）</td>
+</tr>
+
+<tr>
+<td class="nm">Chervoneva et al.</td>
+<td>Bioinformatics 2021<br>37:1452–1459</td>
+<td><b>CSI（细胞信号强度）</b></td>
+<td><b>标记点过程</b>：条件空间指标、pair correlation、mark correlation</td>
+<td><span class="m">IHC → cell CSI → marked point process → spatial indices</span></td>
+<td><span class="badge r-eval">Biomarker</span>（非训练）</td>
+<td><b>是</b></td>
+</tr>
+
+<tr>
+<td class="nm">BeerLaNet<br><span class="small">Chen et al.</span></td>
+<td>MICCAI 2025<br>arXiv:2510.06592</td>
+<td><b>Beer–Lambert 染色浓度</b></td>
+<td>NMF 求解过程<b>展开为可训练网络</b>（algorithmic unrolling）</td>
+<td><span class="m">RGB → OD → 物理约束的非负/稀疏 NMF → 归一化输出</span></td>
+<td><span class="badge r-train">Training</span>（物理约束嵌入结构）</td>
+<td>间接（染色归一化，非表达）</td>
+</tr>
+
+<tr>
+<td class="nm">Multispectral brightfield multiplex IHC</td>
+<td>Lab Invest 2020<br>DOI 10.1038/s41374-020-0429-0</td>
+<td><b>光谱解混丰度 a<sub>i</sub></b></td>
+<td>线性混合模型反演；每个 biomarker 丰度图与单标 DAB 图对比验证</td>
+<td><span class="m">multispectral RGB → spectral unmixing → per-marker abundance → 与 DAB 定量对比</span></td>
+<td><span class="badge r-phys">Physical measurement</span> + <span class="badge r-bio">Biological validation</span></td>
+<td><b>是</b>（多重 IHC 标记）</td>
+</tr>
+
+<tr>
+<td class="nm">Loo et al.<br><span class="small">Verily / Genmab</span></td>
+<td>Cancer Res Commun 2025<br>5:54</td>
+<td><b>pseudo-IHC（Beer–Lambert 渲染）</b>；mIF 荧光强度</td>
+<td>细胞级：阳性细胞密度、阳性百分比、<b>TPS / CPS</b>、共定位 → Pearson 相关</td>
+<td><span class="m">AF → 虚拟 mIF → pIHC (Beer-Lambert) → 细胞级定量 → 与真实染色相关</span></td>
+<td><span class="badge r-train">Training</span>（pIHC 作目标）+ <span class="badge r-eval">Evaluation</span></td>
+<td><b>是</b>（PD-L1 TPS/CPS、CD3、CD8、PanCK）</td>
+</tr>
+
+<tr>
+<td class="nm">AdvLIF<br><span class="small">Yu et al.</span></td>
+<td>J Digit Imaging 2026<br>DOI 10.1007/s10278-026-02320-4</td>
+<td>物理启发算子（reaction-diffusion、Poisson）+ IHC 定量</td>
+<td>IHC Quantification Difference 指标（0.092 最低）</td>
+<td><span class="m">IHC → 物理启发算子 → 联合生成 + 分割 → 定量差异指标</span></td>
+<td><span class="badge r-train">Training</span> + <span class="badge r-eval">Evaluation</span></td>
+<td><b>是</b>（单细胞分析场景）</td>
+</tr>
+
+<tr>
+<td class="nm">HEX<br><span class="small">Li et al.</span></td>
+<td>Nature Medicine 2026<br>DOI 10.1038/s41591-025-04060-4</td>
+<td>空间蛋白组表达（细胞级，40 个 marker）</td>
+<td>细胞级表达预测 + 多模态整合 + 空间 niche 分析</td>
+<td><span class="m">H&E → 细胞级蛋白表达图 → 空间 niche → 临床结局</span></td>
+<td><span class="badge r-bio">Biological validation</span>（6 个独立队列，2,298 患者）</td>
+<td><b>是</b>（40 个免疫/结构/功能蛋白）</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<h3>8.2 组合类型的分布统计</h3>
+<div class="grid2">
+  <div class="card">
+    <h4>已被证实的组合 ✔</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><span class="m">RGB → OD → 均值</span>（一阶统计）</li>
+      <li><span class="m">RGB → OD → 直方图</span>（分布统计）</li>
+      <li><span class="m">RGB → OD → block 均值</span>（粗空间）</li>
+      <li><span class="m">RGB → OD → top-k% 分位数</span>（顺序统计）</li>
+      <li><span class="m">RGB → DAB OD → KL 散度</span>（分布距离）</li>
+      <li><span class="m">RGB → OD → 共现矩阵 → Haralick</span>（对象级空间）</li>
+      <li><span class="m">RGB → CSI → 标记点过程</span>（点过程空间）</li>
+      <li><span class="m">多光谱 → 解混丰度 → 与 DAB 定量比对</span>（光谱物理）</li>
+      <li><span class="m">RGB → OD → 最优传输一致性</span>（分布/集合对齐）</li>
+      <li><span class="m">RGB → 染色浓度 → 物理约束 NMF 展开</span></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>未检索到的组合 ✘</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><span class="m">RGB → OD → FFT / 功率谱 → loss</span></li>
+      <li><span class="m">RGB → OD → 小波分解 → 多尺度表达约束</span></li>
+      <li><span class="m">RGB → OD → Moran's I / Geary's C → loss</span></li>
+      <li><span class="m">RGB → OD → Ripley's K → loss</span></li>
+      <li><span class="m">RGB → OD → GLCM 纹理特征 → loss</span></li>
+      <li><span class="m">RGB → OD → 阳性区连通分量/形状描述子 → loss</span></li>
+      <li><span class="m">RGB → OD → 持续同调 / TDA → loss</span></li>
+      <li><span class="m">RGB → 细胞级表达向量 → 分布匹配 loss</span></li>
+      <li><span class="m">光谱解混残差 → loss</span></li>
+    </ul>
+    <p class="small" style="margin-top:10px"><b>注意</b>：这些"未检索到"多数是<b>组合层面的空白</b>——每一半都已被证实可行（OD 是成熟物理量；FFT/Moran's I/TDA 是成熟数学工具），只是没人把它们拼在一起用于虚拟染色。</p>
+  </div>
+</div>
+
+<h3>8.3 一个必须说清的判断</h3>
+<div class="callout key">
+  <span class="lbl">"物理 + 数学"不是新发明，但它被切成了两半</span>
+  如果把"物理表示 + 数学约束"广义理解，那么<b>定量病理学在 2001–2022 年间已经做得很充分</b>：Ruifrok（OD 分解）、Camp（荧光 + 区室）、McCarty（H-score）、Chervoneva（点过程 + CSI）、Failmezger（共现 + 熵 + 预后）。<br><br>
+  <b>真正的"新"在于：把这一整套成熟的定量病理工具，接到生成模型的 loss 上。</b>这件事在 2024 年由 PSPStain 首次做到（OD→FOD→{均值, 直方图, 分块}），2025–2026 年开始扩散。<br><br>
+  所以准确的表述是：<b>"物理 + 数学"在定量病理中成熟，在虚拟染色中刚刚开始，且目前只用到最基础的三种数学操作（均值、直方图、分块）。</b>共现矩阵、点过程、频域、小波、形态学描述子——这些在定量病理中已有成熟工具——<b>尚未被接入虚拟染色</b>。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s9"><span class="num">9</span>Training constraints vs evaluation metrics —— 严格区分</h2>
+
+<p>本章把每一类方法严格分到五类角色中。<b>这是最容易被论文摘要混淆的地方。</b></p>
+
+<div class="legend">
+  <span><span class="badge r-train">Training constraint</span> 进入 loss</span>
+  <span><span class="badge r-aux">Auxiliary constraint</span> 训练中额外约束</span>
+  <span><span class="badge r-eval">Evaluation metric</span> 训练后评价</span>
+  <span><span class="badge r-bio">Biological validation</span> 病理/临床证据</span>
+  <span><span class="badge r-phys">Physical measurement</span> 本身是测量或 proxy</span>
+</div>
+
+<h3>9.1 角色归属总表</h3>
+<div class="tw">
+<table class="wide">
+<thead><tr><th>方法 / 量</th><th>① Training</th><th>② Auxiliary</th><th>③ Evaluation</th><th>④ Biological validation</th><th>⑤ Physical measurement</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td class="nm">OD / 色解卷积</td><td></td><td></td><td></td><td></td><td><b>✔ 核心</b></td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">IOD / mIOD</td><td></td><td></td><td><b>✔ PSPStain, PGVMS, USIGAN</b></td><td></td><td>✔（派生量）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">MOD / AOD</td><td></td><td></td><td>✔（传统 IHC 定量）</td><td></td><td>✔</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">FOD</td><td><b>✔ PSPStain / PGVMS / Cross-channel</b></td><td></td><td></td><td></td><td>✔（OD 重加权）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">DAB intensity (Beer–Lambert)</td><td><b>✔ UNIStainNet L_DAB；Wei et al. L1</b></td><td></td><td><b>✔ DAB KL, Pearson-r</b></td><td></td><td>✔</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">DAB 直方图 KL</td><td></td><td></td><td><b>✔ UNIStainNet</b></td><td></td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">FOD 直方图 L2</td><td><b>✔ PSPStain L_MLPA-histo</b></td><td></td><td></td><td></td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">FOD block 均值</td><td><b>✔ PSPStain L_MLPA-block</b></td><td></td><td></td><td></td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">H-score</td><td></td><td></td><td><b>✔ 半定量标准</b></td><td><b>✔ 病理评分</b></td><td></td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">TPS / CPS (PD-L1)</td><td></td><td></td><td><b>✔ Loo 2025（r=0.46 / 0.71）</b></td><td><b>✔ 临床标准</b></td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">荧光强度 / AQUA score</td><td></td><td></td><td>✔</td><td><b>✔ Camp 2002, McCabe 2005</b></td><td>✔</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">光谱解混丰度</td><td></td><td></td><td>✔</td><td><b>✔ Lab Invest 2020（与 DAB 比对）</b></td><td>✔</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">Moran's I / Geary's C</td><td></td><td></td><td>—</td><td>—</td><td></td><td><span class="badge ev-weak">Weak</span></td></tr>
+<tr><td class="nm">Ripley's K</td><td></td><td></td><td>✔ Spatiopath（TME）</td><td>✔</td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">共现矩阵 (Haralick on OD)</td><td></td><td></td><td>✔ Failmezger 2022</td><td><b>✔ 预后（p=0.01 vs 0.3）</b></td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">Shannon 熵 / EDI</td><td></td><td></td><td>✔ Failmezger 2022</td><td>✔</td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">标记点过程 (CSI)</td><td></td><td></td><td>✔ Chervoneva 2021</td><td>✔</td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">Perceptual / LPIPS</td><td><b>✔ 大量</b></td><td></td><td>✔</td><td></td><td></td><td><span class="badge ev-weak">非表达</span></td></tr>
+<tr><td class="nm">SSIM / PSNR</td><td>✔（SSIM loss）</td><td></td><td><b>✔ 主流但被证明不可靠</b></td><td></td><td></td><td><span class="badge ev-weak">非表达</span></td></tr>
+<tr><td class="nm">Gaussian Pyramid loss</td><td><b>✔ 广泛</b></td><td></td><td></td><td></td><td></td><td><span class="badge ev-weak">非表达</span></td></tr>
+<tr><td class="nm">PatchNCE / ASP / CUT</td><td><b>✔ 广泛</b></td><td></td><td></td><td></td><td></td><td><span class="badge ev-weak">非表达</span></td></tr>
+<tr><td class="nm">Optimal Transport (USIGAN)</td><td><b>✔</b></td><td></td><td></td><td></td><td></td><td><span class="badge ev-mod">间接表达</span></td></tr>
+<tr><td class="nm">Prototype consistency (CTPC/CPPC)</td><td><b>✔ PSPStain / PGVMS</b></td><td></td><td></td><td></td><td></td><td><span class="badge ev-mod">区域级表达</span></td></tr>
+<tr><td class="nm">联合分割损失</td><td><b>✔ DeepLIIF / AdvLIF</b></td><td></td><td>✔（Dice）</td><td></td><td></td><td><span class="badge ev-mod">细胞级</span></td></tr>
+<tr><td class="nm">下游分类器一致性</td><td></td><td><b>✔ TDKStain（HER2 分级）</b></td><td><b>✔ PGVMS（ViT 分类）</b></td><td>✔</td><td></td><td><span class="badge ev-mod">语义级</span></td></tr>
+<tr><td class="nm">病理医生评分</td><td></td><td></td><td></td><td><b>✔ Wu 2022（3 位乳腺病理专家）；Cross-channel（PCPA/SIA）</b></td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">下游临床结局</td><td></td><td></td><td></td><td><b>✔ HEX（+22% 预后；+24–39% 免疫治疗响应）</b></td><td></td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">Fourier / 小波（作用于表达图）</td><td>✘</td><td>✘</td><td>✘</td><td>✘</td><td></td><td><span class="badge ev-spec">未检索到</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.2 必须警惕的三种混淆</h3>
+
+<div class="callout warn">
+  <span class="lbl">混淆一：把 perceptual loss 当成表达约束</span>
+  UNIStainNet 同时使用了 LPIPS、edge loss、feature matching loss <b>和</b> DAB stain loss。前三个都是外观约束，只有 <code>L_DAB</code> 是表达约束。论文自己在消融中表明，去掉 UNI 条件会同时恶化 FID 与 DAB KL——但<b>不能因此说"perceptual loss 保护了蛋白表达"</b>。
+</div>
+
+<div class="callout warn">
+  <span class="lbl">混淆二：把"评价指标"当成"训练约束"</span>
+  IOD/mIOD 在 PSPStain、PGVMS、USIGAN 中主要是<b>评价指标</b>（用来证明生成图与真值图的表达量一致）。只有在 PSPStain/PGVMS 的 <b>FOD 形式</b>下才真正进入 loss。同一篇论文里，"IOD 评价"与"FOD loss"是两个不同的东西，摘要中容易混为一谈。
+</div>
+
+<div class="callout warn">
+  <span class="lbl">混淆三：术语歧义 —— "intensity" 到底指什么</span>
+  <table style="min-width:auto;margin-top:8px">
+    <thead><tr><th>写法</th><th>真实含义</th><th>范围</th></tr></thead>
+    <tbody>
+      <tr><td>RGB intensity</td><td>原始像素值</td><td>0–255 / 0–1</td></tr>
+      <tr><td>gray intensity</td><td>灰度值</td><td>0–255（<b>越大越亮，与 OD 反相关</b>）</td></tr>
+      <tr><td>optical density</td><td>−log₁₀(I/I₀)</td><td>0–∞（<b>越大越深</b>）</td></tr>
+      <tr><td>"mean intensity"（IHC 论文）</td><td>可能是 gray value，也可能是 OD</td><td><b>必须看方法学部分</b></td></tr>
+      <tr><td>"DAB intensity"（UNIStainNet）</td><td>色解卷积后 DAB 通道的 OD</td><td>OD 尺度</td></tr>
+    </tbody>
+  </table>
+  这个歧义是导致"跨论文无法比较"的直接原因之一（UNIStainNet 明确指出了这一点）。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s10"><span class="num">10</span>Comparison table —— 总对比表</h2>
+
+<p>按你要求的字段逐篇提取。<b>表格可横向滚动。</b>角色列使用 §9 的五个标记。</p>
+
+<div class="tw">
+<table class="wide">
+<thead><tr>
+<th>Paper</th><th>Year</th><th>Task</th><th>Input→Output</th><th>Marker</th><th>Representation</th><th>Physical basis</th><th>Physical quantity</th><th>Math operation</th><th>Role</th><th>Exact loss</th><th>Spatial</th><th>Cell-level</th><th>Bio validation</th><th>Dataset</th><th>Main finding</th><th>Limitation</th><th>Relation to FOD+math/spatial/freq idea</th>
+</tr></thead>
+<tbody>
+
+<!-- ===== 基础方法 ===== -->
+<tr>
+<td class="nm">Ruifrok &amp; Johnston</td><td>2001</td><td>染色分离与定量</td><td>RGB → 各染料 OD</td><td>通用</td><td>stain-specific OD</td><td>Beer–Lambert</td><td>OD</td><td>矩阵求逆</td><td><span class="badge r-phys">Phys</span></td><td>—</td><td>否</td><td>否</td><td>与多染色组合一致性</td><td>自建</td><td>色解卷积使定量与染色组合无关</td><td>假设 3 染料、线性叠加</td><td><b>整个物理路线的入口</b>；FOD 也是从它出发</td>
+</tr>
+<tr>
+<td class="nm">Vahadane et al.</td><td>2016</td><td>染色归一化 / 分离</td><td>RGB → stain density maps</td><td>H/E 等</td><td>stain concentration（稀疏非负）</td><td>Beer–Lambert + 物理先验</td><td>concentration</td><td>稀疏 NMF</td><td><span class="badge r-phys">Phys</span>+<span class="badge r-eval">Eval</span></td><td>—</td><td>否</td><td>否</td><td>染色密度与 GT 相关性 + 病理医生偏好</td><td>多中心</td><td>稀疏非负先验显著提升归一化质量</td><td>线性模型；>3 染料失效</td><td><b>最接近"物理量 + 数学约束"的经典先例</b>（非负 + 稀疏）</td>
+</tr>
+<tr>
+<td class="nm">Macenko et al.</td><td>2009</td><td>染色向量估计</td><td>RGB → stain matrix</td><td>H/E</td><td>OD 空间 SVD</td><td>Beer–Lambert</td><td>OD</td><td>SVD 极值</td><td><span class="badge r-phys">Phys</span></td><td>—</td><td>否</td><td>否</td><td>视觉</td><td>—</td><td>无需手工指定 stain vector</td><td>对低染色区域敏感</td><td>OD 工具链</td>
+</tr>
+<tr>
+<td class="nm">Camp et al. (AQUA)</td><td>2002</td><td>原位蛋白定量</td><td>荧光 IHC → AQUA score</td><td>HER2, p53, ER 等</td><td><b>区室级荧光强度</b></td><td>荧光发射</td><td>fluorescence intensity</td><td>区室掩膜内均值</td><td><span class="badge r-phys">Phys</span>+<span class="badge r-bio">Bio</span></td><td>—</td><td>否（区室）</td><td><b>✔ 核/浆/膜</b></td><td>与临床结局</td><td>TMA 250 例</td><td>首次实现亚细胞定位的自动化连续定量</td><td>依赖抗体/荧光质量</td><td><b>对象级表达的经典先例；虚拟染色几乎未借鉴</b></td>
+</tr>
+<tr>
+<td class="nm">McCabe et al.</td><td>2005</td><td>抗体浓度效应</td><td>荧光 IHC → 预后</td><td>HER2, p53, ER</td><td>AQUA score</td><td>荧光</td><td>fluorescence intensity</td><td>RR / KM 生存分析</td><td><span class="badge r-bio">Bio</span></td><td>—</td><td>否</td><td>✔</td><td><b>✔ 抗体浓度反转预后关系</b></td><td>TMA 250 例</td><td>抗体浓度可反转 biomarker-预后关系（RR 0.47↔1.98）</td><td>—</td><td><b>物理定量的最强警示：protocol 决定结论</b></td>
+</tr>
+<tr>
+<td class="nm">McCarty et al. (H-score)</td><td>1985</td><td>半定量评分</td><td>IHC → 0–300</td><td>ER 等</td><td>强度加权阳性比例</td><td>无（视觉）</td><td>—</td><td>Σ i·P<sub>i</sub></td><td><span class="badge r-eval">Eval</span>+<span class="badge r-bio">Bio</span></td><td>—</td><td>否</td><td>✔（细胞）</td><td>临床广泛使用</td><td>—</td><td>H-score 成为 IHC 标准半定量指标</td><td>观察者间差异；非线性强度分级</td><td>虚拟染色中主要作评价（IHC4BC、TDKStain）</td>
+</tr>
+<tr>
+<td class="nm">Taylor &amp; Levenson</td><td>2006</td><td>综述</td><td>—</td><td>通用</td><td>半定量评估的局限</td><td>—</td><td>—</td><td>—</td><td><span class="badge r-bio">Bio</span></td><td>—</td><td>—</td><td>—</td><td><b>✔ 系统梳理 IHC 定量陷阱</b></td><td>—</td><td>IHC 半定量存在方法学与解释性双重局限</td><td>—</td><td><b>做物理路线前必读的批判性综述</b></td>
+</tr>
+<tr>
+<td class="nm">Rizzardi et al.</td><td>2012</td><td>方法比较</td><td>IHC → 数字分析 vs 目视</td><td>S100A1</td><td>%Pos + 平均强度</td><td>OD</td><td>OD</td><td>相关性分析</td><td><span class="badge r-eval">Eval</span></td><td>—</td><td>否</td><td>✔（肿瘤区）</td><td><b>✔ 与病理医生评分对比</b></td><td>卵巢癌 TMA 215 例</td><td>数字分析与目视评分一致性存在系统性差异</td><td>—</td><td>"看起来像 vs 定量一致"的早期实证</td>
+</tr>
+<tr>
+<td class="nm">Chervoneva et al.</td><td>2021</td><td>空间异质性量化</td><td>IHC → 空间指标</td><td>ER/PR/Ki67 类</td><td><b>CSI（细胞信号强度）</b></td><td>OD</td><td>cell-level OD</td><td><b>标记点过程 / 条件空间指标</b></td><td><span class="badge r-eval">Eval</span></td><td>—</td><td><b>✔ 点过程</b></td><td>✔</td><td>✔ 与临床指标</td><td>乳腺癌</td><td>CSI 的空间分布提供独立于均值的预后信息</td><td>—</td><td><b>最接近"物理量 + 真空间统计"的定量病理工作</b></td>
+</tr>
+<tr>
+<td class="nm">Failmezger et al.</td><td>2022</td><td>空间异质性 biomarker</td><td>IHC → 53 个空间分数</td><td><b>HER2, CMET, CD44, EGFR</b></td><td><b>膜 OD</b>（每细胞）</td><td>OD</td><td>membrane OD</td><td><b>对象级共现矩阵（Haralick）+ tile 熵 + GMM/EDI</b></td><td><span class="badge r-eval">Eval</span>+<span class="badge r-bio">Bio</span></td><td>—</td><td><b>✔ 邻域图</b></td><td>✔</td><td><b>✔ 预后优于均值</b>（p=0.01 vs 0.3）</td><td>CRC 34 例</td><td>空间分数比平均表达更有预后价值</td><td>样本量小（34）</td><td><b>最直接的"OD + 空间统计"范例；虚拟染色尚未采用</b></td>
+</tr>
+<tr>
+<td class="nm">Spatiopath</td><td>2025</td><td>TME 空间模式</td><td>多色图像 → 统计检验</td><td>免疫细胞标记</td><td>细胞轮廓 + 肿瘤区</td><td>无</td><td>—</td><td><b>扩展 Ripley's K</b></td><td><span class="badge r-eval">Eval</span></td><td>—</td><td><b>✔</b></td><td>✔</td><td>✔ 肺肿瘤切片</td><td>肺癌</td><td>区分显著免疫细胞关联与随机分布</td><td>—</td><td>空间统计工具箱，尚未接入虚拟染色</td>
+</tr>
+<tr>
+<td class="nm">Seyed Jafari &amp; Hunger</td><td>2016/17</td><td>IHC OD 评分</td><td>IHC → OD score</td><td>通用</td><td>OD 均值</td><td>Beer–Lambert</td><td>OD</td><td>均值</td><td><span class="badge r-eval">Eval</span></td><td>—</td><td>否</td><td>否</td><td>—</td><td>—</td><td>提出用 OD 替代人工半定量</td><td>未解决 protocol 依赖</td><td>MOD 的标准引用</td>
+</tr>
+<tr>
+<td class="nm">Lab Invest 2020 (multispectral multiplex IHC)</td><td>2020</td><td>多重明场 IHC 定量</td><td>多光谱 → 每标记丰度</td><td>多重</td><td><b>光谱解混丰度</b></td><td>Beer–Lambert + 线性混合</td><td>spectral abundance</td><td>线性解混</td><td><span class="badge r-phys">Phys</span>+<span class="badge r-bio">Bio</span></td><td>—</td><td>否</td><td>否</td><td><b>✔ 与单标 DAB 图比对</b></td><td>自建</td><td>LED 多光谱 + 解混可在明场实现可靠多重定量</td><td>硬件成本</td><td><b>光谱物理路线的代表；虚拟染色未接入</b></td>
+</tr>
+
+<!-- ===== 虚拟染色 ===== -->
+<tr>
+<td class="nm">Rivenson et al.</td><td>2019</td><td>虚拟染色</td><td><b>自发荧光 → H&E</b></td><td>—（形态）</td><td>RGB 图像</td><td>AF 光学</td><td>AF intensity</td><td>像素/感知</td><td><span class="badge r-train">Train</span></td><td>GAN + L1</td><td>否</td><td>否</td><td>病理医生盲评</td><td>多器官</td><td>首个 AF→H&E 虚拟染色，Nature Biomed Eng</td><td>非蛋白表达任务</td><td>奠基工作；未涉及表达量</td>
+</tr>
+<tr>
+<td class="nm">Wu et al. (Virtual HER2)</td><td>2022</td><td>虚拟 IHC</td><td><b>label-free → HER2 IHC</b></td><td><b>HER2</b></td><td>RGB 图像</td><td>AF</td><td>AF intensity</td><td>像素/感知</td><td><span class="badge r-train">Train</span>+<span class="badge r-bio">Bio</span></td><td>GAN + L1</td><td>否</td><td>否</td><td><b>✔ 3 位乳腺病理专家 HER2 评分</b></td><td>自建</td><td>首次 label-free 虚拟 HER2 IHC</td><td>未做细胞级定量</td><td><b>少见的"病理医生 HER2 评分"验证</b></td>
+</tr>
+<tr>
+<td class="nm">Liu et al. (BCI / PyramidP2P)</td><td>2022</td><td>H&E→IHC</td><td>H&E → HER2 IHC</td><td>HER2</td><td>RGB</td><td>无</td><td>—</td><td><b>4 层 pyramid 多尺度</b></td><td><span class="badge r-train">Train</span></td><td>GAN + pyramid L1</td><td>否</td><td>否</td><td>SSIM/PSNR</td><td><b>BCI（公开）</b></td><td>首个 H&E→IHC benchmark 与数据集</td><td>无表达级评价</td><td>GP loss 的源头；<b>图像级多尺度，非表达多尺度</b></td>
+</tr>
+<tr>
+<td class="nm">Li et al. (ASP)</td><td>2023</td><td>H&E→IHC</td><td>H&E → 4 种 IHC</td><td>HER2/Ki67/ER/PR</td><td>RGB / 特征</td><td>无</td><td>—</td><td>对比学习（patch）</td><td><span class="badge r-train">Train</span></td><td><b>Adaptive Supervised PatchNCE</b></td><td>否</td><td>否</td><td>SSIM/PSNR/FID</td><td><b>MIST（公开）</b></td><td>用加权对比学习应对 GT 错位</td><td>未约束表达量</td><td>主流范式代表：<b>纯特征级约束</b></td>
+</tr>
+<tr>
+<td class="nm">TDKStain (Peng et al.)</td><td>2024/25</td><td>H&E→IHC</td><td>H&E → HER2 IHC</td><td>HER2</td><td><b>DAB 膜区 + 核密度</b></td><td>OD（DAB 通道）</td><td>DAB OD</td><td>密度估计</td><td><span class="badge r-train">Train</span>+<span class="badge r-aux">Aux</span></td><td>GAN + 密度估计网络交替训练</td><td>✔（膜区）</td><td>✔（核密度）</td><td><b>✔ 下游 HER2 分级</b></td><td>自建 1024²</td><td>FID/DISTS 最佳；膜强度与核密度任务特定评价最佳</td><td>内容一致性较差（USIGAN 指出）</td><td><b>少数用"膜区 + 核密度"作为任务先验的工作</b></td>
+</tr>
+<tr>
+<td class="nm">GramGAN (Guan et al.)</td><td>2023/24</td><td>多域染色迁移</td><td>H&E → 多风格</td><td>Ki67 等</td><td>RGB / 风格特征</td><td>无</td><td>—</td><td>风格字典 + 注意力</td><td><span class="badge r-train">Train</span></td><td>CycleGAN + 风格引导块</td><td>否</td><td>否</td><td>✔ 下游肾小球分割</td><td>ANHIR 等</td><td>单网络多域迁移</td><td>—</td><td>风格级，非表达级</td>
+</tr>
+<tr>
+<td class="nm">MVFStain (Zhang et al.)</td><td>2022</td><td>H&E→多 IHC</td><td>H&E → HER2/PgR/ER/Ki67</td><td>4 marker</td><td>RGB / 风格特征</td><td>无</td><td>—</td><td><b>Histogram loss（Ustinova）</b></td><td><span class="badge r-train">Train</span></td><td>KL + histogram loss + cycle</td><td>否</td><td>否</td><td>视觉</td><td>自建</td><td>首个从 H&E 生成多种 IHC 的网络</td><td>—</td><td><b>histogram loss 的先例，但作用于风格特征而非 OD</b></td>
+</tr>
+<tr>
+<td class="nm">ODA-GAN</td><td>2025 (CVPR)</td><td>H&E→IHC</td><td>H&E → IHC</td><td>HER2 等</td><td>特征解耦</td><td>部分（OD 相关）</td><td>OD 相关</td><td>弱监督 + 特征解耦</td><td><span class="badge r-train">Train</span></td><td>弱监督对抗</td><td>否</td><td>否</td><td>—</td><td>—</td><td>用弱监督缓解配对缺失</td><td>—</td><td>与 OD 相关，但非显式统计约束</td>
+</tr>
+<tr>
+<td class="nm">Wei et al. (DeStainer/ReStainer)</td><td>2023/24</td><td>H&E→IHC</td><td>H&E → HER2 IHC</td><td>HER2</td><td><b>DAB 通道</b></td><td>OD</td><td>DAB OD</td><td>L1 + cosine</td><td><span class="badge r-train">Train</span>+<span class="badge r-aux">Aux</span></td><td><b>L1 on DAB channel</b>；HER2 分级用 Focal loss</td><td>否</td><td>否</td><td>kNN 分类（60%）</td><td>BCI</td><td>共享 hematoxylin 通道 + 显式 DAB 通道监督</td><td>下游精度不足</td><td><b>显式 DAB 通道监督的早期实例</b></td>
+</tr>
+<tr>
+<td class="nm"><b>PSPStain (Chen et al.)</b></td><td>2024</td><td>H&E→IHC</td><td>H&E → HER2 IHC</td><td><b>HER2</b></td><td><b>OD → FOD</b></td><td><b>Beer–Lambert</b></td><td><b>FOD</b></td><td><b>均值 + 20-bin 直方图 + 16-block</b></td><td><span class="badge r-train">Train</span>+<span class="badge r-eval">Eval</span></td><td><b>L_MLPA（avg+histo+block）+ L_CTPC</b></td><td><b>✔ block 级</b></td><td>否</td><td>IOD/mIOD/Pearson-R</td><td>BCI + MIST</td><td>首次把物理量统计写进 loss；Pearson-R 0.755（BCI）</td><td>块级空间仍很粗</td><td><b>你的 idea 的最直接先例</b></td>
+</tr>
+<tr>
+<td class="nm">Cross-channel Perception (Yang et al.)</td><td>2025</td><td>H&E→IHC</td><td>H&E → HER2 IHC</td><td>HER2</td><td><b>H 通道 FOD + D 通道 FOD</b></td><td>Beer–Lambert + HED 解卷积</td><td>FOD</td><td>均值 + block + 累积直方图；跨通道一致性</td><td><span class="badge r-train">Train</span>+<span class="badge r-bio">Bio</span></td><td>L_dual + L_cross + L_fd（Gigapath）</td><td>✔ block</td><td>否</td><td><b>✔ 3 位病理医生 PCPA/SIA</b></td><td>BCI + MIST</td><td>区分核/膜通道并约束跨通道关系</td><td>PCC 仍偏低（0.14–0.24）</td><td><b>FOD 路线的扩展；引入通道间关系</b></td>
+</tr>
+<tr>
+<td class="nm">USIGAN (Peng et al.)</td><td>2025</td><td>H&E→IHC</td><td>H&E → IHC</td><td>HER2/Ki67/ER/PR</td><td>特征集合</td><td>无（但有 IoD 评价）</td><td>—</td><td><b>Unbalanced Optimal Transport</b></td><td><span class="badge r-train">Train</span>+<span class="badge r-eval">Eval</span></td><td>UOT-CTM + PC-SCM</td><td>集合级</td><td>否</td><td>IoD / Pearson-R</td><td>MIST + IHC4BC</td><td>弱配对下的最优传输一致性</td><td>计算复杂度</td><td><b>分布/集合级约束的代表</b></td>
+</tr>
+<tr>
+<td class="nm">UNIStainNet (Saurav et al.)</td><td>2026</td><td>H&E→IHC</td><td>H&E → 4 种 IHC</td><td>HER2/Ki67/ER/PR</td><td><b>Beer–Lambert DAB 强度</b></td><td><b>Beer–Lambert</b></td><td>DAB OD</td><td><b>top-10% 分位数（loss）+ 256-bin KL（eval）</b></td><td><span class="badge r-train">Train</span>+<span class="badge r-eval">Eval</span></td><td><b>L_DAB</b>（λ=0.2）+ LPIPS + edge + FM</td><td>否</td><td>否</td><td>per-class DAB 分级；组织类型分层失败分析</td><td>BCI + MIST</td><td>统一多标记 + 基础模型条件；DAB KL 0.159（MIST）</td><td>仅 DAB 染色、仅乳腺癌；失败预测 AUC 0.72–0.85</td><td><b>最完整的"DAB 物理量 + 分位数 + KL"组合</b></td>
+</tr>
+<tr>
+<td class="nm"><b>PGVMS (Chen et al.)</b></td><td>2026 (TMI)</td><td>H&E→多重 IHC</td><td>H&E → HER2/ER/PR/Ki67</td><td>4 marker</td><td><b>OD → FOD</b></td><td><b>Beer–Lambert</b></td><td>FOD</td><td><b>MLPA + CPPC + CONCH-FID</b></td><td><span class="badge r-train">Train</span>+<span class="badge r-eval">Eval</span></td><td>L_MLPA + L_CPPC + L_GP</td><td>✔ block + prototype</td><td>间接（DeepLIIF 可视化）</td><td>IOD / Pearson-R / 病理医生 1–5 分（定位/异质性/强度）</td><td>MIST + IHC4BC + 4 个临床队列</td><td>prompt 引导的统一多重虚拟染色</td><td>MIST 多重 GT 仅 22.2%；prompt 过长反而变差</td><td><b>FOD 路线目前最完整的工作</b></td>
+</tr>
+<tr>
+<td class="nm">DiffVS (marker-wise)</td><td>2026 (AAAI)</td><td>虚拟多重染色</td><td>H&E → 多标记</td><td>多标记</td><td>RGB / 潜空间</td><td>无</td><td>—</td><td>标记条件化扩散</td><td><span class="badge r-train">Train</span></td><td>LDM + 像素微调</td><td>否</td><td>否</td><td>视觉</td><td>—</td><td>单张 H&E 生成多重染色</td><td>—</td><td>语义条件化，非物理量约束</td>
+</tr>
+<tr>
+<td class="nm">Star-Diff</td><td>2025</td><td>染色修复</td><td>劣质 → 高质量染色</td><td>—</td><td>RGB</td><td>无</td><td>—</td><td>结构感知扩散</td><td><span class="badge r-train">Train</span></td><td>restoration diffusion</td><td>否</td><td>否</td><td>—</td><td>—</td><td>把虚拟染色重构成图像修复任务</td><td>—</td><td>非表达约束</td>
+</tr>
+<tr>
+<td class="nm">DGR（misalignment-resistant）</td><td>2026 (Nat Commun)</td><td>错位鲁棒虚拟染色</td><td>H&E → IHC</td><td>多</td><td>RGB</td><td>无</td><td>—</td><td>级联配准 + 生成解耦</td><td><span class="badge r-train">Train</span></td><td>配准 + 生成分离</td><td>否</td><td>否</td><td>—</td><td>多</td><td>把生成与空间对齐解耦</td><td>—</td><td>解决数据问题，非表达约束</td>
+</tr>
+<tr>
+<td class="nm">AdvLIF</td><td>2026</td><td>虚拟染色 + 分割</td><td>IHC → H&E-like + 辅助模态</td><td>—</td><td>物理启发算子 + IHC 定量</td><td>reaction-diffusion / Poisson</td><td>—</td><td>IHC Quantification Difference</td><td><span class="badge r-train">Train</span>+<span class="badge r-eval">Eval</span></td><td>对抗正则 + 边界感知重建</td><td>✔（边界）</td><td><b>✔ 核</b></td><td>Dice 0.775（BCData）</td><td>BCData, DeepLIIF</td><td>物理启发 + 联合分割提升定量保真（0.092）</td><td>"物理"是算子层面而非光学层面</td><td><b>物理启发 ≠ 光学物理量</b>，需区分</td>
+</tr>
+<tr>
+<td class="nm">Loo et al. (AF→mIF)</td><td>2025</td><td>虚拟多重免疫荧光</td><td><b>自发荧光 → H&E + mIF</b></td><td><b>PD-L1, CD3, CD8, PanCK, DAPI</b></td><td><b>细胞级荧光强度</b></td><td>AF + Beer–Lambert pIHC</td><td>AF intensity, pIHC OD</td><td><b>阳性细胞密度/百分比、TPS、CPS、共定位 → Pearson</b></td><td><span class="badge r-train">Train</span>+<span class="badge r-eval">Eval</span></td><td>pIHC 作为训练目标</td><td>✔ ROI 定义</td><td><b>✔ 细胞级</b></td><td><b>✔ TPS r=0.46, CPS r=0.71</b></td><td>NSCLC 自建</td><td>首个系统性验证虚拟 mIF 的临床评分一致性</td><td>PD-L1/CD8 相关性偏低；无临床结局关联</td><td><b>目前最完整的"细胞级表达验证"范例</b></td>
+</tr>
+<tr>
+<td class="nm">ROSIE</td><td>2025 (Nat Commun)</td><td>虚拟空间蛋白组</td><td>H&E → mIF（数十蛋白）</td><td>多（免疫/结构）</td><td><b>细胞级蛋白表达 + 定位</b></td><td>荧光</td><td>fluorescence intensity</td><td>细胞表型分类</td><td><span class="badge r-bio">Bio</span></td><td>—</td><td>✔</td><td><b>✔</b></td><td>细胞表型识别（B/T 细胞、TILs、微环境）</td><td>1,000+ 配对，20 组织，16M 细胞</td><td>H&E 可推断数十个蛋白的表达与定位</td><td>表达预测相关性有限</td><td><b>语义级表达的代表</b></td>
+</tr>
+<tr>
+<td class="nm"><b>HEX</b></td><td>2026 (Nat Med)</td><td>虚拟空间蛋白组</td><td>H&E → 40 个蛋白的细胞级表达</td><td><b>40 个免疫/结构/功能蛋白</b></td><td><b>细胞级表达谱</b></td><td>空间蛋白组</td><td>fluorescence（训练标签）</td><td>细胞级预测 + 多模态整合 + niche 分析</td><td><span class="badge r-bio">Bio</span></td><td>—</td><td><b>✔ niche</b></td><td><b>✔</b></td><td><b>✔ 6 个独立队列 2,298 患者；预后 +22%，免疫响应 +24–39%</b></td><td>819,000 tiles / 382 样本</td><td>虚拟空间蛋白组可提升临床预测</td><td>训练依赖高质量空间蛋白组数据</td><td><b>把"表达预测"直接接到临床终点的最高规格工作</b></td>
+</tr>
+<tr>
+<td class="nm">PaPIS</td><td>2025</td><td>虚拟染色评价度量</td><td>—</td><td>—</td><td>细胞形态特征（EfficientNet-B7 分割模型 + Retinex）</td><td>无</td><td>—</td><td>反射/照度分解 + 高低频距离</td><td><span class="badge r-train">Train</span>+<span class="badge r-eval">Eval</span></td><td>L_papis 作为辅助感知损失</td><td>细胞组织</td><td>✔（核）</td><td><b>✘ 论文明确承认未与病理医生评分或蛋白表达建立相关性</b></td><td>PARS→H&E, 5 WSI</td><td>比 SSIM/PSNR/LPIPS 更贴近病理结构</td><td><b>无蛋白表达验证</b></td><td><b>反例：看起来"病理感知"，但未触及蛋白表达</b></td>
+</tr>
+
+<!-- ===== 数学/频域工具 ===== -->
+<tr>
+<td class="nm">HueNet</td><td>2023</td><td>通用 I2IT</td><td>图像 → 图像</td><td>—</td><td>可微直方图</td><td>无</td><td>—</td><td><b>可微 1D/2D 直方图 loss</b></td><td><span class="badge r-train">Train</span></td><td>histogram loss</td><td>否</td><td>否</td><td>—</td><td>自然图像</td><td>使直方图可端到端反向传播</td><td>未用于病理</td><td><b>若要做 OD 直方图 loss，这是现成的可微实现参考</b></td>
+</tr>
+<tr>
+<td class="nm">Focal Frequency Loss</td><td>2021 (ICCV)</td><td>图像重建</td><td>—</td><td>—</td><td>频域幅度/相位</td><td>无</td><td>—</td><td><b>频域加权损失</b></td><td><span class="badge r-train">Train</span></td><td>FFL</td><td>否</td><td>否</td><td>—</td><td>通用</td><td>缓解频谱偏差</td><td>未用于病理表达</td><td><b>频域 loss 的通用参考</b></td>
+</tr>
+<tr>
+<td class="nm">LapLoss</td><td>2025 (ICLR)</td><td>I2IT 对比度增强</td><td>—</td><td>—</td><td>Laplacian pyramid</td><td>无</td><td>—</td><td><b>多尺度金字塔损失</b></td><td><span class="badge r-train">Train</span></td><td>LapLoss</td><td>否</td><td>否</td><td>—</td><td>通用</td><td>多尺度损失优于单尺度</td><td>未用于病理</td><td>多尺度 loss 的通用参考</td></tr>
+<tr>
+<td class="nm">BeerLaNet</td><td>2025 (MICCAI)</td><td>染色归一化</td><td>RGB → 归一化 RGB</td><td>H/E</td><td><b>Beer–Lambert 染色浓度</b></td><td><b>Beer–Lambert</b></td><td>concentration</td><td><b>NMF 算法展开</b></td><td><span class="badge r-train">Train</span></td><td>物理约束嵌入网络结构</td><td>否</td><td>否</td><td>跨域泛化</td><td>多中心</td><td>物理感知的自适应归一化</td><td>任务为归一化</td><td><b>"物理模型 → 可训练网络"的范例</b></td></tr>
+<tr>
+<td class="nm">Beer-Lambert Autoencoder</td><td>2026</td><td>无监督染色解混</td><td>多重 IHC → 分离</td><td>多重</td><td>染色浓度</td><td><b>Beer–Lambert</b></td><td>concentration</td><td>自编码器 + 物理约束</td><td><span class="badge r-train">Train</span></td><td>重构 + 物理正则</td><td>否</td><td>否</td><td>—</td><td>多重 IHC</td><td>无监督物理解混</td><td>—</td><td>物理路线仍在发展</td></tr>
+<tr>
+<td class="nm">NLTD 2.0</td><td>2025</td><td>非线性色解卷积</td><td>RGB → >3 染料分离</td><td>多重</td><td>非线性解混</td><td>经验（超越 BLL）</td><td>—</td><td>非线性模型</td><td><span class="badge r-phys">Phys</span></td><td>—</td><td>否</td><td>否</td><td>—</td><td>多重 IHC</td><td>线性解卷积在 >3 染料时失效</td><td>—</td><td><b>BLL 的失效边界被明确指出</b></td></tr>
+<tr>
+<td class="nm">StainNet</td><td>2021</td><td>染色归一化</td><td>RGB → 归一化</td><td>H/E</td><td>RGB</td><td>无（蒸馏）</td><td>—</td><td>1×1 卷积</td><td><span class="badge r-train">Train</span></td><td>蒸馏损失</td><td>否</td><td>否</td><td>—</td><td>—</td><td>1.28K 参数即可归一化</td><td>无物理解释</td><td>对比：纯学习方法 vs 物理方法</td></tr>
+
+</tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s11"><span class="num">11</span>Research Landscape —— 成熟 / 较少 / 未检索到</h2>
+
+<p>本节严格按证据等级标注。<b>不把 speculative 写成"已有方法"，也不为了支持某个想法而强行说"没人做过"。</b></p>
+
+<h3>11.1 已经成熟的方向</h3>
+<div class="tw">
+<table>
+<thead><tr><th>方向</th><th>成熟度</th><th>关键证据</th><th>证据等级</th></tr></thead>
+<tbody>
+<tr><td class="nm">OD 作为染色剂浓度的物理代理</td><td>完全成熟（1998–今）</td><td>Beer–Lambert 理论 + Ruifrok 2001 + 数十年工程实践</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">色解卷积与 stain vector 估计</td><td>完全成熟</td><td>Ruifrok 2001、Macenko 2009、Vahadane 2016、NLTD 2.0</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">IOD / MOD / %Pos / H-score 作为定量指标</td><td>完全成熟，临床标准</td><td>McCarty 1985、Rizzardi 2012、Seyed Jafari 2016</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">荧光定量 IHC 与区室级表达（AQUA）</td><td>成熟</td><td>Camp 2002（Nat Med）、McCabe 2005（JNCI）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">细胞级表达定量（分割 → 每细胞强度）</td><td>成熟</td><td>DeepLIIF、CellVisioner、Cytoland、QuPath 生态</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">H&E→IHC 虚拟染色的基础框架</td><td>成熟（方法层面）</td><td>BCI 2022、MIST/ASP 2023、大量后续工作</td><td><span class="badge ev-strong">Strong</span></td></tr>
+<tr><td class="nm">空间点过程统计用于 TME 分析</td><td>成熟（空间生物学）</td><td>Spatiopath 2025、Summers 2022、Chervoneva 2021</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>11.2 较少但真实存在的方向</h3>
+<div class="tw">
+<table>
+<thead><tr><th>方向</th><th>状态</th><th>代表工作</th><th>证据等级</th></tr></thead>
+<tbody>
+<tr><td class="nm"><b>把物理表达量的统计量写进虚拟染色 loss</b></td><td>2024 年出现，2025–26 扩散中；目前只用到均值 / 直方图 / 分块三种操作</td><td>PSPStain 2024、Cross-channel 2025、UNIStainNet 2026、PGVMS 2026</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">DAB 通道作为显式监督目标</td><td>少数工作</td><td>Wei et al.、TDKStain、UNIStainNet</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">分布距离（KL）用于表达评价</td><td>很新，仅见一两篇</td><td>UNIStainNet（256-bin DAB KL）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">最优传输用于表达/内容一致性</td><td>少数工作</td><td>USIGAN 2025</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">细胞级表达验证（TPS/CPS 相关性）</td><td>仅见一篇系统性工作</td><td>Loo et al. 2025（Cancer Res Commun）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">虚拟空间蛋白组（H&E→多蛋白细胞级表达）</td><td>2025–26 兴起，规格很高</td><td>ROSIE（Nat Commun 2025）、HEX（Nat Med 2026）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">物理模型（Beer–Lambert）展开为网络结构</td><td>少数工作</td><td>BeerLaNet（MICCAI 2025）、Beer-Lambert Autoencoder 2026</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">物理启发算子（非光学）用于虚拟染色</td><td>个别工作</td><td>AdvLIF 2026（reaction-diffusion / Poisson）</td><td><span class="badge ev-weak">Weak</span></td></tr>
+<tr><td class="nm">光谱解混用于多重 IHC 定量</td><td>成熟于定量病理，未接入虚拟染色</td><td>Lab Invest 2020</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">对象级共现矩阵（Haralick on OD）</td><td>成熟于定量病理，未接入虚拟染色</td><td>Failmezger 2022</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+<tr><td class="nm">拓扑数据分析（TDA）用于表达空间结构</td><td>非常新，2026 年刚出现</td><td>bioRxiv 2026（TDA of spatial protein expression）</td><td><span class="badge ev-weak">Weak</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>11.3 检索未发现（不等于不存在）的方向</h3>
+<div class="tw">
+<table>
+<thead><tr><th>方向</th><th>检索结论</th><th>最接近的替代工作</th><th>等级</th></tr></thead>
+<tbody>
+<tr>
+  <td class="nm">把 OD/FOD 表达图送入 <b>Fourier 域</b>并做 loss 或评价</td>
+  <td>未检索到</td>
+  <td>Focal Frequency Loss（ICCV 2021，图像域）；FDA-UNet（染色归一化的频域注意力）</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">把表达图做 <b>小波分解</b>并约束多尺度表达结构</td>
+  <td>未检索到</td>
+  <td>LapLoss（ICLR 2025，通用 I2IT）；PyramidP2P 的 GP loss（图像级多尺度）</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">在虚拟染色 loss 中使用 <b>Moran's I / Geary's C</b></td>
+  <td>未检索到</td>
+  <td>Failmezger 2022（共现矩阵，等价的空间自相关信息，但作为 biomarker 而非 loss）；Chervoneva 2021（点过程）</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">在虚拟染色 loss 中使用 <b>Ripley's K / pair correlation</b></td>
+  <td>未检索到</td>
+  <td>Spatiopath 2025（TME 分析，非虚拟染色）</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">在虚拟染色 loss 中使用 <b>GLCM / Haralick 纹理特征</b>作用于表达图</td>
+  <td>未检索到</td>
+  <td>Failmezger 2022（对象级共现，非像素级 GLCM，且非 loss）</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">约束 <b>阳性区的形状 / 大小 / 连通分量 / 分簇状态</b></td>
+  <td>未检索到</td>
+  <td>TDKStain（膜区掩膜）、AdvLIF（核分割）——只到"区域"，未到"形状描述子"</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">细胞级表达 <b>分布</b>的匹配 loss（如每细胞表达向量的直方图/Wasserstein）</td>
+  <td>未检索到</td>
+  <td>PSPStain 的 pixel-level FOD 直方图；HueNet 的可微直方图</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">光谱解混残差作为 loss</td>
+  <td>未检索到</td>
+  <td>Lab Invest 2020（解混作为测量，非 loss）</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+<tr>
+  <td class="nm">把 FOD 与其他物理量（IOD/荧光/解混丰度）做系统对比</td>
+  <td>未检索到</td>
+  <td>无</td>
+  <td><span class="badge ev-spec">未检索到</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout neg">
+  <span class="lbl">关于"未检索到"的严格声明</span>
+  上表所有"未检索到"的含义是：<b>在本报告使用的关键词组合与数据库范围内（英文为主，覆盖 PubMed / arXiv / Nature / IEEE / Elsevier / Springer / MICCAI / CVPR / AAAI / ICLR / bioRxiv），没有找到直接文献。</b><br>
+  它<b>不</b>意味着：① 从未有人提出；② 相关思路不可行；③ 你一定有创新性。<br>
+  可能的原因包括：① 相关工作在非英文文献；② 相关约束写在 supplementary material 中未被索引；③ 使用了我未覆盖的术语（例如把"频域约束"称为 "spectral consistency" 或 "harmonic prior"）；④ 工作极新（2026 年下半年）尚未被索引。<br>
+  <b>建议你在做正式 novelty claim 之前，用下面 §11.4 的检索式再自行复核一遍。</b>
+</div>
+
+<h3>11.4 供你复核的检索式（反向检索用）</h3>
+<div class="grid2">
+  <div class="card">
+    <h4>物理定量侧</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><code>"optical density" AND ("virtual staining" OR "stain translation")</code></li>
+      <li><code>"Beer-Lambert" AND ("virtual staining" OR histopathology)</code></li>
+      <li><code>"stain concentration" AND loss AND (histopathology OR IHC)</code></li>
+      <li><code>"integrated optical density" AND ("loss" OR "constraint")</code></li>
+      <li><code>"DAB" AND "loss function" AND (deep learning OR GAN)</code></li>
+      <li><code>quantitative immunohistochemistry AND standardization AND optical density</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>空间 / 频域侧</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><code>"Moran's I" AND (histopathology OR immunohistochemistry OR "protein expression")</code></li>
+      <li><code>"Ripley's K" AND (pathology OR "tumor microenvironment")</code></li>
+      <li><code>"spatial statistics" AND ("virtual staining" OR "image translation")</code></li>
+      <li><code>"frequency domain loss" AND (histopathology OR pathology)</code></li>
+      <li><code>wavelet AND "protein expression" AND (image OR histology)</code></li>
+      <li><code>"co-occurrence matrix" AND "optical density" AND immunohistochemistry</code></li>
+      <li><code>"topological data analysis" AND "protein expression" AND spatial</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>虚拟染色 + 表达保持</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><code>"biomarker-preserving" OR "expression-preserving" AND staining</code></li>
+      <li><code>"virtual IHC" AND (quantitative OR "protein expression")</code></li>
+      <li><code>"stain-to-stain" translation AND (biomarker OR protein)</code></li>
+      <li><code>"cell-level" AND "virtual staining" AND correlation</code></li>
+      <li><code>H-score AND ("virtual staining" OR "image translation")</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>评价与验证</h4>
+    <ul class="small" style="padding-left:18px">
+      <li><code>"pathologist" AND "virtual staining" AND (agreement OR correlation)</code></li>
+      <li><code>TPS OR CPS AND ("virtual staining" OR "computational staining")</code></li>
+      <li><code>"downstream" AND ("virtual staining") AND (prognosis OR outcome)</code></li>
+      <li><code>SSIM AND "does not correlate" AND pathology</code></li>
+    </ul>
+  </div>
+</div>
+
+<h3>11.5 一张 landscape 地图</h3>
+<div class="ladder">
+  <div class="lvl l1">
+    <div class="hd"><span class="tag">Layer 1 · 物理</span><span class="ttl">OD / 色解卷积 / 荧光 / 光谱解混</span><span class="badge ev-strong">成熟</span></div>
+    <div class="body">Ruifrok 2001、Macenko 2009、Vahadane 2016、Camp 2002、Lab Invest 2020、BeerLaNet 2025、NLTD 2.0 2025。</div>
+    <div class="verdict">这是整个领域的<b>地基</b>。任何"物理表达"讨论都必须从这里出发。</div>
+  </div>
+  <div class="lvl l3">
+    <div class="hd"><span class="tag">Layer 2 · 统计</span><span class="ttl">IOD / MOD / H-score / 直方图</span><span class="badge ev-strong">成熟（定量病理）</span></div>
+    <div class="body">McCarty 1985、Rizzardi 2012、Seyed Jafari 2016。作为虚拟染色 loss 只在 2024 年后出现（PSPStain）。</div>
+    <div class="verdict"><b>Layer 1 + Layer 2 的组合在定量病理中早已成熟，但在虚拟染色中刚刚被使用，且只用了最基础的三种操作。</b></div>
+  </div>
+  <div class="lvl l4">
+    <div class="hd"><span class="tag">Layer 3 · 空间</span><span class="ttl">共现 / 熵 / 点过程 / Ripley's K</span><span class="badge ev-mod">成熟于定量病理，虚拟染色中缺失</span></div>
+    <div class="body">Chervoneva 2021、Failmezger 2022、Spatiopath 2025。</div>
+    <div class="verdict"><b>这一层是"物理量 + 空间统计"最直接的可借用对象。</b>虚拟染色目前只有 16-block 均值这种粗糙替代。</div>
+  </div>
+  <div class="lvl l5">
+    <div class="hd"><span class="tag">Layer 4 · 频域 / 多尺度</span><span class="ttl">Fourier / 小波 / 金字塔</span><span class="badge ev-spec">表达图上未检索到</span></div>
+    <div class="body">工具成熟（Focal Frequency Loss 2021、LapLoss 2025），但在病理中只用于图像级（FDA-UNet、GP loss）。</div>
+    <div class="verdict"><b>这是检索到的最大空白。</b>但空白 ≠ 有价值，也 ≠ 没人在做。见 §13 问题 6。</div>
+  </div>
+  <div class="lvl l6">
+    <div class="hd"><span class="tag">Layer 5 · 对象</span><span class="ttl">细胞 / 核 / 膜 / 区域级表达</span><span class="badge ev-strong">成熟（临床主流）</span></div>
+    <div class="body">AQUA、DeepLIIF、Ki67 LI、TPS/CPS、Loo 2025。</div>
+    <div class="verdict">临床真正认账的粒度。<b>虚拟染色在这一层只有评价，少有训练约束。</b></div>
+  </div>
+  <div class="lvl l7">
+    <div class="hd"><span class="tag">Layer 6 · 语义</span><span class="ttl">Biomarker status / phenotype / TME / outcome</span><span class="badge ev-mod">兴起中</span></div>
+    <div class="body">ROSIE 2025、HEX 2026、TDKStain 下游分级。</div>
+    <div class="verdict">这是目前规格最高、最接近临床落地的方向，但它<b>绕过了</b>低层的物理/空间约束，直接靠大规模配对数据学习映射。</div>
+  </div>
+</div>
+
+<div class="callout key">
+  <span class="lbl">Landscape 的一句话总结</span>
+  <b>Layer 1（物理）与 Layer 6（语义）都很热，中间的 Layer 3（空间统计）、Layer 4（频域）几乎是空的。</b>而 Layer 2（统计）刚刚开始从定量病理"渗透"到虚拟染色的 loss 里。这个"两头热、中间空"的结构，就是当前领域最真实的形状。
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s12"><span class="num">12</span>Most relevant papers —— 最值得精读的论文</h2>
+
+<h3>12.1 基础方法（物理定量与色解卷积的地基）</h3>
+<div class="paper">
+  <div class="t">1. Quantification of histochemical staining by color deconvolution</div>
+  <div class="meta">Ruifrok AC, Johnston DA · 2001 · Analytical and Quantitative Cytology and Histology 23(4):291–299 · PMID 11531144</div>
+  <div class="why"><b>为什么必读</b>：色解卷积的原始论文。OD、stain vector、stain matrix 的数学全部在这里。任何"物理表达"路线的起点。</div>
+</div>
+<div class="paper">
+  <div class="t">2. Structure-Preserving Color Normalization and Sparse Stain Separation for Histological Images</div>
+  <div class="meta">Vahadane A, Peng T, Sethi A, et al. · 2016 · IEEE Transactions on Medical Imaging 35(8):1962–1971 · DOI 10.1109/TMI.2016.2529665</div>
+  <div class="why"><b>为什么必读</b>：把"stain density"（染色密度）作为核心中间表示，并显式引入两个物理先验（非负、稀疏）。这是"物理表示 + 数学约束"在病理领域最早的漂亮范例之一，且它的验证方式（染色密度与 GT 的相关性）值得直接借鉴。</div>
+</div>
+<div class="paper">
+  <div class="t">3. Automated subcellular localization and quantification of protein expression in tissue microarrays (AQUA)</div>
+  <div class="meta">Camp RL, Chung GG, Rimm DL · 2002 · Nature Medicine 8:1323–1327 · DOI 10.1038/nm791</div>
+  <div class="why"><b>为什么必读</b>：区室级（核/浆/膜）蛋白定量的经典。虚拟染色社区几乎完全忽略了它，但它 2002 年就解决了"在哪个空间尺度上定义表达"这个问题。</div>
+</div>
+<div class="paper">
+  <div class="t">4. Automated Quantitative Analysis (AQUA) of In Situ Protein Expression, Antibody Concentration, and Prognosis</div>
+  <div class="meta">McCabe A, Dolled-Filhart M, Camp RL, Rimm DL · 2005 · JNCI 97(24):1808–1815 · DOI 10.1093/jnci/dji427</div>
+  <div class="why"><b>为什么必读</b>：证明抗体浓度可以反转 biomarker 与预后的关系（RR 0.47 ↔ 1.98）。这是做任何"定量蛋白表达"时最重要的警示。</div>
+</div>
+<div class="paper">
+  <div class="t">5. Quantification of immunohistochemistry — issues concerning methods, utility and semiquantitative assessment II</div>
+  <div class="meta">Taylor CR, Levenson RM · 2006 · Histopathology 49(4):411–424 · DOI 10.1111/j.1365-2559.2006.02513.x</div>
+  <div class="why"><b>为什么必读</b>：系统梳理 IHC 半定量的方法学陷阱。做物理路线之前必须知道"OD 到底能证明什么、不能证明什么"。</div>
+</div>
+<div class="paper">
+  <div class="t">6. Beer–Lambert law for optical tissue diagnostics: current state of the art and the main limitations</div>
+  <div class="meta">2021 · Journal of Biomedical Optics · PMC8553265</div>
+  <div class="why"><b>为什么必读</b>：BLL 在组织光学中的失效模式清单。散射、厚度、饱和、背景——全部列全。</div>
+</div>
+
+<h3>12.2 物理定量（IOD / OD / 光谱 / 解混）</h3>
+<div class="paper">
+  <div class="t">7. Quantification of spatial tumor heterogeneity in immunohistochemistry staining images</div>
+  <div class="meta">Chervoneva I, Peck AR, et al. · 2021 · Bioinformatics 37(10):1452–1459</div>
+  <div class="why"><b>为什么必读</b>：把"细胞信号强度（CSI）"作为标记点过程的 mark，构造条件空间指标。<b>这是"物理量 + 真空间统计"在病理中最直接的范例</b>，也是你要做空间约束时最该先读的一篇。</div>
+</div>
+<div class="paper">
+  <div class="t">8. Spatial heterogeneity of cancer associated protein expression in immunohistochemically stained images as an improved prognostic biomarker</div>
+  <div class="meta">Failmezger H, Hessel H, Kapil A, Schmidt G, Harder N (AstraZeneca) · 2022 · Frontiers in Oncology 12:964716 · DOI 10.3389/fonc.2022.964716</div>
+  <div class="why"><b>为什么必读</b>：<b>本报告中最重要的一篇"OD + 空间统计"文献。</b>把膜 OD 做成对象级共现矩阵（Haralick 式），加 tile 熵与 EDI，共 53 个空间分数，并证明空间分数在预后上优于平均表达（p=0.01 vs 0.3）。如果你要做"物理表达图 + 空间统计约束"，这篇是必须吃透的先例。</div>
+</div>
+<div class="paper">
+  <div class="t">9. Brightfield multiplex immunohistochemistry with multispectral imaging</div>
+  <div class="meta">2020 · Laboratory Investigation · DOI 10.1038/s41374-020-0429-0</div>
+  <div class="why"><b>为什么必读</b>：明场多光谱 + 光谱解混做多重 IHC 定量，并把解混结果与单标 DAB 图比对验证。是"光谱物理量"路线的最佳入口。</div>
+</div>
+<div class="paper">
+  <div class="t">10. IHC Optical Density Score: A New Practical Method for Quantitative Immunohistochemistry Image Analysis</div>
+  <div class="meta">Seyed Jafari SM, Hunger RE · 2016/2017 · Applied Immunohistochemistry &amp; Molecular Morphology · PMID 27093452</div>
+  <div class="why"><b>为什么必读</b>：MOD / OD score 的标准引用，明确指出 OD 与抗原表达程度成比例。</div>
+</div>
+<div class="paper">
+  <div class="t">11. Quantitative comparison of immunohistochemical staining measured by digital image analysis versus pathologist visual scoring</div>
+  <div class="meta">Rizzardi AE, et al. · 2012 · Diagnostic Pathology 7:42 · DOI 10.1186/1746-1596-7-42</div>
+  <div class="why"><b>为什么必读</b>："数字定量 vs 目视评分"的早期系统比较，是理解"看起来像 ≠ 定量一致"的实证基础。</div>
+</div>
+<div class="paper">
+  <div class="t">12. Adaptive Stain Normalization for Cross-Domain Medical Histology (BeerLaNet)</div>
+  <div class="meta">2025 · MICCAI 2025 · arXiv:2510.06592</div>
+  <div class="why"><b>为什么必读</b>：把 Beer–Lambert + NMF 的求解过程"展开"成可训练网络。<b>"物理模型 → 可微分网络"最干净的实现参考。</b></div>
+</div>
+
+<h3>12.3 虚拟染色（与蛋白表达相关）</h3>
+<div class="paper">
+  <div class="t">13. ★ Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining (PSPStain)</div>
+  <div class="meta">Chen F, Zhang R, Zheng B, Sun Y, He J, Qin W · 2024 · MICCAI 2024 · arXiv:2407.03655 · code: github.com/ccitachi/PSPStain</div>
+  <div class="why"><b>必读第一位。</b>FOD 的提出者，也是"物理量（OD→FOD）+ 数学统计（均值/直方图/分块）写进 loss"的首次实现。L_MLPA = avg + 20-bin histo + 16-block。评价引入 IOD/mIOD/Pearson-R。你的想法与它的差别，必须建立在读懂这篇的基础上。</div>
+</div>
+<div class="paper">
+  <div class="t">14. ★ PGVMS: A Prompt-Guided Unified Framework for Virtual Multiplex IHC Staining with Pathological Semantic Learning</div>
+  <div class="meta">Chen F, Zhang R, Hu W, et al. · 2026 · IEEE Transactions on Medical Imaging · arXiv:2602.23292 · code: github.com/ccitachi/PGVMS</div>
+  <div class="why"><b>必读。</b>同一组的最新工作。把 FOD + MLPA + prototype 一致性扩展到多重 IHC 统一框架，并引入 CONCH-FID。同时是"FOD 路线目前的天花板"——看清它做了什么、没做什么。</div>
+</div>
+<div class="paper">
+  <div class="t">15. ★ UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</div>
+  <div class="meta">Saurav JR, Pham TLH, Mukherjee P, Yi P, Orr BA, Luber JM · 2026 · arXiv:2603.12716</div>
+  <div class="why"><b>必读。</b>把 Beer–Lambert 色解卷积的 DAB 强度用成 loss（top-10% 分位数匹配）与评价（256-bin KL）。同时它对"跨论文指标不可比"的分析非常清醒，值得学习它的问题意识。</div>
+</div>
+<div class="paper">
+  <div class="t">16. Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining</div>
+  <div class="meta">Yang H, Wu JY, Fang R, et al.（复旦中山医院）· 2025 · arXiv:2506.07559</div>
+  <div class="why"><b>必读。</b>FOD 路线的扩展：区分 hematoxylin 通道与 DAB 通道，各自做 FOD 统计约束 + 跨通道一致性。并引入 3 位病理医生的 PCPA/SIA 人工指标。</div>
+</div>
+<div class="paper">
+  <div class="t">17. Adaptive Supervised PatchNCE Loss for Learning H&amp;E-to-IHC Stain Translation (ASP) + MIST dataset</div>
+  <div class="meta">Li F, Hu Z, Chen W, Kak A · 2023 · arXiv:2303.06193</div>
+  <div class="why"><b>必读（作为对照）。</b>纯特征级约束的代表，同时发布 MIST 数据集（HER2/Ki67/ER/PR），是后续所有 FOD 路线论文的公共评测基准。</div>
+</div>
+<div class="paper">
+  <div class="t">18. BCI: Breast Cancer Immunohistochemical Image Generation through Pyramid Pix2pix</div>
+  <div class="meta">Liu S, et al. · 2022 · CVPRW 2022 · arXiv:2204.11425</div>
+  <div class="why"><b>必读。</b>BCI 数据集的来源，也是 Gaussian Pyramid loss 在虚拟染色中的源头。理解"多尺度"在虚拟染色里到底指什么。</div>
+</div>
+<div class="paper">
+  <div class="t">19. H&amp;E to IHC virtual staining methods in breast cancer: an overview and benchmarking</div>
+  <div class="meta">2025 · npj Digital Medicine · DOI 10.1038/s41746-025-01741-9</div>
+  <div class="why"><b>必读综述。</b>系统梳理 HER2/PgR/ER/Ki67 的虚拟染色方法（PyramidP2P、ASP、TDKStain、GramGAN、MVFStain、Wei et al. 等），并做基准比较。是快速建立全景的最佳入口。</div>
+</div>
+<div class="paper">
+  <div class="t">20. USIGAN: Unbalanced Self-Information Feature Transport for Weakly Paired Image IHC Virtual Staining</div>
+  <div class="meta">Peng Y, Xiong B, Chen F, et al. · 2025 · arXiv:2507.05843</div>
+  <div class="why"><b>建议读。</b>最优传输一致性 + 明确的 IoD/Pearson-R 评价。是"分布/集合级约束"的代表。</div>
+</div>
+<div class="paper">
+  <div class="t">21. Label-Free Virtual HER2 Immunohistochemical Staining of Breast Tissue Using Deep Learning</div>
+  <div class="meta">Wu Y, et al. · 2022 · BME Frontiers 2022:9786242 · DOI 10.34133/2022/9786242</div>
+  <div class="why"><b>建议读。</b>label-free → 虚拟 HER2 IHC 的首次演示，并用 3 位乳腺病理专家做 HER2 评分验证。<b>在 2022 年就做了"专家评分验证"。</b></div>
+</div>
+<div class="paper">
+  <div class="t">22. Autofluorescence Virtual Staining System for H&amp;E Histology and Multiplex Immunofluorescence Applied to Immuno-Oncology Biomarkers in Lung Cancer</div>
+  <div class="meta">Loo J, et al.（Verily / Genmab）· 2025 · Cancer Research Communications 5(1):54 · DOI 10.1158/2767-9764.CRC-24-0327</div>
+  <div class="why"><b>强烈建议读。</b><b>目前公开文献中最完整的"虚拟染色细胞级表达验证"范例</b>：细胞级阳性密度/百分比、PD-L1 TPS (r=0.46)、CPS (r=0.71)、CD3/CD8 共定位，并诚实报告了失败模式（CD8、PD-L1 在肿瘤细胞上相关性低）。</div>
+</div>
+<div class="paper">
+  <div class="t">23. AdvLIF: An Adversarially and Physics-Inspired Framework for Virtual Staining and Nucleus Segmentation</div>
+  <div class="meta">Yu Q, Shao C, et al. · 2026 · Journal of Digital Imaging · DOI 10.1007/s10278-026-02320-4 · PMID 42773343</div>
+  <div class="why"><b>建议读。</b>物理启发算子（reaction-diffusion / Poisson）+ 联合分割 + IHC Quantification Difference 指标（0.092）。注意区分"物理启发算子"与"光学物理量"——这是两个不同的"物理"。</div>
+</div>
+<div class="paper">
+  <div class="t">24. Pathology-Guided Virtual Staining Metric for Evaluation and Training (PaPIS)</div>
+  <div class="meta">Wang Q, Tweel JED, Haji Reza P, Layton A · 2025 · arXiv:2507.12624</div>
+  <div class="why"><b>作为反面教材读。</b>它用细胞形态分割模型特征 + Retinex 分解构造"病理感知"度量，并当 loss 用——但论文明确承认<b>未与病理医生评分或蛋白表达建立相关性</b>。这正好演示了"看起来病理感知 ≠ 蛋白表达正确"。</div>
+</div>
+<div class="paper">
+  <div class="t">25. Generative AI for misalignment-resistant virtual staining to accelerate … (DGR)</div>
+  <div class="meta">2026 · Nature Communications · DOI 10.1038/s41467-026-71038-2 · arXiv:2509.14119</div>
+  <div class="why"><b>建议读。</b>把"生成"与"空间对齐"解耦。理解虚拟染色最根本的数据问题（序列切片错位）如何被处理，这对设计任何表达级约束都至关重要。</div>
+</div>
+
+<h3>12.4 空间表达（空间生物学与空间蛋白组）</h3>
+<div class="paper">
+  <div class="t">26. Statistical analysis of spatial patterns in tumor microenvironment images (Spatiopath)</div>
+  <div class="meta">2025 · Nature Communications · DOI 10.1038/s41467-025-57943-y</div>
+  <div class="why"><b>必读。</b>把 Ripley's K 扩展到细胞轮廓与肿瘤区域，用于 TME 空间模式检验。是"空间统计如何真正被用起来"的当代范例。</div>
+</div>
+<div class="paper">
+  <div class="t">27. Spatial statistics is a comprehensive tool for quantifying cell-to-cell relationships</div>
+  <div class="meta">Summers HD, et al. · 2022 · Cell Reports Methods</div>
+  <div class="why"><b>建议读。</b>空间统计在细胞关系量化中的方法论综述，适合作为工具选型的参考。</div>
+</div>
+<div class="paper">
+  <div class="t">28. Deciphering cell to cell spatial relationship for pathology images using spatial point pattern analysis</div>
+  <div class="meta">2024 · Scientific Reports · DOI 10.1038/s41598-024-81383-1</div>
+  <div class="why"><b>建议读。</b>点模式分析在病理图像上的实操综述。</div>
+</div>
+<div class="paper">
+  <div class="t">29. ROSIE: AI generation of multiplex immunofluorescence staining from histopathology images</div>
+  <div class="meta">2025 · Nature Communications · DOI 10.1038/s41467-025-62346-0 · bioRxiv 2024.11.10.622859</div>
+  <div class="why"><b>必读。</b>从 H&E 计算推断数十个蛋白的表达与定位，1,000+ 配对样本、20 组织、1,600 万细胞。是"语义级表达预测"的代表，验证方式是细胞表型识别能力。</div>
+</div>
+<div class="paper">
+  <div class="t">30. ★ AI-enabled virtual spatial proteomics from histopathology for interpretable biomarker discovery in lung cancer (HEX)</div>
+  <div class="meta">Li Z, Li Y, Xiang J, et al.（含 Ruijiang Li 组）· 2026 · Nature Medicine · DOI 10.1038/s41591-025-04060-4</div>
+  <div class="why"><b>必读（规格最高）。</b>从 H&E 生成 40 个蛋白的细胞级空间表达谱，在 6 个独立 NSCLC 队列（2,298 患者）上验证：预后提升 22%，免疫治疗响应预测提升 24–39%。<b>它展示了"表达预测"如何直接接到临床终点，是目前这条链的最高规格证据。</b></div>
+</div>
+
+<h3>12.5 数学 / 频域 / 分布约束工具</h3>
+<div class="paper">
+  <div class="t">31. HueNet: Differentiable Histogram Loss Functions for Intensity-based Image-to-Image Translation</div>
+  <div class="meta">2023 · IEEE (Xplore doc 10133915)</div>
+  <div class="why"><b>若要做 OD 直方图 loss，必读。</b>提供了可微直方图层的实现思路，使"在物理量上做分布约束"可以直接反向传播。注意：原论文场景是自然图像，未涉及病理。</div>
+</div>
+<div class="paper">
+  <div class="t">32. Focal Frequency Loss for Image Reconstruction and Synthesis</div>
+  <div class="meta">Jiang L, Dai B, Wu W, Loy CC · 2021 · ICCV 2021 · arXiv:2012.12821</div>
+  <div class="why"><b>若要做频域约束，必读。</b>频域损失的经典实现。</div>
+</div>
+<div class="paper">
+  <div class="t">33. LapLoss: Laplacian Pyramid-based Multiscale loss for Image Translation</div>
+  <div class="meta">2025 · ICLR 2025 · arXiv:2503.05974</div>
+  <div class="why"><b>若要做多尺度约束，必读。</b>多尺度损失的现代实现。</div>
+</div>
+<div class="paper">
+  <div class="t">34. Topological Data Analysis of Spatial Protein Expression in Multiplexed Spatial Proteomics Studies</div>
+  <div class="meta">2026 · bioRxiv</div>
+  <div class="why"><b>新方向参考。</b>把持续同调用于空间蛋白表达。属于"表达图的拓扑表示"，是目前最新的数学表示尝试之一。</div>
+</div>
+
+<h3>12.6 补充：深挖 IHC 定量的经典与综述</h3>
+<div class="paper">
+  <div class="t">35. Deep Learning–Based H-Score Quantification of Immunohistochemistry Images</div>
+  <div class="meta">2024 · Modern Pathology · DOI 10.1016/j.modpat.2023.100373</div>
+  <div class="why">深度学习做 H-score 的最新范例，理解 H-score 的算法化实现与验证方式。</div>
+</div>
+<div class="paper">
+  <div class="t">36. DeepLIIF: Deep-Learning Inferred Multiplex Immunofluorescence for IHC Image Quantification</div>
+  <div class="meta">Ghahremani P, et al. · 2022 · Nature Machine Intelligence / CVPR 2022 / MICCAI 2023–24 · deepliif.org</div>
+  <div class="why">把染色解卷积、细胞分割、单细胞定量合成一个框架。<b>少数真正把"细胞级"带进模型的工作。</b></div>
+</div>
+<div class="paper">
+  <div class="t">37. Deep learning-enabled virtual histological staining of biological samples</div>
+  <div class="meta">Bai B, et al. · 2023 · Light: Science &amp; Applications · DOI 10.1038/s41377-023-01104-7</div>
+  <div class="why">虚拟染色领域最常被引用的综述之一，覆盖 label-free 与 stain-to-stain 两条主线。</div>
+</div>
+<div class="paper">
+  <div class="t">38. Virtual staining for histology by deep learning</div>
+  <div class="meta">2024 · Trends in Biotechnology · DOI 10.1016/j.tibtech.2024.03.002</div>
+  <div class="why">从生物学与临床视角看虚拟染色，包含对定量可靠性的批判性讨论。</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s13"><span class="num">13</span>核心疑问逐条回答</h2>
+
+<div class="qanswer">
+  <div class="qh"><span class="qn">Q1</span><span>在病理蛋白表达量化中，FOD / OD 是不是常见路线？它处于整个方法体系中的什么位置？</span></div>
+  <p><b>OD：是，而且是绝对主流。</b>OD 是 Beer–Lambert 直接给出的物理量，从 Ruifrok 2001 起就是 IHC 定量的默认入口，IOD/MOD/H-score 全部由它派生。<span class="badge ev-strong">Strong</span></p>
+  <p><b>FOD：不是。它只在 3 篇论文中出现，且全部来自同一研究组（SIAT，秦文健组）。</b></p>
+  <div class="tw">
+  <table style="min-width:auto">
+    <thead><tr><th>论文</th><th>年份</th><th>venue</th></tr></thead>
+    <tbody>
+      <tr><td>PSPStain（FOD 首次提出）</td><td>2024</td><td>MICCAI 2024</td></tr>
+      <tr><td>Cross-channel Perception Learning</td><td>2025</td><td>arXiv 2506.07559</td></tr>
+      <tr><td>PGVMS</td><td>2026</td><td>IEEE TMI</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><b>FOD 在方法体系中的位置</b>：它是一个<b>二阶概念</b>——必须先有 OD（一阶物理量），再对 OD 做幂次重加权得到 FOD。它不提供新的物理信息，只改变优化时各区域的权重。因此它在体系中的位置是"<b>OD 的一种任务导向重参数化</b>"，属于 Level 1（物理）与 Level 3（统计）之间的一个变体。</p>
+  <div class="verdictbox"><b>准确表述</b>：OD 是领域公认的物理入口（Strong）；FOD 是一个已被验证有效、但尚未被社区广泛采用的工程技巧（Moderate，单一研究组）。把两者混为一谈会严重高估 FOD 的地位。</div>
+</div>
+
+<div class="qanswer">
+  <div class="qh"><span class="qn">Q2</span><span>除了 FOD / OD，还有哪些"具有物理意义"的表达表示？</span></div>
+  <p>按物理基础的强度排序：</p>
+  <div class="tw">
+  <table>
+    <thead><tr><th>物理表示</th><th>物理基础</th><th>与蛋白的关系</th><th>是否用于虚拟染色</th><th>证据</th></tr></thead>
+    <tbody>
+      <tr><td class="nm">Optical Density (OD) / Absorbance</td><td>Beer–Lambert（吸收）</td><td>∝ 染色剂浓度 → proxy 蛋白量</td><td><b>✔</b>（多数论文用它做可视化/评价；少数做 loss）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+      <tr><td class="nm">Stain concentration / density</td><td>Beer–Lambert + 非负/稀疏先验</td><td>直接是染色剂浓度</td><td>间接（BeerLaNet 归一化、Beer-Lambert AE 解混）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+      <tr><td class="nm">Fluorescence intensity / AQUA score</td><td>荧光发射（量子产率）</td><td>∝ 荧光团浓度 → proxy 蛋白量</td><td>✔（Loo 2025 的 mIF 输出；DeepLIIF 的 mIF 中间表示）</td><td><span class="badge ev-strong">Strong</span></td></tr>
+      <tr><td class="nm">Spectral abundance（光谱解混）</td><td>线性混合模型 + 各染料参考光谱</td><td>每个标记独立的丰度</td><td>✘（定量病理成熟，虚拟染色未接入）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+      <tr><td class="nm">Multispectral / hyperspectral</td><td>多波长采样 → 解混</td><td>同上，且能分离重叠染料</td><td>✔（作为输入模态：Zhu 2024、Loo 2025）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+      <tr><td class="nm">Autofluorescence (AF) intensity</td><td>内源荧光团</td><td>间接（形态代理，非蛋白）</td><td>✔（作为输入模态）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+      <tr><td class="nm">Quantitative phase / optical path length</td><td>干涉相位 ∝ 干质量</td><td>生物量，非特定蛋白</td><td>✔（PhaseStain）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+      <tr><td class="nm">X-ray attenuation</td><td>X 射线吸收</td><td>与染色对应</td><td>✔（X-ray virtual histology 2026）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+      <tr><td class="nm">DAB OD（单标记通道）</td><td>OD + 色解卷积</td><td>DAB 显色剂浓度</td><td><b>✔ 已进入 loss</b>（UNIStainNet、Wei et al.、TDKStain）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+      <tr><td class="nm">CSI（细胞信号强度）</td><td>OD 的细胞级聚合</td><td>每细胞染色剂浓度</td><td>✘</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+      <tr><td class="nm">Top-k% DAB intensity</td><td>OD 的顺序统计</td><td>最强表达区代理</td><td><b>✔</b>（UNIStainNet L_DAB）</td><td><span class="badge ev-mod">Moderate</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="verdictbox"><b>结论</b>：真正有物理意义的表示有 4 大家族——<b>吸收型（OD/浓度/光谱）</b>、<b>发射型（荧光/AF）</b>、<b>相干型（相位）</b>、<b>衰减型（X-ray）</b>。其中只有前两族被虚拟染色实际使用，且只用了最粗的粒度。</div>
+</div>
+
+<div class="qanswer">
+  <div class="qh"><span class="qn">Q3</span><span>虚拟染色研究中，研究者是直接约束蛋白表达的物理量，还是更多依赖 image-level / feature-level / perceptual loss？</span></div>
+  <p><b>证据明确：绝大多数依赖 image-level / feature-level / perceptual loss。</b><span class="badge ev-strong">Strong</span></p>
+  <p>具体计数（本报告覆盖的虚拟染色工作中）：</p>
+  <ul>
+    <li><b>仅使用通用图像/特征约束</b>（adversarial + L1 + perceptual + PatchNCE + SSIM + pyramid + cycle）：Rivenson 2019、Liu 2022 (BCI)、Li 2023 (ASP)、GramGAN、MVFStain、ODA-GAN、Star-Diff、DiffVS、DGR、PaPIS、UNIStainNet 的大部分损失项 —— <b>占绝对多数</b>。</li>
+    <li><b>显式使用物理量（OD/DAB/FOD）作为约束或目标</b>：PSPStain 2024、Cross-channel 2025、UNIStainNet 2026（L_DAB）、PGVMS 2026、TDKStain（膜区掩膜）、Wei et al.（DAB L1）、Loo 2025（pIHC 目标）—— <b>7 篇左右，全部集中在 2024 年之后</b>。</li>
+    <li><b>使用物理量但只作评价</b>：PSPStain/PGVMS/USIGAN 的 IOD、UNIStainNet 的 DAB KL、Loo 2025 的 TPS/CPS —— 这一类反而不少。</li>
+  </ul>
+  <div class="verdictbox">
+    <b>关键判断</b>：不能因为一篇论文用了 perceptual loss 就说它"约束了蛋白表达"。按这个标准严格筛选后，<b>真正在训练中约束蛋白表达物理量的虚拟染色论文，在 2024 年之前基本为零</b>；2024–2026 年出现约 7 篇，且大部分集中在一个研究组。<br>
+    <b>这不是"没人做过"，而是"刚刚开始做，且做的还很浅"。</b>
+  </div>
+</div>
+
+<div class="qanswer">
+  <div class="qh"><span class="qn">Q4</span><span>有没有明确存在 <span class="m">physical representation + statistical constraint</span> 这种路线？请列出具体论文。</span></div>
+  <p><b>有，而且这是本报告中最确凿的一条"混合路线"。</b><span class="badge ev-strong">Strong</span></p>
+  <div class="tw">
+  <table class="wide">
+    <thead><tr><th>论文</th><th>物理表示</th><th>统计约束</th><th>是否进 loss</th><th>是"物理测量 → 数学统计"吗？</th></tr></thead>
+    <tbody>
+      <tr><td class="nm">PSPStain (MICCAI 2024)</td><td>OD → FOD</td><td>均值 + 20-bin 直方图 L2 + 16-block 均值</td><td><b>✔</b></td><td><b>是</b>。完整链条：RGB → 色解卷积 → DAB OD → FOD → {一阶统计, 分布统计, 粗空间统计}</td></tr>
+      <tr><td class="nm">PGVMS (TMI 2026)</td><td>OD → FOD</td><td>同上 + prototype 一致性</td><td><b>✔</b></td><td><b>是</b>。同上，并加入区域级 prototype 统计</td></tr>
+      <tr><td class="nm">Cross-channel Perception (2025)</td><td>H 通道 FOD + D 通道 FOD</td><td>均值 + block + 累积直方图；跨通道一致性</td><td><b>✔</b></td><td><b>是</b>。并且是"物理表示 + 统计约束 + 通道间关系"的三元组合</td></tr>
+      <tr><td class="nm">UNIStainNet (2026)</td><td>Beer–Lambert 色解卷积 → DAB 强度</td><td>训练：top-10% 分位数均值；评价：256-bin KL 散度</td><td>✔（分位数）</td><td><b>是</b>。物理量 → 顺序统计 + 分布距离</td></tr>
+      <tr><td class="nm">Failmezger 2022 (Front Oncol)</td><td>细胞膜 OD</td><td>对象级共现矩阵（Haralick）+ tile 熵 + EDI</td><td>✘（作 biomarker）</td><td><b>是</b>。而且是<b>空间统计</b>，不只是分布统计</td></tr>
+      <tr><td class="nm">Chervoneva 2021 (Bioinformatics)</td><td>CSI（细胞级 OD）</td><td>标记点过程 / 条件空间指标</td><td>✘</td><td><b>是</b>。物理量 → 点过程空间统计</td></tr>
+      <tr><td class="nm">USIGAN (2025)</td><td>（图像/特征，非显式 OD）</td><td>Unbalanced Optimal Transport 一致性</td><td>✔</td><td>部分是。物理表示不显式，但用 IoD 评价</td></tr>
+      <tr><td class="nm">Vahadane 2016 (TMI)</td><td>stain density（浓度）</td><td>非负 + 稀疏约束</td><td>✘（是求解约束）</td><td>是（经典先例）。物理先验作为数学约束</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="verdictbox">
+    <b>归纳</b>：这条路线真实存在，且有两条不同的子线：<br>
+    <b>子线 A（虚拟染色 loss 线）</b>：PSPStain → PGVMS → Cross-channel → UNIStainNet。特征是"OD/DAB/FOD + 均值/直方图/分位数"，2024 年后出现。<br>
+    <b>子线 B（定量病理 biomarker 线）</b>：Chervoneva 2021、Failmezger 2022。特征是"细胞级 OD/CSI + 共现/点过程/熵"，2021–2022 年成熟，但<b>从未被接入虚拟染色</b>。<br>
+    <b>两条子线至今没有交汇</b>——这正是本报告最重要的结构性发现。
+  </div>
+</div>
+
+<div class="qanswer">
+  <div class="qh"><span class="qn">Q5</span><span>有没有 <span class="m">physical + spatial</span> / <span class="m">physical + frequency</span> / <span class="m">physical + morphological</span> 约束？</span></div>
+
+  <h4>① physical + spatial：<span class="badge ev-mod">有，但粗</span></h4>
+  <ul>
+    <li><b>训练约束中</b>：PSPStain / PGVMS 的 <code>L_MLPA-block</code>（16 个 block 的 FOD 均值）——这是<b>分块均值</b>，属于最粗粒度的空间分布描述，不是空间统计。PSPStain 的 CTPC / PGVMS 的 CPPC 在肿瘤掩膜上做 prototype 一致性——属于<b>区域级</b>约束。USIGAN 的 OT 相关矩阵——属于<b>集合级</b>。</li>
+    <li><b>定量病理中（未接入虚拟染色）</b>：Failmezger 2022 的对象级共现矩阵（<b>真正的空间统计，作用于膜 OD</b>）；Chervoneva 2021 的标记点过程（作用于 CSI）；Spatiopath 2025 的 Ripley's K（作用于细胞/TME，不含 OD）。</li>
+  </ul>
+  <div class="verdictbox"><b>结论</b>：<span class="m">physical + spatial</span> 存在，但在虚拟染色中<b>只有 block 级和 prototype 级</b>；<b>真正的空间统计量（共现矩阵、点过程、Moran's I、Ripley's K）从未进入虚拟染色的 loss</b>。这是"存在但浅"的典型。</div>
+
+  <h4>② physical + frequency：<span class="badge ev-spec">未检索到</span></h4>
+  <p>检索范围内<b>没有</b>任何论文把 OD/FOD/DAB map 送入 Fourier / 小波域并构造 loss 或评价。频域/多尺度方法在病理中确实存在，但作用对象是 RGB 图像（FDA-UNet 用于染色归一化；GP loss 用于图像多尺度重建；Frequency-spatial interaction 用于细胞检测）。<b>最接近的是 Focal Frequency Loss（ICCV 2021）与 LapLoss（ICLR 2025），但都是通用 I2IT 方法，未涉及病理表达量。</b></p>
+
+  <h4>③ physical + morphological：<span class="badge ev-weak">部分存在，层次很浅</span></h4>
+  <ul>
+    <li><b>存在</b>：TDKStain 的膜染色强度掩膜（区域）；AdvLIF 的核分割（边界）；DeepLIIF 的细胞分割（对象）；UNIStainNet 的 Sobel edge loss（但作用于 RGB，非表达）。</li>
+    <li><b>不存在</b>：把<b>阳性区域的形状描述子</b>（面积、周长、紧凑度、离心率、连通分量数、簇大小分布、分簇程度）作为虚拟染色的约束或评价。<b>检索未发现。</b></li>
+  </ul>
+  <div class="verdictbox"><b>直接回答</b>：研究者确实约束了"区域"，但约束的是<b>区域的位置/掩膜/边界</b>，不是<b>区域的形态学统计量</b>。后者（形状、大小、聚集状态）在检索范围内是空白。</div>
+</div>
+
+<div class="qanswer">
+  <div class="qh"><span class="qn">Q6</span><span>如果文献主要集中在 OD / intensity / H-score / cell-level expression，而很少有人对"物理表达图"做频域、多尺度、空间统计约束 —— 这是已做过的方向，还是相对少见的方向？</span></div>
+  <p>逐条给出<b>有证据支持</b>的判断，不做"没人做过"的断言：</p>
+  <div class="tw">
+  <table>
+    <thead><tr><th>方向</th><th>检索结论</th><th>证据等级</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="nm">物理表达图 + <b>一阶统计</b>（均值）</td>
+        <td><b>已做过</b></td>
+        <td><span class="badge ev-strong">Strong</span></td>
+        <td>PSPStain/PGVMS 的 L_MLPA-avg；UNIStainNet 的 top-10% DAB</td>
+      </tr>
+      <tr>
+        <td class="nm">物理表达图 + <b>分布统计</b>（直方图 / KL）</td>
+        <td><b>已做过</b></td>
+        <td><span class="badge ev-strong">Strong</span></td>
+        <td>PSPStain 的 20-bin FOD 直方图 L2（loss）；UNIStainNet 的 256-bin DAB KL（eval）</td>
+      </tr>
+      <tr>
+        <td class="nm">物理表达图 + <b>粗空间</b>（分块 / prototype）</td>
+        <td><b>已做过，但很粗</b></td>
+        <td><span class="badge ev-mod">Moderate</span></td>
+        <td>PSPStain 的 16-block；PGVMS 的 CPPC；Cross-channel 的 block</td>
+      </tr>
+      <tr>
+        <td class="nm">物理表达图 + <b>真空间统计</b>（共现 / 点过程 / Moran's I / Ripley's K）</td>
+        <td><b>定量病理中已做；虚拟染色中未检索到</b></td>
+        <td><span class="badge ev-mod">Moderate（前者）</span> / <span class="badge ev-spec">未检索到（后者）</span></td>
+        <td>Failmezger 2022、Chervoneva 2021 是现成的先例；但没有虚拟染色论文把这类约束写进 loss</td>
+      </tr>
+      <tr>
+        <td class="nm">物理表达图 + <b>频域 / 小波 / 多尺度</b></td>
+        <td><b>未检索到</b></td>
+        <td><span class="badge ev-spec">未检索到</span></td>
+        <td>频域/多尺度 loss 存在于图像域（GP loss、Focal Frequency Loss、LapLoss），但作用对象是 RGB 而非表达图</td>
+      </tr>
+      <tr>
+        <td class="nm">物理表达图 + <b>形态学描述子</b>（形状/大小/连通性/分簇）</td>
+        <td><b>未检索到</b></td>
+        <td><span class="badge ev-spec">未检索到</span></td>
+        <td>最接近的是膜区掩膜与核分割，但那不是形态学统计量</td>
+      </tr>
+      <tr>
+        <td class="nm">细胞级表达的 <b>分布匹配</b></td>
+        <td><b>未检索到</b></td>
+        <td><span class="badge ev-spec">未检索到</span></td>
+        <td>细胞级表达只用于评价（Loo 2025、PCPA/SIA），未用于 loss</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <span class="lbl">你要求的那句"诚实话"，我原样给你</span>
+    <b>检索到的文献主要集中于：① OD/色解卷积作为物理入口；② IOD/MOD/H-score 作为统计表示；③ 均值/直方图/分块作为虚拟染色中的约束；④ cell-level expression 作为评价粒度。</b><br><br>
+    <b>我没有检索到明确使用以下手段的虚拟染色论文</b>：把 OD/FOD/DAB 表达图送入频域（Fourier/小波）并构造 loss 或评价；在虚拟染色 loss 中使用 Moran's I / Geary's C / Ripley's K / GLCM；约束阳性区的形状/大小/连通性；对细胞级表达分布做匹配。<br><br>
+    <b>但这并不能证明这些方向从未被提出。</b>可能的原因：非英文文献、supplementary material 未被索引、术语不同（如 spectral consistency / harmonic prior / structure prior）、或工作极新尚未被索引。<br><br>
+    <b>最接近的替代文献</b>：频域 → Focal Frequency Loss (ICCV 2021) + LapLoss (ICLR 2025)（通用 I2IT）；空间统计 → Failmezger 2022 + Chervoneva 2021（定量病理，作用于 OD/CSI）；形态学 → TDKStain 的膜区掩码 + AdvLIF 的核分割；细胞级分布 → HueNet 的可微直方图（通用）。
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="s14"><span class="num">14</span>总范式判断：那条链条存在吗？</h2>
+
+<div class="mathblock">
+Image <span class="op">→</span> Physical representation <span class="op">→</span> Quantitative / Spatial representation <span class="op">→</span> Constraint <span class="op">→</span> Biological validation
+</div>
+
+<p><b>答案是：这条链在文献中<u>分散地</u>存在，但<u>没有任何一篇论文完整地走完它</u>。</b></p>
+
+<div class="tw">
+<table>
+<thead><tr><th>链条环节</th><th>是否有文献做到</th><th>代表工作</th><th>缺口</th></tr></thead>
+<tbody>
+<tr><td class="nm">① Image → Physical representation</td><td><b>✔ 完全成熟</b></td><td>Ruifrok 2001、Vahadane 2016、BeerLaNet 2025</td><td>无缺口</td></tr>
+<tr><td class="nm">② Physical → Quantitative representation</td><td><b>✔ 成熟</b></td><td>IOD/MOD/H-score、AQUA、Loo 2025 的 TPS/CPS</td><td>无缺口</td></tr>
+<tr><td class="nm">③ Physical → Spatial representation</td><td><b>△ 存在于定量病理，虚拟染色中缺失</b></td><td>Chervoneva 2021、Failmezger 2022、Spatiopath 2025</td><td>虚拟染色只到 block/prototype</td></tr>
+<tr><td class="nm">④ → Constraint（进入 loss）</td><td><b>△ 只有一阶/分布/粗空间</b></td><td>PSPStain 2024、PGVMS 2026、UNIStainNet 2026</td><td>空间统计/频域/形态学未进入 loss</td></tr>
+<tr><td class="nm">⑤ → Biological validation</td><td><b>△ 分散、标准不一</b></td><td>Wu 2022（专家评分）、Loo 2025（TPS/CPS）、HEX 2026（临床结局）</td><td>多数论文仍只用 SSIM/PSNR/FID</td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>文献实际呈现的三条分散路线</h4>
+<div class="grid2">
+  <div class="card">
+    <h4>路线 I：定量病理（闭环，但不含生成）</h4>
+    <p class="small"><span class="m">Image → OD/荧光 → IOD/MOD/H-score/共现/点过程 → 预后或临床指标</span></p>
+    <p class="small">完整闭环，有生物验证。但<b>没有生成模型</b>，因此没有"约束 loss"这一环。</p>
+  </div>
+  <div class="card">
+    <h4>路线 II：虚拟染色（有生成，但约束浅）</h4>
+    <p class="small"><span class="m">H&E → 生成 IHC → 图像/特征损失 → SSIM/PSNR/FID（少量 IOD/Pearson）</span></p>
+    <p class="small">有生成与约束，但物理量与空间统计极浅；生物验证多为单点。</p>
+  </div>
+  <div class="card">
+    <h4>路线 III：物理量 loss 的新兴线（2024–）</h4>
+    <p class="small"><span class="m">RGB → DAB OD → FOD → {均值, 直方图, 分块} → loss → IOD/Pearson 验证</span></p>
+    <p class="small">这是最接近完整链条的一支，但只覆盖了统计层的一小部分，且集中在 1–2 个研究组。</p>
+  </div>
+  <div class="card">
+    <h4>路线 IV：语义级端到端（最高规格）</h4>
+    <p class="small"><span class="m">H&E → 细胞级蛋白表达谱（40 marker） → 临床结局</span></p>
+    <p class="small">ROSIE、HEX。<b>跳过了低层的物理/空间显式约束</b>，靠大规模配对数据直接学映射，用临床终点验证。</p>
+  </div>
+</div>
+
+<div class="callout key">
+  <span class="lbl">最终判断</span>
+  <b>不存在一个统一的范式。</b>现实是四条分散的路线：定量病理路线（成熟但无生成）、虚拟染色路线（有生成但约束浅）、物理量 loss 新兴线（最接近完整链条但很窄）、语义级端到端路线（规格高但跳过低层约束）。<br><br>
+  <b>最显著的"结构性裂缝"</b>：定量病理在 2021–2022 年就已经建立了"细胞级 OD + 共现矩阵 / 点过程 / 熵"这套成熟的空间表达表示（Chervoneva 2021、Failmezger 2022），而虚拟染色在 2024 年后才开始使用"OD + 均值/直方图/分块"这种最基础的形式。<b>两套文献之间几乎没有引用关系。</b>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="sec" id="refs"><span class="num">15</span>参考文献</h2>
+
+<h4>物理 / 光学定量</h4>
+<ol class="small">
+<li>Ruifrok AC, Johnston DA. Quantification of histochemical staining by color deconvolution. <i>Anal Quant Cytol Histol</i> 2001;23(4):291–299. PMID 11531144.</li>
+<li>Vahadane A, Peng T, Sethi A, et al. Structure-Preserving Color Normalization and Sparse Stain Separation for Histological Images. <i>IEEE Trans Med Imaging</i> 2016;35(8):1962–1971. DOI 10.1109/TMI.2016.2529665.</li>
+<li>Macenko M, Niethammer M, Marron JS, et al. A method for normalizing histology slides for quantitative analysis. <i>IEEE ISBI</i> 2009. DOI 10.1109/ISBI.2009.5193250.</li>
+<li>Camp RL, Chung GG, Rimm DL. Automated subcellular localization and quantification of protein expression in tissue microarrays. <i>Nature Medicine</i> 2002;8:1323–1327. DOI 10.1038/nm791.</li>
+<li>McCabe A, Dolled-Filhart M, Camp RL, Rimm DL. Automated Quantitative Analysis (AQUA) of In Situ Protein Expression, Antibody Concentration, and Prognosis. <i>JNCI</i> 2005;97(24):1808–1815. DOI 10.1093/jnci/dji427.</li>
+<li>Taylor CR, Levenson RM. Quantification of immunohistochemistry — issues concerning methods, utility and semiquantitative assessment II. <i>Histopathology</i> 2006;49(4):411–424. DOI 10.1111/j.1365-2559.2006.02513.x.</li>
+<li>Rizzardi AE, Johnson AT, Vogel RI, et al. Quantitative comparison of immunohistochemical staining measured by digital image analysis versus pathologist visual scoring. <i>Diagn Pathol</i> 2012;7:42. DOI 10.1186/1746-1596-7-42.</li>
+<li>Seyed Jafari SM, Hunger RE. IHC Optical Density Score: A New Practical Method for Quantitative Immunohistochemistry Image Analysis. <i>Appl Immunohistochem Mol Morphol</i> 2017. PMID 27093452.</li>
+<li>Beer–Lambert law for optical tissue diagnostics: current state of the art and the main limitations. <i>J Biomed Opt</i> 2021. PMC8553265.</li>
+<li>Brightfield multiplex immunohistochemistry with multispectral imaging. <i>Laboratory Investigation</i> 2020. DOI 10.1038/s41374-020-0429-0.</li>
+<li>Selaru A, Phillip JM, et al. NLTD 2.0: A Nonlinear Framework for Robust and Customizable Color Deconvolution in Histopathology. <i>bioRxiv</i> 2025. DOI 10.1101/2025.10.02.679756.</li>
+<li>Chen T, et al. Adaptive Stain Normalization for Cross-Domain Medical Histology (BeerLaNet). <i>MICCAI</i> 2025. arXiv:2510.06592.</li>
+<li>Beer-Lambert Autoencoder for Unsupervised Stain Unmixing. arXiv:2601.11336 (2026).</li>
+<li>Kang H, et al. StainNet: A Fast and Robust Stain Normalization Network. <i>Front Med</i> 2021. DOI 10.3389/fmed.2021.746307.</li>
+<li>Csibra E, Stan GB. FPCountR: Absolute protein quantification using fluorescence measurements. <i>Nat Commun</i> 2022. DOI 10.1038/s41467-022-34232-6.</li>
+</ol>
+
+<h4>定量病理 / 空间统计 / 评分</h4>
+<ol class="small" start="16">
+<li>McCarty KS Jr, Miller LS, Cox EB, et al. Estrogen receptor analyses: correlation of biochemical and immunohistochemical methods using monoclonal antireceptor antibodies. <i>Arch Pathol Lab Med</i> 1985;109:716–721.（H-score 原始文献）</li>
+<li>Allred DC, Harvey JM, Berardo M, Clark GM. Prognostic and predictive factors in breast cancer by immunohistochemical analysis. <i>Mod Pathol</i> 1998;11:155–168.</li>
+<li>Chervoneva I, Peck AR, et al. Quantification of spatial tumor heterogeneity in immunohistochemistry staining images. <i>Bioinformatics</i> 2021;37(10):1452–1459.</li>
+<li>Failmezger H, Hessel H, Kapil A, Schmidt G, Harder N. Spatial heterogeneity of cancer associated protein expression in immunohistochemically stained images as an improved prognostic biomarker. <i>Front Oncol</i> 2022;12:964716. DOI 10.3389/fonc.2022.964716.</li>
+<li>Statistical analysis of spatial patterns in tumor microenvironment images (Spatiopath). <i>Nat Commun</i> 2025. DOI 10.1038/s41467-025-57943-y.</li>
+<li>Summers HD, et al. Spatial statistics is a comprehensive tool for quantifying cell-to-cell relationships. <i>Cell Rep Methods</i> 2022.</li>
+<li>Deciphering cell to cell spatial relationship for pathology images using spatial point pattern analysis. <i>Sci Rep</i> 2024. DOI 10.1038/s41598-024-81383-1.</li>
+<li>Deep Learning–Based H-Score Quantification of Immunohistochemistry Images. <i>Modern Pathology</i> 2024. DOI 10.1016/j.modpat.2023.100373.</li>
+<li>Ghahremani P, et al. DeepLIIF: Deep-Learning Inferred Multiplex Immunofluorescence for IHC Image Quantification. <i>Nat Mach Intell</i> 2022 / CVPR 2022 / MICCAI 2023–24.</li>
+<li>Topological Data Analysis of Spatial Protein Expression in Multiplexed Spatial Proteomics Studies. <i>bioRxiv</i> 2026.</li>
+<li>A robust, scalable K-statistic for quantifying immune cell spatial organization. arXiv:2412.08498 (2024).</li>
+<li>Haralick RM, Shanmugam K, Dinstein I. Textural Features for Image Classification. <i>IEEE Trans Syst Man Cybern</i> 1973;3(6):610–621.</li>
+</ol>
+
+<h4>虚拟染色 / 染色迁移</h4>
+<ol class="small" start="28">
+<li><b>Chen F, Zhang R, Zheng B, Sun Y, He J, Qin W.</b> Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining. <i>MICCAI</i> 2024. arXiv:2407.03655. Code: github.com/ccitachi/PSPStain.</li>
+<li><b>Chen F, Zhang R, Hu W, et al.</b> PGVMS: A Prompt-Guided Unified Framework for Virtual Multiplex IHC Staining with Pathological Semantic Learning. <i>IEEE Trans Med Imaging</i> 2026. arXiv:2602.23292.</li>
+<li><b>Saurav JR, Pham TLH, Mukherjee P, Yi P, Orr BA, Luber JM.</b> UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC. arXiv:2603.12716 (2026).</li>
+<li><b>Yang H, Wu JY, Fang R, et al.</b> Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining. arXiv:2506.07559 (2025).</li>
+<li>Li F, Hu Z, Chen W, Kak A. Adaptive Supervised PatchNCE Loss for Learning H&amp;E-to-IHC Stain Translation with Inconsistent Groundtruth Image Pairs. arXiv:2303.06193 (2023).</li>
+<li>Liu S, et al. BCI: Breast Cancer Immunohistochemical Image Generation through Pyramid Pix2pix. <i>CVPRW</i> 2022. arXiv:2204.11425.</li>
+<li>Peng Y, Xiong B, Chen F, et al. USIGAN: Unbalanced Self-Information Feature Transport for Weakly Paired Image IHC Virtual Staining. arXiv:2507.05843 (2025).</li>
+<li>H&amp;E to IHC virtual staining methods in breast cancer: an overview and benchmarking. <i>npj Digital Medicine</i> 2025. DOI 10.1038/s41746-025-01741-9.</li>
+<li>Rivenson Y, Wang H, Wei Z, et al. Virtual histological staining of unlabelled tissue-autofluorescence images via deep learning. <i>Nat Biomed Eng</i> 2019;3:466–477. DOI 10.1038/s41551-019-0362-y.</li>
+<li>Rivenson Y, et al. PhaseStain: the digital staining of label-free quantitative phase microscopy images using deep learning. <i>Light Sci Appl</i> 2019.</li>
+<li>Wu Y, et al. Label-Free Virtual HER2 Immunohistochemical Staining of Breast Tissue Using Deep Learning. <i>BME Frontiers</i> 2022;2022:9786242. DOI 10.34133/2022/9786242.</li>
+<li>Loo J, Robbins M, McNeil C, et al. Autofluorescence Virtual Staining System for H&amp;E Histology and Multiplex Immunofluorescence Applied to Immuno-Oncology Biomarkers in Lung Cancer. <i>Cancer Res Commun</i> 2025;5(1):54. DOI 10.1158/2767-9764.CRC-24-0327.</li>
+<li>Yu Q, Shao C, Yang R, et al. AdvLIF: An Adversarially and Physics-Inspired Framework for Virtual Staining and Nucleus Segmentation. <i>J Digit Imaging</i> 2026. DOI 10.1007/s10278-026-02320-4. PMID 42773343.</li>
+<li>Wang Q, Tweel JED, Haji Reza P, Layton A. Pathology-Guided Virtual Staining Metric for Evaluation and Training. arXiv:2507.12624 (2025).</li>
+<li>Generative AI for misalignment-resistant virtual staining. <i>Nat Commun</i> 2026. DOI 10.1038/s41467-026-71038-2. arXiv:2509.14119.</li>
+<li>Virtual Multiplex Staining for Histological Images using a Marker-wise Condition (DiffVS). <i>AAAI</i> 2026. DOI 10.1609/aaai.v40i10.37764. arXiv:2508.14681.</li>
+<li>From Pixels to Pathology: Restoration Diffusion for Diagnostic-Consistent Virtual Staining (Star-Diff). <i>Comput Biol Med</i> 2025. arXiv:2508.02528.</li>
+<li>Bai B, et al. Deep learning-enabled virtual histological staining of biological samples. <i>Light Sci Appl</i> 2023. DOI 10.1038/s41377-023-01104-7.</li>
+<li>Virtual staining for histology by deep learning. <i>Trends in Biotechnology</i> 2024. DOI 10.1016/j.tibtech.2024.03.002.</li>
+<li>Virtual staining for pathology: Challenges, limitations and future directions. 2025. DOI 10.1016/j.medai.2025.100226.</li>
+<li>Virtual histological staining: toward standardization and clinical translation. 2026. DOI 10.1007/s13534-026-00597-6.</li>
+<li>Zhu Y, He Y, et al. Deep learning for rapid virtual H&amp;E staining of label-free glioma tissue from hyperspectral images. <i>Comput Biol Med</i> 2024. DOI 10.1016/j.compbiomed.2024.108958.</li>
+<li>Quantitative Stain Mapping in X-Ray Virtual Histology. <i>Adv Sci</i> 2026. DOI 10.1002/advs.202519783.</li>
+<li>Yoon C, Park S, et al. Deep learning-based virtual staining, segmentation, and classification in label-free images. <i>Light Sci Appl</i> 2024. DOI 10.1038/s41377-024-01554-7.</li>
+<li>Robust virtual staining of landmark organelles with Cytoland. <i>Nat Mach Intell</i> 2025. DOI 10.1038/s42256-025-01046-2.</li>
+<li>CellVisioner: A Generalizable Cell Virtual Staining Toolbox. <i>Research</i> 2023. DOI 10.34133/research.0285.</li>
+<li>Akbarnejad A, Ray N, Barnes PJ, Bigras G. Predicting Ki67, ER, PR, and HER2 Statuses from H&amp;E-stained Breast Cancer Images (IHC4BC). arXiv:2308.01982 (2023).</li>
+</ol>
+
+<h4>空间蛋白组 / 多模态</h4>
+<ol class="small" start="55">
+<li>ROSIE: AI generation of multiplex immunofluorescence staining from histopathology images. <i>Nat Commun</i> 2025. DOI 10.1038/s41467-025-62346-0.</li>
+<li><b>Li Z, Li Y, Xiang J, et al.</b> AI-enabled virtual spatial proteomics from histopathology for interpretable biomarker discovery in lung cancer (HEX). <i>Nature Medicine</i> 2026. DOI 10.1038/s41591-025-04060-4.</li>
+<li>HistoStainAlign: Cross-Modality Learning for Predicting Immunohistochemistry Biomarkers. <i>Am J Pathol</i> 2025.</li>
+</ol>
+
+<h4>数学 / 分布 / 频域 / 多尺度工具</h4>
+<ol class="small" start="58">
+<li>Lim J, et al. HueNet: Differentiable Histogram Loss Functions for Intensity-based Image-to-Image Translation. <i>IEEE</i> 2023. Xplore doc 10133915.</li>
+<li>Ustinova E, Lempitsky V. Learning Deep Embeddings with Histogram Loss. <i>NeurIPS</i> 2016.</li>
+<li>Jiang L, Dai B, Wu W, Loy CC. Focal Frequency Loss for Image Reconstruction and Synthesis. <i>ICCV</i> 2021. arXiv:2012.12821.</li>
+<li>LapLoss: Laplacian Pyramid-based Multiscale Loss for Image Translation. <i>ICLR</i> 2025. arXiv:2503.05974.</li>
+<li>Denton E, Chintala S, Szlam A, Fergus R. Deep Generative Image Models using a Laplacian Pyramid of Adversarial Networks. <i>NeurIPS</i> 2015.</li>
+<li>Zero-shot Medical Image Translation via Frequency-Guided Diffusion. arXiv:2304.02742.</li>
+<li>FDA-UNet: Frequency-Domain Dual Attention Based on UNet for Stain Normalization. Springer 2024. DOI 10.1007/978-981-97-9674-8_8.</li>
+<li>GL2T-Diff: Medical image translation via spatial-frequency fusion. <i>Pattern Recognition</i> 2026.</li>
+<li>Frequency-spatial domain feature interaction for accurate cell detection in multiplex imaging. <i>Biomed Signal Process Control</i> 2026.</li>
+<li>Joint Wasserstein Distribution Matching for unsupervised image translation. arXiv:2003.00389.</li>
+</ol>
+
+<footer>
+  <p><b>报告说明</b>：本报告基于公开文献检索（2026-09），所有结论均标注证据等级。文中"未检索到"一律指"在本次检索的数据库与关键词范围内未发现直接文献"，<b>不等于该方向从未被提出</b>。</p>
+  <p>凡涉及具体数值（如 Pearson-R、IOD 偏差、p 值、Dice 等）均引自对应论文原文；凡涉及论文未明确说明的内容，报告中均已标注为"论文未说明"或"未检索到"，不做推测性填补。</p>
+  <p style="margin-top:14px;color:#8a919f">Generated as a structured literature survey · 15 sections · 67 references</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

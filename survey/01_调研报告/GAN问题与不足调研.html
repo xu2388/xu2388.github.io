@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfcfd">
+<meta name="format-detection" content="telephone=no">
+<title>GAN 的问题与不足：原理、失败成因、诊断与可约束改动</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:14px 0}.cite{font-size:12.5px;color:var(--muted);border-left:3px solid var(--strong);padding-left:12px}.source{font-size:12px;color:var(--muted)}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){html{scroll-padding-top:12px}body{font-size:16px;line-height:1.75;overflow-x:hidden}.wrap{display:block;width:100%;max-width:none}nav.toc{display:block;position:sticky;top:0;z-index:10;width:100%;height:auto;max-height:52px;overflow-x:auto;overflow-y:hidden;padding:9px 12px;border-right:0;border-bottom:1px solid var(--border);background:rgba(251,252,253,.96);-webkit-overflow-scrolling:touch;white-space:nowrap}nav.toc .brand{display:inline-block;margin:0 14px 0 0;font-size:12px}nav.toc .sub{display:none}nav.toc a{display:inline-block;margin:0 4px 0 0;padding:5px 9px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:12px;white-space:nowrap}nav.toc a.l1{margin-top:0;font-weight:700;color:var(--text)}nav.toc a.l2{padding-left:9px;font-size:12px;color:var(--muted)}main{width:100%;max-width:none;padding:22px 14px 72px}header.doc{padding-bottom:18px;margin-bottom:26px}header.doc .kicker{font-size:11px;letter-spacing:.08em}header.doc h1{font-size:25px;line-height:1.38;margin:8px 0 12px;overflow-wrap:anywhere}header.doc .desc{font-size:15px;line-height:1.7}.meta{gap:6px;margin-top:14px}.meta span{font-size:11.5px;padding:4px 8px;line-height:1.45}h2{font-size:21px;line-height:1.4;margin:40px 0 14px;padding-bottom:7px}h3{font-size:17px;line-height:1.5;margin:26px 0 9px}h4{font-size:15px}p{margin:8px 0}ul,ol{margin-left:20px}.box{padding:13px 14px;margin:14px 0;border-radius:9px}.box .bt{font-size:13px}.card{margin:14px 0}.card .ch{padding:10px 13px}.card .body{padding:7px 13px 13px}.grid2{grid-template-columns:1fr;gap:12px}.mini{padding:11px 12px}.scroll{margin:13px 0;border-radius:8px;-webkit-overflow-scrolling:touch}.scroll:after{content:"左右滑动查看表格";display:block;padding:5px 10px;color:var(--muted);font-size:11px;background:var(--softer);border-top:1px solid var(--border)}table{min-width:680px;font-size:13px}thead th{padding:9px 9px;font-size:12px}td{padding:8px 9px}.flow{margin:13px 0;padding:11px 12px;overflow:hidden}.flow pre,pre{margin:10px 0;padding:11px 12px;font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}.formula{margin:11px 0;padding:11px 12px;font-size:12px;line-height:1.65;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.b{font-size:10.5px;padding:2px 6px}.cite{font-size:12px}a{overflow-wrap:anywhere}}@media(max-width:380px){main{padding-left:11px;padding-right:11px}header.doc h1{font-size:22px}h2{font-size:19px}.meta span{font-size:11px}nav.toc{padding-left:9px;padding-right:9px}}@media(min-width:901px){nav.toc{scrollbar-width:thin}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">GAN · failure-mode research</div>
+<div class="sub">原理 · 失败成因 · 诊断 · 可约束改动<br>截至 2026-10-13 · 一手论文优先</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · GAN 到底在做什么</a>
+<a class="l2" href="#s11">1.1 生成器、判别器与博弈</a>
+<a class="l2" href="#s12">1.2 目标函数与最优解</a>
+<a class="l2" href="#s13">1.3 一次训练迭代</a>
+<a class="l1" href="#s2">2 · 问题总地图</a>
+<a class="l1" href="#s3">3 · 训练崩溃与数值失稳</a>
+<a class="l2" href="#s31">3.1 梯度饱和/消失</a>
+<a class="l2" href="#s32">3.2 振荡、发散与 D/G 失衡</a>
+<a class="l2" href="#s33">3.3 WGAN 也不是收敛证明</a>
+<a class="l2" href="#s34">3.4 NaN、Inf 与黑图</a>
+<a class="l1" href="#s4">4 · 模式崩溃与覆盖不足</a>
+<a class="l1" href="#s5">5 · 棋盘格与其他生成伪影</a>
+<a class="l2" href="#s51">5.1 棋盘格的成因</a>
+<a class="l2" href="#s52">5.2 为什么 GAN 容易放大它</a>
+<a class="l2" href="#s53">5.3 可验证的修复路径</a>
+<a class="l1" href="#s6">6 · 数据、条件与判别器的不足</a>
+<a class="l1" href="#s7">7 · 评价指标为什么会误导</a>
+<a class="l1" href="#s8">8 · 约束应该放在哪一格</a>
+<a class="l1" href="#s9">9 · 推荐实验路线与止损标准</a>
+<a class="l1" href="#s10">10 · 证据边界与参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Research report · GAN failure modes</div>
+<h1>GAN 的问题与不足：原理、失败成因、诊断与可约束改动</h1>
+<p class="desc">本报告从 GAN 的原始博弈目标出发，系统整理训练崩溃、梯度饱和、振荡发散、模式崩溃、棋盘格伪影、判别器过拟合、条件失配和评价指标失真，并把每个问题拆成「成因 → 症状 → 可验证实验 → 可改动位置」。目标不是罗列技巧，而是帮助你围绕 GAN 的真实缺陷设计约束。</p>
+<div class="meta"><span>对象：GAN / conditional GAN / image-to-image GAN</span><span>重点：训练稳定性 · 伪影 · 覆盖度 · 可解释约束</span><span>证据：原始论文、官方 arXiv/会议页面、库内既有报告</span><span>报告日期：2026-10-13</span><span>优先级：可复现 &gt; 可解释 &gt; 改动小</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="box key"><div class="bt">一句话判断</div><p><b>GAN 的根本难点不是“生成器不够强”，而是它把生成任务变成了一个非合作的双网络博弈：判别器在变，生成器看到的目标也在变；理论最优解存在，不等于有限步 SGD/Adam 会稳定到达。</b>因此你要围绕问题加约束，第一步应先判断问题属于哪一类，而不是看到伪影就直接换 loss。</p></div>
+<div class="box stop"><div class="bt">最容易犯的三个误判</div><ol><li><b>“loss 下降 = 训练变好”</b>：GAN loss 不是单调的质量指标，旋转博弈可能一边 loss 下降、一边样本恶化。</li><li><b>“FID 变好 = 没有模式崩溃”</b>：单一分数可能把质量与覆盖度混在一起；需要 precision/recall、分层统计和实例级检查。</li><li><b>“WGAN-GP = 已经解决收敛”</b>：它改善了 critic 的约束方式，但已有理论反例表明，有限 critic 更新下 WGAN/WGAN-GP 仍不具有普适收敛保证。</li></ol></div>
+<div class="box good"><div class="bt">对你的研究最值得优先验证的方向</div><ol><li><b>先做可观测性约束：</b>记录 D/G 梯度范数、logit、激活范围、NaN 首发位置、样本多样性和分层表达统计。</li><li><b>再做单因素稳定性：</b>固定网络和数据，只替换一种上采样、一个 critic 正则或一个 D/G 更新比例。</li><li><b>最后做任务约束：</b>把结构、浓度、表达或物理一致性挂到明确的位置；不要把所有辅助 loss 直接相加后再猜权重。</li></ol></div>
+<div class="scroll"><table><thead><tr><th>问题轴</th><th>根因类别</th><th>最先测什么</th><th>最小改动</th><th>改动成本</th><th>可复现性</th></tr></thead><tbody>
+<tr><td>训练崩溃/振荡</td><td>博弈动力学、D/G 步长与容量不匹配</td><td>梯度范数、logit、参数/激活是否增长</td><td>非饱和损失、TTUR、SN 或零中心 GP</td><td><span class="b low">低–中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>模式崩溃</td><td>生成器只覆盖容易骗过 D 的少数模式</td><td>precision/recall、最近邻、多样性分层</td><td>minibatch discrimination、条件覆盖约束、数据增强</td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td></tr>
+<tr><td>棋盘格</td><td>上采样覆盖不均、频率偏置、损失放大高频</td><td>随机初始化输出、频谱与局部周期扫描</td><td>resize-convolution、合适 kernel/stride、抗混叠</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>NaN/Inf/黑图</td><td>数值范围、归一化、混合精度或激活/梯度溢出</td><td>逐层 finite check 和首个异常张量</td><td>修数据范围/AMP、梯度裁剪、降低步长</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>病理/条件错误</td><td>条件信息不可辨识、错位监督、判别器 shortcut</td><td>按组织/marker/病例分层，做配准扰动</td><td>结构/浓度/语义约束；弱配对 loss correction</td><td><span class="b medium">中–高</span></td><td><span class="b medium">中</span></td></tr>
+</tbody></table></div>
+
+<h2 id="s1"><span class="num">1</span>GAN 到底在做什么</h2>
+<h3 id="s11">1.1 生成器、判别器与博弈</h3>
+<p>GAN 包含两个模型：</p>
+<div class="grid2"><div class="mini"><div class="mt">Generator，生成器 G</div><p>从 latent noise <code>z∼p_z</code> 生成样本 <code>x̂=G(z)</code>。它试图让生成分布 <code>p_g</code> 接近真实数据分布 <code>p_data</code>。</p></div><div class="mini"><div class="mt">Discriminator，判别器 D</div><p>输入样本并输出“来自真实数据”的概率或 score。它试图区分 <code>x∼p_data</code> 与 <code>G(z)∼p_g</code>。</p></div></div>
+<p>两者不是串联的普通网络，而是一个 two-player minimax game。Goodfellow 等人在 <i>Generative Adversarial Nets</i>（NeurIPS 2014，arXiv:1406.2661）中给出：在任意函数空间里，目标是让 G 恢复训练数据分布，让 D 在两种来源上都输出 1/2。这个结论是分布级理论结果，不是对实际有限容量、有限步数、随机优化器的承诺。</p>
+<div class="flow"><pre><code>真实样本 x ~ p_data ───────────► D(x) ──► “real”
+                                      ▲
+latent z ~ p_z ─► G(z)=x_hat ──────────┘
+
+D：区分真实 / 生成；G：让生成样本骗过 D
+两方交替更新 → 目标函数不断变化 → 不是普通的单目标优化</code></pre></div>
+<h3 id="s12">1.2 原始目标函数、最优判别器与 JS 散度</h3>
+<p>原始 GAN 的 minimax 目标为：</p>
+<div class="formula">min<sub>G</sub> max<sub>D</sub> V(D,G) = E<sub>x~p<sub>data</sub></sub>[log D(x)] + E<sub>z~p<sub>z</sub></sub>[log(1 − D(G(z)))]</div>
+<p>固定 G 时，最优判别器是：</p>
+<div class="formula">D*<sub>G</sub>(x) = p<sub>data</sub>(x) / (p<sub>data</sub>(x) + p<sub>g</sub>(x))</div>
+<p>把这个最优 D 代回去，原论文证明生成器相当于最小化：</p>
+<div class="formula">C(G) = −log 4 + 2 · JSD(p<sub>data</sub> || p<sub>g</sub>)</div>
+<p>所以在理想条件下，<code>p_g=p_data</code>，且 <code>D(x)=1/2</code>。但这里有一个决定性限定：推导假设 D 对当前 G 已充分优化、函数容量足够，并且讨论的是分布级目标。真实训练中 D/G 都是有限网络，只更新有限步，还带 minibatch 噪声。</p>
+<h3 id="s13">1.3 一次训练迭代如何发生</h3>
+<ol><li>从真实数据采样一批 <code>x</code>，从 latent 分布采样一批 <code>z</code>。</li><li>用当前 G 得到 <code>G(z)</code>，更新 D，使其提高真实样本得分、降低生成样本得分。</li><li>冻结或不更新 D 的参数，更新 G，使 <code>D(G(z))</code> 变得更像真实。</li><li>重复。此时下一轮 G 看到的 D 已经改变，因此“G 的目标函数”也在移动。</li></ol>
+<p>实践中常用 non-saturating generator loss：</p>
+<div class="formula">L<sub>G,NS</sub> = −E<sub>z</sub>[log D(G(z))]</div>
+<p>它与原始 minimax generator objective 具有相同的目标固定点，但在早期 D 很容易识别假样本时，通常提供更强的生成器梯度。需要注意：这只是缓解梯度饱和，不会自动解决模式崩溃、伪影或条件错误。</p>
+
+<h2 id="s2"><span class="num">2</span>问题总地图：先按故障位置分类</h2>
+<p>同一个“生成质量下降”可能来自不同层。下面这张图是后续诊断的入口。</p>
+<div class="flow"><pre><code>输入 / 数据层
+├─ 数据太少、分布偏、标注或配准错误
+└─ 条件信息不可辨识、domain shortcut
+
+博弈 / 优化层
+├─ D 过强 → G 梯度饱和
+├─ D/G 步长与容量不匹配 → 振荡、发散、循环
+├─ critic 约束不当 → 梯度爆炸/消失
+└─ 辅助 loss 梯度方向冲突 → 目标漂移、训练抖动
+
+生成器架构层
+├─ transpose convolution / 上采样覆盖不均 → 棋盘格
+├─ receptive field 与尺度不匹配 → 纹理重复、结构断裂
+└─ 归一化/激活/AMP → 数值异常、颜色漂移
+
+分布与评价层
+├─ mode collapse / mode dropping → 覆盖不足
+├─ FID/IS 单分数 → 质量与覆盖混淆
+└─ 局部判别器 → 局部真实但全局/语义错误</code></pre></div>
+<div class="box teal"><div class="bt">一个重要区分</div><p><b>GAN 特有问题：</b>非合作博弈、判别器反馈、模式崩溃、D/G 失衡、critic 约束。<br><b>所有生成模型共有的问题：</b>数据不足、条件不可辨识、配准错误、幻觉、评价指标与任务目标不一致。研究设计时要把两类分开，否则容易把“数据本身不提供的信息”误写成 GAN 的缺陷。</p></div>
+
+<h2 id="s3"><span class="num">3</span>训练崩溃与数值失稳</h2>
+<h3 id="s31">3.1 梯度饱和与梯度消失：D 先赢时 G 学不到</h3>
+<p>在原始 minimax 生成器目标中，G 最小化 <code>E[log(1−D(G(z)))]</code>。如果训练早期 D 很强，生成样本几乎都被判为假，即 <code>D(G(z))≈0</code>，这个目标会进入饱和区，传给 G 的有效梯度可能变弱。原始 GAN 论文因此提出 non-saturating 版本，让 G 最大化 <code>E[log D(G(z))]</code>。</p>
+<div class="scroll"><table><thead><tr><th>可观测现象</th><th>支持的解释</th><th>不能单独证明什么</th><th>最小验证</th></tr></thead><tbody>
+<tr><td>D(real) 接近 1，D(fake) 接近 0</td><td>判别器在当前批次过强；与 G 饱和一致</td><td>不能证明全局 D 已最优，也不能证明只有 loss 的问题</td><td>记录 logits 而非只记录 sigmoid 后概率</td></tr>
+<tr><td>G 梯度范数接近 0</td><td>可能是饱和、激活饱和、detach 或学习率过小</td><td>不能仅凭一个 batch 归因</td><td>逐层梯度、参数 requires_grad、AMP scaler、finite check</td></tr>
+<tr><td>样本长期不变</td><td>G 更新没有有效信号，也可能是 latent 被忽略</td><td>不等于一定是 mode collapse</td><td>固定 z 与变化 z 各测一次，比较样本变化</td></tr>
+</tbody></table></div>
+<p><b>可改动方向：</b>优先切换 non-saturating loss；再检查 D/G 学习率与更新次数；若使用 Wasserstein critic，检查 critic 梯度而不是把 critic score 当概率。不要一开始同时换 loss、网络、数据增强和评价指标。</p>
+<h3 id="s32">3.2 振荡、发散与 D/G 失衡：这是博弈动力学问题</h3>
+<p>GAN 的联合更新场不一定像普通最小化那样直接指向谷底。Mescheder 等人在 <i>Which Training Methods for GANs do actually Converge?</i>（ICML 2018，arXiv:1801.04406）中用 Dirac-GAN 构造反例：存在唯一平衡点，但未正则化 GAN、WGAN 和有限次 critic 更新的 WGAN-GP 并不总能收敛到该点。该结果不是说每次训练都会失败，而是说明“换成某个流行 loss 就有普适收敛保证”是不成立的。</p>
+<div class="grid2"><div class="mini"><div class="mt">振荡</div><p>loss 和样本质量周期性上下波动；某一方刚改善，另一方的更新又把状态推开。常见于 D/G 步长或更新比不匹配，或局部梯度场有明显旋转成分。</p></div><div class="mini"><div class="mt">发散 / 崩溃</div><p>梯度、激活、参数或 critic score 持续增大，图像突然变成常数、噪声或纯黑。可能是步长过大、正则失效、数值溢出，也可能是数据范围错误。</p></div></div>
+<p>TTUR（Two Time-Scale Update Rule）给 D 和 G 分别设置学习率。Heusel 等人在 NeurIPS 2017（arXiv:1706.08500）中证明，在随机逼近的一系列假设下可收敛到 stationary local Nash equilibrium，并报告在多个数据集上改善 DCGAN/WGAN-GP。正确表述是“在假设下有理论与实验支持”，不是“任意实现都保证收敛”。</p>
+<h3 id="s33">3.3 WGAN/WGAN-GP 改善什么，没解决什么</h3>
+<p>WGAN（ICML 2017，arXiv:1701.07875）把 JS 风格的判别概率目标改为 Wasserstein-1 距离的 critic 目标：</p>
+<div class="formula">W(P<sub>r</sub>,P<sub>g</sub>) = sup<sub>||f||<sub>L</sub>≤1</sub> E<sub>x~P<sub>r</sub></sub>[f(x)] − E<sub>x~P<sub>g</sub></sub>[f(x)]</div>
+<p>它的理论动机是：当真实分布和生成分布落在低维流形上时，Wasserstein 距离对生成器参数变化可具有更好的连续性，且 critic 的数值曲线更有诊断意义。WGAN-GP（NeurIPS 2017，arXiv:1704.00028）指出 weight clipping 会导致 critic 过于简单、梯度层间异常等问题，并用输入梯度惩罚替代 clipping：</p>
+<div class="formula">λ E<sub>x̂</sub>[(||∇<sub>x̂</sub>D(x̂)||<sub>2</sub> − 1)<sup>2</sup>], 其中 x̂ = εx + (1−ε)G(z)</div>
+<p>但这个 penalty 是在采样点上的软约束，不等于处处严格满足全局 1-Lipschitz；而 Mescheder 的反例进一步说明有限 critic 更新下 WGAN/WGAN-GP 仍没有普适收敛保证。</p>
+<div class="box warn"><div class="bt">研究上应如何使用 WGAN-GP / SN</div><p>把它们视为“改变 critic 条件和训练动力学的候选干预”，而不是“理论上已经解决 GAN 崩溃”。实验上应同时报告：训练成功率、梯度范数、样本质量、覆盖度和运行成本。单次最好结果不足以证明稳定性。</p></div>
+<h3 id="s34">3.4 NaN、Inf 与黑图：不要先猜，先定位首个异常</h3>
+<p>在本轮核实的 GAN 经典论文中，没有一篇给出“所有 NaN/黑图的单一成因”。因此下面是工程诊断假设，不应冒充定理：</p>
+<div class="scroll"><table><thead><tr><th>优先级</th><th>候选成因</th><th>先查什么</th><th>对应改动</th></tr></thead><tbody>
+<tr><td>1</td><td>输入/目标范围不一致，如 [0,1]、[-1,1]、OD 或 log 域混用</td><td>首个 batch 的 min/max/mean/std，renderer 前后范围</td><td>统一数据契约，明确每个 head 的物理范围</td></tr>
+<tr><td>2</td><td>激活或梯度溢出，尤其是 AMP、exp/log、除以接近 0 的量</td><td>逐层 finite check、AMP scaler、exp/log 输入</td><td>clamp、稳定公式、降低学习率或暂时关闭 AMP</td></tr>
+<tr><td>3</td><td>归一化统计异常，batch 太小或输入分布漂移</td><td>每层 activation norm、归一化 running statistics</td><td>改用更适合小 batch 的归一化或冻结统计</td></tr>
+<tr><td>4</td><td>loss 权重或 adversarial 梯度突然占主导</td><td>每项 loss 与每项梯度范数</td><td>warm-up、梯度裁剪、权重重标定；不要只看 loss 数值</td></tr>
+<tr><td>5</td><td>实现错误：detach、错误的 label、D/G optimizer 误更新</td><td>检查 requires_grad、optimizer 参数集合和调用顺序</td><td>写单元测试和 1 batch 反向传播检查</td></tr>
+</tbody></table></div>
+<pre><code># 伪代码：每个训练 step 都可记录的最小诊断
+for name, tensor in named_tensors:
+    assert torch.isfinite(tensor).all(), name
+log({
+  "D_real_logit": D(real).detach().mean(),
+  "D_fake_logit": D(fake.detach()).mean(),
+  "g_grad_norm": grad_norm(G),
+  "d_grad_norm": grad_norm(D),
+  "g_activation_max": activation_max(G),
+  "d_activation_max": activation_max(D),
+})</code></pre>
+
+<h2 id="s4"><span class="num">4</span>模式崩溃与覆盖不足</h2>
+<p>“模式崩溃”不是一个单一现象，至少要区分：</p>
+<div class="grid2"><div class="mini"><div class="mt">Mode collapse</div><p>不同 latent 输入被映射成少数相似输出；生成分布内部多样性不足。</p></div><div class="mini"><div class="mt">Mode dropping</div><p>生成样本可能看起来很真实，但只覆盖真实分布的一部分模式，例如只生成主流类别、主流颜色或主流组织背景。</p></div></div>
+<p>直觉上，G 可能找到一个容易骗过当前 D 的输出模式，并反复生成它；D 又在这些样本上变强，G 再换一个 shortcut。由于 G/D 同时移动，单纯依靠“看起来没有重复”并不能确认覆盖充分。</p>
+<h3>4.1 为什么会发生</h3>
+<ul><li><b>反馈局部化：</b>D 的梯度只告诉 G 当前边界附近如何变好，不直接给出“还缺哪些真实模式”的覆盖清单。</li><li><b>判别器 shortcut：</b>D 可能利用背景、scanner、边缘、压缩痕迹或 patch 采样差异，而不是目标语义。</li><li><b>条件覆盖不足：</b>条件 GAN 中，少数标签/少数表达等级/少数组织类型更容易被拟合，稀有条件被忽略。</li><li><b>数据不平衡：</b>如果真实数据本身长尾，生成器追逐总体损失时会优先覆盖高频模式。</li></ul>
+<h3>4.2 如何测：不要只用 FID</h3>
+<p>Sajjadi 等人在 <i>Assessing Generative Models via Precision and Recall</i>（NeurIPS 2018，arXiv:1806.00035）指出，FID 等单分数难以区分不同失败情况，提出将生成样本的质量（precision）与目标分布覆盖（recall）拆开。Kynkäänniemi 等人在 <i>Improved Precision and Recall Metric for Assessing Generative Models</i>（NeurIPS 2019，arXiv:1904.06991）进一步强调，已有指标可能给出不充分或相互矛盾的结果。</p>
+<div class="scroll"><table><thead><tr><th>要回答的问题</th><th>建议指标/实验</th><th>解释</th></tr></thead><tbody>
+<tr><td>生成样本像不像真实</td><td>FID/KID/precision、人工盲评</td><td>质量维度；不能单独说明覆盖</td></tr>
+<tr><td>是否覆盖真实模式</td><td>recall/coverage、按标签/组织/表达等级分层</td><td>覆盖维度；需要足够样本与合理特征空间</td></tr>
+<tr><td>是否重复生成</td><td>生成样本两两特征距离、最近邻比例、固定 seed 多次采样</td><td>检测内部多样性与记忆化</td></tr>
+<tr><td>是否保留条件关系</td><td>condition-to-output accuracy、marker positive/negative recall、病例级相关性</td><td>条件一致性，不等于整体真实感</td></tr>
+</tbody></table></div>
+<h3>4.3 可尝试的改动与证据边界</h3>
+<p>Salimans 等人在 <i>Improved Techniques for Training GANs</i>（NeurIPS 2016，arXiv:1606.03498）研究了 minibatch discrimination、feature matching、historical averaging 和 label smoothing 等训练技术。它们提供了可操作的稳定化与多样性思路，但论文实验结论绑定于其数据集、架构和训练协议，不能写成“普适消除 mode collapse”。</p>
+<table><thead><tr><th>改动</th><th>可能作用</th><th>要验证的预测</th><th>成本/复现性</th></tr></thead><tbody>
+<tr><td>Minibatch discrimination</td><td>让 D 感知同一 batch 内样本的相似性，抑制重复输出</td><td>内部特征距离上升，同时 recall 不下降</td><td><span class="b medium">中 / 中</span></td></tr>
+<tr><td>Feature matching</td><td>G 匹配真实/生成的中间特征统计，减少只追逐单点 D 梯度</td><td>训练曲线更平滑、覆盖改善，但可能牺牲锐度</td><td><span class="b low">低 / 高</span></td></tr>
+<tr><td>条件覆盖 loss</td><td>对表达等级、组织类型或标签分层，防止少数条件被忽略</td><td>尾部条件 recall 提升，而不是只提升全图均值</td><td><span class="b medium">中 / 中</span></td></tr>
+<tr><td>数据/判别器增强</td><td>减少 D 记忆或 shortcut，尤其适合小数据</td><td>train/validation gap 变小，后期 FID 不再恶化</td><td><span class="b medium">中 / 高</span></td></tr>
+</tbody></table>
+
+<h2 id="s5"><span class="num">5</span>棋盘格与其他生成伪影</h2>
+<h3 id="s51">5.1 棋盘格的数学/工程成因</h3>
+<p>棋盘格通常与 decoder 中的转置卷积（transposed convolution，也常被叫 deconvolution）或不恰当的上采样组合有关。核心是<b>输出位置接受到的输入贡献数不均匀</b>：当 stride 与 kernel size 的关系造成 uneven overlap 时，有些输出像素被更多 kernel 覆盖，有些被更少覆盖，固定周期的幅度差异就可能呈现棋盘格。</p>
+<p>更具体地说，如果一维上采样的 kernel size 不能被 stride 整除，不同相位位置的覆盖次数通常不同；二维情况下，水平与垂直的覆盖不均相乘，容易形成规则网格。即使 kernel size 可以整除 stride，学习到的卷积权重仍可能偏向某些频率，因此并不代表“数学上完全没有伪影”。</p>
+<p>Odena、Dumoulin 和 Olah 的 Distill 文章 <i>Deconvolution and Checkerboard Artifacts</i>（2016）是最直接的机制解释来源；本轮无法稳定抓取该页面全文，因此这里把它作为解释性来源而不是逐字核实的全文证据。Aitken 等人的 <i>Checkerboard artifact free sub-pixel convolution</i>（arXiv:1707.02937）官方摘要明确总结了三类来源：deconvolution overlap、random initialization 和 loss functions。</p>
+<div class="formula">不均匀覆盖 → 周期性有效增益不同 → 特定频率被放大 → 规则网格/条纹伪影</div>
+<h3 id="s52">5.2 为什么 GAN 会把它放大</h3>
+<ul><li><b>判别器奖励局部高频：</b>PatchGAN 或局部 critic 可能把锐利、强对比的纹理当作 realism 线索，生成器就有动力保留/放大局部周期信号。</li><li><b>上采样伪影在随机初始化时已经存在：</b>如果模型刚初始化就能看出周期图案，问题不主要来自训练崩溃，而来自架构/初始化；Aitken 摘要对此有明确说明。</li><li><b>损失函数会选择频率：</b>像素、感知和 adversarial loss 的频率偏好不同，伪影可能在多个 loss 竞争时被保留下来。</li><li><b>多尺度输出的相位不一致：</b>不同尺度的上采样路径如果不能对齐，可能造成局部纹理在尺度融合时出现周期性断裂。</li></ul>
+<p>因此棋盘格不能简单归结为“GAN 不稳定”：它通常是<b>生成器上采样结构问题 + 训练目标对局部高频的选择</b>共同造成。GAN 训练崩溃会使其更明显，但不是唯一来源。</p>
+<h3 id="s53">5.3 可验证的修复路径</h3>
+<div class="scroll"><table><thead><tr><th>方案</th><th>机制</th><th>优点</th><th>风险/边界</th><th>成本</th></tr></thead><tbody>
+<tr><td>Resize-convolution</td><td>先 nearest/bilinear resize，再用普通 convolution</td><td>把固定尺度变化与可学习卷积分开，通常减少 uneven overlap</td><td>nearest 可能产生边缘阶梯，bilinear 可能过平滑；不是自动保证无伪影</td><td><span class="b low">低</span></td></tr>
+<tr><td>合适的 kernel/stride</td><td>优先选覆盖均匀的组合，如 kernel 能被 stride 整除</td><td>改动最小，适合作为第一消融</td><td>只能降低结构性风险，不能消除学习到的频率偏置</td><td><span class="b high">低</span></td></tr>
+<tr><td>Sub-pixel / pixel shuffle + 合理初始化</td><td>在高分辨率空间重排通道；使用 convolution NN resize 初始化</td><td>Aitken 等报告初始化时即可避免棋盘格，并比较了建模能力</td><td>仍需检查后续卷积与损失是否重新引入频率伪影</td><td><span class="b medium">中</span></td></tr>
+<tr><td>抗混叠/频谱诊断</td><td>对 feature/output 做频谱约束或频率分层监控</td><td>能把伪影从视觉描述变成可测信号</td><td>频谱变平不等于结构更正确；需和任务指标一起看</td><td><span class="b medium">中</span></td></tr>
+<tr><td>只加 TV/平滑 loss</td><td>惩罚局部变化</td><td>可能暂时压低网格对比度</td><td>容易把真实细胞边界也抹平；应作为对照而非默认主解</td><td><span class="b low">低</span></td></tr>
+</tbody></table></div>
+<p><b>最干净的棋盘格实验：</b>固定训练目标、数据和随机种子，只替换 decoder：A 转置卷积；B resize-conv；C 合法 kernel/stride；D sub-pixel + 合理初始化。每种至少多 seed，测随机初始化输出、训练中输出、最终图像的二维频谱峰、周期性自相关和边缘保真。</p>
+
+<h2 id="s6"><span class="num">6</span>数据、条件与判别器的不足</h2>
+<h3>6.1 判别器过拟合：小数据会把 G 的反馈变成坏信号</h3>
+<p>Karras 等人在 <i>Training Generative Adversarial Networks with Limited Data</i>（NeurIPS 2020，arXiv:2006.06676）明确指出：数据太少通常导致 D 过拟合，进而使训练发散。论文提出 adaptive discriminator augmentation（ADA），不改 loss 和网络架构，通过对 D 看到的样本做自适应增强来降低过拟合，且报告在小数据场景有效。</p>
+<div class="formula">数据太少 → D 记忆训练集 → D 的反馈不代表目标分布 → G 学到错误方向 → 后期训练发散</div>
+<p>可观察症状包括：D 对训练 real/fake 过度自信、训练/验证行为分离、早期质量变好后继续训练反而恶化。ADA 不是万能药：增强过强会引入 augmentation leakage，数据足够时增强也可能伤害性能。</p>
+<h3>6.2 Patch 判别器的局部真实性陷阱</h3>
+<p>PatchGAN 擅长判断局部纹理、局部颜色和局部对比度，但它不自动保证全局结构、稀有类别或生物学语义。对 H&amp;E→IHC 尤其要区分：</p>
+<div class="grid2"><div class="mini"><div class="mt">D 可能管到</div><p>局部染色纹理、DAB 的局部对比度、目标域颜色统计、patch-level realism。</p></div><div class="mini"><div class="mt">D 不能自动保证</div><p>哪一个细胞应阳性、阳性是否位于膜而非胞浆、表达等级、细胞结构位置、病例级 marker 分布。</p></div></div>
+<p>因此“局部看起来很真”与“任务上正确”可以脱钩。已有库内报告 <a href="GAN虚拟染色_方法路线与浓度域先例调研.html">《GAN 虚拟染色：方法路线、独特问题与浓度域先例》</a>已把这一问题映射到 RGB GAN、DAB/OD loss、PALS/PCLS 和错位监督的位置；本报告在此基础上补充通用 GAN 机制。</p>
+<h3>6.3 条件信息不可辨识与监督错位</h3>
+<p>conditional GAN 可以让 G 接收图像、标签、文本或 marker token，但“输入了条件”不等于“输出忠实使用了条件”。如果条件信息在数据中弱、稀有或与背景 shortcut 相关，模型可能忽略条件或利用错误线索。</p>
+<p>在虚拟染色中，连续切片的像素错位会让 pixel loss 惩罚正确的结构；CycleGAN 可以绕开配对，却不能凭空恢复输入中不存在的 marker 实例信息。库内 DGR 精读明确拆出了 Pix2Pix 的逐像素错位风险、RegGAN 的 warp 后损失漏洞和 DGR 的生成—配准解耦思路。对你的 GAN 改动，建议把“错位鲁棒性”和“GAN 稳定性”做成两个正交消融轴，而不是混为一个新 loss。</p>
+
+<h2 id="s7"><span class="num">7</span>评价指标为什么会误导</h2>
+<h3>7.1 FID、IS 与单一分数的边界</h3>
+<p>FID 通过特征空间中的均值/协方差统计比较真实与生成样本，能在很多场景提供有用的分布级摘要；TTUR 论文提出 FID 时也强调其相对 Inception Score 更能捕捉生成样本与真实样本的相似性。但任何单一分数都不能同时完整回答“像不像、覆盖多少、条件对不对、是否有局部伪影”。</p>
+<p>Sajjadi 2018 和 Kynkäänniemi 2019 的 precision/recall 工作给出一个更适合诊断的拆法：</p>
+<div class="flow"><pre><code>质量（precision）高、覆盖（recall）低 → 样本很像但 mode dropping
+质量低、覆盖高 → 覆盖广但样本不真实
+质量与覆盖都高 → 更接近理想
+质量与覆盖都低 → 生成分布整体偏离</code></pre></div>
+<h3>7.2 对病理/图像翻译任务的额外要求</h3>
+<div class="scroll"><table><thead><tr><th>层级</th><th>需要回答</th><th>建议评价</th><th>不能由什么替代</th></tr></thead><tbody>
+<tr><td>分布级</td><td>整体是否接近目标域</td><td>FID/KID/precision-recall、分层分布距离</td><td>不能替代实例级正确性</td></tr>
+<tr><td>实例级</td><td>这一张输入的结构/条件是否保留</td><td>结构相似、边缘/核/膜定位、配准扰动敏感性</td><td>不能只用 FID</td></tr>
+<tr><td>表达级</td><td>marker 强度和阳性率是否正确</td><td>IOD、DAB p90、阳性细胞 precision/recall、病例级相关性</td><td>不能用 RGB MSE 代替</td></tr>
+<tr><td>伪影级</td><td>是否出现周期网格、重复纹理、幻觉细胞</td><td>频谱峰、重复率、最近邻、专家盲评/幻觉检测</td><td>不能以“视觉锐利”代替</td></tr>
+<tr><td>鲁棒性</td><td>换病例、组织、scanner、轻微错位后是否仍有效</td><td>外部集、组织分层、配准扰动、跨域测试</td><td>不能只报最好 seed</td></tr>
+</tbody></table></div>
+
+<h2 id="s8"><span class="num">8</span>约束应该放在哪一格</h2>
+<p>“给 GAN 加约束”必须先说清约束作用于谁。不同位置改变的机制不同，成本和副作用也不同。</p>
+<div class="scroll"><table><thead><tr><th>位置</th><th>典型约束</th><th>主要解决</th><th>不能保证</th><th>成本</th><th>可复现性</th></tr></thead><tbody>
+<tr><td>G 输出前 / decoder</td><td>resize-conv、spectral/weight normalization、抗混叠</td><td>棋盘格、激活爆炸、部分频率偏置</td><td>条件正确、表达正确、无 mode collapse</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>D 内部</td><td>Spectral normalization、gradient penalty、feature matching</td><td>critic 条件、D 过强、反馈平滑</td><td>普适收敛、完整覆盖</td><td><span class="b low">低–中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>G/D 更新规则</td><td>non-saturating、TTUR、D:G 更新比、warm-up</td><td>梯度饱和、振荡、失衡</td><td>数据错误、结构幻觉</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>G 输出后派生量</td><td>OD/DAB/FOD、edge、segmentation/feature、结构 loss</td><td>表达分布、结构、语义</td><td>这些量本身的不可辨识性与错位误差</td><td><span class="b medium">中</span></td><td><span class="b medium">中–高</span></td></tr>
+<tr><td>数据 / D 输入</td><td>ADA、patch 采样、分层 batch、条件随机化</td><td>D 过拟合、shortcut、长尾遗漏</td><td>生成器架构产生的棋盘格</td><td><span class="b medium">中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>采样后</td><td>频谱筛查、异常样本拒绝、不确定性/集成</td><td>检测和止损</td><td>从根源改变训练动力学</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+</tbody></table></div>
+<div class="box pur"><div class="bt">推荐的约束顺序</div><p><b>先结构可见性，再 critic 稳定性，最后任务语义。</b>具体顺序：① decoder 上采样单因素消融；② non-saturating + SN/GP + TTUR 的稳定性基线；③ 分布覆盖与条件覆盖；④ DAB/OD/结构/语义约束；⑤ 最后才考虑多模块联合。每一步都保留一个完全不变的 baseline。</p></div>
+
+<h2 id="s9"><span class="num">9</span>推荐实验路线与止损标准</h2>
+<h3>9.1 最小可行实验矩阵</h3>
+<div class="scroll"><table><thead><tr><th>阶段</th><th>唯一变量</th><th>对照</th><th>主要指标</th><th>通过条件</th></tr></thead><tbody>
+<tr><td>G0 复现基线</td><td>无</td><td>当前 GAN 原实现，至少 3 seeds</td><td>训练成功率、FID/KID、precision/recall、梯度和 NaN</td><td>能重复得到相近结果，记录全链路日志</td></tr>
+<tr><td>G1 梯度稳定</td><td>non-saturating / SN / GP / TTUR 逐项</td><td>一次只换一项</td><td>D/G logits、梯度范数、后期质量、运行时间</td><td>崩溃率下降且不牺牲 recall</td></tr>
+<tr><td>G2 棋盘格</td><td>transpose conv vs resize-conv vs sub-pixel</td><td>固定 loss、训练步数、seed</td><td>随机初始化伪影、频谱峰、自相关、边缘误差</td><td>伪影下降且结构/高频真实边界不被抹平</td></tr>
+<tr><td>G3 覆盖度</td><td>minibatch discrimination 或 feature matching</td><td>G1 最佳基线</td><td>precision/recall、类/组织/表达分层 recall</td><td>覆盖提升而不是只降低 FID</td></tr>
+<tr><td>G4 任务约束</td><td>只加一个结构或表达约束</td><td>G1/G3 最佳基线</td><td>结构、表达、幻觉、错位扫描</td><td>改善目标任务且不产生新的训练失稳</td></tr>
+<tr><td>G5 联合方案</td><td>最多两种已验证组件</td><td>所有单项最佳</td><td>均值、最差分位数、seed 方差、成本</td><td>增益超过复杂度和失败率代价</td></tr>
+</tbody></table></div>
+<h3>9.2 训练监控清单</h3>
+<ul><li><b>优化：</b>G/D 学习率、D:G 更新比、每项 loss、每项梯度范数、参数更新范数。</li><li><b>判别器：</b>real/fake logits、训练/验证 gap、不同组织/条件的输出分布。</li><li><b>生成器：</b>固定 latent 的时间序列、不同 latent 的内部距离、每层激活范围。</li><li><b>伪影：</b>随机初始化输出、二维频谱、周期自相关、棋盘周期扫描、最近邻重复。</li><li><b>任务：</b>结构/边缘/细胞定位、表达强度和阳性率、病例级相关性、组织分层结果。</li><li><b>数值：</b>首个 NaN/Inf 的张量、AMP scaler、输入输出范围、所有 exp/log/div 的输入。</li></ul>
+<h3>9.3 什么时候应该停止当前路线</h3>
+<div class="box stop"><div class="bt">止损标准</div><ul><li>同一配置 3–5 个 seed 中多数出现 NaN/Inf，而首发位置不稳定且无法通过数据契约修正：先停下加模块，回到数值定位。</li><li>只要把 adversarial 权重调大就出现结构/表达明显退化：说明目标方向或尺度冲突，不应继续盲调 λ。</li><li>FID 改善但 recall、尾部条件或实例级表达恶化：拒绝该方案，不把 FID 改善写成成功。</li><li>棋盘格在随机初始化输出阶段已出现：优先改 decoder，不要先增加 GAN loss。</li><li>训练稳定但条件输出不随条件变化：优先做条件可用性和 shortcut 实验，不要先堆语义 loss。</li></ul></div>
+<h3>9.4 可直接写成论文的研究问题</h3>
+<ol><li><b>稳定性约束：</b>SN、GP、TTUR 如何改变 G/D 局部动力学，是否降低 seed 方差而不损失覆盖？</li><li><b>频率约束：</b>棋盘格是否主要由 decoder 的 uneven overlap 产生，还是由 D 对高频局部纹理的奖励放大？</li><li><b>覆盖约束：</b>按病例/组织/表达等级分层的 recall 约束，能否比全局 diversity loss 更直接地减少 mode dropping？</li><li><b>任务约束：</b>结构/浓度/表达约束分别挂在 G 输出、D 输入还是派生量上时，梯度路径与失败模式有什么区别？</li></ol>
+
+<h2 id="s10"><span class="num">10</span>证据边界与参考文献</h2>
+<div class="box warn"><div class="bt">本轮明确没有找到的强证据</div><ul><li>没有找到任何单一 GAN loss/正则能对任意深度网络、任意数据流形、有限 minibatch 和有限更新次数提供普适收敛保证。</li><li>没有找到“所有 NaN、黑图和棋盘格都由同一原因导致”的一手证据；NaN/黑图必须依赖代码级逐层诊断。</li><li>WGAN-GP、SN、TTUR 的论文实验不能直接外推到你的数据、网络和 H&amp;E→IHC 任务；需要重新做消融。</li><li>棋盘格机制的经典解释 Distill 页面本轮无法稳定抓取全文；本报告的 overlap/初始化/loss 三源总结由 Aitken 2017 官方摘要核实，Distill 作为可读解释链接保留。</li></ul></div>
+<h3>10.1 已核实的一手来源</h3>
+<div class="scroll"><table><thead><tr><th>文献</th><th>核心用途</th><th>核实等级</th></tr></thead><tbody>
+<tr><td>Goodfellow et al., <i>Generative Adversarial Nets</i>, NeurIPS 2014, <a href="https://arxiv.org/abs/1406.2661">arXiv:1406.2661</a></td><td>原始 minimax 博弈、D 最优解、JS 散度、非饱和 G 目标</td><td><span class="b high">全文/官方摘要已核实</span></td></tr>
+<tr><td>Salimans et al., <i>Improved Techniques for Training GANs</i>, NeurIPS 2016, <a href="https://arxiv.org/abs/1606.03498">arXiv:1606.03498</a></td><td>minibatch discrimination、feature matching 等稳定化技术</td><td><span class="b high">官方摘要/HTML 已核实</span></td></tr>
+<tr><td>Arjovsky et al., <i>Wasserstein GAN</i>, ICML 2017, <a href="https://arxiv.org/abs/1701.07875">arXiv:1701.07875</a></td><td>Wasserstein critic、连续性、mode collapse 与曲线诊断的论文主张</td><td><span class="b high">官方摘要/HTML 已核实</span></td></tr>
+<tr><td>Gulrajani et al., <i>Improved Training of Wasserstein GANs</i>, NeurIPS 2017, <a href="https://arxiv.org/abs/1704.00028">arXiv:1704.00028</a></td><td>weight clipping 问题、gradient penalty</td><td><span class="b high">官方摘要/HTML 已核实</span></td></tr>
+<tr><td>Heusel et al., <i>GANs Trained by a Two Time-Scale Update Rule...</i>, NeurIPS 2017, <a href="https://arxiv.org/abs/1706.08500">arXiv:1706.08500</a></td><td>TTUR、局部 Nash、FID</td><td><span class="b high">官方摘要已核实</span></td></tr>
+<tr><td>Mescheder et al., <i>Which Training Methods for GANs do actually Converge?</i>, ICML 2018, <a href="https://arxiv.org/abs/1801.04406">arXiv:1801.04406</a></td><td>Dirac-GAN 反例、WGAN/WGAN-GP 非普适收敛、正则化收敛结果</td><td><span class="b high">官方摘要/HTML 已核实</span></td></tr>
+<tr><td>Miyato et al., <i>Spectral Normalization for GANs</i>, ICLR 2018, <a href="https://arxiv.org/abs/1802.05957">arXiv:1802.05957</a></td><td>判别器 spectral normalization</td><td><span class="b medium">官方摘要级核实</span></td></tr>
+<tr><td>Sajjadi et al., <i>Assessing Generative Models via Precision and Recall</i>, NeurIPS 2018, <a href="https://arxiv.org/abs/1806.00035">arXiv:1806.00035</a></td><td>质量与覆盖度拆分</td><td><span class="b high">官方摘要已核实</span></td></tr>
+<tr><td>Kynkäänniemi et al., <i>Improved Precision and Recall Metric...</i>, NeurIPS 2019, <a href="https://arxiv.org/abs/1904.06991">arXiv:1904.06991</a></td><td>改进 precision/recall，说明单指标可能不充分</td><td><span class="b high">官方摘要已核实</span></td></tr>
+<tr><td>Karras et al., <i>Training GANs with Limited Data</i>, NeurIPS 2020, <a href="https://arxiv.org/abs/2006.06676">arXiv:2006.06676</a></td><td>D 过拟合、ADA、有限数据边界</td><td><span class="b high">官方摘要/HTML 已核实</span></td></tr>
+<tr><td>Aitken et al., <i>Checkerboard artifact free sub-pixel convolution...</i>, 2017, <a href="https://arxiv.org/abs/1707.02937">arXiv:1707.02937</a></td><td>棋盘格三类来源、sub-pixel 初始化</td><td><span class="b high">官方摘要已核实</span></td></tr>
+<tr><td>Odena et al., <i>Deconvolution and Checkerboard Artifacts</i>, Distill 2016, <a href="https://distill.pub/2016/deconv-checkerboard/">Distill</a></td><td>转置卷积 overlap 与 resize-convolution 的解释性材料</td><td><span class="b medium">本轮页面抓取未完成，待复核</span></td></tr>
+</tbody></table></div>
+<h3>10.2 与资料库已有内容的关系</h3>
+<ul><li><a href="GAN虚拟染色_方法路线与浓度域先例调研.html">GAN 虚拟染色：方法路线、独特问题与浓度域先例</a>：专注 H&amp;E→IHC 的 GAN 路线、浓度/OD/FOD 和病理表达约束；本报告补充通用 GAN 原理、收敛反例、棋盘格和训练诊断。</li><li><a href="../03_论文精读博客/dgr_blog/DGR抗错位虚拟染色_论文精读博客.md">DGR 抗错位虚拟染色精读</a>：专注配准错位与生成—配准解耦；本报告把它作为“条件/监督问题不等于 GAN 稳定性问题”的任务级例子。</li><li><a href="../05_伪影与失败模式/扩散模型黑团伪影_成因诊断与解决方案.html">扩散模型黑团伪影</a>：面向扩散/潜空间黑团，不应直接把其中的成因移植为 GAN 结论。</li></ul>
+<p class="cite">证据标记说明：<b>[VERIFIED]</b> 表示本轮实际读取到论文官方摘要、官方 HTML 或会议页面；<b>[THEORY]</b> 表示论文在给定假设下的理论结果；<b>[EVIDENCE]</b> 表示论文报告的实验观察；<b>[INFERENCE]</b> 表示基于机制的工程推断，需要在你的数据和实现中验证；<b>[UNVERIFIED]</b> 表示本轮未读取原文关键段落，不应作为强事实引用。</p>
+</main></div></body></html>

@@ -12,13 +12,10 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
+<h1 class="site-title">我的个人博客</h1>
 <p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">8</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
 </div></header>
 <article class="article">
 <h1>医学图像染色转换 · 相关工作综述</h1>
@@ -44,7 +41,7 @@
 <p>$$ \mathcal{L}_{\text{PatchNCE}}=\sum_{l}\sum_{s}-\log\frac{\exp(\hat z_l^s\cdot z_l^s/\tau)}{\sum_{t}\exp(\hat z_l^s\cdot z_l^t/\tau)} . $$</p>
 <p>该设计解除对像素配准的依赖，但仅施加隐式特征约束，不保证几何保真，常出现轮廓漂移。</p>
 <p>CUT-GDC 外挂一个独立的多尺度梯度域损失。以 Sobel 求水平与垂直梯度：</p>
-<p>$$ G_h=I<em>\begin{bmatrix}-1&amp;0&amp;+1\\-2&amp;0&amp;+2\\-1&amp;0&amp;+1\end{bmatrix},\quad G_v=I</em>\begin{bmatrix}-1&amp;-2&amp;-1\\0&amp;0&amp;0\\+1&amp;+2&amp;+1\end{bmatrix}, $$</p>
+<p>$$ G_h=I*\begin{bmatrix}-1&amp;0&amp;+1\\-2&amp;0&amp;+2\\-1&amp;0&amp;+1\end{bmatrix},\quad G_v=I*\begin{bmatrix}-1&amp;-2&amp;-1\\0&amp;0&amp;0\\+1&amp;+2&amp;+1\end{bmatrix}, $$</p>
 <p>梯度向量 $\vec g=(G_h,G_v)$ 拆为幅值项与方向项：</p>
 <p>$$ L_{mag}=\frac{1}{N}\sum\big\||\vec g_x|-|\vec g_{\hat y}|\big\|,\quad L_{\cos}=\frac{1}{N}\sum\left(1-\vec{\hat g}_x\cdot\vec{\hat g}_{\hat y}\right), $$</p>
 <p>$$ L_{\text{GDC}}=\lambda_m L_{mag}+\lambda_\theta L_{\cos},\quad L_{\text{total}}=L_{\text{GAN}}+\lambda_{\text{NCE}}L_{\text{PatchNCE}}+\lambda_{\text{GDC}}L_{\text{GDC}} . $$</p>

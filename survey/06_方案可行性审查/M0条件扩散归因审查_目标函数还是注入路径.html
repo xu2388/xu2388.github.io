@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M0 条件扩散归因审查 —— 目标函数还是注入路径</title>
+<style>:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}.flow{margin:16px 0}.flow>pre{border-left-color:var(--teal);background:#f4fafb}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">M0 归因审查</div><div class="sub">条件被读但不被利用<br>H-A 目标函数 vs H-B 注入路径</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l2" href="#s0">三个假设的排序</a>
+<a class="l2" href="#s0">一句话行动</a>
+<a class="l1" href="#s1">1 · 本报告在库内的分工</a>
+<a class="l1" href="#s2">2 · 先修诊断学：三个假设的预测高度重叠</a>
+<a class="l1" href="#s3">3 · H-A 的硬上界：条件能降低多少 loss</a>
+<a class="l2" href="#s3">MMG 恒等式</a>
+<a class="l2" href="#s3">代进 M0 的数字</a>
+<a class="l1" href="#s4">4 · 四篇最贴近的文献（逐字核实）</a>
+<a class="l1" href="#s5">5 · 逐条对账：10 条事实各支持谁</a>
+<a class="l1" href="#s6">6 · 假设优先级排序与理由</a>
+<a class="l1" href="#s7">7 · ★ 判别实验设计（可直接跑）</a>
+<a class="l2" href="#s7">T0 目标函数受控对照</a>
+<a class="l2" href="#s7">T1 上界 · T2 错位</a>
+<a class="l2" href="#s7">T3 强度扫描 × 注入路径</a>
+<a class="l2" href="#s7">T4 cond=none · T5 单 arm</a>
+<a class="l1" href="#s8">8 · 修复方案</a>
+<a class="l2" href="#s8">H-A 的最小改法</a>
+<a class="l2" href="#s8">H-B 的多尺度注入具体形式</a>
+<a class="l1" href="#s9">9 · §2.8 硬约束边界检查表</a>
+<a class="l1" href="#s10">10 · 未核实清单与诚实标注</a>
+<a class="l1" href="#s11">11 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Attribution review · M0 conditional diffusion baseline</div>
+<h1>M0 条件扩散归因审查 —— 是目标函数抄了近路，还是注入路径传不动？</h1>
+<p class="desc">审查对象：<code>handoff/20_M0浓度扩散基线_实验记录与问题说明.md</code>。任务是把「条件被读取但不被利用」这一现象归因到 <b>H-A 目标函数</b> 或 <b>H-B 单尺度 concat 注入路径</b>，并给出判别实验与不违反 §2.8 硬约束的修复方案。</p>
+<div class="meta"><span>2026-10-08</span><span>12 节 · 11 条参考文献（全部一手核实）</span><span>含 3 个零训练/低代价判别实验设计</span><span>5 路并行检索 + 逐条原文复核</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box stop"><div class="bt">★ 先纠正一条：文档里「条件信号本来就弱，学它不划算」这一支，被库内数据否证了</div>
+<p>文档 §5 的 H-A 目前是「我们倾向的解释」，它最硬的一支论据来自 §3.4 的线性探针 <code>r≈0.23</code> ⇒「线性可提取的信息量非常有限」。<b>但库内早先的一份报告（<code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code>，222 KB）里已经记录了你自己的基线在同一数据集上的实测值：</b></p>
+<div class="scroll"><table>
+<thead><tr><th>对象</th><th class="c">DAB 相关</th><th class="c">R²</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td>M0（overfit3，32 patch）</td><td class="c">≈ 0.02</td><td class="c">≈ 0.0004</td><td>本文档 §3.9 / §6</td></tr>
+<tr><td>线性探针（<b>下界</b>）</td><td class="c">0.233</td><td class="c">0.054</td><td>文档 §3.4 <code>probe_signal</code></td></tr>
+<tr><td><b>你的 PSPStain baseline（BCI 实测）</b></td><td class="c"><b>0.439</b></td><td class="c"><b>0.193</b></td><td>库内 <code>PSPStain_频域条件注入_文献综述报告</code> §1.5</td></tr>
+<tr><td>UNIStainNet（BCI，含冻结 UNI 基础模型）</td><td class="c">0.867</td><td class="c">0.752</td><td>同上</td></tr>
+</tbody></table></div>
+<p style="margin-bottom:0">⇒ <b>条件值 19%–75%，不是 5%。</b>「学它不划算」这条论证不成立：<b>在同一个数据集、同一个任务上，你自己家族的 GAN 基线已经拿到 <code>R²≈0.19</code>，而 M0 拿到 ≈0。</b>⇒ <b>M0 的失败是真实故障，不是「理性地忽略一个小信号」。</b></p></div>
+
+<div class="box key"><div class="bt">总判定（修正后）</div>
+<p><b>H-A 仍然排第一，但支撑它的证据换了一条。</b>不是「信号太弱所以不值得学」（已否证），而是：<b>在架构、条件注入路径、数据全部相同的条件下，把训练目标从「直接 MSE 回归」换成「v-prediction 扩散」，模型就从「完全背得下来（train <code>r=0.9964</code>）」变成「完全背不下来（train <code>r=0.0264</code>）」。</b>这个对照是文档里<b>已经有的</b>（<code>probe_regress</code> vs <code>overfit3</code>，同一批 32 个高方差 patch），但文档没有把它当作 H-A 的主证据来读。</p>
+<p style="margin-bottom:0"><b>H-C 排第二</b>——它是仪器失效，同时也是一个<b>必须排除的混淆</b>（回归 2000 步 vs 扩散 3000 步、任务难度不同、数据是否常驻显存不同）。<b>H-B 真实但次要</b>（已被 <code>probe_synth</code> 部分否证）。<b>H-D 已确认存在</b>（BCI 是 serial-section，原文自述「some positions cannot achieve pixel-level alignment」），但它<b>解释不了 <code>r≈0</code></b>——因为训练过的方法在同一数据上能到 0.44+。</p>
+</div>
+
+<h3>四条排序（H-D 为新增）</h3>
+<div class="scroll"><table>
+<thead><tr><th>假设</th><th class="c">判定</th><th>一句话依据</th><th class="c">优先级</th></tr></thead>
+<tbody>
+<tr><td><b>H-A</b> 目标函数的退化解（loss collapse）</td><td class="c"><span class="b bad">主因</span></td><td><b>同架构 / 同注入路径 / 同 32 patch</b>：直接回归 train <code>r=0.9964</code>，扩散 train <code>r=0.0264</code>。加上 arXiv:2505.11123 对同一机制的命名（<b>loss collapse</b>）与「破坏性反馈环」</td><td class="c">★★★</td></tr>
+<tr><td><b>H-C</b> 32 patch 根本不够 <span class="small">（仪器失效 + 混淆）</span></td><td class="c"><span class="b medium">前置</span></td><td><code>probe_regress</code> holdout <code>r=0.0297</code>；ICLR 2022 逐字把现象限定在「limited data settings」；<b>且它与 H-A 之间还差一个受控对照（T0）</b></td><td class="c">★★★</td></tr>
+<tr><td><b>H-B</b> 单尺度 concat 注入路径太弱</td><td class="c"><span class="b medium">真实但次要</span></td><td>同一条 concat 路径在合成强条件上 <code>r=0.9956</code> ⇒ 路径不是死的；但 T2I-Adapter / SPADE / SLICE 三条独立证据支持「只在输入层注入一次不够」</td><td class="c">★★</td></tr>
+<tr><td><b>H-D</b> serial-section 无像素级对齐 <span class="b purple">新增</span></td><td class="c"><span class="b low">已确认·非主因</span></td><td>BCI 原论文逐字「<b>some positions cannot achieve pixel-level alignment</b>」；库内实测 edge cross-corr <code>0.005~0.02</code>。它给像素级 <code>R²</code> 设了一个已知上限，<b>但训练过的方法能到 0.44+，所以它不解释 <code>r≈0</code></b></td><td class="c">★</td></tr>
+</tbody></table></div>
+
+<h3>一句话行动</h3>
+<div class="box good"><div class="bt">先做三个测试，再决定改什么</div>
+<pre style="background:none;border:none;padding:0;margin:8px 0"><code>① T1 上界测试            CPU，~30 分钟   → 条件的真实 R²（含非线性），对照 0.193 这个已实现值
+② T0 目标函数受控对照     GPU，~20 分钟   → ★ 分开 H-A 与 H-C（本轮新增，最重要）
+③ T3 条件强度扫描×注入路径 GPU，~40 分钟   → 分开 H-A 与 H-B
+   ↑ 这三个数字出来之前，任何「改架构」或「改目标函数」都是盲目的。
+④ E1/T4 cond=none 对照    GPU，~40 分钟   → 文档原设计，只有单侧判别力（见 §2）</code></pre>
+<p style="margin-bottom:0">注意：<b>文档 §7 原本设计的 E1（cond=none 对照）不能单独完成归因</b>——H-A 与 H-B 都预测「none ≈ he」，见 §2。<b>T0 才是能分开 H-A 与 H-C 的那个实验。</b></p></div>
+
+<h2 id="s1"><span class="num">1</span>本报告在库内的分工</h2>
+
+<p>库内已有 40+ 份文档，与本题最贴近的五份，分工如下：</p>
+
+<div class="scroll"><table>
+<thead><tr><th>既有文档</th><th>它回答的问题</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><b>PSPStain 频域条件注入 · 文献综述报告</b>（01 类 · 222 KB）<span class="b bad">最相邻</span></td><td>频域条件<b>值不值得做</b>、Gate 怎么设计、<b>你的实验记录在文献坐标里的位置</b></td><td><b>★ 上游 + 本报告的关键反证来源</b>。它的 §1.5 记录了<b>你自己的 PSPStain baseline 在 BCI 上 DAB corr = 0.439</b>、§3b.1 是 BCI/MIST 的<b>全文献性能对照表</b>、Part 5/6 讨论了<b>多尺度注入点（32/16→64/32/16）与 zero-init gate</b>。<b>本报告 §3.4 的修正直接由它触发</b>；本报告 §8 的 B1/B2 是它 Part 6「Gate 设计」在 DAB-only 场景下的对应形式</td></tr>
+<tr><td><b>DAB-only 浓度扩散架构全流程可行性审查</b>（06 类）</td><td>这套方案<b>内部是否自洽</b>：数据假设、条件、扩散、score prior、渲染六层</td><td><b>上游</b>。它论证「标准 conditional diffusion 仍需 weak-paired target；完全 random non-paired 会退化为 p(DAB)」。本报告把它的定性判断<b>量化</b>成 <code>R²</code> 上界</td></tr>
+<tr><td><b>DAB-only 浓度扩散 · 文献先例地图与模型选型审查</b>（06 类）</td><td>文献上每一格<b>谁已经占了</b></td><td><b>并列</b>。它的「B 模块 = MIU-Diff Stage 1」结论与本报告无关；但它的「v-prediction 选型证据」本报告沿用</td></tr>
+<tr><td><b>V1 网络结构定稿审查</b>（06 类）</td><td>用户的 25 节 V1 spec <b>逐组件判定</b></td><td><b>下游接口</b>。本报告的 H-B 修复方案（多尺度注入）正是 V1 报告里「条件注入 = 残差 / ControlNet-lite」那一格的<b>具体形式</b>。V1 报告判定「结构+形态合并为一个 encoder 成立」，本报告不改这条</td></tr>
+<tr><td><b>扩散模型虚拟染色 · 蛋白表达约束 · 约束位置地图</b>（01 类）</td><td>约束<b>挂在哪一格</b>，各挂载点的 Jacobian 隐患</td><td><b>正交</b>。那份讲的是「辅助 loss 挂哪」，本报告讲的是「条件怎么进网络」。两者唯一交叉处是 <code>v-prediction</code> 的有界性，已在该报告核实</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">一条必须写下来的纠正（本轮核实）</div>
+<p>「<b>ControlNet 的消融证明只注入 middle / 只注入 decoder / 注入全部的差别</b>」——<b>这张表不存在</b>。我下载了 arXiv:2302.05543 全文逐条查过：ControlNet 的消融只有两项——(1) zero-conv 换成普通 Gaussian 初始化卷积；(2) 每个 block 的可训练副本换成<b>单个卷积层</b>（ControlNet-lite）。<b>真正做「注入位置 × 注入尺度」消融的是 T2I-Adapter（arXiv:2302.08453, Table 2）</b>，见 §4。</p>
+<p style="margin-bottom:0"><b>对账结果（好消息）</b>：我 grep 了全库，<code>HE2IHC_Diffusion_Disentanglement_Report.html</code> 与 <code>PSPStain_频域条件注入_文献综述报告.html</code> 都<b>已把 ControlNet 与 T2I-Adapter 分开陈述</b>，<b>没有发现误归属</b>。上面这条只作为预防性提示保留。</p></div>
+
+<h2 id="s2"><span class="num">2</span>先修诊断学：三个假设的预测高度重叠</h2>
+
+<p>在给出排序之前，必须先说清一件事：<b>文档 §7 列出的实验（尤其 E1）在当前形式下无法完成归因</b>。原因是三个假设对同一个观测的预测是重叠的。</p>
+
+<h3>为什么 E1（cond=none）不能分开 H-A 与 H-B</h3>
+
+<div class="scroll"><table>
+<thead><tr><th>观测：<code>cond=none</code> 与 <code>cond=he</code> 比</th><th>H-A 的预测</th><th>H-B 的预测</th><th class="c">能否区分</th></tr></thead>
+<tbody>
+<tr><td><b>两者统计与观感一致</b>（条件没产生实质影响）</td><td>✓ 信号太弱，学它不划算</td><td>✓ 条件传不进去</td><td class="c"><span class="b bad">不能</span></td></tr>
+<tr><td><b><code>he</code> 明显更好</b>（条件确实起作用）</td><td>—（预测不会出现）</td><td>✗ 被否证</td><td class="c"><span class="b medium">单侧</span></td></tr>
+</tbody></table></div>
+
+<p>⇒ <b>E1 只在「he 明显更好」这一个方向上有效</b>。而文档 §3.9 的 <code>ab_cond</code> 已经给出了接近这个方向的信息（条件被读了，<code>r_AB=0.85/0.93</code>），所以 E1 大概率会落在「两者接近」这一格——<b>那一格没有判别力</b>。</p>
+
+<div class="box warn"><div class="bt">真正的问题是：现有全部证据都在「32 个 patch」这个 regime 里</div>
+<p style="margin-bottom:0">文档 §4.3 自己已经点出了这一点，而且点得很准。这里只补一个<strong>结构性理由</strong>：在 32 个 patch 上，模型的可行策略是<b>「背下这 32 个目标」</b>（26.6 M 参数对 32 个样本），而<b>不是</b>「学会条件映射」。<b>这两条策略在任何指标上都会给出相似的数字</b>（都低 loss、都在 val 上失败）。因此 32-patch regime 的观测不能用来判断「条件为什么没被利用」——因为在那个 regime 里，模型<b>本来就不需要</b>条件。</p></div>
+
+<p>⚠ 但要公平地说：文档 §4.3 主张「§3.9 / §3.10 测的是<b>条件怎么被使用</b>这一功能性问题，不依赖泛化，所以可信」。<b>这个辩护部分成立</b>——「条件被读了但没有方向」这个结论是站得住的（因为它是在训练过的 patch 上测的）。<b>不成立的部分</b>是把它外推到「真实任务上条件也不携带信息」：在 32-patch regime 里，条件不携带信息是<b>必然</b>的（模型可以背答案），所以那个观测不能作为真实任务上条件无用的证据。</p>
+
+<h2 id="s3"><span class="num">3</span>H-A 的硬上界：条件到底能降低多少 loss</h2>
+
+<p>这一节是本报告的核心。它给出一个<b>与架构无关、与注入方式无关</b>的量：条件对 loss 的贡献上界。<b>如果这个上界本来就很小，那么 H-A 就成立了，而且不需要任何训练就能验证。</b></p>
+
+<h3>3.1 MMG 恒等式（逐字核实）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">MMG: Mutual Information Estimation via the MMSE Gap in Diffusion</div><div class="v">Longxuan Yu, Xing Shi, Xianghao Kong, Tong Jia, Greg Ver Steeg（UC Riverside / UCSD）· arXiv:2509.20609 · 2025 · 12 页 · <b>已下载全文逐字核实</b></div></div><div><span class="b high">VERIFIED</span></div></div>
+<div class="body">
+<p>原文 Eq.(7) 逐字：</p>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>log p(x|y) − log p(x) = ½ ∫₀^∞ dγ ( mmse(x|γ) − mmse(x|γ,y) )</code></pre></div>
+<p>原文 Eq.(8) 逐字：</p>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>I(x;y) = ½ ∫₀^∞ dγ ( mmse_x(γ) − mmse_{x|y}(γ) )</code></pre></div>
+<p>原文逐字（就在 Eq.8 正下方）：</p>
+<p style="margin-left:14px;border-left:3px solid var(--border);padding-left:12px"><i>「Conditioning on y can only decrease the MMSE Wu &amp; Verdú (2011), so the mutual information is non-negative as expected. While Eq. 7 appears to be novel, a version of Eq. 8 appeared in Guo et al. (2005).」</i></p>
+<p>原文 §4.2「The Orthogonal Principle」逐字：</p>
+<p style="margin-left:14px;border-left:3px solid var(--border);padding-left:12px"><i>「The principle states that for optimal denoisers, <b>the gap in MMSE is precisely the expected squared distance between the conditional and unconditional estimators</b>.」</i></p>
+<p><b>这三句话合起来就是本报告要用的全部：</b>条件带来的 loss 下降 = 条件估计器与无条件估计器之间的均方距离 = 条件所解释的目标方差。它<b>不可能为负</b>，也<b>不可能超过目标自身的方差</b>。</p>
+</div></div>
+
+<h3>3.2 翻译成 M0 的语言</h3>
+
+<p>把 <code>x</code> 取成 M0 的扩散目标 <code>z₀</code>（归一化后的 <code>C_DAB</code>），把 <code>y</code> 取成 <code>cond=[C_H^HE, C_E^HE]</code>，把 <code>γ</code> 取成噪声水平（与扩散时刻 <code>t</code> 一一对应）：</p>
+
+<div class="scroll"><table>
+<thead><tr><th>MMG 的记号</th><th>在 M0 里是什么</th></tr></thead>
+<tbody>
+<tr><td><code>mmse_x(γ)</code></td><td>只看 <code>z_t</code>、不看条件时，预测 <code>z₀</code> 的最小可达 MSE（= 无条件模型的最优 loss）</td></tr>
+<tr><td><code>mmse_{x|y}(γ)</code></td><td>同时看 <code>z_t</code> 和 <code>cond</code> 时，预测 <code>z₀</code> 的最小可达 MSE</td></tr>
+<tr><td><b>差值</b></td><td><b>条件在这一噪声水平上的全部价值</b> <code>= E‖x̂(z_t,cond) − x̂(z_t)‖²</code></td></tr>
+<tr><td>对 γ 积分</td><td>条件在整个扩散过程中的总价值 = <code>2·I(z₀; cond)</code></td></tr>
+</tbody></table></div>
+
+<h3>3.3 为什么条件的价值集中在高 t，且总量 ≈ R²</h3>
+
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>高 t（ᾱ_t → 0）：  z_t ≈ ε
+                    E[z₀ | z_t] ≈ E[z₀]  ← 已经是个常数，条件无关
+                    ⇒ 条件在这里的<b>全部</b>价值 = Var( E[z₀ | cond] ) = R² · Var(z₀)
+                    而此处 v_t = √ᾱ ε − √(1−ᾱ) z₀ ≈ −z₀，loss 尺度 ≈ Var(z₀)
+                    ⇒ 相对改善上界 ≈ R²
+
+低 t（ᾱ_t → 1）：  z_t ≈ z₀  ← 答案已经在输入里，条件是冗余的
+                    ⇒ 条件价值 ≈ 0
+
+⇒ 条件的价值<b>集中在高 t</b>；而 v-prediction 的 MSE 目标<b>对所有权重相同的 t 一视同仁</b>。</code></pre></div>
+
+<div class="box key"><div class="bt">核心命题</div>
+<p style="margin-bottom:0">在 M0 的 <code>v-prediction</code> MSE 目标下，<b>条件能把最优 loss 降低的比例，上界是 <code>R²</code></b>（条件对 <code>z₀</code> 的决定系数）。这个上界与架构、注入方式、模型大小<b>全部无关</b>。</p></div>
+
+<h3>3.4 代进 M0 的实测数字</h3>
+
+<p>文档 §3.4 <code>probe_signal</code> 给出（在<b>没见过的</b> val 上评）：</p>
+
+<div class="scroll"><table>
+<thead><tr><th>探针</th><th class="c">Pearson r</th><th class="c">R² = r²</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>逐像素线性</td><td class="c">0.2327</td><td class="c">0.054</td><td>线性可提取的方差份额 ≈ 5.4%</td></tr>
+<tr><td>块均值 (16×16) 线性</td><td class="c">0.3038</td><td class="c">0.092</td><td>粗尺度也只有 ≈ 9.2%</td></tr>
+<tr><td>常数（对照）</td><td class="c">0.0000</td><td class="c">0</td><td>—</td></tr>
+</tbody></table></div>
+
+<p><b>⇒ 线性意义下 <code>R² ≈ 5%</code>。非线性 / 多尺度模型能更高，但 §7 的 <b>T1</b> 会给出真实的上界。</b></p>
+
+<div class="box stop"><div class="bt">★ 但这里有一个致命的反证：线性探针给的是<b>下界</b>，不是上界</div>
+<p><b>① 5.4% 是「<u>线性</u>可提取」的比例，不是「可提取」的比例。</b>文档 §3.4 自己也写了这条边界：「线性探针给的是<b>下界</b>，不是能力上限」。<b>而库内记录的一个数字把这个下界抬到了 19%：</b></p>
+<div class="scroll"><table>
+<thead><tr><th>对象</th><th class="c">DAB 相关</th><th class="c">R²</th><th>性质</th></tr></thead>
+<tbody>
+<tr><td>线性探针（逐像素）</td><td class="c">0.233</td><td class="c">0.054</td><td><b>下界</b></td></tr>
+<tr><td>块均值线性（16×16）</td><td class="c">0.304</td><td class="c">0.092</td><td><b>下界</b></td></tr>
+<tr><td><b>你的 PSPStain baseline（BCI 实测）</b></td><td class="c"><b>0.439</b></td><td class="c"><b>0.193</b></td><td><b>已实现值</b>（训练过的 GAN）</td></tr>
+<tr><td>UNIStainNet（BCI，冻结 UNI 基础模型）</td><td class="c">0.867</td><td class="c">0.752</td><td>已实现值（重装备）</td></tr>
+</tbody></table></div>
+<p><b>② ⇒ 条件值 19%–75%，不是 5%。</b>MMG 的上界依然成立、依然有用（它告诉我们「条件的价值不可能超过它解释的方差」，且它给了 T1 一个理论形式），<b>但它不能被用来论证「网络忽略条件是理性的」——因为可解释的方差是 19%+，不是 5%。</b></p>
+<p><b>③ 这条上界的正确用法是当作一把尺子。</b>T1 测出的非线性 <code>R²</code> 必须与 <b>0.193</b> 这个已实现值对照：<b>若 T1 给出 0.19 上下</b>，说明线性探针严重低估、条件完全值得学，H-A 的「不划算」论证彻底出局；<b>若 T1 也给出 0.05 上下</b>，那才是「上界真的很小」，此时才轮到这个论证上场。</p>
+<p style="margin-bottom:0"><b>④ 「比常数基线还差 13%」仍然有意义，但读法要改。</b>它不是「理性忽略小信号」的签名（那是本文档原来的读法），而是<b>「一个本可以拿到 R²≈0.19 的任务，被做成了 r≈0」的签名</b>——同一数据集上你的 PSPStain baseline 拿到 0.439，M0 拿到 0.02。<b>⇒ 这是故障，不是取舍。</b></p></div>
+
+<div class="box key"><div class="bt">所以 §3 的结论要这样表述</div>
+<p style="margin-bottom:0">MMG 恒等式<b>不是</b>「H-A 成立的证明」，它是<b>测量条件价值的正确工具</b>。它给出的上界在<b>实测</b>之前不能用来论证任何事。<b>本报告 §0 的修正就是：这个上界的实测值（0.193）远大于线性下界（0.054），因此「信号太弱」这条解释被否证。</b></p></div>
+
+<h3>3.5 一个放大因素：MSE 在重尾目标上被少数像素主导</h3>
+
+<p>文档 §3.10 给出真值 DAB 的范围 <code>[-0.0143, 3.5461]</code>，而归一化常数 <code>hi = 0.8786</code>（§2.2）。<b>最大值是归一化上界的 4 倍</b> ⇒ 分布极重尾，少数像素的 DAB 是高分位数的数倍。</p>
+<p>平方损失（v-MSE）对这些像素的权重是平方级的 ⇒ <b>loss 被少数可能不可预测的极端像素主导</b>，这进一步压低「可被条件解释」的有效方差份额。</p>
+<div class="box warn"><div class="bt">这条是「放大器」，不是「主因」——必须分清</div>
+<p style="margin-bottom:0">重尾会压低<b>像素级</b>的 <code>R²</code>，但<b>解释不了「同数据集上 PSPStain 拿到 0.439、M0 拿到 0.02」这个差距</b>——因为 PSPStain 用的是同一批数据、同一类逐像素损失。⇒ <b>重尾是背景条件，不是故障本身。</b>它的正确用法是提醒 T1 要<b>分层报告</b>（逐像素 / 块均值 / 高分位像素分开报），而不是报一个聚合 <code>R²</code>。</p></div>
+<div class="box warn"><div class="bt">需要你确认口径</div><p style="margin-bottom:0">上面 <code>3.5461</code> 与 <code>hi=0.8786</code> 是否同一量纲（都是原始浓度？还是一个是归一化前、一个是渲染后？）。文档 §3.10 里「预测 DAB 范围 <code>[0.0110, 0.8786]</code>」恰好等于归一化的 <code>[lo, hi]</code>，而「真值 DAB 范围」写的是 <code>[-0.0143, 3.5461]</code>——<b>两行疑似不同量纲</b>。这个口径不影响 §3.4 的结论，但会影响 §7 <b>T1</b> 的实现。</p></div>
+
+<h2 id="s4"><span class="num">4</span>四篇最贴近的文献（全部逐字核实）</h2>
+
+<p>下面四篇是决定本报告结论方向的工作。<b>四篇的 PDF 我都下载并逐字读到了所引的句子</b>，引用处标注了核实等级。</p>
+
+<div class="card">
+<div class="ch"><div><div class="title">① Conditioning Matters: Training Diffusion Policies is Faster Than You Think</div><div class="v">Zibin Dong, Yicheng Liu, Yinchuan Li, Hang Zhao, Jianye Hao（天津大学 / 清华）· arXiv:2505.11123 · 2025-05-16 · 26 页 · <b>全文核实</b></div></div><div><span class="b bad">H-A 的直接命名</span> <span class="b high">VERIFIED</span></div></div>
+<div class="body">
+<p><b>领域提醒</b>：这是 <b>VLA / diffusion policy（机器人动作）</b>，<b>不是</b>医学图像。但它的机制陈述与 M0 的 H-A <b>逐字同构</b>。</p>
+<p>摘要逐字：</p>
+<p style="margin-left:14px;border-left:3px solid var(--border);padding-left:12px"><i>「when generative conditions are hard to distinguish, the training objective degenerates into modeling the <b>marginal</b> action distribution, a phenomenon we term <b>loss collapse</b>」</i></p>
+<p>§4 Method 逐字：</p>
+<p style="margin-left:14px;border-left:3px solid var(--border);padding-left:12px"><i>「If v_θ(t,x,c) ≈ v_θ(t,x), the expectation in the objective effectively <b>marginalizes over c</b>, causing it to degenerate into an unconditional one.」</i></p>
+<p>引言逐字（这段是本报告最重要的引文）：</p>
+<p style="margin-left:14px;border-left:3px solid var(--border);padding-left:12px"><i>「This loss collapse creates a <b>destructive feedback loop</b>: as the policy network begins ignoring conditional inputs, the training objective further degrades, <b>reinforcing the network's tendency to discard conditions altogether rather than attempting to interpret them</b>.」</i></p>
+<p><b>它给出的修法（Cocos）</b>逐字：「using a <b>condition-conditioned source distribution</b> (Cocos) by sampling <code>z</code> from <code>q(z)=q(x₁,c)q(x₀|c)</code>」而不是标准的 <code>q(z)=q(x₁,c)q(x₀)</code>。即：<b>让源分布（初始噪声）依赖条件</b>，而不是独立。</p>
+<div class="box warn"><div class="bt">为什么这篇对 M0 特别重要</div>
+<p style="margin-bottom:0">它把「条件弱 ⇒ 退化为边缘分布」从<b>一句直觉</b>变成了<b>一个有定理（Theorem 1, Gradient Contraction under Independent Sampling）、有命名、有修法</b>的现象。文档 §5 的 H-A 目前是「我们倾向的解释」——<b>这篇让它升级为「有文献先例的正式机制」</b>。同时它指出关键一点：<b>这个退化是自我强化的</b>，所以「多训一会儿」不会自己好。</p></div>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">② MMG: Mutual Information Estimation via the MMSE Gap in Diffusion</div><div class="v">arXiv:2509.20609 · 2025 · 12 页 · 全文核实</div></div><div><span class="b bad">上界的出处</span> <span class="b high">VERIFIED</span></div></div>
+<div class="body">
+<p>见 §3.1。<b>它是本报告唯一一条「量化上界」的出处</b>，且它的原意正是「用一个无条件模型作对照来量化条件信息量」——所以它同时也是 §7 判别实验的方法论出处。</p>
+<p>注意它的 Eq.(8) 追认自 <b>Guo et al. (2005)</b>，且「<code>Conditioning on y can only decrease the MMSE</code>」追认自 <b>Wu &amp; Verdú (2011)</b>——<b>所以这条不是新结果，是信息论里的经典事实</b>（I-MMSE 关系）。这一点很重要：<b>它意味着这条上界不是某个方法的局限，而是任何条件生成模型的数学天花板。</b></p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">③ SLICE: Speech Enhancement via Layer-wise Injection of Conditioning Embeddings</div><div class="v">Seokhoon Moon, Kyudan Jung, Jaegul Choo（KAIST）· arXiv:2603.05302 · 2026-03 · 5 页 · 全文核实</div></div><div><span class="b bad">H-B 的受控证据</span> <span class="b high">VERIFIED</span></div></div>
+<div class="body">
+<p>摘要逐字（<b>这段与 M0 的观测几乎一字不差地对应</b>）：</p>
+<p style="margin-left:14px;border-left:3px solid var(--border);padding-left:12px"><i>「Prior noise-aware approaches <b>inject conditioning at the input layer only, which can degrade performance below that of an unconditioned model</b>. To address this, we propose injecting degradation conditioning … into the <b>timestep embedding</b> so that it <b>propagates through all residual blocks without architectural changes</b>.」</i></p>
+<p>再逐字：</p>
+<p style="margin-left:14px;border-left:3px solid var(--border);padding-left:12px"><i>「In controlled experiments where <b>only the injection method varies</b>, input-level conditioning performs <b>worse than using no encoder at all</b> on compound degradations, while our layer-wise injection achieves the best results.」</i></p>
+<div class="box stop"><div class="bt">这是全文最贴近 M0 的一条</div>
+<p style="margin-bottom:0">它做了两件 M0 正好需要的事：<b>(a)</b> 在「<b>只变注入方式</b>」的受控设置下证明 <b>input-level conditioning 可以比无条件还差</b>——这正是 M0 的 <code>F9</code>（比常数基线还差 13%）；<b>(b)</b> 给出了修法：<b>注入到 timestep embedding，从而穿过所有 residual block，且不改架构</b>。</p></div>
+<div class="box warn"><div class="bt">但它不能直接照搬，必须说清差别</div>
+<p style="margin-bottom:0">SLICE 注入的是一个<b>全局向量</b>（噪声类型 / 混响 / 失真的分类条件，来自预训练 encoder + 多任务头）。M0 的条件是<b>空间图</b>（2 通道、128×128）。<b>把空间图池化成全局向量塞进 timestep embedding，会丢掉全部空间信息。</b>所以 SLICE 可迁移的是它的<b>结论</b>（「只在输入层注入不够，要穿到每个 block」），<b>不是它的算子</b>。空间条件的对应形式见 §8。</p></div>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">④ T2I-Adapter: Learning Adapters to Dig out More Controllable Ability for Text-to-Image Diffusion Models</div><div class="v">Chong Mou et al.（北大 / 腾讯 ARC）· arXiv:2302.08453 · 10 页 · Table 2 逐字核实</div></div><div><span class="b bad">注入尺度的受控消融</span> <span class="b high">VERIFIED</span></div></div>
+<div class="body">
+<p>这是<b>唯一一篇真正做了「注入位置 × 注入尺度」受控消融的论文</b>（不是 ControlNet，见 §1 的纠正）。Table 2 caption 逐字：「<i>Ablation study of how the guidance information is injected into the SD model.</i>」</p>
+<div class="scroll"><table>
+<thead><tr><th class="c">Mode</th><th class="c">Scale Num.</th><th class="c">Enc.</th><th class="c">Dec.</th><th class="c">FID ↓</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td class="c">4</td><td class="c">✓</td><td class="c"></td><td class="c"><b>17.36</b></td></tr>
+<tr><td class="c">2</td><td class="c">4</td><td class="c"></td><td class="c">✓</td><td class="c">18.32</td></tr>
+<tr><td class="c">3</td><td class="c">4</td><td class="c">✓</td><td class="c">✓</td><td class="c">18.08</td></tr>
+<tr><td class="c">4</td><td class="c">3</td><td class="c">✓</td><td class="c"></td><td class="c">17.86</td></tr>
+<tr><td class="c">5</td><td class="c">2</td><td class="c">✓</td><td class="c"></td><td class="c">18.77</td></tr>
+<tr><td class="c">6</td><td class="c"><b>1</b></td><td class="c">✓</td><td class="c"></td><td class="c"><b>22.66</b></td></tr>
+</tbody></table></div>
+<p>原文逐字：「The SD model has an encoder and a decoder, each with <b>4 scales</b> (i.e., 64×64, 32×32, 16×16, 8×8).」</p>
+<div class="box key"><div class="bt">读法</div>
+<p style="margin-bottom:0"><b>① 注入尺度从 4 降到 1：FID 17.36 → 22.66（+30%）。</b>⇒ 「注入几个尺度」对空间条件的效果有<b>显著</b>影响，这是受控证据。<b>② 只注入 encoder 最好（17.36），只注入 decoder 更差（18.32）。</b>⇒ 对 M0 的直接含义：<b>条件不应该只在输入层进一次，也不应该只往 decoder 灌；要沿 encoder 各尺度都进去。</b></p></div>
+</div></div>
+
+<h3>其他相关文献（简表，均已核实或明确标注未核实）</h3>
+<div class="scroll"><table>
+<thead><tr><th>文献</th><th>题录</th><th>与本题的关系</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr><td><b>SPADE</b></td><td>Park, Liu, Wang, Zhu, CVPR 2019, arXiv:1903.07291</td><td>逐字：「the normalization layers tend to <b>“wash away” semantic information</b>」；Table 3 caption 逐字：「simply <b>concatenating semantic input at every layer fails to do so</b>」<b>⇒ 输入层 concat 会被归一化层洗掉的直接原文</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>GLIGEN</b></td><td>Li et al., CVPR 2023, arXiv:2301.07093</td><td>零初始化门控残差侧路，逐字：「treated as a <b>residual, whose gate is initially set to 0</b> (due to γ being initialized as 0). This also enables more stable training.」<b>且不复制 encoder</b> ⇒ §8 的 H-B 修法有直接先例</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>DiT</b></td><td>Peebles &amp; Xie, ICCV 2023, arXiv:2212.09748</td><td>Figure 5 caption 逐字：「<b>adaLN-Zero outperforms cross-attention and in-context conditioning at all stages of training</b>」；正文：「We experiment with variants … via adaptive layer norm, cross-attention and extra input tokens. <b>Adaptive layer norm works best.</b>」<b>⇒ 「逐层调制 &gt; 输入 concat」的直接受控证据</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>ControlNet</b></td><td>Zhang, Rao, Agrawala, ICCV 2023, arXiv:2302.05543</td><td>逐字：「The lightweight ControlNet-lite … is <b>not strong enough to interpret the conditioning images</b>」；zero-conv 逐字：「<b>zero-initialized convolution layers</b> that progressively grow the parameters from zero」。<b>⚠ 它没有「middle / decoder / all」消融</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>Collapse by Conditioning</b></td><td>Shahbazi, Danelljan, Paudel, Van Gool, <b>ICLR 2022</b>, arXiv:2201.06578</td><td>逐字：「<b>class-conditioning causes mode collapse in limited data settings, where unconditional learning leads to satisfactory generative ability</b>」。修法 = 从无条件 GAN 出发<b>渐进注入</b>条件。<b>⇒ H-C（数据少）与「条件反而有害」的先例</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>Cross &amp; Ragni</b></td><td>ML-DE Workshop @ ECAI 2024, PMLR 255, arXiv:2409.06364</td><td>逐字：「TTS DM likelihoods are <b>agnostic to the text input</b>」；「the likelihood in question is <b>not as sensitive to the conditioning input as one expects</b>」<b>⇒ 「似然对条件不敏感」的先例</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>Conditional Collapse in SLR</b></td><td>Hong &amp; Košecká（George Mason）· arXiv:2606.01643 · 2026</td><td>逐字：「FID rewards an anatomically valid <b>mean motion that ignores the input</b>」；faithfulness「<b>never attained</b>」且与 FID「<b>uncorrelated</b>」。<b>⇒ 与「给对/给错条件与真值相关都是 0」最同构的诊断范式</b>；且它把瓶颈归到<b>配对数据规模</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>Posterior Collapse &amp; Non-identifiability</b></td><td>Wang, Blei, Cunningham, NeurIPS 2021, arXiv:2301.00537</td><td>逐字：posterior「<b>is equal to its prior</b>」；证明 posterior collapse「<b>if and only if</b> the latent variables are non-identifiable」。<b>⇒ 理论锚点（VAE 侧，非扩散）</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td>FreeU</td><td>Si et al., arXiv:2309.11497</td><td>逐字：skip connections「mainly introduce <b>high-frequency features</b> into the decoder」<b>⇒ 解释「条件影响集中在细胞边界」</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td>CCUA</td><td>arXiv:2507.09052</td><td>长尾扩散：尾类条件导致 mode collapse；修法 = 在大 timestep 上做条件-无条件对齐损失</td><td class="c"><span class="b medium">摘要级</span></td></tr>
+<tr><td>Feedback Guidance</td><td>NeurIPS 2025, arXiv:2506.06085</td><td>用「conditional signal informativeness」自适应调节 guidance 强度</td><td class="c"><span class="b medium">摘要级</span></td></tr>
+</tbody></table></div>
+
+<h2 id="s5"><span class="num">5</span>逐条对账：文档里的 10 条事实各支持谁</h2>
+
+<p>把文档 §4.1 的 F1–F10 逐条对照三个假设。<b>「✓」= 该假设预测这条观测；「✗」= 该假设与这条观测矛盾。</b></p>
+
+<div class="scroll"><table>
+<thead><tr><th class="c">#</th><th>事实（文档原文）</th><th class="c">H-A<br>目标函数</th><th class="c">H-B<br>注入路径</th><th class="c">H-C<br>32 patch</th><th>本报告读法</th></tr></thead>
+<tbody>
+<tr><td class="c">F1</td><td>管线通，能学条件映射且能泛化（synth 0.9956/0.9950）</td><td class="c">✓</td><td class="c">✗</td><td class="c">✓</td><td><b>否证「路径是死的」</b>。但合成目标是条件的<b>局部、高 SNR</b> 函数，不能证明路径能传<b>语义</b>条件</td></tr>
+<tr><td class="c">F2</td><td>单尺度 concat <b>有能力</b>拟合映射（regress train r=0.9964）</td><td class="c"><b>✓✓</b></td><td class="c">✗</td><td class="c">✓</td><td><b>★ 本轮升级为 H-A 的主证据。</b>把它与 overfit3 的 <b>train r = 0.0264</b>（文档 §6）并列读：<b>同架构、同注入路径、同 32 patch，回归背得下来（0.9964）、扩散背不下来（0.0264）⇒ 变量只剩训练目标。</b>（文档原文只写「能背不代表能学」，没有做这个并列）</td></tr>
+<tr><td class="c">F3</td><td>32 patch 学不到泛化（holdout r=0.0297）</td><td class="c">—</td><td class="c">—</td><td class="c">✓</td><td><b>H-C 的直接证据</b>：32 patch 连直接回归都不泛化</td></tr>
+<tr><td class="c">F4</td><td>真实数据 HE→DAB 线性信号很弱（r 0.23/0.30）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td><b>★ 本轮被否证为 H-A 的依据。</b>线性探针是<b>下界</b>；你的 PSPStain baseline 在同数据集上实测 DAB corr <b>0.439</b> ⇒ 真实可解释方差 ≥ <b>0.19</b> ⇒ <b>「信号太弱所以不划算」不成立</b></td></tr>
+<tr><td class="c">F5</td><td>条件被读了，换条件输出会变（0.85/0.93 ≠ 1.0）</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td><b>三条都预测这条</b> ⇒ 无判别力（但足以撤回「条件被完全忽略」的旧结论）</td></tr>
+<tr><td class="c">F6</td><td>条件贡献远小于噪声（MAE 0.05–0.08 vs 0.25）</td><td class="c"><b>✓✓</b></td><td class="c">✓</td><td class="c">✓</td><td><b>无判别力</b>。但「弱」的量级与 R²≈5% 的预测一致</td></tr>
+<tr><td class="c">F7</td><td>条件不携带 patch 级信息（对/错条件与真值相关都是 0）</td><td class="c"><b>✓✓</b></td><td class="c">✓</td><td class="c">✓</td><td><b>无判别力</b>，但它是 H-A 最自然的推论：如果条件只值 5%，网络没理由去拟合它</td></tr>
+<tr><td class="c">F8</td><td>输出在归一化区间两端饱和，过染约 2 倍</td><td class="c"><b>✓✓</b></td><td class="c">—</td><td class="c">—</td><td><b>H-A 的签名</b>：学的是被 clip 过的边缘分布，其均值高于真值均值</td></tr>
+<tr><td class="c">F9</td><td>比常数基线还差（MAE 0.291 vs 0.258）</td><td class="c"><b>✓✓</b></td><td class="c">✓</td><td class="c">✓</td><td><b>H-A 的必然推论</b>：输出 = 边缘均值 + 与目标无关的方差 ⇒ MAE 必高于纯常数。<b>SLICE 有逐字同款观测</b></td></tr>
+<tr><td class="c">F10</td><td>32 张高方差 patch 目标方差是分层抽的 60 倍</td><td class="c">—</td><td class="c">—</td><td class="c">✓</td><td>这解释了<b>为什么前两次门禁是假阳性</b>，与三个假设都不冲突</td></tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">对账的结论（修正后）</div>
+<p>10 条事实里，有 5 条（F5/F6/F7/F9 + 部分 F1）被三个假设共同预测 ⇒ <b>无判别力</b>。</p>
+<p><b>真正有判别力的只剩两条：</b></p>
+<p>· <b>F2（升级读法）</b>——同架构、同注入路径、同 32 patch 下，<b>回归 train <code>r=0.9964</code> vs 扩散 train <code>r=0.0264</code></b> ⇒ 变量只剩训练目标 ⇒ <b>H-A 的主证据</b>。</p>
+<p>· <b>F3</b>——<code>probe_regress</code> holdout <code>0.0297</code> ⇒ 32 patch 不泛化 ⇒ <b>H-C</b>。</p>
+<p style="margin-bottom:0"><b>F4 原本被当作 H-A 的定量依据，本轮被库内数据（PSPStain 0.439）否证。</b>⇒ 现有证据确实已经用尽，而且用尽之后指向的是「<b>目标函数 + 仪器</b>」这一对，<b>不是「注入路径」</b>。</p></div>
+
+<h2 id="s6"><span class="num">6</span>假设优先级排序与理由</h2>
+
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>排序：  H-A  ≫  H-C（前置·仪器失效）  &gt;  H-B  &gt;  H-D（新增·必须先量）
+        └─ 主因        └─ 不解决它，归因实验没有判别力   └─ 真实但次要   └─ R² 的天花板</code></pre></div>
+
+<h3>6.1 为什么 H-A 排第一（证据已换成另一条）</h3>
+
+<div class="box stop"><div class="bt">先说被撤掉的那条</div>
+<p style="margin-bottom:0"><b>原报告草稿曾把「§3 的上界 ≈ R² ≈ 5%」当作 H-A 的主要依据。这条已撤回</b>——因为库内记录了你自己的 PSPStain baseline 在同一数据集上 DAB corr = <b>0.439</b>（<code>R²≈0.19</code>），UNIStainNet 0.867（<code>R²≈0.75</code>）。<b>线性探针的 5% 是下界，不是上界。条件完全值得学。</b>见 §3.4 的修正。</p></div>
+
+<div class="scroll"><table>
+<thead><tr><th>支持理由（修正后）</th><th>强度</th><th>依据</th></tr></thead>
+<tbody>
+<tr><td><b>同架构 / 同注入路径 / 同 32 patch，只换训练目标</b>：回归背得下来（<code>0.9964</code>），扩散背不下来（<code>0.0264</code>）</td><td><span class="b bad">强</span></td><td>文档 §3.6 <code>probe_regress</code> vs §6 的 overfit3 记录。<b>这是现有数据里最干净的一条对照——变量只剩训练目标</b></td></tr>
+<tr><td>有<b>命名、有定理、有修法</b>的文献先例</td><td><span class="b bad">强</span></td><td>arXiv:2505.11123「loss collapse」+「destructive feedback loop」+ Theorem 1 + Cocos 修法（§4①）</td></tr>
+<tr><td>有「<b>条件在少数据下反而有害</b>」的独立先例</td><td><span class="b medium">中</span></td><td>ICLR 2022（arXiv:2201.06578）逐字：「class-conditioning causes mode collapse <b>in limited data settings</b>, where unconditional learning leads to satisfactory generative ability」</td></tr>
+<tr><td>是<b>唯一能解释 F8/F9</b> 的假设</td><td><span class="b medium">中</span></td><td>F9「比常数基线还差」= 输出含与目标无关的方差；F8「饱和在归一化两端」= 学的是被 clip 的边缘分布</td></tr>
+<tr><td><b>反方（必须诚实说）</b></td><td><span class="b medium">中</span></td><td><b>F2 vs overfit3 的对照有三个混淆</b>：步数（2000 vs 3000）、任务难度（固定 <code>t=0</code> vs 全部 <code>t</code>）、数据是否常驻显存。<b>⇒ 必须做 T0 受控版本才能定案。</b></td></tr>
+<tr><td><b>已撤回的理由</b></td><td><span class="b bad">✗</span></td><td><s>「条件改善上界 ≈ 5%，学它不划算」</s>——被 PSPStain 0.439 否证（§3.4）</td></tr>
+</tbody></table></div>
+
+<h3>6.2 为什么 H-C 排第二，但性质不同</h3>
+
+<p><b>H-C 不是「原因」，是「仪器失效」。</b>把它排在第二不是因为它更可能是主因，而是因为<b>不先解决它，H-A 与 H-B 就无法区分</b>（§2 的预测重叠表）。</p>
+
+<ul>
+<li><b>文档自己的证据</b>：F3 <code>probe_regress</code> holdout <code>r=0.0297</code> ⇒ 32 个 patch 连直接回归都不泛化。</li>
+<li><b>文献先例</b>：<i>Collapse by Conditioning</i>（ICLR 2022, arXiv:2201.06578）逐字把现象限定在「<b>limited data settings</b>」；<i>Conditional Collapse in SLR</i>（arXiv:2606.01643）逐字把瓶颈归到「<b>isolating the size of the sentence-level paired-dataset as the bottleneck</b>」——<b>两篇独立工作都把「条件不被利用」归到数据规模</b>。</li>
+</ul>
+
+<div class="box warn"><div class="bt">关于「不要建议换更大的模型 / 更多数据」这条约束</div>
+<p style="margin-bottom:0">用户明确要求避免「扩大规模就完事」。<b>我同意，而且本报告的建议不是那个。</b>区别在于：<b>「多训一个更大的模型」是扩大规模；「把 32-patch 这个失效仪器换成零训练的解析测试」是换仪器。</b>本报告推荐的 T1/T2 <b>完全不需要训练</b>，T3 只要 ~40 分钟，T5 才需要一次全量训练——而 T5 的目的是<b>取得一个可判别的仪器</b>，不是「靠规模解决」。</p></div>
+
+<h3>6.3 为什么 H-B 排第三（真实但次要）</h3>
+
+<div class="scroll"><table>
+<thead><tr><th>判断</th><th>依据</th></tr></thead>
+<tbody>
+<tr><td><b>它不是主因</b>（已被部分否证）</td><td>F1/F2：<b>同一条单尺度 concat 路径</b>在合成强条件上 <code>r=0.9956</code>，且能泛化 ⇒ 路径不是死的。<b>如果路径是死路，F1 不可能出现。</b></td></tr>
+<tr><td><b>但它真实存在</b></td><td>SPADE 逐字：normalization layers 会「wash away」语义；T2I-Adapter Table 2：注入尺度 4→1 时 FID 17.36→22.66；SLICE 逐字：input-level conditioning 可以「worse than no encoder at all」。<b>三条独立证据都指向「只在输入层注入一次」不够。</b></td></tr>
+<tr><td><b>它解释了 F7 的细节</b></td><td>「换条件时差异集中在细胞边界」（低层 / 高频）与 FreeU 逐字「skip connections mainly introduce <b>high-frequency features</b> into the decoder」一致</td></tr>
+<tr><td><b>但它被同一个 R² 封顶</b></td><td>即使注入完美，也只能恢复 <code>R²</code> 那一片。<b>修 H-B 不能单独让模型「工作」。</b></td></tr>
+<tr><td><b>然而它是最值得先试的改动</b></td><td>它是<b>唯一一个「便宜、方向明确、且能提高可恢复上限」的杠杆</b>——如果注入把可恢复比例从 1% 提到 5%，那就是 5× 的提升</td></tr>
+</tbody></table></div>
+
+<h3>6.4 H-D（新增）：已确认存在，但解释不了 <code>r≈0</code></h3>
+
+<p>文档里没有这一条。提出它的理由是库内一个<b>早先的实测数字</b>与本项目的 <code>probe_signal</code> 之间有一处张力：</p>
+
+<div class="scroll"><table>
+<thead><tr><th>测量</th><th>对象</th><th class="c">像素级</th><th class="c">块级</th><th>读法</th></tr></thead>
+<tbody>
+<tr><td>库内早先实测</td><td><code>C_H^HE</code> vs <code>C_H^IHC</code>（<b>同一组织、跨两种染色</b>）</td><td class="c">0.061</td><td class="c">0.407 <span class="small">(128)</span></td><td>「块级高、像素级低」<b>是空间错位的签名</b></td></tr>
+<tr><td>本项目 <code>probe_signal</code></td><td><code>[C_H^HE, C_E^HE]</code> → <code>C_DAB^IHC</code></td><td class="c">0.233</td><td class="c">0.304 <span class="small">(16×16)</span></td><td>像素→块提升<b>很小</b>，不像错位主导</td></tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">★ 这个张力已经被库内另一份报告解答了——H-D 成立，但它是背景，不是故障</div>
+<p>库内 <code>PSPStain_频域条件注入_文献综述报告.html</code> §1.5 已经记录：</p>
+<ul>
+<li><b>BCI 原论文自述</b>逐字：「<b>some positions cannot achieve pixel-level alignment</b>」——<b>它是 serial-section 数据，像素级对齐本来就不存在。</b></li>
+<li>库内实测 edge cross-correlation ≈ <b>0.005~0.02</b> ⇒ H&E 与 IHC 几乎无像素级对齐。</li>
+<li>CCPL (2025) 在 BCI 上报告最优方法的 PCC 仅 <b>0.2441</b>；MIST-HER2 上仅 0.1388。</li>
+</ul>
+<p style="margin-bottom:0"><b>⇒ 所以 <code>probe_signal</code> 的 r=0.233 不是「条件弱」，而是「BCI 的像素级对应本来就到这个量级」。</b>这解释了 §6.4 表格里那处张力（0.061 vs 0.233 是不同指标，不是矛盾）。<b>但关键推论是：</b>既然同数据集上训练过的方法能到 <b>DAB corr 0.439</b>，那么<b>像素级对齐的缺失只是给 <code>R²</code> 设了一个上限，它解释不了「M0 拿到 0.02」</b>。⇒ <b>H-D 是背景条件，不是故障本身；不需要为它改变方案，但 T1 必须分层报告。</b></p></div>
+
+<p><b>另外，H-D 还覆盖一类文档没排除的可能：patch 采样错位。</b>文档 §3.1 的 <code>sanity_check</code> 过了 8 道门禁，但它验的是「浓度链路可逆、矩阵一致、配对正确」——<b>「配对正确」通常指文件名匹配，不等于「两个 patch 是同一块组织」</b>。这是可测的（T2），不是要重新争论冻结结论。</p>
+
+<h2 id="s7"><span class="num">7</span>★ 判别实验设计（可直接跑）</h2>
+
+<p>全部实验按「代价从低到高」排列。<b>T1 / T2 零训练、纯 CPU；<span class="key">T0 与 T3 是两个真正有判别力的归因实验</span>——T0 分开 H-A 与 H-C，T3 分开 H-A 与 H-B。</b>文档 §7 原有的 E1（<code>cond=none</code>）<b>不能单独完成归因</b>（见 §2）。</p>
+
+<h3>T0 —— 目标函数受控对照（★ 分开 H-A 与 H-C，GPU，~20 分钟）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">把「目标函数」之外的所有变量锁死，只看换目标函数换不换得动</div><div class="v">这是文档里 <code>probe_regress</code> vs <code>overfit3</code> 那个对照的<b>受控版</b>，也是 H-A 目前唯一的主证据</div></div><div><span class="b bad">决定性</span> <span class="b medium">~20 min GPU</span></div></div>
+<div class="body">
+<p><b>为什么必须有它：</b>文档里支持 H-A 的那条对照（直接回归 train <code>r=0.9964</code> vs 扩散 train <code>r=0.0264</code>）<b>虽然同架构、同注入路径、同 32 patch，但还差三个变量没锁死</b>——训练步数（2000 vs 3000）、任务难度（固定 <code>t=0</code> 的单步回归 vs 全部 <code>t</code> 的多步去噪）、数据是否常驻显存。<b>H-C 完全可以主张「是这三个差异造成的，不是目标函数」。</b>T0 就是把这三个变量补齐的那个对照。</p>
+<p><b>做法（只改一个变量）：</b></p>
+<ol>
+<li>固定：<b>同一架构</b>（<code>UNet2DModel</code>，26.6 M 参数，一字不改）、<b>同一批 32 个高方差 patch</b>（与 <code>overfit3</code> 完全一致）、<b>同步数</b>（<b>两支都跑 2000 步</b>）、<b>同种子</b>、<b>同 batch / lr / EMA</b>。</li>
+<li><b>Arm ①（直接回归）</b>：把同一个网络当普通回归头用——训练时<b>永远取 <code>t=0</code></b>（即 <code>z_t = z_0</code>，不加噪），目标就是 <code>z_0</code> 本身。这是 <code>probe_regress</code> 在受控条件下的复现。</li>
+<li><b>Arm ②（真扩散）</b>：<b>同架构、同 patch、同步数、同种子</b>，唯一区别是 <code>t</code> 从 <code>[0,1000]</code> 采样、走完整的 v-prediction 训练。</li>
+<li>两支都在<b>训练集本身</b>上测 <code>r</code>（看「能不能背下来」，不是看泛化——泛化是 T1/T3 的事）。<b>再补一条步数曲线</b>：每 500 步记录一次 train <code>r</code>，看它是「平台」还是「还在爬」。</li>
+</ol>
+<p><b>预期结果与判据：</b></p>
+<div class="scroll"><table>
+<thead><tr><th>假设</th><th>预测</th><th>读法</th></tr></thead>
+<tbody>
+<tr><td><b>H-A</b>（目标函数是主因）</td><td>Arm ① 训练集 <code>r → 0.99</code>；Arm ② 即使同步数、同种子，训练集 <code>r</code> 仍<b>停在 0.03 附近不涨</b>（曲线早早平台化）</td><td><b>⇒ 目标函数单独就能解释差异</b>，与步数/难度/显存无关。H-A 由构造成立，直接进 §8.1</td></tr>
+<tr><td><b>H-C</b>（32 patch 是主因）</td><td>Arm ② 的 <code>r</code> 随步数<b>持续上升</b>（2000 步已明显 &gt; 0.03，且曲线未饱和）</td><td><b>⇒ 是数据量/训练预算不够</b>，扩散不是不能学，是没学够。资源应先投数据与预算，而不是改架构</td></tr>
+<tr><td><b>两者都对</b>（最可能）</td><td>Arm ② 缓慢上升但<b>远低于 Arm ①</b>，并在一个较低平台饱和</td><td>⇒ 目标函数<b>压低了收敛速度与上限</b>，数据量<b>同时</b>是瓶颈。<b>这正是「先量后改」要区分的两种资源投向</b></td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">为什么它排在最前（成本最低、判别力最强）</div>
+<p style="margin-bottom:0"><b>它不需要新数据、不需要新代码路径、不需要改架构</b>——只是把已有的两个脚本放到<b>同一组超参</b>下重跑一次，20 分钟 GPU。<b>而它给出的答案决定了 §8.1（改目标函数）与「扩数据 / 加预算」哪条先走。</b>在 T0 之前直接改架构（B1）或直接改目标函数（Cocos）都是盲目的：<b>你连「扩散到底能不能在这批数据上学到东西」都还没测过。</b></p></div>
+</div></div>
+
+<h3>T1 —— 条件上界测试（零训练，CPU，~30 分钟）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">测出真实的 <code>R²</code>：条件到底解释了多少目标方差</div><div class="v">这是 §3 上界的实测版，也是文档 §7 E2 的升级形式</div></div><div><span class="b high">零训练</span> <span class="b blue">CPU</span></div></div>
+<div class="body">
+<p><b>做法（不需要 GPU、不需要训练）：</b></p>
+<ol>
+<li>取全量 train（3506 patch，或抽 512）+ val（64 patch）。</li>
+<li>对 <code>C_DAB</code> 与 <code>[C_H, C_E]</code> 都做<b>多尺度分解</b>：块均值（8/16/32/64）+ 局部均值/方差/梯度幅值。<b>目标也做同样分解</b>——这是关键，逐像素的 <code>C_DAB</code> 本身噪声很大，块均值才是「该染多浓」这个可学的量。</li>
+<li>在每个尺度上拟合条件均值 <code>E[C_DAB | cond]</code>：<b>ridge 起步</b>（闭式、秒级），再用<b>小 MLP 或梯度提升树</b>给非线性上界。</li>
+<li>算 <code>R²(scale) = Var(Ê[z₀|cond]) / Var(z₀)</code>，<b>报整条曲线</b>，不只报一个数。</li>
+</ol>
+<p><b>预期结果</b>（按 §3 的推算）：逐像素 <code>R²</code> 约 0.05–0.15；随尺度变粗上升到 <code>R²</code> ≈ 0.2–0.5；<b>粗尺度才是可学的部分</b>。</p>
+<div class="box key"><div class="bt">判据（这条决定后面所有事）</div>
+<p><b>★ 先设一个健全性下限：<code>max R²</code> 必须 ≥ 0.193，否则说明这个探针本身太弱，不是条件太弱。</b>理由：你的 PSPStain 基线在<b>同一数据集</b>上已经实现 <code>R²≈0.193</code>（§0 表）。<b>探针若测不到 0.193，问题在探针（线性/ridge 表达力不足），不在条件。</b>所以 T1 报出的数字要当成<b>下界</b>读，直到它超过 0.193 才可作为「上界」使用。</p>
+<p style="margin-bottom:0"><b>若 <code>max R²</code> 落在 0.19–0.25</b> ⇒ H-A 的<b>「信号弱」这一半成立，但「弱到不值得学」不成立</b>：天花板是 0.19 而不是 0.05，M0 拿到 0.0004 仍是真实故障 ⇒ <b>主攻目标函数与优化，而不是「接受小信号」</b>。<br><b>若 <code>max R² &gt; 0.40</code></b> ⇒ H-A 被<b>进一步削弱</b>，模型确实在把真信号扔掉 ⇒ 主攻 H-B 与优化。<br><b>若粗尺度 R² ≫ 细尺度 R²</b> ⇒ 多尺度注入应<b>主要作用在粗尺度</b>，且 M0 的 patch 尺寸/感受野需要重新审视（这正是文档 §7 E2 的预判，本轮得到文献支持）。</p></div>
+</div></div>
+
+<h3>T2 —— 错位测试（零训练，CPU，~15 分钟）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">量出 <code>R²</code> 有多少被空间错位吃掉（H-D）</div><div class="v">对照库内早先的 <code>Corr_pixel=0.061</code> vs <code>Corr_128=0.407</code></div></div><div><span class="b high">零训练</span> <span class="b blue">CPU</span></div></div>
+<div class="body">
+<p><b>做法：</b></p>
+<ol>
+<li>对每对 patch，在 <code>dx, dy ∈ [−8, 8]</code>（可加小旋转/尺度）上搜索，最大化 <code>corr(块均值(C_H^HE), 块均值(C_DAB^IHC))</code>。</li>
+<li>比较「不搜」与「搜过之后」的 <code>R²</code>。</li>
+<li>顺带量：<code>corr(C_H^HE, C_H^IHC)</code> 与 <code>corr(C_DAB^IHC, C_H^HE)</code> 在同一批 patch 上的值——<b>直接解决 §6.4 的矛盾</b>。</li>
+</ol>
+<p><b>预期结果：</b>若错位主导，<code>R²</code> 在允许 ±4–8 像素平移后会<b>明显跳升</b>；若错位不主导，跳升很小。</p>
+<p><b>判据：</b>跳升 &gt; 2× ⇒ <b>先修数据配对/采样，再谈模型</b>；跳升 &lt; 1.2× ⇒ H-D 排除，回到 H-A/H-B。</p>
+</div></div>
+
+<h3>T3 —— 条件强度扫描 × 注入路径（★ 分开 H-A 与 H-B，GPU，~40 分钟）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">把「条件信息量」与「注入强度」当成两个自变量扫</div><div class="v">这是文档 §7 E4 的升级形式，也是分开 H-A 与 H-B 的关键设计</div></div><div><span class="b bad">决定性</span> <span class="b medium">~40 min GPU</span></div></div>
+<div class="body">
+<p><b>核心思想：</b>H-A 与 H-B 都预测「Δr 会塌」，但<b>塌的原因不同</b>——H-A 说塌点由 <code>R²</code> 决定，H-B 说塌点由注入方式决定。<b>所以要同时扫这两个自变量。</b></p>
+<p><b>做法：</b></p>
+<ol>
+<li>造一个<b>可控 <code>R²</code></b> 的合成任务：保留强合成信号 <code>S = 0.7·C_E + 0.3·blur3×3(C_H)</code>，但<b>给条件加噪</b>：<br><code>cond(β) = normalize( β·cond + √(1−β²)·noise_cond )</code>，<code>β ∈ {1.0, 0.6, 0.35, 0.2, 0.1, 0.05}</code>。<br>目标 <code>tgt = clip(S, −1, 1)</code> 不变 ⇒ <b>「目标给定条件的 <code>R²</code>」随 β 单调下降且可解析计算</b>（先用 T1 的方法把每个 β 的 <code>R²</code> 量出来）。</li>
+<li>两条注入路径：<b>(a) M0 原样单尺度 concat</b>；<b>(b) §8 的多尺度零初始化门控残差</b>。</li>
+<li>每个 (β, 注入) 组合训 <b>800 步 / 16 patch</b>（与 <code>probe_synth</code> 完全同口径），采样后算 <code>Δr = r(对条件) − r(轮转条件)</code>。</li>
+<li>画 <code>Δr</code> vs <code>β</code>（或 vs <code>R²</code>），两条曲线。</li>
+</ol>
+<div class="scroll"><table>
+<thead><tr><th>假设</th><th>预测的曲线形状</th></tr></thead>
+<tbody>
+<tr><td><b>H-A</b>（目标函数）</td><td>两条曲线<b>几乎重合</b>；<code>Δr</code> 只随 <code>R²</code> 下降而塌；<b>塌点与注入方式无关</b></td></tr>
+<tr><td><b>H-B</b>（注入路径）</td><td>两条曲线<b>分开</b>；多尺度注入的 <code>Δr</code> 在<b>更低的 <code>R²</code></b> 处仍不塌（即它能榨出更弱的信号）</td></tr>
+</tbody></table></div>
+<p><b>成本：</b>6 个 β × 2 条路径 × ~3 分钟 ≈ <b>36 分钟 GPU</b>（<code>probe_synth</code> 已在数分钟内跑完 800 步，所以这是保守估计）。</p>
+<div class="box good"><div class="bt">为什么这个设计比文档的 E1 / E4 强</div>
+<p style="margin-bottom:0"><b>E1（cond=none）只在单侧有判别力</b>（§2）；<b>E4（条件强度扫描）只扫了一个自变量</b>，无法把「塌」归因到 R² 还是注入。<b>T3 同时扫两个自变量，是唯一能把两条曲线分开的设计。</b></p></div>
+</div></div>
+
+<h3>T4 —— <code>cond=none</code> 对照（GPU，~40 分钟）</h3>
+
+<p>就是文档的 <b>E1</b>。<b>建议仍然跑</b>（它是 M0 规格本来就要求的三个基线之一），但<b>必须知道它的局限</b>：</p>
+<ul>
+<li><b>只有单侧判别力</b>：<code>none ≈ he</code> 时无法归因（H-A/H-B 都预测这个结果）。</li>
+<li><b>它的真正价值在另一个方向</b>：如果 <code>none</code> <b>明显更好</b>，那就复现了 SLICE 逐字报告的「input-level conditioning 比无条件还差」——<b>那是一个可发表级别的阴性发现</b>，而且直接指向 H-B。</li>
+<li><b>必须同种子、同 patch、同步数、同超参</b>（文档 §2.5 已规定），否则不成立。</li>
+</ul>
+
+<h3>T5 —— 全量数据最小判别（GPU，~2 小时，唯一需要「跑一次真的」的实验）</h3>
+
+<p>文档 §4.3 已把它列为「本方案目前最大的方法论缺口」。本报告只补一条<b>设计约束</b>：</p>
+<div class="box warn"><div class="bt">不要直接跑 <code>run_ladder.sh</code>（三段各 10000 步）</div>
+<p style="margin-bottom:0">那样会得到三组<b>都无法判别</b>的结果（因为还没有仪器）。正确做法是：<b>先只跑一个 arm（<code>he</code>，全量，10000 步）</b>，用它同时测 <code>Δr</code>、<code>R²</code> 达成度、以及 §3.10 的饱和度指标。<b>拿到这组数字后，再决定要不要跑另外两段。</b>文档 §7 E5 说「建议在 E1~E4 给出方向之后再决定」——<b>这个判断是对的，本报告同意，只是把判据换成了 T1/T3。</b></p></div>
+
+<h3>7.1 与文档 §7 原设计的映射</h3>
+<div class="scroll"><table>
+<thead><tr><th>文档原编号</th><th>本报告对应</th><th>关系</th></tr></thead>
+<tbody>
+<tr><td>—</td><td><b>T0（目标函数受控对照）</b></td><td><b>新增</b>：把文档里 <code>probe_regress</code> vs <code>overfit3</code> 的对照补成受控版（同步数 / 同种子 / 同数据驻留），<b>是分开 H-A 与 H-C 的唯一设计</b>，也是本轮最重要的一条</td></tr>
+<tr><td>E1（cond=none 对照）</td><td><b>T4</b></td><td>保留，但降级为「单侧判别」+ 潜在阴性发现</td></tr>
+<tr><td>E2（条件信号多尺度分解）</td><td><b>T1</b></td><td><b>升级</b>：从「描述性分解」升级为「<code>R²</code> 上界测量」，并给出决策判据</td></tr>
+<tr><td>E3（把 Δr 固化为常驻指标）</td><td><b>采纳，且升级为 T3 的主指标</b></td><td>文档这条判断正确，本报告把 <code>Δr</code> 提到核心位置</td></tr>
+<tr><td>E4（条件强度扫描）</td><td><b>T3</b></td><td><b>升级</b>：从「只扫 α」升级为「<code>R²</code> × 注入路径」二维扫描</td></tr>
+<tr><td>E5（完整消融阶梯）</td><td><b>T5</b></td><td>保留但缩为单 arm；并加「先拿仪器再决定」的判据</td></tr>
+<tr><td>—</td><td><b>T2（错位测试）</b></td><td><b>新增</b>：H-D，文档未提出</td></tr>
+</tbody></table></div>
+
+<h2 id="s8"><span class="num">8</span>修复方案</h2>
+
+<p><b>前提（修正后）</b>：先做 <b>T0</b> 与 <b>T1</b>，量出「扩散能不能学」与「条件上界是多少」，再决定期望值。<b>这里有一个已经实现的参照点必须记住：</b>你的 PSPStain 基线在<b>同一数据集</b>上拿到 <b>DAB corr 0.439（<code>R²≈0.19</code>）</b>，UNIStainNet（含冻结 UNI 基础模型）到 <b>0.867（<code>R²≈0.75</code>）</b>。<b>所以本项目的现实目标是「追平 0.19 这条线」，而不是「做出肉眼可用的图」</b>——后者在 BCI 上连 SOTA 都还做不到（病理医生盲测准确率仅 37.5%–40%）。</p>
+
+<div class="box warn"><div class="bt">§8 的期望值校准：什么算「成功」（防止两种误判）</div>
+<div class="scroll"><table>
+<thead><tr><th>档位</th><th class="c">DAB corr</th><th class="c">R²</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td><b>M0 现状</b></td><td class="c">≈0.02</td><td class="c">≈0.0004</td><td><b>故障</b>：连常数基线都打不过（浓度 MAE 差 13%）</td></tr>
+<tr><td><b>修复后最低验收线</b></td><td class="c">≥ 0.30</td><td class="c">≥ 0.09</td><td>「稳定超过常数基线」——<b>§8.1 / §8.2 做完后应达到的最低线</b></td></tr>
+<tr><td><b>追平自家 GAN</b></td><td class="c">0.439</td><td class="c">0.193</td><td>PSPStain 基线（BCI 实测）——<b>扩散路线的现实对标</b></td></tr>
+<tr><td><b>BCI SOTA 区间</b></td><td class="c">0.53–0.87</td><td class="c">0.28–0.75</td><td>Star-Diff 0.53 / UNIStainNet 0.867（<b>含冻结基础模型，不在 §2.8 允许范围内</b>）</td></tr>
+</tbody></table></div>
+<p style="margin-bottom:0"><b>这张表是为了防止两种误判：</b>(a) 把「<code>r</code> 从 0.02 提到 0.15」误判为「成了」——其实还在噪声量级；(b) 因为「做不到 0.87」就判定整条路线失败——<b>0.87 那条用了冻结 UNI 基础模型，本来就不是 M0 这一代的对标对象</b>。</p></div>
+
+<h3>8.1 若判定为 H-A —— 最小改法（按推荐度排序）</h3>
+
+<div class="scroll"><table>
+<thead><tr><th class="c">#</th><th>改法</th><th>具体形式</th><th>依据</th><th class="c">改动成本</th><th class="c">可复现性</th><th class="c">§2.8</th></tr></thead>
+<tbody>
+<tr><td class="c"><b>1</b></td><td><b>Cocos 式：让初始噪声依赖条件</b></td><td><code>z_T = σ_T·μ(cond) + √(1−σ_T²)·ε</code>，其中 <code>μ</code> 是一个 1 层 conv（或直接取 <code>0.7·C_E+0.3·blur(C_H)</code> 这个已验过的确定性映射）。其余全部不动</td><td>arXiv:2505.11123 逐字给出该修法，且指出<b>标准采样 <code>q(z)=q(x₁,c)q(x₀)</code> 正是 collapse 的成因</b></td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">高</span></td><td class="c"><span class="b medium">需确认</span></td></tr>
+<tr><td class="c"><b>2</b></td><td><b>CFG + condition dropout</b></td><td>训练时以 10% 概率把 <code>cond</code> 置零；采样用 <code>ε̃=(1+w)ε_cond − w·ε_uncond</code>，扫 <code>w∈[0,3]</code></td><td>Ho &amp; Salimans Eq.(6)；GLIGEN 逐字「drop … with <b>10% probability</b> for classifier-free guidance」</td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">高</span></td><td class="c"><span class="b bad">需裁定</span></td></tr>
+<tr><td class="c"><b>3</b></td><td><b>loss 重加权到高 t</b></td><td>条件价值集中在高 t（§3.3），而 v-MSE 对 t 一视同仁 ⇒ 给 <code>t &gt; t*</code> 的样本加权</td><td>§3.3 的推导；<b>无直接文献先例</b>（属自研）</td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td class="c"><b>4</b></td><td><b>条件通道标准化 / 放大</b></td><td>对 <code>C_H, C_E</code> 做逐通道 robust 标准化（已做）+ 试 per-patch 标准化，把弱变化放大</td><td>无数值先例，属工程尝试</td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">高</span></td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td class="c">5</td><td>条件对比 / 相关性损失</td><td>CCUA 式：在大 timestep 上做条件-无条件对齐损失</td><td>arXiv:2507.09052（<b>仅摘要级核实</b>）</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b bad">很可能违反</span> <span class="small">（「H 相关 loss」）</span></td></tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">关于第 1 条（Cocos）：这是最贴合 H-A 的改法，但它改变了 M0 的一个设计前提</div>
+<p style="margin-bottom:0">M0 §2.3 / §2.7 规定「采样从纯 <code>N(0,1)</code> 出发」。Cocos 让初始分布依赖条件 ⇒ <b>模型从「纯生成」变成「带信息先验的生成」</b>。这<b>不在 §2.8 的禁止清单里</b>，但<b>它确实改了一条设计前提，需要用户确认</b>。它的好处是：<b>它从构造上破坏了「对 c 求期望会退化成无条件」这条路径</b>——不是靠调参，是靠改分布。</p></div>
+
+<div class="box warn"><div class="bt">关于第 2 条（CFG）：必须由用户裁定是否违反 §2.8 #5</div>
+<p style="margin-bottom:0">§2.8 #5 禁止「<b>分类器引导</b>（classifier guidance）」。<b>CFG 不是 classifier guidance</b>——前者不需要任何额外分类器，是 Ho &amp; Salimans 提出的、用同一个模型的条件/无条件两支做外推；后者（Dhariwal &amp; Nichol）需要一个单独训练的分类器并取其梯度。<b>所以按字面，CFG 不违反 #5。</b>但它<b>需要训练时加 condition dropout</b>（M0 明确「没有条件 dropout」），这是一处训练改动。<b>这条边界应由用户裁定，本报告不替用户决定。</b></p></div>
+
+<h3>8.2 若判定为 H-B —— 多尺度注入的具体形式</h3>
+
+<p>用户要求的四个细节（<b>在哪里注入 / 注入几层 / 用什么算子 / 是否 zero-init</b>）逐条给出。<b>全部满足 §2.8：不用 ControlNet、不用 LoRA、不用 VAE、不用 GAN、不用分类器引导。</b></p>
+
+<div class="card">
+<div class="ch"><div><div class="title">★ 方案 B1（首推）：多尺度零初始化门控残差注入（GLIGEN 式）</div><div class="v">不复制 encoder、不新增 loss、step 0 与 M0 数值完全一致</div></div><div><span class="b high">首推</span> <span class="b purple">零初始化</span></div></div>
+<div class="body">
+<p><b>在哪里注入：</b>U-Net 的 <b>4 个 up_block 的输出处</b>（分辨率 16/8/4/2，对应 <code>block_out_channels=(64,128,256,256)</code>）。<b>建议同时在 4 个 down_block 的输入处各加一路</b>（T2I-Adapter Table 2 显示只注入 encoder 反而最好，17.36 vs decoder-only 18.32）。</p>
+<p><b>注入几层：</b><b>3–4 层</b>。T2I-Adapter 的消融显示尺度数从 4 降到 1 时 FID 17.36→22.66（+30%），<b>所以不要只做 1 层</b>；4 层是上限，3 层已能拿到大部分收益。</p>
+<p><b>用什么算子：</b></p>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>对第 l 层（分辨率 H/2^l × W/2^l，通道 C_l）：
+    c_l = Conv1×1_l( downsample_l( cond ) )      # cond(2,128,128) → (C_l, H/2^l, W/2^l)
+    h_l ← h_l + tanh(γ_l) · c_l                   # γ_l 是每层一个可学习标量，γ_l = 0 初始化
+
+参数量：Σ_l C_l·2 ≈ 2·(64+128+256+256) ≈ 1.4 K —— 可忽略</code></pre></div>
+<p><b>是否 zero-init：是，必须。</b>两个理由：<b>(a) 有直接先例</b>——GLIGEN 逐字「treated as a residual, whose <b>gate is initially set to 0</b> (due to γ being initialized as 0). This also enables more stable training」；ControlNet 的 zero-conv 是同一思想。<b>(b) 它保证了 <code>step 0</code> 的输出与 M0 baseline 数值完全一致</b> ⇒ 之后任何变化都可归因，这是本项目一贯要求的可解释性。</p>
+<p><b>依据汇总：</b>GLIGEN（零初始化门控残差，不复制 encoder）· ControlNet（zero-conv + 逐 encoder level 注入）· T2I-Adapter（注入尺度消融）· DiT（「adaLN-Zero outperforms cross-attention and in-context conditioning at all stages of training」——<b>逐层调制 &gt; 输入 concat 的直接受控证据</b>）。</p>
+<p><b>成本 / 可复现性：</b>改动成本 <span class="b high">低</span>（约 50 行，包一层 <code>UNet2DModel</code>）；可复现性 <span class="b high">高</span>（GLIGEN + ControlNet 都有公开实现与权重）。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">方案 B2：多尺度空间调制（SPADE / AdaGN 的 diffusion 版）</div><div class="v">更强，但改动更大</div></div><div><span class="b medium">次推</span></div></div>
+<div class="body">
+<p><b>在哪里注入：</b><b>每个 GroupNorm 处</b>（SPADE 逐字：「<b>each normalization layer</b> uses the segmentation mask to modulate the layer activations」）。</p>
+<p><b>用什么算子：</b><code>h ← (1 + γ_l(cond)) ⊙ norm(h) + β_l(cond)</code>，其中 <code>γ_l, β_l</code> 由一个小 conv 从下采样后的 <code>cond</code> 产生。<b>zero-init 的等价形式是 <code>γ=0, β=0</code></b>（即 step 0 时退化为恒等）。</p>
+<p><b>依据：</b>SPADE 逐字指出「the normalization layers tend to <b>“wash away” semantic information</b>」，并证明「simply concatenating semantic input at every layer <b>fails</b>」；ADM 的 AdaGN、DiT 的 adaLN-Zero 都是这一族。</p>
+<p><b>成本 / 可复现性：</b>改动成本 <span class="b medium">中</span>（要替换 <code>UNet2DModel</code> 里所有 <code>GroupNorm</code>，约 100–150 行）；可复现性 <span class="b medium">中高</span>（SPADE 有官方实现，但 diffusion 版需自己搭）。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">方案 B3：timestep-embedding 注入（SLICE 式）—— 便宜，但对空间条件不适用</div><div class="v">必须诚实标注它的局限</div></div><div><span class="b low">不推荐作主方案</span></div></div>
+<div class="body">
+<p>SLICE 的机制是：把条件编码后<b>加进 timestep embedding</b>，从而「propagates through all residual blocks <b>without architectural changes</b>」。<b>但 SLICE 的条件是一个全局向量</b>（噪声类型 / 混响 / 失真的分类条件）。</p>
+<div class="box stop"><div class="bt">为什么不能直接搬到 M0</div>
+<p style="margin-bottom:0">M0 的条件是<b>空间图</b>（2×128×128）。把它池化成全局向量塞进 timestep embedding，<b>会丢掉全部空间信息</b>——而「哪里该染」正是空间信息。<b>⇒ SLICE 可迁移的是它的结论（「只在输入层注入不够，要穿到每个 block」），不是它的算子。</b>若要用，只能当作<b>全局染色风格的调制</b>，与 B1 叠加，不能替代 B1。</p></div>
+</div></div>
+
+<h3>8.3 两件事都要做，但顺序是「先量后改」</h3>
+
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>0. T0 目标函数受控对照（GPU 20 min）→ 先回答「扩散能不能学」= 分开 H-A 与 H-C
+      │
+      ├─ Arm ② 早早平台化在 0.03 ─→ 目标函数是主因，进 §8.1（Cocos / CFG）
+      └─ Arm ② 还在随步数爬 ─────→ 先加数据 / 预算，别急着改架构
+
+1. T1 上界测试（CPU 30 min）   → 拿到 R² 天花板（且必须 ≥ 0.193，否则是探针太弱）
+      │
+      ├─ max R² ≈ 0.19–0.25 ─→ 主攻目标函数与优化（M0 拿到 0.0004 仍是故障）
+      │
+      └─ max R² &gt; 0.40 ─────→ 主攻注入（§8.2 B1）与优化
+
+2. T3 条件强度扫描 × 注入路径（GPU 40 min）→ 分开 H-A 与 H-B，决定资源往哪投
+3. T5 单 arm 全量训练（GPU 2 h） → 拿到可判别的仪器，再决定是否跑完整阶梯</code></pre></div>
+
+<div class="box good"><div class="bt">最后一条：文档 §7 E3 的判断应该被保留并提到核心位置</div>
+<p style="margin-bottom:0"><code>Δr = r(对条件) − r(错条件)</code> 是本项目<b>唯一一个能同时满足「不受 R² 上界压制」与「不需要肉眼判断」</b>的指标。文档说它「目前只是一次性脚本，应该成为常驻指标」——<b>这个判断是正确的，而且比文档自己意识到的更重要：它是 H-A/H-B 归因的唯一载体。</b></p></div>
+
+<h3>8.4 H-D（serial-section 错位）在修复计划里的位置</h3>
+
+<p><b>它不产生新的改法，只产生一条前置检查。</b>T2 会告诉你错位吃掉了多少 <code>R²</code>，按结果分流：</p>
+<ul>
+<li><b>若 T2 显示跳升 &gt; 2×</b> ⇒ 说明「配对的两个 patch 不是同一块组织」这个混淆很大，<b>先修采样 / 配对，任何模型改动都排在后面</b>——否则你会在一个错的对应关系上调模型，调出来的结论全部作废。</li>
+<li><b>若 T2 显示跳升 &lt; 1.2×</b> ⇒ H-D 只是背景上限，<b>不改变 §8.1 / §8.2 的任何结论</b>，直接按 H-A / H-B 走。</li>
+</ul>
+<p><b>为什么它不能是主因：</b>同一份 serial-section 数据上，PSPStain 能到 <b>0.439</b>、UNIStainNet 能到 <b>0.867</b>。<b>错位给像素级 <code>R²</code> 设了一个上限，但没有把上限压到 0.0004。</b>所以 H-D 只影响「上限是多少」，不影响「M0 为什么只拿到 0.02」——后者必须由 H-A 或 H-B 解释。</p>
+
+<h2 id="s9"><span class="num">9</span>§2.8 硬约束边界检查表</h2>
+
+<p>逐条核对本报告的建议与 M0 §2.8 的 10 条冻结约束。<b>「需裁定」= 本报告不替用户决定，请用户确认。</b></p>
+
+<div class="scroll"><table>
+<thead><tr><th>建议</th><th>触及哪条约束</th><th>核对结论</th><th class="c">判定</th></tr></thead>
+<tbody>
+<tr><td><b>T0 目标函数受控对照</b>（同架构两支对照）</td><td>#6</td><td>两支各 <b>2000 步 / 32 patch</b>，与 <code>overfit3</code> / <code>probe_regress</code> 完全同规模 ⇒ <b>属过拟合探针，不属长训练</b>；不新增 loss、不改架构、不换数据集、不引入 teacher</td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td><b>T1 上界测试</b>（多尺度 ridge / MLP 探针）</td><td>#9 不在本机训练</td><td>零训练、纯 CPU。数据需在服务器上跑（或导出小批 patch）。<b>不构成训练</b></td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td><b>T2 错位测试</b></td><td>#1 #2 #3 #9</td><td>只读数据、只做相关/平移搜索。<b>不改矩阵、不换数据集、不训练</b></td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td><b>T3 条件强度扫描</b></td><td>#6 冒烟测试未过不启动长训练</td><td>每个组合 800 步 / 16 patch，与已跑过的 <code>probe_synth</code> 完全同口径 ⇒ <b>属探针，不属长训练</b></td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td><b>T4 <code>cond=none</code> 对照</b></td><td>#6</td><td>3000 步 / 32 patch，与 overfit3 同规模 ⇒ <b>属过拟合探针，不属长训练</b>；且 §2.5 本来就要求这个基线</td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td><b>T5 单 arm 全量训练</b></td><td><b>#6</b></td><td><b>⚠ 直接违反。</b>overfit3 <b>未过</b>过拟合门禁，而 #6 规定「冒烟测试未过之前不启动长训练」。<b>要么先重新定义门禁（见下），要么用户显式授权越过 #6。</b></td><td class="c"><span class="b bad">违反（需授权）</span></td></tr>
+<tr><td><b>B1 多尺度零初始化门控残差</b></td><td>#5（「ControlNet」）</td><td><b>B1 不是 ControlNet</b>：不复制 encoder、不加载 SD 权重、不建侧支路；只是几路 1×1 conv + 门控残差。不新增任何 loss / GAN / VAE / teacher / 分类器引导。<b>但它与 ControlNet-lite 形似，边界应由用户裁定。</b></td><td class="c"><span class="b medium">需裁定</span></td></tr>
+<tr><td><b>B2 SPADE 式多尺度调制</b></td><td>#5</td><td>不新增 loss / GAN / VAE / teacher / 分类器引导；但替换所有 <code>GroupNorm</code> 是<b>较大</b>的结构改动</td><td class="c"><span class="b medium">需裁定</span></td></tr>
+<tr><td><b>B3 SLICE 式 timestep 注入</b></td><td>#5</td><td>只改 timestep embedding 的输入，<b>不改架构</b>。但见 §8.2：对空间条件不适用</td><td class="c"><span class="b high">不违反</span></td></tr>
+<tr><td><b>H-A 方案 1（Cocos）</b></td><td>#5；且改动 §2.3/§2.7 的设计前提</td><td>不在禁止清单里。<b>但它把「从纯 <code>N(0,1)</code> 出发」改成「带信息先验」——这是一条设计前提的变更，需用户确认</b></td><td class="c"><span class="b medium">需裁定</span></td></tr>
+<tr><td><b>H-A 方案 2（CFG + dropout）</b></td><td>#5（「分类器引导」）</td><td><b>CFG ≠ classifier guidance</b>（前者无额外分类器）。按字面不违反 #5；<b>但需要训练时加 condition dropout</b>，是一处训练改动</td><td class="c"><span class="b medium">需裁定</span></td></tr>
+<tr><td><b>H-A 方案 3（loss 重加权到高 t）</b></td><td>#5</td><td>不新增 loss，只是对同一个 v-MSE 加权重；但<b>改了 §2.6 的训练目标</b></td><td class="c"><span class="b medium">需裁定</span></td></tr>
+<tr><td><b>H-A 方案 5（条件对比损失）</b></td><td><b>#5（「H 相关 loss」）</b></td><td><b>很可能违反</b>——它就是一个与条件相关的附加损失项</td><td class="c"><span class="b bad">很可能违反</span></td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">T5 与 #6 的冲突，需要用户给一个决定</div>
+<p><b>事实：</b>overfit3 门禁未过（终 loss 0.1233 / val 0.14696），而 §2.8 #6 规定「冒烟测试未过之前不启动长训练」。</p>
+<p style="margin-bottom:0"><b>但门禁本身已被文档 §3.3 证明是失效的</b>（前两次假阳性的根因是 patch 目标方差太小）。所以这里有三条路，请用户选一条：<b>(a)</b> 用 T1/T3 的结果重新定义门禁（推荐——门禁的本意是「确认管线能学」，而 T1/T3 比 loss 更能回答这个问题）；<b>(b)</b> 显式授权越过 #6；<b>(c)</b> 不跑 T5，只靠 T1–T4 下结论。<b>本报告不替用户选。</b></p></div>
+
+<h2 id="s10"><span class="num">10</span>未核实清单与诚实标注</h2>
+
+<div class="box stop"><div class="bt">明确未核实 / 未取到原文的事项（<b>不要当作事实引用</b>）</div>
+<ol>
+<li><b>MMG 的 venue 未核实。</b>子 agent 报告为「SPIGM Workshop @ NeurIPS 2025」，但我下载的 PDF 正文<b>没有出现该 venue 字样</b>。本报告只按 <code>arXiv:2509.20609</code> 引用，<b>不声称其发表处</b>。</li>
+<li><b>「条件改善上界 ≈ R²」的措辞没有直接出处。</b>MMG 的 Eq.(7)/(8) 给的是 <b>MMSE gap</b> 与 <b>互信息</b> 的恒等式；「等价于决定系数 R²」是<b>本报告的推导</b>，不是原文陈述。数学上成立（正交原理 + 全方差分解），但<b>它是我推的，不是引的</b>。</li>
+<li><b>arXiv:2608.23916</b>（Raju &amp; Zhang, "The Loss Floor of Denoising Score Matching"）我只读到摘要，正文未下载。其「exact conditional-variance decomposition」的具体形式<b>未说明</b>。</li>
+<li><b>arXiv:2506.13763</b>（Xu et al., ICLR 2026）与 <b>arXiv:2503.20240</b>（Unconditional Priors Matter!）均为<b>摘要级</b>核实。</li>
+<li><b>CCUA（arXiv:2507.09052）与 Feedback Guidance（arXiv:2506.06085）</b>为摘要级核实，未读正文。</li>
+<li><b>arXiv:2301.00537 的题录</b>：子 agent 给的是 Wang/Blei/Cunningham, NeurIPS 2021。我未下载核实其作者与年份，<b>只核实了它的内容陈述</b>（「posterior is equal to its prior」、「if and only if … non-identifiable」）。</li>
+<li><b>FreeU 的那句引文</b>（skip connections「mainly introduce high-frequency features」）来自摘要级抓取，未下载正文逐字核对。</li>
+</ol></div>
+
+<div class="box warn"><div class="bt">本轮由我亲自下载 PDF 并逐字核实的（可直接引用）</div>
+<p style="margin-bottom:0"><b>arXiv:2505.11123</b>（26 页）· <b>arXiv:2509.20609</b>（12 页）· <b>arXiv:2302.08453</b>（10 页，Table 2 逐字）· <b>arXiv:1903.07291</b>（19 页）· <b>arXiv:2201.06578</b>（21 页，含 ICLR 2022 页眉）· <b>arXiv:2603.05302</b>（5 页）· <b>arXiv:2606.01643</b>（15 页）· <b>arXiv:2409.06364</b>（14 页，含 PMLR 255 页眉）· <b>arXiv:2301.07093</b> · <b>arXiv:2212.09748</b> · <b>arXiv:2302.05543</b>。共 11 篇。</p></div>
+
+<div class="box warn"><div class="bt">其他诚实标注</div>
+<ul style="margin-bottom:0">
+<li><b>§0 / §3.4 的 <code>0.439</code> 与 <code>0.867</code> 来自库内文档</b>（<code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code> §1.5），<b>不是外文论文</b>。我本轮读了该文件、确认它记录的是你自己基线的实测值，<b>但那个数字背后的原始实验记录我没有独立复算</b>——若它本身有误，§0 的纠正与 §8 的期望值校准会随之动摇。<b>这是本报告最需要你去核一下的一个数。</b></li>
+<li><b>T0 / T1 / T3 的「预期结果」是预测，不是测量。</b>特别是 §7 里「逐像素 R² 约 0.05–0.15、粗尺度 0.2–0.5」是按 §3 的推算给的<b>数量级估计</b>，必须以实测替换；T0 的「Arm ② 停在 0.03 附近」也只是 H-A 的预测，不是已知结果。</li>
+<li><b>§3.5 的重尾推论依赖一个量纲口径</b>（<code>3.5461</code> vs <code>hi=0.8786</code>），文档两行疑似不同量纲。<b>该口径不确认，§3.5 的「MSE 被少数像素主导」就只是疑似。</b></li>
+<li><b>§6.4 的 H-D 依据是库内早先一次实测</b>（<code>Corr_pixel=0.061</code>）。我<b>没有</b>在本轮重新跑它，也不确定它当时的解混口径与 M0 是否一致。<b>它是「待查信号」，不是「已确立事实」。</b></li>
+<li><b>「ControlNet 没有注入位置消融」这条纠正</b>只覆盖 arXiv:2302.05543 v3 的正文与我所抓的 PDF；<b>其补充材料我没取到</b>，故不能 100% 排除。</li>
+</ul></div>
+
+<h2 id="s11"><span class="num">11</span>参考文献</h2>
+
+<div class="scroll"><table>
+<thead><tr><th class="c">#</th><th>文献</th><th>题录</th><th class="c">核实等级</th></tr></thead>
+<tbody>
+<tr><td class="c">[1]</td><td>Conditioning Matters: Training Diffusion Policies is Faster Than You Think</td><td>Dong, Liu, Li, Zhao, Hao · arXiv:2505.11123 · 2025</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[2]</td><td>MMG: Mutual Information Estimation via the MMSE Gap in Diffusion</td><td>Yu, Shi, Kong, Jia, Ver Steeg · arXiv:2509.20609 · 2025</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[3]</td><td>SLICE: Speech Enhancement via Layer-wise Injection of Conditioning Embeddings</td><td>Moon, Jung, Choo（KAIST）· arXiv:2603.05302 · 2026</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[4]</td><td>T2I-Adapter: Learning Adapters to Dig out More Controllable Ability for T2I Diffusion Models</td><td>Mou et al. · arXiv:2302.08453 · 2023</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[5]</td><td>Semantic Image Synthesis with Spatially-Adaptive Normalization（SPADE）</td><td>Park, Liu, Wang, Zhu · CVPR 2019 · arXiv:1903.07291</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[6]</td><td>Collapse by Conditioning: Training Class-conditional GANs with Limited Data</td><td>Shahbazi, Danelljan, Paudel, Van Gool · <b>ICLR 2022</b> · arXiv:2201.06578</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[7]</td><td>Conditional Collapse in Sign Language Production: A Diagnostic and a Scaling Argument</td><td>Hong, Košecká（George Mason）· arXiv:2606.01643 · 2026</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[8]</td><td>What happens to diffusion model likelihood when your model is conditional?</td><td>Cross, Ragni · ML-DE Workshop @ ECAI 2024, PMLR 255 · arXiv:2409.06364</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[9]</td><td>GLIGEN: Open-Set Grounded Text-to-Image Generation</td><td>Li, Liu, Wu, Mu, Yang, Gao, Li · CVPR 2023 · arXiv:2301.07093</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[10]</td><td>Scalable Diffusion Models with Transformers（DiT）</td><td>Peebles, Xie · ICCV 2023 · arXiv:2212.09748</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[11]</td><td>Adding Conditional Control to Text-to-Image Diffusion Models（ControlNet）</td><td>Zhang, Rao, Agrawala · ICCV 2023 · arXiv:2302.05543</td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td class="c">[12]</td><td>Classifier-Free Diffusion Guidance（CFG）</td><td>Ho, Salimans · arXiv:2207.12598 · 2022</td><td class="c"><span class="b medium">子 agent 引用，未复核</span></td></tr>
+<tr><td class="c">[13]</td><td>Diffusion Models Beat GANs on Image Synthesis（classifier guidance / AdaGN）</td><td>Dhariwal, Nichol · NeurIPS 2021 · arXiv:2105.05233</td><td class="c"><span class="b medium">子 agent 引用，未复核</span></td></tr>
+<tr><td class="c">[14]</td><td>Score-Based Generative Modeling through SDEs</td><td>Song et al. · ICLR 2021 · arXiv:2011.13456</td><td class="c"><span class="b medium">子 agent 引用，未复核</span></td></tr>
+<tr><td class="c">[15]</td><td>FreeU: Free Lunch in Diffusion U-Net</td><td>Si et al. · arXiv:2309.11497 · 2023</td><td class="c"><span class="b medium">摘要级</span></td></tr>
+<tr><td class="c">[16]</td><td>Posterior Collapse and Latent Variable Non-identifiability</td><td>arXiv:2301.00537</td><td class="c"><span class="b medium">内容核实·题录未核实</span></td></tr>
+<tr><td class="c">[17]</td><td>Contrastive Conditional-Unconditional Alignment for Long-tailed Diffusion（CCUA）</td><td>arXiv:2507.09052</td><td class="c"><span class="b low">摘要级</span></td></tr>
+<tr><td class="c">[18]</td><td>Feedback Guidance of Diffusion Models</td><td>NeurIPS 2025 · arXiv:2506.06085</td><td class="c"><span class="b low">摘要级</span></td></tr>
+<tr><td class="c">[19]</td><td>The Loss Floor of Denoising Score Matching: Fisher Geometry from Schrödinger Bridges</td><td>Raju, Zhang · arXiv:2608.23916</td><td class="c"><span class="b low">摘要级</span></td></tr>
+<tr><td class="c">[20]</td><td>Diagnosing and Improving Diffusion Models by Estimating the Optimal Loss Value</td><td>Xu et al. · ICLR 2026 · arXiv:2506.13763</td><td class="c"><span class="b low">摘要级</span></td></tr>
+</tbody></table></div>
+
+<div class="foot">
+<p class="small">本报告的每一条承重结论都可回溯到上表 [1]–[11] 中我亲自下载并逐字读过的段落。<b>[12]–[20] 未做同等程度核实，引用时请标注。</b></p>
+</div>
+
+</main>
+</div>
+</body>
+</html>

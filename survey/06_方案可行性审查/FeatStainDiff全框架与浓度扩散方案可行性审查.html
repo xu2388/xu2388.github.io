@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeatStainDiff 全框架与浓度扩散方案可行性审查</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Concentration Diffusion</div>
+<div class="sub">FeatStainDiff 全框架审查<br>H&amp;E→IHC · 2026-10-08</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · 论文的完整数据流</a>
+<a class="l2" href="#s1-1">1.1 任务目标与边界</a>
+<a class="l2" href="#s1-2">1.2 训练期与推理期</a>
+<a class="l1" href="#s2">2 · 全框架逐模块可行性</a>
+<a class="l2" href="#s2-1">2.1 feature diffusion</a>
+<a class="l2" href="#s2-2">2.2 CSB 语义桥</a>
+<a class="l2" href="#s2-3">2.3 MMD 分布桥</a>
+<a class="l2" href="#s2-4">2.4 FMoE 频率专家</a>
+<a class="l1" href="#s3">3 · 框架中的结构性问题</a>
+<a class="l1" href="#s4">4 · 浓度扩散的映射</a>
+<a class="l2" href="#s4-1">4.1 为什么浓度扩散更适合本项目</a>
+<a class="l2" href="#s4-2">4.2 不能直接照搬的部分</a>
+<a class="l1" href="#s5">5 · backbone 与模型选择</a>
+<a class="l1" href="#s6">6 · 推荐的整体架构</a>
+<a class="l2" href="#s6-1">6.1 主干与条件</a>
+<a class="l2" href="#s6-2">6.2 参数化与物理渲染</a>
+<a class="l2" href="#s6-3">6.3 loss 与时间步调度</a>
+<a class="l1" href="#s7">7 · 可执行实验路线</a>
+<a class="l1" href="#s8">8 · 风险、止损与未核实</a>
+<a class="l1" href="#s9">9 · 最终决策</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">方案可行性审查 · 全扩散思路</div>
+<h1>FeatStainDiff 全框架与浓度扩散方案<br>—— 完整处理逻辑、可行性与模型选择</h1>
+<p class="desc">材料：`/Users/hua/Desktop/kexue .pdf`（Medical Image Analysis 112, 2026, 104138）全文 16 页；结合当前 H&amp;E→HER2-IHC 项目、已验证的浓度扩散闭环与现有 StainFuser 状态。本报告不把 feature-level 方法直接冒充 RGB 虚拟染色，而是逐格判断哪些思想能迁移。</p>
+<div class="meta"><span>FeatStainDiff · MedIA 2026</span><span>DOI 10.1016/j.media.2026.104138</span><span>全文 16 页</span><span>浓度扩散已验证基本可行</span><span>2026-10-08</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box key">
+<div class="bt">总判定：论文的「基本扩散逻辑」成立，但它成立的是 feature-level 目标；浓度域版本成立且更贴合你的科学目标</div>
+<p><b>FeatStainDiff 的完整处理逻辑在它自己的目标上是可行的：</b>把 H&amp;E 和 IHC 先映射为高层 feature，再从纯噪声生成 IHC-like feature，最后服务 MIL/WSI 分类。论文的消融、跨数据集与配准扰动实验，确实支持「语义桥 + 分布桥 + 条件扩散」这条组合。</p>
+<p>但如果把它整体搬到你的 H&amp;E→HER2-IHC RGB/浓度生成任务，<b>不能原样搬</b>。原因不是扩散框架不行，而是目标不同：</p>
+<ul><li>它的目标是<strong>下游分类可用的 IHC feature</strong>，不是病理医生可查看的 IHC 图像；</li><li>它依赖<strong>注册后的 H&amp;E/IHC feature pairs</strong>，不是你的主设定 non-paired / weak-paired；</li><li>它的 feature-frequency 不是物理染色频率，不能把 FMoE 直接解释成 <code>C_H/C_DAB</code> 分离；</li><li>它没有 Beer–Lambert、stain matrix、DAB FOD 或 H-score calibration。</li></ul>
+</div>
+
+<div class="box good">
+<div class="bt">对你最有价值的迁移结论</div>
+<p><b>保留它的「整体逻辑骨架」，替换它的表示与监督：</b></p>
+<pre><code>FeatStainDiff：H&amp;E feature → semantic bridge → diffusion → IHC feature → MIL
+你的版本：    H&amp;E structure → semantic/physical bridge → concentration diffusion → Z → BL → RGB IHC</code></pre>
+<p>其中最值得迁移的是：</p>
+<ol><li><b>语义桥与分布桥分开</b>：结构/病理语义是一层，目标染色分布是另一层；</li><li><b>条件扩散从纯噪声开始</b>，而不是把 H&amp;E 当成带噪目标的中间状态；</li><li><b>条件可沿 denoising timestep 调度</b>，但先做简单 scalar gate，不直接上四专家 FMoE；</li><li><b>最终模型选择应由输出空间决定</b>：浓度图是 2D 空间问题，首选小型 conditional U-Net，不是论文中的 U-ViT/FMoE。</li></ol>
+</div>
+
+<div class="scroll"><table>
+<thead><tr><th>模块/决策</th><th>可行性判定</th><th>对你的迁移方式</th><th>改动成本</th><th>可复现性</th></tr></thead>
+<tbody>
+<tr><td>Feature-level conditional diffusion</td><td><span class="b high">成立，但目标不同</span></td><td>证明「从纯噪声生成目标域表示」可行；作为浓度扩散的逻辑先例，不作为 RGB backbone</td><td>低（思想）</td><td><span class="b high">高</span></td></tr>
+<tr><td>CSB：contrastive + semantic token</td><td><span class="b medium">有条件成立</span></td><td>paired subset 可用；主 non-paired 路线改成冻结病理特征 + 分布/区域约束，不能搬实例 InfoNCE</td><td>中</td><td><span class="b medium">中</span></td></tr>
+<tr><td>MMD 分布桥</td><td><span class="b medium">有条件成立</span></td><td>更适合改成 fixed-M 下的 DAB/FOD 分布约束；不直接让 H&amp;E 与 IHC feature 全分布相同</td><td>低–中</td><td><span class="b high">高</span></td></tr>
+<tr><td>FMoE：4 个 DCT expert</td><td><span class="b medium">成立但需收窄</span></td><td>先用 timestep gate；后续最多做 2-expert channel/scale routing；不直接复制 DCT+MHSA+4 experts</td><td>中–高</td><td><span class="b low">中–低</span></td></tr>
+<tr><td>浓度域扩散</td><td><span class="b high">成立，且更适合</span></td><td>输出 <code>Z=[C_H,C_DAB,C_res]</code>，BL 正演回 RGB；你已有闭环验证</td><td>中–高</td><td><span class="b medium">中–高</span></td></tr>
+<tr><td>U-ViT/DiT 作为第一主干</td><td><span class="b low">不推荐作为第一版</span></td><td>浓度图是有局部空间结构的低通道 2D 场，先用 U-Net；DiT 作为后续对照</td><td>高</td><td><span class="b medium">中</span></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s1"><span class="num">1</span>论文的完整数据流</h2>
+
+<h3 id="s1-1">1.1 任务目标与边界</h3>
+<p>论文的目标不是「把 H&amp;E 像素变成 IHC 像素」，而是：</p>
+<pre><code>registered H&amp;E/IHC patches
+        │
+        ├─ frozen feature extractor（ResNet50 / UNI / CONCH）
+        ▼
+H&amp;E feature f_HE                     IHC feature f_IHC
+        │                                      │
+        └──── CSB semantic bridge ────────────┘
+                         │
+                    H&amp;E semantic condition
+                         │
+IHC feature + Gaussian noise z_t ── conditional diffusion ──&gt; synthetic IHC feature
+                         │
+                         ▼
+                    MIL / WSI classification</code></pre>
+<p>论文使用 BCI、MIST 做 feature generation，并用 IMPRESS、内部 NSCLC、TCGA-BRCA 做 downstream biomarker classification。其结果主要证明：生成的 feature 对 MIL 分类更有用。</p>
+
+<h3 id="s1-2">1.2 训练期与推理期必须分开看</h3>
+<div class="scroll"><table>
+<thead><tr><th>阶段</th><th>输入</th><th>启用的模块</th><th>真实作用</th></tr></thead>
+<tbody>
+<tr><td>feature preparation</td><td>注册 H&amp;E/IHC patch pair</td><td>feature extractor</td><td>把图像问题变成 feature sequence 问题</td></tr>
+<tr><td>训练 diffusion</td><td>noisy IHC feature <code>z_t</code> + H&amp;E feature</td><td>CSB 两分支、U-ViT、FMoE</td><td>学习 <code>p(IHC-feature | HE-feature)</code></td></tr>
+<tr><td>训练 CSB</td><td>paired H&amp;E/IHC features</td><td>H&amp;E/IHC semantic encoder、[SEM] token、InfoNCE、MMD</td><td>给 H&amp;E 条件塑造一个更接近 IHC 语义的表示</td></tr>
+<tr><td>推理</td><td>H&amp;E feature + <code>z_T~N(0,I)</code></td><td>H&amp;E CSB branch、denoising U-ViT、FMoE；关闭 IHC branch</td><td>从纯噪声生成 IHC-like feature</td></tr>
+<tr><td>downstream</td><td>generated IHC-like feature</td><td>CLAM / TranMIL / DSMIL / MambaMIL</td><td>验证临床分类效用，不验证图像物理真实性</td></tr>
+</tbody>
+</table></div>
+<div class="box warn"><div class="bt">论文逻辑中最容易被误读的一点</div><p>训练时的 IHC feature 是 target 和监督；推理时 IHC branch 关闭，不能把训练阶段的 paired IHC 信息误认为推理输入。这个逻辑本身是标准 conditional diffusion，但它依赖训练期存在注册后的 target feature。它不是完全无监督的跨域生成。</p></div>
+
+<h2 id="s2"><span class="num">2</span>全框架逐模块可行性</h2>
+
+<h3 id="s2-1">2.1 Feature diffusion：可行性高，但只是“目标表示扩散”</h3>
+<div class="box good"><div class="bt">判定：成立</div><p>从纯高斯噪声生成 IHC feature、用 H&amp;E feature 作为条件，是一个标准且合理的 conditional diffusion 任务。论文的结果也支持这一点：FeatStainDiff 在 ResNet50、CONCH、UNI 三类 feature extractor 上提高 MAE/PCC，并在多个 MIL 框架上提高 ACC/AUC。</p></div>
+<p>它比 AugDiff 的关键改进是：</p>
+<ul><li>AugDiff 把 H&amp;E feature 当作 noisy intermediate，隐含假设 source/target feature 分布足够近；</li><li>FeatStainDiff 从纯噪声开始，显式学习 <code>p(z_IHC|f_HE)</code>；</li><li>CSB 负责把 condition 推向共享语义空间，FMoE 负责 target feature distribution gap。</li></ul>
+<p><b>对浓度扩散的启示：</b>你的浓度图也不应被简单地当成 H&amp;E 的加噪版本。应把 H&amp;E 的 <code>C_H</code>、形态结构和 marker token 作为 condition，从独立噪声开始生成目标浓度 <code>Z</code>。这比「直接把 H&amp;E 浓度当成扩散中间态」更能容纳 H&amp;E 与 IHC 的不可见表达差异。</p>
+
+<h3 id="s2-2">2.2 CSB 语义桥：思想正确，监督前提不能搬</h3>
+<div class="box key"><div class="bt">判定：有条件成立</div><p>双层语义约束的思路是成立的：一个层面约束语义 token，另一个层面约束完整 feature distribution。但论文的 contrastive positive pair 来自同一组织位置的 H&amp;E/IHC feature；你的主设定没有实例级配对真值，因此不能直接照搬。</p></div>
+<p>论文的 CSB 包含：</p>
+<pre><code>H&amp;E feature sequence → Transformer encoder → [SEM]_HE + multi-stage features
+IHC feature sequence → Transformer encoder → [SEM]_IHC + multi-stage features
+             │
+             ├─ asymmetric contrastive semantic alignment
+             └─ Gaussian-kernel MMD on full feature sequence</code></pre>
+<p>可迁移的是「语义桥」这个位置，不是 loss 的表面形式。对你的浓度生成路线，应改成：</p>
+<ul><li><b>结构语义：</b>H&amp;E 的 nuclei、gland、membrane morphology，通过 H&amp;E encoder 或冻结病理 foundation feature 表达；</li><li><b>marker expression：</b>用 HER2 marker token 指定目标 marker，不把配对 IHC feature 作为输入；</li><li><b>物理表达：</b>通过固定 M 的 DAB/FOD 分布与区域 ranking 约束输出。</li></ul>
+<p>如果有一部分可靠配准 BCI/MIST pair，可以做一个<strong>paired-only 辅助实验</strong>验证 contrastive loss；但不能把它作为主 non-paired 方法的必要条件。</p>
+
+<h3 id="s2-3">2.3 MMD 分布桥：可行，但不能让所有域分布相同</h3>
+<div class="box good"><div class="bt">判定：成立但要改变对齐对象</div><p>MMD 作为 distribution-level bridge 合理，尤其适合弱配准/非配对场景。但论文的 MMD 是 H&amp;E/IHC feature encoder 输出之间的分布对齐；在你的任务中，若直接让 H&amp;E feature 与 IHC feature 完全分布相同，可能把真实的 marker-specific difference 抹掉。</p></div>
+<p>你的 MMD/分布损失应优先作用在：</p>
+<ol><li>生成 <code>C_DAB</code> 的全局均值分布；</li><li>固定 M 后 DAB FOD 的 20-bin histogram；</li><li>按组织/肿瘤区域分层的 distribution；</li><li>区域级阳性 ranking 的 pairwise distribution，而不是像素配对。</li></ol>
+<div class="formula">L<sub>expr-dist</sub> = MMD( FOD<sub>DAB</sub>(generated), FOD<sub>DAB</sub>(real-IHC) )</div>
+<p><b>注意：</b>如果数据是 non-paired，分布损失只能保证 cohort-level / subgroup-level 合理，不能保证每一张 H&amp;E 的 HER2 实例表达唯一正确。这正是你已经确认的不可辨识边界。</p>
+
+<h3 id="s2-4">2.4 FMoE：有消融支持，但不应当成为第一版架构</h3>
+<div class="box warn"><div class="bt">判定：成立但需收窄</div><p>论文 Table 7 显示 4-expert frequency 配置优于 spatial 4-expert、2-expert frequency、无 learnable filters 与无 load balancing；所以 FMoE 在 feature-level 任务里有实验支持。但它的作用对象是 feature sequence，不是物理浓度通道。</p></div>
+<p>论文的 FMoE 是：</p>
+<pre><code>ψ_i(F) = IDCT( MHSA( DCT(F) ⊙ W_i ) )
+W_f = Softmax( Linear([GAP(F)+GMP(F), Linear(t)]) + ε )
+F_out = Σ_i W_f,i ψ_i(F)</code></pre>
+<p>关键问题有三点：</p>
+<ul><li><b>频率轴语义不够清楚：</b>F∈R<sup>L×d</sup>，W_i∈R<sup>d</sup>；论文称为 feature frequency，但必须明确 DCT 沿 token 轴还是 feature 轴。若沿 feature dimension，它不等于空间频率；若沿 token dimension，则 token 的排列必须具有稳定空间顺序。</li><li><b>专家没有预先定义语义：</b>论文自己说明 expert 不是一个明确的「结构专家/染色专家」；后续看到的低频/高频 specialization 是训练后的观察，不是硬约束。</li><li><b>load balancing 可能与“按样本自适应”有张力：</b>强制专家权重均匀可以避免 collapse，但也可能阻止某些样本真正只需要少数专家。它需要消融，不能默认越均匀越好。</li></ul>
+<p>对你的项目，先把它压缩成：</p>
+<pre><code>g_struct(t), g_expr(t)                 # 无专家，scalar gate
+        ↓
+2-expert：structure-scale / expression-scale  # 仅当第一步有收益
+        ↓
+4-expert DCT/MHSA                        # 最后才考虑</code></pre>
+
+<h2 id="s3"><span class="num">3</span>框架中的结构性问题</h2>
+
+<div class="scroll"><table>
+<thead><tr><th>问题</th><th>严重性</th><th>为什么是问题</th><th>对你的启示</th></tr></thead>
+<tbody>
+<tr><td>配对/配准依赖</td><td><span class="b bad">P0 边界</span></td><td>CSB contrastive 和 MMD 的训练输入来自 registered H&amp;E/IHC pairs；不是完全 non-paired</td><td>主路线不能使用 paired latent L2；paired subset 只能作为辅助验证</td></tr>
+<tr><td>feature extractor 决定任务</td><td><span class="b bad">P0</span></td><td>ResNet50、CONCH、UNI 的 feature 语义不同；“IHC-like feature”不是唯一客观空间</td><td>浓度扩散不要把 foundation feature 当作物理浓度替代物；它只能做语义辅助</td></tr>
+<tr><td>目标 feature 的可识别性</td><td><span class="b bad">P0</span></td><td>同一 H&amp;E 可以对应多个 IHC marker expression；feature MAE 只能评价 paired set 的平均映射</td><td>生成浓度仍需 uncertainty、多 seed 分布与 ranking，不能只看 feature MAE</td></tr>
+<tr><td>feature frequency 的坐标依赖</td><td><span class="b medium">P1</span></td><td>DCT 轴、token 顺序、feature extractor 层级影响“频率”解释</td><td>不要把 FMoE 的 frequency 直接写成 C_H/C_DAB 的物理频率</td></tr>
+<tr><td>扩散输出是 feature，不可逆回图</td><td><span class="b medium">P1</span></td><td>无法检查 BL consistency、RGB artifact、DAB optical density</td><td>你的浓度扩散优势正是保留物理闭环，不要退回 feature-only 作为主输出</td></tr>
+<tr><td>论文核心代码暂缺</td><td><span class="b medium">P1</span></td><td>官方仓库公开 train/infer/tests，但 <code>featstaindiff/model.py</code> 暂 withheld；权重/数据也未发布</td><td>可采纳思想和公式，不能把它当现成可复现 backbone</td></tr>
+<tr><td>训练和推理的尺度</td><td><span class="b medium">P1</span></td><td>每个 WSI 数万 patch，论文采用 30 DDIM steps × 5 seeds；工程成本不低</td><td>浓度图先用确定性 DDIM/少步采样，先验证质量再做 ensemble</td></tr>
+</tbody>
+</table></div>
+
+<div class="box stop"><div class="bt">一个容易被论文结果掩盖的风险</div><p>论文在 TCGA-BRCA cross-center 中采用 residual integration：generated feature 加回 original H&amp;E feature。这个设计会提高稳健性，但也意味着结果不能简单解释为「生成的 IHC feature 已经独立正确」——它可能是 H&amp;E feature 提供了主要结构，generated feature 只提供增量。你的浓度路线也应该把 <code>C_H</code> 作为结构锚，而不是声称 DAB 单独恢复了全部病理真值。</p></div>
+
+<h2 id="s4"><span class="num">4</span>浓度扩散的映射</h2>
+
+<h3 id="s4-1">4.1 为什么浓度扩散比 feature diffusion 更适合你的科学问题</h3>
+<div class="box key"><div class="bt">你的优势不是“也做一个 diffusion”，而是把 diffusion 的状态空间换成有物理语义的状态空间</div><p>FeatStainDiff 证明的是：目标域 feature 可以从纯噪声中被条件生成，并通过语义/分布约束获得下游效用。你已经验证浓度扩散闭环基本可行，因此可以把它升级为：</p>
+<pre><code>H&amp;E RGB
+  └─ fixed M_HE → C_H, C_E / morphology condition
+  └─ HER2 marker token
+       ↓
+noisy concentration state Z_t
+       ↓ conditional diffusion
+Z_0 = [C_H, C_DAB, C_res]
+       ↓ fixed / calibrated M_IHC + Beer–Lambert
+IHC RGB</code></pre>
+<p>这个设计同时保留：</p>
+<ul><li>扩散对一对多表达不确定性的建模能力；</li><li><code>C_H</code> 对组织结构的显式语义；</li><li><code>C_DAB</code> 对 HER2 蛋白表达的显式语义；</li><li>Beer–Lambert 对 RGB 结果的物理可检查性；</li><li>fixed-M 下 H-score/FOD 的跨图可比性。</li></ul></div>
+
+<h3 id="s4-2">4.2 不能直接照搬 FeatStainDiff 的部分</h3>
+<div class="scroll"><table>
+<thead><tr><th>FeatStainDiff 组件</th><th>浓度域对应物</th><th>是否直接复制</th><th>替代方案</th></tr></thead>
+<tbody>
+<tr><td>H&amp;E/IHC feature paired InfoNCE</td><td>H&amp;E structure ↔ generated concentration</td><td><span class="b bad">否</span></td><td>冻结病理 feature 作结构辅助；主监督用 FOD distribution/ranking</td></tr>
+<tr><td>full feature MMD</td><td>DAB/FOD distribution</td><td><span class="b medium">改写后可用</span></td><td>fixed-M 下分层 MMD；不让 H&amp;E 和 IHC 全部染色分布相同</td></tr>
+<tr><td>FMoE mid-block</td><td>channel-time routing</td><td><span class="b medium">先简化</span></td><td>输入/输出端 scalar gate；后续再做 2 expert</td></tr>
+<tr><td>U-ViT</td><td>2D concentration denoiser</td><td><span class="b low">不直接复制</span></td><td>小型 conditional U-Net；DiT/U-ViT 作为后续对照</td></tr>
+<tr><td>MAE/PCC feature metrics</td><td>DAB FOD / BL / clinical metrics</td><td><span class="b bad">不能替代</span></td><td>五层评价：图像、语义、物理、临床、伪影</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s5"><span class="num">5</span>backbone 与模型选择</h2>
+
+<div class="box good"><div class="bt">最终建议：浓度扩散第一版选 2D conditional U-Net + v-prediction；不要选 U-ViT/FMoE 作为第一主干</div><p>你的输出是 2D 浓度场，通道数只有 2–3，空间结构强，数据规模相对有限，而且你优先级是可复现、可解释、改动小。这个问题的第一主干应优先匹配<strong>空间局部性与物理通道</strong>，而不是匹配论文中的 feature sequence 形式。</p></div>
+
+<div class="scroll"><table>
+<thead><tr><th>候选 backbone</th><th>适合的对象</th><th>优点</th><th>主要问题</th><th>建议</th><th>成本</th><th>复现性</th></tr></thead>
+<tbody>
+<tr><td><b>Conditional 2D U-Net</b></td><td>96/128/256 浓度图</td><td>局部结构强；多尺度 skip；可直接注入 <code>C_H</code>、边缘、marker token；代码成熟</td><td>长程依赖不如 Transformer；需要控制容量</td><td><span class="b high">主推荐</span>第一版基线</td><td>中</td><td><span class="b high">高</span></td></tr>
+<tr><td><b>U-ViT</b></td><td>feature sequence / 大尺度全局建模</td><td>长程依赖强；与 FeatStainDiff 逻辑一致</td><td>对 96×96 小瓦片过重；空间 token/位置编码与浓度语义需重新设计</td><td><span class="b medium">第二推荐</span>做 backbone 对照</td><td>中–高</td><td><span class="b medium">中</span></td></tr>
+<tr><td><b>DiT</b></td><td>大数据、高算力、标准图像 latent</td><td>Transformer scaling 好；全局建模强</td><td>小数据容易过拟合；浓度图 token 化损失局部归纳偏置；训练成本高</td><td><span class="b low">后置</span></td><td>高</td><td><span class="b medium">中</span></td></tr>
+<tr><td><b>FMoE-U-Net</b></td><td>已证明普通 denoiser 不足时</td><td>可做 input/timestep adaptive routing</td><td>专家 collapse、load loss、频率轴解释与物理通道错位</td><td><span class="b low">不要第一版</span></td><td>高</td><td><span class="b low">中–低</span></td></tr>
+<tr><td><b>Flow matching U-Net</b></td><td>浓度端点生成、少步采样</td><td><code>x̂1=x_t+(1−t)v</code> 有界；不需要扩散 <code>x̂0</code> 除法；适合后续对照</td><td>不是本轮必须更换的理由；训练/采样管线需另建</td><td><span class="b medium">第二阶段对照</span></td><td>中</td><td><span class="b medium">中–高</span></td></tr>
+<tr><td><b>SD2.1 latent U-Net</b></td><td>RGB 图像/现有 StainFuser</td><td>可复用现有权重与 ControlNet</td><td>VAE 黑团、物理量不在生成空间、改浓度输出要换解码器</td><td><span class="b medium">保留作 RGB baseline</span></td><td>低（现成）</td><td><span class="b high">高</span></td></tr>
+</tbody>
+</table></div>
+
+<h3>5.1 推荐的 U-Net 规模</h3>
+<p>如果当前 patch 是 96×96，第一版不要使用 SD2.1 级别的 860M U-Net。建议先做小模型：</p>
+<pre><code>input / output: Z ∈ R^(2 or 3)×96×96
+base channels: 64 or 96
+channel multipliers: [1, 2, 4, 4]
+residual blocks per level: 2
+attention: only at 24×24 or 12×12, not every level
+conditioning: FiLM/SPADE for H&amp;E structure + marker token cross-attention
+parameter target: roughly 10M–80M, depending on attention width</code></pre>
+<p>如果你的实际生成空间是 <code>12×12</code> 浓度 latent，而不是 96×96 浓度图，则可以相应减小 U-Net；但不要因为当前 SD2.1 的 64×64 latent，就默认浓度输出也必须走 VAE latent。</p>
+
+<h3>5.2 为什么 v-prediction 比 epsilon 更适合第二阶段</h3>
+<p>如果只做最小扩散 baseline，epsilon prediction 最容易与现有代码对齐。但只要开始把 FOD/物理损失挂到端点估计上，<code>x̂0</code> 的恢复式在高噪声端存在 <code>1/sqrt(SNR)</code> 放大风险。建议：</p>
+<ul><li><b>Baseline：</b>epsilon prediction，只挂主扩散 loss，验证浓度生成能否稳定；</li><li><b>主方法：</b>v-prediction，端点恢复更平衡，配合 <code>λ(t)∝sqrt(SNR(t))</code> 的物理 loss gate；</li><li><b>对照：</b>flow matching velocity prediction，验证不除法是否带来稳定性收益。</li></ul>
+
+<h2 id="s6"><span class="num">6</span>推荐的整体架构</h2>
+
+<h3 id="s6-1">6.1 主干与条件</h3>
+<pre><code>H&amp;E RGB
+  ├─ fixed M_HE → C_H, C_E
+  ├─ morphology encoder → multi-scale H&amp;E structure features
+  └─ optional frozen UNI/CONCH → semantic feature (auxiliary only)
+
+HER2 marker token + target stain token
+              │
+              ▼
+noisy Z_t = [C_H, C_DAB, C_res]_t
+              │
+              ▼
+conditional 2D U-Net / v-prediction
+  ├─ FiLM/SPADE: H&amp;E spatial structure
+  ├─ token cross-attention: marker identity / target stain
+  ├─ early: structure gate high
+  ├─ middle: expression distribution gate
+  └─ late: local DAB/ranking gate, structure floor retained
+              │
+              ▼
+Z_0 = [C_H, C_DAB, C_res]
+  ├─ C_H, C_DAB: nonnegative parameterization
+  ├─ C_res: signed + shrink-to-zero
+  └─ fixed/calibrated M_IHC + Beer–Lambert
+              │
+              ▼
+          RGB IHC
+</code></pre>
+<p>这里要强调：<b>marker token 是条件控制，不等于显式解耦已经被证明。</b>真正能证明解耦有效的是 marker swap、zeroing ablation、结构/表达独立指标和多 seed 稳定性。</p>
+
+<h3 id="s6-2">6.2 参数化与物理渲染</h3>
+<div class="scroll"><table>
+<thead><tr><th>量</th><th>推荐参数化</th><th>原因</th><th>禁止做法</th></tr></thead>
+<tbody>
+<tr><td><code>C_H</code></td><td>标准化的 <code>u_H=log(1+C_H)</code> 或扩散后的 unconstrained variable，经 <code>exp-1</code> 回到浓度</td><td>真实浓度非负；避免直接 clamp 造成梯度断裂</td><td>训练过程中直接 <code>clamp(0,max)</code></td></tr>
+<tr><td><code>C_DAB</code></td><td>同上；目标 DAB 量级用 fixed-M 标定</td><td>表达强度跨图可比</td><td>逐图自由 stain matrix；会破坏 H-score 可比性</td></tr>
+<tr><td><code>C_res</code></td><td>有符号标准化变量；加入 <code>λ_res||C_res||</code></td><td>它是未解释残差，不是真染色浓度</td><td>softplus/clamp 成非负；会抹掉负半轴</td></tr>
+<tr><td><code>M_IHC</code></td><td>监督侧固定队列级 M；渲染侧可学习但用色一致性锚定</td><td>监督浓度可比，同时允许渲染适配域色差</td><td>用两套 M 直接比较 loss，不做口径统一</td></tr>
+<tr><td><code>I_0</code></td><td>统一白点/背景处理；先做 E0.3 的 X0 选择</td><td>无色轴偏移会泄漏进 H/DAB</td><td>把白点变化吸收进 DAB 并误判为表达</td></tr>
+</tbody>
+</table></div>
+<div class="formula">OD = M<sub>IHC</sub>Z + b &nbsp;&nbsp;&nbsp; I<sub>RGB</sub> = I<sub>0</sub> · exp(−OD)</div>
+<p>你已经验证浓度扩散基本可行，因此第一版不需要再证明「RGB→浓度→RGB 闭环」；新验证重点应转为：</p>
+<ul><li>生成的 <code>C_H</code> 是否保持 H&amp;E structure；</li><li>生成的 <code>C_DAB</code> 是否改善 fixed-M FOD distribution/ranking；</li><li><code>C_res</code> 是否保持低能量而不是成为隐藏内容通道；</li><li>BL render 后的 RGB 是否没有黑团、过饱和和背景泄漏。</li></ul>
+
+<h3 id="s6-3">6.3 loss 与时间步调度</h3>
+<div class="formula">L = L<sub>diff</sub> + λ<sub>phys</sub>(t)L<sub>FOD</sub> + λ<sub>sem</sub>(t)L<sub>sem</sub> + λ<sub>res</sub>||C<sub>res</sub>||<sub>1</sub></div>
+<p>建议的第一版不是把所有损失全程打开，而是：</p>
+<pre><code>r = t / T                       # r≈1: high-noise, r≈0: clean
+w_struct(r) = 0.35 + 0.65·sigmoid((r-0.55)/0.10)
+w_expr(r)   = 0.20 + 0.80·sigmoid((0.45-r)/0.10)
+λ_phys(r)   = λ0 · sqrt(SNR(r))  # if loss is differentiated through x̂0
+λ_sem(r)    = small → medium, with warmup
+</code></pre>
+<ul><li>高噪声端：结构条件与 <code>C_H</code> 保持强；物理 loss 不能因 <code>x̂0</code> 除法而爆；</li><li>中间阶段：开启 global FOD distribution，让模型先确定 DAB 量级；</li><li>低噪声端：开启 regional ranking / membrane detail；保留 structure floor；</li><li>残差收缩：全程小权重，避免模型把无法解释的信息塞入 <code>C_res</code>。</li></ul>
+<p><b>不要同时上 CSB、MMD、FMoE、FOD、ranking。</b>每增加一项都改变梯度读出的变量，必须单独做 gradient norm、cosine 与 timestep profile 记录。</p>
+
+<h2 id="s7"><span class="num">7</span>可执行实验路线</h2>
+
+<div class="box stop"><div class="bt">阶段 0：浓度扩散的门禁不是“能不能跑”，而是“物理量是否真的在控制生成”</div><p>你已经确认浓度扩散基本可行，下一步不要再把时间花在证明 U-Net 能输出浓度图；要验证的是输出通道的语义、条件是否泄漏、物理 loss 是否真的改变 DAB 而不是整图变棕。</p></div>
+<div class="scroll"><table>
+<thead><tr><th>阶段</th><th>实验</th><th>唯一变化</th><th>判据</th><th>通过后</th><th>不通过</th></tr></thead>
+<tbody>
+<tr><td>0.1</td><td>浓度闭环</td><td>固定 M / 参数化 / renderer</td><td>合成数据重建误差 &lt;1e-6；真实数据报告 BL residual、clamp fraction</td><td>进入生成测试</td><td>先修参数化或 M，不训练</td></tr>
+<tr><td>0.2</td><td>结构通道消融</td><td>完整 <code>C_H</code> vs zero <code>C_H</code></td><td>zero <code>C_H</code> 后 nuclei/membrane DICE 明显下降；DAB分布不应完全崩</td><td>证明结构通道有作用</td><td>不要宣称解耦成功，查 condition 泄漏</td></tr>
+<tr><td>0.3</td><td>marker swap</td><td>HER2 token ↔ 其他 marker token/blank</td><td>结构大致稳定，DAB/FOD/下游分级按 marker 改变</td><td>证明 token 是表达条件</td><td>token 不生效或只改变颜色风格</td></tr>
+<tr><td>0.4</td><td>global FOD</td><td>只加 global mean + 20-bin histogram</td><td>DAB 分布改善且结构/黑团不恶化</td><td>进入 regional ranking</td><td>只变整图棕色，停止加大 λ</td></tr>
+<tr><td>1.1</td><td>regional ranking</td><td>加入区域级 ranking</td><td>阳性/阴性区域排序提高；非配对下不要求像素位置完全一致</td><td>进入语义辅助</td><td>回到 global FOD，先不加复杂 OT</td></tr>
+<tr><td>1.2</td><td>pathology semantic bridge</td><td>冻结 UNI/CONCH feature 只作辅助测量或小权重 loss</td><td>下游 segmentation/classification 有增益，且 FOD 不被压坏</td><td>进入 backbone 对照</td><td>梯度冲突或只改善 feature metric，停止</td></tr>
+<tr><td>2.1</td><td>backbone ablation</td><td>U-Net vs U-ViT/DiT</td><td>在相同参数量/训练预算下，五层指标至少 3 层改善</td><td>决定论文主干</td><td>保留 U-Net，记录负结果</td></tr>
+<tr><td>2.2</td><td>FMoE-lite</td><td>scalar gate vs 2 experts vs 4 experts</td><td>收益需超过增加的参数/不稳定性；expert utilization 不 collapse</td><td>才考虑完整 FMoE</td><td>停止，不堆专家</td></tr>
+</tbody>
+</table></div>
+
+<h3>7.1 backbone 对照的公平协议</h3>
+<ul><li>同一 train/val/test split、同一 fixed M、同一数据归一化；</li><li>同一参数量数量级，不允许 U-ViT 用 10 倍参数量后只比较单一 PSNR；</li><li>同一 scheduler、同一 diffusion parameterization、同一采样步数；</li><li>至少 3 seeds；报告均值、标准差与最差 seed；</li><li>必须包含 feature-level 与 physical-level 两组指标；不能因为 FeatStainDiff 风格的 feature metric 变好就判物理浓度成功。</li></ul>
+
+<h2 id="s8"><span class="num">8</span>风险、止损与未核实</h2>
+
+<div class="scroll"><table>
+<thead><tr><th>风险</th><th>预警指标</th><th>止损动作</th></tr></thead>
+<tbody>
+<tr><td>模型学成 cohort-average DAB</td><td>global FOD 变好但 regional ranking 不变；输出整片同色</td><td>停止增大 global loss；加入区域 ranking/uncertainty</td></tr>
+<tr><td>结构条件被表达分支覆盖</td><td>后期 nuclei/membrane DICE 降，<code>C_H</code> 低频偏移</td><td>提高 structure floor；先去掉 late expression gate</td></tr>
+<tr><td><code>C_res</code> 偷塞内容</td><td>residual energy 上升；BL RGB 变好但 H-score 不稳定</td><td>加 residual shrinkage；检查 M/白点；禁止非物理解释</td></tr>
+<tr><td>物理 loss 劫持扩散训练</td><td>高 t 梯度范数爆、<code>x0_pred</code> 越界、clamp fraction 上升</td><td>按 SNR 调 λ 或改 v-prediction；不要用 PCGrad 掩盖幅度问题</td></tr>
+<tr><td>病理 feature loss 与浓度目标冲突</td><td>UNI/CONCH 指标提高但 DAB FOD 变差</td><td>feature loss 降为评估或小权重 auxiliary；不让 perceptual loss 代替表达监督</td></tr>
+<tr><td>FMoE 专家 collapse</td><td>某一 expert 权重长期接近 1；load loss 下降但性能不升</td><td>回退 scalar gate；不要盲目提高 load balancing</td></tr>
+</tbody>
+</table></div>
+
+<h3>8.1 本轮已核实与未核实</h3>
+<ul><li><b>已核实：</b>论文题录、全文 16 页、完整数据流、CSB 公式、MMD、FMoE 公式、训练/推理差异、数据集、消融表、30-step DDIM + 5-seed ensemble。</li><li><b>已核实：</b>官方仓库 README 说明只公开训练/推理/测试壳，核心 <code>featstaindiff/model.py</code> 暂 withheld；训练数据、提取 feature、权重未发布，因此当前无法完整复现。</li><li><b>未核实：</b>核心 <code>model.py</code> 尚未公开，无法逐行确认 DCT 的实际轴、U-ViT 的精确层数/通道数、所有损失的代码实现。</li><li><b>未核实：</b>论文 Eq. (5) 的 contrastive loss 打印形式中分母的指示函数看起来与 numerator 的正样本索引存在不寻常关系；需要核心代码公开后确认是排版问题、特意的负样本分母，还是实现差异。</li><li><b>未核实：</b>论文没有证明完全 non-paired 情况下 CSB/MMD 仍能提供实例级正确表达。</li></ul>
+
+<h2 id="s9"><span class="num">9</span>最终决策</h2>
+
+<div class="box key"><div class="bt">给你的明确建议</div><ol><li><b>主线确定为浓度扩散</b>：既然闭环已经验证基本可行，没必要退回 RGB feature-only 作为主方案。</li><li><b>第一 backbone 选小型 conditional 2D U-Net + v-prediction</b>；epsilon 作为最小 baseline，flow matching 作为后续稳定性对照。</li><li><b>借 FeatStainDiff 的“语义桥 + 分布桥”</b>：语义桥用 H&amp;E morphology / 冻结病理 feature 作辅助，分布桥用 fixed-M DAB/FOD；不要搬 paired InfoNCE 作为主损失。</li><li><b>借 FMoE 的 timestep-aware routing 抽象</b>：先实现 <code>g_struct(t)</code>/<code>g_expr(t)</code> 两个 scalar gate；只有它通过消融，才试 2 experts，最后才考虑完整 4-expert DCT/MHSA。</li><li><b>不要把这篇论文当作物理浓度扩散先例</b>：它证明的是 feature diffusion；你的创新/价值在于把同一“条件扩散 + 语义/分布桥”逻辑放入有物理意义的浓度空间并通过 BL 闭环。</li></ol></div>
+
+<div class="box good"><div class="bt">可以写成论文方法主张的最稳版本</div><p><b>我们不直接在 RGB 或抽象 feature 空间生成 IHC，而是在固定 stain matrix 定义的浓度空间中进行条件扩散：以 H&amp;E-derived morphology 约束苏木素结构，以 marker token 和 DAB distribution/ranking 约束目标蛋白表达，并通过可微 Beer–Lambert renderer 将浓度状态闭环到 RGB。时间步调度只作为结构/表达条件的门控机制，而不是把染色通道误称为 Fourier 频率。</b></p></div>
+
+<div class="foot"><p><b>FeatStainDiff 全框架与浓度扩散方案可行性审查</b> · 2026-10-08 · 归入 <code>06_方案可行性审查/</code></p><p>核心边界：FeatStainDiff 是 feature-level diffusion；浓度扩散是本项目的物理生成主线。本文将「论文已经证明的事实」与「迁移到本项目的建议」分开陈述。</p></div>
+</main>
+</div>
+</body>
+</html>

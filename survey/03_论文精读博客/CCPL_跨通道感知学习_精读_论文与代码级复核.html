@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCPL 精读 · 跨通道感知学习（论文 + 代码级复核）</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Paper Deep-Read · CCPL</div>
+<div class="sub">跨通道感知学习 · 论文 + 官方代码逐行复核<br>2026-10-16</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 论文事实卡片</a>
+<a class="l1" href="#s2">2 · 本报告在库内的分工</a>
+<a class="l1" href="#s3">3 · 它到底在解决什么问题</a>
+<a class="l2" href="#s3-1">3.1 临床约束逼出的三个需求</a>
+<a class="l2" href="#s3-2">3.2 前人做法的三派与缺口</a>
+<a class="l1" href="#s4">4 · 方法逐件拆解</a>
+<a class="l2" href="#s4-1">4.1 DCP · 双通道感知</a>
+<a class="l2" href="#s4-2">4.2 FD · 与 Gigapath 的特征对齐</a>
+<a class="l2" href="#s4-3">4.3 NMCC · 核—膜跨通道相关性</a>
+<a class="l2" href="#s4-4">4.4 总目标与超参</a>
+<a class="l1" href="#s5">5 · ★★ 代码级复核</a>
+<a class="l2" href="#s5-1">5.1 三个独立的「跑不起来」</a>
+<a class="l2" href="#s5-2">5.2 ★ 两个旗舰损失是梯度死路</a>
+<a class="l2" href="#s5-3">5.3 论文—代码逐条对账表</a>
+<a class="l2" href="#s5-4">5.4 谱系：DCP 就是 PSPStain 的 MLPA 扩了一路</a>
+<a class="l1" href="#s6">6 · 数字自洽性核查</a>
+<a class="l2" href="#s6-1">6.1 Table I 正文声称 vs 表内数据</a>
+<a class="l2" href="#s6-2">6.2 Table III 消融：被写成「slightly」的 59%</a>
+<a class="l1" href="#s7">7 · 消融表真正告诉了我们什么</a>
+<a class="l1" href="#s8">8 · 可迁移性判定（对你的「2 通道生成」）</a>
+<a class="l1" href="#s9">9 · 引用策略：怎么引、别怎么引</a>
+<a class="l1" href="#s10">10 · 未核实清单与证据边界</a>
+<a class="l1" href="#s11">11 · 参考文献与代码</a>
+<a class="l1" href="#s12">12 · 评价协议与对比公平性（第二轴）</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">论文精读 · 03/04 · 跨通道监督的先例 + 一次代码级复核</div>
+<h1>Hao Yang et al. (ICME 2025) —— 把 HER2 拆成「核通道 + 膜通道」，再约束两者之间的关系<br><span class="small">Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining（CCPL）</span></h1>
+<p class="desc">对象：你桌面上那份 <code>Cross-channel Perception Learning for H&amp;E-to-IHC  Virtual Staining .pdf</code>。本报告基于 <b>arXiv 2506.07559v1 全文（7 页）逐段精读</b>，并<b>把官方仓库整仓拉下来逐行读了</b>——结果发现论文与代码之间存在四处实质不一致，其中两处直接决定了这篇工作能不能被当作可复现基线。</p>
+<div class="meta"><span>arXiv:2506.07559v1</span><span>ICME 2025</span><span>复旦大学 + 中山医院</span><span class="b high">全文已核实</span><span class="b high">官方代码已逐行复核</span><span class="b bad">仓库不可运行</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key">
+<div class="bt">一句话：CCPL 的机制内核不是「用两个通道做生成」，而是「用颜色反卷积把 IHC 拆成 H/D 两个<u>监督</u>通道，再对这两个通道做统计约束 + 对两者的关系做一致性约束」。生成器输出的仍然是 3 通道 RGB。</div>
+<p>这个区分对你是决定性的。<b>如果你的思路是「让网络生成两个通道」，CCPL 不是先例；如果你的思路是「在损失里用两个通道」，CCPL 正是先例。</b> 论文里没有任何一处改生成器，只改了损失。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 四条硬结论（前三条来自代码，第四条来自数字）</div>
+<ol>
+<li><b>官方仓库跑不起来</b>——三个<u>彼此独立</u>的阻断：① 整个 <code>util/</code> 包缺失（<code>train.py</code> 第 6 行 <code>from util.visualizer import Visualizer</code> 直接 ImportError）；② <code>models/feature_loss.py</code> 是 0 字节；③ <code>NMCC_Loss.__init__</code> 里写了 <code>super(ChannelCorrelationLoss, self)</code>，而 <code>ChannelCorrelationLoss</code> 这个类在<u>全仓任何 .py 里都不存在</u> → 实例化必抛 <code>NameError</code>（我用桩模块实测复现，见 §5.1）。</li>
+<li><b>论文的两个旗舰损失，在代码里都是梯度死路。</b> <code>FD.py</code> 与 <code>NMCC.py</code> 都把 Gigapath 调用包在 <code>with torch.no_grad():</code> 里，两个特征都 detached ⇒ 损失对生成图<u>零梯度</u>，是一个常数。也就是说：<b>论文靠消融证明有效的 FD 与 NMCC，在发布版里根本推不动梯度</b>（见 §5.2）。</li>
+<li><b>论文 Eq.(3) 的 α = 0.1 通道加权没有实现。</b> 论文写 <code>L_dual = α·L_H + (1−α)·L_D</code>，代码里是 <code>loss_DCP = loss_DCP_h + loss_DCP_d</code>——直接相加，没有 0.1/0.9 这个权重（见 §5.3）。</li>
+<li><b>Table I 的正文声称与表内数据不符两处。</b> 正文说 CCPL 在 BCI 上拿到「lowermost FID」，但表里 PSPStain 48.42 &lt; CCPL 57.81，CCPL 是第三名；正文说 PCC「ranks first on BCI」，但 ASP 0.2609 &gt; CCPL 0.2441，CCPL 是第二名（见 §6.1）。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">对你的课题最要紧的一条推论</div>
+<p>CCPL 的 <code>DCP.py</code> 与 PSPStain 的 <code>PALS.py</code> <b>常数逐字一致</b>（α=1.8、thresh_FOD=0.15、thresh_mask=0.68、num_blocks=16、num_bins=20、±0.4 的门控带），唯一区别是 PSPStain 只算 D 通道、CCPL 多算了 H 通道。换句话说：</p>
+<p style="font-family:var(--mono);font-size:12.3px;background:#f8f9fb;border-left:3px solid var(--amber);padding:10px 14px;border-radius:6px">「把 MLPA 从 DAB 单通道扩展到 H+D 双通道」这件事，<b>2025-06 已经有人做了并发表了</b>。</p>
+<p>所以如果你方案的核心卖点只是「从只预测 DAB 变成两通道」，<b>新颖性会被这篇吃掉</b>。你需要一个它没有的差异点（见 §8）。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>论文事实卡片</h2>
+
+<div class="card">
+<div class="ch"><div><div class="title">Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining</div><div class="v">IEEE International Conference on Multimedia &amp; Expo (ICME) 2025 · 会议短文（7 页）</div></div><div><span class="b high">题录已核实</span> <span class="b high">全文已核实</span> <span class="b high">代码已复核</span></div></div>
+<div class="body">
+<table style="min-width:600px">
+<tbody>
+<tr><td style="width:150px"><b>作者</b></td><td>Hao Yang, JianYu Wu, Run Fang<sup>†</sup>, Xuelian Zhao, Yuan Ji, Zhiyu Chen, Guibin He, Junceng Guo, Yang Liu, Xinhua Zeng<sup>†</sup></td></tr>
+<tr><td><b>单位</b></td><td>① 复旦大学智能机器人研究院（College of Intelligent Robotics and Advanced Manufacturing）② 复旦大学附属中山医院病理科 ③ 复旦大学义乌研究院 ④ 多伦多大学计算机系</td></tr>
+<tr><td><b>通讯</b></td><td>haoyang24@fudan.edu.cn · zengxh@fudan.edu.cn（Run Fang 与 Xinhua Zeng 为通讯作者）</td></tr>
+<tr><td><b>发表</b></td><td><b>ICME 2025</b>——这一条来自官方 README 逐字："Here's the code for our paper at the <b>IEEE International Conference on Multimedia &amp; Expo</b> 2025"</td></tr>
+<tr><td><b>arXiv</b></td><td><code>arXiv:2506.07559v1</code> [cs.CV]，2025-06-09 提交，仅 v1</td></tr>
+<tr><td><b>arXiv 页面是否标注 venue</b></td><td><span class="b bad">否</span>——arXiv API 的 <code>comment</code> 与 <code>journal_ref</code> 字段均为空。venue 只能从官方 README 反推。<span class="small">（这正是库里那条「arXiv 不标 venue 是常态」教训的又一例）</span></td></tr>
+<tr><td><b>代码</b></td><td><a href="https://github.com/Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining">Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining</a><br>3 star · 无 license · 最后推送 2025-02-17 · README 仅 3 行</td></tr>
+<tr><td><b>被引</b></td><td>OpenAlex <code>cited_by_count: 0</code>（截至 2026-10-16）。Semantic Scholar 记为 0。<span class="small">会议短文 + 无预印本推广，尚未进入引用循环。</span></td></tr>
+<tr><td><b>关键词</b></td><td>Virtual staining · Cross-channel correlation · Feature distillation · Pathology foundation model</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="box teal">
+<div class="bt">一个题录层面的更正（相对库内既有记录）</div>
+<p>库内 <code>03_论文精读博客/桌面论文批量精读_12篇.html</code> §3 记的是：<b>「venue：原文未标注正式 venue … 按 arXiv preprint 计」</b>。这个判断在<u>只看论文 PDF</u> 时是正确的（PDF 页眉页脚确实没有任何会议名），但<b>已被官方代码仓库的 README 推翻</b>——README 逐字写明是 ICME 2025。本报告按 <b>ICME 2025</b> 记，并保留这条纠错痕迹。</p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>本报告在库内的分工</h2>
+
+<p>库内已有两份报告碰过 CCPL，必须先说清分工，避免重复推导：</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:230px">既有报告</th><th>它已经做了什么</th><th>本报告做什么（增量）</th></tr></thead>
+<tbody>
+<tr>
+<td><code>01_调研报告/MCCL论文获取报告_公开内容汇编与同源开放姊妹篇CCPL.html</code><br><span class="small">2026-10-11</span></td>
+<td>解决的是<b>「拿得到吗」</b>：逐家核实 MCCL 付费墙，发现 CCPL 是同团队开放姊妹篇，给出 CCPL 的书目与获取路径。</td>
+<td>不重复。本报告直接引用它已核实的「CCPL 是 MCCL 姊妹篇」这一结论。</td>
+</tr>
+<tr>
+<td><code>03_论文精读博客/桌面论文批量精读_12篇.html</code> §3<br><span class="small">批量精读</span></td>
+<td>解决的是<b>「论文讲了什么」</b>：符号表、三个模块的公式逐条解释、消融表转录。质量已经很高。</td>
+<td><b>本报告的增量全部在代码层与数字自洽性层</b>：仓库可运行性、损失是否真的回传梯度、论文—代码对账、Table I/III 的正文声称与数据是否一致、以及 DCP 与 PSPStain PALS 的逐字同源。这些是只读 PDF 拿不到的。</td>
+</tr>
+<tr>
+<td><code>06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</code> §3</td>
+<td>解决的是<b>「你的输出空间该是几个通道」</b>：论证 <code>[H, DAB, H]</code> 秩亏 + channel attention 不可辨识，推荐 <code>[C_H, C_DAB, C_res]</code>。</td>
+<td>正交。那份管<b>输出空间设计</b>，本报告管<b>损失层能借什么</b>。两者在第 8 节汇合。</td>
+</tr>
+</tbody>
+</table></div>
+
+<h2 id="s3"><span class="num">3</span>它到底在解决什么问题</h2>
+
+<h3 id="s3-1">3.1 临床约束逼出的三个需求</h3>
+<p>论文的动机链条写得比一般会议短文更紧，值得完整还原：</p>
+<ul>
+<li><b>HER2 判读的硬指标是两个</b>：膜染色强度 + 阳性细胞比例（原文逐字："the accurate evaluation of HER2-positive cancers relies on precise analysis of membrane staining intensity and the proportion of positive cells"）。这两个量<b>恰好一个来自核、一个来自膜</b>。</li>
+<li><b>术中冰冻要求轻量 + 快速推理</b>（原文："practical application scenarios, such as intraoperative frozen sections, require models to be lightweight and capable of rapid inference"）。这一条直接封死了「把病理大模型直接部署上去」的路线。</li>
+<li><b>前人只盯单通道</b>（原文逐字："they primarily focus on single-channel features from either cell nuclei or cell membranes, failing to effectively model the spatial distribution, morphological characteristics, and staining intensity relationships between the two"）。</li>
+</ul>
+
+<h3 id="s3-2">3.2 前人做法的三派与缺口</h3>
+<div class="scroll"><table>
+<thead><tr><th>派别</th><th>代表</th><th>做法</th><th>缺口（论文的论证）</th></tr></thead>
+<tbody>
+<tr><td>A · 基线翻译</td><td>Pix2pix [25]、Pyramidpix2pix [26]、CUT [29]</td><td>H&amp;E→IHC 当 image-to-image；因组织无法二次染色，用相邻切片做对齐监督</td><td>像素损失只约束「看起来像」。<b>消融 Model 1（无任何模块）PCPA 仅 2.21、SIA 仅 2.13（5 分制）</b>——纯像素监督下病理特征几乎没保住</td></tr>
+<tr><td>B · 针对性监督改进</td><td>ASP [27]、PSPStain [14]</td><td>ASP 用 Adaptive Supervised PatchNCE 处理输入—目标不一致；PSPStain 用 protein-aware + prototype consistency 建模肿瘤细胞膜</td><td><b>都只盯单一通道</b>——要么核、要么膜</td></tr>
+<tr><td>C · 大模型下游</td><td>—</td><td>把虚拟染色当病理基础模型的下游任务</td><td>模型规模大，与术中冰冻的轻量需求冲突</td></tr>
+</tbody>
+</table></div>
+
+<p>论文的解法因此是三件事同时做：<b>拆成核/膜双通道做统计约束</b>、<b>借大模型能力但不增加推理负担</b>（蒸馏而非部署）、<b>显式建模核—膜关系</b>。这个「三件事」的拆法本身是干净的，也是这篇工作唯一的真正立意。</p>
+
+<h2 id="s4"><span class="num">4</span>方法逐件拆解</h2>
+
+<p>CCPL 由三个策略组成：<b>DCP</b>（Dual-Channel Perception，双通道感知）、<b>FD</b>（Feature Distillation with Gigapath，特征蒸馏）、<b>NMCC</b>（Nucleus-Membrane Cross-channel Correlation，核—膜跨通道相关性）。骨架是 <b>CUT</b>，生成器 ResNet-6Blocks，判别器 PatchGAN。</p>
+
+<div class="box key">
+<div class="bt">先记住一句话：三个模块全部是<u>损失</u>，没有一个改生成器</div>
+<p>DCP 改损失、FD 改损失、NMCC 改损失。生成器自始至终输出 3 通道 RGB IHC。<b>「双通道」只活在损失里。</b> 这一点决定了 §8 的可迁移性判定。</p>
+</div>
+
+<h3 id="s4-1">4.1 DCP · 双通道感知</h3>
+
+<h4>(a) 核—膜染色分离：用传统颜色反卷积做物理拆分</h4>
+<p>RGB → HED 色彩空间（hematoxylin / eosin / DAB 三染料强度）→ 把 DAB 与 Eosin 通道置零，只留 hematoxylin → 转回 RGB，得到<u>只有核染色</u>的图；同理置零其余两路，得到<u>只有 DAB（膜染色）</u>的图。</p>
+<p><b>代码里用的染色矩阵是硬编码的 Ruifrok 标准 HED 矩阵</b>（<code>DCP.py</code> 第 16 行）：</p>
+<pre><code>self.rgb_from_hed = torch.tensor([[0.65, 0.70, 0.29],
+                                  [0.07, 0.99, 0.11],
+                                  [0.27, 0.57, 0.78]])</code></pre>
+<p class="small">三列依次是 H / E / D 的 RGB 单位向量。这是 Ruifrok &amp; Johnston (2001) 的标准值，<b>论文正文完全没有提到用的是哪一套矩阵、也没有说是否从数据估计</b>——这是复现时必须自己决定的一个自由度。</p>
+
+<div class="box warn">
+<div class="bt">一处「静默抹掉负分量」的实现细节（与你的方案直接相关）</div>
+<p><code>DCP.py</code> / <code>NMCC.py</code> 的 <code>separate_stains()</code> 里有这一行：</p>
+<pre><code>stains = torch.maximum(stains, torch.tensor(0))   # 把负浓度直接归零</code></pre>
+<p>颜色反卷积在伪逆解下会产出负的浓度分量（物理上无意义，但数学上是「该分量解释不了、需要别的分量补」的信号）。这一行把它们<u>静默清零</u>，梯度也一并归零。库内 <code>06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</code> §3.3 已经论证过：<b>对残差/正交补通道加非负约束会「静默抹掉负分量并归零其梯度」</b>——CCPL 这里犯的是同一类错，只不过它把两路都当真实染色处理，所以影响面比你的 C_res 小。但你若照抄这个 <code>separate_stains</code>，务必注意。</p>
+</div>
+
+<h4>(b) FOD 变换</h4>
+<div class="formula">FOD<sub>C</sub> = (OD<sub>C</sub>)<sup>α<sub>C</sub></sup> &nbsp; if FOD<sub>C</sub> &gt; T<sub>C</sub> &nbsp; else &nbsp; 0 &nbsp;&nbsp;&nbsp;<span class="small">（Eq. 1）</span></div>
+<p class="small">原文条件项写成「用 FOD 自身判断 FOD」，语义上自洽成怪。库内 12 篇报告 §3 已标「存疑」。<b>本轮代码复核把这个存疑结案了</b>：代码里阈值确实作用在<u>取幂之后</u>的值上（<code>DCP.py</code> 第 98–100 行：先 <code>FOD = FOD ** alpha</code>，再 <code>torch.where(FOD &lt; thresh_FOD, 0, FOD)</code>）。所以原文写法虽丑，但<u>描述的就是代码在做的事</u>——不是笔误，是一个确实有点怪的阈值设计。</p>
+
+<h4>(c) 通道级感知损失</h4>
+<div class="formula">L<sub>C</sub> = ‖FOD<sub>g,C,avg</sub> − FOD<sub>r,C,avg</sub>‖²<sub>2</sub> + (1/B)Σ<sub>j</sub>‖FOD<sup>(j)</sup><sub>g,C,block</sub> − FOD<sup>(j)</sup><sub>r,C,block</sub>‖²<sub>2</sub> + (1/N)Σ<sub>i</sub>‖H<sup>(i)</sup><sub>g</sub> − H<sup>(i)</sup><sub>r</sub>‖²<sub>2</sub> &nbsp;<span class="small">(Eq. 2)</span></div>
+<p>三项分别是<b>全图平均 FOD</b>（全局强度）、<b>16 个局部 block 的平均 FOD</b>（局部空间分布）、<b>20 个直方图 bin 的累积 FOD</b>（分布形状）。B=16、N=20 来自代码。</p>
+
+<div class="box pur">
+<div class="bt">★ 与 PSPStain 的关系：Eq.(2) 就是 PSPStain 的 MLPA 损失，一模一样</div>
+<p>库内 <code>03_论文精读博客/桌面论文批量精读_12篇.html</code> §2 已经精读过 Beer–Lambert 自编码器与 PSPStain。这里补上代码级的确认：<b>CCPL 的 <code>DCP.py</code> 与 PSPStain 的 <code>models/PALS.py</code> 是同一份实现</b>，常数逐字相同（α=1.8、thresh_FOD=0.15、thresh_mask=0.68、num_blocks=16、num_bins=20、以及一个原文<u>没写</u>的 ±40% 门控带）。唯一区别：</p>
+<div class="scroll"><table style="min-width:640px">
+<thead><tr><th>文件</th><th>类名</th><th>算几个通道</th><th>取哪个通道</th></tr></thead>
+<tbody>
+<tr><td>PSPStain <code>models/PALS.py</code></td><td><code>MLPA_LOSS</code></td><td class="c">1</td><td><code>ihc_hed[:,:,:,2]</code> → 只取 D（DAB）</td></tr>
+<tr><td>CCPL <code>models/DCP.py</code></td><td><code>DCP_LOSS</code></td><td class="c">2</td><td>索引 0（H）+ 索引 2（D），两路各算一遍再相加</td></tr>
+</tbody>
+</table></div>
+<p><b>结论：CCPL 的 DCP = PSPStain 的 MLPA 从「DAB 单通道」扩成「H + DAB 双通道」。</b> 这个事实对 §8 的新颖性判定是决定性的。</p>
+</div>
+
+<h4>(d) 双通道合成</h4>
+<div class="formula">L<sub>dual</sub> = α·L<sub>H</sub> + (1−α)·L<sub>D</sub>，α = 0.1 &nbsp;&nbsp;&nbsp;<span class="small">(Eq. 3)</span></div>
+<p>核通道权重 0.1、膜通道权重 0.9——把优化重心压在 HER2 判读最关键的膜上。<b>但这一条在代码里没有实现，见 §5.3。</b></p>
+
+<h3 id="s4-2">4.2 FD · 与 Gigapath 的特征对齐</h3>
+<div class="formula">L<sub>fd_cos</sub> = 1 − cos(f<sub>g</sub>, f<sub>r</sub>) &nbsp;&nbsp;·&nbsp;&nbsp; L<sub>fd_L2</sub> = ‖f<sub>g</sub> − f<sub>r</sub>‖²<sub>2</sub> &nbsp;&nbsp;·&nbsp;&nbsp; L<sub>fd</sub> = β·L<sub>fd_cos</sub> + (1−β)·L<sub>fd_L2</sub> &nbsp;<span class="small">(Eq. 4–6)</span></div>
+<p><code>f_g</code> / <code>f_r</code> 是生成图 / 真值图过 <b>Gigapath Tile Encoder</b> 后的特征。卖点是「训练时借大模型，推理时不需要它」——原文逐字：<b>"without increasing the inference burden"</b>。</p>
+<p>代码里 Gigapath 的加载方式是（<code>CCPL_model.py</code> 第 115–117 行）：</p>
+<pre><code>self.tile_encoder = timm.create_model("hf_hub:prov-gigapath/prov-gigapath", pretrained=True)
+for param in self.tile_encoder.parameters():
+    param.requires_grad = False          # 冻结</code></pre>
+
+<div class="box stop">
+<div class="bt">一处安全问题：仓库里硬编码了一个 HuggingFace token</div>
+<p><code>CCPL_model.py</code> 第 29 行把 <code>os.environ["HF_TOKEN"]</code> 直接赋了一个明文 token 字符串并提交进公开仓库。<b>这是一个已泄露的凭据</b>，任何人 clone 都能拿到。我不在这里复现它的值。<b>你如果 fork 这个仓库，第一件事是把那一行删掉、改用环境变量。</b> 同时这也解释了作者为什么能加载 <code>hf_hub:</code> 的 gated 模型。</p>
+</div>
+
+<h3 id="s4-3">4.3 NMCC · 核—膜跨通道相关性 ★ 论文自认的最核心</h3>
+<div class="formula">R<sub>g</sub> = γ‖f<sub>H,g</sub> − f<sub>D,g</sub>‖²<sub>2</sub> + (1−γ)(1 − cos(f<sub>H,g</sub>, f<sub>D,g</sub>)) &nbsp;<span class="small">(Eq. 7)</span></div>
+<div class="formula">R<sub>r</sub> = γ‖f<sub>H,r</sub> − f<sub>D,r</sub>‖²<sub>2</sub> + (1−γ)(1 − cos(f<sub>H,r</sub>, f<sub>D,r</sub>)) &nbsp;<span class="small">(Eq. 8)</span></div>
+<div class="formula">L<sub>cross</sub> = θ‖R<sub>g</sub> − R<sub>r</sub>‖²<sub>2</sub> + (1−θ)(1 − cos(R<sub>g</sub>, R<sub>r</sub>)) &nbsp;<span class="small">(Eq. 9)</span></div>
+
+<p>这三行是全文最值得看的地方，也是<u>理论上</u>唯一没有先例的地方（见 §8）。它的思路是：</p>
+<ul>
+<li>Eq.7/8 先把「生成图里核特征与膜特征的关系」<code>R_g</code>、和「真图里核特征与膜特征的关系」<code>R_r</code> 各自量出来；</li>
+<li>Eq.9 再逼 <code>R_g</code> 与 <code>R_r</code> 彼此一致。</li>
+</ul>
+<p><b>不是逼两张图各自像，而是逼两张图<u>内部的核—膜关系</u>像。</b> 用库内既有报告的比喻：不是分别要求「画对鼻子」「画对嘴巴」，而是要求「鼻子和嘴巴的相对位置关系」和真人一致。</p>
+
+<div class="box teal">
+<div class="bt">理论上这是一阶 vs 二阶的区别，值得说清楚</div>
+<p>常规特征蒸馏（Eq.4–6）对齐的是 <code>f_g</code> 与 <code>f_r</code> —— 一阶量（特征本身）。NMCC 对齐的是 <code>R(·)</code> —— <b>由两个特征算出来的关系，是二阶量</b>。在文献谱系上，这个「对齐关系矩阵本身」的写法与 <b>style transfer 的 Gram 矩阵匹配</b>（Gatys et al., CVPR 2016）、<b>Deep CORAL</b>（Sun &amp; Saenko, ECCV 2016 Workshop）、<b>SPKD</b>（Tung &amp; Mori, ICCV 2019）同构——只是那些用在风格迁移 / 域适应 / 知识蒸馏里，<b>没有被用在虚拟染色上</b>。本轮五路检索（含 Europe PMC 全文库 + arXiv 元数据）对 <code>"cross-channel consistency loss"</code> 等五个关键词均为 <b>0 命中</b>。这是 CCPL 真正的新颖点。</p>
+</div>
+
+<h3 id="s4-4">4.4 总目标与超参</h3>
+<div class="formula">L<sub>total</sub> = L<sub>adv</sub> + λ<sub>d</sub>L<sub>dual</sub> + λ<sub>f</sub>L<sub>fd</sub> + λ<sub>c</sub>L<sub>cross</sub> + L<sub>NCE</sub> + λ<sub>m</sub>L<sub>SSIM</sub> + λ<sub>g</sub>L<sub>GP</sub> &nbsp;<span class="small">(Eq. 10)</span></div>
+
+<div class="scroll"><table>
+<thead><tr><th>超参</th><th>论文值</th><th>代码值</th><th>一致？</th></tr></thead>
+<tbody>
+<tr><td>λ<sub>d</sub>（DCP）</td><td>1</td><td>隐式 1（无 lambda 变量，直接加）</td><td><span class="b high">一致</span></td></tr>
+<tr><td>λ<sub>f</sub>（FD）</td><td>1</td><td><code>--lamba_FD</code> 默认 1</td><td><span class="b high">一致</span></td></tr>
+<tr><td>λ<sub>c</sub>（NMCC）</td><td>1</td><td><code>--lamba_NMCC</code> 默认 1</td><td><span class="b high">一致</span></td></tr>
+<tr><td>λ<sub>m</sub>（SSIM）</td><td>0.05</td><td><code>0.05 * self.loss_ssim</code></td><td><span class="b high">一致</span></td></tr>
+<tr><td>λ<sub>g</sub>（GP 梯度惩罚）</td><td>10</td><td><code>--lambda_gp</code> 默认 10.0</td><td><span class="b high">一致</span></td></tr>
+<tr><td>α（H/D 通道权重）</td><td>0.1 / 0.9</td><td><b>不存在</b>（两路直接相加）</td><td><span class="b bad">不一致</span></td></tr>
+<tr><td>α<sub>H</sub>, α<sub>D</sub>（FOD 幂指数）</td><td>1.8</td><td><code>--alpha_h/--alpha_d</code> 默认 1.8</td><td><span class="b high">一致</span></td></tr>
+<tr><td>T<sub>H</sub>, T<sub>D</sub>（FOD 阈值）</td><td>0.15</td><td><code>--thresh_FOD_h/_d</code> 默认 0.15</td><td><span class="b high">一致</span></td></tr>
+<tr><td>β（cos / L2 权重）</td><td>原文未给</td><td><b>不存在</b>（代码只有 cos 项）</td><td><span class="b bad">论文未给 + 代码缺项</span></td></tr>
+<tr><td>γ, θ（Eq.7–9 权重）</td><td>原文未给</td><td><b>不存在</b>（代码只有 cos 项）</td><td><span class="b bad">论文未给 + 代码缺项</span></td></tr>
+<tr><td>训练轮数</td><td>80</td><td><code>n_epochs=80</code></td><td><span class="b high">一致</span></td></tr>
+<tr><td>batch size</td><td>4</td><td><code>batch_size=3</code></td><td><span class="b medium">不一致（小）</span></td></tr>
+<tr><td>crop</td><td>512×512</td><td><code>load_size=1024, crop_size=512</code></td><td><span class="b high">一致</span></td></tr>
+<tr><td>生成器</td><td>ResNet-6Blocks</td><td><code>netG='resnet_6blocks'</code></td><td><span class="b high">一致</span></td></tr>
+<tr><td>GP 金字塔权重</td><td>原文未提</td><td><code>[0.015625,0.03125,0.0625,0.125,0.25,1.0]</code>（几何级数，非均匀）</td><td><span class="b medium">论文未提</span></td></tr>
+</tbody>
+</table></div>
+
+<p class="small">代码值来源：<code>models/CCPL_model.py</code> 第 62–69 行（默认值）、第 334 行（总损失接线）、<code>experiments/CCPL_launcher.py</code>（实际训练配置）。</p>
+
+<h2 id="s5"><span class="num">5</span>★★ 代码级复核</h2>
+
+<div class="box key">
+<div class="bt">为什么要做这一步</div>
+<p>库内已有过两次教训（SGCD、HistDiST），都指向同一件事：<b>「论文做了什么」与「代码做了什么」可能不一致，而且不一致的方式往往正好落在论文最想让你相信的那一点上。</b> CCPL 是 3 star、3 行 README 的会议短文代码，属于高风险对象。本次把整仓 tarball 拉下来、逐行读完 5 个模型文件 + launcher，并把关键结论做了可复现的实测。</p>
+</div>
+
+<h3 id="s5-1">5.1 三个独立的「跑不起来」</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">阻断 ① · 整个 <code>util/</code> 包缺失</div><div class="v">train.py 第 6 行就 ImportError</div></div><span class="b bad">致命</span></div>
+<div class="body">
+<pre><code># train.py（仓库根）
+from util.visualizer import Visualizer     # ← 第 6 行
+from util.visualizer import save_images
+from util import html
+from util import util
+# models/CCPL_model.py
+import util.util as util
+from util import losses</code></pre>
+<p><b>但仓库里根本没有 <code>util/</code> 这个目录。</b> 已核实：仓库根目录只有 <code>IHC/ data/ experiments/ models/ options/ pretrain/ test.py train.py README.md</code>。</p>
+<p><b>为什么会这样？</b> 我对比了 PSPStain 的仓库，它有完整的 <code>util/</code>（17 个文件：<code>util.py</code>、<code>losses.py</code>、<code>visualizer.py</code>、<code>html.py</code>、<code>pytorch_stats_loss.py</code>、<code>inception.py</code>、<code>fid.py</code>…）。而 CCPL 的 <code>data/__init__.py</code>(3694 B)、<code>models/PCLS.py</code>(8117 B)、<code>models/torch_utils.py</code>(1654 B)、<code>experiments/tmux_launcher.py</code>(7488 B)、<code>experiments/pretrained_launcher.py</code>(1888 B) <b>与 PSPStain 的对应文件<u>字节数完全一致</u></b>。</p>
+<p style="font-family:var(--mono);font-size:12.3px;background:#f8f9fb;border-left:3px solid var(--red);padding:10px 14px;border-radius:6px">⇒ CCPL 仓库是 PSPStain 仓库的 fork，作者改完 <code>models/</code> 后<u>忘了把 <code>util/</code> 一起提交</u>（或用了 .gitignore 误伤）。仓库里还残留着 <code>experiments/__pycache__/PSPStain_launcher.cpython-38.pyc</code> 与 <code>models/__pycache__/PSPStain_model.cpython-39.pyc</code>，进一步印证。</p>
+<p><b>实际后果</b>：任何人 clone 后跑 <code>python train.py</code>，会在 import 阶段就死掉，连参数解析都到不了。README 只有 3 行，没有任何「请自行补齐 util/」的说明。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">阻断 ② · <code>models/feature_loss.py</code> 是 0 字节</div><div class="v">空文件</div></div><span class="b medium">可绕过</span></div>
+<div class="body">
+<p>已核实：<code>wc -c models/feature_loss.py</code> → <code>0</code>。当前代码没有任何地方 import 它，所以暂时不影响运行，但它是典型的「改到一半」残留物。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">阻断 ③ · <code>NMCC_Loss</code> 引用了不存在的类名 → 实例化必抛 NameError</div><div class="v">已实测复现</div></div><span class="b bad">致命</span></div>
+<div class="body">
+<pre><code># models/NMCC.py 第 7–9 行（逐字）
+class NMCC_Loss(nn.Module):
+    def __init__(self, extractor, alpha_h, alpha_d):
+        super(ChannelCorrelationLoss, self).__init__()   # ← ChannelCorrelationLoss 是谁？</code></pre>
+<p>我在<b>全仓</b>搜索 <code>ChannelCorrelationLoss</code>，只命中两处：<code>NMCC.py</code> 第 9 行本身，以及一个<b>残留的编译产物</b> <code>models/__pycache__/CH.cpython-39.pyc</code>。<b>没有任何 .py 文件定义这个类</b>。</p>
+<p>推测：原本有一个 <code>models/CH.py</code> 定义 <code>ChannelCorrelationLoss</code>，后来重命名成 <code>NMCC.py</code> / <code>NMCC_Loss</code>，但 <code>super()</code> 里的名字忘了改。<code>.pyc</code> 残留是直接证据。</p>
+<p><b>实测复现</b>（用桩模块替换 torch / torchvision，避免装 2 GB 依赖）：</p>
+<pre><code>模块导入成功；NMCC_Loss = &lt;class 'nmcc_probe.NMCC_Loss'&gt;
+&gt;&gt;&gt; 实例化抛异常: NameError : name 'ChannelCorrelationLoss' is not defined</code></pre>
+<p>这意味着 <code>CCPL_model.py</code> 第 135 行 <code>self.criterionNMCC = NMCC_Loss(...)</code> <b>必然崩溃</b>。即使你把 <code>util/</code> 补齐、把 HF token 换掉，训练仍然起不来。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">小结：这个仓库不是「文档差」，是「提交了一个中间态快照」</div>
+<p>三个阻断彼此独立——补了 <code>util/</code> 还有 NameError，改了 NameError 还有 token 问题。<b>结论：CCPL 目前不具备「clone 即复现」的能力。</b> 想复现必须：① 从 PSPStain 仓库拷 <code>util/</code>；② 修 <code>NMCC.py</code> 第 9 行；③ 换掉 HF token；④ 自己确认 FD/NMCC 的梯度问题（下一节）。<b>这四步里没有一步是论文写了的。</b></p>
+</div>
+
+<h3 id="s5-2">5.2 ★ 两个旗舰损失是梯度死路</h3>
+
+<p>这是本次复核最重要的一条。请看 <code>models/FD.py</code> <b>逐字全文</b>：</p>
+
+<pre><code>class FeatureDistillationLoss(nn.Module):
+    def __init__(self, extractor):
+        super(FeatureDistillationLoss, self).__init__()
+        self.extractor = extractor
+        self.transform = transforms.Compose([
+            transforms.Resize(256, interpolation=...BICUBIC),
+            transforms.CenterCrop(224),
+            transforms.Normalize(mean=(0.485,0.456,0.406), std=(0.229,0.224,0.225)),
+        ])
+
+    def forward(self, input, target):
+        input, target = self.transform(input), self.transform(target)
+        with torch.no_grad():                          # ★★★ 就是这一行
+            input_features  = self.extractor(input).squeeze()
+            target_features = self.extractor(target).squeeze()
+
+        cosine_similarity = F.cosine_similarity(input_features, target_features, dim=-1)
+        loss = 1 - cosine_similarity.mean()
+        return loss</code></pre>
+
+<div class="box stop">
+<div class="bt">★ 逐行推理：这个损失对生成图零梯度</div>
+<ol>
+<li><code>input</code> = <code>fake_B</code>，是<u>带梯度</u>的生成图。经 <code>self.transform()</code> 后仍带梯度。</li>
+<li>但第 22 行 <code>with torch.no_grad():</code> 把它送进 <code>self.extractor</code>。<b>在 <code>no_grad</code> 上下文里创建的所有张量，<code>requires_grad=False</code>、<code>grad_fn=None</code>。</b></li>
+<li>所以 <code>input_features</code> 与 <code>target_features</code> <u>两个都被 detach 了</u>。</li>
+<li>第 26 行在 <code>no_grad</code> <u>外面</u>算 <code>F.cosine_similarity</code>——但两个输入都 requires_grad=False，输出自然也 requires_grad=False。</li>
+<li>⇒ <code>loss</code> 是一个<b>常数</b>。它被 <code>lamba_FD * loss_FD</code> 加进总损失后，<code>loss_G.backward()</code> 不会报错（因为其他项有梯度），但这一项贡献的梯度<b>恰好为 0</b>。</li>
+</ol>
+<p><b>结论：FD 在发布版代码里是一个昂贵的装饰——它每步多跑 2 次 Gigapath 前向（512×512 缩到 224），却不产生任何梯度信号。</b></p>
+</div>
+
+<p><code>models/NMCC.py</code> 的 <code>forward</code> 是<u>同一个模式</u>：</p>
+<pre><code>    def forward(self, input, target):
+        input_h, input_d = self.get_rgb(input)          # 颜色反卷积，带梯度
+        target_h, target_d = self.get_rgb(target)
+        input_h = self.transform(input_h); ...          # 带梯度
+        with torch.no_grad():                           # ★★★ 同样这一行
+            input_h_f  = self.extractor(input_h).squeeze()
+            input_d_f  = self.extractor(input_d).squeeze()
+            target_h_f = self.extractor(target_h).squeeze()
+            target_d_f = self.extractor(target_d).squeeze()
+
+        input_cos  = self.compute_cos(input_h_f, input_d_f)
+        target_cos = self.compute_cos(target_h_f, target_d_f)
+        return abs(input_cos - target_cos).mean()       # ← 常数，零梯度</code></pre>
+
+<div class="box stop">
+<div class="bt">★ 所以论文的消融表里有一个无法用这份代码解释的数字</div>
+<p>论文 Table III 说：加 FD 让 FID 从 <b>60.59 降到 40.05</b>（这是全文最大的一项改善）。但如果发布版的 FD 零梯度，它<u>不可能</u>产生这个改善。二者必有一假：</p>
+<ul>
+<li>要么论文的数字来自一个<b>没有 <code>no_grad</code></b> 的内部版本（发布时被误改）；</li>
+<li>要么这个改善来自别的东西（例如那次实验同时改了别的超参）。</li>
+</ul>
+<p><b>在没有作者说明的情况下，无法判定。请把「FD 有效」当作「未复现的论文声称」，不要当作「已知事实」。</b> 同样的判断适用于 NMCC。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">一个必须说清的边界：我的结论是「代码阅读 + 语义推理」，不是「跑出来的」</div>
+<p>我没有在本机安装 torch（~2 GB）去实际跑一次 <code>backward()</code>。上面第 2–5 步依据的是 PyTorch 对 <code>torch.no_grad()</code> 的<u>文档化语义</u>：该上下文内创建的所有张量都不参与梯度计算。这是确定性的语言语义，不是经验判断。</p>
+<p><b>可证伪的预测</b>：任何人装好 torch 后跑这三行，都会得到 <code>False</code>：</p>
+<pre><code>l = FeatureDistillationLoss(frozen_extractor)
+out = l(fake_B_with_grad, real_B)
+print(out.requires_grad)      # 预测：False</code></pre>
+<p>如果打印出 <code>True</code>，我的结论就是错的。<b>这是一个 30 秒可验证的判据，欢迎直接证伪。</b></p>
+</div>
+
+<h3 id="s5-3">5.3 论文—代码逐条对账表</h3>
+
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th style="width:150px">论文写的</th><th style="width:330px">代码实际做的</th><th>差异性质</th><th class="c">影响</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Eq.(3)</b> <code>L_dual = α·L_H + (1−α)·L_D</code>，α = 0.1</td>
+<td><code>DCP.py</code> 第 79 行：<code>loss_DCP = loss_DCP_h + loss_DCP_d</code><br>——<b>两路等权相加，没有 α</b></td>
+<td>论文声称的「核 0.1 / 膜 0.9」通道加权<b>未实现</b>。<code>DCP_LOSS.__init__</code> 也<u>没有 α 这个参数</u>（签名只有 alpha_h, alpha_d, 4 个 threshold）</td>
+<td class="c"><span class="b bad">高</span></td>
+</tr>
+<tr>
+<td><b>Eq.(2)</b> 三项：全局 avg + 16 block + 20 bin 直方图</td>
+<td>代码里<u>多了一项门控</u>：<code>torch.where((ΔOD ≥ −0.4·OD_r) &amp; (ΔOD ≤ 0.4·OD_r), 只算histo, 算avg+histo)</code></td>
+<td>代码比论文<u>多</u>了一个机制（±40% 带内只惩罚直方图）。这一项论文完全没写，但它是从 PSPStain 的 PALS 原样继承的</td>
+<td class="c"><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><b>Eq.(6)</b> <code>L_fd = β·L_fd_cos + (1−β)·L_fd_L2</code></td>
+<td><code>FD.py</code> 只有 <code>1 − cos.mean()</code>。<b>没有 L2 项</b></td>
+<td>论文的「cosine + L2 双约束」实际只有 cosine 一路</td>
+<td class="c"><span class="b bad">高</span></td>
+</tr>
+<tr>
+<td><b>Eq.(7)(8)(9)</b> R 里含 γ‖·‖²，L_cross 含 θ‖R_g−R_r‖²</td>
+<td><code>NMCC.py</code>：<code>R = cos(f_H, f_D)</code>（纯 cosine）；<code>L_cross = abs(cos_g − cos_r).mean()</code>。<b>三处 L2 项全部没有</b></td>
+<td>论文的三项加权结构，实际退化成「两个 cosine 值之差的绝对值」</td>
+<td class="c"><span class="b bad">高</span></td>
+</tr>
+<tr>
+<td>FD 与 NMCC 通过 Gigapath 特征<u>参与训练</u></td>
+<td>两处都在 <code>with torch.no_grad()</code> 里调 backbone ⇒ <b>零梯度</b></td>
+<td>论文的两个旗舰损失在代码里是常数项</td>
+<td class="c"><span class="b bad">致命</span></td>
+</tr>
+<tr>
+<td>NMCC 的 <code>α_h / α_d</code> 用于 FOD 聚焦</td>
+<td><code>NMCC_Loss.__init__</code> 存了 <code>self.alpha_h/alpha_d</code> 并算了 <code>adjust_Calibration_h/d</code>，但 <code>forward()</code> <b>从不使用</b></td>
+<td>死参数。NMCC 里根本没有 FOD 变换——FOD 只在 DCP 里</td>
+<td class="c"><span class="b low">低</span></td>
+</tr>
+<tr>
+<td>batch size = 4</td>
+<td>launcher：<code>batch_size=3</code></td>
+<td>数值不符（不影响结论）</td>
+<td class="c"><span class="b low">低</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box pur">
+<div class="bt">怎么用这张表</div>
+<p><b>如果你只是引用 CCPL 的「想法」</b>（把 IHC 拆成核/膜两路做监督、并约束两路关系），这张表不影响你——想法本身是成立的，而且有先例价值。</p>
+<p><b>如果你想复现它的数字、或者想「基于它的实现」改</b>，这张表就是必须看的第一页：论文里的三个损失公式，代码里没有一个被完整实现。</p>
+</div>
+
+<h3 id="s5-4">5.4 谱系：DCP 就是 PSPStain 的 MLPA 扩了一路</h3>
+
+<p>把两份代码并排看，血缘关系一目了然：</p>
+
+<div class="scroll"><table style="min-width:820px">
+<thead><tr><th>项</th><th>PSPStain <code>models/PALS.py</code>（MICCAI 2024）</th><th>CCPL <code>models/DCP.py</code>（ICME 2025）</th></tr></thead>
+<tbody>
+<tr><td>类名</td><td><code>MLPA_LOSS</code></td><td><code>DCP_LOSS</code></td></tr>
+<tr><td>染色矩阵</td><td><code>[[0.65,0.70,0.29],[0.07,0.99,0.11],[0.27,0.57,0.78]]</code></td><td><b>完全相同</b></td></tr>
+<tr><td>α（FOD 幂指数）</td><td><code>1.8</code></td><td><code>1.8</code>（拆成 alpha_h / alpha_d）</td></tr>
+<tr><td>thresh_FOD</td><td><code>0.15</code></td><td><code>0.15</code></td></tr>
+<tr><td>thresh_mask</td><td><code>0.68</code></td><td><code>0.68</code></td></tr>
+<tr><td>num_blocks</td><td><code>16</code></td><td><code>16</code></td></tr>
+<tr><td>num_bins</td><td><code>20</code></td><td><code>20</code></td></tr>
+<tr><td>±0.4 门控带</td><td><code>torch.where(ΔOD≥−0.4·OD &amp; ΔOD≤0.4·OD, histo, avg+histo)</code></td><td><b>逐字相同</b></td></tr>
+<tr><td>取哪个通道</td><td><code>ihc_hed[:,:,:,2]</code> → <b>只有 D</b></td><td>索引 0（H）+ 索引 2（D）→ <b>两路</b></td></tr>
+<tr><td>总损失里的位置</td><td><code>loss_G = ... + loss_CTPC_MLPA</code>（1 项）</td><td><code>loss_G = ... + loss_DCP + λ_FD·L_FD + λ_NMCC·L_NMCC</code>（3 项）</td></tr>
+</tbody>
+</table></div>
+
+<p><b>CCPL 相对 PSPStain 的全部增量 = ① MLPA 从单通道扩到双通道；② 加两个基于 Gigapath 的损失（而这两个损失在代码里零梯度）。</b> 这就是一篇 7 页会议短文的全部内容。这个判断很重要，因为它同时说明了 <b>PSPStain 是这个方向真正的承重基线</b>，而不是 CCPL。</p>
+
+<h2 id="s6"><span class="num">6</span>数字自洽性核查</h2>
+
+<p>这一节把论文自己的表与自己的正文对一遍。<b>只做算术，不做解释。</b></p>
+
+<h3 id="s6-1">6.1 Table I 正文声称 vs 表内数据</h3>
+
+<p>Table I（BCI 数据集）原始数字：</p>
+<div class="scroll"><table style="min-width:760px">
+<thead><tr><th>方法</th><th class="c">SSIM↑</th><th class="c">PCC↑</th><th class="c">PSNR↑</th><th class="c">FID↓</th><th class="c">PCPA↑</th><th class="c">SIA↑</th></tr></thead>
+<tbody>
+<tr><td>Pix2pix</td><td class="c">0.2887</td><td class="c">0.1260</td><td class="c">14.50</td><td class="c">296.20</td><td class="c">1.87</td><td class="c">1.96</td></tr>
+<tr><td>Pyramidpix2pix</td><td class="c">0.3631</td><td class="c">0.1283</td><td class="c">18.34</td><td class="c">161.39</td><td class="c">2.03</td><td class="c">2.37</td></tr>
+<tr><td>ASP</td><td class="c">0.5025</td><td class="c"><b>0.2609</b></td><td class="c">17.87</td><td class="c">54.72</td><td class="c">3.47</td><td class="c">2.60</td></tr>
+<tr><td>PSPStain</td><td class="c">0.4600</td><td class="c">0.2187</td><td class="c">18.65</td><td class="c"><b>48.42</b></td><td class="c">3.27</td><td class="c">3.02</td></tr>
+<tr style="background:var(--blueSoft)"><td><b>Ours (CCPL)</b></td><td class="c"><b>0.5280</b></td><td class="c">0.2441</td><td class="c"><b>20.42</b></td><td class="c">57.81</td><td class="c"><b>3.68</b></td><td class="c"><b>3.51</b></td></tr>
+</tbody>
+</table></div>
+
+<div class="scroll"><table style="min-width:860px">
+<thead><tr><th style="width:390px">论文正文逐字声称</th><th>表内事实</th><th class="c">判定</th></tr></thead>
+<tbody>
+<tr>
+<td>"it achieves the highest scores in terms of both <b>PSNR and SSIM</b>"</td>
+<td>PSNR 20.42 = 最大；SSIM 0.5280 = 最大</td>
+<td class="c"><span class="b high">成立</span></td>
+</tr>
+<tr>
+<td>"On the <b>PCC</b> metric, CCPL ranks <b>first and second</b> on the BCI and MIST-HER2 datasets, <b>respectively</b>"</td>
+<td>BCI：ASP 0.2609 &gt; Ours 0.2441 ⇒ CCPL 是<b>第二</b><br>MIST：Ours 0.1388 &gt; PSPStain 0.1352 ⇒ CCPL 是<b>第一</b></td>
+<td class="c"><span class="b bad">反了</span></td>
+</tr>
+<tr>
+<td>"CCPL achieves the <b>lowermost FID</b> scores on the BCI dataset"</td>
+<td>PSPStain 48.42 &lt; ASP 54.72 &lt; <b>Ours 57.81</b> ⇒ CCPL 是<b>第三</b></td>
+<td class="c"><span class="b bad">不成立</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box stop">
+<div class="bt">★ 两处声称与自己的表冲突，其中一处是<u>彻底写反</u></div>
+<p>PCC 那句是全文最典型的「抄错方向」：BCI 上它其实是第二、MIST 上才是第一，正文把两个数据集的顺序写反了。<b>FID 那句更严重——它是把「第三名」写成了「最低」。</b></p>
+<p>Table II（MIST-HER2）的正文声称我逐条核过，<b>全部成立</b>（SSIM / PCC / PSNR / FID 四项均为最优）。所以问题只出在 Table I 的正文。</p>
+<p class="small">顺带：Table I 的方法顺序是「Pix2pix → Pyramidpix2pix → ASP → PSPStain → Ours」，而 Fig.2 的 caption 写「columns 3-7 represent … CCPL, ASP, Pix2pix, PSPStain, and Pyramidpix2pix」——两处顺序不同。这是排版问题，但看图时容易对错列。</p>
+</div>
+
+<h3 id="s6-2">6.2 Table III 消融：被写成「slightly」的 59%</h3>
+
+<p>Table III（消融）原始数字与逐次增量：</p>
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th class="c">ID</th><th class="c">FD</th><th class="c">DCP</th><th class="c">NMCC</th><th class="c">SSIM↑</th><th class="c">PCC↑</th><th class="c">PSNR↑</th><th class="c">FID↓</th><th class="c">PCPA↑</th><th class="c">SIA↑</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td class="c">✗</td><td class="c">✗</td><td class="c">✗</td><td class="c">0.5045</td><td class="c">0.2166</td><td class="c">19.96</td><td class="c">60.59</td><td class="c">2.21</td><td class="c">2.13</td></tr>
+<tr><td class="c">2</td><td class="c">✓</td><td class="c">✗</td><td class="c">✗</td><td class="c">0.4947</td><td class="c">0.2256</td><td class="c">20.68</td><td class="c"><b>40.05</b></td><td class="c">2.76</td><td class="c">2.74</td></tr>
+<tr><td class="c">3</td><td class="c">✓</td><td class="c">✗</td><td class="c">✓</td><td class="c"><b>0.5383</b></td><td class="c">0.2327</td><td class="c">19.70</td><td class="c">63.83</td><td class="c">3.23</td><td class="c">2.97</td></tr>
+<tr style="background:var(--blueSoft)"><td class="c">4</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">0.5280</td><td class="c"><b>0.2441</b></td><td class="c">20.42</td><td class="c">57.81</td><td class="c"><b>3.68</b></td><td class="c"><b>3.51</b></td></tr>
+</tbody>
+</table></div>
+
+<p class="small">一致性自检：Model 4 的六项数字与 Table I 的「Ours」完全一致 ⇒ 两份表是同一组实验，可放心互相引用。</p>
+
+<div class="scroll"><table style="min-width:880px">
+<thead><tr><th style="width:330px">论文正文逐字声称</th><th>算术事实</th><th class="c">判定</th></tr></thead>
+<tbody>
+<tr>
+<td>"<b>FD</b> significantly improves the FID score (Model 1 vs. Model 2)"</td>
+<td>FID 60.59 → 40.05，<b>−33.9%</b></td>
+<td class="c"><span class="b high">成立</span></td>
+</tr>
+<tr>
+<td>"<b>NMCC</b> enhances SSIM and PCC scores … Although <b>FID scores slightly decrease</b> in this case"</td>
+<td>SSIM 0.4947→0.5383 ✓；PCC 0.2256→0.2327 ✓<br>但 FID <b>40.05 → 63.83 = +59.4%</b>；PSNR 20.68→19.70 也变差</td>
+<td class="c"><span class="b bad">「slightly」不实</span></td>
+</tr>
+<tr>
+<td>"<b>DCP</b> further improves PSNR and PCC scores (Mode 3 vs. Model 4)"</td>
+<td>PSNR 19.70→20.42 ✓；PCC 0.2327→0.2441 ✓<br>但 SSIM 0.5383→<b>0.5280</b> 反而变差</td>
+<td class="c"><span class="b medium">部分成立</span></td>
+</tr>
+<tr>
+<td>"The complete model achieves <b>balanced improvements across all metrics</b>"</td>
+<td>完整模型 SSIM 0.5280 &lt; Model 3 的 0.5383<br>完整模型 FID 57.81 &gt; Model 2 的 40.05</td>
+<td class="c"><span class="b bad">不成立</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box stop">
+<div class="bt">★ 三条比正文更重要的算术事实</div>
+<ol>
+<li><b>NMCC 让 FID 从 40.05 恶化到 63.83，涨幅 59.4%。</b> 而且 63.83 <b>比「什么都不加」的 60.59 还差</b>——也就是说，在「只有 FD 打底」的配置上单独加 NMCC，分布级指标反而跌破起点。论文用 "slightly decrease" 一笔带过，并把原因归给 Inception 特征不适合病理。这个归因<u>可能对</u>，但论文<b>没有做任何实验来支持它</b>（例如换成病理特征算 FID 再看）。</li>
+<li><b>Model 2（只加 FD）的 FID = 40.05，比完整模型（57.81）好 44%，而且比所有基线都好</b>（最好的基线 PSPStain 是 48.42）。论文没有讨论这个「去掉两个模块反而更好」的结果。</li>
+<li><b>完整模型的 FID（57.81）在 Table I 里排第三</b>，落后 PSPStain（48.42）和 ASP（54.72）。这与正文「lowermost FID」的声称直接冲突（见 §6.1）。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">一个必须避免的误读</div>
+<p>不要把上面的第 1、2 条读成「NMCC 没用」。正确的读法是：<b>NMCC 在分布级指标（FID）上明显有害，在实例级/人类评价指标上明显有益</b>（PCPA 2.76→3.23、SIA 2.74→2.97）。这恰恰符合库内 <code>07_评价指标底层原理</code> 与 <code>01_调研报告/Diffusion主损失与辅助损失的梯度冲突_机制分析.html</code> 反复强调的那条：<b>distribution-level 与 instance-level 指标可以反向</b>，用单一指标（尤其 PSNR/FID）下结论是错的。</p>
+<p>论文的错误不在于结果，而在于<b>把「+59%」写成「slightly」，并且没有正面讨论这个 trade-off</b>。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>消融表真正告诉了我们什么</h2>
+
+<p>把 Table III 重排成「加什么 → 换来什么」的形式，结论会比论文清楚得多：</p>
+
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th>动作</th><th class="c">FID（分布级）</th><th class="c">SSIM</th><th class="c">PCC</th><th class="c">PSNR</th><th class="c">PCPA / SIA（人类评价）</th><th>一句话</th></tr></thead>
+<tbody>
+<tr><td>什么都不加</td><td class="c">60.59</td><td class="c">0.5045</td><td class="c">0.2166</td><td class="c">19.96</td><td class="c">2.21 / 2.13</td><td>像素监督下病理特征几乎没保住</td></tr>
+<tr><td>+ FD</td><td class="c" style="color:var(--green)"><b>40.05</b></td><td class="c">0.4947</td><td class="c">0.2256</td><td class="c">20.68</td><td class="c">2.76 / 2.74</td><td><b>FID 改善最大的一步</b>（但代码里零梯度，见 §5.2）</td></tr>
+<tr><td>+ NMCC</td><td class="c" style="color:var(--red)"><b>63.83</b></td><td class="c" style="color:var(--green)">0.5383</td><td class="c">0.2327</td><td class="c">19.70</td><td class="c">3.23 / 2.97</td><td><b>结构指标与人类评价一起涨，分布指标崩</b></td></tr>
+<tr><td>+ DCP</td><td class="c">57.81</td><td class="c">0.5280</td><td class="c" style="color:var(--green)">0.2441</td><td class="c" style="color:var(--green)">20.42</td><td class="c" style="color:var(--green)">3.68 / 3.51</td><td>把 FID 拉回来一部分，人类评价继续涨</td></tr>
+</tbody>
+</table></div>
+
+<div class="box key">
+<div class="bt">三条可迁移的读法</div>
+<ol>
+<li><b>「加模块」的收益高度依赖你用什么指标看。</b> FD 是唯一让分布级和实例级<u>同时</u>变好的模块；NMCC 是典型的「实例级赢、分布级输」；DCP 是唯一让 PSNR/PCC/人类评价同时涨的模块。</li>
+<li><b>如果只能借一个模块，借 DCP（= PSPStain 的 MLPA 双通道版）。</b> 它是唯一一个在四个量化指标 + 两个人类评价里<u>都没有明显反作用</u>的（只在 SSIM 上微降 0.0103）。而且它有代码可读、常数明确。</li>
+<li><b>NMCC 要借就必须自带一个「分布级不掉」的补偿设计。</b> 论文没给，所以你不能照抄它的损失权重就完事。</li>
+</ol>
+</div>
+
+<h2 id="s8"><span class="num">8</span>可迁移性判定（对你的「2 通道生成」）</h2>
+
+<p>你的思路是「用 2 个通道做<u>生成</u>」。先把三种可能的含义分开，因为结论完全不同：</p>
+
+<div class="scroll"><table style="min-width:880px">
+<thead><tr><th>你可能的含义</th><th>CCPL 是不是先例</th><th>说明</th></tr></thead>
+<tbody>
+<tr>
+<td><b>A. 网络输出 2 个通道</b>（例如输出 [C_H, C_DAB] 浓度图，再渲染成 RGB）</td>
+<td><span class="b bad">不是</span></td>
+<td>CCPL 生成器输出 3 通道 RGB，从未改过。<b>它只把 IHC 拆成两路来<u>算损失</u>。</b></td>
+</tr>
+<tr>
+<td><b>B. 损失里用 2 个通道分别约束</b></td>
+<td><span class="b high">是，且是直接先例</span></td>
+<td>这正是 DCP 做的事，而且它已经把 PSPStain 的 DAB 单通道版扩成了 H+D 双通道版。</td>
+</tr>
+<tr>
+<td><b>C. 约束两个通道之间的关系</b>（跨通道一致性）</td>
+<td><span class="b high">是，且是目前唯一先例</span></td>
+<td>NMCC 是文献里唯一把「通道间关系」做成损失的虚拟染色工作（五路检索均 0 命中其它）。</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box stop">
+<div class="bt">★ 最关键的新颖性提醒</div>
+<p>库内 <code>06_方案可行性审查/DAB-only浓度扩散_文献先例地图与模型选型审查.html</code> 讨论的是「DAB-only vs 两通道」。而 CCPL 已经把 <b>「从 DAB 单通道扩到 H+D 双通道的 FOD/MLPA 约束」</b> 做完了并发表在 ICME 2025。所以：</p>
+<ul>
+<li>如果差异点只是「我用了两个通道做监督」→ <b>被 CCPL 覆盖</b>，不能作为创新点。</li>
+<li>如果差异点是「我<u>生成</u>两个通道而不是只在损失里拆两个通道」→ <b>CCPL 没有覆盖</b>，这是一条真实的空位（五路检索在病理域也没找到 encoder + 2-decoder 或 OD/stain-concentration 生成 + Beer–Lambert 渲染的先例）。</li>
+<li>如果差异点是「我在<u>浓度域</u>做跨通道一致性，而不是在 RGB 特征空间」→ 也未被覆盖，而且你的物理量更干净（CCPL 是在 Gigapath 的 RGB 特征上算 cosine，没有物理意义；浓度域的关系有量纲、可解释）。</li>
+</ul>
+</div>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">可以搬（按性价比排序）</div>
+<p><b>① DCP 的双通道 FOD 统计损失</b>：直接可读可抄，常数明确。<b>但注意</b>：它的 <code>separate_stains</code> 会静默清零负浓度，你要换成你的正交基解卷积。</p>
+<p><b>② NMCC 的「关系一致性」结构</b>：<code>L = |R(generated) − R(real)|</code> 这个骨架本身是干净的，可以整体换到浓度域。建议<b>不要</b>照抄它的 cosine-only 退化版，而是补回论文写的 L2 项。</p>
+<p><b>③ 特征蒸馏的位置</b>：训练时挂大模型、推理时摘掉——这个「零推理成本」的用法对你同样成立。</p>
+</div>
+<div class="mini">
+<div class="mt">不要搬</div>
+<p><b>① <code>no_grad</code> 包 backbone 的写法</b>：这是 bug，不是设计。</p>
+<p><b>② 硬编码的 Ruifrok HED 矩阵</b>：你的方案要用数据估计的染色矩阵（Macenko/Vahadane），否则和你的浓度域定义不一致。</p>
+<p><b>③ 两路等权相加</b>：论文写的 α=0.1 加权在代码里没实现。你若想用通道加权，得自己实现并自己消融——不要以为「CCPL 验证过 α=0.1 有效」。</p>
+<p><b>④ 用 FID 论证 NMCC 有效</b>：它自己的数据说相反。</p>
+</div>
+</div>
+
+<h2 id="s9"><span class="num">9</span>引用策略：怎么引、别怎么引</h2>
+
+<div class="scroll"><table style="min-width:860px">
+<thead><tr><th style="width:300px">你想说的话</th><th>能不能引 CCPL</th><th>怎么引</th></tr></thead>
+<tbody>
+<tr>
+<td>「跨通道一致性损失在虚拟染色里是新机制」</td>
+<td><span class="b high">可以，而且是唯一依据</span></td>
+<td>引 CCPL + 说明「截至检索日未见其它把通道间关系做成损失的虚拟染色工作」。这条我五路检索过（Europe PMC 全文 + arXiv 元数据，五个关键词 0 命中），站得住。</td>
+</tr>
+<tr>
+<td>「把 IHC 拆成核/膜双通道做监督已有先例」</td>
+<td><span class="b high">可以</span></td>
+<td>必须<b>同时引 PSPStain</b>（单通道版，MICCAI 2024）和 CCPL（双通道版，ICME 2025），说明「从单通道到双通道的扩展已发生」。</td>
+</tr>
+<tr>
+<td>「CCPL 证明了双通道监督有效」</td>
+<td><span class="b medium">谨慎</span></td>
+<td>可以引它的<u>人类评价</u>结果（PCPA 2.76→3.23、SIA 2.74→2.97），但<b>不要</b>用 FID 支持这个论点——它自己的表说 FID 恶化 59%。</td>
+</tr>
+<tr>
+<td>「CCPL 的 SOTA 结果」</td>
+<td><span class="b bad">不要</span></td>
+<td>Table I 的 FID 是第三名，PCC 是第二名，正文声称与数据冲突。要引只能引「PSNR/SSIM 最优」。</td>
+</tr>
+<tr>
+<td>「基于 CCPL 的实现改进」</td>
+<td><span class="b bad">不要</span></td>
+<td>仓库不可运行 + 两个旗舰损失零梯度 + 公式未完整实现。没有可复现的基线可基于。</td>
+</tr>
+<tr>
+<td>「用 Gigapath 特征做生成损失」</td>
+<td><span class="b medium">谨慎</span></td>
+<td>CCPL 是目前仅有的两篇之一（另一篇是 SheafStain, NeurIPS 2026, arXiv:2606.11846）。但 CCPL 的实现零梯度，SheafStain 的实现是 detach 目标分支 + 只在最后 50 epoch 开 λ。所以<b>「有效」目前只有弱证据</b>。</td>
+</tr>
+</tbody>
+</table></div>
+
+<h2 id="s10"><span class="num">10</span>未核实清单与证据边界</h2>
+
+<div class="box warn">
+<div class="bt">本轮<u>已经核实</u>的（都是抓取后逐字读到）</div>
+<ul>
+<li>CCPL 全文 7 页（本地 PDF + arXiv 2506.07559v1 一致）</li>
+<li>官方仓库全仓 tarball（26 个 .py 全部可读）、<code>FD.py</code> / <code>NMCC.py</code> / <code>DCP.py</code> / <code>CCPL_model.py</code> / <code>CCPL_launcher.py</code> 逐行</li>
+<li><code>NMCC_Loss</code> 实例化抛 NameError —— <b>本机实测复现</b></li>
+<li>PSPStain <code>models/PALS.py</code> 与 <code>models/PSPStain_model.py</code>（用于谱系对比）</li>
+<li>venue = ICME 2025（来自官方 README 逐字）</li>
+<li>OpenAlex <code>cited_by_count: 0</code>（2026-10-16）</li>
+<li>SheafStain / UNIStainNet / ContiStain / HistDiT / Beer-Lambert AE 的题录（arXiv API 逐条）</li>
+</ul>
+</div>
+
+<div class="box stop">
+<div class="bt">仍未核实 / 需要作者或你自行确认的</div>
+<ol>
+<li><b>FD 与 NMCC 的梯度结论是「代码阅读 + 语言语义推理」，不是跑出来的。</b> 我没有在本机装 torch。§5.2 给了 30 秒可证伪的判据。</li>
+<li><b>论文的数字究竟来自哪个版本的代码，未知。</b> 发布版零梯度的 FD 无法解释「FID 60.59→40.05」。作者是否在别处跑过正确版本，无从得知。</li>
+<li><b>Table I 正文的两处错误是笔误还是有意，无法判断。</b> 我只报告「正文与表不符」这一事实。</li>
+<li><b>BCI 数据集划分口径待核对。</b> CCPL 写「训练 3,980 / 测试 995 对」，而 PSPStain 论文（arXiv 2407.03655）报告的是 3,396 / 977 对。<b>两个数字不一致，我未去核实官方 BCI 挑战赛的原始划分。</b> 引用数据集规模时请以官方 BCI 页面为准，不要引 CCPL 的。</li>
+<li><b>NMCC 的 <code>β / γ / θ</code> 三个权重论文完全没给</b>，代码里也不存在（退化成纯 cosine）。所以「论文的三项加权结构」到底该取什么值，没有依据。</li>
+<li><b>论文的 <code>B</code>（block 数）与 <code>N</code>（histogram bin 数）正文未给</b>；代码里是 16 与 20。<b>这是代码事实，不是论文事实</b>，引用时需注明来源。</li>
+<li><b>参考文献 [17] 的引用明显不当</b>：正文写 "Quantitative metrics and human evaluation results [17]"，而 [17] 是 <i>Stephanie: Step-by-step dialogues for mimicking human interactions in social conversations</i>（arXiv 2407.04093）——一篇对话生成论文，与病理图像的人类评价毫无关系。同组自引。类似地 [18]（视频异常检测综述）被用来支持 "stain-to-stain transformation"，[22]（AMP-Net 视频异常检测）被列在 GAN 病理工作里。<b>这三处属引用失当，不要顺着它的文献表建立技术谱系。</b></li>
+</ol>
+</div>
+
+<div class="box teal">
+<div class="bt">本轮把库内两处旧标记结案了</div>
+<ul>
+<li>库内 12 篇报告 §3 标「Eq.(1) 的条件项 <b>存疑</b>」→ <b>已结案</b>：代码确认阈值作用在取幂之后，原文写法丑但描述准确（§4.1(b)）。</li>
+<li>库内 12 篇报告 §3 记「<b>venue 未标注，按 arXiv preprint 计</b>」→ <b>已结案</b>：官方 README 逐字写明 ICME 2025（§1）。<span class="small">保留原标记以便对账，不静默删除。</span></li>
+</ul>
+</div>
+
+<h2 id="s11"><span class="num">11</span>参考文献与代码</h2>
+
+<div class="scroll"><table style="min-width:860px">
+<thead><tr><th>对象</th><th>题录</th><th>URL</th><th class="c">本轮核实</th></tr></thead>
+<tbody>
+<tr><td><b>CCPL</b>（本报告主体）</td><td>Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining. Hao Yang, JianYu Wu, Run Fang, Xuelian Zhao, Yuan Ji, Zhiyu Chen, Guibin He, Junceng Guo, Yang Liu, Xinhua Zeng. <b>ICME 2025</b>. arXiv:2506.07559v1</td><td><a href="https://arxiv.org/abs/2506.07559">arxiv.org/abs/2506.07559</a></td><td class="c"><span class="b high">全文</span></td></tr>
+<tr><td>CCPL 官方代码</td><td>Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining</td><td><a href="https://github.com/Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining">github.com</a></td><td class="c"><span class="b high">全仓逐行</span></td></tr>
+<tr><td>PSPStain（承重基线）</td><td>Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining. Fuqiang Chen, Ranran Zhang, Boyun Zheng, Yiwen Sun, Jiahui He, Wenjian Qin. <b>MICCAI 2024</b>. arXiv:2407.03655v2</td><td><a href="https://github.com/ccitachi/PSPStain">github.com/ccitachi/PSPStain</a></td><td class="c"><span class="b high">PALS.py 逐行</span></td></tr>
+<tr><td>ContiStain（同组后续）</td><td>ContiStain: Cross-Domain Relation-Preserving Distillation for Continual Multi-Domain Virtual IHC Staining. Fuqiang Chen 等. <b>MICCAI 2026</b>. arXiv:2607.03851v1</td><td><a href="https://arxiv.org/abs/2607.03851">arxiv.org/abs/2607.03851</a></td><td class="c"><span class="b high">题录</span></td></tr>
+<tr><td>SheafStain（Gigapath 作损失的唯一姊妹）</td><td>SheafStain: Sheaf-Theoretic Schrödinger Bridge for Spatially and Biologically Coherent Virtual Staining. Hyeongyeol Lim 等. <b>NeurIPS 2026</b>. arXiv:2606.11846v2</td><td><a href="https://arxiv.org/abs/2606.11846">arxiv.org/abs/2606.11846</a></td><td class="c"><span class="b medium">题录</span></td></tr>
+<tr><td>Gram 矩阵匹配（NMCC 的谱系根）</td><td>Image Style Transfer Using Convolutional Neural Networks. Gatys, Ecker, Bethge. <b>CVPR 2016</b>. DOI 10.1109/CVPR.2016.265</td><td>—</td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>Deep CORAL（协方差对齐）</td><td>Deep CORAL: Correlation Alignment for Deep Domain Adaptation. Sun, Saenko. <b>ECCV 2016 Workshop</b>. arXiv:1607.01719</td><td><a href="https://arxiv.org/abs/1607.01719">arxiv.org</a></td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>相似度保持蒸馏 SPKD</td><td>Similarity-Preserving Knowledge Distillation. Tung, Mori. <b>ICCV 2019</b>. arXiv:1907.09682</td><td><a href="https://arxiv.org/abs/1907.09682">arxiv.org</a></td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>染色反卷积原始方法</td><td>Quantification of histochemical staining by color deconvolution. Ruifrok, Johnston. <b>Anal Quant Cytol Histol</b> 23(4):291–299, 2001. PMID 11531144</td><td>—</td><td class="c"><span class="b low">未抓原文</span></td></tr>
+<tr><td>Prov-GigaPath</td><td>A whole-slide foundation model for digital pathology from real-world data. Hanwen Xu 等. <b>Nature</b> 630, 181–188, 2024</td><td>—</td><td class="c"><span class="b low">未抓原文</span></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s12"><span class="num">12</span>评价协议与对比公平性（第二轴）</h2>
+<p class="small">本节回应「这篇论文有掺水的嫌疑」。<b>§5–§7 走的是「代码与论文是否一致」与「表内数字是否自洽」；本节走的是另一条轴：实验设计与对比是否公平。</b>两者不重复。所有数字均逐字取自本地 PDF（arXiv:2506.07559v1，7 页）的 Table I / II / III。</p>
+
+<h3>12.1 基线数字不可信：三个「在定义上不可能」的值</h3>
+<div class="scroll"><table><thead><tr><th>方法</th><th>数据集</th><th>SSIM↑</th><th>PCC↑</th><th>PSNR↑</th><th>FID↓</th><th>问题</th></tr></thead><tbody>
+<tr><td>Pix2pix</td><td>MIST-HER2</td><td><b>0.0788</b></td><td>0.0604</td><td><b>12.47</b></td><td>251.75</td><td><span class="b bad">不可能</span></td></tr>
+<tr><td>Pyramidpix2pix</td><td>MIST-HER2</td><td>0.1677</td><td><b>0.0042</b></td><td>13.62</td><td>255.14</td><td><span class="b bad">不可能</span></td></tr>
+<tr><td>ASP</td><td>MIST-HER2</td><td>0.1971</td><td>0.1231</td><td>14.14</td><td>50.13</td><td>—</td></tr>
+<tr><td>PSPStain</td><td>MIST-HER2</td><td>0.1874</td><td>0.1352</td><td>14.18</td><td>46.47</td><td>—</td></tr>
+<tr><td>Ours</td><td>MIST-HER2</td><td>0.1998</td><td>0.1388</td><td>14.70</td><td>46.15</td><td>—</td></tr>
+</tbody></table></div>
+<div class="box stop"><div class="bt">为什么 pix2pix 那一行是硬矛盾</div>
+<p><b>pix2pix 是配对方法，用 L1 逐像素监督。</b>它的目标函数直接把输出往 GT 的像素值上拉。在这种设定下报出 <b>PSNR 12.47 dB</b> 与 <b>SSIM 0.0788</b>，等于说「一个被逐像素优化的模型，其输出与目标几乎不相关」——这与它的训练目标<b>在定义上矛盾</b>。</p>
+<p>换算一下量级：PSNR 12.47 dB ⇒ MSE ≈ 255²/10<sup>1.247</sup> ≈ 2204 ⇒ <b>RMSE ≈ 47 个灰阶（满量程 255）</b>。SSIM 0.0788 则接近「结构性完全不相关」。</p>
+<p><b>Pyramidpix2pix 的 PCC = 0.0042</b> 同样异常——线性相关系数约等于 0，意味着生成图与 GT 之间不存在任何线性关系。对一个多尺度配对的 pix2pix 变体，这个数不该出现。</p>
+<p><b>⇒ 只有两种可能：</b>① 这两个基线被训练坏了（欠训练 / 发散 / 输入—目标配错）；② 这些数字不是在本协议下跑出来的（引自他处或误抄）。<b>论文对基线的数字来源零说明</b>——既没写「我们复现」，也没写「引自 [x]」。</p></div>
+<div class="box warn"><div class="bt">同一张表内的不连续性，论文也未讨论</div>
+<p>在同一数据集、同一评测协议下：pix2pix 的 <b>FID 251.75</b> 与 ASP 的 <b>50.13</b> 相差 <b>5 倍</b>；而 PSNR 只从 12.47 走到 14.14（+1.67 dB）。<b>PSNR 几乎没动，FID 掉了 5 倍</b>——这两个指标在同一组模型上的这种背离幅度，很难在统一协议下自然出现。</p>
+<p>更关键的是：<b>MIST-HER2 上所有方法的 PSNR 都落在 12–15 dB、SSIM 全部低于 0.2。</b>这是「输出接近噪声」的量级。论文<b>对此没有任何一句讨论</b>——没有说该子集为何这么难，也没有把这一现象作为结论的限制条件。</p></div>
+
+<h3>12.2 它自己的「什么都不加」基线，已经打赢了主要对手</h3>
+<p>Table III 的 Model 1 是 <b>FD✗ / DCP✗ / NMCC✗</b>——即 CUT + L<sub>SSIM</sub> + L<sub>GP</sub>，<b>不含本文任何一个模块</b>。把它和 Table I 并排：</p>
+<div class="scroll"><table><thead><tr><th>配置</th><th>PSNR↑</th><th>SSIM↑</th><th>来源</th></tr></thead><tbody>
+<tr><td><b>CCPL 的 Model 1（零模块基线）</b></td><td><b>19.96</b></td><td><b>0.5045</b></td><td>Table III</td></tr>
+<tr><td>ASP（MICCAI 2023）</td><td>17.87</td><td>0.5025</td><td>Table I</td></tr>
+<tr><td>PSPStain（MICCAI 2024）</td><td>18.65</td><td>0.4600</td><td>Table I</td></tr>
+<tr><td>Pyramidpix2pix（CVPR 2022）</td><td>18.34</td><td>0.3631</td><td>Table I</td></tr>
+<tr><td>CCPL 完整模型</td><td>20.42</td><td>0.5280</td><td>Table I / III row 4</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">★ 收益归属被高估</div>
+<p>论文对 ASP 的 PSNR 优势是 <b>20.42 − 17.87 = +2.55 dB</b>。但它的<b>零模块基线已经是 19.96</b>。也就是说：</p>
+<p><b>这 +2.55 dB 里，只有 0.46 dB（18%）来自它的三个模块；另外 2.09 dB（82%）来自「换了一个更强的基线配置」。</b>同理对 PSPStain：基线 19.96 已高于 18.65。</p>
+<p>而三个模块合计换来的是：<b>PSNR +0.46 dB（+2.3%）· SSIM +0.0235（+4.7%）· FID −2.78（−4.6%）</b>。</p>
+<p><b>前提已核</b>：Table III 与 Table I 同为 BCI，且 row 4 与 Table I 的 Ours <b>六个数字逐字相同</b>（0.5280 / 0.2441 / 20.42 / 57.81 / 3.68 / 3.51），所以两组数字同协议、可直接比。</p>
+<p><b>⇒ 问题不是「模块无效」，而是「把基线带来的收益算进了自己的贡献」。</b>这是对比公平性层面的掺水，也是最容易被审稿人抓的一条。</p></div>
+
+<h3>12.3 人评是它唯一大幅领先的地方，但协议不成立</h3>
+<div class="box stop"><div class="bt">四个协议缺口</div>
+<ol>
+<li><b>3 位病理医生，无一致性统计量。</b>没有 kappa、没有 ICC、没有标准差、没有逐图分数分布。只有三个平均后的单点数（如 3.68）。</li>
+<li><b>★ "images with significant scoring discrepancies were excluded" —— 这是方向性偏置，不是中性清洗。</b>剔除分歧样本 = 删掉「最难判、最可能区分不开各方法」的样本 ⇒ <b>一致性会系统性被抬高</b>。一个中立的做法是<b>保留全部样本并报告分歧率</b>。</li>
+<li><b>未说明是否盲评。</b>「每位医生独立评分」只保证了医生之间不互相影响，<b>不等于医生不知道哪张是生成图</b>。对虚拟染色任务，是否盲评直接决定这个分数有没有意义。</li>
+<li><b>未说明评了多少张图、如何抽样。</b>分母缺失，分数不可复现。</li>
+</ol>
+<p><b>一个可疑的分布特征</b>：SIA 列是<b>唯一完美单调</b>的（1.96 → 2.37 → 2.60 → 3.02 → 3.51），而 PCPA 列不是（1.87 → 2.03 → 3.47 → 3.27 → 3.68）。「独立评分」的量恰好严格单调，值得要求原始逐图数据。</p></div>
+<p><b>而且这恰恰是它唯一能赢的地方。</b>量化指标上它对 PSPStain 的优势极小：MIST-HER2 的 FID <b>46.15 vs 46.47 = 0.7%</b>；BCI 上 FID 反而更差（<b>57.81 vs 48.42</b>，见 §6.1）。<b>⇒ 结论的承重墙是那个协议不成立的人评。</b></p>
+
+<h3>12.4 无方差、无种子、无权重敏感性</h3>
+<ul>
+<li><b>所有指标都是单点数字。</b>无 std、无多 seed 重复。GAN 在 ~4,000 张图上训练，FID 的跨 seed 波动通常是数点量级。而它对 PSPStain 在 MIST 上的优势只有 <b>0.32</b>（46.15 vs 46.47）——<b>没有方差，这个优势不可判定。</b></li>
+<li><b>λ<sub>d</sub> = λ<sub>f</sub> = λ<sub>c</sub> = 1</b>，三个新损失权重直接取 1，<b>无敏感性分析</b>。而 §7 已显示 NMCC 使 FID 恶化 59.4%——<b>这正是最该扫 λ<sub>c</sub> 的地方，论文没做。</b>若扫过，很可能发现 NMCC 只有在很小权重下才不伤分布指标。</li>
+<li>没有报任何<b>统计显著性检验</b>，却使用了「state-of-the-art」与「lowermost」这类最强措辞。</li>
+</ul>
+
+<h3>12.5 缺扩散类对比（一篇 2025-06 的论文）</h3>
+<p>对比方法<b>最新只到 PSPStain（MICCAI 2024），且全部是 GAN 系</b>：</p>
+<div class="scroll"><table><thead><tr><th>基线</th><th>年份</th><th>类型</th></tr></thead><tbody>
+<tr><td>Pix2pix [25]</td><td>2017 / 2020</td><td>配对 GAN</td></tr>
+<tr><td>Pyramid pix2pix [26]</td><td>CVPR 2022</td><td>配对 GAN</td></tr>
+<tr><td>ASP [27]</td><td>MICCAI 2023</td><td>非配对 CUT 系</td></tr>
+<tr><td>PSPStain [14]</td><td>MICCAI 2024</td><td>非配对 CUT 系</td></tr>
+<tr><td colspan="3"><b>扩散类虚拟染色基线：0 篇。</b>未对比 StainDiff（MICCAI 2023）、VIMs（Text-to-Stain）、Score-based unpaired virtual histology staining，以及库内已精读的 PST-Diff / Star-Diff / SAStainDiff 等</td></tr>
+</tbody></table></div>
+<p><b>⇒ 对一篇自称 SOTA 的虚拟染色论文，在 2025 年 6 月仍只与 GAN 系比较，是明显的基线缺口。</b>它因此无法支撑「该方法优于当前最好方案」这一更强主张——只能说「优于 GAN 系方案」。</p>
+
+<h3>12.6 引文注水：10 / 29 = 34% 同组自引</h3>
+<p>29 条参考文献中，两个名字反复出现（已逐条核对作者串）：</p>
+<div class="scroll"><table><thead><tr><th>作者</th><th>条目</th><th>条数</th><th>与虚拟染色的关系</th></tr></thead><tbody>
+<tr><td><b>Weide Liu</b></td><td>[1] [2] [4] [8]</td><td>4</td><td>图像美学评估 · 弱监督分割 ×3</td></tr>
+<tr><td><b>Yang Liu</b></td><td>[3] [9] [10] [17] [18] [22]</td><td>6</td><td>双语 EEG 解码 · 视频异常检测 ×3 · 细胞轮廓分割 · 社交对话</td></tr>
+<tr><td colspan="2"><b>合计</b></td><td><b>10 / 29 = 34%</b></td><td><b>多数与虚拟染色无关</b></td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">最刺眼的一条：[17]</div>
+<p>正文写 <code>"human evaluation results [17]"</code>，而 [17] 是：</p>
+<p><b><i>Stephanie: Step-by-step dialogues for mimicking human interactions in social conversations</i></b>（arXiv 2407.04093）</p>
+<p><b>一篇社交对话生成论文，无法为病理图像的人评协议提供任何支撑。</b>把它挂在「human evaluation results」后面，是纯粹的引用填充。</p>
+<p>（既有 §8 已点出 [17] [18] [22] 三处失当；<b>本节补的是总量与占比</b>：10/29，且集中在开篇的「multimedia medical information systems」框架段——这个框架的作用看来就是给这批多媒体 / 视频异常 / 对话论文提供挂靠位。）</p></div>
+
+<h3>12.7 六个可核对点（掺水嫌疑的实证清单）</h3>
+<div class="scroll"><table><thead><tr><th>#</th><th>观察</th><th>证据</th><th>性质</th><th>在哪</th></tr></thead><tbody>
+<tr><td>1</td><td>正文称 BCI 上 FID 最低</td><td>表内排第三：PSPStain 48.42 &lt; ASP 54.72 &lt; Ours 57.81</td><td><span class="b bad">事实错误</span></td><td>§6.1</td></tr>
+<tr><td>2</td><td>正文称 BCI 上 PCC 第一、MIST 上第二</td><td><b>完全写反</b>（BCI 第二 / MIST 第一）</td><td><span class="b bad">事实错误</span></td><td>§6.1</td></tr>
+<tr><td>3</td><td>59.4% 的 FID 恶化写成 "slightly decrease"</td><td>40.05 → 63.83</td><td><span class="b bad">描述失真</span></td><td>§7</td></tr>
+<tr><td>4</td><td>配对 pix2pix 报 PSNR 12.47 / SSIM 0.0788；Pyramidpix2pix PCC 0.0042</td><td>Table II</td><td><span class="b bad">数字可疑</span></td><td><b>§12.1</b></td></tr>
+<tr><td>5</td><td>3 人评、剔除分歧样本、无一致性统计、未说明盲评</td><td>§IV-A</td><td><span class="b bad">协议不成立</span></td><td><b>§12.3</b></td></tr>
+<tr><td>6</td><td>10/29 同组自引，含社交对话论文支撑人评</td><td>参考文献表</td><td><span class="b bad">引文注水</span></td><td><b>§12.6</b></td></tr>
+</tbody></table></div>
+
+<h3>12.8 判定：不是造假，是「过度声称 + 派生性未披露 + 对比不公平」</h3>
+<div class="box key"><div class="bt">四条要分开看</div>
+<ol>
+<li><b>数字没有被藏。</b>40.05 与 63.83 都如实写在表里，48.42 也在表里。<b>被藏的是「描述」和「结论」</b>——用 "slightly" 描述 +59%，用 "lowermost" 描述第三名。</li>
+<li><b>代码问题比论文问题更严重。</b>既有 §5 已实测：仓库跑不起来（三处独立阻断）、两个旗舰损失因 <code>no_grad</code> 而零梯度、仓库硬编码明文 HF token。<b>「论文声称有效但代码推不动梯度」这一条，比任何数字问题都硬。</b></li>
+<li><b>派生性未披露。</b>DCP = PSPStain 的 MLPA 扩一路（§5.4 已逐字证实）；λ<sub>g</sub>=10、λ<sub>m</sub>=0.05、ResNet-6Blocks、PatchGAN、batch 4、512 crops 全部与 PSPStain 相同。但正文只说「CUT 是 baseline」，<b>没有披露与 PSPStain 的同源程度</b>，还把 PSPStain 列为被超越的对手。</li>
+<li><b>对比不公平。</b>零模块基线已打赢 ASP 与 PSPStain（§12.2）；配对基线的数字不可信（§12.1）；缺全部扩散基线（§12.5）；无方差（§12.4）。</li>
+</ol>
+<p><b>⇒ 定性：这是一篇「派生性工作 + 过度声称」，不是数据造假。表里的数字是真的，问题是这些数字被用来支撑它们支撑不了的结论。</b></p>
+<p><b>⇒ 对你的实际含义（承接 §8）</b>：它<b>不能当可复现基线</b>（代码跑不起来），但它<b>占掉了一个位置</b>——「把 MLPA 从 DAB 单通道扩到 H+D 双通道」这件事 2025-06 已经有人发表。如果你的方案核心卖点只是「从只预测 DAB 变成两通道」，<b>新颖性会被它吃掉</b>。但它留下的空位也很清楚：<b>它没有一个模块是频域的，也没有一个模块处理切片错位。</b></p></div>
+
+<div class="foot">
+<p><b>本报告定位</b>：库内 CCPL 的第 2 份文档。第 1 份是 <code>MCCL论文获取报告_…同源开放姊妹篇CCPL.html</code>（获取路径），第 2 份是 <code>桌面论文批量精读_12篇.html</code> §3（论文内容）。<b>本报告的增量全部在代码层与数字自洽性层。</b></p>
+<p><b>§12 追加（2026-10-16）</b>：走的是<b>第二条轴</b>——评价协议与对比公平性。§5–§7 管「代码与论文是否一致」「表内数字是否自洽」，§12 管「实验设计与对比是否公平」。两轴不重复：§12.1（基线数字不可信）、§12.2（收益归属被高估）、§12.3（人评协议）、§12.4（无方差）、§12.5（缺扩散对比）、§12.6（引文注水）均为本轮新增。</p>
+<p>与本报告配套的检索报告：<code>01_调研报告/通道分解与跨通道约束_可缝合模块检索.html</code>（把「通道」相关的可移植机制按插入位置整理成总表，面向你的「2 通道生成」思路）。</p>
+<p>撰写：2026-10-16 · 证据等级：全文已核实 / 官方代码已逐行复核 / 关键结论本机实测复现</p>
+</div>
+
+</main>
+</div>
+</body>
+</html>

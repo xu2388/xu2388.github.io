@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>通道分解与跨通道约束 · 可缝合模块检索</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Method Survey · 通道轴</div>
+<div class="sub">通道分解 / 跨通道约束 / 可缝合模块<br>面向「2 通道生成」思路 · 2026-10-16</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 本报告在库内的分工</a>
+<a class="l1" href="#s2">2 · 检索方法与核实等级</a>
+<a class="l1" href="#s3">3 · 先划清「通道」的四种含义</a>
+<a class="l1" href="#s4">4 · ★ 位置总表（全文骨架）</a>
+<a class="l1" href="#s5">5 · 位置① 监督信号：染色分离</a>
+<a class="l1" href="#s6">6 · 位置② 损失层：通道级与跨通道</a>
+<a class="l2" href="#s6-1">6.1 通道级损失（per-channel）</a>
+<a class="l2" href="#s6-2">6.2 跨通道一致性（★ 空位）</a>
+<a class="l2" href="#s6-3">6.3 谱系根：Gram / CORAL / SPKD</a>
+<a class="l1" href="#s7">7 · 位置③ 生成器内部：分支与调制</a>
+<a class="l1" href="#s8">8 · 位置④ 输出空间：通道数与浓度域</a>
+<a class="l1" href="#s9">9 · 位置⑤ 特征层：基础模型蒸馏</a>
+<a class="l1" href="#s10">10 · ★ 可缝合清单总表</a>
+<a class="l1" href="#s11">11 · 对你「2 通道生成」的逐格映射</a>
+<a class="l1" href="#s12">12 · 可执行实验路线与止损</a>
+<a class="l1" href="#s13">13 · 未核实清单与证据边界</a>
+<a class="l1" href="#s14">14 · 参考文献与代码</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">方法检索 · 通道轴 · 面向双通道生成的模块清单</div>
+<h1>「通道」这条线上，哪些东西可以直接缝进你的生成模型<br><span class="small">染色分解 · 通道级损失 · 跨通道一致性 · 多分支生成 · 基础模型蒸馏</span></h1>
+<p class="desc">你的待试验思路是「用 2 个通道做生成」。本报告把「通道」相关机制<u>按它挂在流水线的哪一格</u>切成五个位置，逐格给出可缝合清单（含<b>改动成本</b>与<b>可复现性</b>两列），并明确标出哪些是成熟构件、哪些是有先例需改造、哪些是<u>真正的空位</u>。</p>
+<div class="meta"><span>五路并行检索</span><span>Europe PMC 全文 + arXiv 元数据</span><span>承重引用已逐条复核</span><span class="b high">含 6 条阴性结论</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key">
+<div class="bt">一句话：在「通道」这条线上，真正稀缺的不是「通道分解」（很成熟），也不是「通道注意力」（通用构件），而是<b>「把两个通道之间的关系做成损失」</b>——这在虚拟染色里目前只有一个先例，而且它的实现是零梯度的（见配套精读报告）。这就是你的空位。</div>
+</div>
+
+<p>按「成熟度 × 能不能缝」把结果分成三档：</p>
+
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th style="width:130px">档位</th><th>机制</th><th>代表工作</th><th class="c">改动成本</th><th class="c">可复现性</th></tr></thead>
+<tbody>
+<tr>
+<td rowspan="3"><span class="b high">A · 成熟可用<br>（直接抄）</span></td>
+<td>染色反卷积做监督信号（FOD / OD 统计损失）</td>
+<td>PSPStain（MICCAI 2024）· CCPL（ICME 2025）</td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">高</span><br><span class="small">PSPStain 代码可读</span></td>
+</tr>
+<tr>
+<td>通道注意力（SE / ECA / CBAM）</td>
+<td>SE (CVPR 2018) · ECA (CVPR 2020) · CBAM (ECCV 2018)</td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">极高</span></td>
+</tr>
+<tr>
+<td>感知损失 / 特征损失</td>
+<td>LPIPS (CVPR 2018) · VGG perceptual</td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">极高</span></td>
+</tr>
+<tr>
+<td rowspan="3"><span class="b medium">B · 有先例<br>（要改造）</span></td>
+<td>双分支 / 多分支生成器</td>
+<td>HEMIT（MICCAI 2024 W）· HistoPlexer (Nat Mach Intell 2025)</td>
+<td class="c"><span class="b medium">中—高</span></td>
+<td class="c"><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td>病理基础模型特征作损失</td>
+<td>CCPL (ICME 2025) · SheafStain (NeurIPS 2026)</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b bad">低</span><br><span class="small">CCPL 零梯度</span></td>
+</tr>
+<tr>
+<td>细胞语义 mask 一致性损失</td>
+<td>MCS-Stain (IEEE TMI 2025)</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">中</span><br><span class="small">需预训练分割器</span></td>
+</tr>
+<tr>
+<td rowspan="3"><span class="b bad">C · 空位<br>（可作创新点）</span></td>
+<td><b>跨通道关系一致性损失</b>（尤其浓度域版）</td>
+<td>仅 CCPL（且实现为零梯度）</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">需自建</span></td>
+</tr>
+<tr>
+<td><b>核—膜拓扑/包含关系约束</b></td>
+<td><span class="b bad">未检索到任何先例</span></td>
+<td class="c"><span class="b bad">高</span></td>
+<td class="c"><span class="b low">需自建</span></td>
+</tr>
+<tr>
+<td><b>OD / 浓度图生成 + Beer–Lambert 渲染</b>（病理域）</td>
+<td><span class="b bad">未检索到生成任务的先例</span><br><span class="small">Beer–Lambert AE 是解卷积，不是生成</span></td>
+<td class="c"><span class="b bad">高</span></td>
+<td class="c"><span class="b low">需自建</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box good">
+<div class="bt">三条最有价值的发现</div>
+<ol>
+<li><b>「双通道监督」这个位置已经被占了，而且是被一个你可能没注意到的组合占的。</b> PSPStain 只约束 DAB 单通道，CCPL 把它扩成 H+D 双通道。所以「把单通道约束扩成双通道」不再是新点。<b>但「生成</b>双通道<sup>*</sup><b>而不是在损失里拆双通道」仍然空着</b>——病理域没有检索到 encoder + 2-decoder，也没有 OD/stain-concentration 生成后经 Beer–Lambert 渲染的先例。</li>
+<li><b>「通道之间的关系」这个二阶量在虚拟染色里是空的。</b> 五路检索（Europe PMC 全文库 + arXiv 元数据 + OpenAlex/Crossref 题录）对 <code>"cross-channel consistency loss"</code>、<code>"cross-correlation consistency loss"</code>、<code>"relational consistency" AND "image translation"</code>、<code>"second-order consistency" AND "generative"</code> 四个查询<b>全部 0 命中</b>。最接近的机制都在别的领域（风格迁移的 Gram 矩阵、域适应的 CORAL、知识蒸馏的 SPKD）。<b>把它的形式搬到<u>浓度域</u>，是目前最干净的一个创新点。</b></li>
+<li><b>「核—膜拓扑关系」完全没人做。</b> 本轮专门检索了「膜环绕核」「核膜包含关系」「细胞实例级形态一致性」——<b>作为生成损失，零先例</b>。现有的替代品是细胞语义 mask 一致性（MCS-Stain，需实例分割）和蛋白表达强度图一致性（PSPStain，不需分割）。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">一条必须遵守的引用纪律（本轮踩过的坑）</div>
+<p>本轮检索里，子 agent 报回的两条线索 <b>「Star-Diff」</b> 与 <b>「Kang 2025 渐进式 H&amp;E→IHC OD 空间 DAB 浓度损失」</b> 在公开文献里<b>都查不到</b>（arXiv 标题检索 0 命中）。这两条来自库内既有报告的命名，可能是内部代号或对 StainDiff / StainDiffuser 的混淆。<b>在正式引用前必须用原文复核，不要顺着内部命名去引。</b> 同理，子 agent 报的「HistoPlexer 是 Nature Machine Intelligence 2025」我只核到 DOI 存在，未读全文。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>本报告在库内的分工</h2>
+
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th style="width:250px">既有报告</th><th>它管的轴</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><code>06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</code> §3</td><td><b>输出空间该是几个通道</b>（论证 [H,DAB,H] 秩亏，推荐 [C_H, C_DAB, C_res]）</td><td><b>正交且互补。</b> 那份管「输出什么」，本报告管「损失挂什么」。§11 做汇合。</td></tr>
+<tr><td><code>06_方案可行性审查/DAB-only浓度扩散_文献先例地图与模型选型审查.html</code></td><td><b>DAB-only vs 两通道</b>的先例地图</td><td><b>直接相关。</b> 本报告 §5 补上它当时没覆盖的一条：CCPL 已完成「MLPA 从 DAB 单通道扩到 H+D 双通道」。</td></tr>
+<tr><td><code>01_调研报告/潜空间训练下的通道与浓度问题_维度错配七层拆解与四条可行路线.html</code></td><td><b>潜空间通道数不匹配</b>（K=3 时浓度空间与 RGB 同构）</td><td>本报告 §8 引用它的结论，不重复推导。</td></tr>
+<tr><td><code>01_调研报告/浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</code></td><td><b>浓度域/OD 域</b>的方法地图与渲染公式</td><td>本报告 §8 只补「通道数」这一维度，渲染公式不重复。</td></tr>
+<tr><td><code>01_调研报告/扩散模型虚拟染色_蛋白表达约束_约束位置地图.html</code></td><td><b>约束挂在哪一格</b>（扩散参数化视角）</td><td><b>本报告是它的「通道」切片。</b> 那份按 ε/v/x̂₀ 切，本报告按「预处理/损失/生成器/输出/特征」切。</td></tr>
+<tr><td><code>01_调研报告/扩散模型门控机制_文献地图与频域交汇.html</code></td><td><b>门控</b>挂在哪一格</td><td>本报告 §7 的 channel attention 与那份的「门控」有重叠，<b>以那份为准</b>，本报告只补「通道维度」这一支。</td></tr>
+<tr><td><code>03_论文精读博客/CCPL_跨通道感知学习_精读_论文与代码级复核.html</code></td><td>CCPL 本体（论文 + 代码）</td><td><b>配套文档。</b> 本报告引用它的代码级结论，不重复。</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s2"><span class="num">2</span>检索方法与核实等级</h2>
+
+<p>本报告用五路并行只读子 agent，<b>按「机制轴」而非关键词切分</b>（避免大量重叠结果）：</p>
+<div class="scroll"><table style="min-width:800px">
+<thead><tr><th class="c">路</th><th>负责的独立论证线</th><th class="c">结果密度</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td>染色分离 / 颜色反卷积 / OD 空间作为<u>监督信号</u>的先例</td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td class="c">2</td><td>通道级损失 / 跨通道一致性损失（含二阶一致性）</td><td class="c"><span class="b high">高</span><br><span class="small">6 条阴性</span></td></tr>
+<tr><td class="c">3</td><td>多通道 / 多分支生成架构 + 通道注意力 + 改通道数</td><td class="c"><span class="b medium">中</span></td></tr>
+<tr><td class="c">4</td><td>病理基础模型特征作蒸馏 / 感知损失</td><td class="c"><span class="b medium">中</span></td></tr>
+<tr><td class="c">5</td><td>核—膜空间关系约束 + 细胞级指标</td><td class="c"><span class="b medium">中</span><br><span class="small">大量阴性</span></td></tr>
+</tbody>
+</table></div>
+
+<div class="box teal">
+<div class="bt">核实等级约定（本报告全程使用）</div>
+<ul>
+<li><span class="b high">VERIFIED</span> = 抓取到原文/摘要并读到该结论。</li>
+<li><span class="b medium">UNVERIFIED</span> = 只见于搜索摘要、二手来源，或仅核实了题录未读正文。</li>
+<li><span class="b high">本机实测</span> = 我在本机跑了代码或调了 API 得到的一手结果（仅用于 CCPL / PSPStain 两处）。</li>
+<li>「摘要没写」一律记 <b>未说明</b>，不补默认值。</li>
+</ul>
+</div>
+
+<h2 id="s3"><span class="num">3</span>先划清「通道」的四种含义</h2>
+
+<div class="box stop">
+<div class="bt">★ 不先分清这个，后面所有结论都会串味</div>
+<p>「通道」在虚拟染色的文献里至少指四件不同的东西。<b>它们之间的可迁移性完全不同</b>，混用会得出错误判断（例如把 channel attention 当成「用了染色通道」）。</p>
+</div>
+
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th class="c" style="width:60px">#</th><th style="width:190px">含义</th><th>典型出现处</th><th>与「染色」的关系</th><th>你的方案里对应什么</th></tr></thead>
+<tbody>
+<tr>
+<td class="c"><b>1</b></td><td><b>RGB 色彩通道</b></td><td>任何图像张量的 <code>[B, 3, H, W]</code></td><td>无。只是显示空间的三个基</td><td>不是你的「2 通道」</td>
+</tr>
+<tr>
+<td class="c"><b>2</b></td><td><b>染色通道 / 染色成分</b></td><td>颜色反卷积后的 H / E / DAB；OD 空间的浓度分量</td><td><b>就是染色本身</b>。有物理量纲</td><td><b>这就是你要的「2 通道」</b>（C_H, C_DAB）</td>
+</tr>
+<tr>
+<td class="c"><b>3</b></td><td><b>特征通道 / 特征维度</b></td><td>CNN 中间层的 channel；channel attention 作用的对象</td><td>无。SE 块的「channel」是特征维度，不是染色</td><td>可以被通道调制，但不是输出空间</td>
+</tr>
+<tr>
+<td class="c"><b>4</b></td><td><b>输出分支 / 任务通道</b></td><td>多 marker 生成（一个头输出 N 个 marker）；多模态输出</td><td>部分。每个分支可以对应一种染色</td><td>「多分支生成器」属于这一类</td>
+</tr>
+</tbody>
+</table></div>
+
+<p class="small">后面的 §5–§9 我会在每个位置标注它属于第几种含义。</p>
+
+<h2 id="s4"><span class="num">4</span>★ 位置总表（全文骨架）</h2>
+
+<div class="box key">
+<div class="bt">为什么按「位置」组织而不是按方法名</div>
+<p>同一篇论文，把机制挂在<u>预处理</u>和挂在<u>损失</u>上，梯度回传路径、数值稳定性、对数据缺陷的鲁棒性<b>完全不同</b>。按位置组织，你才能直接判断「这个模块能不能缝进我这一格」。</p>
+</div>
+
+<div class="scroll"><table style="min-width:1000px">
+<thead><tr><th class="c" style="width:56px">位置</th><th style="width:150px">挂在哪</th><th style="width:150px">「通道」含义</th><th>机制</th><th>代表工作</th><th class="c">病理域<br>验证</th><th class="c">改动<br>成本</th><th class="c">可复现<br>性</th></tr></thead>
+<tbody>
+<tr>
+<td class="c"><b>①</b></td><td>预处理 / 监督信号</td><td class="c">含义 2</td><td>颜色反卷积拆 H/D 通道 → 转 OD/FOD → 逐通道统计对齐</td><td>PSPStain · CCPL · TTSaD</td>
+<td class="c"><span class="b high">有</span></td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">高</span></td>
+</tr>
+<tr>
+<td class="c"><b>②</b></td><td>损失层</td><td class="c">含义 2</td><td><b>(a) 通道级损失</b>：逐通道算 + 加权<br><b>(b) 跨通道一致性</b>：约束通道间关系</td><td>(a) CCPL DCP · PSPStain MLPA<br>(b) <b>仅 CCPL NMCC</b></td>
+<td class="c"><span class="b medium">(a) 有<br>(b) 名义有</span></td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b medium">(a) 高<br>(b) 低</span></td>
+</tr>
+<tr>
+<td class="c"><b>③</b></td><td>生成器内部</td><td class="c">含义 3 / 4</td><td>通道注意力（SE/ECA/CBAM）· 多分支/双解码器 · 条件通道调制（FiLM/SPADE/AdaIN）</td><td>HEMIT · SRUG · SE/ECA/CBAM</td>
+<td class="c"><span class="b medium">分支有<br>注意力弱</span></td><td class="c"><span class="b high">低—中</span></td><td class="c"><span class="b high">高</span></td>
+</tr>
+<tr>
+<td class="c"><b>④</b></td><td>输出空间</td><td class="c">含义 2</td><td>输出通道数设计：2 通道 / 3 通道 / 浓度域 + Beer–Lambert 渲染 · 扩 conv_in/conv_out</td><td>StainQuant(BL-AE) · ControlNet zero-conv</td>
+<td class="c"><span class="b bad">生成任务<br>无先例</span></td><td class="c"><span class="b bad">高</span></td><td class="c"><span class="b low">需自建</span></td>
+</tr>
+<tr>
+<td class="c"><b>⑤</b></td><td>特征层</td><td class="c">含义 3</td><td>病理基础模型特征做蒸馏 / 语义一致性损失</td><td>CCPL · SheafStain · UNIStainNet</td>
+<td class="c"><span class="b high">有</span></td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b bad">低</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<p class="small">「改动成本」= 是否要改预训练权重 / 是否要改通道数 / 是否要重训；「可复现性」= 有没有可读的官方实现 + 论文数字是否自洽。</p>
+
+<h2 id="s5"><span class="num">5</span>位置① 监督信号：染色分离</h2>
+
+<p class="small">「通道」含义 = <b>第 2 种（染色成分）</b>。这一格是把染色图拆成成分，再把成分级的统计量当作监督。</p>
+
+<h3>5.1 已核实的先例（三条，谱系清晰）</h3>
+
+<div class="scroll"><table style="min-width:980px">
+<thead><tr><th style="width:170px">工作</th><th>题录</th><th>它怎么用「通道」</th><th class="c">配准</th><th class="c">开源</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr>
+<td><b>PSPStain</b><br><span class="small">承重基线</span></td>
+<td>Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining. Fuqiang Chen 等. <b>MICCAI 2024</b>. arXiv:2407.03655v2</td>
+<td>对 IHC 做颜色反卷积 → <b>只取 DAB 通道</b> → 转 FOD 图 O=(−log₁₀(I/I₀))<sup>α</sup>（α=1.8）→ MLPA 损失约束（全图 avg + 16 block + 20 bin 直方图）</td>
+<td class="c">弱配对<br><span class="small">相邻切片</span></td>
+<td class="c"><a href="https://github.com/ccitachi/PSPStain">ccitachi/PSPStain</a></td>
+<td class="c"><span class="b high">本机实测<br>读 PALS.py</span></td>
+</tr>
+<tr>
+<td><b>CCPL</b></td>
+<td>Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining. Hao Yang 等. <b>ICME 2025</b>. arXiv:2506.07559v1</td>
+<td><b>把 PSPStain 的 DAB 单通道扩成 H + D 双通道</b>，两路各算一遍 MLPA 再相加（论文声称 α=0.1 加权，代码里没实现）</td>
+<td class="c">配对</td>
+<td class="c"><a href="https://github.com/Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining">Freddie1946/…</a></td>
+<td class="c"><span class="b high">本机实测<br>读 DCP.py</span></td>
+</tr>
+<tr>
+<td><b>TT-SaD</b></td>
+<td>Test-Time Stain Adaptation with Diffusion Models for Histopathology Image Classification. Tsai, Chen, Lu. <b>ECCV 2024</b>. DOI 10.1007/978-3-031-72761-0_15</td>
+<td>把染色偏移写成 OD 空间的<b>线性逆问题</b>（A = w<sub>t</sub>w<sub>s</sub><sup>†</sup>），在扩散采样中施加硬一致性约束。<b>任务不同</b>（patch 分类，不生成图）</td>
+<td class="c">unseen<br>target</td>
+<td class="c"><a href="https://github.com/cctsai831/TT-SaD">cctsai831/TT-SaD</a></td>
+<td class="c"><span class="b high">库内已精读</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box pur">
+<div class="bt">★ 这一格的现状：已经被占满了，且有一个你需要注意的「已被做过」</div>
+<p><b>「颜色反卷积 + OD/FOD 统计约束」这条线是成熟且被反复验证的</b>（PSPStain 的 MLPA 是它的标准实现，CCPL 直接 fork 了同一份代码）。</p>
+<p>但请注意这个组合：<b>PSPStain 只约束 DAB 单通道 → CCPL 约束 H+D 双通道，且 CCPL 已发表在 ICME 2025。</b> 所以如果你方案里「两通道」的贡献仅仅是「从只约束 DAB 变成约束 H 和 DAB」，<b>这个增量已经被发表过了</b>。你需要把差异点放在别处（见 §11）。</p>
+</div>
+
+<h3>5.2 值得注意的一条：OD 空间的染色反卷积在生成任务里<u>只被用作损失</u></h3>
+<p>本轮检索的一个明确阴性结论：<b>「先在 OD / 浓度域生成，再用 Beer–Lambert 渲染回 RGB」这条路线，在病理<u>生成</u>任务里没有找到先例。</b></p>
+<ul>
+<li><b>Beer–Lambert Autoencoder</b>（Mark Eastwood 等，arXiv:2601.11336，2026-01）确实在浓度域做生成——但它的任务是<b>无监督染色解卷积与表示学习</b>（5 染色 mIHC：H/CDX2/MUC2/MUC5/CD8），<u>不是染色转换</u>。它的 decoder 是一个可微的 Beer–Lambert 前向模型，染色矩阵可学、用常见色原色相初始化。<b>官方代码库名就是 <code>StainQuant</code></b>（<a href="https://github.com/measty/StainQuant">github.com/measty/StainQuant</a>），注意：StainQuant 不是另一篇独立论文。</li>
+<li><b>Light: Science &amp; Applications 2020</b>（DOI 10.1038/s41377-020-0315-y）用「digital staining matrix」做多染色的数字混合，但<b>它直接输出 RGB，不走 OD/Beer–Lambert</b>。</li>
+<li><b>npj Digital Medicine 2025 的 H&amp;E→IHC 综述</b>（DOI 10.1038/s41746-025-01741-9）提到有工作「predict the DAB channel」，但综述没给出可核实的原始文献 ID，<b>我不列</b>。</li>
+</ul>
+<p><b>⇒ 对你的含义</b>：你在「浓度域生成 + Beer–Lambert 渲染」这条路上，<u>没有生成任务的先例可引</u>。这既是风险（没人验证过）也是机会（空位）。库内 <code>01_调研报告/浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</code> 已经把渲染桥的公式写全了，本报告只补「通道数」这一维度。</p>
+
+<h2 id="s6"><span class="num">6</span>位置② 损失层：通道级与跨通道</h2>
+
+<p class="small">「通道」含义 = <b>第 2 种（染色成分）</b>。这一格是整个检索里<u>信息量最大</u>的一格，因为你要的「可缝合」主要落在这里。</p>
+
+<h3 id="s6-1">6.1 通道级损失（per-channel / channel-wise）</h3>
+
+<p>这一类的形态很朴素：<b>把输出拆成几路，每路各自算损失，再按权重合成</b>。</p>
+
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th style="width:200px">工作</th><th>通道级损失的做法</th><th class="c">权重形式</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr><td><b>CCPL</b> · Eq.(3)</td><td><code>L_dual = α·L_H + (1−α)·L_D</code>，α=0.1（核 0.1 / 膜 0.9）</td><td class="c">固定标量</td><td class="c"><span class="b high">VERIFIED<br><span class="small">但代码未实现</span></span></td></tr>
+<tr><td><b>PSPStain</b> · MLPA</td><td>只算 D 通道，无需加权</td><td class="c">—</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>VMS</b>（Virtual Multiplex Staining）</td><td>marker-by-marker 条件生成、共享架构，用 pixel-level 损失提升单步采样颜色保真。<b>摘要未提及任何跨 marker / 通道间一致性损失</b></td><td class="c">未说明</td><td class="c"><span class="b medium">UNVERIFIED<br><span class="small">仅摘要</span></span></td></tr>
+<tr><td>ER/PR 两阶段生成（Frontiers in Oncology 2026）</td><td>双 marker（ER+PR）。损失是 MSE + adversarial BCE + L1 + <b>Edge-Focused Loss</b>：<code>L_EF = W(y)·(y−ŷ)²</code>，<code>W(y)=5 if y&lt;ε_low; 10 if y&gt;ε_high; 1 otherwise</code>。<b>注意：W 按<u>标签</u>加权，不是按<u>通道</u>加权</b>。评估时才单独 deconvolve DAB 通道</td><td class="c">按像素标签</td><td class="c"><span class="b medium">UNVERIFIED</span></td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+<div class="bt">一个容易被误读的陷阱</div>
+<p>「按标签/像素加权」和「按通道加权」是两件不同的事。上面 ER/PR 那篇的 Edge-Focused Loss 是<u>前者</u>——它在空间上加权（边缘附近权重高），与通道无关。<b>不要把它当作「通道级加权」的先例。</b></p>
+</div>
+
+<h3 id="s6-2">6.2 跨通道一致性（★ 空位）</h3>
+
+<div class="box stop">
+<div class="bt">★ 本报告最重要的阴性结论</div>
+<p>本轮用 <b>Europe PMC 全文库</b>（生物医学 OA 全文）+ <b>arXiv 元数据 API</b> + OpenAlex/Crossref 题录，对以下查询做了穷举：</p>
+<div class="scroll"><table style="min-width:700px">
+<thead><tr><th>查询</th><th class="c">命中</th></tr></thead>
+<tbody>
+<tr><td><code>"cross-channel consistency loss"</code></td><td class="c"><span class="b bad">0</span></td></tr>
+<tr><td><code>"cross-correlation consistency loss"</code></td><td class="c"><span class="b bad">0</span></td></tr>
+<tr><td><code>"relational consistency" AND "image translation"</code></td><td class="c"><span class="b bad">0</span></td></tr>
+<tr><td><code>"second-order consistency" AND "generative"</code></td><td class="c"><span class="b bad">0</span></td></tr>
+<tr><td><code>"channel consistency loss"</code></td><td class="c"><span class="b low">1（无关）</span></td></tr>
+<tr><td>arXiv <code>all:"cross-channel consistency"</code></td><td class="c"><span class="b low">2（均无关）</span></td></tr>
+</tbody>
+</table></div>
+<p><b>⇒ 在虚拟染色 / image-to-image 里，把「生成图两通道之间的关系」对齐到「真值两通道之间的关系」的损失，未检索到先例。把「关系的关系」（二阶一致性）当损失的写法只存在于 domain adaptation / knowledge distillation。</b></p>
+<p class="small">范围声明：Europe PMC 全文 + arXiv 元数据 + OpenAlex/Crossref 题录，<b>不含 Google Scholar 全文与付费会议正文</b>。所以这是「未检索到」，不是「不存在」。</p>
+</div>
+
+<p>唯一名义上占了这个位置的是 <b>CCPL 的 NMCC</b>：</p>
+<div class="formula">R<sub>g</sub> = γ‖f<sub>H,g</sub> − f<sub>D,g</sub>‖² + (1−γ)(1 − cos(f<sub>H,g</sub>, f<sub>D,g</sub>))，&nbsp; L<sub>cross</sub> = θ‖R<sub>g</sub> − R<sub>r</sub>‖² + (1−θ)(1 − cos(R<sub>g</sub>, R<sub>r</sub>))</div>
+<p>但配套精读报告已经查明：<b>① 代码里只有 cosine 项，三处 L2 全部缺失；② 更严重的是整个损失包在 <code>torch.no_grad()</code> 里，对生成图零梯度。</b> 所以这个位置是「名义上有人占，实际上没人站住」。</p>
+
+<div class="box good">
+<div class="bt">为什么这是你最好的切入点</div>
+<ol>
+<li><b>位置上没有竞争者。</b> 不是「没人想到」，而是五路检索确实没找到。</li>
+<li><b>CCPL 的实现是坏的，所以它的负面结果（FID +59%）不能算在这条路线的账上。</b> 你如果能证明「在浓度域做跨通道一致性不掉分布级指标」，那是对 CCPL 的一个<u>实质性修正</u>。</li>
+<li><b>浓度域做这件事在物理上比 CCPL 更合理。</b> CCPL 是在 Gigapath 的 RGB 特征上算 cosine——那个特征空间的「关系」没有量纲、不可解释。而 C_H 与 C_DAB 都是浓度，它们之间的关系（比例、协方差、秩相关）有明确物理含义，可以直接对应到 HER2 判读的「膜强度 × 阳性比例」。</li>
+</ol>
+</div>
+
+<h3 id="s6-3">6.3 谱系根：Gram / CORAL / SPKD（把形式搬到别的领域）</h3>
+
+<p>「对齐关系矩阵」这件事在别的领域是成熟的。以下四篇是可直接借形式的：</p>
+
+<div class="scroll"><table style="min-width:960px">
+<thead><tr><th style="width:190px">工作</th><th>题录</th><th>核心形式（逐字）</th><th>为什么可迁移</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Gatys et al.</b><br>Gram 矩阵匹配</td>
+<td>Image Style Transfer Using Convolutional Neural Networks. <b>CVPR 2016</b>. DOI 10.1109/CVPR.2016.265</td>
+<td><code>E_l = 1/(4N_l²M_l²) · Σ_ij (G^l_ij − A^l_ij)²</code>；<code>G^l_ij = Σ_k F^l_ik F^l_jk</code></td>
+<td><code>G</code> 就是<b>通道 × 通道</b>的相关矩阵。这是「对齐通道间关系」最原始的形态。NMCC 与它同构</td>
+<td class="c"><span class="b medium">UNVERIFIED<br><span class="small">二手</span></span></td>
+</tr>
+<tr>
+<td><b>Deep CORAL</b></td>
+<td>Deep CORAL: Correlation Alignment for Deep Domain Adaptation. Sun &amp; Saenko. <b>ECCV 2016 Workshop</b>. arXiv:1607.01719</td>
+<td><code>ℓ_CORAL = 1/(4d²) ‖C_S − C_T‖²_F</code>（<code>C</code> = 层激活的协方差矩阵）</td>
+<td><b>协方差 = 通道间二阶关系</b>，且<u>可微</u>。可直接改写成「生成图各染色通道协方差 ≈ 真值协方差」。比 Gram 更简洁（少一层求和）</td>
+<td class="c"><span class="b medium">UNVERIFIED</span></td>
+</tr>
+<tr>
+<td><b>SPKD</b></td>
+<td>Similarity-Preserving Knowledge Distillation. Tung &amp; Mori. <b>ICCV 2019</b>. arXiv:1907.09682</td>
+<td><code>L_SP = (1/b²) Σ_{(l,l')∈I} ‖G^(l)_T − G^(l')_S‖²_F</code>，其中 <code>G = A Aᵀ</code> 后做行 L2 归一化</td>
+<td>最接近「二阶一致性」的现成写法。<b>注意它的 <code>G</code> 是对 batch 内样本算的（batch-wise 关系矩阵），不是通道间</b>——迁移时要改轴</td>
+<td class="c"><span class="b medium">UNVERIFIED</span></td>
+</tr>
+<tr>
+<td><b>RKD</b></td>
+<td>Relational Knowledge Distillation. Park 等. <b>CVPR 2019</b>. arXiv:1904.05068</td>
+<td>distance-wise / angle-wise 损失，"penalize structural differences in relations"</td>
+<td>提供「关系」的两种具体度量（距离、角度）。摘要未给公式</td>
+<td class="c"><span class="b medium">UNVERIFIED</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box teal">
+<div class="bt">一个理论上的加持（可选引用）</div>
+<p><b>Demystifying Neural Style Transfer</b>（IJCAI 2017, arXiv:1701.01036）证明了「匹配 Gram 矩阵」<u>等价于</u>「最小化二阶多项式核的 MMD」。如果你要论证「二阶一致性有理论依据而不只是一个启发式」，这是可以引的一句。</p>
+<p class="small">但注意：该结论只对 Gram 矩阵成立，不自动推广到「任意关系函数 R」。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">还找到一条同名的、但方向相反的</div>
+<p><b>SC³: Selective Cross-Correlation Consistency Loss for Out-of-Distribution Generalization</b>（ICME 2024, DOI 10.1109/ICME57554.2024.10688222）。它对齐<u>同类样本特征</u>的 cross-correlation matrix，并用 Semantic-Oriented Selection 剔除 spurious channels。<b>名字很像，但作用轴不同</b>（它对齐的是样本间的相关矩阵，不是通道间的关系）。代码 <code>github.com/znchen666/SC3</code> 我抓取 README 返回 404，<b>未能验证仓库内容</b>。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>位置③ 生成器内部：分支与调制</h2>
+
+<p class="small">「通道」含义 = <b>第 3 种（特征维度）或第 4 种（输出分支）</b>。</p>
+
+<h3>7.1 多分支 / 双解码器生成器</h3>
+
+<div class="scroll"><table style="min-width:980px">
+<thead><tr><th style="width:180px">工作</th><th>题录</th><th>架构</th><th class="c">改动成本</th><th class="c">开源</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr>
+<td><b>HEMIT</b></td>
+<td>H&amp;E to Multiplex-Immunohistochemistry Image Translation with <b>Dual-Branch</b> Pix2pix Generator. <b>MICCAI 2024 Workshops</b>（LNCS, 2025）. DOI 10.1007/978-3-031-84525-3_16</td>
+<td>官方 README 里 generator 名为 <code>SwinTResnet</code>——<b>是双 backbone（Swin + ResNet），不是「一个编码器 + 两个解码器」</b>。注意：「一个 encoder + 2 decoder」在病理域<b>本轮未检索到</b></td>
+<td class="c"><span class="b medium">中</span><br><span class="small">需整体替换 netG</span></td>
+<td class="c"><a href="https://github.com/BianChang/Pix2pix_DualBranch">BianChang/Pix2pix_DualBranch</a><br><span class="small">数据集 <a href="https://github.com/BianChang/HEMIT-DATASET">HEMIT-DATASET</a></span></td>
+<td class="c"><span class="b medium">题录 VERIFIED<br>架构 UNVERIFIED<br><span class="small">Springer 反爬</span></span></td>
+</tr>
+<tr>
+<td><b>HistoPlexer</b></td>
+<td>Histopathology-based protein multiplex generation using deep learning. <b>Nature Machine Intelligence 2025</b>. DOI 10.1038/s42256-025-01074-y</td>
+<td>解码器末端<b>联合预测多个 marker</b>（输出头通道数 = marker 数），不是输出单张 RGB</td>
+<td class="c"><span class="b bad">高</span><br><span class="small">需重训</span></td>
+<td class="c">摘要未说明</td>
+<td class="c"><span class="b medium">仅摘要</span></td>
+</tr>
+<tr>
+<td><b>VMS</b></td>
+<td>Virtual Multiplex Staining for Histological Images using a Marker-wise Conditioned Diffusion Model. <b>AAAI 2026</b>. arXiv:2508.14681</td>
+<td>marker-by-marker 条件生成、共享架构，最多 18 marker</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c">未说明</td>
+<td class="c"><span class="b medium">仅摘要</span></td>
+</tr>
+<tr>
+<td><b>MVFStain</b></td>
+<td>MVFStain: Multiple virtual functional stain histopathology images generation based on specific domain mapping. <b>Medical Image Analysis</b> vol.80, 102520, 2022. DOI 10.1016/j.media.2022.102520</td>
+<td>content encoder + style encoder（KL loss 约束特征分布为高斯）+ decoder 输出多张图。<b>是显式的 structure / style 分离</b></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c">摘要未说明</td>
+<td class="c"><span class="b medium">完整摘要</span></td>
+</tr>
+<tr>
+<td><b>HistDiT</b></td>
+<td>HistDiT: A Structure-Aware Latent Conditional Diffusion Model for High-Fidelity Virtual Staining. Aasim Bin Saleem, Amr Ahmed, Ardhendu Behera. <b>ICPR 2026</b>. arXiv:2604.08305v1</td>
+<td>二级源称「双流条件机制，分别处理空间结构与染色」→ <b>与你的「结构通道 + 表达通道」高度同构</b>。UNI 作 semantic phenotype guidance（条件，非损失）</td>
+<td class="c"><span class="b bad">高</span><br><span class="small">latent diffusion</span></td>
+<td class="c">未说明</td>
+<td class="c"><span class="b high">题录 VERIFIED<br><span class="small">架构 UNVERIFIED</span></span></td>
+</tr>
+</tbody>
+</table></div>
+
+<h3>7.2 通道注意力与条件调制（通用构件，可即插即用）</h3>
+
+<div class="scroll"><table style="min-width:900px">
+<thead><tr><th style="width:120px">构件</th><th>原始论文</th><th>题录</th><th class="c">插入位置</th><th class="c">成本</th><th class="c">代码</th></tr></thead>
+<tbody>
+<tr><td><b>SE</b></td><td>Squeeze-and-Excitation Networks</td><td>CVPR 2018 / TPAMI. arXiv:1709.01507</td><td class="c">中间层</td><td class="c"><span class="b high">低</span></td><td class="c"><a href="https://github.com/hujie-frank/SENet">hujie-frank/SENet</a></td></tr>
+<tr><td><b>CBAM</b></td><td>CBAM: Convolutional Block Attention Module</td><td>ECCV 2018. arXiv:1807.06521</td><td class="c">中间层</td><td class="c"><span class="b high">低</span></td><td class="c">论文称公开，未抓 URL</td></tr>
+<tr><td><b>ECA</b></td><td>ECA-Net: Efficient Channel Attention for Deep CNNs</td><td>CVPR 2020. arXiv:1910.03151</td><td class="c">中间层</td><td class="c"><span class="b high">低</span></td><td class="c"><a href="https://github.com/BangguWu/ECANet">BangguWu/ECANet</a></td></tr>
+<tr><td><b>FiLM</b></td><td>FiLM: Visual Reasoning with a General Conditioning Layer</td><td>AAAI 2018. arXiv:1709.07871</td><td class="c">中间层（条件调制）</td><td class="c"><span class="b high">低</span></td><td class="c"><a href="https://github.com/ethanjperez/film">ethanjperez/film</a></td></tr>
+<tr><td><b>SPADE</b></td><td>Semantic Image Synthesis with Spatially-Adaptive Normalization</td><td>CVPR 2019. arXiv:1903.07291</td><td class="c">中间层（换 norm 层）</td><td class="c"><span class="b medium">中</span></td><td class="c"><a href="https://github.com/NVlabs/SPADE">NVlabs/SPADE</a></td></tr>
+<tr><td><b>AdaIN</b></td><td>Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization</td><td>ICCV 2017. arXiv:1703.06868</td><td class="c">中间层</td><td class="c"><span class="b high">低</span></td><td class="c"><a href="https://github.com/xunhuang1995/AdaIN-style">xunhuang1995/AdaIN-style</a></td></tr>
+</tbody>
+</table></div>
+
+<div class="box stop">
+<div class="bt">★ 三条必须知道的阴性结论（这一格最大的坑）</div>
+<ol>
+<li><b>SE / CBAM / ECA 被插入「病理染色生成器」的先例，本轮未检索到。</b> 只找到分类任务用 channel attention 的先例，以及 <b>SRUG</b>（arXiv:2601.04785，<a href="https://github.com/RisingRich/SRUG">github.com/RisingRich/SRUG</a>）在<u>医学图像翻译</u>的残差分支里嵌了通道重校准——但它的域是 <b>MRI</b>（BraTS/IXI），<b>不是病理</b>。</li>
+<li><b>「一个编码器 + 两个解码器」在病理域未检索到。</b> HEMIT 是双 backbone，不是双 decoder。</li>
+<li><b>病理域直接改 SD <code>conv_in</code>/<code>conv_out</code> 通道数并保留预训练权重的先例，未检索到。</b> 通用做法是 <b>ControlNet 的 zero-convolution</b>（ICCV 2023, arXiv:2302.05543）——冻结原权重、新增支路零初始化，让参数从零渐进生长。<b>但那是自然图像。</b></li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">★ 一个与库内既有结论的交叉警告（重要）</div>
+<p>库内 <code>06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</code> §3.1 已经证明：如果你把输出设计成 <code>[C_H, C_DAB, C_H]</code>（同一个通道重复两次），那么任何逐通道乘性权重 <code>w=(w₁,w₂,w₃)</code> 下，<b>只有 <code>(w₁+w₃)</code> 可辨识</b>——attention 权重图在数学上无法解释。</p>
+<p>⇒ <b>你想在浓度域用 channel attention，前提是三个通道线性无关。</b> 这也是那份报告推荐 <code>[C_H, C_DAB, C_res]</code>（正交基）的原因之一。本报告 §11 会把这个约束带进去。</p>
+</div>
+
+<h2 id="s8"><span class="num">8</span>位置④ 输出空间：通道数与浓度域</h2>
+
+<p class="small">「通道」含义 = <b>第 2 种（染色成分）</b>。这一格是你要「做生成」的落点。</p>
+
+<h3>8.1 现成的通道数改造手段</h3>
+<div class="scroll"><table style="min-width:880px">
+<thead><tr><th style="width:180px">手段</th><th>题录</th><th>做法</th><th class="c">成本</th><th class="c">病理域</th></tr></thead>
+<tbody>
+<tr>
+<td><b>ControlNet zero-conv</b></td>
+<td>Adding Conditional Control to Text-to-Image Diffusion Models. <b>ICCV 2023</b>. arXiv:2302.05543</td>
+<td>冻结原模型，新增支路用 <b>zero-initialized convolution</b>，参数从零渐进生长。<b>扩 <code>conv_in</code> 通道的标准做法</b></td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b bad">未验证</span></td>
+</tr>
+<tr>
+<td><b>Palette</b></td>
+<td>Palette: Image-to-Image Diffusion Models. arXiv:2111.05826</td>
+<td>conditional diffusion 统一 I2I；条件 concat 进输入通道</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b bad">未验证</span></td>
+</tr>
+<tr>
+<td><b>Beer–Lambert Autoencoder</b></td>
+<td>arXiv:2601.11336（Mark Eastwood 等, 2026-01）</td>
+<td>encoder 预测 K 个非负浓度通道，decoder 是<b>可微 Beer–Lambert 前向模型</b>（染色矩阵可学）。<b>但任务是解卷积，不是染色转换</b></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b high">有<br><span class="small">但非生成</span></span></td>
+</tr>
+</tbody>
+</table></div>
+
+<h3>8.2 库内已有结论（不重复推导）</h3>
+<ul>
+<li><b><code>01_调研报告/潜空间训练下的通道与浓度问题_维度错配七层拆解与四条可行路线.html</code></b>：潜通道数是超参而非定律；K=3 时浓度空间与 RGB 空间是同一个问题。⇒ <b>你不需要为了「2 通道」去改 VAE 的潜通道数</b>。</li>
+<li><b><code>01_调研报告/浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</code></b>：渲染桥的完整公式与参数已写全。</li>
+<li><b><code>06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</code></b>：输出通道的物理筛选判据（线性无关 / 有物理意义 / 能取 target / 恒存在 / 可微），结论是 <code>C_res</code> 是唯一无条件通过的第三通道。</li>
+</ul>
+
+<div class="box key">
+<div class="bt">本报告只补一条这一格缺的：通道数与「生成」的关系</div>
+<p>库内所有相关报告讨论的都是「<b>在损失里</b>用几个通道」。本报告补上的是：<b>「把通道数搬到<u>生成空间</u>」这件事，在病理域没有先例。</b> 五路检索明确阴性——没有 encoder + 2-decoder，没有「先生成 stain concentration / OD map 再经 Beer–Lambert 渲染」的生成网络（现有的 Beer–Lambert 工作都是分析/归一化/解卷积，不是生成）。</p>
+<p><b>这是你方案里最有价值的一个空位，也是风险最高的一个</b>——因为没人验证过，所以也没有已知的失败模式可借鉴。§12 给了一个低成本的先验检查来降低这个风险。</p>
+</div>
+
+<h2 id="s9"><span class="num">9</span>位置⑤ 特征层：基础模型蒸馏</h2>
+
+<p class="small">「通道」含义 = <b>第 3 种（特征维度）</b>。这一格严格说不属于「通道」轴，但因为 CCPL 的 FD 与 NMCC 都在这里，且你已经问到了，所以单列一节。</p>
+
+<div class="scroll"><table style="min-width:1000px">
+<thead><tr><th style="width:170px">工作</th><th>题录</th><th>用的模型与挂法</th><th>消融证据</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr>
+<td><b>CCPL</b></td>
+<td>ICME 2025. arXiv:2506.07559v1</td>
+<td>Gigapath Tile Encoder，<b>冻结</b>。算 feature distillation loss + 双通道 cross-channel 相关性</td>
+<td>论文声称有（FID 60.59→40.05），<b>但代码里两个损失都包在 <code>no_grad</code> 里 ⇒ 零梯度</b></td>
+<td class="c"><span class="b high">本机实测</span></td>
+</tr>
+<tr>
+<td><b>SheafStain</b></td>
+<td>SheafStain: Sheaf-Theoretic Schrödinger Bridge for Spatially and Biologically Coherent Virtual Staining. Hyeongyeol Lim 等. <b>NeurIPS 2026</b>. arXiv:2606.11846v2</td>
+<td><b>Prov-GigaPath ViT（冻结）</b>，per-token 空间特征，d=1536。损失是 <b>Cross-Stain VFM Alignment</b>，作用在 DAB 解混渲染图上；<b>target 分支 detached</b>（梯度只回生成侧）；λ 从 0（epoch 1–350）升到 1（epoch 351–400），<b>只在最后 50 epoch 开启</b></td>
+<td>有 progressive ablation。结论是 <b>"small but consistent gain"</b>，BCI/HER2 上 <b>DAB-r +2.2%</b>，同时降 FID/LPIPS/DISTS。<b>作者自评贡献很小</b></td>
+<td class="c"><span class="b medium">UNVERIFIED<br><span class="small">子 agent 读全文</span></span></td>
+</tr>
+<tr>
+<td><b>UNIStainNet</b></td>
+<td>arXiv:2603.12716v1（Jillur Rahman Saurav 等）。<span class="small">库内既有报告核实为 ACM-BCB 2026；arXiv 页面未标注 venue</span></td>
+<td>UNI（冻结）作 SPADE-UNet 的 <b>dense spatial token 条件输入</b>——<b>不是损失</b>。有 misalignment-aware loss suite，但未称用 UNI 特征做损失</td>
+<td>—</td>
+<td class="c"><span class="b high">题录 VERIFIED</span></td>
+</tr>
+<tr>
+<td><b>HistDiT</b></td>
+<td>ICPR 2026. arXiv:2604.08305v1</td>
+<td>UNI 作 semantic phenotype guidance（<b>条件</b>）；多目标损失，UNI 是否入损失<b>未说明</b></td>
+<td>—</td>
+<td class="c"><span class="b high">题录 VERIFIED</span></td>
+</tr>
+<tr>
+<td><b>ContiStain</b></td>
+<td>ContiStain: Cross-Domain Relation-Preserving Distillation for Continual Multi-Domain Virtual IHC Staining. Fuqiang Chen 等. <b>MICCAI 2026</b>. arXiv:2607.03851v1</td>
+<td>蒸馏对象是<b>自己的 MoE feature extractor</b> 的 token-level <b>cosine similarity 矩阵</b>；<b>CONCH 只用于 ConchFID 评测指标</b>，不入损失</td>
+<td>有（vs sequential FT：FID −11.1、ConchFID −60.9）</td>
+<td class="c"><span class="b high">题录 VERIFIED</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box stop">
+<div class="bt">★ 三条硬结论</div>
+<ol>
+<li><b>Gigapath 特征被当作训练损失，目前只确认 2 篇：CCPL 与 SheafStain。</b> arXiv 元数据检索 <code>all:"GigaPath" AND all:"loss"</code> 只命中 CCPL 一条（注意：该检索只覆盖 title/abstract/authors/comments，<b>不是全文</b>）。</li>
+<li><b>大量工作声称「用了病理基础模型特征」，实际是冻结编码器做<u>条件</u>或<u>评测</u>，不参与生成损失</b>（UNIStainNet、HistDiT、ContiStain 都是这一类）。<b>「用作损失」和「用作条件」是两件事，引用时务必分清。</b></li>
+<li><b>这类损失与像素重建损失会不会梯度冲突，没有针对病理域 FM 的受控实验。</b> 只有通用结论：<b>The Perception-Distortion Tradeoff</b>（CVPR 2018, arXiv:1711.06077）数学证明了 distortion 与 perceptual quality 互斥。<b>SheafStain 的工程做法（detach 目标分支 + 只在末段 50 epoch 开 λ）可视为规避冲突的经验证据，但它没做梯度分析。</b></li>
+</ol>
+</div>
+
+<div class="box teal">
+<div class="bt">如果你想用「cosine 项 + L2 项加权」这个组合（CCPL 论文写的那个形式）</div>
+<p>最直接的可引用先例是 <b>ND loss</b>：<i>Improving Knowledge Distillation via Regularizing Feature Norm and Direction</i>（arXiv:2305.17007）。它显式拆成 direction（cosine）+ norm（L2）两项并加权，消融显示 ND loss 增益最大。代码 <a href="https://github.com/WangYZ1608/Knowledge-Distillation-via-ND">WangYZ1608/Knowledge-Distillation-via-ND</a>。</p>
+<p class="small">注意：它是<u>分类任务的知识蒸馏</u>，不是图像生成。所以它只能作为「这个损失形式有先例」的依据，不能作为「在虚拟染色里有效」的依据。</p>
+</div>
+
+<h2 id="s10"><span class="num">10</span>★ 可缝合清单总表</h2>
+
+<p>按你关心的两列排序：<b>改动成本</b>（低 → 高）与<b>可复现性</b>（高 → 低）。这一张表是全报告的行动入口。</p>
+
+<div class="scroll"><table style="min-width:1080px">
+<thead><tr><th class="c" style="width:44px">序</th><th style="width:190px">可缝合的东西</th><th class="c" style="width:60px">位置</th><th>缝到哪 / 怎么缝</th><th class="c" style="width:80px">改动成本</th><th class="c" style="width:90px">可复现性</th><th class="c" style="width:80px">证据强度</th></tr></thead>
+<tbody>
+<tr>
+<td class="c">1</td>
+<td><b>双通道 FOD/OD 统计损失</b><br><span class="small">CCPL DCP / PSPStain MLPA</span></td>
+<td class="c">②</td>
+<td>在损失里对 C_H、C_DAB 各算「全图均值 + 16 block + 20 bin 直方图」三项 L2，再合成。<b>代码可读可抄</b></td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">高</span><br><span class="small">PALS.py 完整</span></td>
+<td class="c"><span class="b high">消融有<br>（但有瑕疵）</span></td>
+</tr>
+<tr>
+<td class="c">2</td>
+<td><b>跨通道关系一致性损失</b><br><span class="small">CCPL NMCC 的<u>形式</u></span></td>
+<td class="c">②</td>
+<td><code>L = |R(gen) − R(real)|</code>，<code>R</code> 是两通道之间的关系度量。<b>建议换到浓度域、用协方差或秩相关，并补回论文写但代码没有的 L2 项</b></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">需自建<br><span class="small">官方实现零梯度</span></span></td>
+<td class="c"><span class="b bad">仅名义<br>有先例</span></td>
+</tr>
+<tr>
+<td class="c">3</td>
+<td><b>通道注意力 SE / ECA</b></td>
+<td class="c">③</td>
+<td>插进生成器中间层。即插即用、零预训练依赖。<b>⚠️ 前提：三个输出通道线性无关</b>（见 §7 的交叉警告）</td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">极高</span></td>
+<td class="c"><span class="b medium">通用构件<br>病理生成域无先例</span></td>
+</tr>
+<tr>
+<td class="c">4</td>
+<td><b>ControlNet zero-conv 扩通道</b></td>
+<td class="c">④</td>
+<td>要改输出/输入通道数时，用零初始化卷积新增支路，冻结原权重，避免破坏预训练</td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">高</span></td>
+<td class="c"><span class="b medium">自然图像<br>病理域未验证</span></td>
+</tr>
+<tr>
+<td class="c">5</td>
+<td><b>条件通道调制 FiLM / SPADE / AdaIN</b></td>
+<td class="c">③</td>
+<td>把「结构条件」按通道/空间调制进中间层。SPADE 成本略高（要换 norm 层）</td>
+<td class="c"><span class="b high">低—中</span></td>
+<td class="c"><span class="b high">高</span></td>
+<td class="c"><span class="b medium">通用构件</span></td>
+</tr>
+<tr>
+<td class="c">6</td>
+<td><b>可微 Beer–Lambert 渲染桥</b></td>
+<td class="c">④</td>
+<td>预测浓度 → <code>OD = M·C</code> → <code>I = I₀·10^(−OD)</code>。库内已有完整公式</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b high">高</span></td>
+<td class="c"><span class="b medium">解卷积域有<br>生成域无先例</span></td>
+</tr>
+<tr>
+<td class="c">7</td>
+<td><b>基础模型特征蒸馏（Gigapath/UNI）</b></td>
+<td class="c">⑤</td>
+<td>训练时挂、推理时摘。<b>关键：不要照抄 CCPL 的 <code>no_grad</code>；参考 SheafStain 的「detach target + λ 后段才开」</b></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b bad">低</span><br><span class="small">两篇实现都有坑</span></td>
+<td class="c"><span class="b medium">弱<br>SheafStain 自评增益很小</span></td>
+</tr>
+<tr>
+<td class="c">8</td>
+<td><b>细胞语义 mask 一致性损失</b><br><span class="small">MCS-Stain</span></td>
+<td class="c">②/⑤</td>
+<td>用预训练分割器（cellpose/cellvit/hovernet）产细胞语义，做一致性损失</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">中</span><br><span class="small">需装分割器</span></td>
+<td class="c"><span class="b medium">有开源<br><span class="small">损失细节未核实</span></span></td>
+</tr>
+<tr>
+<td class="c">9</td>
+<td><b>多分支 / 双解码器生成器</b><br><span class="small">HEMIT / HistoPlexer</span></td>
+<td class="c">③④</td>
+<td>输出分支按通道拆分。<b>「一个 encoder + 2 decoder」在病理域无先例，要自己设计</b></td>
+<td class="c"><span class="b bad">中—高</span></td>
+<td class="c"><span class="b medium">中<br><span class="small">HEMIT 有码</span></span></td>
+<td class="c"><span class="b medium">架构细节<br>UNVERIFIED</span></td>
+</tr>
+<tr>
+<td class="c">10</td>
+<td><b>核—膜拓扑 / 包含关系约束</b></td>
+<td class="c">②</td>
+<td><b>空位。</b> 需自己设计（实例级、需分割）。本轮零先例</td>
+<td class="c"><span class="b bad">高</span></td>
+<td class="c"><span class="b low">需自建</span></td>
+<td class="c"><span class="b bad">零先例</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box good">
+<div class="bt">只做三个的话，选这三个（1 → 2 → 6）</div>
+<ol>
+<li><b>#1 双通道 FOD 统计损失</b>——成本最低、有完整可读实现、且和你的浓度域天然兼容（FOD 本来就是 OD 域的量）。</li>
+<li><b>#2 跨通道关系一致性损失（浓度域版）</b>——唯一空位、理论最干净、CCPL 的坏实现给了你正当的「修正」理由。</li>
+<li><b>#6 可微 Beer–Lambert 渲染桥</b>——把「2 通道生成」这件事闭合起来的必需品。没有它，「生成两个通道」就只是一个中间表示，不构成完整方案。</li>
+</ol>
+<p class="small">#3（SE）可以作为低成本的消融项加上去，但要先确认三通道线性无关。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">★ 一条纪律：这份清单里的推荐只来自三种证据</div>
+<p>按库内既定纪律，凡写「推荐 X」必须有 (a) 受控实验、(b) 消融数据、或 (c) 我自己实测过。<b>本表 #1 的依据是 CCPL 的消融表（有数据但正文声称与数据冲突）；#2 的依据是「零先例 + 形式有跨领域先例」，<u>不是</u>「它在虚拟染色里有效」；#7 的依据是 SheafStain 的 progressive ablation（但作者自评增益很小）。</b></p>
+<p><b>#2 目前没有 (a)(b)(c) 中任何一条。</b> 所以它在表里被标为「需自建 / 仅名义有先例」，而不是「推荐」。#12 的实验路线就是为补上这个证据设计的。</p>
+</div>
+
+<h2 id="s11"><span class="num">11</span>对你「2 通道生成」的逐格映射</h2>
+
+<p>把库内已有的输出空间设计（<code>StainFuser改造</code> §3 推荐的 <code>[C_H, C_DAB, C_res]</code>）与本报告的位置总表合并，得到一张「你的方案每一格该放什么」的表：</p>
+
+<div class="scroll"><table style="min-width:1040px">
+<thead><tr><th class="c" style="width:56px">位置</th><th style="width:180px">你方案里这一格是什么</th><th>已有先例（可引）</th><th>空位（你的增量）</th><th class="c">风险</th></tr></thead>
+<tbody>
+<tr>
+<td class="c"><b>①</b></td><td>配对 H&amp;E / IHC → OD → 浓度（正交基解卷积）</td><td>PSPStain、CCPL、TT-SaD、Beer–Lambert AE 都用颜色反卷积 + OD 空间</td><td><b>无</b>——这一格完全成熟，不要试图在这里创新</td><td class="c"><span class="b high">低</span></td>
+</tr>
+<tr>
+<td class="c"><b>②</b></td><td>损失：<br>(a) 逐通道 FOD 统计约束<br>(b) <b>浓度域跨通道关系一致性</b></td><td>(a) PSPStain MLPA / CCPL DCP<br>(b) 仅 CCPL NMCC（且实现零梯度）</td><td><b>(b) 是真正的空位。</b> 把关系一致性从「Gigapath RGB 特征上的 cosine」搬到「浓度域的比例 / 协方差 / 秩相关」</td><td class="c"><span class="b medium">中</span><br><span class="small">无先例可参照</span></td>
+</tr>
+<tr>
+<td class="c"><b>③</b></td><td>生成器内部：条件注入 + 可选通道调制</td><td>FiLM / SPADE / AdaIN（通用）；SE/ECA（通用）</td><td>病理染色生成器里插 SE 无先例，但价值有限</td><td class="c"><span class="b medium">中</span><br><span class="small">⚠️ 需三通道线性无关</span></td>
+</tr>
+<tr>
+<td class="c"><b>④</b></td><td><b>输出 3 通道浓度 [C_H, C_DAB, C_res]</b>（而非 2 通道）→ Beer–Lambert 渲染</td><td>Beer–Lambert AE（解卷积域）；ControlNet zero-conv（扩通道手段）</td><td><b>「浓度域生成 + BL 渲染」在病理生成任务里无先例</b></td><td class="c"><span class="b bad">高</span></td>
+</tr>
+<tr>
+<td class="c"><b>⑤</b></td><td>可选：病理基础模型特征蒸馏</td><td>CCPL、SheafStain</td><td>无。且两篇实现都有坑</td><td class="c"><span class="b bad">高</span><br><span class="small">建议最后做</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box key">
+<div class="bt">★ 三个必须说清的差异点（相对 CCPL / PSPStain）</div>
+<ol>
+<li><b>「生成」vs「监督」</b>：CCPL 只在损失里拆两通道，生成器仍输出 RGB；<b>你让生成器直接输出浓度通道</b>。这是架构级的差异，不是超参差异。</li>
+<li><b>「浓度域的关系」vs「特征域的关系」</b>：CCPL 的 <code>R</code> 是 Gigapath 特征向量的 cosine——无物理意义、不可解释；<b>你的 <code>R</code> 是 C_H 与 C_DAB 之间的关系，有量纲、可直接对应 HER2 判读的「膜强度 × 阳性比例」</b>。</li>
+<li><b>「三通道正交基」vs「两通道」</b>：库内已论证 <code>[C_H, C_DAB, C_res]</code> 正交基让 channel attention 可辨识、且 <code>C_res</code> 是免费的诊断通道。<b>这比 CCPL 的两通道设计多了一个可解释的出口。</b></li>
+</ol>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 一个必须自己确认的前提（否则前面全白做）</div>
+<p>你的 IHC 数据（BCI / MIST-HER2）里，<b>第三个通道到底是什么</b>？库内 <code>StainFuser改造</code> §3.2 已经指出两条候选：</p>
+<ul>
+<li><b>C_res（正交补残差）</b>——恒存在、可直接由 OD 投影算出、推荐；</li>
+<li><b>C_E（eosin）</b>——只有当 IHC 片做了伊红复染才存在。<b>HER2 标准流程通常只用 DAB + 苏木素复染，不加伊红</b>（伊红会干扰 DAB 判读）。</li>
+</ul>
+<p><b>这一条「不是可以靠推理确定的」</b>——必须去看你的数据。如果 BCI / MIST 的 IHC 片没有伊红，那么「三通道 = [H, DAB, E]」这条路直接不成立，只能走 <code>[C_H, C_DAB, C_res]</code>。</p>
+</div>
+
+<h2 id="s12"><span class="num">12</span>可执行实验路线与止损</h2>
+
+<p>按「零成本 → 低成本 → 高成本」排列。<b>每一步都有明确的止损条件，不达标就不要往下走。</b></p>
+
+<div class="card">
+<div class="ch"><div><div class="title">E0 · 零成本前置检查（不训练任何模型）</div><div class="v">目的：确认数据支撑得起「三通道」</div></div><span class="b high">1 天</span></div>
+<div class="body">
+<ol>
+<li>取 BCI 与 MIST-HER2 各 50 张真值 IHC，做 Ruifrok HED 反卷积，<b>逐像素统计 eosin 通道的能量占比</b>。若 eosin 通道几乎全为 0 ⇒ 数据无伊红 ⇒ 只能走 <code>C_res</code>。</li>
+<li>用 <code>M₃ = [s_H, s_DAB, ŝ_res]</code> 做 Gram–Schmidt 正交化，验证 <code>M₃ᵀM₃ ≈ I</code>（精确可逆）。</li>
+<li>算 <code>‖Render(Deconv(x)) − x‖</code>，与库内已有实测（真实 IHC 0.023 / 随机噪声 0.636）对照。<b>若你的数字显著大于 0.023，说明染色矩阵估计有问题，先修这个。</b></li>
+</ol>
+<p><b>止损</b>：若 eosin 能量占比 &gt; 5% 且分布有明显结构 ⇒ 可以试三通道 [H,DAB,E]；否则锁定 [H,DAB,res]。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E1 · 只加「双通道 FOD 统计损失」（缝 #1）</div><div class="v">目的：建立可信的 baseline，同时验证「两通道监督」在你的骨架上的收益</div></div><span class="b medium">低成本</span></div>
+<div class="body">
+<p>把 PSPStain 的 MLPA（单通道 DAB）与 CCPL 的 DCP（双通道 H+D）都实现一遍，做三组对照：<b>无约束 / MLPA(D) / DCP(H+D)</b>。</p>
+<p><b>注意两件事</b>：① 不要照抄 CCPL 的 <code>separate_stains</code>（它会 <code>torch.maximum(stains, 0)</code> 静默清零负浓度），换成你的正交基解卷积；② CCPL 论文写的 α=0.1 通道加权在代码里没实现，<b>要自己实现并自己消融</b>，不要以为它验证过。</p>
+<p><b>止损</b>：若 DCP 相对 MLPA(D) 在<u>分布级和实例级指标上都没有改善</u> ⇒ 说明「双通道监督」在你的骨架上没有增量（这与 CCPL 的消融其实一致：DCP 只让 PSNR/PCC/人类评价涨，SSIM 反而微降）。那就不要在这一格投入更多。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E2 · ★ 浓度域跨通道关系一致性（缝 #2，本报告最推荐的一步）</div><div class="v">目的：把唯一的空位做成可证伪的结论</div></div><span class="b medium">中成本</span></div>
+<div class="body">
+<p>把 CCPL 的 <code>L_cross</code> 形式搬到浓度域，做<u>关系度量的消融</u>——这是本轮检索里没有任何人做过的对照：</p>
+<div class="scroll"><table style="min-width:820px">
+<thead><tr><th class="c">组</th><th>关系度量 R(C_H, C_DAB)</th><th>依据</th></tr></thead>
+<tbody>
+<tr><td class="c">R0</td><td>不加（baseline）</td><td>—</td></tr>
+<tr><td class="c">R1</td><td>逐像素比例 <code>C_DAB / (C_H + ε)</code> 的空间均值对齐</td><td>直接对应 HER2 的「膜强度 / 核数」比值语义</td></tr>
+<tr><td class="c">R2</td><td>通道间 <b>协方差矩阵</b>对齐（Deep CORAL 形式）</td><td>ECCV 2016 W, arXiv:1607.01719</td></tr>
+<tr><td class="c">R3</td><td>通道间 <b>Gram 矩阵</b>对齐（NMCC 的形式，但换到浓度域）</td><td>CVPR 2016, DOI 10.1109/CVPR.2016.265</td></tr>
+<tr><td class="c">R4</td><td><b>秩相关</b>（Spearman）对齐</td><td>对单调非线性不敏感；无直接先例</td></tr>
+<tr><td class="c">R5</td><td>CCPL 原版（Gigapath 特征上的 cosine）作对照</td><td>ICME 2025</td></tr>
+</tbody>
+</table></div>
+<p><b>必须同时报告分布级与实例级指标</b>（FID + PCPA/SIA 或等价物）。<b>判据不是「FID 变好」，而是「实例级变好且分布级不显著变差」</b>——因为 CCPL 的数据已经证明「实例级赢、分布级输」是这条路的典型形态。</p>
+<p><b>止损</b>：若 R1–R4 全部显示「实例级涨、分布级崩」且崩的幅度与 CCPL 的 +59% 同量级 ⇒ 说明这个 trade-off 是机制固有的，不是你实现的问题。此时应把结论写成「跨通道一致性在浓度域仍受 perception-distortion 权衡支配」，<b>这本身是一个有价值的负结果</b>，而不是失败。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E3 · 浓度域生成 + Beer–Lambert 渲染（缝 #6）</div><div class="v">目的：把「2 通道生成」闭合</div></div><span class="b bad">高成本</span></div>
+<div class="body">
+<p>这一步是架构级的，<b>建议在 E0–E2 全部达标后再做</b>。关键设计点：</p>
+<ul>
+<li><b>通道数用 3（[C_H, C_DAB, C_res]）而不是 2</b>——理由见库内 <code>StainFuser改造</code> §3：<code>C_res</code> 是唯一无条件通过五项物理筛选的第三通道，且它让 channel attention 可辨识。</li>
+<li><b>C_H、C_DAB 用 softplus 保非负；<code>C_res</code> 必须允许取负</b>（它是正交补方向的投影，真实 IHC 的 OD 完全可能落在负侧）。<b>对 <code>C_res</code> 加 <code>clamp(min=0)</code> 会重演「静默抹掉负分量并归零其梯度」的错误。</b></li>
+<li>若用扩散/流匹配骨架，输出通道改造参考 ControlNet 的 zero-conv（arXiv:2302.05543）。</li>
+</ul>
+<p><b>止损</b>：先做「<code>‖Render(Deconv(x)) − x‖</code> 闭环门禁」（库内 <code>StainFuser改造</code> §5 已有该门禁设计）。<b>闭环不达标就不要训练</b>——渲染器不可逆的话，后面所有损失都建在沙子上。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E4 · 最后再考虑基础模型蒸馏（缝 #7）</div><div class="v">优先级最低</div></div><span class="b low">可选</span></div>
+<div class="body">
+<p>理由：① CCPL 的实现零梯度（不可用）；② SheafStain 的实现是「detach target + 只在最后 50 epoch 开 λ」，而且<b>作者自评增益很小（DAB-r +2.2%）</b>；③ 没有针对病理 FM 的梯度冲突受控实验。</p>
+<p>如果要做，参考 SheafStain 的工程写法而不是 CCPL 的。<b>不要照抄 <code>with torch.no_grad()</code>。</b></p>
+</div>
+</div>
+
+<h2 id="s13"><span class="num">13</span>未核实清单与证据边界</h2>
+
+<div class="box warn">
+<div class="bt">本轮<u>已一手核实</u>的</div>
+<ul>
+<li><b>CCPL 官方仓库全仓逐行</b>（26 个 .py）——本机拉取 tarball 后读的</li>
+<li><b>PSPStain <code>models/PALS.py</code> / <code>models/PSPStain_model.py</code></b>——用于谱系对比</li>
+<li><b><code>NMCC_Loss</code> 实例化抛 NameError</b>——本机实测复现</li>
+<li>以下题录经 arXiv API 逐条核实：CCPL 2506.07559v1 / PSPStain 2407.03655v2 / SheafStain 2606.11846v2（NeurIPS 2026）/ UNIStainNet 2603.12716v1（arXiv 未标 venue）/ ContiStain 2607.03851v1（MICCAI 2026）/ HistDiT 2604.08305v1（ICPR 2026）/ Beer–Lambert AE 2601.11336v1</li>
+</ul>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 集中列出<u>未能读到原文</u>的，<b>不要当作事实引用</b></div>
+<ol>
+<li><b>HEMIT 的双分支语义</b>——Springer 章节页反爬，摘要未抓到。已核实的只有：标题、venue（MICCAI 2024 Workshops）、DOI（10.1007/978-3-031-84525-3_16）、代码仓库存在（README 里 generator 名是 <code>SwinTresnet</code>）。<b>「双 backbone 还是双 decoder」这一条我未能确认。</b></li>
+<li><b>HistoPlexer 的方法细节</b>——只核到 DOI 存在，未读全文。</li>
+<li><b>HistDiT 的双流条件机制</b>——来自二级来源，arXiv 摘要未描述架构。</li>
+<li><b>VMS（AAAI 2026, arXiv:2508.14681）</b>——只读摘要，损失细节未说明。</li>
+<li><b>MVFStain 的逐通道权重</b>——摘要未说明。</li>
+<li><b>MCS-Stain 的损失细节</b>——只核到仓库存在与三个开关名（<code>use_cp_loss / use_cvt_loss / use_hv_loss</code>），<b>损失公式未读</b>。venue（IEEE TMI 2025）来自二级来源。</li>
+<li><b>SC³ 的代码仓库</b>（github.com/znchen666/SC3）——抓取 README 返回 <b>404</b>，未能验证内容。</li>
+<li><b>Ruifrok &amp; Johnston (2001)</b>——未抓原文，仅见二手引用。</li>
+<li><b>Gatys CVPR 2016 / Deep CORAL / SPKD / RKD 的公式</b>——来自子 agent 读正文，<b>我未二次复核</b>。</li>
+<li><b>MICCAI 2024「Advancing H&amp;E-to-IHC Virtual Staining with Task-Specific Domain Knowledge for HER2 Scoring」</b>——标题/作者/venue 经 MICCAI 官方 program 核实，但<b>未获取到 arXiv 或 DOI</b>，损失形式未核实。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">★ 两条必须特别警告的「查不到的线索」</div>
+<p>子 agent 明确报了以下<b>阴性结论</b>，它们来自库内既有报告的命名，但在公开文献里查不到：</p>
+<ul>
+<li><b>「Star-Diff」</b>——arXiv 标题检索 0 命中，多轮 web 检索无匹配。可能是内部代号，或与 <b>StainDiff</b>（Shen &amp; Ke, MICCAI 2023）或 <b>StainDiffuser</b>（arXiv:2403.11340，dual diffusion 做 IHC 生成 + H&amp;E 分割，<u>不使用染色解混</u>）混淆。</li>
+<li><b>「Kang 2025 渐进式 H&amp;E→IHC OD 空间 DAB 浓度损失」</b>——未检索到。</li>
+</ul>
+<p><b>在正式引用前必须用原文复核。不要顺着内部命名去引。</b></p>
+</div>
+
+<div class="box teal">
+<div class="bt">检索范围声明（决定「未检索到」的强度）</div>
+<p>本轮覆盖：Europe PMC 全文库、arXiv 元数据 API（title/abstract/authors/comments，<b>非全文</b>）、OpenAlex、Crossref、Semantic Scholar（部分被限流）、GitHub API。未覆盖：<b>Google Scholar 全文、IEEE Xplore / Springer 付费正文、CNKI 等中文库</b>。所以本报告所有的「未检索到」都是<b>弱否定</b>——表示在我覆盖的范围内没有，不代表不存在。</p>
+</div>
+
+<h2 id="s14"><span class="num">14</span>参考文献与代码</h2>
+
+<div class="scroll"><table style="min-width:1000px">
+<thead><tr><th>对象</th><th>题录</th><th>链接</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr><td><b>PSPStain</b><br><span class="small">承重基线（单通道 MLPA）</span></td><td>Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining. Fuqiang Chen, Ranran Zhang, Boyun Zheng, Yiwen Sun, Jiahui He, Wenjian Qin. <b>MICCAI 2024</b>. arXiv:2407.03655v2</td><td><a href="https://github.com/ccitachi/PSPStain">github.com/ccitachi/PSPStain</a></td><td class="c"><span class="b high">代码逐行</span></td></tr>
+<tr><td><b>CCPL</b><br><span class="small">双通道版 + 跨通道一致性</span></td><td>Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining. Hao Yang 等. <b>ICME 2025</b>. arXiv:2506.07559v1</td><td><a href="https://arxiv.org/abs/2506.07559">arXiv</a> · <a href="https://github.com/Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining">GitHub</a></td><td class="c"><span class="b high">全仓逐行</span></td></tr>
+<tr><td>ContiStain</td><td>Cross-Domain Relation-Preserving Distillation for Continual Multi-Domain Virtual IHC Staining. Fuqiang Chen 等. <b>MICCAI 2026</b>. arXiv:2607.03851v1</td><td><a href="https://arxiv.org/abs/2607.03851">arXiv</a> · <a href="https://github.com/ccitachi/ContiStain">GitHub</a></td><td class="c"><span class="b high">题录</span></td></tr>
+<tr><td>SheafStain</td><td>Sheaf-Theoretic Schrödinger Bridge for Spatially and Biologically Coherent Virtual Staining. Hyeongyeol Lim 等. <b>NeurIPS 2026</b>. arXiv:2606.11846v2</td><td><a href="https://arxiv.org/abs/2606.11846">arXiv</a> · <a href="https://github.com/deepnoid-ai/SheafStain">GitHub</a></td><td class="c"><span class="b medium">题录 VERIFIED</span></td></tr>
+<tr><td>UNIStainNet</td><td>Foundation-Model-Guided Virtual Staining of H&amp;E to IHC. Jillur Rahman Saurav 等. arXiv:2603.12716v1</td><td><a href="https://arxiv.org/abs/2603.12716">arXiv</a> · <a href="https://github.com/facevoid/UNIStainNet">GitHub</a></td><td class="c"><span class="b high">题录</span></td></tr>
+<tr><td>HistDiT</td><td>A Structure-Aware Latent Conditional Diffusion Model for High-Fidelity Virtual Staining. Aasim Bin Saleem, Amr Ahmed, Ardhendu Behera. <b>ICPR 2026</b>. arXiv:2604.08305v1</td><td><a href="https://arxiv.org/abs/2604.08305">arXiv</a></td><td class="c"><span class="b high">题录</span></td></tr>
+<tr><td>Beer–Lambert AE / StainQuant</td><td>Beer-Lambert Autoencoder for Unsupervised Stain Representation Learning and Deconvolution in Multi-immunohistochemical Brightfield Histology Images. Mark Eastwood 等. arXiv:2601.11336v1</td><td><a href="https://arxiv.org/abs/2601.11336">arXiv</a> · <a href="https://github.com/measty/StainQuant">GitHub (StainQuant)</a></td><td class="c"><span class="b high">题录</span></td></tr>
+<tr><td>TT-SaD</td><td>Test-Time Stain Adaptation with Diffusion Models for Histopathology Image Classification. Tsai, Chen, Lu. <b>ECCV 2024</b>. DOI 10.1007/978-3-031-72761-0_15</td><td><a href="https://github.com/cctsai831/TT-SaD">github.com/cctsai831/TT-SaD</a></td><td class="c"><span class="b high">库内已精读</span></td></tr>
+<tr><td>HEMIT</td><td>H&amp;E to Multiplex-IHC Image Translation with Dual-Branch Pix2pix Generator. <b>MICCAI 2024 Workshops</b>. DOI 10.1007/978-3-031-84525-3_16</td><td><a href="https://github.com/BianChang/Pix2pix_DualBranch">GitHub</a> · <a href="https://github.com/BianChang/HEMIT-DATASET">数据集</a></td><td class="c"><span class="b medium">题录</span></td></tr>
+<tr><td>HistoPlexer</td><td>Histopathology-based protein multiplex generation using deep learning. <b>Nature Machine Intelligence 2025</b>. DOI 10.1038/s42256-025-01074-y</td><td>—</td><td class="c"><span class="b medium">仅 DOI</span></td></tr>
+<tr><td>MVFStain</td><td>Multiple virtual functional stain histopathology images generation based on specific domain mapping. <b>Medical Image Analysis</b> 80:102520, 2022. DOI 10.1016/j.media.2022.102520</td><td>—</td><td class="c"><span class="b medium">完整摘要</span></td></tr>
+<tr><td>VMS</td><td>Virtual Multiplex Staining for Histological Images using a Marker-wise Conditioned Diffusion Model. <b>AAAI 2026</b>. arXiv:2508.14681</td><td><a href="https://arxiv.org/abs/2508.14681">arXiv</a></td><td class="c"><span class="b medium">仅摘要</span></td></tr>
+<tr><td>Gram 矩阵匹配</td><td>Image Style Transfer Using Convolutional Neural Networks. Gatys, Ecker, Bethge. <b>CVPR 2016</b>. DOI 10.1109/CVPR.2016.265</td><td>—</td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>Deep CORAL</td><td>Correlation Alignment for Deep Domain Adaptation. Sun &amp; Saenko. <b>ECCV 2016 Workshop</b>. arXiv:1607.01719</td><td><a href="https://arxiv.org/abs/1607.01719">arXiv</a></td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>SPKD</td><td>Similarity-Preserving Knowledge Distillation. Tung &amp; Mori. <b>ICCV 2019</b>. arXiv:1907.09682</td><td><a href="https://arxiv.org/abs/1907.09682">arXiv</a></td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>RKD</td><td>Relational Knowledge Distillation. Park 等. <b>CVPR 2019</b>. arXiv:1904.05068</td><td><a href="https://arxiv.org/abs/1904.05068">arXiv</a></td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>ND loss（cosine+L2）</td><td>Improving Knowledge Distillation via Regularizing Feature Norm and Direction. arXiv:2305.17007</td><td><a href="https://arxiv.org/abs/2305.17007">arXiv</a> · <a href="https://github.com/WangYZ1608/Knowledge-Distillation-via-ND">GitHub</a></td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>Perception-Distortion Tradeoff</td><td>The Perception-Distortion Tradeoff. Blau &amp; Michaeli. <b>CVPR 2018</b>. arXiv:1711.06077</td><td><a href="https://arxiv.org/abs/1711.06077">arXiv</a></td><td class="c"><span class="b medium">二手</span></td></tr>
+<tr><td>ControlNet（zero-conv）</td><td>Adding Conditional Control to Text-to-Image Diffusion Models. <b>ICCV 2023</b>. arXiv:2302.05543</td><td><a href="https://arxiv.org/abs/2302.05543">arXiv</a> · <a href="https://github.com/lllyasviel/ControlNet">GitHub</a></td><td class="c"><span class="b medium">仅摘要</span></td></tr>
+<tr><td>SE / ECA / CBAM / FiLM / SPADE / AdaIN</td><td>CVPR 2018 (1709.01507) · CVPR 2020 (1910.03151) · ECCV 2018 (1807.06521) · AAAI 2018 (1709.07871) · CVPR 2019 (1903.07291) · ICCV 2017 (1703.06868)</td><td>各 arXiv abs 页</td><td class="c"><span class="b medium">仅摘要</span></td></tr>
+<tr><td>MCS-Stain</td><td>Boosting FFPE-to-HE Virtual Staining with Multiple Cell Semantics. <b>IEEE TMI 2025</b></td><td><a href="https://github.com/huyihuang/MCS-Stain">github.com/huyihuang/MCS-Stain</a></td><td class="c"><span class="b medium">仅仓库</span></td></tr>
+<tr><td>H&amp;E→IHC 综述与 benchmark</td><td>H&amp;E to IHC virtual staining methods in breast cancer: an overview and benchmarking. <b>npj Digital Medicine 2025</b>. DOI 10.1038/s41746-025-01741-9</td><td><a href="https://www.nature.com/articles/s41746-025-01741-9">nature.com</a></td><td class="c"><span class="b medium">正文（子 agent）</span></td></tr>
+</tbody>
+</table></div>
+
+<div class="foot">
+<p><b>本报告定位</b>：库内「通道轴」的第一份专题检索。与它正交的是 <code>StainFuser改造</code>（输出空间设计）、<code>DAB-only浓度扩散</code>（单/双通道先例）、<code>蛋白表达约束_约束位置地图</code>（按扩散参数化切）。</p>
+<p><b>配套精读</b>：<code>03_论文精读博客/CCPL_跨通道感知学习_精读_论文与代码级复核.html</code>——本报告所有关于 CCPL 的代码级结论（零梯度、NameError、公式未实现、消融数字）都在那份里有完整取证。</p>
+<p>撰写：2026-10-16 · 方法：五路并行只读检索 + 承重引用逐条复核 + 关键代码本机实测 · 证据等级见每行标注</p>
+</div>
+
+</main>
+</div>
+</body>
+</html>

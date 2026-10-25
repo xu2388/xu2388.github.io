@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化","date":"2026-10-24","tags":["课程笔记","深度学习/神经网络"],"category":"课程笔记","summary":"把 Transformer 拆成六类可检验组件：给出 FFN 的升维—激活—降维公式，说明缩放点积注意力的投影、缩放因子与多头切分，写清解码器上三角置负无穷的掩码自注意力、以目标侧为 query、源侧为 key/value 的交叉注意力，以及残差与层归一化的串联次序；并给出 Base（512 维、8 头、FFN 内维 2048）与 Big（1024 维、16 头、FFN 内维 4096）两种配置对照。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</h1>
+<div class="meta">课程笔记 · 深度学习/神经网络 · 整理自豆包对话 豆包对话 · 神经网络构成要素讲解</div>
+<h1>Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</h1>
+<h2>一、概述</h2>
+<p>本笔记只做一件事：把 Transformer 拆成若干可以单独检验的组件，逐个给出公式、张量维度与执行次序。循环神经网络语言模型、Seq2Seq 编码器—解码器、注意力机制的历史动机与束搜索等解码策略已在《循环神经网络语言模型（RNN-LM）》一篇中展开，本文不再重复，只处理其内部构件。</p>
+<p>需要说明的是，本笔记所依据的材料是一次课程幻灯片的逐页讲解记录，幻灯片图像本身并不可得。因此凡属&quot;必须看图才讲得通&quot;的内容（图示连线、热力图、架构框图的空间排布），本文只用一句话概括结论，不补写图内细节；凡是 AI 回答中自足成立的公式、结构说明与配置数值，才完整收录。材料末尾关于课程报名、选题推荐与师生往来的部分与主题无关，一律不取。</p>
+<p>本文覆盖的组件为：词嵌入与位置编码、前馈网络（FFN）、缩放点积注意力与自注意力、带掩码的自注意力、交叉注意力、残差连接与层归一化，最后以 Base 与 Big 两种配置把上述组件的具体尺寸落到实处。</p>
+<h2>二、核心概念：整体数据流与组件分工</h2>
+<h3>2.1 端到端数据流</h3>
+<p>材料给出的主干流程可以写成两步：输入侧先做嵌入，再堆叠若干层，最后投影回词表。</p>
+<p>编码器侧：</p>
+<pre><code>源词 → 词嵌入 Ew·xj + 位置嵌入 Epj → Add &amp; Norm 包裹的（自注意力 + FFN）× N → 编码器状态 H</code></pre>
+<p>解码器侧：</p>
+<pre><code>已生成目标词 → 词嵌入 + 位置嵌入 →（掩码自注意力 → 交叉注意力 → FFN）× N → 线性层 + Softmax → 下一词概率分布</code></pre>
+<p>其中输入向量由词嵌入向量与位置嵌入向量相加得到，材料的转录写法是 <code>EwXi + Epj</code>，即&quot;第 $i$ 个词的词嵌入&quot;加上&quot;位置 $j$ 的位置嵌入&quot;；解码器顶层的输出需经线性层与 Softmax 才成为词表上的概率分布。层数 $N$ 在 Base 与 Big 两种配置中均取 6。</p>
+<h3>2.2 组件职责表</h3>
+<p>下表按&quot;是否混合位置&quot;&quot;是否引入新参数&quot;两项把组件分工排开，这是理解后文的关键框架。</p>
+<table>
+<tr><th>组件</th><th>职责</th><th>是否跨位置混合信息</th><th>主要可训练参数</th></tr>
+<tr><td>词嵌入层</td><td>把离散词映射为 $d_{model}$ 维稠密向量</td><td>否</td><td>嵌入矩阵</td></tr>
+<tr><td>位置编码</td><td>补回自注意力丢失的词序信息</td><td>否</td><td>无（正弦余弦形式为固定值）</td></tr>
+<tr><td>自注意力</td><td>让每个位置从同一序列的全局范围取上下文</td><td>是</td><td>$W^Q$、$W^K$、$W^V$、$W^O$</td></tr>
+<tr><td>掩码自注意力</td><td>同上，但只允许看当前位置及之前</td><td>是</td><td>同上（掩码本身无参数）</td></tr>
+<tr><td>交叉注意力</td><td>让目标侧位置读取源侧表示 $H$</td><td>是</td><td>同上</td></tr>
+<tr><td>前馈网络 FFN</td><td>对每个位置独立做非线性特征变换</td><td>否</td><td>$W_1$、$b_1$、$W_2$、$b_2$</td></tr>
+<tr><td>残差连接</td><td>让子层输入直接加到输出上</td><td>否</td><td>无</td></tr>
+<tr><td>层归一化</td><td>把每个位置的向量分布拉稳</td><td>否</td><td>缩放因子与偏移</td></tr>
+<tr><td>输出层</td><td>把最终向量投到词表并 Softmax</td><td>否</td><td>输出投影矩阵</td></tr>
+</table>
+<p>一句概括材料反复强调的分工：注意力决定&quot;从哪里取信息&quot;，前馈网络决定&quot;取到之后怎么加工&quot;，残差与归一化决定&quot;深层堆叠时数值是否还稳得住&quot;。</p>
+<h2>三、前馈网络 FFN</h2>
+<h3>3.1 公式与逐符号维度</h3>
+<p>前馈层是最经典的组件：给定输入向量 $x$，先做一次仿射变换 $Mx+b$，再加非线性激活，写作 $y=a(Mx+b)$。若只有矩阵乘法与偏置，多层堆叠仍等价于单层仿射变换，非线性能力完全来自激活函数。矩阵乘法又称仿射变换，这个称呼源于其几何性质——输入空间中的直线，变换后仍是直线。</p>
+<p>Transformer 中的 FFN 是两层线性变换夹一个激活：</p>
+<p>$$ \mathrm{FFN}(x)=\max\left(0,\; x W_1 + b_1\right) W_2 + b_2 $$</p>
+<p>逐符号说明：$x$ 是某一位置的输入向量，维度为 $d_{model}$；$W_1$ 把维度从 $d_{model}$ 升到中间维度 $d_{ff}$；$b_1$ 是升维后的偏置；$\max(0,\cdot)$ 即 ReLU，逐元素把负值截为 0；$W_2$ 再把 $d_{ff}$ 降回 $d_{model}$；$b_2$ 为输出偏置。材料也给出同一公式的向量写法 $\mathrm{FFN}(\hat{h}_j)=\mathrm{relu}(W_1\hat{h}_j+b_1)W_2+b_2$，二者只是行的位置与列的向量之争，含义一致。</p>
+<p>Base 配置下的形状变化如下：</p>
+<table>
+<tr><th>阶段</th><th>张量形状</th><th>说明</th></tr>
+<tr><td>输入</td><td>$n \times 512$</td><td>$n$ 为序列长度</td></tr>
+<tr><td>乘 $W_1$ 后</td><td>$n \times 2048$</td><td>升维，$W_1$ 为 $512 \times 2048$</td></tr>
+<tr><td>过 ReLU 后</td><td>$n \times 2048$</td><td>逐元素，形状不变</td></tr>
+<tr><td>乘 $W_2$ 后</td><td>$n \times 512$</td><td>降维，$W_2$ 为 $2048 \times 512$</td></tr>
+<tr><td>输出</td><td>$n \times 512$</td><td>与输入同形，故可直接做残差相加</td></tr>
+</table>
+<h3>3.2 为什么要&quot;中间大、两头小&quot;</h3>
+<p>材料把这一设计与因子分解并置为一组对照。二者方向相反，目的也相反：</p>
+<table>
+<tr><th>设计</th><th>维度走向</th><th>目的</th><th>典型场景</th></tr>
+<tr><td>因子分解</td><td>高维 → 低维 $k$ → 高维</td><td>削减参数量</td><td>大词表嵌入与输出层</td></tr>
+<tr><td>Transformer 的 FFN</td><td>$d_{model}$ → 更大的 $d_{ff}$ → $d_{model}$</td><td>允许更复杂的特征交互</td><td>每层的前馈子层</td></tr>
+</table>
+<p>因子分解的做法是把 $M$ 近似为 $A$ 与 $B$ 之积，参数量从 $\lvert x\rvert \times \lvert y\rvert$ 降到 $\lvert x\rvert \times k+k\times \lvert y\rvert$。材料给出的幻灯片算例是 $\lvert x\rvert=20000$、$\lvert y\rvert=50000$ 时参数量为 $10^9$，取瓶颈 $\lvert v\rvert=100$ 后降为 $200$ 万加 $500$ 万，即 $7\times 10^6$。其代价是秩被强行压低，属于有信息损失的近似；收益是瓶颈会迫使模型只保留显著特征，与主成分分析的思路同构。</p>
+<p>FFN 取相反方向：输入与输出维度不变，只把中间放大。中间向量维度变大后，模型可以在更高维的空间里组合、交叉特征；真正起作用的是在这个高维中间向量上施加非线性，相当于把输入映射到高维空间用超平面分割数据，再映射回原维度。Base 配置 $512 \rightarrow 2048 \rightarrow 512$ 的两个矩阵各有 $512\times 2048=1{,}048{,}576$ 个参数，合计约 $2.1\times 10^6$（幻灯片原文把这组数字口语化为&quot;一百万&quot;，材料已注明这是取整所致）。</p>
+<h3>3.3 逐位置独立、参数共享</h3>
+<p>FFN 作用在序列的每个位置上，位置之间不交换信息，同一组 $W_1,W_2$ 在所有位置共享。因此它等价于一个对整条序列滑用的同一映射，也等价于核宽为 1 的逐位置变换。材料对此的表述是&quot;不同位置的参数是共享的，相当于对序列中每个词向量做一次相同的特征映射&quot;。</p>
+<p>伪代码：</p>
+<pre><code># FFN：逐位置独立，位置数 n 不参与计算
+def FFN(x, W1, b1, W2, b2):
+    h = relu(x @ W1 + b1)      # (n, d_model) -&gt; (n, d_ff)
+    y = h @ W2 + b2            # (n, d_ff)   -&gt; (n, d_model)
+    return y                   # 与 x 同形，可直接做残差</code></pre>
+<p>一个值得记录的延伸：材料后半部分讲到混合专家（MoE）时指出，专家本质上就是标准 Transformer 层里的那个 FFN（两层全加激活），MoE 只是把单个 FFN 换成多组不共享权重的 FFN，再加一个路由门控按得分取前 $k$ 个加权求和，注意力层与归一化保持不变。换句话说，FFN 是架构里最容易被替换的一块。</p>
+<h2>四、缩放点积注意力：先投影，再匹配</h2>
+<h3>4.1 三个量与一次查询</h3>
+<p>注意力可以按数据库查询理解：拿 Query 去和所有 Key 匹配，匹配度越高的 Key 对应的 Value 权重越大，最后按权重把 Value 加权求和。核心公式为：</p>
+<p>$$ \text{Attention}(Q,K,V)=\mathrm{softmax}\left(\frac{Q K^{\top}}{\sqrt{d_k}}\right)V $$</p>
+<p>材料强调，注意力不直接在原始向量上计算，而要先用权重矩阵投影，即从 $\text{Attention}(Q,K,V)$ 变为 $\text{Attention}(QW^Q, KW^K, VW^V)$。投影的作用有三层：把 $d_{model}$ 降到更小的 $d_k$ 以减少点积计算量；引入可学习参数，让模型自己学到更适合算相似度的特征空间；构成多头注意力的前提——多个头就是多组独立的投影。</p>
+<h3>4.2 缩放因子 $\sqrt{d_k}$ 的作用</h3>
+<p>材料给出的理由是：维度很高时点积结果的方差会变大，Softmax 之后梯度容易消失，除以 $\sqrt{d_k}$ 是对方差做缩放以稳定梯度。换言之，缩放不是数学技巧上的装饰，而是为了让归一化后的权重分布不至于在训练初期就塌成近乎 one-hot 的形状。</p>
+<h3>4.3 自注意力：三个量同源于一个序列</h3>
+<p>编码器侧的自注意力把序列自身的表示 $H$（每一行是一个词的向量 $h_j$）同时作为 Query、Key、Value 的来源：</p>
+<p>$$ \text{self-attention}(H)=\text{MultiHead}(H,H,H),\qquad Q=HW^{Q},\; K=HW^{K},\; V=HW^{V} $$</p>
+<p>材料转录的幻灯片公式写作 $\text{self-attention}(H)=\text{Attention}(HW^{Q},HW^{K},H)$，即 Value 直接取原始输入而不再投影；另一处讲解则写作 $V=HW^{V}$。两处并不矛盾：前者是幻灯片为省符号做的简化，后者是带 $W^V$ 的一般形式，本文以一般形式为准，并在误区一节提示这一写法差异。自注意力的目的很明确：每个词的表示既包含自身，也结合上下文，从而区分多义词。</p>
+<p>多头则并行做多次单头注意力再拼接：</p>
+<p>$$ \text{MultiHead}(Q,K,V)=\text{Concat}(\text{head}_1,\dots,\text{head}_h)\,W^{O} $$</p>
+<p>每个头的 $W_i^{Q},W_i^{K},W_i^{V}$ 独立，会学到不同的注意力模式，最后用 $W^{O}$ 做一次线性变换融合所有头。头数与单头维度的关系由配置给出：Base 为 $512/8=64$，Big 为 $1024/16=64$（材料原文写明&quot;每个头的维度 = 总维度 / 头数&quot;）。单头维度停在 64，正是为了让参与点积的向量不要维度过高，从而避免点积值过大影响 Softmax 的梯度稳定性。</p>
+<p>注意力不识别词序：计算权重时只用到词向量，不看词在句子中的位置，把词序打乱而词不变，自注意力的结果完全相同。而词序对语言至关重要，因此需要位置编码：给每个位置生成一个独特向量加到词嵌入上。材料给出正弦余弦形式：</p>
+<p>$$ PE_{(pos,2i)}=\sin\left(\frac{pos}{10000^{2i/d_{model}}}\right),\qquad PE_{(pos,2i+1)}=\cos\left(\frac{pos}{10000^{2i/d_{model}}}\right) $$</p>
+<p>不同频率的波给每个位置生成独一无二的&quot;指纹&quot;，位置越近的向量模式越相似。</p>
+<p>伪代码（单头，含掩码接口）：</p>
+<pre><code>def attention(Q, K, V, mask=None, dk):
+    s = (Q @ transpose(K)) / sqrt(dk)     # (n_q, n_k) 相似度分数
+    if mask is not None:
+        s = s + mask                      # 禁止的位置置为 -inf
+    a = softmax(s, axis=-1)               # 每行和为 1
+    return a @ V                          # (n_q, d_k)</code></pre>
+<h2>五、掩码自注意力：上三角置 $-\infty$</h2>
+<h3>5.1 具体做法</h3>
+<p>解码器是自回归的：生成第 $i$ 个词时只能依据第 $1$ 到第 $i-1$ 个词。若不加限制，位置 $i$ 的 Query 会与位置 $j&gt;i$ 的 Key 计算相似度，从而读到尚未生成的目标词，训练时等于把答案泄露给模型。做法是把注意力分数矩阵的上三角（严格上三角部分）置为 $-\infty$，再做 Softmax：</p>
+<p>$$ s_{ij}=-\infty \quad (j&gt;i),\qquad \alpha_{ij}=\frac{\exp(s_{ij})}{\sum_{k\le i}\exp(s_{ik})} $$</p>
+<p>由于 $\exp(-\infty)=0$，被屏蔽位置在归一化后权重严格为 0，位置 $i$ 的上下文只是它自身与左侧位置加权和。以三个位置为例，分数矩阵加上掩码后的形状是：</p>
+<p>$$ \begin{bmatrix} s_{11} &amp; -\infty &amp; -\infty \\ s_{21} &amp; s_{22} &amp; -\infty \\ s_{31} &amp; s_{32} &amp; s_{33} \end{bmatrix} $$</p>
+<p>第一行只有一个非屏蔽项，Softmax 后权重为 1；第三行三项全部参与。计算式仍可写成与编码器完全同形的多头自注意力，只是输入序列换成&quot;带掩码的目标侧表示&quot;：</p>
+<p>$$ \text{self-attention}(\tilde{S})=\text{MultiHead}(\tilde{S},\tilde{S},\tilde{S}) $$</p>
+<p>掩码本身不含参数，多头计算方式与编码器一致，差别仅在&quot;只能看前面&quot;这一条限制。</p>
+<h3>5.2 为什么必须掩码</h3>
+<p>训练时目标序列是已知的（材料在讲解 GPT 一节同样强调：生成第 $i$ 个词只能看第 $1$ 到 $i-1$ 个词）。不加掩码，模型可以在训练阶段从右侧位置直接抄到正确标签，损失下降得很快却学不到任何预测能力；推理时未来词根本不存在，掩码又必须生效，训练与推理的可见范围就会不一致。掩码保证两者看到的信息集合完全相同，是自回归生成的前提。</p>
+<table>
+<tr><th>维度</th><th>编码器自注意力</th><th>解码器掩码自注意力</th></tr>
+<tr><td>可见范围</td><td>整个句子的所有位置</td><td>当前位置及其之前</td></tr>
+<tr><td>掩码</td><td>无</td><td>上三角置 $-\infty$</td></tr>
+<tr><td>用途</td><td>编码源句，完善每个词的上下文表示</td><td>生成目标句，防止未来信息泄露</td></tr>
+<tr><td>计算式</td><td>$\text{MultiHead}(H,H,H)$</td><td>$\text{MultiHead}(\tilde{S},\tilde{S},\tilde{S})$</td></tr>
+</table>
+<h2>六、交叉注意力：唯一区别在 Q 的来路</h2>
+<h3>6.1 接法</h3>
+<p>解码器在掩码自注意力之后还有一层注意力，其 Query 来自目标侧，Key 与 Value 来自编码器的最终输出 $H$：</p>
+<p>$$ \text{attention}(\tilde{S},H)=\text{MultiHead}(Q=\tilde{S},\; K=H,\; V=H) $$</p>
+<p>材料对应的转录式写作 <code>attention(Ṡ, H) = softmax MultiHead(Ṡ, H, H)</code>，其中 $\tilde{S}$ 是解码器侧表示、$H$ 是编码器状态。这一层是编码器与解码器之间的桥梁：生成每个词时回读源句信息，使输出与输入对齐。</p>
+<h3>6.2 与自注意力的关系</h3>
+<p>把两节公式并排看，即可确认二者只差 $Q,K,V$ 的来源，点积、缩放、掩码、Softmax、加权求和五步完全相同。RNN 时代的加性注意力（$a(s_{i-1},h_j)=v^{\top}\tanh(W s_{i-1}+U h_j+b)$）同样是&quot;目标侧查询、源侧键值&quot;这一格局，只是打分函数不同，因此交叉注意力并不是 Transformer 新发明的机制，而是把打分函数换成了缩放点积。</p>
+<table>
+<tr><th>对照项</th><th>自注意力</th><th>交叉注意力</th></tr>
+<tr><td>Query 来源</td><td>序列自身（或解码器自身）</td><td>解码器侧表示 $\tilde{S}$</td></tr>
+<tr><td>Key、Value 来源</td><td>同一序列自身</td><td>编码器输出 $H$</td></tr>
+<tr><td>分数矩阵形状</td><td>$n \times n$（同侧）</td><td>$n_{tgt} \times n_{src}$（异侧）</td></tr>
+<tr><td>是否用上三角掩码</td><td>编码器不用；解码器自注意力用</td><td>一般不用（源侧已完整可读）</td></tr>
+<tr><td>功能</td><td>建模序列内部依赖</td><td>对齐源侧与目标侧</td></tr>
+<tr><td>计算式</td><td>缩放点积注意力</td><td>与左列完全同式</td></tr>
+</table>
+<p>材料亦指出 $Q/K/V$ 的角色可以互换：既可以让目标侧查源侧，也可以反过来让源侧查目标侧，取决于任务；而在编码器—解码器翻译模型中，固定取前者。至于架构层面的取舍：只用编码器（如 BERT 一类的双向模型）时不存在交叉注意力，只用解码器时保留掩码自注意力但没有编码器可供查询，交叉注意力随之整体消失——这恰好说明它是可选组件而非注意力机制的本体。</p>
+<h2>七、残差连接与层归一化</h2>
+<h3>7.1 两种连接的位置</h3>
+<p>每个子层都配一条残差通路：把子层输出与子层输入直接相加，材料写作</p>
+<p>$$ \text{output}=\text{self-attention}(h_j)+h_j $$</p>
+<p>其作用有两点：梯度可沿残差路径直接传到前面的层，缓解深层堆叠的梯度消失；即使子层没学到有效变换，原始信息也不会丢。相加要求两侧同形，这正是 FFN 必须&quot;升上去再降回原维度&quot;、注意力输出必须经 $W^{O}$ 投回 $d_{model}$ 的结构原因。</p>
+<p>残差之后接层归一化，把该位置的向量分布拉回稳定范围：</p>
+<p>$$ \mathrm{LN}(x)=\gamma\cdot\frac{x-\mu}{\sqrt{\sigma^{2}+\varepsilon}}+\beta $$</p>
+<p>$\mu$ 与 $\sigma^{2}$ 是均值与方差，$\gamma$、$\beta$ 为可学习的缩放与偏移。材料强调其收益是训练更快更稳、缓解梯度爆炸与消失。</p>
+<h3>7.2 一层的完整次序</h3>
+<p>材料给出的堆叠链条是&quot;子层 → 残差相加 → 层归一化&quot;重复两次：</p>
+<p>$$ h_j \rightarrow \text{MultiHead} \rightarrow +h_j \rightarrow \mathrm{LN} \rightarrow \mathrm{FFN} \rightarrow +\text{输入} \rightarrow \mathrm{LN} \rightarrow h_j^{\mathrm{new}} $$</p>
+<p>解码器层则是同一骨架套三个子层：掩码自注意力、交叉注意力、FFN，每个子层各配一次残差与一次层归一化。材料在编码器结构图上把这一对操作合标为 <code>Add &amp; Norm</code>，并特别说明 FFN 之后的残差与归一化在图上未画出但属标配。</p>
+<p>需要如实标注一点：本材料只给出上述这一种放法，即归一化位于残差相加之后（通常称 post-LN），并未讨论把归一化提到子层之前的 pre-LN 变体，故本文不作两种放法的对照，也不补写其优劣结论。</p>
+<h3>7.3 层骨架伪代码</h3>
+<p>把前述组件串起来，两种堆叠的差别只在于解码器多两层注意力：</p>
+<pre><code># 编码器层（重复 N 次）
+x = LN( x + SelfAttn(x) )           # 自注意力：Q=K=V= x，无掩码
+x = LN( x + FFN(x) )                # 逐位置前馈
+
+# 解码器层（重复 N 次）
+y = LN( y + MaskedSelfAttn(y, causal_mask) )   # 上三角置 -inf
+y = LN( y + CrossAttn(Q=y, K=H, V=H) )         # H 为编码器最终输出
+y = LN( y + FFN(y) )
+return y                            # 送线性层 + Softmax</code></pre>
+<p>其中 <code>H</code> 只在整个编码器算完之后产生，并被解码器每一层的交叉注意力重复读取；<code>causal_mask</code> 不携带参数。三处 <code>LN(... + ...)</code> 正是材料里 <code>Add &amp; Norm</code> 的展开写法。</p>
+<h2>八、Base 与 Big：两种配置</h2>
+<h3>8.1 配置表</h3>
+<p>材料转录的幻灯片给出的是 Big 一档的配置：编码器与解码器各 6 层、向量尺寸 1024、注意力头 16、Key/Query 计算用的缩放后向量维度 64、两个前馈层之间的中间向量维度 4096；同时与 Base 对照，Base 为 512 维、8 头、FFN 中间维度 2048、单头维度同为 64、层数同为 6。</p>
+<table>
+<tr><th>配置项</th><th>Base</th><th>Big</th><th>说明</th></tr>
+<tr><td>编码器层数 $N$</td><td>6</td><td>6</td><td>两种配置相同</td></tr>
+<tr><td>解码器层数 $N$</td><td>6</td><td>6</td><td>两种配置相同</td></tr>
+<tr><td>$d_{model}$</td><td>512</td><td>1024</td><td>主干向量维度</td></tr>
+<tr><td>$d_{ff}$（FFN 中间维度）</td><td>2048</td><td>4096</td><td>均为 $d_{model}$ 的 4 倍</td></tr>
+<tr><td>注意力头数 $h$</td><td>8</td><td>16</td><td>与 $d_{model}$ 同比例放大</td></tr>
+<tr><td>单头维度 $d_k$</td><td>64</td><td>64</td><td>$512/8=64$，$1024/16=64$</td></tr>
+<tr><td>FFN 两个矩阵参数量</td><td>$2\times 512\times 2048\approx 2.1\times 10^{6}$</td><td>$2\times 1024\times 4096\approx 8.4\times 10^{6}$</td><td>每层每侧的前馈部分</td></tr>
+<tr><td>全模型参数量</td><td>$65\times 10^{6}$</td><td>$213\times 10^{6}$</td><td>取自原论文表 3</td></tr>
+</table>
+<h3>8.2 关于 4094 的核对</h3>
+<p>成文时对本节数值做了联网核对。原论文表 3 中 Base 行给出 $N=6$、$d_{model}=512$、$d_{ff}=2048$、$h=8$、$d_k=d_v=64$，Big 行给出 $N=6$、$d_{model}=1024$、$d_{ff}=4096$、$h=16$。本文所依据的材料转录值即 4096，与原论文一致；若在其他转录或笔记中看到 Big 的 FFN 中间维度写作 4094，应判定为笔误：一则 4094 与原论文表 3 不符，二则 4096 恰为 $4\times 1024=2^{12}$，与&quot;中间维度取 $d_{model}$ 四倍&quot;的规律及本材料的&quot;升维—降维&quot;叙述完全吻合，4094 不具备这种可解释性。据此本文统一采用 4096，并在此显式记录核对过程，而非默默改数。</p>
+<h3>8.3 头数与 $d_k$ 的关系</h3>
+<p>材料把这一关系写成一句话：每个头的维度等于总维度除以头数。两种配置算下来都等于 64，说明从 Base 到 Big 放大的不是单头维度，而是头的数量与主干维度。这个设计有两处好处：单头维度稳定在 64，参与点积的向量维度不变，就不会因维度过高把点积值推大、破坏 Softmax 的梯度稳定性；头数翻倍则意味着可以并行捕捉两倍的关系模式，而各头的计算量与 Base 相同。</p>
+<h2>九、常见误区</h2>
+<ol><li><strong>把掩码当成参数</strong>。上三角的 $-\infty$ 只是加在分数上的常量偏置，不引入任何可训练权重；参数量与编码器自注意力完全相同。</li><li><strong>以为交叉注意力是一种新算法</strong>。二者只在 $Q$（以及 $K,V$）的来源上不同，点积、除以 $\sqrt{d_k}$、Softmax、加权求和四步一字不差。</li><li><strong>忽略 FFN 的位置独立性</strong>。FFN 不跨位置交换信息，若把整条序列展平后当一个大矩阵做变换，就会误以为它能替代注意力。</li><li><strong>混淆两种维度设计</strong>。因子分解是&quot;高—低—高&quot;，为的是降参数；FFN 是&quot;低—高—低&quot;，为的是增强特征交互。二者方向相反，不能互相解释。</li><li><strong>把幻灯片里 Value 不投影的写法当作一般形式</strong>。$\text{Attention}(HW^{Q},HW^{K},H)$ 是简化记法，一般形式应写 $HW^{V}$。</li><li><strong>忘记残差要求同形</strong>。$\mathrm{FFN}$ 与多头注意力的输出必须回到 $d_{model}$，否则 $+h_j$ 无法进行；&quot;中间放大再压回&quot;不只是性能选择，也是形状约束。</li><li><strong>误记 Big 的 FFN 内维为 4094</strong>。已核对为 4096，见第八节。</li><li><strong>把词序问题归给归一化</strong>。自注意力对词序不敏感，补位信息靠位置编码，与层归一化无关。</li><li><strong>用编码器视角理解解码器</strong>。编码器可以看全句，解码器的第一层注意力必须只看左侧；两种&quot;自注意力&quot;计算式同形，可见范围完全不同。</li></ol>
+<h2>十、总结要点</h2>
+<ol><li>Transformer 每层由&quot;注意力混合位置信息 + FFN 逐位置加工 + 残差与层归一化稳住数值&quot;三件事构成，组件职责互不重叠。</li><li>FFN 的公式为 $\mathrm{FFN}(x)=\max(0,\,xW_1+b_1)W_2+b_2$，形状沿 $d_{model}\rightarrow d_{ff}\rightarrow d_{model}$ 走一圈，参数在位置间共享。</li><li>缩放点积注意力先投影再匹配，除以 $\sqrt{d_k}$ 是为压制高维点积的方差、避免 Softmax 梯度消失；多头即多组独立投影后拼接再经 $W^{O}$ 融合。</li><li>掩码自注意力把分数矩阵严格上三角置 $-\infty$，Softmax 后被屏蔽位置权重恰为 0，其必要性在于让训练与推理的可见信息集合一致。</li><li>交叉注意力取 $\text{MultiHead}(Q=\tilde{S},K=H,V=H)$，与自注意力唯一区别是 Query（与 Key/Value）的来路，去掉编码器它便整体消失。</li><li>残差连接与层归一化在每个子层后各出现一次，材料给出的是&quot;相加之后再归一化&quot;的次序；pre-LN 变体未见于材料，故本文不作对照。</li><li>Base 与 Big 的差异集中在 $d_{model}$、$h$ 与 $d_{ff}$ 三项，单头维度 64 与层数 6 保持不变，$d_{ff}$ 恒为 $d_{model}$ 的 4 倍（2048 与 4096）。</li></ol>
+<h2>参考文献</h2>
+<ol><li>Vaswani A., Shazeer N., Parmar N., et al. Attention Is All You Need. NeurIPS 2017. 表 3 给出 Base 与 Big 两种配置的 $N$、$d_{model}$、$d_{ff}$、$h$、$d_k$ 与参数量。裸链接：https://arxiv.org/abs/1706.03762 ；会议版 PDF：https://papers.neurips.cc/paper/7181-attention-is-all-you-need.pdf</li><li>课程幻灯片《Components of Neural Networks / Feed-Forward Layer / Attention / Transformer》逐页讲解记录（豆包对话，193 条消息），本文公式、结构说明与配置数值均取自该记录的文字部分；幻灯片图像不可得，依赖图示的内容未予收录。</li></ol>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 神经网络构成要素讲解</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

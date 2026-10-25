@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "条件注入", "潜空间"],"category":"研究","summary":"StainDiffuser 与 StainFuser 分别回答「条件从哪一层进入扩散模型」：前者在像素空间 DDPM 上以共享 H&E 编码器加分割辅助分支，把目标细胞定位先验做成仅训练期生效的多任务约束（染色损失加 λ 倍分割损失）；后者在 Stable Diffusion 潜空间同时注入双条件——目标风格经 VAE 编码作交叉注意力的键值，源形态经零初始化卷积逐层加性嵌入。本文连读两篇，给出六维横向对照与数值核实清单（剔除三处不可采信项），并提出「注入位置决定推理输入、配对需求与语义上限」这一核心判断。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1 class="site-title">我的个人博客</h1>
+    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+  </div>
+</header>
+<article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
+<h1>条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读</h1>
+<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<blockquote><strong>论文一</strong>：<em>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</em> <strong>作者</strong>：Tushar Kataria, Beatrice Knudsen, Shireen Y. Elhabian <strong>发表</strong>：arXiv 预印本，arXiv:2403.11340（v1 提交于 2024-03，v2 修订于 2025-05，eess.IV / cs.CV） <strong>任务</strong>：H&amp;E→IHC 虚拟染色（CD3、CK8/18 两种标志物），像素空间双分支 DDPM  <strong>论文二</strong>：<em>StainFuser: Controlling Diffusion for Faster Neural Style Transfer in Multi-Gigapixel Histology Images</em> <strong>作者</strong>：Robert Jewsbury, Ruoyu Wang, Abhir Bhalerao, Nasir Rajpoot, Quoc Dang Vu <strong>发表</strong>：arXiv 预印本，arXiv:2403.09302（v1 提交于 2024-03，v2 修订于 2024-07，eess.IV） <strong>代码</strong>：https://github.com/r-j96/stainfuser （已核对存在） <strong>任务</strong>：病理染色归一化（风格迁移），基于预训练 Stable Diffusion 的条件潜扩散  两篇的发表信息经 arXiv 摘要页逐条核对；StainFuser 在原料中曾被称为「MICCAI 2024」，该会议归属未能在核对页面确认，本文按 arXiv 预印本引用。</blockquote>
+<hr />
+<h2>一、为什么「条件注入位置」是虚拟染色扩散的核心分歧</h2>
+<p>虚拟染色与染色归一化在生成模型视角下是同一个问题：<strong>给定一张源病理图像和一个条件（目标标志物 / 目标染色风格），生成一张结构不变、表观大变的图像</strong>。扩散模型本身只学「去噪」，真正决定行为的是条件从哪一层、以什么形式进入去噪网络。原料两条对话恰好覆盖了两种代表性答案，而分歧可以归结为三条互相牵扯的轴。</p>
+<p><strong>表示空间</strong>：条件进入像素空间还是潜空间。像素空间 DDPM 里条件就是一张同尺寸图像，天然适合拼接与逐层相加；潜空间条件扩散（LDM）里条件要经过同一个 VAE 编码器变成潜向量，再选择「加性通路」或「注意力通路」注入。表示空间一旦改变，所有注入模块的形态都要重写。</p>
+<p><strong>生效时机</strong>：条件是在<strong>训练期</strong>塑形模型、推理时消失，还是在<strong>推理期</strong>仍要显式提供。这不是小事——它直接决定部署时用户必须准备什么输入。StainDiffuser 的分割分支属于前者（训练辅助、推理卸载），StainFuser 的双条件属于后者（推理时每张图都要同时给源图和目标风格图）。</p>
+<p><strong>约束强度</strong>：条件以损失函数形式约束（软约束，靠反向传播间接生效），还是以特征通道的结构形式约束（硬约束，信息必须流过该通道）。前者不改网络、推理零成本；后者保证每一步去噪都被条件调制，但要付出额外参数与额外输入。</p>
+<table>
+<tr><th>注入通道</th><th>典型形式</th><th>生效期</th><th>主要代价</th></tr>
+<tr><td>损失层多任务</td><td>共享编码器 + 辅助任务噪声损失</td><td>仅训练</td><td>条件信息可能被主任务梯度淹没</td></tr>
+<tr><td>结构级加性嵌入</td><td>零初始化卷积逐层相加</td><td>训练 + 推理</td><td>推理需额外提供条件图像</td></tr>
+<tr><td>注意力级注入</td><td>交叉注意力的键 / 值序列</td><td>训练 + 推理</td><td>条件须整理成序列格式</td></tr>
+</table>
+<p>本文的推测是：<strong>「注入位置」这个看似工程化的问题，实际上是虚拟染色扩散路线选择的真正分水岭</strong>——它比「用 DDPM 还是 LDM」更能解释两篇论文在数据需求、推理接口和语义上限上的全部差异。下面两节分别拆解机制，第四节做横向对照，第五节回答「两篇都没解决什么」。</p>
+<hr />
+<h2>二、StainDiffuser：双分支如何把分割先验变成生成约束</h2>
+<h3>2.1 问题设定：小数据养不活纯扩散模型</h3>
+<p>病理配对图像通常只有数千量级图块，而常规扩散模型需要数百万样本才能稳定收敛。StainDiffuser 的切入点是引入一个与染色<strong>天然同源</strong>的辅助任务——细胞分割：染色的目标是「给特定细胞上色」，分割的目标是「定位这些细胞」，二者靶向同一对象（论文称之为任务关联性，task affinity）。把分割做成第二个去噪任务，等于让同一批数据承担两份监督，缓解小数据困境。</p>
+<h3>2.2 架构：共享编码器、任务专属注意力、独立解码器</h3>
+<p>主干是像素空间的两个条件 DDPM 分支，信息通路分三段：</p>
+<ol><li><strong>共享 H&amp;E 编码器</strong>：对输入 H&amp;E 图像提取 4 层多尺度特征 $F_1,\dots,F_4$，这是两分支共同的「通用认知层」。</li><li><strong>任务专属注意力块</strong>：分割分支与染色分支各配一组独立的注意力模块，各自从同一份 H&amp;E 特征中「筛选」自己需要的成分——分割侧强化细胞边界与位置特征，染色侧强化纹理与染色兼容性特征。跨任务信息<strong>不经过 mask 传递，而经过特征空间传递</strong>。</li><li><strong>两个完全独立的扩散解码器（UNet）</strong>：分别对目标 IHC 图像和分割 mask 做加噪—去噪。论文对「双分支互相污染编码器」的回应正是这个三件套：通用层共享、筛选层分离、任务特异层独立，再叠加下面要说的损失配比来平衡两个分支对编码器权重的拉扯。</li></ol>
+<h3>2.3 分割标签从哪来：DAB 通道的自动化阈值化</h3>
+<p>分割分支不需要人工标注。标签由配对 IHC 图像自动生成：对 <strong>DAB 通道</strong>（棕色阳性信号所在通道）做阈值化，原料与论文 v2 正文均给出阈值取</p>
+<p>$$\text{threshold} = \mu + 2\sigma$$</p>
+<p>（$\mu,\sigma$ 为该 DAB 通道的均值与标准差），再经形态学处理得到粗分割 mask。对 CD3 这类信号不均、阈值化不稳的标志物，额外用一个轻量分割模型在噪声标签上迭代优化，全程仍不需要病理医生手标。这一点值得注意：<strong>「DAB 阈值 = $\mu+2\sigma$」把染色语义转译成了结构语义</strong>，是后文批评「语义代理」链路的起点。</p>
+<h3>2.4 损失：分割先验如何变成生成约束</h3>
+<p>两个分支都是标准的噪声预测目标。分割分支损失（对时间步、配对数据、噪声取期望）：</p>
+<p>$$\mathcal{L}_{seg}(\theta)=\mathbb{E}_{t,\,(I^{he},\,I_{0}^{seg}),\,\epsilon}\left[\left\lVert \epsilon-f_\theta\!\left(I^{he},\,I_{t}^{seg},\,t\right)\right\rVert_{2}^{2}\right]$$</p>
+<p>其中 $I_t^{seg}$ 由干净 mask $I_0^{seg}$ 按噪声调度 $\overline{\alpha}_{t}=\prod_{s\le t}(1-\beta_s)$ 加噪得到，$f_\theta$ 以 H&amp;E 图像为条件。染色分支损失形式相同，只是去噪对象换成真实 IHC 图像 $I_0^{ihc}$。总目标为：</p>
+<p>$$\mathcal{L}_{stain}=\mathcal{L}_{gen}+\lambda\,\mathcal{L}_{seg}$$</p>
+<p>$\lambda$ 的角色是<strong>调节分割分支对共享编码器权重更新的话语权</strong>：形态越难辨的标志物，越需要分割侧把编码器「逼」会定位细胞。原料称论文消融给出 CK8/18 最优 $\lambda=1$、CD3 最优 $\lambda=3$；经核对论文 v2 正文，消融网格为 $\lambda\in\{0.1,\,0.3,\,1,\,3,\,10\}$，最优值确为 1 与 3，且原文解释是 CD3+ T 细胞在 H&amp;E 中形态模糊、更需要分割任务主导编码器学习。</p>
+<p>关键机制在于：<strong>分割结果从不直接输入染色分支</strong>。它的价值有两条隐性通路——注意力特征筛选让两分支在共享特征上协同；$\lambda\mathcal{L}_{seg}$ 的梯度回传持续塑形共享编码器与注意力块。训练结束后分割分支整个卸载（图中标注 Not Used During Inference），推理只需一张 H&amp;E。</p>
+<h3>2.5 两个扩展变体</h3>
+<ul><li><strong>Multi-StainDiffuser</strong>：换掉染色侧的注意力块数量，N 个独立注意力块分别接入 N 个染色扩散分支，一张 H&amp;E 同时生成 CD3、CK8/18 等多种 IHC，训练只需各标志物的单染色配对数据，不要求同一组织做过多重染色。</li><li><strong>Bi-Directional StainDiffuser</strong>：当连自动阈值化的条件都不具备（无可用分割标签）时，删去分割分支，改为双向生成——同时训练 H&amp;E→IHC 与 IHC→H&amp;E，用第二个方向充当辅助任务，逼编码器学出染色无关的领域不变特征。此时「第二任务」从显式语义（mask）退化为隐式语义（反向翻译），协同的抓手弱了一档，但保住了框架统一。</li></ul>
+<h3>2.6 数据规模与训练配置（经论文 v2 正文核对）</h3>
+<table>
+<tr><th>项目</th><th>CK8/18 任务</th><th>CD3 任务</th></tr>
+<tr><td>训练图块数</td><td>约 57,887</td><td>约 59,362</td></tr>
+<tr><td>测试图块数</td><td>约 6,460</td><td>约 6,920</td></tr>
+<tr><td>图块分辨率</td><td>128×128</td><td>128×128</td></tr>
+<tr><td>训练迭代</td><td>300 万，batch size 4（两任务共用）</td><td>同左</td></tr>
+</table>
+<p>论文报告的指标以 PSNR、SSIM、FID 等图像级指标为主，128×128 图块水平上 PSNR 约在 20–21.7、SSIM 约 0.63–0.68、FID 约 15–23 的量级（数值为本文对照 v2 正文核实所得，非原料照抄）。消融显示完整双分支在染色保真（PSNR、SSIM）与分割精度（Dice）上均优于单分支配置——原料对话中曾出现 $Dice\approx 0.90$ 与「15 ms/张」两个具体值，前者未能在论文中核实对应数字，后者与论文正文直接矛盾（论文明确说迭代采样推理较慢、未报告单张耗时），<strong>本文一律不采信</strong>。</p>
+<hr />
+<h2>三、StainFuser：潜空间条件扩散与双通路注入</h2>
+<h3>3.1 任务重构：染色归一化 = 受控风格迁移</h3>
+<p>同一类组织因染料批次、扫描仪与流程差异呈现不同「染色风格」，导致下游 AI 模型跨中心失效。手工方法（Ruifrok、Vahadane）依赖预设染色矩阵、泛化差；GAN 方法（CAGAN）训练不稳、难以迁移到未见染色域；神经风格迁移（NST）质量高但逐图迭代优化、慢到无法处理多吉像素全切片。StainFuser 的重新定义是：<strong>把归一化当作「保留源图像形态 + 迁移目标图像风格」的双条件生成任务</strong>，用一个训练好的条件潜扩散模型一次性取代逐图优化。</p>
+<h3>3.2 表示空间：SD 潜空间中的条件扩散</h3>
+<p>模型在 Rombach 等提出的潜扩散框架上适配预训练 Stable Diffusion 的 VAE 与 UNet。扩散过程发生在潜空间：前向加噪对象是「源形态 + 目标风格」合成图像 $u$ 的潜表示 $z_{0}^{u}$，反向过程从纯高斯噪声 $z_{T}^{u}\sim\mathcal{N}(0,I)$ 出发逐步去噪，经 VAE 解码得到归一化图像。训练目标仍是噪声预测 MSE：</p>
+<p>$$\mathcal{L}=\mathbb{E}\left[\left\lVert \epsilon-\epsilon_{\theta}\!\left(z_{t}^{u},\,t,\,p^{s},\,p^{t}\right)\right\rVert_{2}^{2}\right]$$</p>
+<p>其中 $p^{s}$、$p^{t}$ 分别是源图像与目标风格图像这两个条件。</p>
+<p><strong>这里必须记录一处原料勘误</strong>：对话材料多次声称「被加噪和去噪的是目标风格图像的潜向量」「目标潜向量是扩散的基」。经核对论文正文，去噪对象是 NST 生成的风格迁移结果 $u$ 的潜表示，推理起点是纯高斯噪声，目标图像只作为条件存在。这一字之差会彻底改变对模型接口的理解，本文以论文正文为准。</p>
+<h3>3.3 双条件、双通路：这是与 StainDiffuser 对照的核心</h3>
+<table>
+<tr><th>通路</th><th>条件</th><th>编码与注入</th><th>承担的约束</th></tr>
+<tr><td>加性通路</td><td>源图像 $p^{s}$（形态）</td><td>VAE 编码为形态潜向量 $z^{s}$，经<strong>零初始化卷积（ZeroConv）</strong>在 UNet 编码与解码的多个层级与对应特征图逐元素相加</td><td>「不许改结构」：腺体轮廓、细胞核分布的硬保留</td></tr>
+<tr><td>注意力通路</td><td>目标图像 $p^{t}$（风格）</td><td>VAE 编码后展平、线性投影为风格条件序列 $c^{t}$，作为 UNet 交叉注意力模块的<strong>键与值</strong>（UNet 特征为查询）</td><td>「要变成这个样子」：颜色比例、亮度的来源</td></tr>
+<tr><td>时间通路</td><td>扩散步 $t$</td><td>沿用 SD 的时间嵌入</td><td>去噪进度调制</td></tr>
+</table>
+<p>两条通路各有所图。<strong>交叉注意力适合注入「全局统计型」信息</strong>——风格本质是颜色分布这种不必逐像素对齐的量，序列格式的键值匹配正合其性；<strong>零卷积加性通路适合注入「逐像素对齐型」信息</strong>——形态约束要求输出的每个位置与源图同位置结构对应，加性融合保留空间坐标。这一分工与 ControlNet（Zhang 等）的设计同源：StainFuser 论文明确说明其零卷积注入遵循 Zhang 等的做法，将冻结 UNet 的可训练副本接给条件分支，零初始化保证训练初期条件支路输出为零、不干扰预训练权重，形态约束随训练进度「从无到有」渐进生效。</p>
+<p>零卷积的代价在原料中被描述为「1×1 或小尺寸卷积、仅占 UNet 参数不到 5%」，该比例为对话中的估计值，未经论文核实，本文改作定性表述：单模块参数量远小于 UNet 主体，多层级合计仍属轻量。</p>
+<h3>3.4 数据支撑：SPI-2M 与图块对数换算</h3>
+<p>条件潜扩散需要海量「源形态—目标风格—迁移结果」三元组，真实世界不存在这种配对。作者自建 SPI-2M：从 TCGA 的 STAD（胃癌）、COAD（结肠癌）、READ（直肠癌）三个队列取 40× 切片，用组织区域检测工具剔除空白背景后切图块，分别聚出<strong>源图像集 $S$（4096 张）与目标风格集 $T$（512 张）</strong>（原料称以 DINOv2 特征做 k-means 聚类，论文正文对聚类所用特征的表述与原料不完全一致，本文仅采信两组规模数），再对<strong>全部 4096×512 个配对</strong>执行 NST，得到</p>
+<p>$$4096 \times 512 = 2\,097\,152$$</p>
+<p>张「源形态 + 目标风格」迁移图作为训练三元组——即论文宣称的 200 万+规模，换算与论文正文数字一致。这个数据集的代价是<strong>教师信号本身是 NST</strong>：NST 常见的过度风格化、纹理涂抹伪影会原样进入训练标签，学生模型的上界被教师的失真锁住，这一点在第五节展开。</p>
+<h3>3.5 报告结果与速度（经论文 v2 正文核对）</h3>
+<p>论文在 CoNIC 测试集报告的图像级指标为 FID 约 25.88、PSNR 约 23.91、SSIM 约 0.875，画质与分布指标优于 Ruifrok、Vahadane、CAGAN，接近 NST；推理速度较逐图优化的 NST 快约 30 倍，单张 512×512 图块生成耗时约 10.4 秒。原料对话给出的「0.41 秒/张」与核实值相差近两个数量级，应是把 NST 教师离线生成阶段或别的口径混入了单图推理时间，<strong>本文不采信该数值，以核实值为准并在此显式勘误</strong>。下游层面，论文声称经其归一化后，CoNIC 细胞核分割与分类模型（PathAI、StarDist 等）的 mPQ+AUC 一致优于上述手工与 GAN 基线。需要划清的一条红线：原料文末附有一节「代表作」总结，其中「SSIM≥0.95」「Dice≥0.98」等条目在两条通路上都找不到出处，属生成内容，<strong>全部剔除，不进入本文任何表格与正文</strong>。</p>
+<hr />
+<h2>四、横向对照：同一问题的两条注入路线</h2>
+<table>
+<tr><th>对照维度</th><th>StainDiffuser</th><th>StainFuser</th></tr>
+<tr><td>表示空间</td><td>像素空间，双分支 DDPM</td><td>潜空间，基于预训练 Stable Diffusion 的 LDM</td></tr>
+<tr><td>任务</td><td>H&amp;E→IHC 虚拟染色（CD3 / CK8/18）</td><td>染色归一化（风格迁移，H&amp;E 域间对齐）</td></tr>
+<tr><td>条件形式</td><td>H&amp;E 图像 + 自动阈值化分割 mask（辅助任务目标）</td><td>源图像潜向量 $z^{s}$ + 目标风格潜向量 $c^{t}$</td></tr>
+<tr><td>注入位置</td><td>共享编码器与任务专属注意力块（仅训练期塑形）；损失层耦合 $\lambda\mathcal{L}_{seg}$</td><td>推理期双通路：形态经 ZeroConv 多层级加性、风格经交叉注意力键值</td></tr>
+<tr><td>推理需要的输入</td><td>仅一张 H&amp;E（分割分支卸载）</td><td>源图像 + 目标风格图像各一张</td></tr>
+<tr><td>是否需配对数据</td><td>需要像素级对齐的 H&amp;E–IHC 配对；分割标签自动生成</td><td>需要三元组配对，由 NST 自造（S×T 全配对）</td></tr>
+<tr><td>训练代价</td><td>从零训练两个 UNet，300 万迭代、batch 4</td><td>预训练权重上微调，新增仅零卷积与投影层，配 209 万合成三元组</td></tr>
+<tr><td>报告指标</td><td>PSNR / SSIM / FID / KID 等，小图块（128×128）水平</td><td>FID / PSNR / SSIM（CoNIC），外加下游 mPQ+AUC 与推理提速</td></tr>
+</table>
+<p>两张表之外，还有一张<strong>数值核实清单</strong>必须交代——本次连读的原料真假混杂，处理结果如下：</p>
+<table>
+<tr><th>原料说法</th><th>核实情况</th><th>本文处理</th></tr>
+<tr><td>StainDiffuser：Dice≈0.90</td><td>论文未以该值呈现，无法核实</td><td>不采用；仅保留「双分支优于单分支」的定性消融结论</td></tr>
+<tr><td>StainDiffuser：15 ms/张</td><td>与正文「迭代采样推理较慢、未报告耗时」矛盾</td><td>不采用</td></tr>
+<tr><td>StainDiffuser：$\lambda=0.6/0.3/0.1$</td><td>属对话中 AI 的建议值，非论文内容</td><td>不采用；采用论文消融网格及最优值 $\lambda=1/3$</td></tr>
+<tr><td>StainFuser：0.41 s/张</td><td>核实值约 10.4 s/张（512×512）</td><td>显式勘误，采用核实值</td></tr>
+<tr><td>StainFuser 文末「代表作」各项指标</td><td>无任何出处，判定为编造</td><td>整节剔除</td></tr>
+<tr><td>StainFuser：零卷积参数占比 &lt;5%</td><td>对话估计，论文未核实</td><td>改定性表述</td></tr>
+</table>
+<hr />
+<h2>五、两篇的共同盲区与笔者的判断</h2>
+<p><strong>盲区一：条件注入解决「像不像」，不解决「对不对」。</strong> StainDiffuser 的分割先验、StainFuser 的风格条件，本质都在约束<strong>表观与结构</strong>；没有一个环节直接约束「蛋白表达量」这类可判读的生物学量。与笔者已精读过的 PSPStain（把 DAB 光密度直接写进损失）对照，两篇的条件语义都停留在<strong>代理层</strong>：StainDiffuser 用阈值化 mask 代理阳性区域，StainFuser 用 NST 伪配对代理风格对应。本文的判断是：这条代理链每多一环，临床可解释性就薄一层——$\mu+2\sigma$ 阈值化对染色批次差异敏感，NST 教师自身有涂抹伪影，而下游扩散损失对「染深了还是染浅了」并不敏感。PSNR/SSIM 奖励糊、FID 只验分布，两篇的主指标都无法回答「阳性强度是否可用于判读」。</p>
+<p><strong>盲区二：对齐假设被回避而非解决。</strong> StainDiffuser 明写依赖像素级对齐配对（同组织脱色重染），对连续切片错位的现实只字未改；StainFuser 干脆用合成数据绕开真实配对——问题被生成器消解，也被生成器掩盖。笔者推测，两篇方法迁到错位明显的真实配对上时，StainDiffuser 的损失协同会先失真（噪声 $\epsilon$ 无处对齐），StainFuser 的零卷积通路反而会因「结构硬约束过强 + 标签有偏」产生系统性形态偏移。</p>
+<p><strong>盲区三：注入位置决定交互性，两篇各丢了一头。</strong> StainDiffuser 把条件烧死在权重里，推理时<strong>无法指定</strong>「我要哪个区域的哪种表达模式」；StainFuser 推理时必须备好一张目标风格参考图，风格选择被预处理流程（挑哪张参考）而非模型语义主导。本文的推测是：真正可用的虚拟染色接口应当介于两者之间——训练期用多任务先验塑形、推理期保留一个<strong>语义级</strong>可调条件（如阳性强度档位），而两篇都还没做到。</p>
+<p><strong>对笔者研究主线的直接启示</strong>：StainFuser 的双通路分工（统计型条件走注意力、对齐型条件走零卷积加性）是一套可以直接搬用的注入语法。把它接到 H&amp;E→IHC 上，一个具体的改造设想是：H&amp;E 的 H/E 浓度图走 ZeroConv 加性通路做结构锚，目标标志物的<strong>光密度统计量</strong>（而非参考图像）投影成序列走交叉注意力——条件的最后一环从「代理语义」换成「物理量」，正是对盲区一的正面回答。此为方案设想，非两篇论文内容。</p>
+<hr />
+<h2>六、局限与下一步</h2>
+<p><strong>本文的诚实边界。</strong> 本次连读以两条豆包对话为原料、以 arXiv v2 正文为核实基准；核实通过 web 抓取完成，未逐页复现论文表格与消融（如 StainFuser 论文正文口径下 NST 对比的完整计时表），第五、六节的机制归因与改造设想均为笔者判断，已逐处标注。两篇发表信息按 arXiv 预印本记录，其正式会议/期刊归属未核实。</p>
+<p><strong>任务层面的错位。</strong> 严格说，StainDiffuser 做虚拟染色、StainFuser 做染色归一化，并非同一基准上的竞争者；本文将其连读，是因为两篇在「条件注入」这一机制维度上恰好构成互补的两极（训练期软约束 vs 推理期双硬通路），对照本身成立，指标横向排名则不成立，第四节表格因此不含跨论文对比分数。</p>
+<p><strong>下一步。</strong> 其一，在本地按核实结论复跑 StainDiffuser 的 $\lambda$ 消融，验证「形态模糊标志物需要更大分割权重」能否在小规模自有数据上复现；其二，把 StainFuser 的零卷积 + 交叉注意力语法移植到浓度空间扩散基线（008/015 两篇的 M0 路线），比较加性通路与拼接通路的结构保持差异；其三，为「注入位置的语义上限」建立可判定实验：同一注入架构下，分别以参考图像、阈值 mask、光密度统计量作条件，观察蛋白表达类指标的响应——该项实验设计待完成，本文不下结论。</p>
+<hr />
+<h2>参考文献</h2>
+<ol><li>Kataria T., Knudsen B., Elhabian S.Y. <em>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</em>. arXiv:2403.11340 (v2, 2025-05)。链接：https://arxiv.org/abs/2403.11340 （题名、作者经 arXiv 摘要页核对；正式发表 venue 未核实）</li><li>Jewsbury R., Wang R., Bhalerao A., Rajpoot N., Vu Q.D. <em>StainFuser: Controlling Diffusion for Faster Neural Style Transfer in Multi-Gigapixel Histology Images</em>. arXiv:2403.09302 (v2, 2024-07)。链接：https://arxiv.org/abs/2403.09302 ；代码仓库 https://github.com/r-j96/stainfuser （题名、作者、仓库存在性经核对；「MICCAI 2024」归属未核实，不采用）</li><li>Ho J., Jain A., Abbeel P. <em>Denoising Diffusion Probabilistic Models</em>. arXiv:2006.11239。链接：https://arxiv.org/abs/2006.11239 （题名、作者经核对）</li><li>Rombach R., Blattmann A., Lorenz D., Esser P., Ommer B. <em>High-Resolution Image Synthesis with Latent Diffusion Models</em>. arXiv:2112.10752。链接：https://arxiv.org/abs/2112.10752 （题名、作者经核对；StainFuser 的 LDM/VAE 基础）</li><li>Zhang L., Rao A., Agrawala M. <em>Adding Conditional Control to Text-to-Image Diffusion Models</em>. arXiv:2302.05543。链接：https://arxiv.org/abs/2302.05543 （题名、作者及零卷积机制经核对；StainFuser 论文明确引用其零卷积做法）</li></ol>
+<hr />
+<p><em>本文为公开研究长文，两篇论文的事实性陈述均以 arXiv v2 正文核对为准；原料中未通过核实的数值已逐条剔除并在第四节列表说明。</em></p>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

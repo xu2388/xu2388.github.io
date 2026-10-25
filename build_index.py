@@ -21,9 +21,10 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 ARTICLES_DIR = os.path.join(ROOT, "articles")
 INDEX_PATH = os.path.join(ROOT, "index.html")
 
-CATEGORY_ORDER = ["研究", "课程笔记", "学习笔记", "随笔", "知识库", "论文", "资料库"]
+CATEGORY_ORDER = ["研究", "调研", "课程笔记", "学习笔记", "随笔", "知识库", "论文", "资料库"]
 CATEGORY_TITLE = {
     "研究": "研究文章",
+    "调研": "调研档案",
     "课程笔记": "课程与科研笔记",
     "学习笔记": "学习笔记 · 教程",
     "随笔": "随笔 · 科普",
@@ -33,6 +34,7 @@ CATEGORY_TITLE = {
 }
 CATEGORY_ID = {
     "研究": "research",
+    "调研": "survey",
     "课程笔记": "courses",
     "学习笔记": "notes",
     "随笔": "essays",
@@ -42,6 +44,7 @@ CATEGORY_ID = {
 }
 CATEGORY_DESC = {
     "研究": "虚拟染色主线的完整研究文章：问题、方法、实验与自我推翻，保留原始数据与结论。",
+    "调研": "围绕 H&E→IHC 的整批调研档案：文献地图、论文翻译、逐篇精读、伪影归因与方案审查。",
     "课程笔记": "把专业课复习与科研对话整理成的系统笔记，按学科分组，正式书面整理。",
     "学习笔记": "从具体困惑出发的教程：扩散与 Flow Matching、VAE、注意力、对比学习与 CLIP。",
     "随笔": "自己写的科普长文，讲本质而不是堆术语。",
@@ -50,11 +53,11 @@ CATEGORY_DESC = {
     "资料库": "全量审计、清单与原始存档说明，用于溯源核对。",
 }
 # 首页每个栏目预览几条
-PREVIEW_N = {"研究": 3, "课程笔记": 1, "学习笔记": 3, "随笔": 2, "知识库": 2, "论文": 1, "资料库": 2}
+PREVIEW_N = {"研究": 3, "调研": 1, "课程笔记": 1, "学习笔记": 3, "随笔": 2, "知识库": 2, "论文": 1, "资料库": 2}
 
 # 首页大分组：科研 / 学习 / 随笔（用户的信息架构）
 GROUPS = [
-    ("科研", "research", "研究文章 · 论文调研", ["研究", "论文"]),
+    ("科研", "research", "研究文章 · 论文精读 · 调研档案", ["研究", "调研", "论文"]),
     ("学习", "learning", "教程 · 课程笔记 · 对话存档", ["学习笔记", "课程笔记", "知识库"]),
     ("随笔", "essays", "自己写的科普", ["随笔"]),
 ]
@@ -217,10 +220,17 @@ def compute_stats(grouped):
     if os.path.exists(pidx):
         with open(pidx, encoding="utf-8") as f:
             papers = f.read().count('class="paper"')
+    survey = 0
+    cat = os.path.join(ARTICLES_DIR, "survey-catalog.html")
+    if os.path.exists(cat):
+        with open(cat, encoding="utf-8") as f:
+            m = re.search(r"调研档案总目（(\d+) 份文档）", f.read())
+        survey = int(m.group(1)) if m else 0
     research = len(grouped.get("研究", []))
     tutorials = len(grouped.get("学习笔记", []))
     return [
         (research, "篇 · 研究文章"),
+        (survey, "份 · 调研档案"),
         (notes + tutorials, "篇 · 笔记与教程"),
         (kb, "条 · 学习对话存档"),
         (papers, "篇 · 论文导读"),

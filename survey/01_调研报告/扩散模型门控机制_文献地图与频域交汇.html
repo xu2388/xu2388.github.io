@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散模型中的门控机制 —— 文献地图、失效模式与频域交汇</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}.flow{margin:16px 0}.flow>pre{border-left-color:var(--teal);background:#f4fafb}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">扩散模型 · 门控机制</div>
+<div class="sub">门控挂在哪一格 · 失效模式 · 频域交汇 · 可迁移性</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 本报告在库内的分工</a>
+<a class="l1" href="#s2">2 · 检索方法与核实等级</a>
+<a class="l1" href="#s3">3 · 门控挂在哪一格：位置总表</a>
+<a class="l1" href="#s4">4 · 位置①：网络内部算子门控</a>
+<a class="l1" href="#s5">5 · 位置②：条件注入与多条件路由</a>
+<a class="l1" href="#s6">6 · 位置③：专家路由门控（MoE）</a>
+<a class="l1" href="#s7">7 · 位置④：时间步 × 频带自适应门控</a>
+<a class="l1" href="#s8">8 · 失效模式与证据清算</a>
+<a class="l1" href="#s9">9 · 频域 × 门控的交汇</a>
+<a class="l1" href="#s10">10 · 可迁移性判定（挂回你的架构）</a>
+<a class="l1" href="#s11">11 · 可执行实验路线与止损</a>
+<a class="l1" href="#s12">12 · 未核实清单与诚实标注</a>
+<a class="l1" href="#s13">13 · 参考文献</a>
+</nav>
+<main>
+
+<header class="doc">
+<div class="kicker">调研报告 · 机制级文献地图</div>
+<h1>扩散模型中的门控机制 —— 文献地图、失效模式与频域交汇</h1>
+<p class="desc">对象：用户提出的两个想法——<b>① 频域的加持</b>、<b>② 门控的机制</b>——问「目前相关的工作都是怎样的」。本报告回答三件事：<b>① 门控在扩散模型里被用在哪些位置、各位置的证据强度差多少；② 门控什么时候会失效甚至让结果变差；③ 频域 × 门控的交汇点与空格在哪。</b>频域部分<b>不重复</b>库内既有两份报告，只做增量与交汇。</p>
+<div class="meta">
+<span>机制级文献地图</span><span>门控 · 四个位置</span><span>失效模式清算</span><span>频域 × 门控</span><span>2026-10-09</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key">
+<div class="bt">总判定：门控在扩散模型里被用在四个完全不同的位置，而「门控有效」的证据强度在这四个位置差了两个数量级</div>
+<p>把「门控」当成一件事谈，是这个方向最常见的错误。文献里的门控至少分四类：<b>① 网络内部算子门控</b>（乘在残差/归一化上）、<b>② 条件注入门控</b>（乘在条件分支的残差上）、<b>③ 专家路由门控</b>（决定哪个专家处理哪个 token）、<b>④ 时间步 / 频带门控</b>（门控本身是 t 或频带的函数）。</p>
+<p>证据强度的分布是<b>极端不均</b>的：</p>
+<ul>
+<li><b>位置①有最硬的正面证据</b>——DiT 的 <code>adaLN-Zero</code>、CaiT 的 <code>LayerScale</code>、<code>ReZero</code> 都有受控消融，而且是在<b>同深度、其余条件全部相同</b>下比的。</li>
+<li><b>位置③有最硬的负面证据</b>——ProMoE（ICLR 2026）逐字说：把 MoE 用到 DiT 上「yielded limited gains」，因为视觉 token 空间冗余导致专家同质化。</li>
+<li><b>位置④基本是空格</b>——「按频带索引、且以 t 为条件的可学习门控」在扩散模型里<b>没有任何工作做过</b>；唯一接近的 FreqFormer（2026-04，技术报告）只有吞吐数字，<b>没有质量消融</b>。</li>
+</ul>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 本轮最重要的单条发现：「零初始化」是必要起点，但它不是最优解</div>
+<p>零初始化残差门控（<code>γ ≡ 0</code>，起点时新分支完全惰性）在文献里被当作金科玉律。本轮核实到一篇直接研究它的论文：<b>《Unveiling the Secret of AdaLN-Zero in Diffusion Transformer》（arXiv 2608.09438，IEEE TPAMI 2026）</b>。它把 adaLN-Zero 的性能来源拆成三个要素（SE 式结构、零初始化、渐进更新顺序），结论是<b>零初始化「最有影响力」</b>——但它同时提出 <code>adaLN-Gaussian</code>（<b>小幅非零高斯初始化</b>），并在同一套设置下<b>一致地优于严格零初始化</b>：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>初始化</th><th class="c">FID @400K</th><th class="c">FID @800K</th><th class="c">FID @CFG 1.5</th></tr></thead>
+<tbody>
+<tr><td>adaLN-Zero（严格零初始化）</td><td class="c">20.02</td><td class="c">14.73</td><td class="c">6.15</td></tr>
+<tr><td><b>adaLN-Gaussian（小幅非零）</b></td><td class="c"><b>17.86</b></td><td class="c"><b>13.14</b></td><td class="c"><b>5.28</b></td></tr>
+</tbody>
+</table>
+</div>
+<p>⇒ 对你的净含义：<b>起点必须惰性（否则会重演 E1 那次「扰动 backbone 就崩」的失败），但不要把 γ≡0 当成教条</b>。第一版用严格零初始化是安全默认；G2 阶段应该把「小高斯非零初始化」作为对照臂。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">第二重要：门控会「让结果变差」，而且这件事有实证</div>
+<p>这不是理论担忧。CaiT（ICCV 2021）在<b>深度匹配、其余条件全部相同</b>下测了三种门控，<b>浅网络里三种全部比不加门控更差</b>；ReZero 自己在 CIFAR ResNet-56 上也复现了同样的现象：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>设置</th><th class="c">baseline</th><th class="c">+零初始化标量门控</th><th class="c">+ReZero</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td>CaiT 深度 12（ImageNet top-1）</td><td class="c">79.9</td><td class="c">—</td><td class="c"><b>78.3</b></td><td>门控<b>掉点 1.6</b></td></tr>
+<tr><td>CaiT 深度 24 / 36</td><td class="c"><b>训练失败†</b></td><td class="c">82.1 / 82.7</td><td class="c">80.8 / 81.6</td><td>门控<b>救活</b>训练</td></tr>
+<tr><td>ReZero · CIFAR ResNet-56</td><td class="c">6.27</td><td class="c"><b>7.84</b>（更差）</td><td class="c">6.58（更差）</td><td>三种门控<b>全比 baseline 差</b></td></tr>
+<tr><td>ReZero · CIFAR ResNet-110</td><td class="c">6.24</td><td class="c">7.49（更差）</td><td class="c"><b>5.93</b></td><td>加深后才反转</td></tr>
+</tbody>
+</table>
+</div>
+<p>⇒ <b>门控的收益随深度/容量出现，浅网络里它是「训练稳定性保险」而不是「性能模块」。</b>你的 backbone 是 from-scratch 小 2D U-Net（浅），所以位置①的门控期望值应该是<b>稳定性 + 可解释性</b>，<b>不要指望它涨点</b>。CaiT 还做了一个更锋利的对照：把训练好的门控值<b>固定成非可学习常数</b>重跑，深度 12 得到 80.6（≥ 可学习的 80.5）⇒ <b>浅层时「可学习」这个属性本身没有价值</b>。</p>
+</div>
+
+<h3>最值得先做的 / 明确不要做的</h3>
+<div class="grid2">
+<div class="mini">
+<div class="mt">最值得先做（成本 +2 参数）</div>
+<p><b>位置①的一个标量残差门控</b>：<code>h' = h + γ·Δh</code>，零初始化或小高斯初始化。理由：这是唯一有<b>同深度受控消融</b>支持的一类，成本最低，而且它直接对应你库内已记录的 E1 失败模式（新分支在起点扰动 backbone）。</p>
+</div>
+<div class="mini">
+<div class="mt">明确不要做</div>
+<p><b>不要在扩散 backbone 上堆 MoE 专家路由</b>——ProMoE 与 FA-MoE 都给了负结果。也<b>不要一次加四种 gate</b>（标量 / 逐通道 / 逐频带 / γ(t)），那样归因不出来。更<b>不要构造「残差门控塌缩到 0」这个失败</b>——本轮检索<b>没有找到任何论文报告过它</b>。</p>
+</div>
+</div>
+
+<h2 id="s1"><span class="num">1</span>本报告在库内的分工</h2>
+
+<p>库内已有 38 份报告，其中与本主题相邻的必须逐份说明关系（避免重复推导，也避免结论互相矛盾）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>库内既有报告</th><th>它回答什么</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><b>频域在扩散模型中的应用_结构保持视角_调研报告.html</b>（81 KB · 2026-10-06）</td><td>频域能插在扩散管线的<b>六个位置</b>；「低频=结构」的三条定理与两处相反证据；AIRPNet/LFP 的三处纠正</td><td><b>频域的主报告，本报告不重复它</b>。只在 §7 做「时间步 × 频带门控」的增量，并在 §9 做交汇</td></tr>
+<tr><td><b>PSPStain_频域条件注入_文献综述报告.html</b>（222 KB）</td><td>频域条件的实现方案（张量流 / hot-start 兼容 / Model A-B-C）；<b>Part 6「Gate 设计」</b>给出四种 gate（标量 / 逐通道 / 逐频带 / γ(t)）与「有界 gate 陷阱」</td><td><b>本报告是它的门控轴展开</b>：把那四种 gate 从「频域条件的附属设计」提升为<b>独立的机制地图</b>，并补上它没覆盖的三个位置（网络内部算子 / 条件路由 / MoE 专家）与<b>失效模式实证</b></td></tr>
+<tr><td><b>02_论文翻译/FGDM_全文翻译_频域引导扩散模型.html</b></td><td>FGDM（TMI 2023）全文中文翻译</td><td>属位置④（频域条件）的一手材料，本报告引用它的消融数字</td></tr>
+<tr><td><b>Diffusion主损失与辅助损失的梯度冲突_机制分析.html</b>（19 节）</td><td>冲突由「辅助损失读哪个变量的 Jacobian」决定；硬判据 <code>gᵀg &lt; −‖g_diff‖²</code>；逐变量 Jacobian 表</td><td><b>本报告 §8.3 的「门控饱和」与它 §4 是同一件事的两面</b>——门控就是乘在 Jacobian 上的一个标量。两报告结论一致，本报告订正了它的一处数字（见 §8.3）</td></tr>
+<tr><td><b>浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</b> + 六段主链路</td><td>浓度域生成、可微 BL 渲染、四臂对照</td><td>本报告 §10 把门控<b>挂回那条六段链路的第 ②③ 格</b></td></tr>
+<tr><td><b>06_方案可行性审查/PST-Diff借鉴与StainFuser改造方案审查.html</b></td><td>PST-Diff 的结构/表达按 timestep 非对称注入</td><td>本报告 §9 引用它的一条边界结论：<b>「通道语义 ≠ Fourier 频率」</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s2"><span class="num">2</span>检索方法与核实等级</h2>
+
+<p>本报告用 <b>5 条并行只读检索线</b>（按「门控挂在哪一格」切分，而不是按关键词切分）：① 网络内部算子门控 ② 条件注入与多条件路由 ③ MoE 专家路由 ④ 时间步 × 频带自适应门控（含 2026 下半年频域增量）⑤ 失效模式与证据强度审计。</p>
+
+<p>决定报告结论方向的承重引用，<b>由我逐条抓一手来源复核</b>（共 3 条，见 §12 的复核记录）。核实等级定义：</p>
+<div class="scroll">
+<table>
+<thead><tr><th class="c">等级</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td class="c"><span class="b high">A</span></td><td>一手论文正文 / 表格数字已核实（或官方代码已读）</td></tr>
+<tr><td class="c"><span class="b medium">B</span></td><td>摘要或部分数字已核实；venue 来自二手</td></tr>
+<tr><td class="c"><span class="b low">C</span></td><td>仅二手来源或未能抓取 ⇒ <b>不得当作事实引用</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">★ 本轮我自己纠正了简报里的两个 arXiv 编号</div>
+<p>我在给检索线派的简报里写了两个编号，抓原文后发现<b>两个都错</b>：</p>
+<ul>
+<li><code>arXiv 2412.05479</code> 我写的是「DiT-MoE」——实际是 <b>LATTE: Learning to Think with Vision Specialists</b>（EMNLP 2025，一个 VLM 论文，无扩散 / 无 MoE 路由）。<b>真正的 DiT-MoE = arXiv 2407.11633</b>。</li>
+<li><code>arXiv 2503.06698</code> 我写的是「EC-DiT」——实际是 <b>What's in a Latent? Leveraging Diffusion Latent Space for Domain Generalization</b>（2025，无 MoE）。<b>真正的 EC-DiT = arXiv 2410.02098</b>（ICLR 2025）。</li>
+</ul>
+<p>⇒ 报告正文一律使用核实后的编号。这是「承重引用必须自己复核」纪律的又一次生效。</p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>门控挂在哪一格：位置总表（全文骨架）</h2>
+
+<p>下面这张表是全文骨架。看任何一篇「扩散 + 门控」的论文，<b>先定位它落在哪一格</b>——因为同一句「加了个门控」，在四个位置上的梯度回传路径、训练稳定性影响、以及「是否被证明有用」<b>完全不同</b>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>门控挂在哪</th><th>它改什么</th><th>代表工作</th><th>门控形式</th><th class="c">有受控消融?</th><th class="c">成本</th></tr></thead>
+<tbody>
+<tr><td class="c"><b>①</b></td><td><b>网络内部</b>残差 / 归一化</td><td>残差分支的幅度</td><td>DiT <code>adaLN-Zero</code> · LayerScale · ReZero · GLU/GEGLU · Sana Mix-FFN · SD3/Flux <code>gate_msa</code></td><td>逐通道向量 / 标量；sigmoid · tanh · 无界</td><td class="c"><span class="b high">有（最硬）</span></td><td class="c"><span class="b high">+2 参数</span></td></tr>
+<tr><td class="c"><b>②</b></td><td><b>条件注入路径</b></td><td>条件信号注入的强度</td><td>GLIGEN · ControlNet · T2I-Adapter · Composer · SPADE/FiLM</td><td><code>tanh(γ)</code> 标量 · 零卷积逐通道 · 固定 ω</td><td class="c"><span class="b medium">部分</span></td><td class="c"><span class="b medium">低–高</span></td></tr>
+<tr><td class="c"><b>③</b></td><td><b>专家路由</b></td><td>哪个专家处理哪个 token</td><td>DiT-MoE · EC-DiT · ProMoE · FA-MoE · FeatStainDiff FMoE</td><td>top-k softmax · expert-choice · 原型余弦</td><td class="c"><span class="b bad">有，且为负</span></td><td class="c"><span class="b bad">高</span></td></tr>
+<tr><td class="c"><b>④</b></td><td><b>时间步 / 频带</b></td><td>门控本身是 t 或频带的函数</td><td>AdaLN · TASR · CFG 调度 · SGN · AFFNet · FreeU · FreqFormer</td><td><code>sigmoid(t)</code> · 逐频带掩码 · 固定启发式</td><td class="c"><span class="b low">少</span></td><td class="c"><span class="b high">低</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">怎么用这张表</div>
+<p>看任何一篇论文，先问两句话：<b>「门控乘在什么上？」</b>（残差 / 归一化 / 条件分支 / 路由 logits）和<b>「门控本身是什么的函数？」</b>（常数 / t / 频带 / 输入特征）。这两问能定位它到唯一一格。</p>
+<p>然后问第三句，也是最重要的一句：<b>「它被单独消融过吗？」</b>——本轮最重要的发现之一是：<b>很多论文里门控「架构上存在」但「从未被单独消融」</b>。这种情况不能引用为「门控有用」的证据（详见 §4 与 §8）。</p>
+</div>
+
+<div class="box">
+<div class="bt">一个需要单独说明的第五格：采样期修正（免训练）</div>
+<p>还有第五类——<b>在推理阶段对采样结果做频带替换 / 尺度修正</b>（FDG · FGD · DCW · HiWave）。它严格说不算「模型里的门控」，而是「采样器里的修正」，且库内 81 KB 频域报告与 222 KB 报告已充分覆盖。本报告只在 §9 引用它的结论，不重复。</p>
+</div>
+
+<h2 id="s4"><span class="num">4</span>位置①：网络内部算子门控</h2>
+
+<p>这是<b>证据最硬的一格</b>。门控乘在残差分支的输出上（或调制归一化的 γ/β），形式上是「让网络自己决定这一层/这个分支出多少力」。</p>
+
+<h3>4.1 逐工作总表</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>门控乘在哪</th><th>形式 / 界 / 初始化</th><th>受控消融（数字）</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr>
+<td><b>DiT · adaLN-Zero</b><br><span class="small">Peebles &amp; Xie · ICCV 2023 · arXiv 2212.09748</span></td>
+<td>残差分支之前：回归出一个<b>逐通道</b>的 α，同时调制 attn 与 MLP 两个子块</td>
+<td>逐通道向量；<b>无界</b>（MLP 输出直接当 α）；<b>零初始化</b> ⇒ 整块初始为恒等映射</td>
+<td>四种 block 设计对比（in-context / cross-attn / adaLN / <b>adaLN-Zero</b>）：adaLN-Zero FID 最低且算力最省；<b>400K 步时 FID 约为 in-context 的一半</b>；「significantly outperforms vanilla adaLN」。<span class="small">逐设计 FID 只在 Fig. 5，未表格化</span></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>AdaLN-Zero 专文 · adaLN-Gaussian</b><br><span class="small">Zhu, Ding, Duan, Wang, Wang · <b>IEEE TPAMI 2026</b> · arXiv 2608.09438</span></td>
+<td>同上（研究 adaLN-Zero 本身）</td>
+<td>把三要素拆开：SE 式结构 / 零初始化 / 渐进更新顺序；<b>零初始化「最有影响力」</b></td>
+<td><b>★ 反例</b>：<code>adaLN-Gaussian</code>（小高斯非零初始化）<b>一致优于</b>零初始化 —— FID <b>17.86 vs 20.02</b>（400K）、<b>13.14 vs 14.73</b>（800K）、<b>5.28 vs 6.15</b>（CFG 1.5）；Wα 初始化 (0,0,0) FID <b>78.99</b> vs (1e-3,1e-3,1e-3) <b>76.21</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>LayerScale</b>（CaiT）<br><span class="small">Touvron et al. · ICCV 2021 · arXiv 2103.17239</span></td>
+<td>残差分支输出，<b>逐通道对角矩阵</b> <code>diag(λ₁…λ_d)</code>，λ_i = ε</td>
+<td>逐通道；无界；ε = <b>0.1</b>（深度 ≤18）/ <b>1e-5</b>（深度 24）/ <b>1e-6</b>（更深）</td>
+<td>DeiT-S 36 块：<b>69.9†（训练失败）→ 80.5</b>（加 LayerScale, ε=1e-6）。<b>★ 反例</b>：深度 12 时零初始化标量门控 <b>78.3 &lt; baseline 79.9</b>。另做「固定权重」对照：depth 12 固定值 <b>80.6 ≥ 可学习 80.5</b> ⇒ 浅层时「可学习」无价值</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>ReZero</b><br><span class="small">Bachlechner et al. · UAI 2021 · arXiv 2003.04887</span></td>
+<td>残差分支：<code>x_{i+1} = x_i + α_i·F(x_i)</code>，<b>每层一个可训练标量</b> α</td>
+<td>标量；无界；<b>α 初始化为 0</b></td>
+<td>「ReZero with <b>α=1 does not show an improvement</b>」⇒ 初始化是承重的。α=0 → enwiki8 到 1.2 BPB <b>快 56%</b>。<b>★ 反例</b>：CIFAR ResNet-56 baseline <b>6.27</b> → 零 γ <b>7.84</b>、Gated ResNet 6.80、ReZero 6.58 ⇒ <b>三种门控全比 baseline 差</b>；ResNet-110 才反转（5.93 &lt; 6.24）</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Sana</b><br><span class="small">Xie et al. (NVIDIA) · arXiv 2410.10629</span></td>
+<td><b>不在 attention 里</b>——门控是 Mix-FFN 内部的 <b>GLU</b>（<code>GLUMBConv</code>）；线性注意力用的是 ReLU 核，<b>没有乘性门控</b></td>
+<td>逐通道 GLU，gate 分支由可配置 <code>glu_act</code> 界定；初始化未说明</td>
+<td>Table 12：FullAttn&amp;FFN 18.7 → <b>+Linear 21.5</b>（线性注意力<b>变差</b>）→ <b>+MixFFN 18.9</b>（恢复）。<b>消融的是整个 Mix-FFN（GLU + 深度可分离卷积），不是门控本身</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>DiG</b>（门控线性注意力扩散）<br><span class="small">Zhu et al. · arXiv 2405.18428</span></td>
+<td>attention 的<b>递推状态</b>上：<code>G_t = α_tᵀβ_t</code> 乘在 running KV state 上（数据相关衰减）</td>
+<td>外积 → 逐 key-dim × 逐 value-dim 矩阵，逐 token；<b>sigmoid</b> 界定 + 温度 τ</td>
+<td><b>门控从未被消融</b>（Table 3 只消融 SREM 空间模块）。反证：DiG-S/2 去掉 SREM 后 FID <b>175.84</b> vs DiT-S/2 <b>68.4</b> ⇒ 单靠门控线性注意力<b>远差于</b>标准注意力</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>MMDiT / SD3</b><br><span class="small">Esser et al. · ICML 2024 · arXiv 2403.03206</span></td>
+<td>逐通道向量：<code>AdaLayerNormZero</code> 从 embedding 映射出 6 个向量，其中 <code>gate_msa</code> / <code>gate_mlp</code> 乘在 attn 与 MLP 残差输出上</td>
+<td>逐通道；调制输入用 SiLU；类名暗示零初始化，但<b>抓取的类里未见显式零初始化代码</b> ⇒ 初始化未说明</td>
+<td><b>无门控消融</b>。SD3 自述的稳定器是 <b>QK-RMSNorm</b>（防 attention logits 增长 / 熵塌缩），<b>不是门控</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Flux</b><br><span class="small">black-forest-labs/flux · 官方代码</span></td>
+<td><code>Modulation</code> 返回 shift/scale/<b>gate</b>；<code>x = x + mod.gate * attn(x)</code>，MLP 同理</td>
+<td>逐通道向量；MLP 是 GELU（<b>不是 GLU</b>）；<code>Modulation.__init__</code> 是普通 <code>nn.Linear</code>，<b>未见零初始化</b></td>
+<td><b>无论文、无消融</b></td>
+<td class="c"><span class="b high">A</span><span class="small">（代码）</span></td>
+</tr>
+<tr>
+<td><b>GLU 家族</b>（GEGLU/SwiGLU/ReGLU）<br><span class="small">Shazeer · arXiv 2002.05202</span></td>
+<td>FFN 输入：两个线性投影的逐元素乘积</td>
+<td>逐通道；gate 分支由 σ / GELU / Swish / ReLU 界定</td>
+<td>有消融，但<b>在 T5/seq2seq 上，不在扩散 backbone 上</b>。⇒「gated MLP 有用」在 LM 上成立，<b>不能外推</b>到扩散</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 位置①的判定：「门控存在」≠「门控被证明有用」</div>
+<p>把上面 9 行按证据强度分档，结论很干净：</p>
+<ul>
+<li><b>被单独消融、且证明有用（只有两条链）</b>：<b>DiT adaLN-Zero</b>（逐通道 + 零初始化残差门控，同设置下胜出 vanilla adaLN 与 cross-attn）与 <b>LayerScale / ReZero</b>（残差缩放救活深网络的训练）。<b>但后者的证据来自分类器 / LM，不是扩散。</b></li>
+<li><b>架构里有、但从未单独消融</b>：Sana 的 Mix-FFN GLU（消融的是整个 Mix-FFN）、SD3 的 <code>gate_msa</code>/<code>gate_mlp</code>、DiG 的 GLA 门控、Flux 的 <code>Modulation.gate</code>、PixArt 的 adaLN-single α。<b>这五个都不能引用为「门控有用」的证据。</b></li>
+<li><b>常见误读（需纠正）</b>：Sana 的门控<b>不在线性注意力里</b>——线性注意力用的是 ReLU 核，门控在 FFN 的 GLU 里。把 Sana 说成「线性注意力 + 可学习门控」是错的。</li>
+</ul>
+</div>
+
+<h2 id="s5"><span class="num">5</span>位置②：条件注入与多条件路由门控</h2>
+
+<p>这一格门控乘在<b>条件分支的残差</b>上——回答的是「这个条件应该以多强的力度注入」。对你的项目直接相关，因为你的架构有<b>多个条件</b>（结构条件 C_H、形态条件 f_morph、可选的蛋白分支）。</p>
+
+<h3>5.1 逐工作总表</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>被门控的是什么</th><th>形式 / 初始化</th><th>消融与数字</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr>
+<td><b>GLIGEN</b><br><span class="small">Li, Liu et al. · CVPR 2023 · arXiv 2301.07093</span></td>
+<td><b>新增 gated-self-attention 分支的残差</b>：<code>v = v + β·tanh(γ)·TS(SelfAttn([v,h_e]))</code></td>
+<td><b>单个可学习标量 γ</b>，过 <b>tanh</b>，<b>初始化为 0</b>；β 全程取 1；<b>可微、在训练循环里</b>（Fig. 15 追踪 γ 随训练变化）</td>
+<td>把 gated <b>self</b>-attn 换成 Flamingo 式 gated <b>cross</b>-attn：FID 相近（5.8）但<b>定位能力塌缩</b>——YOLO AP <b>21.7 → 16.6</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>ControlNet</b><br><span class="small">Zhang, Rao, Agrawala · ICCV 2023 · arXiv 2302.05543</span></td>
+<td><b>可训练副本分支的残差</b>：零卷积 Z（1×1 conv，<b>weight 与 bias 全零</b>）</td>
+<td><b>逐通道（整卷积）</b>，不是标量；weight + bias 双零初始化；可微</td>
+<td>主文消融（Fig. 8）把零卷积换成高斯初始化标准卷积，<b>结果只有定性描述、无数值</b>（说「掉到 ControlNet-lite 水平」）。FID <b>15.27 vs 17.92</b> 是 ControlNet vs ControlNet-lite，<b>不是门控消融</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>T2I-Adapter</b><br><span class="small">Mou, Wang et al. · arXiv 2302.08453</span></td>
+<td><b>没有可学习门控</b>：条件特征直接<b>相加</b>到 UNet 编码器特征；多适配器融合用 <code>Fc = Σ ω_k·Fk</code></td>
+<td>ω_k 是<b>可调标量超参（固定，不学）</b>；无零初始化；门控意义上不可微</td>
+<td>消融的是<b>注入位置</b>（非门控）：encoder-only FID <b>17.36</b>、decoder-only <b>18.32</b>、两者都加 <b>18.08</b>；尺度 3→17.86、2→18.77、1→22.66</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Composer</b><br><span class="small">Huang, Chen et al. · arXiv 2302.09778</span></td>
+<td>融合 / 路由权重（不是架构门控）：全局条件加到时间步 embedding，局部条件求和后拼到 x_t</td>
+<td>ω 与 dropout 都是<b>固定超参</b>；条件 dropout 独立 p=<b>0.5</b>、drop-all p=0.1、keep-all p=0.1、强度图 p=0.7</td>
+<td><b>★ 负结果（逐字）</b>：「text embeddings are often <b>downweighted</b> in generated results when image and text embeddings with different semantics are jointly used」；联合训练「may <b>downweight the single-conditional generation performance</b>」⇒ <b>条件被压制的实证</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>SPADE</b> / <b>FiLM</b><br><span class="small">Park et al. CVPR 2019 · arXiv 1903.07291；Perez et al. AAAI 2018 · arXiv 1709.07871</span></td>
+<td>归一化内部的 <b>逐像素 / 逐特征 γ, β</b>（不是乘性残差门控，是仿射调制）</td>
+<td>可学习；初始化未说明</td>
+<td>SPADE 摘要级、FiLM 说「robust to ablations」；<b>均无可用数字</b></td>
+<td class="c"><span class="b medium">B</span></td>
+</tr>
+<tr>
+<td><b>UNIStainNet</b>（你的域内最相关工作）<br><span class="small">Saurav, Pham et al. · arXiv 2603.12716</span></td>
+<td>SPADE-UNet + 冻结 UNI 基础模型的稠密空间 token；逐 marker 的<b>可学习染色 embedding</b></td>
+<td><b>未说明</b>——论文未提出可学习条件门控，也无门控消融</td>
+<td>无门控消融</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">★ ControlNet 的两句必须逐字记住的话</div>
+<p><b>零初始化的理由</b>：「Zero convolutions <b>protect this backbone by eliminating random noise as gradients in the initial training steps</b>.」以及「progressively grow the parameters from zero and ensure that no harmful noise could affect the finetuning」。</p>
+<p><b>「突然收敛」现象</b>：「we call this the <b>'sudden convergence phenomenon'</b>」——模型不是逐渐学会跟随条件，而是<b>在某个 step 突然学会</b>，通常<b>不到 10K 步</b>。Fig. 4 标注的具体步数是 <b>6133</b>。</p>
+<p>⇒ 这两句话对你的价值是双重的：① 零初始化是<b>防止新分支在起点污染已学好的 backbone</b> 的机制——这正是你库内 E1 失败（FID 109.75→125.96、DAB corr 0.439→0.244）的<b>解药</b>；② 但「突然收敛」意味着<b>前几千步条件实际上是被忽略的</b>，所以「前 3K 步看起来没效果」<b>不是</b>「这个方法不行」的证据——这是一个真实的观测陷阱。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">位置②的判定</div>
+<p>唯一一个「<b>可学习 + 可微 + 有消融</b>」的条件门控是 <b>GLIGEN 的 <code>tanh(γ)</code> 标量残差门控</b>（γ 初始化为 0）。ControlNet 的零卷积是逐通道的、但<b>主文没有数值消融</b>。T2I-Adapter 与 Composer <b>根本不学门控</b>——它们用固定 ω + 条件 dropout 来路由。⇒ <b>「多条件用可学习门控融合」这件事，在文献里其实没有被充分验证过。</b></p>
+</div>
+
+<h2 id="s6"><span class="num">6</span>位置③：专家路由门控（MoE）—— 最强的负结果在这里</h2>
+
+<p>这一格的门控不乘在残差上，而是<b>做选择</b>：把 token 分配给不同的专家子网络。对你直接相关——「用一个 gate 在 marker 分支和形态分支之间路由」是一个很自然的想法。但这是本轮四个位置里<b>证据最不利于新增设计</b>的一格。</p>
+
+<h3>6.1 逐工作总表</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>路由单元 / 形式</th><th>均衡机制</th><th>对照与数字</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr>
+<td><b>ProMoE</b> ★<br><span class="small">Wei, Zhang, Yuan et al. · <b>ICLR 2026</b> · arXiv 2510.24711</span></td>
+<td>token；两步路由：先按<b>功能角色</b>分条件/无条件（CFG），再用<b>可学习原型</b>做余弦相似度分配（无 softmax/sigmoid）</td>
+<td>不用经典负载均衡损失，改用 <b>路由对比损失（InfoNCE）</b> <code>L_RCL</code></td>
+<td>FID-50K（cfg=1.5）：Dense-DiT-B <b>9.02</b>；DiT-MoE-B <b>8.94</b>；DiffMoE-B <b>8.22</b>；<b>ProMoE-B 6.39</b>。Dense-DiT-L 3.56 vs ProMoE-L（458M 激活/1.063B 总）<b>2.79</b>；Dense-DiT-XL 3.23 vs ProMoE-XL <b>2.59</b>。最大 EC-DiT-M-64E 类配置 GenEval 71.68%、97.21B 总 / 8.27B 激活</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>DiT-MoE</b><br><span class="small">Fei, Fan, Yu, Li, Huang · arXiv <b>2407.11633</b>（<span class="small">注意：不是 2412.05479</span>）</span></td>
+<td>图像 patch token（逐层，在 self-attn 之后）；<b>top-k softmax，k=2</b>，每层 8 专家（另有 16E 变体）+ 共享专家</td>
+<td>有「专家级均衡损失」（DeepSeek-MoE 式）；<b>精确公式未在摘要/README 重述</b></td>
+<td><b>无参数匹配消融</b>。主张只是「性能与稠密网络相当但算力少得多」。总计 <b>16.5B</b>，激活量未在摘要给出。<b>正面发现</b>：专家选择「shows preference with <b>spatial position and denoising time step</b>」⇒ 时序路由是<b>涌现</b>的</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>EC-DiT</b><br><span class="small">Sun, Lei, Zhang et al. · ICLR 2025 · arXiv <b>2410.02098</b>（<span class="small">不是 2503.06698</span>）</span></td>
+<td>token（图像 + 文本），且<b>显式时间步自适应</b>（输入 <code>x′ = x_s + MHCA(x_s)</code> 携带时间步 embedding）；<b>expert-choice</b>：每个专家选 top-C token，<code>C = ⌈S·f_c/E⌉</code>，容量因子 <b>f_c = 2.0</b></td>
+<td><b>不需要负载均衡损失</b>（「equation 6 inherently ensures full utilization」）</td>
+<td>与 GShard top-2 做<b>激活量匹配</b>对照（top-2 匹配 f_c=2.0 的激活量）。GenEval %：Dense-XL 67.08；GS-XL-8E 67.82 / 32E 68.52；<b>EC-DiT-XL-8E 68.62 / 32E 69.38</b>；Dense-XXL 67.82；GS-XXL-32E 69.96；<b>EC-DiT-XXL-32E 70.86</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>FA-MoE</b><br><span class="small">Sun, Meng, Chen, Chen · CVPR 2026 Findings, pp. 3988–3997</span></td>
+<td><b>频带 token</b>（块 DCT 系数分成低/高频 token）+ 时间步 token；expert-choice，<code>C = ⌈S·c/E⌉ + 1</code>（多留一格给时间步 token）</td>
+<td>无辅助损失</td>
+<td><b>无参数匹配消融</b>，只有超参网格。<b>关键负向</b>：E=4, c=2 最优；<b>E 从 4 增到 8「only led to unstable and slow convergence, worse FID」</b>。报告<b>专家不平衡</b>（选低频 token 的专家数量多于其他）</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>FeatStainDiff · FMoE</b><br><span class="small">Zhong et al. · Med. Image Anal. 112 (2026) 104138 · DOI 10.1016/j.media.2026.104138</span></td>
+<td><b>未说明</b>——官方仓库 <code>featstaindiff/model.py</code> 标「temporarily withheld」，ScienceDirect 付费墙；摘要只说 FMoE「adaptively handles distribution shifts through spectral processing」</td>
+<td>未说明</td>
+<td>无可用信息。<b>不得按 FA-MoE 类推</b></td>
+<td class="c"><span class="b medium">B</span></td>
+</tr>
+<tr>
+<td><b>Switch Transformer</b><br><span class="small">Fedus, Zoph, Shazeer · JMLR 2022 · arXiv 2101.03961</span></td>
+<td>token；top-1/top-2 路由</td>
+<td>辅助损失 <code>loss = α·N·Σ_i f_i·P_i</code>（f_i = 派给专家 i 的 token 比例，P_i = 路由器给专家 i 的概率比例）；容量因子 &gt;1 缓冲不平衡，超载 token <b>被丢弃</b>（走残差），通常 <b>&lt;1%</b></td>
+<td>报告「用足够大的系数确保良好均衡」⇒ 不平衡是<b>调参失败，不是内在缺陷</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>ST-MoE</b><br><span class="small">Zoph et al. · arXiv 2202.08906</span></td>
+<td>token</td>
+<td><b>路由器 z-loss</b> <code>L_z = (1/B)Σ(log Σ_j e^{x_j})²</code>，惩罚过大的 router logits</td>
+<td>「update clipping + z-loss 稳定了全部 3 次运行，但 <b>clipping 显著损害模型质量</b>」⇒ 稀疏模型<b>本质上比稠密模型更不稳定</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Shazeer 2017</b>（门控塌缩的原始记录）<br><span class="small">arXiv 1701.06538 · ICLR 2017</span></td>
+<td>token → 专家</td>
+<td>importance loss；<b>W_g 与 W_noise 零初始化</b>以从均衡起点出发</td>
+<td>逐字：「the gating network tends to converge to a state where it always produces large weights for the <b>same few experts</b>. This imbalance is <b>self-reinforcing</b>...」</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Chi et al.</b><br><span class="small">NeurIPS 2022 · arXiv 2204.09179</span></td>
+<td>token → 专家（点积路由）</td>
+<td>提出 X-MoE：降维 + L2 归一化 + 门控，在低维超球面上路由</td>
+<td>点积路由「encourages token clustering around expert centroids, implying a trend toward <b>representation collapse</b>」</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★★ 位置③的判定：MoE 用在扩散上，文献给的是负结果</div>
+<p><b>ProMoE（ICLR 2026）的摘要逐字</b>：「Despite its notable success in large language models (LLMs), <b>existing attempts to apply MoE to Diffusion Transformers (DiTs) have yielded limited gains</b>.」它给出的原因是语言 token 与视觉 token 的<b>根本差异</b>：语言 token 语义稠密、token 间差异显著；而<b>视觉 token 有空间冗余与功能异质性</b>，这「hindering expert specialization in vision MoE」。它引用的量化证据是 <b>class-in/class-out 距离比：视觉 0.748 vs 语言 19.283</b>。</p>
+<p>⇒ 对你的净含义：<b>不要指望「用一个 gate 在 marker 分支与形态分支之间做 MoE 路由」能自动带来收益</b>。如果你的路由信号是<b>语义的</b>（marker vs 形态，而不是空间位置），那它接近 ProMoE 说的「explicit routing guidance」这一条修法，<b>理论上可能有效</b>——但<b>没有任何病理 / 虚拟染色论文验证过</b>，而最相关的 FeatStainDiff 的 FMoE 公式<b>恰好是未公开的</b>。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">两条必须记住的对照纪律</div>
+<p>① <b>本轴上没有任何一篇给出「总参数匹配」的稠密 vs MoE 消融。</b>EC-DiT、ProMoE、FA-MoE 都是<b>激活量匹配</b>（这是诚实的口径，但不是总参数匹配）；DiT-MoE <b>根本没做匹配对照</b>。⇒ 引用 MoE 的增益时必须写明是哪一种匹配。</p>
+<p>② <b>时序路由是涌现的，不是设计出来的</b>：DiT-MoE 观察到专家选择「随空间位置与去噪时间步」有偏好；EC-DiT 把它显式化。⇒ 如果你的门控想利用「不同 t 需要不同处理」，<b>已有工作支持这个方向存在</b>，但支持的是「路由随 t 变化」这个现象，不是「路由能涨点」。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>位置④：时间步 × 频带自适应门控</h2>
+
+<p>这一格的门控不改「乘在什么上」，而是改<b>「门控本身是什么的函数」</b>——让门控随 t 变化，或随频带变化，或两者兼有。<b>这也是你问的「频域 + 门控」真正交汇的地方。</b></p>
+
+<h3>7.1 Part A — 时间步自适应门控</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>门控是 t 的什么函数</th><th>形式 / 界</th><th>证据（数字）</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr>
+<td><b>DiT · AdaLN</b><br><span class="small">arXiv 2212.09748</span></td>
+<td>α 由 <b>(t, c)</b> 的 embedding 回归出来；<b>逐维度</b>、<b>对所有 token 相同</b></td>
+<td>无界（MLP 输出）；零初始化 MLP</td>
+<td>见 §4.1。<b>论文没有给出 α 随 t 变化的曲线</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>TASR</b><br><span class="small">Lin et al. · ACM MM 2025 · arXiv 2412.03355</span></td>
+<td><b>控制权重图 α</b> 门控 ControlNet 的 skip 特征：<code>f_d + f_cond * α</code>；适配器同时吃 <b>UNet 特征 + ControlNet 特征 + timestep t</b>（经 AdaLN 注入）⇒ α 是 <b>(t, 特征)</b> 的函数，<b>逐像素</b></td>
+<td><b>sigmoid → 有界 (0,1)</b>；作者明确说有界是为了「constrains the optimization space」（<b>防 reward hacking</b>）</td>
+<td>Table 2（DIV2K-val）：<b>含 t</b> LPIPS <b>0.3762</b> / MANIQA <b>0.6007</b> vs <b>去 t</b> 0.3965 / 0.5856；纯 ControlNet 0.4632 / 0.6876（reward-hacked）。<b>无 α 随 t 的曲线</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Dynamic CFG</b><br><span class="small">Papalampidi et al. (Google) · arXiv 2509.16131</span></td>
+<td>CFG 尺度 ω <b>逐时间步</b>由在线反馈贪心搜索选出 ⇒ ω 是 <b>(t, prompt, 样本)</b> 的函数</td>
+<td>离散候选集</td>
+<td>相对 Imagen 3 默认值最多 <b>53.8%</b> 人类偏好胜率（能力类 prompt 上 55.5%）。逐字：「the optimal guidance schedule is <b>inherently dynamic and prompt-dependent</b>」</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Learn to Guide Your Diffusion Model</b><br><span class="small">arXiv 2510.00815 · ICLR 2026</span></td>
+<td>学 ω_{c,(s,t)}（条件 + 时间步的函数），用 MMD 自一致性约束</td>
+<td>未说明</td>
+<td><b>形状：学到的权重在去噪中段达到峰值（钟形）。</b>数字（ImageNet-64 FID <b>1.99</b> vs 最优手工 2.11；MS-COCO FID 24.74→18.01）来自二手摘要</td>
+<td class="c"><span class="b medium">B</span></td>
+</tr>
+<tr>
+<td><b>Beta Sampling</b>（不是门控，是 t 采样调度）<br><span class="small">Lee et al. · WACV 2025 · arXiv 2407.12173</span></td>
+<td>—（但提供了「谱变化率随 t 怎么变」的唯一直接测量）</td>
+<td>—</td>
+<td>逐步傅里叶分析：「substantial <b>low-frequency changes early on</b> and <b>high-frequency adjustments later</b>」⇒ 重要性集中在<b>两端</b>，故用 Beta(α=β)（双峰）步长分布。4/6 步 FID/IS 优于均匀。<span class="small">论文<b>没有</b>用「U 形」这个词，原话是「early and late stages」</span></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.2 Part B — 频带门控</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>门控对象 / 是什么的函数</th><th>形式 / 界</th><th>证据与代价</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Spectral Gating Networks (SGN)</b><br><span class="small">Zhang et al. · arXiv 2602.07679 · 2026-02</span></td>
+<td><code>T_SGN(u) = φ(u) + G(u) ⊙ Ψ_spec(u)</code>：门控的是<b>谱分支</b>（可训练随机傅里叶特征），频率选择性藏在 Ψ_spec 里 ⇒ <b>门控本身不按频带索引</b>，而是<b>逐通道</b></td>
+<td><code>G(u) = σ(w_g ⊙ LN(u) + b_g)</code>，<b>逐通道 sigmoid</b></td>
+<td><b>定理 3.1（同伦一致性 / 冷启动稳定性）</b>：谱分支初始幅度 O(ε) 时，<code>∇_{θ_base}L⁽⁰⁾ = ∇_{θ_base}L_MLP⁽⁰⁾ + O(ε)</code>，且 <code>‖∇_{θ_spec}L⁽⁰⁾‖ = O(ε)</code> ⇒ <b>起点继承基础网络的优化行为</b>。代价「接近 MLP 级运行时」。<b>非扩散模型</b>；无数值消融</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>AFFNet</b><br><span class="small">Huang et al. · ICCV 2023 · arXiv 2307.14008</span></td>
+<td><code>X̂ = F⁻¹[M(F(X)) ⊙ F(X)]</code>，掩码 M 与 F(X) <b>同形状</b> ⇒ <b>逐通道 × 逐频率</b>，且<b>逐实例自适应</b>（从 X_F 学出来）</td>
+<td>组 1×1 → <b>ReLU</b> → 组 1×1 ⇒ <b>非负、上无界</b>（不是 sigmoid）</td>
+<td>有消融（通道特定 token 混合 / 频率操作），<b>无「门控 vs 频率」曲线</b>。<b>非扩散模型</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>FreeU</b><br><span class="small">Si et al. · CVPR 2024 · arXiv 2309.11497</span></td>
+<td>两处：① backbone 特征<b>空间域</b>放大 α_l（只对前一半通道）；② skip 特征的<b>傅里叶域</b>掩码 β，<b>抑制低频</b>（r &lt; r_thresh 乘 s_l）</td>
+<td><b>固定启发式</b>（β 是「傅里叶系数幅值的函数」），<b>不是学出来的</b>；免训练、零参数</td>
+<td>无消融曲线（Fig. 6 给的是质量随 b、s 的变化）。人评 85.88% vs 14.12%。<b>它是位置③与位置④的混合体，但门控不可学</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>Latent Wavelet Diffusion</b><br><span class="small">ICLR 2026 · github.com/LuigiSigillo/LatentWaveletDiffusion</span></td>
+<td>对高频子带（LH+HL+HH）做<b>能量掩码</b></td>
+<td><b>无参数</b>（不是可学习门控）</td>
+<td>仅搜索摘要，<b>未抓取</b></td>
+<td class="c"><span class="b low">C</span></td>
+</tr>
+<tr>
+<td><b>FreqFormer</b> ★（唯一的近似命中）<br><span class="small">arXiv 2604.22808 · 2026-04 · <b>技术报告，非同行评审</b></span></td>
+<td><b>谱路由网络</b>：「allocates heads across [frequency] bands <b>using layer statistics and the diffusion timestep</b>」⇒ 路由<b>同时是 t 与频带的函数</b>，<b>且在扩散模型里</b></td>
+<td>未说明</td>
+<td><b>只有系统级数字</b>（64K–1M token 下的吞吐 / FLOPs / 显存）⇒ <b>没有任何质量消融</b></td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 位置④的判定：「按频带索引 + 以 t 为条件」的可学习门控，在扩散模型里是空格</div>
+<p>把 Part A 与 Part B 合起来看，四类能力各有人做到，但<b>没有一个工作同时具备四条</b>：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>能力</th><th>谁做到了</th><th>是否在扩散模型里</th><th>是否有质量消融</th></tr></thead>
+<tbody>
+<tr><td>门控是 <b>t 的函数</b></td><td>AdaLN · TASR · CFG 调度</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b high">有（TASR / CFG）</span></td></tr>
+<tr><td>门控<b>按频带索引</b>（可学习）</td><td>AFFNet（逐通道 × 逐频率）</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b medium">部分</span></td></tr>
+<tr><td>门控一个<b>谱分支</b>（可学习）</td><td>SGN（逐通道 sigmoid）</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b medium">有定理，无数值</span></td></tr>
+<tr><td><b>t × 频带 联合</b></td><td>FreqFormer（谱路由）</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b bad">无</span></td></tr>
+</tbody>
+</table>
+</div>
+<p>⇒ <b>「按频带索引、且以 t 为条件的可学习门控，放进扩散模型」这一格没有被占。</b>库内 222 KB 频域报告 Part 6 列出四种 gate 时，也是把它们当作<b>待做设计</b>而不是<b>已有先例</b>——这个判断本轮得到独立确认。</p>
+</div>
+
+<h3>7.3 Part C — 2026 下半年频域扩散增量（相对库内 2026-10-06 报告）</h3>
+<p>库内频域主报告成稿于 2026-10-06，本轮专门检索了它之后的新工作。<b>结论：在「可学习门控 × 频带 × 时间步」这个交叉上，没有新增。</b>2026-09 之后的频域扩散工作都做频带分解但<b>不做可学习门控</b>：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>日期</th><th>做了什么</th><th>是否有可学习门控</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr><td>Adversarial Training for Pixel Diffusion（arXiv 2609.38170）</td><td>2026-09-29</td><td>像素扩散的频带 + 幂律分析；非高噪声时间步上做对抗损失</td><td class="c"><span class="b bad">无</span></td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td>Physics-Guided Spectral Distillation（arXiv 2609.34795）</td><td>2026-09-28</td><td>多层 Haar DWT + 逐频带目标 + 退化感知权重</td><td class="c"><span class="b bad">无</span>（权重是物理引导的，非学习门控）</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td>PFGNet（CVPR 2026, pp. 38848–38858, arXiv 2602.20537）</td><td>2026-02</td><td>逐像素频率引导门控（空间自适应带通）</td><td class="c"><span class="b medium">是，但函数是「局部谱线索 / 位置」，<b>不是 t</b>；且非扩散</span></td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td>StrideDiffusion（arXiv 2607.20545）</td><td>2026-07</td><td>时序扩散的频带感知步长调度</td><td class="c"><span class="b low">未核实</span></td><td class="c"><span class="b low">C</span></td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">Part C 用过的检索式：<code>frequency domain diffusion model 2026 arXiv 2609</code>、<code>arXiv 2610 diffusion model frequency wavelet 2026</code>、<code>learnable frequency gate diffusion transformer per-band 2026 spectral gate timestep</code>、<code>diffusion model frequency band gating function of timestep spectral router 2026</code>。</p>
+
+<h2 id="s8"><span class="num">8</span>失效模式与证据清算</h2>
+
+<p>这一节回答一个具体问题：<b>门控什么时候不管用、什么时候有害？</b>答案分七条，每条都标注它是「<b>解析为真</b>」还是「<b>实证观测</b>」。</p>
+
+<h3>8.1 零初始化：是安全默认，不是定律（实证）</h3>
+<div class="grid2">
+<div class="mini">
+<div class="mt">支持零初始化的证据</div>
+<p><b>ControlNet</b>：零卷积「eliminating random noise as gradients in the initial training steps」（定性消融，无数值）。</p>
+<p><b>CaiT</b>：深度 36 不加 LayerScale <b>训练失败（69.9†）</b>，加了 <b>80.5</b>。</p>
+<p><b>adaLN-Zero</b>：FID <b>20.02</b> vs vanilla adaLN <b>24.13</b>（arXiv 2608.09438 复现数字）。</p>
+<p><b>ReZero</b>：α=1 <b>不涨点</b>，α=0 才有收益 ⇒ 初始化是承重的。</p>
+</div>
+<div class="mini">
+<div class="mt">反证：零初始化不是最优</div>
+<p><b>adaLN-Gaussian</b>（小幅非零高斯初始化）在同一设置下<b>一致优于</b>严格零初始化：FID <b>17.86 vs 20.02</b>（400K）、<b>13.14 vs 14.73</b>（800K）、<b>5.28 vs 6.15</b>（CFG 1.5）。</p>
+<p><b>GateSkip</b>（ICLR 2026）把门控<b>初始化成「开」</b>（b=5 ⇒ σ(5)≈1，W_G ~ N(0, 0.01²)）——与零初始化相反，<b>而且有效</b>。</p>
+<p>⇒ <b>「起点惰性」是安全默认（尤其当你想保护一个已预训练的 backbone 时），但不要把它当成普遍定律。</b></p>
+</div>
+</div>
+
+<h3>8.2 门控会让结果变差（实证，数字在 §0）</h3>
+<p>三条独立证据：CaiT 深度 12 的 ReZero（78.3 &lt; 79.9）；ReZero 在 CIFAR ResNet-56 上三种门控全比 baseline 差（6.27 → 6.58/6.80/7.84）；CaiT 的「固定权重」对照（depth 12 固定值 80.6 ≥ 可学习 80.5）。<b>共同规律：门控的收益随深度出现，浅网络里它是负担。</b></p>
+
+<h3>8.3 门控饱和（解析为真）+ 库内「11×」的订正</h3>
+<div class="box warn">
+<div class="bt">解析事实</div>
+<p>对 <code>γ = γ_max·σ(a)</code>，<code>dγ/da = γ_max·σ(a)(1−σ(a))</code>。<b>σ 的导数上界是 1/4</b>，且在 γ→0 时 →0。⇒ <b>用 sigmoid 把门控压在接近 0 的地方，会让门控参数自身的梯度非常小。</b></p>
+<p>这个「σ 导数 ≤ 1/4」是<b>解析为真</b>的，且有文献逐字写过——Spectral Gating Networks（arXiv 2602.07679）在定理 3.1 的证明里写「<b>sigmoid has derivative ≤ 1/4</b>」。</p>
+</div>
+<div class="box stop">
+<div class="bt">★ 订正库内报告的一处数字：库内 §6.2 的「11×」</div>
+<p>库内 222 KB 频域报告 §6.2 给出「在同一个 γ₀ 下，tanh 给出的梯度是 sigmoid 的 <b>11 倍</b>」。<b>这个算术是对的，但它不是文献数字，而且强烈依赖参数化。</b></p>
+<p><b>它的算法（我复核过，算术无误）</b>：在 <b>γ = γ_max·σ(a)</b> 与 <b>γ = γ_max·tanh(a)</b> 这个<b>归一化</b>参数化下，两者都要求 γ₀ = 0.01、γ_max = 0.1 ——<br>
+σ 分支：σ(a₀)=0.1 ⇒ a₀ = logit(0.1) = −2.197，<code>dγ/da = 0.1 × 0.1 × 0.9 = 0.009</code>；<br>
+tanh 分支：tanh(a₀)=0.1 ⇒ a₀ = atanh(0.1) = 0.1003，<code>dγ/da = 0.1 × (1 − 0.01) = 0.099</code>；<br>
+比值 = 0.099 / 0.009 = <b>11×</b>。</p>
+<p><b>为什么不能当作文献引用</b>：① <b>没有任何论文写过「11×」这个数字</b>；② 比值<b>完全取决于参数化</b>——如果不做 γ_max 归一化（直接比 <code>g=σ(a)</code> 与 <code>g=tanh(a)</code>），得到的比值是另一个数；③ 本轮检索中<b>没有找到任何论文讨论「小初始化 sigmoid 门控的梯度饥饿」</b>（TASR 用 sigmoid 是为了防 reward hacking，不是为了稳定性）。</p>
+<p>⇒ <b>报告里的正确写法</b>：「σ 导数上界 1/4（有文献）」+「在 γ_max 归一化参数化下，tanh 起点梯度约为 σ 的 11 倍（<b>自证算术，无文献</b>）」。</p>
+</div>
+
+<h3>8.4 门控的放置位置（实证，可迁移）</h3>
+<div class="box stop">
+<div class="bt">★ 门控必须乘在分支输出上，不能乘在输入上</div>
+<p><b>GateSkip</b>（arXiv 2510.13876，ICLR 2026）在 Llama-3.2-1B 上、其余条件全部相同，对比了门控放置位置（Table 5）：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>门控放在哪</th><th class="c">0% skip</th><th class="c">5%</th><th class="c">10%</th><th class="c">15%</th></tr></thead>
+<tbody>
+<tr><td><b>模块入口</b>（gate before module）</td><td class="c">21.1</td><td class="c">5.5</td><td class="c">1.3</td><td class="c"><b>1.0</b></td></tr>
+<tr><td><b>模块之后</b>（gate after module，即残差侧）</td><td class="c"><b>26.8</b></td><td class="c"><b>25.5</b></td><td class="c"><b>24.2</b></td><td class="c"><b>23.2</b></td></tr>
+</tbody>
+</table>
+</div>
+<p>另外两条同表对照：<b>标量门 20.4 vs 向量门 23.2</b>（向量更好）；<b>MLP 门 18.5 vs linear-sigmoid 门 23.2</b>。</p>
+<p><b>诚实标注</b>：这是 <b>LLM 论文，不是扩散</b>；Table 5 的数字由检索子 agent 读全文取得，<b>我只复核了摘要</b>（摘要确认「sigmoid-linear gate」「smooth, differentiable gates fine-tune stably」「On instruction-tuned models we see accuracy gains at full compute」）。<b>数字未二次复核，但结论方向与位置①的机制一致</b>（门控乘在残差分支上）。</p>
+</div>
+
+<h3>8.5 路由塌缩（实证）—— 但只在 MoE 里被记录过</h3>
+<p><b>Shazeer 2017（arXiv 1701.06538）</b>逐字：「the gating network tends to converge to a state where it always produces large weights for the <b>same few experts</b>. This imbalance is <b>self-reinforcing</b>, as the favored experts are trained more rapidly and thus are selected even more by the gating network.」修法：importance loss + <b>W_g 零初始化</b>以从均衡起点出发。</p>
+<div class="box stop">
+<div class="bt">★★ 一条必须写下来的负面结论：不要构造「残差门控塌缩到 0」这个失败</div>
+<p>本轮专门检索了「残差 / skip 门控学到 0、分支从未被使用」这个失败模式。<b>没有找到任何论文报告过它。</b></p>
+<p>找到的最接近的三件事，<b>没有一件是它</b>：① ControlNet 的「突然收敛」——是<b>瞬态</b>（前几千步条件近似被忽略，然后突然学会），不是塌缩；② Composer 的「条件被压制」——是<b>固定 ω 与语义冲突</b>导致，不是可学习门控塌缩；③ GateSkip 的 L2 稀疏惩罚把门控<b>主动推向 0</b>——那是设计，不是塌缩。</p>
+<p>⇒ 库内 222 KB 报告 §6.2 担心的「频域分支看起来没被激活」是<b>基于梯度分析的合理担忧</b>，<b>不是文献事实</b>。报告里必须这么写，否则会误导成「文献说门控会塌缩」。</p>
+</div>
+
+<h3>8.6 MoE 在扩散上收益有限甚至为负（实证）</h3>
+<p>见 §6 的 ProMoE 逐字与 FA-MoE 的「E 从 4 增到 8 反而更差」。补一条：<b>Switch Transformer</b> 报告「用足够大的均衡系数可以确保良好均衡」⇒ 不平衡是<b>调参失败而非内在缺陷</b>，但代价是需要引入辅助损失与容量因子（丢弃 &lt;1% token）。<b>ST-MoE</b> 的 router z-loss 更直接：update clipping 能稳定训练但「significantly hurts model quality」⇒ <b>稀疏模型本质上比稠密模型更不稳定</b>。</p>
+
+<h3>8.7 七条判定的汇总表</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>主张</th><th class="c">解析 / 实证</th><th>净含义（对你）</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>零初始化是安全默认，但不是最优</td><td class="c"><span class="b blue">实证</span></td><td>第一版用零初始化；G2 阶段把「小高斯」当对照臂</td></tr>
+<tr><td>2</td><td>门控在浅网络里可能不涨甚至掉点</td><td class="c"><span class="b blue">实证</span></td><td>把位置①的门控当<b>稳定性保险</b>，不是涨点模块</td></tr>
+<tr><td>3</td><td>σ 门控在 γ→0 处梯度很小（导数上界 1/4）</td><td class="c"><span class="b purple">解析</span></td><td>tanh 或小高斯优于「严格 σ + 极小 γ₀」；「11×」不可引用</td></tr>
+<tr><td>4</td><td>门控必须乘在分支输出（残差侧）</td><td class="c"><span class="b blue">实证</span></td><td>不要乘在输入上（入口门控会灾难性塌缩）</td></tr>
+<tr><td>5</td><td>MoE 路由门控会自增强式塌缩</td><td class="c"><span class="b blue">实证</span></td><td>若做 MoE 必须带均衡机制；但见第 6 条</td></tr>
+<tr><td>6</td><td>MoE 在扩散 DiT 上收益有限、专家同质化</td><td class="c"><span class="b blue">实证</span></td><td><b>不要做 MoE 路由</b></td></tr>
+<tr><td>7</td><td>「残差门控塌缩到 0」</td><td class="c"><span class="b bad">无证据</span></td><td><b>不得作为文献事实引用</b>（可以当作自己实测的备查假设）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s9"><span class="num">9</span>频域 × 门控的交汇</h2>
+
+<p>这是你问题的正题：「频域的加持 + 门控的机制」放一起，文献里有什么。<b>结论是：交汇点只有两个半，而最像你想法的那个恰好是最没有证据的那个。</b></p>
+
+<h3>9.1 已有的交汇点：两个半</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>频域部分</th><th>门控部分</th><th>缺什么</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr>
+<td><b>FreeU</b>（CVPR 2024）</td>
+<td>skip 特征上做傅里叶低通抑制（<b>抑制低频</b>）+ backbone 空间域放大</td>
+<td><b>固定启发式</b>，不是可学习门控</td>
+<td>门控不可学 ⇒ 无法自适应；无消融曲线</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>AFFNet</b>（ICCV 2023）</td>
+<td>逐通道 × 逐频率可学习掩码，逐实例自适应</td>
+<td>可学习，但 <b>ReLU（非负、上无界）</b></td>
+<td><b>不在扩散模型里</b>；无「门控 vs 频率」曲线</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>SGN</b>（arXiv 2602.07679 · 2026-02）</td>
+<td>门控一个<b>谱分支</b>（可训练随机傅里叶特征）</td>
+<td><b>逐通道 sigmoid</b>，有同伦一致性定理保证冷启动</td>
+<td><b>门控不按频带索引</b>（频率选择性藏在 Ψ_spec 里）；<b>不是扩散</b>；无数值消融</td>
+<td class="c"><span class="b high">A</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.2 最像你想法的那个：FreqFormer（唯一的近似命中）</h3>
+<div class="box warn">
+<div class="bt">FreqFormer —— 它是空格边上唯一站着的人，但它没有回答「有没有用」</div>
+<p><b>《FreqFormer: Hierarchical Frequency-Domain Attention with Adaptive Spectral Routing for Long-Sequence Video Diffusion Transformers》</b>（arXiv 2604.22808，2026-04，<b>技术报告，非同行评审</b>）。</p>
+<p>它的<b>谱路由网络</b>「allocates heads across [frequency] bands using <b>layer statistics and the diffusion timestep</b>」——即把 head 按频带分配，且<b>分配随 t 变化</b>，用于「early: global structure, later: detail」的算力再分配。这<b>正是</b>「t × 频带」联合路由，而且<b>在扩散模型里</b>。</p>
+<p><b>但它只报系统级数字</b>（64K–1M token 下的吞吐 / FLOPs / 显存），<b>没有任何质量消融</b>（没有 FID / SSIM / 下游指标）。⇒ 它证明了「这个机制可以被造出来」，<b>没有证明「这个机制有用」</b>。</p>
+</div>
+
+<h3>9.3 空格的确切形状</h3>
+<div class="box stop">
+<div class="bt">★ 空格：按频带索引 + 以 t 为条件的可学习门控，放进扩散模型 —— 无人做过</div>
+<p>把 §7.2 的四条能力做布尔与运算，<b>同时满足四条的工作数 = 0</b>（FreqFormer 满足「t × 频带 + 在扩散里」，但缺质量消融；AFFNet 满足「可学习 + 按频带」，但不在扩散；SGN 满足「可学习 + 门控谱分支」，但不按频带、不在扩散）。</p>
+<p>这个判断与库内两份频域报告的结论一致：222 KB 报告的 Part 6 把「标量 / 逐通道 / 逐频带 / γ(t)」四种 gate 列出来时，是当作<b>待做设计</b>，并<b>没有</b>为「逐频带 gate」或「γ(t)」找到扩散域的先例。</p>
+</div>
+
+<h3>9.4 一条必须记住的边界：「通道语义 ≠ Fourier 频率」</h3>
+<div class="box warn">
+<div class="bt">这是库内 PST-Diff 审查已经立下的结论，本报告再次确认它</div>
+<p>你的 <b>H / DAB 两个通道是化学语义（染色种类），不是频带</b>。所以：</p>
+<ul>
+<li><b>「按通道门控」</b>（H 一个 γ、DAB 一个 γ）与<b>「按频带门控」</b>（LL / LH / HL / HH 各一个 γ）是<b>两件不同的事</b>，不能互相替代，也不能混着说。</li>
+<li>库内 PST-Diff 审查的边界结论：<b>「通道语义 ≠ Fourier 频率」</b>，PST-LT 的 paired latent L2 不能迁到非配对。同一逻辑在这里适用：<b>不要把「H 是低频、DAB 是高频」当成可以硬编码的通道-频带对应</b>——库内 81 KB 频域报告已指出，伊红成片弥散（相关长度大 ⇒ 低频）、DAB 细线稀疏（相关长度小 ⇒ 高频）是<b>统计倾向</b>，不是可以写死的映射。</li>
+</ul>
+</div>
+
+<h2 id="s10"><span class="num">10</span>可迁移性判定（挂回你的架构）</h2>
+
+<p>把门控挂回你的<b>六段主链路</b>（① 输入与解混 ② 条件构造 ③ 条件扩散·生成空间可开关 ④ 浓度头 → 可微 BL ⑤ 损失 ⑥ 评价）与<b>四臂对照</b>（A RGB / B 浓度 / C log-浓度 / D 确定性回归）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>门控候选</th><th>挂在哪一格</th><th>文献证据强度</th><th class="c">改动成本</th><th class="c">建议</th></tr></thead>
+<tbody>
+<tr>
+<td><b>标量残差门控</b>（零初始化，常数 γ）</td>
+<td>② 条件构造的注入残差 / ③ 生成空间内任一新分支</td>
+<td><span class="b high">最硬</span>（adaLN-Zero · LayerScale · ReZero，同深度受控消融）</td>
+<td class="c"><span class="b high">+2 参数</span></td>
+<td class="c"><span class="b high">第一版就上</span></td>
+</tr>
+<tr>
+<td><b>条件注入门控</b>（<code>h + tanh(γ)·Δh</code>，γ₀=0）</td>
+<td>② 条件构造（多条件融合处）</td>
+<td><span class="b high">有消融</span>（GLIGEN，YOLO AP 21.7 vs 16.6）</td>
+<td class="c"><span class="b high">+1 参数</span></td>
+<td class="c"><span class="b high">若注入强度是瓶颈，上</span></td>
+</tr>
+<tr>
+<td><b>逐通道门控</b>（H / DAB 各一个 γ）</td>
+<td>③ 生成空间（浓度 2ch）</td>
+<td><span class="b medium">架构里有但无消融</span>（MMDiT <code>gate_msa</code> / Flux <code>Modulation.gate</code>）</td>
+<td class="c"><span class="b high">+2 参数</span></td>
+<td class="c"><span class="b medium">低风险，可作 G2 对照</span></td>
+</tr>
+<tr>
+<td><b>γ(t) 时间步自适应</b></td>
+<td>③ 生成空间</td>
+<td><span class="b high">证据一致</span>（DiT AdaLN · TASR · CFG 调度；形状倾向「中段最强」）</td>
+<td class="c"><span class="b high">+几十参数</span></td>
+<td class="c"><span class="b high">第二版（第一版先常数 γ）</span></td>
+</tr>
+<tr>
+<td><b>按频带门控</b>（LL/LH/HL/HH 各一个 γ）</td>
+<td>② 条件构造（若走 DWT 表示）</td>
+<td><span class="b bad">无先例</span>（AFFNet 不在扩散；SGN 不按频带）</td>
+<td class="c"><span class="b medium">+数千参数</span></td>
+<td class="c"><span class="b medium">只在位置①证明有效后再做</span></td>
+</tr>
+<tr>
+<td><b>t × 频带 联合门控</b></td>
+<td>② / ③ 之间</td>
+<td><span class="b bad">空格</span>（FreqFormer 近似但无质量消融）</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b purple">做出来就是新意，但风险自负</span></td>
+</tr>
+<tr>
+<td><b>MoE 专家路由</b>（marker vs 形态）</td>
+<td>③ 生成空间</td>
+<td><span class="b bad">负结果</span>（ProMoE：MoE 在 DiT 上「limited gains」；FA-MoE：E↑ 更差）</td>
+<td class="c"><span class="b bad">高</span></td>
+<td class="c"><span class="b bad">不要做</span></td>
+</tr>
+<tr>
+<td><b>免训练采样期频带修正</b></td>
+<td>采样期（不在四臂内）</td>
+<td><span class="b high">有消融</span>（FDG：EDM2-XXL FID 8.65→4.99）</td>
+<td class="c"><span class="b high">零</span></td>
+<td class="c"><span class="b medium">见频域报告 §6（本报告不重复）</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>10.1 三条关键判断</h3>
+<div class="box key">
+<div class="bt">① 门控对你最大的价值不是「性能」，是「把 E1 那次失败变成可控的」</div>
+<p>你库内已记录：<b>E1 失败</b>（FID 109.75→125.96、DAB corr 0.439→0.244），归因是「<b>任何在起点就扰动 backbone 的新分支都会破坏已经学好的 diffusion prior</b>」。<b>零初始化残差门控正是这条失败的解药</b>——ControlNet 的原话就是「eliminating random noise as gradients in the initial training steps」，起点时 Δh ≡ 0，前向完全等价于 baseline。</p>
+<p>所以位置①的门控在你项目里的定位应该是：<b>「让新分支可以安全地加上去」的工程保险</b>，顺带给你一个可解释的量（γ 的收敛值告诉你模型依赖哪一路）。</p>
+</div>
+<div class="box warn">
+<div class="bt">② 但不要把它当「性能模块」——你的 backbone 是浅的</div>
+<p>CaiT / ReZero 的实证显示：<b>浅网络里门控可能不涨甚至掉点</b>（CaiT depth 12：78.3 &lt; 79.9；ResNet-56 三种门控全比 baseline 差）。你的 backbone 是 from-scratch 小 2D U-Net（base 64–96），属于「浅」。⇒ <b>期望值定在「稳定性 + 可解释性」，不是「涨点」。</b></p>
+</div>
+<div class="box warn">
+<div class="bt">③ 门控的放置：必须乘在分支输出（残差侧）</div>
+<p>GateSkip 的放置对照（入口门控在 15% skip 时掉到 1.0 acc）虽然来自 LLM，但方向与位置①的机制一致：<b>门控乘在残差分支的输出上</b>。不要设计成「乘在输入特征上」。</p>
+</div>
+
+<h2 id="s11"><span class="num">11</span>可执行实验路线与止损</h2>
+
+<p>路线按「改动量从小到大」排序，<b>每一阶段只有一个唯一变量</b>。所有阶段都建在四臂对照之上，且不改变「输出必须经 BL」这条红线。</p>
+
+<div class="flow">
+<pre><code>G0  零训练门禁（&lt;30 行）
+     └─ 断言新分支在 step 0 对 hidden stream 完全无影响
+        · zero-init 分支：断言 max|h' − h| == 0
+        · 小高斯分支：断言 max|h' − h| &lt; 1e-7
+        · 记录 ρ_l = RMS(Δh_l)/RMS(h_l)，初始应为 0
+     ▼ 若 G0 不过 ⇒ 先修初始化，不要开始训练
+
+G1  只加一个标量门控（唯一变量 = 有无门控）
+     └─ h' = h + γ·Δh，γ = γ_max·tanh(a)，γ_max = 0.1，a ← atanh(0.1)
+        · 必须同时记录 a（原始参数）与 γ（tanh 后）——只记 γ 分不清
+          「a 不动」还是「tanh 压住了」
+     ▼ 判据：γ 是否离开 0.01
+        · 收敛到有意义的值 ⇒ 继续 G2
+        · 稳定停在 0.01 ⇒ 是梯度问题，回去看 §8.3
+        · 收敛到 ~0 ⇒ 分支确实无用，这是有效阴性结论
+
+G2  门控的函数形式（唯一变量 = γ 的形式）
+     └─ 对比三臂：① 常数 γ ② γ(t)（形状取「弱–强–弱」，中段最强）
+                   ③ 小高斯非零初始化（TPAMI 2026 的 adaLN-Gaussian）
+     ▼ 判据：γ(t) 是否明显优于常数 γ；小高斯是否优于严格零初始化
+        · 都无差别 ⇒ 该任务对门控形式不敏感，省掉这部分复杂度
+
+G3  只在 G1/G2 成立后才做
+     └─ 按频带门控（LL/LH/HL/HH 各一个 γ）——这一格没有先例
+        · 判据：HH 的 γ 是否被压到 0
+          （若被压到 0 ⇒ 高频负迁移，与 StainDiffuser 的警告一致）
+     └─ 或 逐通道门控（H / DAB 各一个 γ）——低风险对照
+     ✗ 不要做 MoE 路由</code></pre>
+</div>
+
+<h3>11.1 必须同时记录的日志项</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>记录项</th><th>定义</th><th>为什么重要</th></tr></thead>
+<tbody>
+<tr><td><code>γ</code>（每个门控）</td><td>门控的实际值</td><td>直接读出「模型依赖哪一路」</td></tr>
+<tr><td><code>a</code>（每个门控）</td><td>门控的<b>原始参数</b>（不是 tanh 后）</td><td>区分「a 不动」与「a 在动但被 tanh/σ 压住」</td></tr>
+<tr><td><code>ρ_l = RMS(Δh_l)/RMS(h_l)</code></td><td>分支残差的相对幅度</td><td>判断分支是否真的在起作用；若一直 ~0.001 说明门控卡住</td></tr>
+<tr><td>逐 block 的 cos 与幅度比</td><td>门控分支梯度 vs 主损失的梯度</td><td>库内梯度冲突报告 §12：<b>必须逐 block 算</b>，全局 cos 会被梯度质量最大的层主导</td></tr>
+<tr><td>实例级指标（分层）</td><td>HER2 分级 DICE / H-score 一致性，<b>按 0 / 1+ / 2+ / 3+ 分层</b></td><td>文献一致显示 3+ 是失败区间；<b>禁单一 PSNR</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">止损条件</div>
+<ul>
+<li><b>G1 的 γ 稳定收敛到 ~0，且 G2 三种形式都无差别</b> ⇒ 门控对你的任务无收益，<b>干净记为阴性</b>；<b>不要靠调 γ_max 硬凑</b>。</li>
+<li><b>门控让 FID 改善但 DAB corr / 实例级指标下降</b> ⇒ 是「全局更像、实例更错」（库内 MIU-Diff 的受控证据就是这个模式），<b>不要用 FID 单独下结论</b>。</li>
+<li><b>G3 的逐频带门控出现某个频带 γ 被压到 0</b> ⇒ 不要移除该频带再试一轮「调参」；先把「该频带负迁移」当作<b>结论</b>记录下来。</li>
+</ul>
+</div>
+
+<div class="box good">
+<div class="bt">如果只做一件事</div>
+<p><b>做 G0 + G1。</b>成本是 <b>+2 个参数 + 不到 30 行门禁脚本</b>，而它同时回答三件事：① 你的新分支能不能安全地加上去（这直接对应 E1 失败）；② 模型是否真的在用这个分支（γ 的收敛值）；③ 如果不用，就是一个可发表的阴性结论。<b>这是本轮全部文献里「证据强度 / 成本」比值最高的一格。</b></p>
+</div>
+
+<h2 id="s12"><span class="num">12</span>未核实清单与诚实标注</h2>
+
+<div class="box key">
+<div class="bt">我在本报告中亲自复核的承重引用（3 条）</div>
+<p>决定报告结论方向的引用由我逐条抓一手来源复核：</p>
+<ol>
+<li><b>arXiv 2608.09438</b> —— 抓 <code>arxiv.org/abs/2608.09438</code>。确认：标题《Unveiling the Secret of AdaLN-Zero in Diffusion Transformer》，作者 Zhu, Ding, Duan, Wang, Wang，<b>IEEE TPAMI 2026（camera-ready）</b>，2026-08-10 提交；摘要逐字含「zero-initialization is proved to be <b>the most influential</b>」「<b>adaLN-Gaussian</b>... consistently improves optimization efficiency」。⇒ §0 与 §8.1 的反例成立。<b>注：17.86 / 20.02 等具体 FID 来自子 agent 读全文，我只复核了摘要级结论。</b></li>
+<li><b>arXiv 2510.13876</b> —— 抓 <code>arxiv.org/abs/2510.13876</code>。确认：标题《What Layers When: Learning to Skip Compute in LLMs with Residual Gates》（GateSkip），作者 Laitenberger, Kopiczko, Snoek, Asano，<b>ICLR 2026</b>；摘要逐字含「<b>sigmoid-linear gate</b>」「smooth, differentiable gates <b>fine-tune stably</b>」「On instruction-tuned models we see <b>accuracy gains at full compute</b>」。⇒ <b>但 §8.4 的放置对照 Table 5 数字（21.1→1.0 vs 26.8→23.2）由子 agent 读全文取得，我未二次复核；且这是 LLM 论文，不是扩散。</b></li>
+<li><b>arXiv 2510.24711</b> —— 抓 <code>arxiv.org/abs/2510.24711</code>。确认：标题《Routing Matters in MoE: Scaling Diffusion Transformers with Explicit Routing Guidance》（ProMoE），作者 Wei, Zhang, Yuan et al.，<b>ICLR 2026</b>；摘要逐字含「existing attempts to apply MoE to Diffusion Transformers (DiTs) have yielded <b>limited gains</b>」「visual tokens exhibit <b>spatial redundancy and functional heterogeneity</b>, hindering expert specialization」。⇒ §6 的负结果成立。</li>
+</ol>
+</div>
+
+<h3>12.1 明确未核实的事项（不要当作事实引用）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>事项</th><th>状态</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><b>「tanh 梯度是 sigmoid 的 11 倍」</b></td><td><span class="b bad">无文献</span></td><td>算术自证正确（在 γ_max 归一化参数化下），但<b>没有任何论文写过这个数字</b>，且比值强烈依赖参数化。库内报告把它当结论用时需改写（见 §8.3）</td></tr>
+<tr><td><b>Learn to Guide Your Diffusion Model</b>（arXiv 2510.00815, ICLR 2026）</td><td><span class="b low">C</span></td><td>ID / venue 已见，<b>数字（FID 1.99、MS-COCO 24.74→18.01）与「钟形」形状来自二手摘要</b>，未自核</td></tr>
+<tr><td><b>GateSkip Table 5 的放置对照数字</b></td><td><span class="b medium">B</span></td><td>子 agent 读全文取得；<b>我只复核了摘要</b>。方向可信，数字未二次复核；且属 LLM 域</td></tr>
+<tr><td><b>FeatStainDiff 的 FMoE 公式</b></td><td><span class="b bad">未说明</span></td><td>官方仓库 <code>featstaindiff/model.py</code> 标「temporarily withheld」+ ScienceDirect 付费墙 ⇒ <b>路由单元 / 路由形式 / k / 辅助损失全部未说明</b>。<b>不得按 FA-MoE 类推</b></td></tr>
+<tr><td><b>Latent Wavelet Diffusion</b>（ICLR 2026）</td><td><span class="b low">C</span></td><td>仅搜索摘要，未抓取；「无参数能量掩码」这一条未经一手确认</td></tr>
+<tr><td><b>FreqFormer</b>（arXiv 2604.22808）</td><td><span class="b medium">B</span></td><td>技术报告，<b>非同行评审</b>；摘要级确认「spectral routing... using layer statistics and the diffusion timestep」，<b>无质量消融</b></td></tr>
+<tr><td><b>SD / SDXL 的 <code>attn2</code> gating</b></td><td><span class="b bad">无来源</span></td><td>属<b>实现层重加权</b>，<b>没有论文级来源</b>；<b>不得</b>当作「论文提出的可学习门控」引用</td></tr>
+<tr><td><b>DiT-MoE 的精确均衡损失公式</b></td><td><span class="b low">C</span></td><td>摘要 / README 只提「expert-level balance loss」，<b>精确形式未重述</b></td></tr>
+<tr><td><b>EC-DiT 论文超参 vs 代码超参一致性</b></td><td><span class="b low">C</span></td><td>未做代码级对账（库内方法论 #9 要求「论文做了什么」与「代码做了什么」分开陈述）</td></tr>
+<tr><td><b>引用量 / 影响力量化</b></td><td><span class="b low">C</span></td><td>Semantic Scholar / 部分 arXiv HTML 抓取受限 ⇒ <b>无独立引用量量化</b>；「空格确认」基于 WebSearch + arXiv 摘要页，<b>不是全量文献计量学结论</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">本轮我纠正的三处（含我自己简报里的错）</div>
+<ol>
+<li><b>arXiv 2412.05479 ≠ DiT-MoE</b>——实为 <b>LATTE: Learning to Think with Vision Specialists</b>（EMNLP 2025，VLM 论文）。真正的 DiT-MoE = <b>arXiv 2407.11633</b>。</li>
+<li><b>arXiv 2503.06698 ≠ EC-DiT</b>——实为 <b>What's in a Latent? Leveraging Diffusion Latent Space for Domain Generalization</b>（2025）。真正的 EC-DiT = <b>arXiv 2410.02098</b>（ICLR 2025）。</li>
+<li><b>「Sana 的门控在线性注意力里」是误读</b>——Sana 的线性注意力用的是 ReLU 核，<b>没有乘性门控</b>；门控在 Mix-FFN 的 GLU 里（官方代码 <code>sana_blocks.py</code> / <code>basic_modules.py</code>）。</li>
+</ol>
+</div>
+
+<h2 id="s13"><span class="num">13</span>参考文献</h2>
+
+<p class="small">按正文出现顺序。等级列同 §2 定义。<b>加粗</b>为承重引用。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>文献</th><th>venue / 年份</th><th>ID / DOI</th><th class="c">等级</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><b>Scalable Diffusion Models with Transformers</b>（DiT）</td><td>ICCV 2023</td><td>arXiv 2212.09748</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">2</td><td><b>Unveiling the Secret of AdaLN-Zero in Diffusion Transformer</b></td><td><b>IEEE TPAMI 2026</b></td><td>arXiv 2608.09438</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">3</td><td><b>Going deeper with Image Transformers</b>（CaiT / LayerScale）</td><td>ICCV 2021</td><td>arXiv 2103.17239</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">4</td><td><b>ReZero is All You Need</b></td><td>UAI 2021</td><td>arXiv 2003.04887</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">5</td><td>SANA: Efficient High-Resolution Image Synthesis with Linear Diffusion Transformers</td><td>arXiv 2024</td><td>arXiv 2410.10629</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">6</td><td>DiG: Scalable and Efficient Diffusion Models with Gated Linear Attention</td><td>arXiv 2024</td><td>arXiv 2405.18428</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">7</td><td>Scaling Rectified Flow Transformers（MMDiT / SD3）</td><td>ICML 2024</td><td>arXiv 2403.03206</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">8</td><td>GLU Variants Improve Transformer</td><td>arXiv 2020</td><td>arXiv 2002.05202</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">9</td><td><b>GLIGEN: Open-Set Grounded Text-to-Image Generation</b></td><td>CVPR 2023</td><td>arXiv 2301.07093</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">10</td><td><b>Adding Conditional Control to Text-to-Image Diffusion Models</b>（ControlNet）</td><td>ICCV 2023</td><td>arXiv 2302.05543</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">11</td><td>T2I-Adapter</td><td>技术报告 2023</td><td>arXiv 2302.08453</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">12</td><td>Composer: Creative and Controllable Image Synthesis with Composable Conditions</td><td>arXiv 2023</td><td>arXiv 2302.09778</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">13</td><td>Semantic Image Synthesis with Spatially-Adaptive Normalization（SPADE）</td><td>CVPR 2019</td><td>arXiv 1903.07291</td><td class="c"><span class="b medium">B</span></td></tr>
+<tr><td class="c">14</td><td>FiLM: Visual Reasoning with a General Conditioning Layer</td><td>AAAI 2018</td><td>arXiv 1709.07871</td><td class="c"><span class="b medium">B</span></td></tr>
+<tr><td class="c">15</td><td>UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</td><td>arXiv 2026</td><td>arXiv 2603.12716</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">16</td><td><b>Routing Matters in MoE: Scaling Diffusion Transformers with Explicit Routing Guidance</b>（ProMoE）</td><td><b>ICLR 2026</b></td><td>arXiv 2510.24711</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">17</td><td>Scaling Diffusion Transformers to 16 Billion Parameters（DiT-MoE）</td><td>arXiv 2024</td><td>arXiv 2407.11633</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">18</td><td>Scaling Diffusion Transformers with Adaptive Expert-Choice Routing（EC-DiT）</td><td>ICLR 2025</td><td>arXiv 2410.02098</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">19</td><td>Improving Medical Image Generation Through Frequency-Aware Mixture of Experts（FA-MoE）</td><td>CVPR 2026 Findings, pp. 3988–3997</td><td>—</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">20</td><td>Diffusion-based cross-staining feature transformation（FeatStainDiff · FMoE）</td><td>Med. Image Anal. 112 (2026) 104138</td><td>DOI 10.1016/j.media.2026.104138</td><td class="c"><span class="b medium">B</span></td></tr>
+<tr><td class="c">21</td><td>Switch Transformers: Scaling to Trillion Parameter Models</td><td>JMLR 2022</td><td>arXiv 2101.03961</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">22</td><td>ST-MoE: Designing Stable and Transferable Sparse Expert Models</td><td>arXiv 2022</td><td>arXiv 2202.08906</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">23</td><td><b>Outrageously Large Neural Networks: The Sparsely-Gated MoE Layer</b></td><td>ICLR 2017</td><td>arXiv 1701.06538</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">24</td><td>On the Representation Collapse of Sparse Mixture of Experts</td><td>NeurIPS 2022</td><td>arXiv 2204.09179</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">25</td><td><b>What Layers When: Learning to Skip Compute in LLMs with Residual Gates</b>（GateSkip）</td><td><b>ICLR 2026</b></td><td>arXiv 2510.13876</td><td class="c"><span class="b high">A</span><span class="small">（摘要级）</span></td></tr>
+<tr><td class="c">26</td><td>Timestep-Aware Diffusion Model for Image Super-Resolution（TASR）</td><td>ACM MM 2025</td><td>arXiv 2412.03355</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">27</td><td>Dynamic Classifier-Free Diffusion Guidance via Online Feedback</td><td>arXiv 2025</td><td>arXiv 2509.16131</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">28</td><td>Learn to Guide Your Diffusion Model</td><td>ICLR 2026</td><td>arXiv 2510.00815</td><td class="c"><span class="b low">C</span></td></tr>
+<tr><td class="c">29</td><td>Beta Sampling is All You Need</td><td>WACV 2025</td><td>arXiv 2407.12173</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">30</td><td>Spectral Gating Networks</td><td>arXiv 2026-02</td><td>arXiv 2602.07679</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">31</td><td>Adaptive Frequency Filters As Efficient Global Token Mixers（AFFNet）</td><td>ICCV 2023</td><td>arXiv 2307.14008</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">32</td><td><b>FreeU: Free Lunch in Diffusion U-Net</b></td><td>CVPR 2024</td><td>arXiv 2309.11497</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">33</td><td>FreqFormer: Hierarchical Frequency-Domain Attention with Adaptive Spectral Routing</td><td>技术报告 2026-04</td><td>arXiv 2604.22808</td><td class="c"><span class="b medium">B</span></td></tr>
+<tr><td class="c">34</td><td>Latent Wavelet Diffusion</td><td>ICLR 2026</td><td>—</td><td class="c"><span class="b low">C</span></td></tr>
+<tr><td class="c">35</td><td>Adversarial Training for Pixel Diffusion</td><td>arXiv 2026-09-29</td><td>arXiv 2609.38170</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">36</td><td>Physics-Guided Spectral Distillation for Underwater Image Enhancement</td><td>arXiv 2026-09-28</td><td>arXiv 2609.34795</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">37</td><td>PFGNet: Pixel-wise Frequency-Guided Gating</td><td>CVPR 2026, pp. 38848–38858</td><td>arXiv 2602.20537</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">38</td><td>Attention U-Net: Learning Where to Look for the Pancreas（skip 门控的经典）</td><td>MIDL 2018</td><td>arXiv 1804.03999</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">39</td><td>PixArt-α: Fast Training of Diffusion Transformer</td><td>ICLR 2024</td><td>arXiv 2310.00426</td><td class="c"><span class="b high">A</span></td></tr>
+<tr><td class="c">40</td><td>Guidance in the Frequency Domain（FDG）</td><td>arXiv 2025</td><td>arXiv 2506.19713</td><td class="c"><span class="b high">A</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="foot">
+<p><b>报告定位</b>：机制级文献地图（门控为增量主轴，频域做交汇）。库内已有两份频域主报告（81 KB 结构保持视角 / 222 KB 条件注入），本报告<b>不重复它们</b>，只补「门控作为独立机制轴」的四个位置 + 失效模式实证 + 频域交汇与空格。</p>
+<p><b>核实声明</b>：决定结论的 3 条承重引用由我逐条抓一手来源复核（见 §12 开头）；其余条目的等级逐条标注，<code>C</code> 级<b>不得当作事实引用</b>。检索线为 5 条并行只读子 agent。</p>
+<p><b>日期</b>：2026-10-09 · 面向 H&amp;E→IHC 浓度域扩散项目（六段主链路 + 四臂对照）。</p>
+</div>
+</main>
+</div>
+</body>
+</html>

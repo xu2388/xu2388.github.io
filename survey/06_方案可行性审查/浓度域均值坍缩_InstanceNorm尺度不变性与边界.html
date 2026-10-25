@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>浓度域均值坍缩：InstanceNorm 的精确尺度不变性与这条路的边界</title>
+<style>
+:root{--ink:#1c1c1a;--ink2:#5f5e5a;--ink3:#8a8a84;--line:#e2e0d8;--bg:#ffffff;--soft:#f7f6f2;--red:#a32d2d;--redbg:#fcebeb;--amber:#854f0b;--amberbg:#faeeda;--green:#3b6d11;--greenbg:#eaf3de;--blue:#185fa5;--bluebg:#e6f1fb;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:56px 40px 96px}
+h1{font-size:26px;line-height:1.4;font-weight:600;margin:0 0 8px;letter-spacing:-.2px}
+.sub{color:var(--ink2);font-size:14px;margin:0 0 28px}
+h2{font-size:19px;font-weight:600;margin:44px 0 14px;padding-top:18px;border-top:1px solid var(--line)}
+h2 .n{display:inline-block;min-width:26px;color:var(--ink3);font-variant-numeric:tabular-nums}
+h3{font-size:15px;font-weight:600;margin:22px 0 8px}
+p{margin:10px 0}
+ul,ol{margin:10px 0 10px 22px;padding:0}
+li{margin:5px 0}
+code{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13px;background:var(--soft);padding:1px 5px;border-radius:4px}
+pre{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.65}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;font-size:12.5px;color:var(--ink2);letter-spacing:.02em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:16px 0;background:#fff}
+.card.k{background:var(--redbg);border-color:#f2c9c9}
+.card.w{background:var(--amberbg);border-color:#f0dcb4}
+.card.g{background:var(--greenbg);border-color:#cfe0b4}
+.card.b{background:var(--bluebg);border-color:#c4dcf3}
+.card h4{margin:0 0 6px;font-size:14px;font-weight:600}
+.card p{margin:6px 0}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);background:#fff;margin-right:6px}
+.eq{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:14px;background:var(--soft);border-left:3px solid var(--ink3);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;overflow:auto}
+.dim{color:var(--ink3)}
+.hi{background:#fff3bf;padding:0 3px;border-radius:3px}
+.foot{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink3);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>浓度域均值坍缩：InstanceNorm 的精确尺度不变性，与这条路的边界</h1>
+<p class="sub">全量 796 张实测 · 机制证明 · 三个判决实验 · 论文定位 · 2026-10-18</p>
+
+<div class="card k">
+<h4>一句话结论</h4>
+<p>模型不是"每张图都偏了一点"，而是<strong>对所有切片输出同一个平均 IHC</strong>。而这不是调参失误——CUT 生成器里的 <code>InstanceNorm2d</code> 使整个网络<strong>对输入的全局缩放严格不变</strong>，切片级染色强度在第一个归一化层就被数学地抹掉了。任何损失、任何权重、任何数据量都无法恢复它。</p>
+<p>但这也意味着：<span class="hi">信息原本在输入里，只是被结构销毁了</span>——所以这条路的边界是"结构"而不是"任务"，有解，只是要动结构。</p>
+</div>
+
+<h2><span class="n">1</span>全量实测：坍缩，不是偏差</h2>
+
+<p>valB 977 张，有效（组织面积 ≥5%）796 张，跳过 181 张。权重 <code>r2_ep40</code>。</p>
+
+<table>
+<thead><tr><th>指标</th><th class="num">真实 IHC</th><th class="num">r2_ep40</th><th>差异</th></tr></thead>
+<tbody>
+<tr><td>D/H median</td><td class="num">0.804</td><td class="num">1.001</td><td>+25%</td></tr>
+<tr><td>D/H IQR 宽度</td><td class="num">0.767</td><td class="num">0.037</td><td><strong>窄 20 倍</strong></td></tr>
+<tr><td>D/H p5–p95</td><td class="num">0.494 – 2.202</td><td class="num">0.929 – 1.055</td><td>真值跨度 4.5×，模型 1.14×</td></tr>
+<tr><td>DAB median</td><td class="num">0.152</td><td class="num">0.179</td><td>+18%</td></tr>
+<tr><td>DAB IQR 宽度</td><td class="num">0.130</td><td class="num">0.009</td><td><strong>窄 14 倍</strong></td></tr>
+<tr><td>阳性率 median</td><td class="num">0.084</td><td class="num">0.205</td><td>2.4×</td></tr>
+<tr><td>阳性率 IQR 宽度</td><td class="num">0.653</td><td class="num">0.102</td><td>窄 6.4×</td></tr>
+<tr><td>PSNR_RGB / SSIM_RGB</td><td class="num">—</td><td class="num">16.88 / 0.384</td><td class="dim">相邻切片，仅作参考</td></tr>
+<tr><td>PSNR_DAB / SSIM_DAB</td><td class="num">—</td><td class="num">19.65 / 0.488</td><td class="dim">同上</td></tr>
+</tbody>
+</table>
+
+<p><strong>中位数只差 25%，分布宽度差 20 倍。</strong>这三个数字放在一起只有一种解释：输出是一个固定点，不是逐图估计。视觉上的三个现象（阴性组织被染棕、强阳性偏淡、阳性率虚高到 0.205）全部由这一个事实推出，不需要额外假设。</p>
+
+<div class="card w">
+<h4>顺带修正一个口径</h4>
+<p>真值 D/H 的全量 median 是 <strong>0.804</strong>，之前 12 张样本给出 0.767，二者接近，说明小样本这次没有带偏。<br>
+但"总量之比 ΣD/ΣH"口径给出的是 1.11–1.25，与中位数口径差 40–55%。<strong>论文里必须固定用"逐图中位数"这一口径</strong>，并在方法节写明估计量——否则同一个模型能被算出两个相差 50% 的偏差。</p>
+</div>
+
+<h2><span class="n">2</span>机制：IN 的尺度不变性是严格的，不是"大概"</h2>
+
+<p>这一步值得单独写，因为它是<strong>可证明的</strong>，不是经验观察。CUT 的 <code>ResnetGenerator</code> 第一层是：</p>
+
+<div class="eq">stem: x → ReLU( InstanceNorm( W<sub>7×7</sub> * x + b ) )</div>
+
+<p>InstanceNorm 对每个样本、每个通道，在空间维度上减均值除标准差。于是对任意 <code>a &gt; 0</code>：</p>
+
+<div class="eq">
+mean(a·y + b) = a·mean(y) + b<br>
+(a·y + b) − mean = a·( y − mean(y) )<br>
+std(a·y + b) = a·std(y)<br>
+⇒ <strong>IN(a·y + b) = IN(y)</strong>
+</div>
+
+<p>也就是说 <code>stem(a·x) ≡ stem(x)</code>，逐元素相等。后面的下采样、6 个 ResBlock、两次上采样、head 全部接收完全相同的张量，因此：</p>
+
+<div class="eq"><strong>G(a · x) ≡ G(x)，对任意 a &gt; 0</strong></div>
+
+<div class="card b">
+<h4>这条等式意味着什么</h4>
+<p>切片级染色强度在输入里是以"全局缩放"形式存在的：这张片子染得深，<code>C_H, C_E</code> 整体乘一个大数；染得浅，整体乘一个小数。而 <code>G</code> 对全局缩放<strong>严格不敏感</strong>。</p>
+<p>所以模型不是"学不会逐图自适应"，而是<strong>在结构上不可能做到</strong>。D/H 的 IQR 窄 20 倍，是这个等式在 796 张图上的直接体现。</p>
+<p class="dim">注意 ResBlock 的 <code>out = x + conv_block(x)</code> 里那条 identity 不经过 IN——但 <code>x</code> 本身已经是 stem 的 IN 输出，尺度早被消掉，所以整条链上没有任何一处保留全局尺度。</p>
+</div>
+
+<h3>10 秒验证（比任何论证都硬）</h3>
+<pre><code>import torch
+x  = batch['A']                                  # [1,2,H,W]
+y1 = netG(x)
+for a in (1.5, 0.7, 3.0):
+    y = netG(x * a)
+    print(a, (y - y1).abs().max().item())        # 预期 ≈ 1e-6（浮点误差）</code></pre>
+
+<p>如果三行都接近 0，这个机制就坐实了。<strong>同时也要跑官方 3ch 权重</strong>——它用的是同一套 <code>normG=instance</code>，按这个推理也应该同样坍缩。若官方不坍缩，说明 RGB 输入里还有一条绕过 IN 的通路（例如通道间比值在 IN 后仍部分保留），那结论要改写。</p>
+
+<h2><span class="n">3</span>为什么"权重越大，坍缩越彻底"</h2>
+
+<p>这一点你的 AI 说对了，但原因不是"梯度是全局平均"，而是更直接的：</p>
+
+<ul>
+<li>设 <code>G</code> 的输出与切片无关，记为常数 <code>c</code>。那么对所有 796 张图，分布损失都是 <code>L(c, p_i)</code>。</li>
+<li>训练最小化 <code>Σ_i L(c, p_i)</code>，最优解是 <code>p_i</code> 的某个中位/重心 —— 正是观察到的 1.00。</li>
+<li>加大权重只是把 <code>c</code> 更精确地推向这个重心，<strong>不改变"输出与输入无关"这件事</strong>。</li>
+</ul>
+
+<p>换句话说：在 <code>G</code> 是尺度不变的函数类里，常数解就是全局最优。损失再强，也只是让这个常数收敛得更干净。</p>
+
+<h2><span class="n">4</span>三个判决实验（按成本排序）</h2>
+
+<table>
+<thead><tr><th style="width:30px">#</th><th>实验</th><th>成本</th><th>判读</th></tr></thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>尺度不变性验证</strong>：同一张图 ×1.5 / ×0.7 / ×3.0，比输出差</td>
+<td>GPU 1 分钟<br><span class="dim">CPU 亦可，小图</span></td>
+<td>差 ≈ 0 → 机制坐实，坍缩是结构必然</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>信息是否可用</strong>：逐图「输入 H&amp;E 平均 OD」与「真实 IHC 的 DAB 均值」的 Pearson r（796 张）</td>
+<td>CPU 数分钟</td>
+<td>r &lt; 0.2 → 即使修好结构也没用，任务本身不可辨识<br>r &gt; 0.5 → 有信号，值得加尺度条件</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>对照</strong>：官方 3ch 权重在同样 796 张上的 D/H IQR</td>
+<td>GPU 数分钟</td>
+<td>同样窄 → 这是 CUT 谱系的共性问题（更强的结论）<br>明显宽 → RGB 有额外通路，需解释</td>
+</tr>
+</tbody>
+</table>
+
+<div class="card">
+<h4>顺序不能颠倒</h4>
+<p>实验 1 是机制，实验 2 是可行性。若先做 2 发现 r 很低，会误判成"任务无解"——但实际上可能是结构先把它毁了。必须先证明"结构毁了它"，再去问"原本有没有信号"。</p>
+</div>
+
+<h2><span class="n">5</span>如果实验 2 有信号：最小结构改动</h2>
+
+<p>核心约束：<strong>注入点必须在最后一次归一化之后</strong>。生成器里 stem / down1 / down2 / 6×ResBlock / up1 / up2 每一层都带 InstanceNorm，任何在这些位置注入的尺度都会被下一层 IN 立刻抹掉。</p>
+
+<div class="card k">
+<h4>先更正两个看起来自然、实际无效的做法</h4>
+<p><strong>① 只去掉 stem 的 IN</strong> —— 尺度活过 stem，但死在紧随其后的 down1 的 IN 上。<br>
+<strong>② 在瓶颈 ResBlock 后做 FiLM</strong> —— 尺度活过瓶颈，但死在 up1 的 IN 上。<br>
+两者都只改了一个环节，而下游还有 4 次归一化。这是本节最容易走错的地方。</p>
+</div>
+
+<p>正确位置：<code>up2</code> 的 ReLU 之后，head 的 <code>Conv7×7</code> 输出上，<code>Tanh</code> 之前——这是全网络最后一次归一化的下游。</p>
+
+<pre><code># 1) 切片级染色量：在 stem 之前取，此时还没被任何 norm 处理
+s = (x[:, 0] + x[:, 1]).mean(dim=(1, 2))        # [B]
+
+# 2) head 处做增益/偏置，零初始化 → 起步严格恒等
+class ScaleHead(nn.Module):
+    def __init__(self, ngf, out_c=2):
+        super().__init__()
+        self.conv = nn.Conv2d(ngf, out_c, 7, padding=3)
+        self.fc   = nn.Linear(1, out_c * 2)
+        nn.init.zeros_(self.fc.weight); nn.init.zeros_(self.fc.bias)
+    def forward(self, h, s):
+        logits = self.conv(h)
+        g, b = self.fc(s[:, None]).chunk(2, dim=1)          # [B,out_c] each
+        return torch.tanh(logits * (1 + g[:, :, None, None])
+                                + b[:, :, None, None])</code></pre>
+
+<p>净增参数约 4 个（<code>fc</code> 的 4 个，替换原 head 卷积不增加）。零初始化保证从现有权重热启时输出逐元素不变，坍缩会原样保留到第一个梯度步——这反而是好事：说明改动本身没有副作用，后续任何变化都能归因给它。</p>
+
+<div class="card w">
+<h4>两个前提必须先确认</h4>
+<p><strong>①</strong> 数据加载器有没有对输入做<strong>逐图归一化</strong>（per-image 分位缩放、均值归一等）。如果有，<code>s</code> 在进网络前就已经是常数，这个 token 拿到的也是常数，等于没加。必须查 <code>aligned_dataset</code> 的浓度域预处理。</p>
+<p><strong>②</strong> <code>s</code> 与目标的相关性（实验 2）。若 r≈0，加了也是白加。</p>
+</div>
+
+<h2><span class="n">6</span>论文：这个结果反而让故事立起来了</h2>
+
+<p>先说结论：<strong>原来的框架（2 通道 + CGA + 比值损失，靠指标涨点）确实撑不住主会</strong>。但这次坍缩的发现，把可写的东西换成了三件更硬的事。</p>
+
+<table>
+<thead><tr><th style="width:26px">#</th><th>可写的贡献</th><th>证据强度</th></tr></thead>
+<tbody>
+<tr><td>A</td><td><strong>机制</strong>：CUT 系虚拟染色生成器的 InstanceNorm 使其对切片级染色强度严格不敏感，逐图自适应在结构上不可能</td><td><span class="tag">数学证明</span> + 796 张实测</td></tr>
+<tr><td>B</td><td><strong>表征价值</strong>：浓度域输出把"颜色偏了"这种肉眼判断，变成可逐图测量的 D/H 分布；RGB 输出下这个失效是隐形的</td><td>恒等映射对照 + 全量分布</td></tr>
+<tr><td>C</td><td><strong>修法</strong>：绕过 IN 的尺度条件（FiLM token）恢复逐图自适应，并给出增益与边界</td><td>待跑（实验 2/3 之后）</td></tr>
+</tbody>
+</table>
+
+<div class="card g">
+<h4>关于"2 通道算不算创新"</h4>
+<p>单独不算——OD 近似一维（PC1 占 96%），信息量几乎没增加，审稿人一句"为什么不用 RGB"就能问住。</p>
+<p><strong>但它有一个真实的方法论价值，而且正好是这次发现的：它让一个原本不可见的失效变成可测量量。</strong>RGB 输出只能看出"偏黄"，看不出"796 张的 D/H 全挤在 1.00"。这是可以写进 motivation 的，比"浓度域更有物理意义"这种口号硬得多。</p>
+</div>
+
+<h3>指标必须换</h3>
+<p>BCI 是相邻切片，<code>edgeCorr(真值, HE) = 0.027</code>，等于没有配准。在这个前提下 PSNR/SSIM 度量的是"碰巧像不像那张错位的图"，不构成证据。建议改成：</p>
+<ul>
+<li><strong>逐图归一化后的 DAB 空间图案一致性</strong>（每张图先按自身强度归一，再比空间分布）</li>
+<li><strong>阳性面积占比</strong>与 <strong>H-score 类统计</strong>（临床 IHC 评分本来就是相对该片自身强度）</li>
+<li><strong>FID / KID</strong>（分布级，不需要配准）</li>
+<li>绝对强度不可推断 —— 作为 limitation 明确写出来，而不是藏起来</li>
+</ul>
+
+<h2><span class="n">7</span>边界：能做什么，不能做什么</h2>
+
+<table>
+<thead><tr><th>能做</th><th>不能做</th></tr></thead>
+<tbody>
+<tr>
+<td>把全局平均水平拉到接近真值（D/H 1.00 vs 0.80、DAB 0.18 vs 0.15，均差约 20%）</td>
+<td>在现有结构下实现逐图自适应（被 IN 严格禁止）</td>
+</tr>
+<tr>
+<td>证明"失效来自结构而非数据"，并给出可复现的验证方法</td>
+<td>靠调损失权重改善坍缩（权重越大越彻底）</td>
+</tr>
+<tr>
+<td>用尺度 token 恢复逐图可调性（若实验 2 有信号）</td>
+<td>在未配准数据上用 PSNR/SSIM 主张质量提升</td>
+</tr>
+</tbody>
+</table>
+
+<div class="card">
+<h4>留给下一步的一句话</h4>
+<p>先跑实验 1（1 分钟）和实验 3（几分钟），把"这是结构必然、且是谱系共性"钉死。这两条一旦成立，<strong>论文的核心结论已经拿到了</strong>，剩下的只是修法与增益。若实验 2 的 r 也很高，那 C 也能补上，故事就完整了。</p>
+</div>
+
+<p class="foot">数据来源：valB 977 张（有效 796）· 权重 r2_ep40 · 解混矩阵 M_IHC 固定 · 口径：逐图 ΣD/ΣH 后取中位数与 IQR</p>
+
+</div>
+</body>
+</html>

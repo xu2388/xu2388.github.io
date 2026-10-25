@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散染色 / 虚拟染色的方法级创新地图 · 从 SAStainDiff 出发的「可移植技巧」调研</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+.box .scroll,.card .body .scroll{border:none;border-radius:0;margin:10px 0 0}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.quote{border-left:3px solid var(--blue);background:var(--blueSoft);padding:12px 16px;margin:14px 0;border-radius:0 8px 8px 0;font-size:13.5px}
+.quote .en{font-family:var(--mono);font-size:12.3px;color:#2a3340;line-height:1.7}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.pipe{display:flex;align-items:center;justify-content:space-between;gap:3px;overflow-x:auto;padding:2px 0}
+.pcell{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
+.ptag{font-size:10.5px;line-height:1.25;white-space:nowrap;min-height:15px;text-align:center;color:var(--muted);font-weight:600}
+.ptag.t-blue{color:var(--blue)}.ptag.t-purple{color:var(--purple)}.ptag.t-green{color:var(--green)}
+.ptag.t-teal{color:var(--teal)}.ptag.t-red{color:var(--red)}.ptag.t-amber{color:var(--amber)}
+.pbox{border:1px solid var(--strong);border-radius:8px;background:#fff;padding:7px 11px;font-size:12px;font-weight:650;text-align:center;white-space:nowrap;font-family:var(--mono);color:var(--text)}
+.pbox.out{background:var(--greenSoft);border-color:#b7e0c7}
+.pbox.phys{background:var(--redSoft);border-color:#f4cfcc}
+.pbox.soft{background:var(--amberSoft);border-color:#f0dcb4}
+.psub{font-size:10px;font-weight:400;color:var(--muted);margin-top:1px;font-family:var(--sans)}
+.parrow{flex:0 0 auto;color:var(--muted);font-size:13px;font-weight:700;align-self:center;padding-bottom:0}
+.pnote{margin-top:12px;padding-top:11px;border-top:1px dashed var(--strong);font-size:12.5px;color:var(--text2);text-align:center}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+.eq{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:12px 0;font-family:var(--mono);font-size:13px;line-height:1.9;overflow-x:auto}
+@media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+ol.ref{padding-left:24px;font-size:13.5px;line-height:1.85}ol.ref li{margin-bottom:7px}
+main a{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(37,99,235,.28)}main a:hover{border-bottom-color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Method-Level Map</div>
+<div class="sub">扩散染色 / 虚拟染色的<br>「可移植技巧」调研<br>锚点工作：SAStainDiff</div>
+<a class="l1" href="#s0">0 执行摘要</a>
+<a class="l2" href="#s0-1">0.1 四个可移植组件</a>
+<a class="l2" href="#s0-2">0.2 四条改变决策的结论</a>
+<a class="l2" href="#s0-3">0.3 与上一份报告的分工</a>
+<a class="l1" href="#s1">1 「这个层面」指哪一层</a>
+<a class="l2" href="#s1-1">1.1 三层创新</a>
+<a class="l2" href="#s1-2">1.2 为什么这层最重要</a>
+<a class="l2" href="#s1-3">1.3 收录标准与证据分级</a>
+<a class="l1" href="#s2">2 SAStainDiff 代码级拆解</a>
+<a class="l2" href="#s2-1">2.1 先纠正最容易搞错的点</a>
+<a class="l2" href="#s2-2">2.2 组件 A：染色增强自监督</a>
+<a class="l2" href="#s2-3">2.3 组件 B：rescheduled sampling</a>
+<a class="l2" href="#s2-4">2.4 组件 C：输入派生初始噪声</a>
+<a class="l2" href="#s2-5">2.5 组件 D：any-size 滑窗采样</a>
+<a class="l2" href="#s2-6">2.6 论文闭源 ⇒ 拿不到的数字</a>
+<a class="l1" href="#s3">3 谱系：四个组件来自哪里</a>
+<a class="l2" href="#s3-1">3.1 (R, N) 门控来自 DDCA</a>
+<a class="l2" href="#s3-2">3.2 增强 vs 归一化：Tellez</a>
+<a class="l2" href="#s3-3">3.3 少步采样来自 DDIM</a>
+<a class="l1" href="#s4">4 同类工作比较矩阵</a>
+<a class="l2" href="#s4-1">4.1 主表</a>
+<a class="l2" href="#s4-2">4.2 三条跨表结论</a>
+<a class="l2" href="#s4-3">4.3 主动排除的工作</a>
+<a class="l1" href="#s5">5 三条分歧</a>
+<a class="l2" href="#s5-1">5.1 训练 T 与推理步数方向相反</a>
+<a class="l2" href="#s5-2">5.2 增强强度：轻、窄、还是宽</a>
+<a class="l2" href="#s5-3">5.3 归一化到底还要不要做</a>
+<a class="l1" href="#s6">6 对本课题的可移植性判定</a>
+<a class="l2" href="#s6-1">6.1 逐组件判定表</a>
+<a class="l2" href="#s6-2">6.2 关键障碍：像素级完美对齐</a>
+<a class="l2" href="#s6-3">6.3 三条可执行移植路线</a>
+<a class="l1" href="#s7">7 最小验证实验（RTX 4060）</a>
+<a class="l1" href="#s8">8 证据边界与未核实清单</a>
+<a class="l1" href="#s9">9 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Method-Level Innovation Map · 2026-10-11</div>
+<h1>扩散染色 / 虚拟染色的方法级创新地图<br>——从 SAStainDiff 出发的「可移植技巧」调研</h1>
+<p class="desc">把 SAStainDiff（BSPC 2025）逐行拆到代码级，再沿它的四条技术谱系往外扩，找出「同类工作都在改什么、哪些能搬进 H&amp;E→IHC 浓度扩散、哪些搬不动」。全部关键机制以官方代码为准；论文闭源的部分显式标为未核实。</p>
+<div class="meta">
+<span>锚点：SAStainDiff · BSPC 2025 · 107:107861</span>
+<span>代码级核实：SAStainDiff / DDCA</span>
+<span>全文核实：Tellez 2019 / StainDiffuser</span>
+<span>同类工作：8 篇</span>
+<span>核心结论：4 条</span>
+<span>未核实清单：11 条</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>执行摘要</h2>
+
+<p>你说「他这个就是在这个层面的一些创新」——这个判断是对的，而且比它看起来更重要。SAStainDiff 的价值<strong>不在</strong>它提出了什么新数学，而在于它把四个<strong>已经被验证过的工程零件</strong>拼成了一个能跑、能发、能在两个扫描仪之间互转的完整系统。这四个零件里，<strong>三个可以搬进你的 H&amp;E→IHC 浓度扩散，一个搬不动</strong>——而搬不动的那一个，恰好是它的核心卖点。</p>
+
+<h3 id="s0-1">0.1 四个可移植组件（先看这张表）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>组件</th><th>它做了什么</th><th>代码位置</th><th>对你（H&amp;E→IHC 浓度扩散）能否搬</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>A · 染色增强自监督</strong></td>
+<td>用「同一块组织的不同染色风格」造出<strong>像素级完美对齐</strong>的训练对：x₀ = 原片，condition = 增强片</td>
+<td><code>Augmentation.py</code> · <code>image_datasets.py:305-308</code></td>
+<td><span class="b bad">搬不动</span> 你连续切片有配准误差，造不出这种对</td>
+</tr>
+<tr>
+<td><strong>B · rescheduled sampling</strong></td>
+<td>推理只用 <strong>5 步 DDIM</strong>，且把起点从 t=800 挪到 <strong>t=720</strong></td>
+<td><code>script_util.py:424</code> · <code>test.sh</code></td>
+<td><span class="b high">可直接搬</span> 纯推理配置，零训练成本</td>
+</tr>
+<tr>
+<td><strong>C · 输入派生初始噪声</strong></td>
+<td>初始状态不是纯高斯，而是<strong>输入图加噪到起点</strong>（保留 7.2% 输入信号）</td>
+<td><code>test.py:101 / 153</code></td>
+<td><span class="b high">可直接搬</span> 一行改动，且与你的结构保持诉求同向</td>
+</tr>
+<tr>
+<td><strong>D · any-size 滑窗采样</strong></td>
+<td>256×256 窗口、stride 194 的重叠拼接，支持任意尺寸/WSI 级推理</td>
+<td><code>gaussian_diffusion.py:403-410</code></td>
+<td><span class="b medium">需改造</span> 你要在浓度域拼接，需处理边界一致性</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s0-2">0.2 四条改变决策的结论</h3>
+
+<div class="box key">
+<div class="bt">结论 1 · 这一层工作的真实形态是「把已验证的零件重新组合」，不是「发明新损失」</div>
+<p>SAStainDiff 的四个组件，<strong>没有一个是它原创的</strong>：染色增强来自 DDCA（Marini 等，2023）的 <code>(R, N)</code> 门控；少步 DDIM 来自 guided-diffusion；输入派生初始噪声来自 SDEdit 那一族。它的贡献是<strong>把「用增强造对」和「扩散去噪」接起来，并让它在一个新任务上工作</strong>。这直接回答了你最初的困惑——<strong>你缺的不是方法，是把已有零件对齐到你任务上的判据</strong>。</p>
+</div>
+
+<div class="box key">
+<div class="bt">结论 2 · 训练时间步分辨率与推理步数是两个相反方向的旋钮</div>
+<p>StainDiffuser（arXiv:2403.11340）的步数消融显示：<strong>训练 T 从 500 提到 4000，FID 从 54.09 降到 23.46</strong>——训练侧越多越好。而 SAStainDiff 在推理侧<strong>只用 5 步</strong>。两者不矛盾，因为它们调的是不同的东西。这正好补上了我上一份报告里「<strong>含义 C</strong>（步数少）」缺的那块实证：<strong>砍推理步数可以，砍训练 T 不行</strong>。</p>
+</div>
+
+<div class="box good">
+<div class="bt">结论 3 · 在病理领域，「改训练分布」比「改后处理」被实证证明更有价值</div>
+<p>Tellez 等（Med Image Anal 2019）在 9 个中心、4 个任务上量化后给出的结论是：<strong>任何形式的染色增强都应该一直开着</strong>；而<strong>染色归一化「不是达到高分类性能的必要条件」</strong>，在算力受限时可以省掉，代价是「可忽略的性能下降」和「显著的提速」。这与我在噪声调度报告里发现的「改 p(t) 优于改 w(t)」是<strong>同一个结构性事实</strong>：<strong>扩大训练分布 &gt; 事后校正</strong>。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">结论 4 · 你遇到的配准问题，是被同类工作<strong>明确点名但未做</strong>的空白</div>
+<p>StainDiffuser 要求 H&amp;E 与 IHC 图块「registered at pixel level accuracy」，并在局限性里逐字写下：<em>「Our study also does not assess StainDiffuser's sensitivity to registration accuracy between H&amp;E and IHC images, leaving this as a direction for future research.」</em>。同时它承认单中心训练会在跨中心时因输入分布漂移而掉性能。<strong>这两条加起来 = 你的问题定义在文献里是开放的</strong>。</p>
+</div>
+
+<h3 id="s0-3">0.3 与上一份报告的分工</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>上一份：噪声调度与时间步分配</th><th>本份：方法级创新地图</th></tr></thead>
+<tbody>
+<tr><td><strong>抽象层次</strong></td><td>概率建模层（推导、等价性、SNR/λ 统一框架）</td><td>工程实现层（代码、超参、拼接、拼接）</td></tr>
+<tr><td><strong>主要证据</strong></td><td>自然图像生成的理论论文 + ICCV 2025 Table 9</td><td>病理染色领域的代码与消融</td></tr>
+<tr><td><strong>回答的问题</strong></td><td>「改什么变量在数学上等价、在实测上更优」</td><td>「别人在代码里到底怎么写的、我能抄哪一段」</td></tr>
+<tr><td><strong>重叠点</strong></td><td colspan="2"><strong>§6「只加噪到 70%」</strong>：上一份从三个含义拆解，本份给出一个<strong>真实存在的工程实例</strong>（SAStainDiff 起点 t=720）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s1"><span class="num">1</span>「这个层面」指哪一层</h2>
+
+<p>你给我的判断是「他这个就是在这个层面的一些创新吧」。为了后面能说清「哪些能搬」，先要把「层面」定义清楚——因为同一个方法在不同层面上看，可移植性完全不同。</p>
+
+<h3 id="s1-1">1.1 三层创新</h3>
+
+<div class="grid3">
+<div class="mini">
+<div class="mt">任务层</div>
+<p><strong>改的是问题本身。</strong>例：把 H&amp;E→IHC 从 RGB 域搬到 OD 域（Kang 2025）；把染色归一化重新定义为「灰度域重建」的自监督问题（StainLUT）。</p>
+<p><strong>风险</strong>：需要重新定义监督信号，改动最大。</p>
+</div>
+<div class="mini">
+<div class="mt">方法层</div>
+<p><strong>改的是建模方式。</strong>例：用扩散替代 GAN（StainDiff, MICCAI 2023）；双扩散联合分割（StainDiffuser）；改噪声调度 / 时间步概率（上一份报告）。</p>
+<p><strong>风险</strong>：需要重训，但通常能复用现成 backbone。</p>
+</div>
+<div class="mini">
+<div class="mt">工程层 ★</div>
+<p><strong>改的是怎么把已有方法跑通。</strong>例：<code>(R,N)</code> 门控的增强合法性校验；5 步 DDIM + 起点前移；输入派生初始噪声；滑窗拼接。</p>
+<p><strong>风险</strong>：最低，多数零训练或一行改动。</p>
+</div>
+</div>
+
+<div class="box key">
+<div class="bt">SAStainDiff 的位置</div>
+<p>它是<strong>方法层（用扩散替代传统归一化）+ 工程层（四个零件）的混合体</strong>，但它的「新」几乎全在工程层。这就是为什么它能发在 BSPC 而不是 NeurIPS——<strong>它解决的问题是「这套零件在这个任务上到底能不能用、要怎么配」，而不是「有没有更好的数学」</strong>。</p>
+</div>
+
+<h3 id="s1-2">1.2 为什么这一层对你的课题最重要</h3>
+
+<p>你在上一份报告的收尾里说过：<em>「你现在并不缺少可以尝试的扩散方法，真正需要的是找出一个有证据支撑的假设，再通过最小实验判断它是否成立。」</em> 这句话在本层尤其成立，原因有三：</p>
+
+<ol>
+<li><strong>工程层零件可以立刻验证</strong>。SAStainDiff 的组件 B 和 C 都是<strong>纯推理改动</strong>，不需要重训——意味着你可以在已经跑通的 baseline 上，用几十分钟就得到「这个零件在我这儿有没有用」的答案。</li>
+<li><strong>工程层零件有真实的代码可抄</strong>。它的 <code>(R,N)</code> 门控、<code>space_timesteps</code> 接线、滑窗拼接都是可以直接读的实现，而不是需要猜的论文描述。</li>
+<li><strong>工程层零件失败得干净</strong>。如果组件 B/C 在你数据上没提升，你可以直接记为阴性，不用怀疑是不是自己的数学推错了。</li>
+</ol>
+
+<h3 id="s1-3">1.3 收录标准与证据分级</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>等级</th><th>含义</th><th>本报告中的对应</th></tr></thead>
+<tbody>
+<tr><td><span class="b high">代码级</span></td><td>我读过官方源码，机制结论由代码直接支持</td><td>SAStainDiff · DDCA（PMC 全文）</td></tr>
+<tr><td><span class="b blue">全文级</span></td><td>我读过全文/HTML 正文，结论可逐字引用</td><td>Tellez 2019（arXiv HTML）· StainDiffuser（arXiv HTML）</td></tr>
+<tr><td><span class="b medium">摘要级</span></td><td>只有摘要或权威二手描述，方法细节未核实</td><td>StainLUT（DOAJ 摘要 + 中文导读）· StainDiff（仅题录 + 一句引文）</td></tr>
+<tr><td><span class="b low">记忆级</span></td><td>前几轮已核实，本报告只做引用不做新结论</td><td>Jeong 2023 · HistDiST · Kang 2025 · TT-SaD</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">收录纪律（与上一份一致）</div>
+<p>本报告<strong>不编造任何论文、数字或结论</strong>。凡是论文闭源而我又拿不到正文的，我<strong>明确写「未核实」并给出核对清单</strong>，不用「同组其他论文大概也是这样」来补空。SAStainDiff 的消融表就属于这种情况——见 §2.6。</p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>SAStainDiff 代码级拆解</h2>
+
+<p>官方仓库 <a href="https://github.com/yhuaishui/SAStainDiff">github.com/yhuaishui/SAStainDiff</a>（基于 <code>openai/guided-diffusion</code> 改造）。以下每一条结论都能在源码里找到对应行。</p>
+
+<h3 id="s2-1">2.1 先纠正一个最容易搞错的点：x₀ 是谁、condition 是谁</h3>
+
+<p>从摘要读，你很可能以为「扩散生成的是归一化后的图，condition 是原图」。代码里的实际接线是<strong>反过来的</strong>，而且这个方向决定了它能不能搬：</p>
+
+<div class="flow">
+<div class="pipe">
+<div class="pcell"><div class="ptag t-blue">训练对（第 1 个返回值）</div><div class="pbox">image_arr<span class="psub">原片 · 规范染色</span></div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag t-green">扩散目标 x₀</div><div class="pbox out">x_start<span class="psub">被加噪的对象</span></div></div>
+<div class="parrow">+</div>
+<div class="pcell"><div class="ptag t-amber">训练对（第 2 个返回值）</div><div class="pbox soft">aug_arr<span class="psub">染色增强片</span></div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag t-purple">condition</div><div class="pbox">HE<span class="psub">拼接进 UNet</span></div></div>
+<div class="parrow">=</div>
+<div class="pcell"><div class="ptag">6 通道输入</div><div class="pbox">cat(x_t, HE)</div></div>
+</div>
+<div class="pnote">依据：<code>image_datasets.py:326</code> 返回 <code>(image_arr, aug_arr, out_dict)</code>；<code>train_util.py:162</code> 解包为 <code>batch_image, batch_HE</code>；<code>gaussian_diffusion.py:994</code> 签名 <code>training_losses(self, model, x_start, HE, t, ...)</code>；<code>unet.py:655</code> <code>x = th.cat((x, HE), 1)</code></div>
+</div>
+
+<div class="box warn">
+<div class="bt">为什么这个方向很关键</div>
+<p><strong>x₀ = 规范染色的原片</strong>，意味着模型学的是「从任意染色风格回到规范染色」。而 <strong>condition = 染色增强片</strong>，意味着推理时你喂进去的「输入图」同时充当条件。这两件事都要求<strong>输入与目标在几何上完全重合</strong>——这正是 §6.2 要展开的障碍。</p>
+</div>
+
+<p>其余训练配置（<code>train.sh</code> + <code>train.py</code> 默认值）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>项</th><th>取值</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>预测目标</td><td><code>epsilon</code></td><td><code>predict_xstart</code> 默认 False</td></tr>
+<tr><td>噪声调度</td><td><code>linear</code>，T=1000</td><td>guided-diffusion 的 scaled linear：β 从 1e−4·s 到 0.02·s，s=1000/T</td></tr>
+<tr><td><strong>时间步采样 p(t)</strong></td><td><code>uniform</code></td><td><code>train.py:75</code> 默认，<code>train.sh</code> 未覆盖 ⇒ <strong>均匀采样</strong></td></tr>
+<tr><td><strong>损失权重 w(t)</strong></td><td>无</td><td>未启用任何 SNR/最小-SNR 加权</td></tr>
+<tr><td>UNet</td><td>128 通道 · 3 res blocks · attention @32,16,8</td><td>输入 6 通道（<code>script_util.py:180</code>）</td></tr>
+<tr><td>分辨率 / batch / lr</td><td>256×256 · 16 · 1e−4</td><td>AdamW</td></tr>
+<tr><td>并行</td><td><code>mpiexec -n 2</code></td><td>训练脚本按 2 卡写</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pur">
+<div class="bt">与上一份报告的呼应</div>
+<p><strong>SAStainDiff 的 p(t) 是均匀的、w(t) 是空的。</strong>这与 HistDiST 的情况完全一致（HistDiST line 974 用 <code>torch.randint</code>、line 1009 <code>snr_gamma=None</code>）。⇒ <strong>在病理染色扩散这个子领域，「时间步分配」这一层普遍还没被动过</strong>——这既解释了为什么上一份报告找到的空白是真的，也说明这一层是低垂的果实。</p>
+</div>
+
+<h3 id="s2-2">2.2 组件 A：染色增强自监督（两种增强 + KD-tree 合法性门控）</h3>
+
+<p>这是 SAStainDiff 的核心机制。它<strong>不收集配对数据</strong>，而是把一张图<strong>重新染一次色</strong>造出「同一个结构、不同染色风格」的对。增强有两个分支，按 80/20 概率选择：</p>
+
+<div class="card">
+<div class="ch"><div><div class="title">分支 A1 · HSV 扰动（80%）</div><div class="v">Augmentation.py:123-154 · new_color_augmentation</div></div><span class="b blue">概率 0.8</span></div>
+<div class="body">
+<p>用 albumentations 对色相/饱和度/明度做随机位移，位移幅度 <code>shift_value=25</code>（训练脚本里；函数默认 70）。然后<strong>不是直接用</strong>，而是：</p>
+<ol>
+<li>对扰动后的图跑 <code>H_E_Staining()</code> 反解出它的 6 维染色矩阵；</li>
+<li>用 KD-tree 查它的 5 个最近邻，距离上限 <code>beta=0.1</code>；</li>
+<li>只有当这 5 个近邻<strong>互不相同</strong>时才接受，否则重试（最多 1000 次）。</li>
+</ol>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">分支 A2 · 染色矩阵重染（20%）</div><div class="v">Augmentation.py:157-194 · new_stain_augmentation</div></div><span class="b purple">概率 0.2</span></div>
+<div class="body">
+<p>从染色数据库里<strong>随机抽一个真实染色矩阵</strong>，做乘性 + 加性扰动，再用它<strong>把原图重新染一遍</strong>：</p>
+<pre><code>HE_ref = data[random_choice(N)]          # 从真实染色库里抽
+alpha_sig = U(1 - sigma1, 1 + sigma1)    # sigma1 = 0.7  → 乘性 [0.3, 1.7]
+beta_sig  = U(-sigma2, sigma2)           # sigma2 = 0.7  → 加性 [-0.7, 0.7]
+HE_ref = HE_ref * alpha_sig + beta_sig
+# KD-tree 合法性门控（同 A1，但阈值 stain_threshold = 1e6）
+A_np = normalizeStaining(patch_np, HE_ref)   # ← 用扰动后的矩阵重新染色</code></pre>
+<p>另有 <strong>50% 概率的 Gaussian blur</strong>（ksize 取 5–21 的奇数，σ~U(0.1, 2)），<strong>只加在 condition 上</strong>，不加在 x₀ 上。</p>
+</div>
+</div>
+
+<div class="box key">
+<div class="bt">★ 这里有一个直接和你「浓度空间建模」相关的发现</div>
+<p><code>normalizeStaining()</code> 的实现是标准 Beer–Lambert 三步：</p>
+<div class="eq">OD = −log((I + 1) / I₀)<br>C  = lstsq(HE, OD)          # 解出浓度<br>I′ = I₀ · exp(−HE_ref · C)  # 用新染色矩阵重混</div>
+<p>也就是说，<strong>SAStainDiff 的染色增强本质上是在浓度空间里换混合矩阵</strong>——和你想做的「浓度域扩散」是<strong>同一个空间对象</strong>。它不是把 RGB 调一调，而是<strong>分解出浓度、换矩阵、重渲染</strong>。这一点在论文摘要里完全看不出来，只有读代码才知道。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">染色数据库的构成（可从仓库直接确认）</div>
+<p><code>stain_augmentation/Aperio.pickle</code>（741 KB）与 <code>Hamamatsu.pickle</code>（410 KB）——两个扫描仪各一份真实染色矩阵库。README 说明可用 <code>extend_kd_tree_offline.py</code> 扩充。⇒ <strong>这个「先建库、再用库约束增强」的范式是可直接复用的</strong>。</p>
+</div>
+
+<h3 id="s2-3">2.3 组件 B：rescheduled sampling（实算起点是 t=720，不是 900）</h3>
+
+<p>这是全篇最容易被误读的一处。README 写的是：</p>
+
+<div class="quote"><span class="en">--timestep_step: The initial sampling point. Default is 900.</span></div>
+
+<p>但<strong>它并不是起点</strong>。追踪接线：<code>test.sh</code> 传 <code>--timestep_step 900 --timestep_respacing ddim5</code>，<code>script_util.py:424</code> 把它接到</p>
+
+<pre><code>use_timesteps = space_timesteps(timestep_step if not is_train else steps,
+                                timestep_respacing)</code></pre>
+
+<p>而 <code>space_timesteps(900, "ddim5")</code> 的语义是「在 <strong>[0, 900) 上找一个整数 stride，使保留点数恰好为 5</strong>」：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>配置</th><th>保留的原始时间步</th><th>实际起点</th><th>起点 ᾱ</th><th>起点 σ</th><th>起点 SNR</th><th>起点 logSNR</th></tr></thead>
+<tbody>
+<tr><td><code>timestep_step=1000</code> + <code>ddim5</code>（默认）</td><td>{0, 200, 400, 600, 800}</td><td><strong>t = 800</strong>（80%）</td><td>0.00151</td><td>0.9992</td><td>0.00151</td><td>−6.50</td></tr>
+<tr><td><code>timestep_step=900</code> + <code>ddim5</code>（论文设置）</td><td>{0, 180, 360, 540, 720}</td><td><strong>t = 720</strong>（72%）</td><td>0.00515</td><td>0.9974</td><td>0.00518</td><td>−5.26</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">ᾱ/SNR 由 guided-diffusion 的 scaled linear 调度（β: 1e−4·s → 0.02·s，s=1，T=1000）逐项累乘算出，可复现。</p>
+
+<div class="box warn">
+<div class="bt">这个数字修正有两层意义</div>
+<ol>
+<li><strong>「起点 900」是误读</strong>。真实起点是 <strong>t=720</strong>，也就是「<strong>只加噪到 72%</strong>」——<strong>这正好是你问过的那个「70%」</strong>。它属于我上一份报告里的<strong>含义 A（推理期低噪声起点）</strong>，不是含义 B（训练截断）。</li>
+<li><strong>但它和 t=800 的差别其实很小</strong>：σ 从 0.9992 变到 0.9974，σ² 都 ≈ 1。所以<strong>真正省时间的是「5 步」，不是「起点前移」</strong>。把这两个效果混为一谈，是读这篇论文时最容易犯的错。</li>
+</ol>
+</div>
+
+<h3 id="s2-4">2.4 组件 C：输入派生初始噪声（残留 7.2% 输入信号）</h3>
+
+<p><code>test.py:101</code>（any-size 分支）与 <code>test.py:153</code>（普通分支）都是同一行：</p>
+
+<pre><code>noise = diffusion.q_sample(HE_input, th.tensor(len(diffusion.betas) - 1))</code></pre>
+
+<p>因为 <code>diffusion</code> 是 <code>SpacedDiffusion</code>，<code>len(betas) = 5</code>，索引 4 对应<strong>保留的最大原始时间步</strong>。又因为 <code>SpacedDiffusion</code> 会把 betas 按 ᾱ 比例重标定，所以累计乘积恰好等于原过程的 ᾱ₇₂₀。于是初始状态是：</p>
+
+<div class="eq">x_T = √0.00515 · x_input + √0.99485 · ε ≈ 0.0718 · x_input + 0.9974 · ε</div>
+
+<p><strong>也就是说，初始状态不是纯高斯，而是「输入图加了强噪」——保留了 7.2% 的输入信号。</strong>对比：如果起点是 t=800，保留比例只有 √0.00151 = 3.9%。所以「起点前移」的真实效果是<strong>把输入信号的残留量提高约 1.85 倍</strong>。</p>
+
+<div class="box good">
+<div class="bt">为什么这个零件对你的结构保持诉求是「同向」的</div>
+<p>你一直在解决「结构保持」。这个零件给出的是一条<strong>零训练成本的软锚定</strong>：不去改损失、不去加分支，只在初始状态里塞进一点输入信号。它比 H 浓度锚定投影更弱，但<strong>成本低到可以立刻试</strong>，而且天然可调（起点越靠前，锚定越强）。</p>
+</div>
+
+<h3 id="s2-5">2.5 组件 D：any-size 滑窗采样</h3>
+
+<p><code>gaussian_diffusion.py:403-410</code>：</p>
+
+<pre><code>def overlapping_grid_indices(self, x_cond, output_size=256, r=256-62):  # r = 194
+    h_list = [i for i in range(0, h - output_size + 1, r)]; h_list.append(h - output_size)
+    w_list = [i for i in range(0, w - output_size + 1, r)]; w_list.append(w - output_size)
+    return h_list, w_list</code></pre>
+
+<p>即：256×256 窗口、stride 194（<strong>重叠 62 像素</strong>），网格点累加到 <code>x_grid_mask</code> 后归一化。目的很明确——<strong>让 256×256 训练的模型能推理任意尺寸图</strong>，不必对 WSI 做无重叠切块（无重叠切块会在边界产生接缝）。</p>
+
+<h3 id="s2-6">2.6 论文闭源 ⇒ 拿不到的数字</h3>
+
+<div class="box stop">
+<div class="bt">证据边界（必须显式说明）</div>
+<p>SAStainDiff 是 <strong>Elsevier 闭源</strong>：OpenAlex 记录 <code>oa_status: "closed"</code>、<code>any_repository_has_fulltext: false</code>；Semantic Scholar 的 <code>openAccessPdf</code> 为空。⇒ <strong>我没有读到正文，也没有看到它的消融表。</strong></p>
+<p>因此本报告对 SAStainDiff 的<strong>所有机制结论都来自官方代码</strong>（这比正文更可靠），而<strong>所有性能数字一律留空</strong>。下面是拿到 PDF 后必须优先核对的 6 件事：</p>
+<ol>
+<li>它<strong>有没有对 <code>timestep_step</code> / <code>timestep_respacing</code> 做消融</strong>？如果做了，「起点前移 vs 步数减少」哪个贡献更大就有了答案——这是本报告最想补上的数字。</li>
+<li>它<strong>有没有对染色增强强度 <code>sigma1/sigma2=0.7</code> 做消融</strong>？（对比 Tellez 的「轻增强更好」，见 §5.2。）</li>
+<li><code>(R, N) = (0.1, 5)</code> 是调出来的还是照抄的？DDCA 原文的最优是 <code>(0.05, 10)</code>，两者<strong>方向相反</strong>（更宽 + 更少邻居）。</li>
+<li>80/20 的 HSV / 重染比例是否消融过？</li>
+<li>MITOS-ATYPIA'14 / Camelyon16 / GlaS 三个数据集上分别是哪些指标、多少分？</li>
+<li>摘要说「reduces the inference time, which is comparable to mainstream methods」——<strong>对比的 mainstream 是哪些、具体秒数是多少</strong>？</li>
+</ol>
+</div>
+
+<h2 id="s3"><span class="num">3</span>谱系：四个组件分别来自哪里</h2>
+
+<p>把 SAStainDiff 的零件往上追溯，你会发现它站在三条已经很成熟的线上。<strong>知道线在哪，比知道这一个点更有用</strong>——因为你可以沿线下手，而不必只盯着这一篇。</p>
+
+<h3 id="s3-1">3.1 (R, N) 门控来自 DDCA</h3>
+
+<p>SAStainDiff 的 README 自己承认：「we performed stain augmentation referring to <em>Data_Driven_Color_Augmentation</em>」。那篇是 Marini 等，<strong>Journal of Pathology Informatics 2023, 14:100183</strong>（DOI <code>10.1016/j.jpi.2022.100183</code>，PMC9852546 开放全文）。它的核心思想一句话：</p>
+
+<div class="quote"><span class="en">"the color variation of an augmented sample A is considered admissible only if it is near to more than N admissible samples."</span><div class="small">DDCA，用 R（Euclidean 半径）与 N（最少近邻数）两个参数做增强合法性门控</div></div>
+
+<p>DDCA 的具体构造（全文可核）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>要素</th><th>DDCA 原文</th><th>SAStainDiff 的实现</th></tr></thead>
+<tbody>
+<tr><td>染色矩阵表示</td><td>2×3 矩阵（H、E 各自的 RGB 吸收分量），Macenko 法估计</td><td>同样 6 维（<code>np.reshape(HE_ref, 6)</code>）</td></tr>
+<tr><td>数据库规模</td><td><strong>&gt;200 万个 H&amp;E 矩阵</strong>（TCGA 123 中心 + ExaMode + Camelyon 4 中心 + 其他），10× 密采 → &gt;800 万样本</td><td>Aperio.pickle + Hamamatsu.pickle 两个扫描仪</td></tr>
+<tr><td>门控参数</td><td><strong>R = 0.05 · N = 10</strong>（原文调出的最优）</td><td><strong>R = 0.1 · N = 5</strong>（<code>--sigma_perturb 0.1 --nearest_neighbours 5</code>）</td></tr>
+<tr><td>对照实验</td><td>与 <strong>11 个</strong>处理染色异质性的 baseline 比较，在结肠与前列腺分类上改善对未见数据的表现</td><td>未获取正文（闭源）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">一个值得注意的偏离</div>
+<p>SAStainDiff 把 <strong>R 放宽了一倍（0.05→0.1）、N 减半（10→5）</strong>。方向上是「<strong>允许更远离真实染色的增强，但要求更少的邻居背书</strong>」——这会让增强分布更宽、更激进。这与 Tellez 的「轻增强更好」结论（见 §5.2）方向相反。是调出来的还是随手设的，<strong>只能等正文</strong>。</p>
+</div>
+
+<h3 id="s3-2">3.2 ★ 染色增强 vs 染色归一化：Tellez 的实证结论</h3>
+
+<p>如果只能从这一整条线里带走一个结论，就是这个。<strong>Tellez 等，Medical Image Analysis 2019, 58:101544</strong>（DOI <code>10.1016/j.media.2019.101544</code>；arXiv:1902.06543 有开放 HTML）。他们在 <strong>4 个任务、9 个中心</strong>上第一次量化了这两类方法的真实作用。逐字结论：</p>
+
+<div class="quote">
+<div class="en">"we found that <strong>any type of stain color augmentation</strong>, i.e. HSV or HED transformation, <strong>should always be used</strong>."</div>
+</div>
+<div class="quote">
+<div class="en">"overall top performance was achieved <strong>without the use of color normalization</strong>. This piece of evidence suggests that <strong>color normalization is not a necessary condition</strong> to achieve high classification performance in histopathology images."</div>
+</div>
+<div class="quote">
+<div class="en">"In setups with reduced computational resources, color normalization <strong>could be omitted</strong>, resulting in a <strong>negligible performance reduction</strong> and a <strong>substantial improvement in processing speed</strong>."</div>
+</div>
+<div class="quote">
+<div class="en">"we recommend tuning the intensity of the color augmentation to <strong>light or strong</strong> in case color normalization is <strong>enabled or disabled</strong>, respectively."</div>
+</div>
+
+<p>另外两条有用的细节：<strong>HED 与 HSV 增强没有显著差别</strong>（「We did not find, however, any substantial performance difference between using HED or HSV color augmentation」）；<strong>强增强与轻增强总体接近，轻增强略优</strong>，强增强在内部测试集上平均掉不到 1%。</p>
+
+<div class="box key">
+<div class="bt">这条结论为什么重要——它与上一份报告是同一个结构</div>
+<div class="scroll">
+<table>
+<thead><tr><th>领域</th><th>「改训练分布」</th><th>「事后校正」</th><th>实证结论</th></tr></thead>
+<tbody>
+<tr><td>自然图像扩散</td><td>改时间步采样 p(t)（等价于改调度）</td><td>改损失权重 w(t)</td><td>p(t) 优于 w(t)（ICCV 2025 Table 9：FID 7.98 vs 8.88）</td></tr>
+<tr><td>病理染色</td><td>染色增强（训练时扩大分布）</td><td>染色归一化（推理前确定性变换）</td><td><strong>增强必开；归一化非必要</strong>（Tellez 2019）</td></tr>
+</tbody>
+</table>
+</div>
+<p>两件事在数学上不同、在<strong>结构上同构</strong>：<strong>让模型见过多样性，比事后把输入拉齐更有效</strong>。这是本报告最值得记住的一句话。</p>
+</div>
+
+<div class="box pur">
+<div class="bt">但请注意 SAStainDiff 的定位是「反例」</div>
+<p>SAStainDiff <strong>本身是一个归一化方法</strong>，却<strong>用增强来监督</strong>。也就是说，它没有在「增强 vs 归一化」之间选边，而是<strong>把两者接成了一个循环</strong>：增强造出训练对 → 训练出归一化能力。这解释了它为什么比传统归一化泛化好，也解释了它为什么<strong>必须要求像素级对齐</strong>（因为增强是在同一张图上做的）。</p>
+</div>
+
+<h3 id="s3-3">3.3 少步采样来自 DDIM / guided-diffusion</h3>
+
+<p>组件 B 里除了「起点前移」，其余全是 <code>openai/guided-diffusion</code> 的原生能力：<code>space_timesteps</code>、<code>SpacedDiffusion</code>、<code>_WrappedModel</code> 的 timestep 重映射。SAStainDiff 的改动只是<strong>把 <code>timestep_step</code> 从 1000 改成 900</strong>（见 <code>script_util.py:424</code> 的那行三元表达式）。</p>
+
+<p>这一点值得单独说：<strong>它证明「rescheduled sampling」这个听起来像新方法的名字，实现代价是一行参数</strong>。所以在你评估「值不值得试」时，答案几乎总是「值得，因为成本近乎为零」。</p>
+
+<h2 id="s4"><span class="num">4</span>同类工作比较矩阵</h2>
+
+<h3 id="s4-1">4.1 主表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>文献</th><th>研究问题</th><th>修改对象</th><th>核心方法</th><th>理论依据</th><th>实验发现</th><th>局限</th><th>对本课题的启发</th></tr></thead>
+<tbody>
+
+<tr>
+<td><strong>SAStainDiff</strong><br>Yang 等<br>BSPC 2025, 107:107861<br><span class="b high">代码级</span></td>
+<td>跨扫描仪染色归一化，免配对数据</td>
+<td>训练监督方式 + 推理配置</td>
+<td>染色增强造自监督对；6 通道 UNet（cat(x_t, HE)）；ε 预测；5 步 DDIM，起点 t=720；输入派生初始噪声；滑窗采样</td>
+<td>无新理论；复用 DDCA 的 (R,N) 门控 + guided-diffusion</td>
+<td><strong>未获取正文</strong>（闭源）。README 称推理时间「comparable to mainstream methods」且保持性能</td>
+<td>训练对必须像素级对齐；增强是同一张图重染</td>
+<td><strong>三个零件可搬</strong>：5 步 DDIM、起点前移、输入派生初始噪声（§6.1）</td>
+</tr>
+
+<tr>
+<td><strong>DDCA</strong><br>Marini 等<br>J Pathol Inform 2023, 14:100183<br><span class="b high">代码级</span></td>
+<td>增强产生不真实染色 ⇒ 污染训练</td>
+<td>增强的合法性判据</td>
+<td>建 &gt;200 万真实染色矩阵库；增强样本只有在 R 半径内存在 &gt;N 个真实样本时才接受</td>
+<td>「临床中出现的染色变化」可用真实数据分布界定</td>
+<td>R=0.05 · N=10 最优；与 <strong>11 个</strong> baseline 比较，对未见染色异质性改善</td>
+<td>依赖大规模真实染色库；R/N 需按数据调</td>
+<td><strong>「先建库、再约束增强」的范式可直接复用</strong>到你的染色/浓度增强</td>
+</tr>
+
+<tr>
+<td><strong>Tellez 等</strong><br>Med Image Anal 2019, 58:101544<br><span class="b blue">全文级</span></td>
+<td>增强 vs 归一化到底哪个有用</td>
+<td>训练分布 vs 推理前变换</td>
+<td>4 任务 × 9 中心的受控量化；提出无监督神经归一化作为对照</td>
+<td>经验量化（首次）</td>
+<td><strong>增强必开；归一化非必要</strong>；HED≈HSV；轻增强略优于强增强</td>
+<td>任务是<strong>分类</strong>不是生成；指标是分类精度不是图像质量</td>
+<td><strong>§3.2 的核心结论</strong>：优先投在「扩大训练分布」上</td>
+</tr>
+
+<tr>
+<td><strong>StainDiffuser</strong><br>Kataria 等<br>arXiv:2403.11340<br><span class="b blue">全文级</span></td>
+<td>小数据下 H&amp;E→IHC 虚拟染色</td>
+<td>架构（多任务）</td>
+<td><strong>双扩散</strong>：一条生成 IHC、一条分割细胞；共享 H&amp;E 编码器 + 注意力耦合；分割标签由 DAB 通道阈值化自动生成</td>
+<td>多任务的任务亲和性可缓解小数据</td>
+<td>128² CK818：PSNR 21.67 / SSIM 0.676 / FID 23.46；CD3：20.64 / 0.633 / 15.83。优于 &gt;20 个 I2I baseline（CycleGAN CK818 20.4/0.66/23.85）</td>
+<td><strong>要求像素级配准</strong>；<strong>明确未评估配准精度敏感性</strong>；单中心训练跨中心掉性能</td>
+<td><strong>★ 你的问题定义在文献里是空白</strong>（§6.2）；双扩散耦合思路可参考但成本高</td>
+</tr>
+
+<tr>
+<td><strong>StainLUT</strong><br>Wang 等<br>npj Digit Med 2025, 9:1–12<br><span class="b medium">摘要级</span></td>
+<td>隐私约束下跨中心归一化</td>
+<td>问题定义（监督信号）</td>
+<td>RGB → <strong>灰度域</strong> → 可学习 <strong>3D LUT</strong> 回映射；场景感知预测器 + 内容感知编码器；四线性插值</td>
+<td><strong>同一疾病类型在不同中心的组织结构高度一致</strong></td>
+<td>vs Macenko / Khan / Vahadane / StainGAN：PSNR、SSIM 更优；UMAP 聚类消失；单中心 CNN 跨中心几乎失效，加预处理后恢复；配合 HSV 增强 ≈ 同中心水平</td>
+<td>测试分布差异大时退化；更适常见癌种 / 形态变异小</td>
+<td><strong>比 SAStainDiff 更接近你的处境</strong>：它的监督假设是「结构近似一致」而非「像素级对齐」</td>
+</tr>
+
+<tr>
+<td><strong>StainDiff</strong><br>Shen &amp; Ke<br>MICCAI 2023, LNCS:549–559<br><span class="b medium">摘要级</span></td>
+<td>染色风格迁移</td>
+<td>方法（DDPM 替代 GAN）</td>
+<td>首个用于组织学染色风格迁移的扩散模型；标题含 <strong>Self-Ensemble</strong></td>
+<td>—</td>
+<td><strong>未获取正文</strong>（闭源，摘要被出版商抹除）。引用 17–27 次</td>
+<td>方法细节未核实</td>
+<td>说明「扩散做染色迁移」这条线从 2023 年就开了；<strong>拿不到细节，不要引用其结论</strong></td>
+</tr>
+
+<tr>
+<td><strong>Jeong 等</strong><br>Comput Biol Med 2023, 152:106335<br><span class="b low">记忆级</span></td>
+<td>H&amp;E→H&amp;E 染色归一化</td>
+<td>空间（分量域）</td>
+<td>SNMF 分解成 H/E → 分量空间 score 扩散归一化 → 重叠窗 patch inpainting 拼回 WSI</td>
+<td>扩散高多样性会导致 mistransfer（把 H 与 E 搞混），分量空间可结构性消除</td>
+<td>摘要级；全文未获取（Elsevier 付费墙）</td>
+<td>任务是归一化不是 H&amp;E→IHC 生成；<strong>不能当虚拟染色先例</strong></td>
+<td>「在染色分量空间做扩散」的最早先例之一；与你「浓度域」思路同源</td>
+</tr>
+
+<tr>
+<td><strong>HistDiST</strong><br>arXiv:2505.06793<br><span class="b low">记忆级</span></td>
+<td>H&amp;E→IHC + DDIM 反演</td>
+<td>训练策略 + 推理策略</td>
+<td>SD + image conditioning；v-pred；zero-SNR 重标定；DDIM 反演提供参考</td>
+<td>—</td>
+<td>Table 2 左：加反演 SSIM 0.198→0.228 <strong>变好</strong>、FID 37.5→41.3 <strong>变坏</strong>；右：注噪越多 FID 41.7→30.1 变好、MRA 0.598→0.547 变坏</td>
+<td>代码 line 974 均匀 p(t)、line 1009 <code>snr_gamma=None</code>；正文称 γ=5 与代码不符</td>
+<td><strong>任何噪声改动必须同时报分布类 + 浓度类指标</strong></td>
+</tr>
+
+<tr>
+<td><strong>Kang 等</strong><br>arXiv:2511.01698<br><span class="b low">记忆级</span></td>
+<td>H&amp;E→IHC，OD 空间</td>
+<td>损失所在空间</td>
+<td>在 OD 空间计算损失</td>
+<td>OD 空间线性化染色叠加</td>
+<td>摘要级；零消融</td>
+<td>只在 OD 空间<strong>算损失</strong>，不在该空间生成</td>
+<td>容易被误引成「OD 空间生成先例」——它不是</td>
+</tr>
+
+<tr>
+<td><strong>TT-SaD</strong><br>Tsai 等<br>ECCV 2024<br><span class="b low">记忆级</span></td>
+<td>测试时染色适应（分类）</td>
+<td>约束所在空间</td>
+<td>DDNM 式 range–nullspace 分解，作用在每步预测端点 x̂₀；<code>A = w_t·w_s†</code></td>
+<td>OD 空间使逆问题<strong>线性化</strong>（RGB 空间非线性）</td>
+<td>适应后 SSIM 从 0.18 级提到 0.92 级；分类 ACC 85.87 vs 未适应 62.57</td>
+<td><strong>输出是分类标签，不做生成</strong></td>
+<td>「换空间使约束线性」的机制证明；<strong>不能当生成先例</strong></td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<h3 id="s4-2">4.2 三条跨表结论</h3>
+
+<div class="box key">
+<div class="bt">结论 A · 这个子领域的方法级创新集中在「怎么造监督信号」，不在「怎么改扩散」</div>
+<p>10 篇里有 4 篇（SAStainDiff、DDCA、StainLUT、Tellez）的核心贡献是<strong>监督信号的构造</strong>：增强造对（SAStainDiff）、合法性门控（DDCA）、灰度域自监督（StainLUT）、量化哪类监督更有用（Tellez）。只有 3 篇（StainDiff、StainDiffuser、Jeong）动的是扩散模型本身，而其中 <strong>2 篇闭源</strong>。</p>
+</div>
+
+<div class="box key">
+<div class="bt">结论 B · 「结构一致性」这个假设的强度，决定了方法能不能用在你身上</div>
+<div class="scroll">
+<table>
+<thead><tr><th>方法</th><th>它对输入/目标关系的假设</th><th>与你的连续切片（有配准误差）的匹配度</th></tr></thead>
+<tbody>
+<tr><td>SAStainDiff</td><td><strong>像素级完全一致</strong>（同一张图重染）</td><td><span class="b bad">不匹配</span></td></tr>
+<tr><td>StainDiffuser</td><td><strong>像素级配准</strong>（原文要求 registered at pixel level accuracy）</td><td><span class="b bad">不匹配</span>（且作者承认未测敏感性）</td></tr>
+<tr><td>StainLUT</td><td><strong>同疾病类型的组织结构近似一致</strong>（跨中心，无对齐）</td><td><span class="b high">最匹配</span></td></tr>
+<tr><td>HistDiST / Kang</td><td>配对切片（假定可配准）</td><td><span class="b medium">部分匹配</span></td></tr>
+</tbody>
+</table>
+</div>
+<p>⇒ <strong>StainLUT 的监督假设（结构近似一致、无需对齐）在原理上比 SAStainDiff 更贴近你</strong>。虽然它不是扩散模型，但它的<strong>假设形式</strong>值得移植：把「结构一致性」当监督信号，而不是把「像素一致性」当监督信号。</p>
+</div>
+
+<div class="box key">
+<div class="bt">结论 C · 这个子领域的「时间步」这一层基本没被动过</div>
+<p>SAStainDiff 用 <strong>均匀 p(t) + 无加权</strong>；HistDiST 也是（<code>torch.randint</code> + <code>snr_gamma=None</code>）。<strong>两篇都是这个领域里调度配置最讲究的工作，而它们的 p(t) 都是最朴素的均匀分布。</strong>这与上一份报告的结论一致：这是真实存在的空白，且改动成本低。</p>
+</div>
+
+<h3 id="s4-3">4.3 主动排除的工作与理由</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>排除理由</th></tr></thead>
+<tbody>
+<tr><td>StainNet（ICCV 2021 等）</td><td>1×1 卷积的确定性颜色映射，无扩散成分；作为 baseline 提一句即可</td></tr>
+<tr><td>StainGAN / CAGAN</td><td>GAN 路线，被 Tellez 与 StainLUT 均作为对照；与「扩散方法级创新」主题不符</td></tr>
+<tr><td>SAStainDiff 的「any-size 采样」单列</td><td>它是工程细节而非独立工作，已并入 §2.5</td></tr>
+<tr><td>自然图像的 SDEdit / DDIM</td><td>已在上一份报告 §7 详述，本报告只引用不重复</td></tr>
+<tr><td>StainDiffuser 的 &gt;20 个 I2I baseline 逐个</td><td>超出「方法级创新」范围；需要时按 §4.1 表中的 CycleGAN/CUT/FastCUT/UNIT 数字引用</td></tr>
+<tr><td>GRIDUMM（arXiv:2609.38465）</td><td>域是统一多模态模型，不是病理扩散；只能作方法论类比（已在上一份报告说明）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s5"><span class="num">5</span>三条分歧</h2>
+
+<p>把 10 篇放在一起看，有三处结论<strong>方向不一致</strong>。它们不是「有人错了」，而是<strong>调的是不同旋钮</strong>。分清楚这三处，你才不会在实验设计里把两个效果搅在一起。</p>
+
+<h3 id="s5-1">5.1 训练 T 越多越好，推理步数却能砍到 5</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>证据</th><th>调的是什么</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td>StainDiffuser Table 3（CK818，128²）</td><td><strong>训练时的扩散步数 T</strong></td><td>500 → PSNR 15.89 / SSIM 0.544 / <strong>FID 54.09</strong>；1000 → 18.11 / 0.605 / 30.18；2000 → 17.01 / 0.578 / 43.80；<strong>4000 → 21.67 / 0.676 / 23.46</strong> ⇒ <strong>越多越好</strong>（4000 最优）</td></tr>
+<tr><td>StainDiffuser Table 9（64²）</td><td>同上</td><td>CK818：250 → 22.97/0.782/27.25；1000 → 22.83/0.775/22.86；4000 → 23.08/0.782/22.09。<strong>非单调</strong>（2000 反而差）⇒ 不是「无脑加」，需调</td></tr>
+<tr><td>SAStainDiff <code>test.sh</code></td><td><strong>推理时的 DDIM 步数</strong></td><td><code>ddim5</code> ⇒ 只用 <strong>5 步</strong>，论文称性能保持</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">必须分清：这是两个不同的旋钮</div>
+<p><strong>训练 T</strong> 决定的是「模型见过多少个不同的噪声水平、噪声水平的分辨率有多细」；<strong>推理步数</strong> 决定的是「用多少个离散点去积分 PF-ODE」。前者是<strong>模型能力</strong>问题，后者是<strong>数值积分精度</strong>问题。</p>
+<p>所以两条结论<strong>并不冲突</strong>，而且合起来给出一个很实用的组合：<strong>训练时把 T 开大（4000 级），推理时砍到 5 步。</strong>这正是 StainDiffuser 自己在局限里说的方向——它说推理慢「could be addressed by exploring fast-sampling diffusion methods」，而 SAStainDiff 恰好就是那个答案。</p>
+</div>
+
+<div class="box pur">
+<div class="bt">对上你上一份报告的映射</div>
+<div class="scroll">
+<table>
+<thead><tr><th>你的「70%」含义</th><th>本报告中的对应证据</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong> 推理期低噪声起点（SDEdit 式）</td><td>SAStainDiff 起点 t=720</td><td><span class="b high">有工程实例</span>，且是它的「rescheduled sampling」的一部分</td></tr>
+<tr><td><strong>B</strong> 训练时截断高噪段</td><td><strong>无正面证据</strong>；StainDiffuser 反而显示训练 T 要开到 4000</td><td><span class="b bad">不建议</span>——间接证据方向相反</td></tr>
+<tr><td><strong>C</strong> 反向步数少但范围全</td><td>SAStainDiff <code>ddim5</code></td><td><span class="b high">有工程实例</span>，是它省时间的真正来源</td></tr>
+</tbody>
+</table>
+</div>
+<p>⇒ 你上一份报告里「含义 A 值得做便宜的 sanity check、含义 B 不值得」的判断，<strong>在这一份里得到了独立的工程实例支持</strong>。</p>
+</div>
+
+<h3 id="s5-2">5.2 增强强度：轻、窄、还是宽</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>来源</th><th>强度设置</th><th>结论方向</th></tr></thead>
+<tbody>
+<tr><td>Tellez 2019（全文）</td><td>轻 vs 强</td><td><strong>轻增强略优</strong>；强增强在内部测试集平均掉 &lt;1%；建议「归一化开启时用轻增强、关闭时用强增强」</td></tr>
+<tr><td>DDCA（全文）</td><td>R=0.05 · N=10</td><td><strong>收窄</strong>：只接受靠近真实染色分布的增强</td></tr>
+<tr><td>SAStainDiff（代码）</td><td>σ1=σ2=0.7（乘性 [0.3,1.7]）· R=0.1 · N=5</td><td><strong>放宽</strong>：扰动幅度大、门控松</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">这处分歧是真实的，而且没有被任何一篇正面解决</div>
+<p>三方给的参数方向<strong>互不相同</strong>：Tellez 说轻、DDCA 说窄、SAStainDiff 说宽。可能的原因是<strong>任务不同</strong>——Tellez 做分类（要域不变特征），DDCA 做分类（要真实分布），SAStainDiff 做<strong>生成/归一化</strong>（要覆盖足够大的风格空间才能外推）。</p>
+<p>对你的启发：<strong>你的任务是生成，所以倾向「宽」；但你的数据有配准误差，宽增强可能放大伪影。</strong>这是一个需要你自己测的交叉点，也是 §7 实验要覆盖的一项。</p>
+</div>
+
+<h3 id="s5-3">5.3 归一化到底还要不要做</h3>
+
+<div class="box">
+<div class="bt">三种立场并存</div>
+<ul>
+<li><strong>Tellez 2019</strong>：归一化「不是必要条件」，算力受限时可省，代价可忽略。</li>
+<li><strong>StainLUT 2025</strong>：归一化是<strong>核心价值</strong>——它让单中心模型在跨中心时恢复可用（「仅用中心 1 数据训练的原始 CNN 在中心 2 的肿瘤定位任务中几乎完全失效，采用 StainLUT 后能准确识别大多数肿瘤区域」）。</li>
+<li><strong>SAStainDiff 2025</strong>：归一化是<strong>任务本身</strong>，但用增强来监督它。</li>
+</ul>
+</div>
+
+<p>这不是矛盾，是<strong>「谁在训练、谁在推理」的区别</strong>：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>场景</th><th>归一化的作用</th><th>对应文献</th></tr></thead>
+<tbody>
+<tr><td>你自己训练模型、自己用</td><td>可用<strong>增强</strong>替代（模型自己学会不变性）</td><td>Tellez（分类任务）</td></tr>
+<tr><td>别人训好的模型、你要用</td><td>归一化是<strong>唯一手段</strong>（你改不了模型）</td><td>StainLUT（跨中心部署）</td></tr>
+<tr><td>你要生成新图</td><td>归一化就是<strong>输出目标</strong></td><td>SAStainDiff</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>⇒ <strong>你的处境属于第一类</strong>（你要训自己的 H&amp;E→IHC 模型）。所以 Tellez 的结论对你直接适用：<strong>先把预算投在增强/训练分布上，而不是先做归一化预处理</strong>。这也和你「不做过多辅助损失、不做大架构改动」的约束一致——增强是<strong>数据管线</strong>里的改动，不是模型里的。</p>
+
+<h2 id="s6"><span class="num">6</span>对本课题的可移植性判定</h2>
+
+<h3 id="s6-1">6.1 逐组件判定表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>组件</th><th>判定</th><th>移植代价</th><th>需要改什么</th><th>风险</th></tr></thead>
+<tbody>
+
+<tr>
+<td><strong>B · 5 步 DDIM + 起点前移</strong></td>
+<td><span class="b high">可直接用</span></td>
+<td><strong>零训练</strong>（改推理配置）</td>
+<td>无。你的 baseline 若用 DDIM，直接把步数与起点设成 <code>5</code> / <code>t=720</code> 级别的值即可</td>
+<td>低。风险是「性能掉了但你没测」——所以必须同时记录质量指标</td>
+</tr>
+
+<tr>
+<td><strong>C · 输入派生初始噪声</strong></td>
+<td><span class="b high">可直接用</span></td>
+<td><strong>零训练</strong>（一行）</td>
+<td>把 <code>x_T = randn_like()</code> 换成 <code>q_sample(x_input, T_start)</code>。注意你的 x_input 是 H&amp;E、输出是 IHC，<strong>结构可借、颜色不可借</strong></td>
+<td>中。若配准误差大，注入的输入结构<strong>会把错位也一起注入</strong>——这正是需要测的</td>
+</tr>
+
+<tr>
+<td><strong>A · 染色增强自监督</strong></td>
+<td><span class="b bad">搬不动（原样）</span></td>
+<td>—</td>
+<td>原方法要求「同一张图重染」，你做不到</td>
+<td>—</td>
+</tr>
+
+<tr>
+<td><strong>A′ · 增强的合法性门控</strong>（从 A 里剥离）</td>
+<td><span class="b medium">需改造</span></td>
+<td>中（要建库）</td>
+<td>把「染色矩阵库」换成<strong>你自己的浓度/DAB-FOD 分布库</strong>；把门控用在你的增强上</td>
+<td>中。你的「真实分布」本身要靠无配准的统计量刻画（均值 + 分位数 + 直方图），不是单点</td>
+</tr>
+
+<tr>
+<td><strong>D · any-size 滑窗采样</strong></td>
+<td><span class="b medium">需改造</span></td>
+<td>低</td>
+<td>直接搬 stride 与 mask 累加逻辑；但要在<strong>浓度域</strong>做边界处理（浓度不可简单平均，建议按 mask 加权后再反渲染）</td>
+<td>低。主要是边界一致性</td>
+</tr>
+
+<tr>
+<td><strong>Tellez 的「增强优先」原则</strong></td>
+<td><span class="b high">可直接用（作为决策原则）</span></td>
+<td>低</td>
+<td>把增强强度当成一个<strong>受控变量</strong>纳入消融，而不是拍一个值</td>
+<td>低</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<h3 id="s6-2">6.2 ★ 关键障碍：SAStainDiff 的配对是像素级完美对齐</h3>
+
+<p>这是本报告最重要的一条判断，值得单独展开。</p>
+
+<div class="flow">
+<div class="pipe">
+<div class="pcell"><div class="ptag t-blue">SAStainDiff 的数据生成</div><div class="pbox">裁同一块 patch</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag t-purple">几何变换（同时作用）</div><div class="pbox">crop / flip / rot90</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag t-amber">只改颜色</div><div class="pbox soft">重染 / HSV</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag t-green">结果</div><div class="pbox out">像素级对齐的 (x₀, cond)</div></div>
+</div>
+<div class="pnote">依据：<code>image_datasets.py:298-308</code> —— <code>image_arr</code> 先做 crop 与 <code>imgaug_transform</code>，<code>aug_arr</code> 再从<strong>已变换的</strong> <code>image_arr</code> 派生 ⇒ 两者几何完全一致，差异<strong>只在颜色</strong></div>
+</div>
+
+<div class="box stop">
+<div class="bt">这意味着什么</div>
+<p>SAStainDiff 的「自监督」之所以成立，是因为它<strong>人为制造了一个像素级配准的数据集</strong>。它的监督信号强度等同于有配对数据——只是配对是合成的。</p>
+<p><strong>你的连续切片没有这个性质。</strong>你的 H&amp;E 与 IHC 之间存在空间偏移与配准误差，所以：</p>
+<ul>
+<li>你<strong>无法</strong>用「重染同一张图」造对；</li>
+<li>你<strong>无法</strong>假定逐像素监督可靠；</li>
+<li>因此 SAStainDiff 的<strong>核心机制（组件 A）在你这里不成立</strong>——不是实现难度问题，是<strong>前提不成立</strong>。</li>
+</ul>
+</div>
+
+<div class="box key">
+<div class="bt">但这恰恰是一个可写的机会</div>
+<p>StainDiffuser 逐字承认：<em>「Our study also does not assess StainDiffuser's sensitivity to registration accuracy between H&amp;E and IHC images, leaving this as a direction for future research.」</em></p>
+<p>而 StainLUT 给出了另一条路：把监督假设从<strong>「像素一致」降级为「结构近似一致」</strong>（它的依据是「不同中心同一疾病类型的组织样本在形态学结构上具有高度一致性」）。<strong>你的连续切片正处在两者之间</strong>：比跨中心更接近（同一块组织的相邻切面），比配准切片更远（有偏移）。</p>
+<p>⇒ <strong>「配准误差下，监督假设该降到什么粒度」是一个被点名但没人做的题。</strong>而它需要的第一个实验恰好是零成本的（§7）。</p>
+</div>
+
+<h3 id="s6-3">6.3 三条可执行移植路线</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">路线 1 · 零成本推理侧移植（建议最先做）</div><div class="v">对应组件 B + C · 不改模型、不重训</div></div><span class="b high">成本最低</span></div>
+<div class="body">
+<p><strong>假设</strong>：在你的 baseline 上，把推理步数砍到 5 步量级、并把初始状态换成「输入图加噪」，性能下降可忽略，且结构指标改善。</p>
+<p><strong>做法</strong>：在<strong>冻结的</strong> baseline 检查点上做 2×2 对照：{步数 5 / 步数 50} × {纯高斯初始 / 输入派生初始}。四个格子跑同一批测试图。</p>
+<p><strong>为什么先做</strong>：不需要训练、不需要新代码（只改采样入口）、结果当天可见。<strong>即使全阴性也有价值</strong>——你会知道「推理侧还有没有免费的午餐」。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">路线 2 · 把「增强合法性门控」搬到浓度域</div><div class="v">对应 DDCA 的 (R, N) 范式 · 需建库</div></div><span class="b medium">中等成本</span></div>
+<div class="body">
+<p><strong>假设</strong>：你现有的增强（若有）会产生不真实的浓度分布，收窄它可改善对未见样本的表现。</p>
+<p><strong>做法</strong>：先用你<strong>已有的无配对 IHC 数据</strong>统计出一个浓度分布库（每个 patch 的 DAB/FOD 的均值 + 分位数 + 直方图向量）；对每个增强样本，只有当它在库中的近邻数超过阈值时才接受。</p>
+<p><strong>关键差异</strong>：SAStainDiff/DDCA 的库是<strong>6 维单点</strong>（染色矩阵），你的库必须是<strong>分布级</strong>（因为你有配准误差，单点不可靠）。这是你相对原方法<strong>必须做出的改动</strong>，也是可以写进论文的地方。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">路线 3 · 用「结构近似一致」替代「像素一致」做监督</div><div class="v">对应 StainLUT 的假设降级 · 改动最大</div></div><span class="b bad">高成本</span></div>
+<div class="body">
+<p><strong>假设</strong>：在配准误差存在时，以<strong>区域级/结构级</strong>一致性（而非逐像素）作为监督，能得到更可靠的 H&amp;E→IHC 映射。</p>
+<p><strong>做法</strong>：把逐像素重建损失替换/补充为「结构级一致性」（例如核掩膜 Dice、区域浓度排序一致性），并用 §6.2 提到的人工劣化配准做对照，验证「监督粒度 vs 配准误差」的关系。</p>
+<p><strong>风险</strong>：这条路线与你的「不做过多辅助损失」约束有张力。<strong>建议先把它当作路线 1/2 结果不理想时的备选，而不是起点。</strong></p>
+</div>
+</div>
+
+<div class="box pur">
+<div class="bt">三条路线的推荐顺序</div>
+<p><strong>路线 1 决定「推理侧有没有免费的午餐」；路线 2 决定「增强该不该收窄」；路线 3 决定「监督粒度要不要改」。</strong>三者成本递增、假设强度递增。不要同时做——否则你无法归因。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>最小验证实验（RTX 4060）</h2>
+
+<p>本节只写<strong>路线 1</strong>——因为它是唯一「零训练、当天可出结果」的实验，也最符合你「先找有证据支撑的假设再最小验证」的要求。</p>
+
+<h3>7.1 前置：先冻结 baseline</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>必须冻结的项</th><th>为什么要冻</th></tr></thead>
+<tbody>
+<tr><td>检查点（同一份权重）</td><td>本实验不改模型，只改推理入口；换权重就失去可比性</td></tr>
+<tr><td>噪声调度 β / ᾱ</td><td>本实验不碰调度（那是路线 2 之后的事）</td></tr>
+<tr><td>训练时的 p(t) 与 w(t)</td><td>同上，保持均匀 + 无加权</td></tr>
+<tr><td>测试集与随机种子</td><td>否则 4 个格子的差异分不清是配置还是采样噪声</td></tr>
+<tr><td>评测脚本与指标定义</td><td>尤其「浓度类指标」的口径（见 7.3）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.2 实验矩阵（2×2，四个格子）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>格子</th><th>推理步数</th><th>初始状态</th><th>它回答什么</th></tr></thead>
+<tbody>
+<tr><td><strong>E0（对照）</strong></td><td>50 步</td><td>纯高斯 <code>randn_like()</code></td><td>基线</td></tr>
+<tr><td><strong>E1</strong></td><td><strong>5 步</strong></td><td>纯高斯</td><td>「砍步数」单独的影响（= 你的「含义 C」）</td></tr>
+<tr><td><strong>E2</strong></td><td>50 步</td><td><strong>输入派生</strong> <code>q_sample(x_input, t_start)</code></td><td>「输入锚定」单独的影响（= 你的「含义 A/C 的锚定部分」）</td></tr>
+<tr><td><strong>E3</strong></td><td><strong>5 步</strong></td><td><strong>输入派生</strong></td><td>两者的组合（SAStainDiff 的实际配置）</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>起点 t_start 怎么选</strong>：不要直接抄 720。按 <strong>保留信号比例</strong>来定更稳：SAStainDiff 的 √ᾱ ≈ 0.072。建议扫 <code>t_start</code> 使 √ᾱ ∈ {0.03, 0.07, 0.15} 三个档（对应不同的锚定强度），因为<strong>你的结构与 SAStainDiff 的染色归一化任务不同，最优锚定强度未必一样</strong>。</p>
+
+<div class="box warn">
+<div class="bt">RTX 4060 上的算力预算：只给方法，不给数字</div>
+<p>我<strong>无法可靠估计</strong>你的模型单步耗时（取决于分辨率、通道数、是否 latent）。所以这里给的是<strong>测量模板</strong>，不是时长：</p>
+<pre><code>1. 先跑 E0 一次，记录：总秒数 / 图数 / 单步秒数
+2. 单步秒数 × 步数 = 每张图的推理成本
+3. 用 step 2 的结果外推 4 个格子 × 测试集大小的总成本
+4. 只有当 4 个格子的总成本 &lt; 一次完整训练成本时，这个实验才划算</code></pre>
+<p>参照量级：SAStainDiff 用 <strong>5 步</strong> 而非 1000 步，理论上推理成本差 <strong>200 倍</strong>——但这是它论文的说法，<strong>具体秒数我没有拿到</strong>（见 §2.6 第 6 条）。</p>
+</div>
+
+<h3>7.3 必须同时记录的两组指标</h3>
+
+<p>这一条是 HistDiST 用一手数据教给我们的（见 §4.1）：<strong>加 DDIM 反演使 SSIM 变好、FID 变坏；注噪越多 FID 变好、MRA 变坏</strong>。只看一组，你一定会把「变了」读成「好了」。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>指标族</th><th>它能支持什么</th><th>它不能支持什么</th><th>配准误差下怎么办</th></tr></thead>
+<tbody>
+<tr><td><strong>分布类</strong><br>（FID / KID / Precision / Recall）</td><td>「生成的 IHC 在统计上像不像真实 IHC」</td><td>不能说明结构对不对、浓度对不对</td><td>可用，因为它是集合级统计，不依赖逐像素对齐</td></tr>
+<tr><td><strong>浓度类</strong><br>（DAB/FOD 均值 · 标准差 · 高分位数 · 直方图）</td><td>「表达强度分布对不对」——这是病理上最有意义的量</td><td>不能说明空间分布对不对</td><td><strong>首选</strong>。对配准误差最鲁棒</td></tr>
+<tr><td><strong>结构类</strong><br>（核掩膜 Dice / 区域一致性）</td><td>「组织结构有没有被破坏」</td><td>不能说明染色对不对</td><td>用<strong>分割掩膜</strong>而非原图比，可吸收部分配准误差</td></tr>
+<tr><td><strong>逐像素类</strong><br>（PSNR / SSIM）</td><td>参考值，便于和文献比</td><td><strong>在配准误差下会被系统性低估</strong>，不可作为主判据</td><td>只作辅助；务必与上面三类同报</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">判读规则（事先定好，避免事后解释）</div>
+<ol>
+<li><strong>E1 vs E0</strong>：分布类 + 浓度类<strong>都没有显著变差</strong> ⇒ 5 步可用，拿到免费提速。</li>
+<li><strong>E2 vs E0</strong>：结构类<strong>显著变好</strong>而浓度类不变差 ⇒ 输入锚定有效。</li>
+<li><strong>E3 vs 全部</strong>：若 E3 ≈ E0 或更好 ⇒ SAStainDiff 的配置在你的任务上成立，可以写进方法。</li>
+<li><strong>止损</strong>：若 E1/E2/E3 全部在分布类或浓度类上显著变差 ⇒ <strong>记为阴性，直接放弃推理侧移植</strong>，转路线 2。不要为了「让它work」去调参。</li>
+</ol>
+</div>
+
+<div class="box stop">
+<div class="bt">两条必须做的控制</div>
+<ul>
+<li><strong>两个种子</strong>：推理采样有随机性（即使 DDIM 确定性，输入派生初始噪声也引入了输入依赖）。至少跑两个种子确认差异不是噪声。</li>
+<li><strong>人工劣化配准对照</strong>：对同一批测试图，人工施加不同幅度的空间偏移（如 0 / 2 / 5 / 10 像素），看 E2/E3 的「结构类指标收益」是否<strong>随偏移增大而衰减</strong>。这一条能直接验证 §6.2 的假设，而且几乎零成本。</li>
+</ul>
+</div>
+
+<h2 id="s8"><span class="num">8</span>证据边界与未核实清单</h2>
+
+<h3>8.1 阅读深度</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>文献</th><th>我实际读到了什么</th><th>本报告中它的结论强度</th></tr></thead>
+<tbody>
+<tr><td>SAStainDiff</td><td><strong>官方源码全文</strong>（8 个文件）+ 摘要（你提供）+ README + 题录</td><td>机制结论<strong>强</strong>（代码级）；性能数字<strong>无</strong></td></tr>
+<tr><td>DDCA</td><td><strong>PMC 开放全文</strong>（约 80 KB 正文）</td><td><strong>强</strong></td></tr>
+<tr><td>Tellez 2019</td><td><strong>arXiv HTML 全文</strong>（约 58 KB 正文）</td><td><strong>强</strong>，结论可逐字引用</td></tr>
+<tr><td>StainDiffuser</td><td><strong>arXiv HTML 全文</strong>（约 87 KB 正文，含消融表）</td><td><strong>强</strong>，数字来自其 Table 3 / 9 与主表</td></tr>
+<tr><td>StainLUT</td><td>DOAJ 摘要 + 中文导读 + 题录</td><td><strong>中</strong>；方法细节（LUT 维度、损失形式）未核实</td></tr>
+<tr><td>StainDiff</td><td>仅题录（DOI/DBLP/引用数）+ 一句正文引文</td><td><strong>弱</strong>；<strong>不引用其结论</strong></td></tr>
+<tr><td>Jeong 2023 / HistDiST / Kang 2025 / TT-SaD</td><td>前几轮已核实，本报告仅引用</td><td>沿用前份报告的等级</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>8.2 尚未核实（11 条）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>未核实项</th><th>影响</th><th>怎么补</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>SAStainDiff 是否对 <code>timestep_step</code> / <code>timestep_respacing</code> 做了消融</td><td>决定「起点前移」与「步数减少」哪个贡献更大</td><td>拿到 PDF 查消融表</td></tr>
+<tr><td>2</td><td>SAStainDiff 的全部性能数字（SSIM/PSNR/FID/分类/分割）</td><td>无法判断它是否真的优于 baseline</td><td>同上</td></tr>
+<tr><td>3</td><td><code>(R,N)=(0.1,5)</code> 是调出来的还是照抄 DDCA</td><td>决定增强强度该往哪个方向调</td><td>同上</td></tr>
+<tr><td>4</td><td>80/20 的 HSV / 重染比例是否消融</td><td>决定两个增强分支的取舍</td><td>同上</td></tr>
+<tr><td>5</td><td>它对比的「mainstream methods」具体是哪些、秒数多少</td><td>决定「5 步」到底省了多少</td><td>同上</td></tr>
+<tr><td>6</td><td>StainDiff 的 Self-Ensemble 到底是什么机制</td><td>若有效，可能是一个可移植零件</td><td>需机构订阅或作者提供</td></tr>
+<tr><td>7</td><td>StainLUT 的 LUT 维度与损失形式</td><td>决定它能否被改造成扩散版本</td><td>Nature 正文 + <code>XuLabZJU/StainLUT</code> 代码</td></tr>
+<tr><td>8</td><td>StainDiffuser 的推理步数（它只报了<strong>训练</strong> T 的消融）</td><td>无法判断它是否也用了少步采样</td><td>查其代码（论文称「will be publicly released upon acceptance」）</td></tr>
+<tr><td>9</td><td>StainDiffuser 的配准误差敏感性（作者自陈未做）</td><td><strong>这就是你的机会</strong></td><td>需要你自己做</td></tr>
+<tr><td>10</td><td>Tellez 的结论在<strong>生成任务</strong>上是否同样成立</td><td>它测的是分类，你的任务是生成</td><td>需要你自己做（可并入 §7 的 E0/E1 对照）</td></tr>
+<tr><td>11</td><td>病理扩散工作里「输入派生初始噪声」是否被系统用过</td><td>若无人做，这是可写点</td><td>需再检索（本轮未覆盖全部）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">一句话总结证据状态</div>
+<p>本报告的<strong>机制层面结论全部有代码或全文支持</strong>；<strong>性能层面结论主要来自 StainDiffuser 与 Tellez</strong>；<strong>SAStainDiff 自己的数字全部缺失</strong>（闭源）。请勿在论文里引用 SAStainDiff 的任何具体指标——我拿不到，你也不该猜。</p>
+</div>
+
+<h2 id="s9"><span class="num">9</span>参考文献</h2>
+
+<h4>本报告的核心（代码级 / 全文级）</h4>
+<ol class="ref">
+<li>Yang, H., Lyu, M., Yan, S., Zhong, T., Li, J., Xu, T., Xie, H., Liu, S. <strong>SAStainDiff: Self-supervised stain normalization by stain augmentation using denoising diffusion probabilistic models.</strong> <em>Biomedical Signal Processing and Control</em> <strong>107</strong> (2025) 107861. DOI: <a href="https://doi.org/10.1016/j.bspc.2025.107861">10.1016/j.bspc.2025.107861</a> · DBLP: journals/bspc/YangLYZLXXL25 · 官方代码：<a href="https://github.com/yhuaishui/SAStainDiff">github.com/yhuaishui/SAStainDiff</a> · <span class="b bad">闭源</span>（OpenAlex <code>oa_status: closed</code>）</li>
+<li>Marini, N., Otálora, S., Wodziński, M., Müller, H., Atzori, M. <strong>Data-driven color augmentation for H&amp;E stained images in computational pathology.</strong> <em>Journal of Pathology Informatics</em> <strong>14</strong> (2023) 100183. DOI: <a href="https://doi.org/10.1016/j.jpi.2022.100183">10.1016/j.jpi.2022.100183</a> · 开放全文：<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9852546/">PMC9852546</a> · 代码：<a href="https://github.com/ilmaro8/Data_Driven_Color_Augmentation">ilmaro8/Data_Driven_Color_Augmentation</a></li>
+<li>Tellez, D., Litjens, G., Bándi, P., Bulten, W., Bokhorst, J.-M., Ciompi, F., van der Laak, J. <strong>Quantifying the effects of data augmentation and stain color normalization in convolutional neural networks for computational pathology.</strong> <em>Medical Image Analysis</em> <strong>58</strong> (2019) 101544. DOI: <a href="https://doi.org/10.1016/j.media.2019.101544">10.1016/j.media.2019.101544</a> · 开放全文：<a href="https://arxiv.org/abs/1902.06543">arXiv:1902.06543</a></li>
+<li>Kataria, T., Knudsen, B., Elhabian, S. Y. <strong>StainDiffuser: MultiTask Diffusion Model for Virtual Staining.</strong> arXiv:<a href="https://arxiv.org/abs/2403.11340">2403.11340</a>（v2, 2025-05-20；v1 标题为 “MultiTask Dual Diffusion Model”）。<span class="b medium">会议出处未在 OpenAlex 核实</span></li>
+</ol>
+
+<h4>同类工作（摘要级 / 记忆级）</h4>
+<ol class="ref" start="5">
+<li>Wang, J., Yu, J., Yang, H., Zhu, Y., Jiang, L., Li, X., Zhang, J., Xu, Y. <strong>Self-supervised stain normalization empowers privacy-preserving and model generalization in digital pathology.</strong> <em>npj Digital Medicine</em> <strong>9</strong>(1) (2025) 1–12. DOI: <a href="https://doi.org/10.1038/s41746-025-02196-8">10.1038/s41746-025-02196-8</a> · 摘要：<a href="https://doaj.org/article/406b0c1aeef74f35ad09c86912b9dea6">DOAJ</a> · 代码：<a href="https://github.com/XuLabZJU/StainLUT">XuLabZJU/StainLUT</a></li>
+<li>Shen, Y., Ke, J. <strong>StainDiff: Transfer Stain Styles of Histology Images with Denoising Diffusion Probabilistic Models and Self-Ensemble.</strong> MICCAI 2023, LNCS, 549–559. DOI: <a href="https://doi.org/10.1007/978-3-031-43987-2_53">10.1007/978-3-031-43987-2_53</a> · DBLP: <a href="https://dblp.org/rec/conf/miccai/ShenK23">conf/miccai/ShenK23</a> · <span class="b bad">闭源，摘要被出版商抹除</span></li>
+<li>Jeong, J. 等 <strong>（SNMF + score 扩散的 H&amp;E 染色归一化）</strong> <em>Computers in Biology and Medicine</em> <strong>152</strong> (2023) 106335. DOI: <a href="https://doi.org/10.1016/j.compbiomed.2022.106335">10.1016/j.compbiomed.2022.106335</a> · <span class="b low">付费墙，全文未获取</span>（题录更正见 <code>MEMORY_三篇精读.md</code>）</li>
+<li>HistDiST: Histopathological Diffusion-based Stain Transfer. arXiv:<a href="https://arxiv.org/abs/2505.06793">2505.06793</a> · 代码：<a href="https://github.com/ErikGro/HistDiST">ErikGro/HistDiST</a>（本报告引用的 Table 2 与代码行号见 <code>MEMORY_HistDiST审查.md</code>）</li>
+<li>Kang 等 <strong>（OD 空间 H&amp;E→IHC 虚拟染色）</strong> arXiv:<a href="https://arxiv.org/abs/2511.01698">2511.01698</a>（2025-11-03）</li>
+<li>Tsai, Chen, Lu. <strong>TT-SaD（测试时染色适应的 OD 空间线性化）</strong> ECCV 2024, LNCS 15093:257–275. DOI: <a href="https://doi.org/10.1007/978-3-031-72761-0_15">10.1007/978-3-031-72761-0_15</a></li>
+</ol>
+
+<h4>零件来源（本报告引用的上游工作）</h4>
+<ol class="ref" start="12">
+<li>Song, J., Meng, C., Ermon, S. <strong>Denoising Diffusion Implicit Models.</strong> ICLR 2021. arXiv:<a href="https://arxiv.org/abs/2010.02502">2010.02502</a>（<code>space_timesteps</code> / <code>SpacedDiffusion</code> 的来源）</li>
+<li>Dhariwal, P., Nichol, A. <strong>Diffusion Models Beat GANs on Image Synthesis.</strong> NeurIPS 2021. arXiv:<a href="https://arxiv.org/abs/2105.05233">2105.05233</a>（<code>openai/guided-diffusion</code>，SAStainDiff 的代码基座）</li>
+<li>Meng, C. 等 <strong>SDEdit: Guided Image Synthesis and Editing with Stochastic Differential Equations.</strong> ICLR 2022. arXiv:<a href="https://arxiv.org/abs/2108.01073">2108.01073</a>（「输入加噪作为初始状态」的原始出处）</li>
+<li>Macenko, M. 等 <strong>A method for normalizing histology slides for quantitative analysis.</strong> ISBI 2009.（SAStainDiff 的 <code>H_E_Staining</code> / <code>normalizeStaining</code> 所实现的方法）</li>
+</ol>
+
+<div class="box key">
+<div class="bt">本报告一句话结论</div>
+<p><strong>SAStainDiff 值得你抄的不是它的任务，是它的三个零件（5 步 DDIM、起点前移、输入派生初始噪声）和一个范式（用真实分布库约束增强）；它最核心的那个零件（用重染造像素级配对）在你这里前提不成立——而这恰好是被同类工作点名但无人做的空白。</strong></p>
+</div>
+
+</main>
+</div>
+</body>
+</html>
+

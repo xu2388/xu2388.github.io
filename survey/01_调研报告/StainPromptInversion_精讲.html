@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>精讲：StainPromptInversion（AAAI 2025 双路径提示反演）</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --fg:#1f2328; --fg2:#57606a; --fg3:#8b949e;
+    --line:#e3e6ea; --line2:#eef0f3; --accent:#2f6feb; --accent-bg:#eaf1fe;
+    --ok:#1a7f37; --ok-bg:#e8f5ec; --warn:#9a6700; --warn-bg:#fdf6e3;
+    --bad:#b42318; --bad-bg:#fdeceb; --purple:#6b4bbd; --purple-bg:#f1ecfd;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15.5px; line-height:1.8; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px 100px;}
+
+  header.top{background:linear-gradient(180deg,#fff 0%,#fbfcfd 100%); border-bottom:1px solid var(--line); padding:38px 0 30px; margin-bottom:30px;}
+  header.top .wrap{padding-bottom:0;}
+  .kicker{display:inline-block; font-size:12.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--purple); background:var(--purple-bg); border-radius:20px; padding:4px 13px; font-weight:600; margin-bottom:16px;}
+  h1{font-size:28px; line-height:1.36; margin:0 0 14px; font-weight:700; letter-spacing:-.01em;}
+  .sub{color:var(--fg2); font-size:15px; margin:0; max-width:830px;}
+  .meta{margin-top:20px; font-size:13px; color:var(--fg3); display:flex; gap:20px; flex-wrap:wrap;}
+  .meta b{color:var(--fg2); font-weight:600;}
+
+  nav.toc{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 22px; margin-bottom:34px;}
+  nav.toc .t{font-size:12.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--fg3); font-weight:600; margin-bottom:10px;}
+  nav.toc ol{margin:0; padding-left:0; list-style:none; counter-reset:toc; columns:2; column-gap:30px;}
+  nav.toc li{counter-increment:toc; margin:3px 0; font-size:14px; break-inside:avoid;}
+  nav.toc li a{color:var(--fg2); text-decoration:none;}
+  nav.toc li a:hover{color:var(--accent);}
+  nav.toc li a::before{content:counter(toc,decimal-leading-zero) "  "; color:var(--fg3); font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:12.5px;}
+
+  section{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:26px 30px 30px; margin-bottom:22px;}
+  h2{font-size:20.5px; margin:0 0 6px; font-weight:700; scroll-margin-top:20px;}
+  h2 .num{color:var(--fg3); font-variant-numeric:tabular-nums; margin-right:9px; font-weight:600; font-family:var(--mono); font-size:17px;}
+  h2 + .lede{color:var(--fg2); font-size:14.5px; margin:0 0 20px; padding-bottom:16px; border-bottom:1px solid var(--line2);}
+  h3{font-size:16.5px; margin:26px 0 9px; font-weight:650;}
+  h3:first-of-type{margin-top:14px;}
+  h4{font-size:14.6px; margin:20px 0 7px; font-weight:650;}
+  p{margin:0 0 13px;}
+  ul,ol{margin:0 0 13px; padding-left:22px;}
+  li{margin:5px 0;}
+  a{color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(47,111,235,.28);}
+  a:hover{border-bottom-color:var(--accent);}
+  code{font-family:var(--mono); font-size:.88em; background:#f2f4f7; padding:1.5px 5px; border-radius:4px; color:#37414d;}
+  b,strong{font-weight:650;}
+
+  .verdict{border:1px solid #d5c9f5; background:linear-gradient(180deg,#f8f5ff 0%,#f2ecfe 100%); border-radius:11px; padding:20px 24px; margin:0 0 22px;}
+  .verdict .lbl{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--purple); font-weight:700; margin-bottom:9px;}
+  .verdict p:last-child{margin-bottom:0;}
+  .verdict.big{padding:24px 26px;}
+  .verdict.big .ans{font-size:18.5px; font-weight:700; line-height:1.6; color:#3b2372; margin:0 0 12px;}
+
+  .box{border-radius:9px; padding:15px 19px; margin:0 0 16px; font-size:14.5px; border:1px solid;}
+  .box p:last-child{margin-bottom:0;}
+  .box .h{font-weight:650; margin-bottom:5px; display:flex; align-items:center; gap:7px;}
+  .box.good{background:var(--ok-bg); border-color:#c3e3cd; color:#14532d;}
+  .box.good .h{color:var(--ok);}
+  .box.warn{background:var(--warn-bg); border-color:#eddfb4; color:#5c4708;}
+  .box.warn .h{color:var(--warn);}
+  .box.bad{background:var(--bad-bg); border-color:#f3cdc9; color:#7a1c14;}
+  .box.bad .h{color:var(--bad);}
+  .box.info{background:#f6f8fa; border-color:var(--line); color:var(--fg2);}
+  .box.info .h{color:var(--fg);}
+  .box.key{background:var(--purple-bg); border-color:#d5c9f5; color:#3b2372;}
+  .box.key .h{color:var(--purple);}
+
+  .formula{background:#f8f9fb; border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:8px;
+    padding:14px 18px; margin:0 0 16px; font-family:var(--mono); font-size:13.2px; line-height:2.05; overflow-x:auto; white-space:pre;}
+  .formula .cmt{color:var(--fg3);}
+  .formula .hl{color:#123a80; font-weight:600;}
+  .formula.p{border-left-color:var(--purple);} .formula.p .hl{color:#3b2372;}
+  .formula.g{border-left-color:var(--ok);} .formula.g .hl{color:#14532d;}
+  .formula.r{border-left-color:var(--bad);} .formula.r .hl{color:#7a1c14;}
+
+  pre.code{background:#1f2328; color:#e6edf3; border-radius:9px; padding:16px 18px; overflow-x:auto;
+    font-family:var(--mono); font-size:12.6px; line-height:1.75; margin:0 0 16px; white-space:pre;}
+  pre.code .c{color:#8b949e;} pre.code .k{color:#ff7b72;} pre.code .s{color:#a5d6ff;} pre.code .f{color:#d2a8ff;}
+  pre.code .hl{background:#2d3a4d; border-radius:3px; padding:0 2px;}
+
+  .tw{overflow-x:auto; margin:0 0 18px; border:1px solid var(--line); border-radius:10px;}
+  table{border-collapse:collapse; width:100%; font-size:13.5px;}
+  th,td{padding:9px 13px; text-align:left; border-bottom:1px solid var(--line2); vertical-align:top;}
+  thead th{background:#f6f8fa; font-weight:650; color:var(--fg2); font-size:12.8px; white-space:nowrap; border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#fbfcfd;}
+  td.c,th.c{text-align:center;}
+  tr.win{background:#f4fbf6;}
+  tr.win:hover{background:#eef9f1;}
+  .tag{display:inline-block; font-size:11.5px; padding:1.5px 8px; border-radius:20px; font-weight:600; white-space:nowrap; line-height:1.6;}
+  .tag.g{background:var(--ok-bg); color:var(--ok);}
+  .tag.y{background:var(--warn-bg); color:var(--warn);}
+  .tag.r{background:var(--bad-bg); color:var(--bad);}
+  .tag.b{background:var(--accent-bg); color:var(--accent);}
+  .tag.p{background:var(--purple-bg); color:var(--purple);}
+  .tag.n{background:#f0f2f5; color:var(--fg2);}
+
+  .card{border:1px solid var(--line); border-radius:11px; margin:0 0 16px; overflow:hidden;}
+  .card > .hd{background:#f8f9fb; padding:12px 19px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:11px; flex-wrap:wrap;}
+  .card > .hd .nm{font-size:15.6px; font-weight:700;}
+  .card > .hd .rk{margin-left:auto; font-size:11.5px; font-weight:700; padding:2.5px 11px; border-radius:20px; background:var(--purple-bg); color:var(--purple);}
+  .card > .bd{padding:16px 19px 4px;}
+  .kv{display:grid; grid-template-columns:80px 1fr; gap:3px 14px; font-size:13.6px; margin:0 0 13px;}
+  .kv dt{color:var(--fg3); font-weight:600;}
+  .kv dd{margin:0;}
+
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 16px; font-size:13.2px;}
+  .node{background:#f6f8fa; border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-family:var(--mono); font-size:12.4px; line-height:1.5;}
+  .node.hi{background:var(--accent-bg); border-color:#cfe0fd; color:#123a80; font-weight:600;}
+  .node.p{background:var(--purple-bg); border-color:#d5c9f5; color:#3b2372; font-weight:600;}
+  .node.g{background:var(--ok-bg); border-color:#c3e3cd; color:#14532d; font-weight:600;}
+  .arw{color:var(--fg3); font-weight:700;}
+
+  .stage{border:1px solid var(--line); border-radius:11px; padding:0; margin:0 0 16px; overflow:hidden;}
+  .stage > .hd{background:#f8f9fb; padding:11px 18px; border-bottom:1px solid var(--line); font-weight:650; font-size:15px; display:flex; align-items:center; gap:10px;}
+  .stage > .hd .n{display:inline-block; width:24px; height:24px; line-height:24px; text-align:center; border-radius:7px; background:var(--purple-bg); color:var(--purple); font-family:var(--mono); font-size:12.5px; font-weight:700;}
+  .stage > .bd{padding:15px 18px 2px;}
+
+  ul.tick{list-style:none; padding-left:0;}
+  .pro::before{content:"＋"; color:var(--ok); font-weight:700; margin-right:6px;}
+  .con::before{content:"－"; color:var(--bad); font-weight:700; margin-right:6px;}
+
+  hr{border:none; border-top:1px solid var(--line2); margin:24px 0;}
+  .small{font-size:13.2px; color:var(--fg2);}
+  .foot{color:var(--fg3); font-size:12.8px; text-align:center; padding:26px 0 0; line-height:1.9;}
+  .var{font-family:var(--mono); background:#f1ecfd; color:#3b2372; padding:1px 5px; border-radius:4px; font-size:.88em;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="kicker">论文精讲</div>
+    <h1>StainPromptInversion 精讲<br><span style="font-size:19px; font-weight:600; color:#57606a;">Unpaired Multi-Domain Histopathology Virtual Staining using Dual Path Prompted Inversion</span></h1>
+    <p class="sub">AAAI 2025 · 中科院深圳先进技术研究院 · 熊兵等。这是 PSPStain 团队唯一的扩散工作，也是目前虚拟染色领域"免训练扩散反演"路线的代表作。本讲逐层拆解论文、公式与官方代码。</p>
+    <div class="meta">
+      <span><b>arXiv</b> 2412.11106</span>
+      <span><b>AAAI</b> 39(8): 8780–8787</span>
+      <span><b>DOI</b> 10.1609/aaai.v39i8.32949</span>
+      <span><b>代码</b> 已开源</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+  <div class="t">目录</div>
+  <ol>
+    <li><a href="#s1">一句话总结</a></li>
+    <li><a href="#s2">它到底在做什么（易误解）</a></li>
+    <li><a href="#s3">动机：虚拟染色为什么难</a></li>
+    <li><a href="#s4">理论基础：DDIM 反演</a></li>
+    <li><a href="#s5">核心方法：双路径提示反演</a></li>
+    <li><a href="#s6">StainPrompt 优化（损失与调度）</a></li>
+    <li><a href="#s7">代码级细节</a></li>
+    <li><a href="#s8">实验结果（含诚实分析）</a></li>
+    <li><a href="#s9">消融实验</a></li>
+    <li><a href="#s10">局限</a></li>
+    <li><a href="#s11">对 PSP-Diffusion 的启示</a></li>
+    <li><a href="#s12">复现陷阱清单</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <h2><span class="num">01</span>一句话总结</h2>
+  <p class="lede">先抓住骨架，再钻细节。</p>
+
+  <div class="verdict big">
+    <div class="lbl">核心思想</div>
+    <p class="ans">用 DDIM 反演把两张图（输入的 H&amp;E、GAN 生成的风格模板）各自反推到噪声，得到两条"轨迹模板"；然后<b>逐时间步优化一张图像尺寸的视觉提示图（visual prompt）</b>，让前向采样同时逼近这两条轨迹，最后换成目标染色域的条件做一次确定性采样出图。</p>
+    <p style="margin-bottom:0">它是<b>"免训练"（不微调扩散模型）但"测试时优化"（每张图都要跑一次 prompt 优化）</b>。核心卖点是<b>结构一致性</b>——在 SSIM / MS-SSIM / PSNR / CSS 上全面领先，且病理医生盲评得分最高。</p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:150px">维度</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td><b>任务</b></td><td>H&amp;E → MAS / PAS / PASM（<b>肾脏特殊染色，不是 IHC</b>）</td></tr>
+        <tr><td><b>数据</b></td><td>ANHIR 肾脏数据集，患者 1–4 训练、患者 5 测试，<b>无像素级配对</b></td></tr>
+        <tr><td><b>扩散模型</b></td><td>自己从零训的<b>类别条件</b>扩散模型（HE/MAS/PAS/PASM 四类），不是 Stable Diffusion</td></tr>
+        <tr><td><b>是否需要微调</b></td><td><b>不需要</b>——只优化一张 prompt 图，模型权重完全冻结</td></tr>
+        <tr><td><b>风格从哪来</b></td><td>一个<b>预训练的 GAN（UMDST / StainGAN）</b>先做一次粗翻译，输出当"风格模板"</td></tr>
+        <tr><td><b>核心机制</b></td><td>双路径（结构路径 + 风格路径）+ null visual prompt 优化 + 确定性采样</td></tr>
+        <tr><td><b>最大优势</b></td><td>结构一致性（SSIM 0.92 vs 次优 0.81）+ 病理医生盲评第一</td></tr>
+        <tr><td><b>最大短板</b></td><td>FID 并不领先（部分设定略逊于 StainGAN）；每张图需上千次网络前向+反传</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <h2><span class="num">02</span>它到底在做什么（易误解）</h2>
+  <p class="lede">先纠正三个常见误解。</p>
+
+  <div class="box warn">
+    <div class="h">误解 1：这是 H&amp;E → IHC 的工作</div>
+    <p style="margin-bottom:0"><b>不是。</b>它的目标域是 <b>MAS（Masson 三色）、PAS（过碘酸-雪夫）、PASM</b>——肾脏病理的<b>特殊染色</b>，用于看胶原纤维、肾小球与肾小管结构。跟 IHC（免疫组化，看蛋白表达）是两类任务。数据集是 ANHIR 的肾脏切片。<br><b>这意味着：它的"风格"是颜色分布，不涉及蛋白表达语义。你的 PSP-Diffusion 面临的分子级语义问题，它没有正面处理。</b></p>
+  </div>
+
+  <div class="box warn">
+    <div class="h">误解 2：它是"training-free"，所以不需要训练</div>
+    <p style="margin-bottom:0"><b>"Training-free" 指的是"不微调预训练扩散模型"</b>，不是说整个流程不用训练。实际上需要三样预训练物：<b>①</b> 一个在 ANHIR 上训练 80k 迭代的类别条件扩散模型；<b>②</b> 一个预训练的 GAN（UMDST 或 StainGAN）当"特征适配函数"；<b>③</b> prompt 优化本身是<b>每张图都要跑的测试时优化</b>（约上千次网络前向+反传）。所以更准确的说法是 <b>"training-free, test-time optimization"</b>。</p>
+  </div>
+
+  <div class="box warn">
+    <div class="h">误解 3：它像 Null-text Inversion 那样优化文本嵌入</div>
+    <p style="margin-bottom:0"><b>不是。</b>Null-text Inversion（Mokady 等）优化的是 <b>文本嵌入空间</b>的 null embedding。这篇优化的是<b>一张与图像同尺寸的、逐时间步的像素图</b> <span class="var">ϕ ∈ ℝ^(T×3×256×256)</span>——是"<b>视觉提示</b>"（visual prompt），不是文本提示。这个区别很重要，后面第 7 节会展开。</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <h2><span class="num">03</span>动机：虚拟染色为什么难</h2>
+  <p class="lede">论文把难点归结为两个，这两个也是全文的设计目标。</p>
+
+  <h3>挑战 1：结构一致性要求比自然图像翻译严格得多</h3>
+  <p>自然图像翻译里，非核心细节变化不影响语义（比如马变斑马，背景变化无所谓）。但病理图像<b>每个细节都有诊断意义</b>——染色剂给特定组织上色，内容的任何改变都可能导致诊断语义偏移。论文 Figure 1 专门画了这个对比。</p>
+
+  <h3>挑战 2：内容与风格的解耦需求更高</h3>
+  <p>论文指出一个反直觉的点：<b>病理图像中"形态"与"语义"的耦合程度比自然图像更低</b>，所以内容提取更难。加上没有像素级配对数据，完全分离风格与内容非常困难。</p>
+
+  <div class="box key">
+    <div class="h">他们对 GAN 路线的批评</div>
+    <p style="margin-bottom:0">论文明确指出：<b>GAN 的对抗训练让生成器-判别器互相博弈，而端到端的生成性质使风格与内容的分离变得困难</b>。这是他们转向扩散反演的根本理由——扩散的 DDIM 反演天然提供"确定性的、可逆的"内容-噪声映射，解耦能力更强。</p>
+  </div>
+
+  <div class="box info">
+    <div class="h">一个值得注意的细节</div>
+    <p style="margin-bottom:0">论文还指出：<b>当时没有专门针对病理图像的大规模预训练模型</b>。这正是他们选择"不微调、只优化 prompt"路线的原因之一——没有好的预训练底子，微调意义不大。这个判断在 2024 年是合理的，但到 2026 年已经不成立（现在有 UNI、CONCH、Virchow 等）。<b>这也是为什么后续 PGVMS 立刻引入了 CONCH。</b></p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <h2><span class="num">04</span>理论基础：DDIM 反演</h2>
+  <p class="lede">不理解这一节，后面全是天书。</p>
+
+  <h3>DDIM 采样（正向，噪声 → 图像）</h3>
+  <div class="formula">x_{t−1} = √ᾱ_{t−1} · [ (x_t − √(1−ᾱ_t)·ε_θ(x_t, t)) / √ᾱ_t ] + √(1−ᾱ_{t−1})·ε_θ(x_t, t)
+<span class="cmt">从 t=T 走到 t=0，逐步去噪</span></div>
+
+  <h3>DDIM 反演（反向，图像 → 噪声）</h3>
+  <p>把上面这个式子倒过来走，就是 DDIM 反演：</p>
+  <div class="formula">x_{t+1} = √ᾱ_{t+1} · [ (x_t − √(1−ᾱ_t)·ε_θ(x_t, t)) / √ᾱ_t ] + √(1−ᾱ_{t+1})·ε_θ(x_t, t)
+<span class="cmt">从 t=0 走到 t=T，把图像"编码"成噪声</span></div>
+
+  <div class="box key">
+    <div class="h">关键前提：近似相等（approximate equality）</div>
+    <p>DDIM 反演之所以成立，依赖一个前提：<b>同一步上"前向预测的噪声"与"反向预测的噪声"近似相等</b>。但这个近似<b>不精确</b>——反演会累积误差。</p>
+    <p style="margin-bottom:0">论文的解决办法就是引入一个额外的可优化变量当"<b>算子（operator）</b>"，把反向过程里偏掉的特征向量<b>掰回与正向过程同方向</b>。这个可优化变量就是 <b>StainStructPrompt</b>（初始化为全零的特征图）。</p>
+  </div>
+
+  <h3>误差随 t 的变化</h3>
+  <p>论文附录给了误差分析：</p>
+  <div class="formula">x_0 = x*_t + (1/ᾱ_t − 1)·σ ,    σ > 0
+ε_θ(x_t, t) = ε*_θ(x_t, t) + σ ,    σ > 0
+<span class="cmt">t 增大时误差减小 → 无条件 DDIM 反演通常需要较大的时间步来压低误差</span></div>
+  <p>这解释了他们为什么把 DDIM 反演步数设得较大（论文说 100，发布的脚本里是 50）。</p>
+
+  <div class="box info">
+    <div class="h">为什么 DDIM 反演能"解耦内容与风格"</div>
+    <p style="margin-bottom:0">因为 DDIM 反演是<b>确定性的</b>（<code>eta=0.0</code>，无随机噪声注入），图像到噪声的映射是一一对应的。图像编辑领域（如 Null-text Inversion、Direct Inversion）利用的正是这一点：反演得到的噪声里保留了内容的"骨架"，而风格可以在正向采样时通过改条件/加引导注入。<b>这篇把这套思路第一次搬到虚拟染色上。</b></p>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <h2><span class="num">05</span>核心方法：双路径提示反演</h2>
+  <p class="lede">三个阶段，两条轨迹，一张待优化的提示图。</p>
+
+  <h3>整体数据流</h3>
+  <div class="flow">
+    <span class="node hi">输入 H&amp;E<br>x₀</span>
+    <span class="arw">→</span>
+    <span class="node">GAN 特征适配器<br>F(·) = UMDST</span>
+    <span class="arw">→</span>
+    <span class="node g">风格模板<br>F(x₀)</span>
+    <span class="arw">↘</span>
+    <span class="node p">DDIM 反演<br>(条件 = None)</span>
+    <span class="arw">→</span>
+    <span class="node p">风格轨迹<br>{y*_t}</span>
+  </div>
+  <div class="flow">
+    <span class="node hi">输入 H&amp;E<br>x₀</span>
+    <span class="arw">→</span>
+    <span class="node p">DDIM 反演<br>(条件 = 源域)</span>
+    <span class="arw">→</span>
+    <span class="node p">结构轨迹<br>{x*_t}</span>
+    <span class="arw">→</span>
+    <span class="node">两条轨迹 + 目标域条件</span>
+    <span class="arw">→</span>
+    <span class="node g">优化 visual prompt ϕ</span>
+    <span class="arw">→</span>
+    <span class="node hi">确定性采样出图</span>
+  </div>
+
+  <h3>Stage 1 · 构建双路径轨迹</h3>
+
+  <div class="stage">
+    <div class="hd"><span class="n">1</span>结构目标路径（Structural Target Path）</div>
+    <div class="bd">
+      <p>对<b>输入 H&amp;E</b> <span class="var">x₀</span> 做 DDIM 反演，条件是<b>源域类别</b> <span class="var">C_S</span>（即 HE 的类标签）：</p>
+      <div class="formula">x*_{t+1} = √ᾱ_{t+1} · [ (x*_t − √(1−ᾱ_t)·ε_θ(x*_t, t, C_S)) / √ᾱ_t ] + √(1−ᾱ_{t+1})·ε_θ(x*_t, t, C_S)</div>
+      <p>得到轨迹 <span class="var">{x*_t}_{t=0}^T</span>。<b>它的作用是保住内容</b>——因为反演是无损的（近似），正向走回来就能还原结构。</p>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="hd"><span class="n">1</span>风格目标路径（Style Target Path）</div>
+    <div class="bd">
+      <p>先用<b>特征适配函数</b> <span class="var">F(·)</span> 把输入 H&amp;E 粗翻译成目标染色（这篇用的是预训练 GAN：UMDST 或 StainGAN），得到风格模板 <span class="var">y*_0 = F(x₀)</span>。再对它做 DDIM 反演，条件是 <b>None（无条件）</b>：</p>
+      <div class="formula">y*_{t+1} = √ᾱ_{t+1} · [ (y*_t − √(1−ᾱ_t)·ε_θ(y*_t, t, C_φ)) / √ᾱ_t ] + √(1−ᾱ_{t+1})·ε_θ(y*_t, t, C_φ)
+<span class="cmt">C_φ 表示"不加额外条件"，目的是避免条件变量污染风格轨迹</span></div>
+      <p>得到轨迹 <span class="var">{y*_t}_{t=0}^T</span>。<b>它的作用是提供目标染色的颜色分布</b>。</p>
+      <div class="box info" style="margin-bottom:14px">
+        <div class="h">为什么用 GAN 的输出当模板，而不是直接用相邻切片？</div>
+        <p style="margin-bottom:0">论文明确说：<b>理想情况下，相邻切片的真实目标染色图是最好的模板。但那样就违反了虚拟染色的初衷</b>——虚拟染色就是为了不切那张片子。所以他们改用"预学习的映射关系"，即一个已经训好的 GAN。并且强调：<b>特征适配函数可以被任何能生成目标域特征图像的方法替代</b>（消融里验证了 UMDST 和 StainGAN 两个都能用，且都比各自的 baseline 好）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="box key">
+    <div class="h">这里有一个必须注意的设计选择</div>
+    <p style="margin-bottom:0">两条路径的<b>条件变量不一样</b>：结构路径用<b>源域条件</b> <span class="var">C_S</span>，风格路径用<b>无条件</b> <span class="var">C_φ</span>。而最终的确定性采样用<b>目标域条件</b> <span class="var">C_T</span>。<br>论文附录的 Figure 7 专门讨论了条件选择（用 N/M/E 表示无/目标域/源域，第一个字母是反演条件、第二个是采样条件）。他们的发现是：<b>只用类别条件（EM）能得到匹配真实分布的目标染色风格，但结构一致性严重丢失。</b>这就是为什么必须走双路径。</p>
+  </div>
+
+  <h3>Stage 2 · StainPrompt 优化</h3>
+  <p>这是全文的核心。优化目标：</p>
+  <div class="formula">arg min_ϕ  Σ_{t=1}^{T} ‖ (y*_{t−1}, x*_{t−1}, y_{t−1}(ȳ_t + ϕ_t, C_T)) ‖
+<span class="cmt">让"带 prompt 的正向采样结果"同时逼近两条轨迹</span></div>
+  <p>具体地，每个时间步：</p>
+  <div class="formula">ŷ_t = ȳ_t + ϕ_t                                          <span class="cmt">把 prompt 加到当前 latent 上</span>
+y_{t−1}(ŷ_t, C_T) = √ᾱ_{t−1}·[ (ŷ_t − √(1−ᾱ_t)·ε_θ(ŷ_t, t, C_T)) / √ᾱ_t ] + √(1−ᾱ_{t−1})·ε_θ(ŷ_t, t, C_T)
+ȳ_{t−1} = y_{t−1}(ȳ_t + ϕ_t, C_T)                        <span class="cmt">用优化后的结果更新，往下走</span></div>
+
+  <p><b>注意 <span class="var">C_T ∈ {1,2,3}</span> 对应 MAS / PAS / PASM</b>——正向采样时用的是<b>目标染色域</b>的类别条件。这是风格注入的来源。</p>
+
+  <h4>两个损失项</h4>
+  <div class="formula">l_StainPrompt = λ · l_struct + (1 − λ) · l_style
+
+l_struct = Σ_{t=0}^{IST}  2(σ_z σ_y + c₁)(σ_zy + c₂) / [(σ_z² + σ_y² + c₁)(σ_z σ_y + c₂)]     <span class="cmt">SSIM 形式</span>
+l_style  = Σ_{t=0}^{IST}  ‖ y*_t − y_t ‖²₂                                                  <span class="cmt">MSE</span>
+<span class="cmt">c₁ = c₂ = 1e-8（论文实验设置）</span></div>
+
+  <div class="box bad">
+    <div class="h">⚠ 论文的公式与实测结论自相矛盾，以代码为准</div>
+    <p>论文 Eq (7) 写的是 <b><code>λ·l_struct + (1−λ)·l_style</code></b>，字面意思是 <b>λ 加权结构损失</b>。但：</p>
+    <ul style="margin-bottom:8px">
+      <li>论文 Table 7 的<b>实测行为</b>是：<b>λ 越大，结构指标越差、风格指标越好</b>（λ=0.05 时 SSIM 最高 0.909；λ=0.85 时 FID 最低 246.999）。</li>
+      <li>Table 7 的说明也写："<i>A larger λ value improves style, while a smaller λ enhances structural integrity</i>"——<b>与 Eq (7) 的标注相反</b>。</li>
+      <li>Table 1 的说明又把 λ=0.05 称为 "<i>struct weight</i>"——再次矛盾。</li>
+      <li>而<b>代码</b>里是 <code>loss = alpha*loss1 + (1-alpha)*loss2</code>，其中 <code>loss1</code> 是 MSE（对应风格轨迹）、<code>loss2</code> 是灰度 SSIM（对应结构轨迹）。所以 <b>alpha 加权的是风格损失</b>，与 Table 7 的实测行为一致。</li>
+    </ul>
+    <p style="margin-bottom:0"><b>结论：论文 Eq (7) 的符号标反了。复现时以代码为准，并且不要照搬论文给的 λ 值，自己扫一遍。</b></p>
+  </div>
+
+  <h4>优化步数的线性衰减调度</h4>
+  <p>论文发现<b>误差会随反向过程累积，过多迭代并不显著改善输出质量</b>。所以每个时间步的迭代次数按线性衰减：</p>
+  <div class="formula">IST_t = (1 − t/T) × IST_init
+<span class="cmt">越靠近 t=0（图像端）迭代越少，越靠近 t=T（噪声端）迭代越多</span>
+<span class="cmt">IST_init = 50（论文实验设置）</span></div>
+  <p>消融（Table 6）显示 IST_init 从 50 增到 250，SSIM 只从 0.9285 掉到 0.9241，FID 从 251.487 微降到 248.789——<b>影响很小，所以选 50 省时间</b>。</p>
+
+  <h3>Stage 3 · 确定性采样</h3>
+  <div class="formula">y_{t−1} = √ᾱ_{t−1}·[ (y_t + ϕ_t − √(1−ᾱ_t)·ε_θ(y_t + ϕ_t, t, C_T)) / √ᾱ_t ] + √(1−ᾱ_{t−1})·ε_θ(y_t + ϕ_t, t, C_T)
+<span class="cmt">从 T 走到 0，每步都加上优化好的 ϕ_t，条件用目标域 C_T</span>
+<span class="cmt">输出 y₀ 就是虚拟染色结果</span></div>
+
+  <div class="box good">
+    <div class="h">一个实用的副产品</div>
+    <p style="margin-bottom:0">论文指出：<b>一次反演得到的结构 null-prompt 嵌入，可以复用于多个无配对染色迁移</b>——只需在输入图上加不同特征。也就是说，结构路径的 prompt 是"输入图特定"的，而风格注入靠改条件 <span class="var">C_T</span>。<b>这意味着一个 H&amp;E 输入，反演一次，就能出 MAS / PAS / PASM 三种结果。</b></p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <h2><span class="num">06</span>StainPrompt 优化（损失与调度）</h2>
+  <p class="lede">把两个 prompt 的角色讲清楚。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:150px">名称</th><th>角色</th><th>论文原话</th><th>对应轨迹</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>StainStructPrompt</b></td>
+          <td>结构矫正算子</td>
+          <td>"<i>correcting the slightly deviated feature vectors in the reverse process back to the same direction as in the forward process</i>"</td>
+          <td>结构路径 {x*_t}</td>
+        </tr>
+        <tr>
+          <td><b>StainStylePrompt</b></td>
+          <td>风格减法算子</td>
+          <td>"<i>functioning as a 'style subtraction operator'</i>"</td>
+          <td>风格路径 {y*_t}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>两者通过一个常数 <span class="var">λ</span> 加权平衡。论文的措辞是：<b>视觉提示充当"算子"，逼近这两条模板轨迹，寻找最优平衡点</b>。</p>
+
+  <div class="box key">
+    <div class="h">为什么"减法算子"这个说法值得琢磨</div>
+    <p style="margin-bottom:0">风格模板 <span class="var">F(x₀)</span> 是 GAN 生成的、带有目标染色颜色的图。反演它得到风格轨迹。在正向采样时，如果把风格轨迹直接"加上去"，就会把 GAN 的伪影也带进来。所以 prompt 在这里的作用更像是<b>从风格模板里提取"纯颜色分量"、剥离 GAN 的结构伪影</b>——因为结构由另一条路径负责。这就是"subtraction"的含义。<b>消融 Table 3 也印证了：加上 StainStylePrompt 后 SSIM 0.8015 → 0.8121、FID 268.491 → 255.261，两项都改善。</b></p>
+  </div>
+
+  <h3>λ 的实际行为（以 Table 7 为准）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th class="c">λ</th><th class="c">SSIM ↑</th><th class="c">FID ↓</th><th class="c">PSNR ↑</th><th>解读</th></tr></thead>
+      <tbody>
+        <tr><td class="c">0</td><td class="c">0.699</td><td class="c">302.929</td><td class="c">14.086</td><td>退化：两项都差</td></tr>
+        <tr class="win"><td class="c"><b>0.05</b></td><td class="c"><b>0.909</b></td><td class="c">278.253</td><td class="c"><b>20.867</b></td><td><b>结构最优</b>（H&amp;E→MAS 用这档）</td></tr>
+        <tr><td class="c">0.25</td><td class="c">0.9002</td><td class="c">280.730</td><td class="c">20.818</td><td>—</td></tr>
+        <tr><td class="c">0.45</td><td class="c">0.8863</td><td class="c">278.305</td><td class="c">20.281</td><td>—</td></tr>
+        <tr class="win"><td class="c"><b>0.55</b></td><td class="c">0.8651</td><td class="c">263.039</td><td class="c">19.862</td><td><b>折中</b>（H&amp;E→PAS 用这档）</td></tr>
+        <tr><td class="c">0.85</td><td class="c">0.8474</td><td class="c"><b>246.999</b></td><td class="c">19.833</td><td><b>风格最优</b></td></tr>
+        <tr><td class="c">0.95</td><td class="c">0.8121</td><td class="c">255.261</td><td class="c">19.220</td><td>风格略回落</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">可以看出这是一个<b>非常干净的权衡曲线</b>：λ 越大 → 风格越准但结构越松。作者对两个任务选了不同档：MAS 偏结构（0.05），PAS 取折中（0.55）。<b>这说明"内容-风格可调"不是一个宣传话术，而是真的有一个连续旋钮。</b></p>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <h2><span class="num">07</span>代码级细节</h2>
+  <p class="lede">读了官方实现后才发现的东西。</p>
+
+  <h3>关键代码（guided_diffusion/gaussian_diffusion.py 的 <code>stainpromptInversion</code>）</h3>
+  <pre class="code"><span class="c"># 核心：在反演轨迹与正向轨迹之间优化 visual prompt</span>
+<span class="k">def</span> <span class="f">stainpromptInversion</span>(self, model, noise, latents, latents_source, num_inner_steps,
+                          alpha=0.5, clip_denoised=True, model_kwargs=None, device=None):
+    latent_cru = noise                                  <span class="c"># x_T，起点噪声</span>
+    indices = list(range(int(self.num_timesteps)))[::-1]
+
+    <span class="hl">visual_prompt = th.zeros([self.num_timesteps, 3, 256, 256],
+                            requires_grad=True, device=device)</span>   <span class="c"># ← 逐时间步的图像尺寸提示图</span>
+
+    <span class="k">for</span> i <span class="k">in</span> indices:
+        t = th.tensor([i], device=device)
+        optimizer = th.optim.Adam([visual_prompt], lr=1e-2)
+        latent_prev        = latents[i].unsqueeze(0)         <span class="c"># 风格模板轨迹 @ t</span>
+        latent_prev_source = latents_source[i].unsqueeze(0)  <span class="c"># 结构模板轨迹 @ t</span>
+
+        <span class="hl">for j in range(int(num_inner_steps * (1. - i / self.num_timesteps))):</span>   <span class="c"># ← Eq (10) 衰减调度</span>
+            latents_prev_rec = self.ddim_sample(model, latent_cru + visual_prompt[i], t, ...)["sample"]
+
+            ssim_loss = StructuralLoss(window_size=11, size_average=True)
+            tarns = transforms.Compose([transforms.Grayscale(num_output_channels=...)])
+
+            loss1 = th.nn.MSELoss()(latents_prev_rec, latent_prev)                       <span class="c"># MSE</span>
+            loss2 = ssim_loss(tarns(latents_prev_rec), tarns(latent_prev_source))        <span class="c"># 灰度 SSIM</span>
+            <span class="hl">loss = alpha * loss1 + (1 - alpha) * loss2</span>
+            optimizer.zero_grad(); loss.backward(); optimizer.step()
+
+        <span class="k">with</span> th.no_grad():
+            latent_cru = self.ddim_sample(model, latent_cru + visual_prompt[i], t, ...)["sample"]
+    <span class="k">return</span> visual_prompt</pre>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:170px">发现</th><th>说明</th><th style="width:74px">重要性</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>prompt 在图像空间</b></td>
+          <td><code>th.zeros([num_timesteps, 3, 256, 256])</code> —— 是<b>逐时间步的一张 RGB 图</b>，不是文本嵌入。加的方式是直接相加：<code>latent_cru + visual_prompt[i]</code>。</td>
+          <td><span class="tag r">高</span></td>
+        </tr>
+        <tr>
+          <td><b>参数量约 10M / 图</b></td>
+          <td>T=50 时 <code>50×3×256×256 = 9,830,400</code> ≈ 9.8M；T=100 时 ≈ 19.7M。相比之下 Null-text Inversion 在 SD 上是 <code>T×77×768 ≈ 3M</code>。<b>这里每张图要优化的参数量大得多。</b></td>
+          <td><span class="tag r">高</span></td>
+        </tr>
+        <tr>
+          <td><b>变量命名与论文相反</b></td>
+          <td>main.py 里 <code>latents</code> 来自 <code>fake_image</code>（风格模板），<code>latents_source</code> 来自 <code>sample</code>（输入 H&amp;E）。但在 <code>stainpromptInversion</code> 里，<code>latent_prev = latents[i]</code> 被用在 <b>loss1</b>、<code>latent_prev_source</code> 被用在 <b>loss2</b>。<b>命名与直觉相反，极易读错。</b></td>
+          <td><span class="tag y">中</span></td>
+        </tr>
+        <tr>
+          <td><b>优化器每步重建</b></td>
+          <td>每个时间步 i 都 <code>th.optim.Adam([visual_prompt], lr=1e-2)</code> 新建一次优化器——<b>动量状态不跨时间步保留</b>。这是一个实现选择，不是笔误。</td>
+          <td><span class="tag n">低</span></td>
+        </tr>
+        <tr>
+          <td><b>总计算量</b></td>
+          <td>内层总迭代数 ≈ Σ<sub>i</sub> IST_init·(1−i/T) ≈ IST_init · T/2。T=50、IST_init=50 → <b>约 1250 次带反传的 DDIM 步</b>。每步都要过一遍网络并反向传播。<b>这是这个方法的主要成本。</b></td>
+          <td><span class="tag r">高</span></td>
+        </tr>
+        <tr>
+          <td><b>类别条件是关键</b></td>
+          <td>扩散模型用 <code>--class_cond True</code> 训练，四个类 <code>HE=0, MAS=1, PAS=2, PASM=3</code>。<b>"多域"能力来自这个类别条件模型，不是来自 prompt。</b></td>
+          <td><span class="tag r">高</span></td>
+        </tr>
+        <tr>
+          <td><b>结构 prompt 可复用</b></td>
+          <td>论文明确说一次反演得到的结构 prompt 可复用于多种染色迁移。代码里 <code>model_kwargs={'y': target_label}</code> 是唯一的域切换开关。</td>
+          <td><span class="tag g">好</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>发布的推理脚本</h3>
+  <pre class="code">MODELS_PATH=<span class="s">"--model_path ./pretrained_model/model770000.pt"</span>
+DIFFUSION_ARGS=<span class="s">"--image_size 256 --num_channels 128 --num_res_blocks 3 --diffusion_steps 50 \
+                 --noise_schedule linear --use_ddim True --rescale_timesteps True"</span>
+SAMPLE_ARGS=<span class="s">"--target_domain MAS"</span>
+DATASET_ARGS=<span class="s">"--data_dir /root/private_data/BingXiong/data/ANHIR_v2/val"</span>
+python main.py $MODELS_PATH $DIFFUSION_ARGS $DATASET_ARGS $SAMPLE_ARGS <span class="hl">--class_cond True</span></pre>
+
+  <div class="box warn">
+    <div class="h">两处版本差异，复现时注意</div>
+    <ul style="margin-bottom:0">
+      <li><b>DDIM 步数</b>：论文写"DDIM inversion timesteps = 100"，发布的脚本里是 <code>--diffusion_steps 50</code>。</li>
+      <li><b>风格路径的条件</b>：README 说 H&amp;E→PAS 时风格路径用 <code>extra</code>（源域条件），但 main.py 里风格路径<b>硬编码为 <code>model_kwargs=None</code></b>，只有注释提示了这个选择。所以要跑 PAS 得自己改代码。</li>
+      <li><b><code>--rescale_timesteps True</code> 是必须的</b>。README 专门警告："<i>When you use improved-diffusion to pretrained diffusion model, you shoud set --rescale_timesteps True</i>"。漏了会导致时间步语义错位。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <h2><span class="num">08</span>实验结果（含诚实分析）</h2>
+  <p class="lede">论文报了五个指标 + 一个病理医生盲评。哪些是真赢，哪些是打平。</p>
+
+  <h3>定量对比（Table 1）</h3>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th rowspan="2" style="width:150px">方法</th>
+        <th colspan="5" class="c">H&amp;E → MAS</th>
+        <th colspan="5" class="c">H&amp;E → PAS</th></tr>
+        <tr>
+        <th class="c">SSIM↑</th><th class="c">CSS↑</th><th class="c">MS-SSIM↑</th><th class="c">PSNR↑</th><th class="c">FID↓</th>
+        <th class="c">SSIM↑</th><th class="c">CSS↑</th><th class="c">MS-SSIM↑</th><th class="c">PSNR↑</th><th class="c">FID↓</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>MUNIT</td><td class="c">0.1206</td><td class="c">0.1281</td><td class="c">0.1705</td><td class="c">10.79</td><td class="c">159.72</td><td class="c">0.0758</td><td class="c">0.0843</td><td class="c">0.0494</td><td class="c">9.85</td><td class="c">217.63</td></tr>
+        <tr><td>StainCUT</td><td class="c">0.4686</td><td class="c">0.5039</td><td class="c">0.7603</td><td class="c">14.32</td><td class="c">111.75</td><td class="c">0.6871</td><td class="c">0.7006</td><td class="c">0.8673</td><td class="c">17.19</td><td class="c">119.49</td></tr>
+        <tr><td>StarGANv2</td><td class="c">0.5703</td><td class="c">0.6143</td><td class="c">0.7448</td><td class="c">14.45</td><td class="c">101.68</td><td class="c">0.6277</td><td class="c">0.6432</td><td class="c">0.7997</td><td class="c">16.54</td><td class="c">100.19</td></tr>
+        <tr><td>UGATIT</td><td class="c">0.7110</td><td class="c">0.7552</td><td class="c">0.7283</td><td class="c">15.56</td><td class="c">127.27</td><td class="c">0.7080</td><td class="c">0.7260</td><td class="c">0.7722</td><td class="c">16.60</td><td class="c">93.55</td></tr>
+        <tr><td>StainGAN</td><td class="c">0.8124</td><td class="c">0.8620</td><td class="c">0.7814</td><td class="c">16.16</td><td class="c">128.40</td><td class="c">0.8455</td><td class="c">0.8664</td><td class="c">0.9033</td><td class="c">17.54</td><td class="c"><b>136.36</b></td></tr>
+        <tr><td>GramGAN</td><td class="c">0.6027</td><td class="c">0.6784</td><td class="c">0.8001</td><td class="c">13.50</td><td class="c">151.84</td><td class="c">0.7167</td><td class="c">0.7324</td><td class="c">0.8757</td><td class="c">16.99</td><td class="c">147.84</td></tr>
+        <tr><td>UMDST (AAAI'22)</td><td class="c">0.7329</td><td class="c">0.7610</td><td class="c">0.8725</td><td class="c">17.56</td><td class="c">179.20</td><td class="c">0.7396</td><td class="c">0.7616</td><td class="c">0.9233</td><td class="c">16.43</td><td class="c">160.59</td></tr>
+        <tr><td>EGSDE（扩散）</td><td class="c">0.1345</td><td class="c">0.1360</td><td class="c">0.3066</td><td class="c">14.74</td><td class="c">197.86</td><td class="c">0.1698</td><td class="c">0.1712</td><td class="c">0.3287</td><td class="c">16.22</td><td class="c">173.07</td></tr>
+        <tr class="win"><td><b>Ours</b></td><td class="c"><b>0.9233</b></td><td class="c"><b>0.9309</b></td><td class="c"><b>0.9458</b></td><td class="c"><b>20.92</b></td><td class="c">179.29</td><td class="c"><b>0.9114</b></td><td class="c"><b>0.9167</b></td><td class="c"><b>0.9500</b></td><td class="c"><b>22.48</b></td><td class="c">146.17</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box good">
+    <div class="h">真赢的地方（幅度很大）</div>
+    <ul style="margin-bottom:0">
+      <li><b>SSIM</b>：MAS 0.9233 vs 次优 StainGAN 0.8124（<b>+0.11</b>）；PAS 0.9114 vs 0.8455（<b>+0.066</b>）</li>
+      <li><b>MS-SSIM</b>：MAS 0.9458 vs UMDST 0.8725；PAS 0.9500 vs UMDST 0.9233</li>
+      <li><b>PSNR</b>：MAS 20.92 vs 17.56；PAS 22.48 vs 17.54（<b>+5 dB</b>）</li>
+      <li><b>CSS</b>（内容结构相似度）：全面领先</li>
+      <li><b>EGSDE 这个扩散 baseline 惨败</b>（SSIM 0.13）——<b>这正是论文的动机证据：naive 的扩散引导在这个任务上根本不行，必须用反演 + 双路径。</b></li>
+    </ul>
+  </div>
+
+  <div class="box warn">
+    <div class="h">没有赢的地方（要诚实看）</div>
+    <ul style="margin-bottom:0">
+      <li><b>FID 不是最好的。</b> H&amp;E→MAS：Ours 179.29 vs UMDST 179.20（<b>基本打平，甚至微输</b>）。H&amp;E→PAS：Ours 146.17 vs <b>StainGAN 136.36（输 10 点）</b>。</li>
+      <li>而 FID 衡量的是<b>风格分布的真实性</b>——也就是说，<b>它的"风格像不像"并没有明显超过 GAN 基线，"结构保得住"才是它的真正优势。</b></li>
+      <li>这一点很重要：<b>如果你的方案主打浓度/风格准确性，那 StainPromptInversion 不是你要打的对手；如果你主打结构保真与物理一致性，它就是最直接的对标。</b></li>
+    </ul>
+  </div>
+
+  <h3>病理医生盲评（Table 8）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th class="c">MUNIT</th><th class="c">CycleGAN</th><th class="c">UMDST (AAAI'22)</th><th class="c">GramGAN (TMI'24)</th><th class="c">Ours</th></tr></thead>
+      <tbody><tr>
+        <td class="c">2.76</td><td class="c">4.64</td><td class="c">7.96</td><td class="c">6.60</td><td class="c" style="background:#e8f5ec;"><b>8.36</b></td>
+      </tr></tbody>
+    </table>
+  </div>
+  <p class="small">ER% = 5 位病理医生的平均评分（1 最低、10 最高）。<b>Ours 8.36 第一，比第二名 UMDST 高 0.4 分。</b>这个幅度不算大，但方向明确。值得注意的是——<b>这是"临床可接受度"的直接证据，很多方法学论文缺这一项。</b></p>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <h2><span class="num">09</span>消融实验</h2>
+  <p class="lede">四个消融，每个都在回答一个"如果不这样会怎样"。</p>
+
+  <h3>消融 1：StainStructPrompt 的作用（Table 2）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th class="c">UDM<br><span class="small">无条件反演</span></th><th class="c">UDM + prompt</th><th class="c">CDM<br><span class="small">条件反演</span></th><th class="c">CDM + prompt</th></tr></thead>
+      <tbody><tr>
+        <td class="c">95.20%</td><td class="c">96.58%</td>
+        <td class="c" style="background:#fdeceb;">65.23%</td><td class="c" style="background:#e8f5ec;"><b>81.84%</b></td>
+      </tr></tbody>
+    </table>
+  </div>
+  <div class="box key">
+    <div class="h">这张表是全文最关键的证据</div>
+    <p style="margin-bottom:0">无条件反演（UDM）本来就有 95.2% 的结构保真，加 prompt 只提升到 96.58%（<b>+1.4</b>）。但<b>条件反演（CDM）只有 65.23%——因为条件变量会引入内容误差——加上 prompt 后跳到 81.84%（+16.6）</b>。<br><b>prompt 的真正价值在于"挽救条件反演引入的误差"</b>，而虚拟染色恰恰必须用条件（才能注入目标染色风格）。所以这个消融精确地论证了 prompt 的必要性。<b>这是全文最漂亮的一个论证。</b></p>
+  </div>
+
+  <h3>消融 2：StainStylePrompt 的作用（Table 3）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>配置</th><th class="c">SSIM ↑</th><th class="c">FID ↓</th></tr></thead>
+      <tbody>
+        <tr><td>baseline</td><td class="c">0.8015</td><td class="c">268.491</td></tr>
+        <tr class="win"><td>baseline + StainStylePrompt</td><td class="c"><b>0.8121</b></td><td class="c"><b>255.261</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>两个指标同时改善——说明风格 prompt 不是"用结构换风格"，而是净增益。</p>
+
+  <h3>消融 3：双路径 vs 单路径（Table 4）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>配置</th><th class="c">SSIM ↑</th><th class="c">FID ↓</th><th class="c">PSNR ↑</th></tr></thead>
+      <tbody>
+        <tr><td>baseline</td><td class="c">0.8015</td><td class="c">268.491</td><td class="c">19.746</td></tr>
+        <tr><td>StructPrompt 主导</td><td class="c"><b>0.909</b></td><td class="c">278.253</td><td class="c"><b>20.867</b></td></tr>
+        <tr class="win"><td><b>双路径（选用）</b></td><td class="c">0.8651</td><td class="c">263.039</td><td class="c">19.862</td></tr>
+        <tr><td>StylePrompt 主导</td><td class="c">0.8474</td><td class="c"><b>246.999</b></td><td class="c">19.833</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>注意：<b>双路径在单项上都不是最好的</b>（结构不如 StructPrompt 主导，风格不如 StylePrompt 主导），<b>但它是最平衡的</b>——两个指标都显著优于 baseline。作者明确选择"平衡"而不是"单项最优"。</p>
+
+  <h3>消融 4：特征适配函数可替换性（Table 5）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>配置</th><th class="c">SSIM ↑</th><th class="c">FID ↓</th><th class="c">PSNR ↑</th></tr></thead>
+      <tbody>
+        <tr><td>Function1 = UMDST（单独用）</td><td class="c">0.7723</td><td class="c">264.375</td><td class="c">17.633</td></tr>
+        <tr class="win"><td>Ours（G = Function1）</td><td class="c"><b>0.9261</b></td><td class="c"><b>234.074</b></td><td class="c"><b>23.681</b></td></tr>
+        <tr><td>Function2 = StainGAN（单独用）</td><td class="c">0.8789</td><td class="c">238.736</td><td class="c">19.032</td></tr>
+        <tr class="win"><td>Ours（G = Function2）</td><td class="c"><b>0.9661</b></td><td class="c">238.727</td><td class="c"><b>26.305</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box good">
+    <div class="h">这是"即插即用"的硬证据</div>
+    <p style="margin-bottom:0">换上任何一个 GAN 当风格模板提供者，结果都<b>大幅优于该 GAN 单独使用</b>。SSIM 从 0.7723 → 0.9261（+0.15）、0.8789 → 0.9661（+0.087）。<b>这说明方法的价值不在于某个特定的 GAN，而在于反演框架本身。</b>——这一点对你的方案设计有直接启发：<b>你的 L3 条件层如果做成"可替换的接口"，就能复现这种即插即用的叙事。</b></p>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <h2><span class="num">10</span>局限</h2>
+  <p class="lede">论文自己承认的 + 我读出来的。</p>
+
+  <h3>论文自陈的局限</h3>
+  <div class="box warn">
+    <div class="h">风格漂移（style drift）</div>
+    <p style="margin-bottom:0">当<b>特征适配函数生成的染色与预训练模型的染色先验差距较大时</b>，条件编码采样会导致风格特征逐渐偏离。论文 Figure 10 展示了失败案例：<b>当参考染色图错误地给本不该染色的区域上了色时，StainPrompt 优化会引入风格伪影。</b><br>但作者把这个失败模式转成了正面论证——"<b>即使风格错了，结构一致性依然保持，这恰恰说明了内容与风格的强分离</b>"。这个辩护是合理的，但也说明<b>方法对风格模板的质量有依赖</b>。</p>
+  </div>
+
+  <h3>我读出来的局限</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:34px" class="c">#</th><th style="width:170px">局限</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="c">1</td>
+          <td><b>计算成本高</b></td>
+          <td>每张图约 <code>IST_init · T/2</code> 次带反传的 DDIM 步（T=50、IST_init=50 → <b>约 1250 次</b>）。且每张图要优化约 <b>10M 参数</b>。对全切片推理（WSI 有上万个 patch）来说，这个成本非常可观。<b>论文没有报单张图的推理时间。</b></td>
+        </tr>
+        <tr>
+          <td class="c">2</td>
+          <td><b>任务范围窄</b></td>
+          <td>只做了肾脏特殊染色（MAS/PAS/PASM），<b>没有做 IHC</b>，也没有蛋白表达语义的验证。指标全是图像质量类（SSIM/FID/PSNR），没有 IoD / 染色量 / 分子相关性这类临床定量指标。</td>
+        </tr>
+        <tr>
+          <td class="c">3</td>
+          <td><b>风格质量未超越 GAN</b></td>
+          <td>FID 上打平或略输（见第 8 节）。所以它的定位是"<b>结构保真的增强器</b>"，不是"风格生成的替代者"。</td>
+        </tr>
+        <tr>
+          <td class="c">4</td>
+          <td><b>依赖 GAN 提供风格模板</b></td>
+          <td>虽然消融证明"换哪个 GAN 都行"，但<b>没有一个 GAN 就完全跑不起来</b>。所以它不是"完全免训练"——它免的是扩散模型的微调，但依赖一个预训练 GAN。</td>
+        </tr>
+        <tr>
+          <td class="c">5</td>
+          <td><b>论文与代码的符号不一致</b></td>
+          <td>Eq (7) 的 λ 语义与 Table 7 矛盾（见第 5 节）；变量命名 <code>latents</code> / <code>latents_source</code> 与直觉相反。<b>这会影响复现效率。</b></td>
+        </tr>
+        <tr>
+          <td class="c">6</td>
+          <td><b>扩散模型是自己从零训的</b></td>
+          <td>没有用任何病理基础模型。论文的理由是"当时没有病理预训练模型"（2024 年的判断），但这个前提现在已经不成立。<b>后续 PGVMS 立刻转向了 CONCH，说明团队自己也意识到了。</b></td>
+        </tr>
+        <tr>
+          <td class="c">7</td>
+          <td><b>没有物理/光学建模</b></td>
+          <td>整个方法纯粹在 RGB 空间操作，<b>没有任何光学密度、Beer–Lambert 或染色矩阵的概念</b>。这跟同团队 PSPStain / PGVMS / USIGAN 大量使用 OD 的风格形成鲜明对比。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <h2><span class="num">11</span>对 PSP-Diffusion 的启示</h2>
+  <p class="lede">这篇能给你什么。</p>
+
+  <div class="box key">
+    <div class="h">启示 1 · 它验证了"扩散反演是解耦的天然工具"，但只在 RGB 空间</div>
+    <p style="margin-bottom:0">DDIM 反演的确定性映射天然把"内容"（留在噪声里）和"风格"（靠条件注入）分开。这是你讨论的<b>轴 3（内容 ⟂ 外观）解耦</b>的一个成熟实现。<b>但它的解耦发生在 RGB 空间的噪声轨迹上，不是浓度空间。</b>你的 RDCS 把解耦挪到表示层，是同一个思想的更进一步——<b>而且你的解耦有物理含义（S 与 C），它只有几何含义（轨迹方向）</b>。</p>
+  </div>
+
+  <div class="box key">
+    <div class="h">启示 2 · "可替换的接口"是它最强的叙事，你也可以有</div>
+    <p style="margin-bottom:0">消融 Table 5 是全文最有说服力的一段：<b>换任何 GAN 当风格模板，结果都大幅优于该 GAN 单独使用</b>。这证明价值在框架而不在组件。<br><b>你的 L4 渲染器 <code>R_S</code> 天然就是这种接口</b>——而且比它更彻底：它的"风格模板提供者"还是要训练一个 GAN，<b>你的"换 S"是换一个矩阵，零训练</b>。这个对比可以直接写进你的 motivation。</p>
+  </div>
+
+  <div class="box good">
+    <div class="h">启示 3 · 它把"结构保真"打成了主战场——你可以从另一个方向切</div>
+    <p style="margin-bottom:0">它在 SSIM / MS-SSIM / PSNR 上大幅领先，但 <b>FID 没赢</b>。这意味着：<b>"结构保真"这个山头已经被它占了</b>。你的浓度空间路线如果也去比 SSIM，胜算不大（而且 SSIM 在错位数据上本来就不可靠）。<br><b>你应该切"染色量准确性"这个山头</b>——DAB KL / IOD / COD 曲线 / 通道串扰。这些指标它是空白的（它一个都没报），而同团队的 USIGAN、PGVMS 都在用。<b>这是差异化定位的机会。</b></p>
+  </div>
+
+  <div class="box good">
+    <div class="h">启示 4 · 它的双路径结构可以映射到你的 L2/L3</div>
+    <p style="margin-bottom:0">它的"结构路径 + 风格路径 + 加权 λ"结构，本质上是<b>两个约束的加权平衡</b>。你的 RDCS 里也有类似结构：<b>L3（形态引导）管结构、L2（浓度先验）管合理性、L4（渲染）管风格</b>。<br>它的教训是：<b>单项最优不如平衡最优</b>（Table 4 显示双路径在两个单项上都不是最好，但综合最好）。你在设计损失权重时可以直接借鉴这个思路，并把它作为消融实验的一个论点。</p>
+  </div>
+
+  <div class="box warn">
+    <div class="h">启示 5 · 别低估它的计算成本，你的方案要报时间</div>
+    <p style="margin-bottom:0">每张图约 1250 次带反传的网络前向。<b>论文没有报推理时间——这是一个可攻击的点。</b>你的方案如果能在推理成本上做到更优（比如用 Marker-wise 的单步微调法），就是一个明确的 practical contribution。<b>建议：你的论文里一定要报单张 patch 的推理时间，并跟它对比。</b></p>
+  </div>
+
+  <div class="box warn">
+    <div class="h">启示 6 · 它是"团队唯一没碰光学密度的工作"</div>
+    <p style="margin-bottom:0">对比看：PSPStain 用 FOD、PGVMS 用 COD 曲线、USIGAN 用 OD + IoD。<b>只有这一篇（熊兵主导的扩散线）完全没有光学密度概念。</b><br>这说明<b>团队内部的"OD 路线"和"扩散路线"还没有合流</b>。而"在浓度空间做扩散"正是这两条线的交汇点。<b>谁先合流谁就拿下这个方向——这是你最大的机会，也是最大的时间压力。</b></p>
+  </div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="s12">
+  <h2><span class="num">12</span>复现陷阱清单</h2>
+  <p class="lede">如果你要跑它或改造它，先看这一页。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:34px" class="c">#</th><th style="width:180px">陷阱</th><th>具体表现与对策</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="c">1</td>
+          <td><b>论文 Eq (7) 的 λ 标反了</b></td>
+          <td>论文写 <code>λ·l_struct + (1−λ)·l_style</code>，但 Table 7 的实测是 λ 越大风格越好。<b>代码是权威</b>：<code>loss = alpha*loss1 + (1-alpha)*loss2</code>，<code>loss1</code>=MSE（风格轨迹）、<code>loss2</code>=灰度SSIM（结构轨迹），<b>alpha 加权风格</b>。<br><b>对策</b>：以代码为准；自己扫 alpha（附录 Fig 8/9 给了扫描曲线）。</td>
+        </tr>
+        <tr>
+          <td class="c">2</td>
+          <td><b>变量命名与直觉相反</b></td>
+          <td><code>latents</code> ← <code>fake_image</code>（风格模板）；<code>latents_source</code> ← <code>sample</code>（输入 H&amp;E）。<b>名字叫 "source" 的那个其实是结构路径，不叫 source 的那个是风格路径。</b><br><b>对策</b>：读代码时先看 main.py 的赋值，再进函数。</td>
+        </tr>
+        <tr>
+          <td class="c">3</td>
+          <td><b><code>--rescale_timesteps True</code> 必开</b></td>
+          <td>README 明确警告。漏了会导致时间步语义与预训练模型不匹配。</td>
+        </tr>
+        <tr>
+          <td class="c">4</td>
+          <td><b>DDIM 步数：论文 100 / 脚本 50</b></td>
+          <td>不一致。发布脚本里是 <code>--diffusion_steps 50</code>。想复现论文数字可能需要改成 100。</td>
+        </tr>
+        <tr>
+          <td class="c">5</td>
+          <td><b>风格路径的条件是硬编码的</b></td>
+          <td>main.py 里风格路径写死 <code>model_kwargs=None</code>，只对 H&amp;E→MAS 有效。README 说 H&amp;E→PAS 应该用 <code>extra</code>。<br><b>对策</b>：跑 PAS 要自己改代码。</td>
+        </tr>
+        <tr>
+          <td class="c">6</td>
+          <td><b>数据集有坑</b></td>
+          <td>README 特别标注："<i>val folder is for test, but we only use H&amp;E folder. other stain type is only use for calculate FID.</i>"——<b>测试时只用 val 里的 H&amp;E 文件夹，其他染色文件夹只用来算 FID。</b>搞错会算不出指标。</td>
+        </tr>
+        <tr>
+          <td class="c">7</td>
+          <td><b>需要 MPI</b></td>
+          <td>代码里 <code>from mpi4py import MPI</code>，数据集按 rank 分片。单卡跑要设置好环境变量。</td>
+        </tr>
+        <tr>
+          <td class="c">8</td>
+          <td><b>预训练物有三样</b></td>
+          <td>① 扩散模型 <code>model770000.pt</code>；② GAN（<code>ANHIR_params_latest.pt</code> 对应 UMDST，或 <code>latest_net_G_A.pt</code> 对应 StainGAN）；③ 数据集。<b>三样都要下。</b></td>
+        </tr>
+        <tr>
+          <td class="c">9</td>
+          <td><b>prompt 参数量很大</b></td>
+          <td><code>[T, 3, 256, 256]</code>。T=100 时约 <b>19.7M 参数/图</b>。显存要留够（论文用 A6000 48G）。</td>
+        </tr>
+        <tr>
+          <td class="c">10</td>
+          <td><b>优化器每步重建</b></td>
+          <td>每个时间步都新建 <code>Adam([visual_prompt], lr=1e-2)</code>，动量不跨步保留。这是有意为之，不是 bug——但如果你改代码时想"优化"它，先验证是否真的更好。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>关键超参一览</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:200px">参数</th><th style="width:110px">值</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>image_size</code></td><td>256</td><td>patch 尺寸（训练时 256×256，192 像素重叠切分）</td></tr>
+        <tr><td><code>num_channels</code></td><td>128</td><td>U-Net 基础通道</td></tr>
+        <tr><td><code>num_res_blocks</code></td><td>3</td><td>每个分辨率层的残差块数</td></tr>
+        <tr><td><code>noise_schedule</code></td><td>linear</td><td>噪声调度</td></tr>
+        <tr><td><code>class_cond</code></td><td>True</td><td><b>关键：类别条件（HE/MAS/PAS/PASM）</b></td></tr>
+        <tr><td><code>rescale_timesteps</code></td><td>True</td><td><b>必须开</b></td></tr>
+        <tr><td><code>IST_init</code></td><td>50</td><td>prompt 初始优化步数</td></tr>
+        <tr><td><code>lr</code>（prompt 优化）</td><td>1e-2</td><td>Adam</td></tr>
+        <tr><td><code>c₁ = c₂</code>（SSIM）</td><td>1e-8</td><td>结构损失常数</td></tr>
+        <tr><td><code>λ</code>（MAS）</td><td>0.05</td><td>偏结构</td></tr>
+        <tr><td><code>λ</code>（PAS）</td><td>0.55</td><td>折中</td></tr>
+        <tr><td>扩散模型训练</td><td>80k 迭代<br>batch 8, lr 1e-4, AdamW</td><td>A6000 48G</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>资源</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:170px">资源</th><th>链接</th></tr></thead>
+      <tbody>
+        <tr><td>论文</td><td><a href="https://arxiv.org/abs/2412.11106">arXiv 2412.11106</a> · <a href="https://doi.org/10.1609/aaai.v39i8.32949">DOI 10.1609/aaai.v39i8.32949</a></td></tr>
+        <tr><td>代码</td><td><a href="https://github.com/DianaNerualNetwork/StainPromptInversion">github.com/DianaNerualNetwork/StainPromptInversion</a></td></tr>
+        <tr><td>核心代码位置</td><td><code>guided_diffusion/gaussian_diffusion.py</code> → <code>stainpromptInversion</code>（README 说 line 911–985）</td></tr>
+        <tr><td>数据集</td><td>ANHIR（<a href="https://anhir.grand-challenge.org/">anhir.grand-challenge.org</a>）· 处理版在百度网盘（提取码 <code>hepm</code>）/ Google Drive</td></tr>
+        <tr><td>预训练权重</td><td>百度网盘（提取码 <code>mtqu</code>）/ Google Drive</td></tr>
+        <tr><td>论文结果图</td><td>百度网盘（提取码 <code>b8f5</code>）/ Google Drive</td></tr>
+        <tr><td>上游依赖</td><td><a href="https://github.com/openai/improved-diffusion">openai/improved-diffusion</a> · <a href="https://github.com/openai/guided-diffusion">openai/guided-diffusion</a> · <a href="https://github.com/linyiyang98/UMDST">UMDST (AAAI'22)</a> · CycleGAN</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box info" style="margin-top:22px">
+    <div class="h">说明</div>
+    <p style="margin-bottom:0">本讲基于 arXiv 2412.11106v1 全文（10 页，含附录）与官方 GitHub 仓库的 README、<code>main.py</code>、<code>guided_diffusion/gaussian_diffusion.py</code> 逐行对照整理。论文与代码不一致之处已逐条标注。所有数字均引自论文表格。</p>
+  </div>
+</section>
+
+<div class="foot">
+  StainPromptInversion 精讲 · AAAI 2025 · 2026-10-03<br>
+  论文 10 页 + 官方代码逐行对照
+</div>
+
+</div>
+</body>
+</html>

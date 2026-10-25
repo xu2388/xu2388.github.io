@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V1 网络结构定稿审查 —— DAB 浓度扩散</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}.flow{margin:16px 0}.flow>pre{border-left-color:var(--teal);background:#f4fafb}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">V1 结构定稿审查</div>
+<div class="sub">DAB 浓度扩散 · 逐组件核查<br>H&amp;E→HER2-IHC · 2026-10-08</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · 本报告与既有报告的分工</a>
+<a class="l1" href="#s2">2 · CFM-HES 全文核实（结案）</a>
+<a class="l2" href="#s2-1">2.1 事实卡片</a>
+<a class="l2" href="#s2-2">2.2 你的引用有一处过度</a>
+<a class="l2" href="#s2-3">2.3 它的推理反而反对你选 diffusion</a>
+<a class="l2" href="#s2-4">2.4 它的 backbone 是普通 U-Net</a>
+<a class="l2" href="#s2-5">2.5 它的消融：SSIM 反而输</a>
+<a class="l1" href="#s3">3 · ★ 硬件现实核查</a>
+<a class="l1" href="#s4">4 · 逐组件审查</a>
+<a class="l2" href="#s4-1">4.1 Stain Separation</a>
+<a class="l2" href="#s4-2">4.2 主 Diffusion backbone</a>
+<a class="l2" href="#s4-3">4.3 Input Adapter / Output Head</a>
+<a class="l2" href="#s4-4">4.4 Structure Encoder</a>
+<a class="l2" href="#s4-5">4.5 A 蛋白表达估计器</a>
+<a class="l2" href="#s4-6">4.6 B 真实 IHC score</a>
+<a class="l2" href="#s4-7">4.7 Guidance 模块</a>
+<a class="l2" href="#s4-8">4.8 物理渲染</a>
+<a class="l1" href="#s5">5 · spec 里没写的六个缺口</a>
+<a class="l1" href="#s6">6 · 修正后的 V1 组件表</a>
+<a class="l1" href="#s7">7 · 开工顺序（修正版）</a>
+<a class="l1" href="#s8">8 · 未核实清单与诚实标注</a>
+<a class="l1" href="#s9">9 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">方案可行性审查 · V1 结构定稿</div>
+<h1>V1 网络结构定稿审查<br>—— SD1.5-style U-Net 的可行性、CFM-HES 全文核实与逐组件判定</h1>
+<p class="desc">对象：用户给出的 25 节 V1 网络结构定稿（主 Diffusion = SD1.5-style U-Net · Structure Encoder = 轻量 CNN-FPN · A = ResNet18+FPN · B = 小型 conditional score U-Net · 固定 Beer–Lambert 渲染）。本报告对三个被引来源（MICCAI 2026 开放获取全文 · HistDiST 官方 README · PST-Diff）逐条一手核实，并给出逐组件判定与修正后的组件表。</p>
+<div class="meta"><span>CFM-HES 全文已取到</span><span>HistDiST 24GB 事实</span><span>SD U-Net 显存核查</span><span>逐组件判定</span><span>2026-10-08</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box key">
+<div class="bt">总判定：<b>表示与条件的设计是对的，backbone 的选型要换，两个必填项缺失</b></div>
+<p>你把「扩散变量 = C<sub>DAB</sub>、条件 = C<sub>H</sub>/C<sub>E</sub>/f<sub>morph</sub>/c<sub>exp</sub>、渲染固定」定下来，方向与 2026 MICCAI 那篇浓度域工作的骨架一致，也与你已验证的闭环一致 —— <b>这部分我完全同意</b>。</p>
+<p>但有三处需要在动代码之前改掉：</p>
+<ol>
+<li><b>SD1.5-style U-Net 在浓度（全分辨率）空间上跑不动</b>，而且你引的两个先例都<b>不支持</b>这个选择 —— HistDiST 是在 <b>latent 空间（64×64）</b>、用 <b>24GB 显存</b> 跑的；CFM-HES 用的是 <b>普通 U-Net</b>（Ronneberger 2015），不是 SD U-Net。见 §3。</li>
+<li><b>C<sub>DAB</sub> 的归一化没有定义</b>，这一项不补，训练不会收敛（§5）。</li>
+<li><b>A 输出的 protein map 没有任何监督信号</b>，按现在的损失设计它会退化成常数图，其多尺度注入等于白加参数（§4.5）。</li>
+</ol>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 本轮最重要的三条新证据（都是一手核实，改变了之前的判断）</div>
+<ol>
+<li><b>HistDiST 官方 README 逐字</b>：「We ran training and inference with a single or multiple <b>24GB VRAM</b> CUDA GPU's」；训练脚本 <code>--num_processes=3 --train_batch_size=16 --resolution=512 --gradient_checkpointing</code>；而它<b>在 latent 空间工作</b>（「The VAE encoder maps images to latent space, where noise is added and later denoised by the U-Net」）。⇒ 你引它来支持 SD U-Net，实际上它同时证明了「SD U-Net 需要 24GB + latent 空间」。</li>
+<li><b>CFM-HES 全文（MICCAI 开放获取 PDF，11 页）已取到</b>：它的 backbone 逐字是「Our CFM model is implemented using a <b>U-Net backbone architecture [22]</b>」，而 [22] = <b>Ronneberger, Fischer, Brox, "U-Net", MICCAI 2015</b> —— 普通 U-Net，<b>不是</b> SD U-Net。⇒ 你最接近的浓度域先例，选的正是我上一份报告推荐的小 U-Net 路线。</li>
+<li><b>CFM-HES 明确为选 FM 而放弃 diffusion，理由是实用性的</b>：逐字「FM learns a constant-velocity field along the straight-line path, leading to <b>more stable training and much faster inference</b> compared to diffusion models. For instance, while a standard DDPM requires about 1000 time steps, FM produces a high-quality generation in <b>50 ODE steps</b>」。⇒ 你把它作为最近的先例，就必须回答「为什么你选 diffusion」。</li>
+</ol>
+</div>
+
+<h3>逐组件判定表</h3>
+<div class="scroll"><table>
+<thead><tr><th>你的组件</th><th>你的选型</th><th>判定</th><th>一句话依据</th><th>改动成本</th></tr></thead>
+<tbody>
+<tr><td>Stain Separation</td><td>非神经网络 / 固定矩阵</td><td><span class="b high">成立</span></td><td>CFM-HES 同样用固定矩阵 + 分离算法；你的重建检查是正确门禁</td><td>低</td></tr>
+<tr><td>扩散变量</td><td>C<sub>DAB</sub> 单通道</td><td><span class="b high">成立</span></td><td>与「只生成缺失染料」范式一致</td><td>—</td></tr>
+<tr><td><b>主 backbone</b></td><td><b>SD1.5-style U-Net</b></td><td><span class="b bad">不成立</span></td><td>两个先例都不支持：HistDiST 是 latent + 24GB；CFM-HES 是普通 U-Net。全分辨率浓度空间跑不动</td><td>中</td></tr>
+<tr><td>Input Adapter 3→4</td><td>3→4 适配层</td><td><span class="b bad">不成立</span></td><td>你不加载 SD 权重 ⇒ 适配层无用途；直接 <code>Conv2d(3, C, 3)</code> 即可</td><td>低</td></tr>
+<tr><td>Output Head</td><td>4→1</td><td><span class="b medium">成立但要收窄</span></td><td>改 <code>conv_out</code> 的 out_channels 即可，不需要额外的 4→1 阶段</td><td>低</td></tr>
+<tr><td>Structure Encoder</td><td>轻量 CNN-FPN（32/64/128/256）</td><td><span class="b high">成立</span></td><td>与「不用 Phikon、用 H/E 浓度」一致；规模合理</td><td>低</td></tr>
+<tr><td>结构 + 形态合并为一个 encoder</td><td>一个 encoder 两种用途</td><td><span class="b high">成立</span></td><td>消除了我上一份报告指出的「三条同源条件路径」问题</td><td>—</td></tr>
+<tr><td>条件注入</td><td>Residual / ControlNet-lite</td><td><span class="b high">成立</span></td><td>GLIGEN 消融说明 sum 注入更适合空间对齐条件</td><td>低</td></tr>
+<tr><td>A Protein Estimator</td><td>ResNet18 + FPN → map + c<sub>exp</sub></td><td><span class="b medium">有条件成立</span></td><td>网络合理，<b>但 protein map 无监督</b>；且监督来源仍是 PSPStain 伪标签</td><td>中</td></tr>
+<tr><td>B Real-IHC Score</td><td>小型 conditional score U-Net</td><td><span class="b medium">有条件成立</span></td><td>结构合理；但 LP(C<sub>H</sub>) 条件会把它推向「只有 marginal」那一档</td><td>高</td></tr>
+<tr><td>Guidance</td><td>数学组合，主模型与 B 同参数化</td><td><span class="b high">成立</span></td><td>统一 v-prediction + 同一 schedule 是正确做法</td><td>低</td></tr>
+<tr><td>物理渲染</td><td>Beer–Lambert，V1 完全固定</td><td><span class="b high">成立</span></td><td>保住了 concentration→RGB 的干净解释</td><td>低</td></tr>
+<tr><td>V1 不上 Phikon</td><td>不上</td><td><span class="b high">成立</span></td><td>避免染色信息泄漏 + 额外大模型 + 显存压力；先证明 H/E 浓度够用</td><td>—</td></tr>
+</tbody></table></div>
+
+<div class="box teal">
+<div class="bt">一句话路线图</div>
+<p><b>换</b> backbone（SD1.5-style → from-scratch 小 U-Net，base 64–96）；<b>删</b> Input Adapter 与额外的 4→1 阶段（直接改 conv_in/conv_out 通道数）；<b>补</b> C<sub>DAB</sub> 的逐通道 robust 归一化（这是必填项）；<b>砍</b> A 的 protein map（v1 只留 c<sub>exp</sub>），或给它显式的空间监督；<b>改</b> B 的 H 条件从「LP(C<sub>H</sub>) 代替」改为「先做 T<sub>H</sub> 域校准，再选带宽」；<b>补</b> 两个 Stage-0 门禁（H&amp;E 侧矩阵列数、残差量级）。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>本报告与既有报告的分工</h2>
+
+<div class="scroll"><table>
+<thead><tr><th>既有文档</th><th>它回答的问题</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><b>DAB-only 浓度扩散_文献先例地图与模型选型审查</b>（同日，06 类）</td><td>「这套方案里每一格，文献上谁已经占了」+ 模型选型</td><td><b>母文档</b>。本报告是它的下一环：把选型落到<b>具体网络结构</b>上，并<b>结案</b>它 §10 里那条「CFM-HES 正文未取到」。</td></tr>
+<tr><td><b>DAB-only 浓度扩散架构全流程可行性审查</b>（同日，06 类）</td><td>方案内部是否自洽 + v1/v2 拆分</td><td>互补。本报告不复述它的自洽性分析。</td></tr>
+<tr><td><b>扩散模型虚拟染色_蛋白表达约束_约束位置地图</b>（01 类）</td><td>蛋白约束挂哪一格</td><td>本报告 §4.5 / §4.6 复用其结论；MIU-Diff 两处勘误已在前一份报告中回填。</td></tr>
+<tr><td><b>PSP-Diffusion 浓度空间扩散_思路澄清</b>（01 类）</td><td>浓度空间范式的澄清点</td><td>本报告 §5 复用其「C 的归一化必须做」与「残差 r」两条，并指出用户 spec 里确实漏了第一条。</td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>CFM-HES 全文核实（未核实项结案）</h2>
+
+<p>你在 spec 里给的是 <b>MICCAI 官方开放获取页</b>（<code>papers.miccai.org/miccai-2026/0607-Paper5285.html</code>）。我顺着它取到了 PDF（<code>paper/5285_paper.pdf</code>，11 页）并逐字读完。<b>前一份报告 §10 里「CFM-HES 正文未取到（Springer 登录墙）」这条未核实项，现在结案。</b></p>
+
+<h3 id="s2-1">2.1 事实卡片（全部逐字核实）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">Making HE Histopathological Images More Colorful by Conditional Flow Matching</div><div class="v">Mohamed Salim Ben Omrane, Ségolène Martin, Mounir Kaaniche, Astrid Laurent-Bellue, Wided Miled Souid, Catherine Guettier, Jean-Christophe Pesquet · MICCAI 2026 · PDF 11 页</div></div><div><span class="b high">VERIFIED（全文）</span></div></div>
+<div class="body">
+<div class="scroll"><table>
+<thead><tr><th>项</th><th>原文事实</th></tr></thead>
+<tbody>
+<tr><td>任务</td><td><b>HE → HES</b>（生成藏红花 saffron，不是 IHC）</td></tr>
+<tr><td>三步管线</td><td>逐字：「stain separation, conditional flow matching, and stain reconstruction」</td></tr>
+<tr><td>浓度域</td><td>逐字：「we adopt a <b>concentration-based representation</b> derived from color deconvolution, in which the image formation process becomes <b>approximately linear with respect to stain concentrations</b>」</td></tr>
+<tr><td>Beer–Lambert</td><td><code>I = I₀ exp(−HW)</code>，<b>I₀ = 255</b>；<code>V = −log(I/I₀) = HW</code> ⇒ <b>自然对数</b>，不是 log₁₀</td></tr>
+<tr><td>只生成缺失通道</td><td>逐字：「our main goal is to estimate the <b>missing saffron concentration map</b> through Conditional Flow Matching」；条件 <code>Y = [H_h^obs, H_e^obs]</code></td></tr>
+<tr><td><b>backbone</b></td><td>逐字：「Our CFM model is implemented using a <b>U-Net backbone architecture [22]</b>」，而 <b>[22] = Ronneberger, Fischer, Brox, "U-Net", MICCAI 2015</b> ⇒ <b>普通 U-Net</b></td></tr>
+<tr><td>训练超参</td><td>150 epochs · Adam · <b>batch 16</b> · lr 5×10⁻⁵ · AMP · 推理 50 步</td></tr>
+<tr><td>分离算法</td><td>不是 Macenko/Vahadane，而是 [24] <b>Sadraoui et al., ICIP</b>：<b>unrolled projected gradient + smooth total variation 正则</b></td></tr>
+<tr><td><b>配对要求</b></td><td>逐字：「For training purposes, we consider <b>paired data</b> that requires their associated ground-truth HES concentrations」；25 对 HE/HES WSI（21/2/2 划分），30,000 张 <b>256×256</b> 配对 patch（24,285/2,547/3,146）</td></tr>
+<tr><td>选 FM 的理由</td><td>逐字（<b>实用性</b>）：「FM learns a constant-velocity field along the straight-line path, leading to <b>more stable training and much faster inference</b> compared to diffusion models... DDPM requires about 1000 time steps, FM produces a high-quality generation in <b>50 ODE steps</b>」</td></tr>
+</tbody></table></div>
+</div></div>
+
+<h3 id="s2-2">2.2 你的引用有一处过度</h3>
+
+<div class="box stop">
+<div class="bt">你写的是：「他们甚至明确认为『只生成缺失染料、保留已知染料』比直接 RGB→RGB 更物理地保持已知结构」</div>
+<p><b>这句话在原文里不存在。</b> 全文我检索了 <code>preserv</code> 等词，原文对「为什么在浓度域做」的论证只有一段，逐字如下：</p>
+<pre><code>The choice of representation space is critical. Rather than operating in the RGB
+domain, we adopt a concentration-based representation derived from color
+deconvolution, in which the image formation process becomes approximately
+linear with respect to stain concentrations. This transformation provides a
+physically meaningful space, simplifying the representation of hematoxylin,
+eosin, and saffron components and facilitating learning.</code></pre>
+<p>⇒ 它的理由是 <b>「成图过程对染色浓度近似线性」</b>，因此「物理上有意义的空间，简化表示、便于学习」。这是<b>线性性 / 可学习性</b>的论证，<b>不是</b>「保留已知结构更物理」的论证。</p>
+<p><b>为什么这一点重要</b>：你打算把这句话写进论文的 motivation。审稿人只要打开这篇 PDF（开放获取）就会发现原文没有这个论断 —— 这属于<b>可被当场证伪的引用</b>。正确写法是引用它真实的那句（线性性），或者改成你自己的论证（下面给你一条更强的）。</p>
+</div>
+
+<div class="box good">
+<div class="bt">建议替换的 motivation（有数据支撑，且是原文没有的）</div>
+<p>把「保留已知结构」换成 <b>「H 通道已被输入约束，生成模型的全部容量都花在 H&amp;E 里没有对应物的那一维上」</b>，并用 CFM-HES 自己的消融做对照：</p>
+<ul>
+<li>CFM-HES 的 saffron <b>与伊红强相关</b>，所以它的生成模型几乎没有增益 —— 消融里把 CFM 换成确定性 UNet（PredS），PSNR 只差 0.72 dB（见 §2.5）。</li>
+<li>而 <b>DAB 在 H&amp;E 里没有对应物</b>，H&amp;E→DAB 是真正的一对多 ⇒ 同样的架构在你这里，生成模型的收益应该<b>更大</b>，而不是更小。</li>
+</ul>
+<p>这条论证同时解释了「为什么你需要生成模型」和「为什么 CFM-HES 的结论不能直接照搬到你的任务」，比原文那句被误引的话强得多。这也正是你库内已有的一条判断。</p>
+</div>
+
+<h3 id="s2-3">2.3 它的推理反而反对你选 diffusion</h3>
+
+<p>CFM-HES <b>明确论证了为什么选 flow matching 而不是 diffusion</b>，理由两条：训练更稳、推理更快（1000 步 → 50 步）。这不是顺带的，它写在 §2.1 Motivation 里，并且论文的整个方法选择都建立在这上面。</p>
+
+<div class="box warn">
+<div class="bt">所以：你把它当作最近的先例，就必须回答「为什么你选 diffusion」</div>
+<p>可行的三条回答，按强度排序：</p>
+<ol>
+<li><b>（最强）任务的一对多程度不同。</b> saffron ≈ 伊红的函数，DAB 在 H&amp;E 里没有对应物 ⇒ 你需要一个真正的生成模型，而 CFM 相对确定性 UNet 的增益在 saffron 上被证明很小（0.72 dB），在你的任务上应当更大。这条有原文消融支撑。</li>
+<li><b>（中）score 引导接口。</b> 你的 B 模块需要采样期 score。FM 的确定性 ODE 没有天然的 score 接口 —— 虽然 Feng et al. (ICML 2025) 已给出 FM 的通用 guidance 框架、Guided Flows 也把 CFG 搬进了 FM，所以这条是「更方便」而不是「只能 diffusion」。</li>
+<li><b>（弱）你已有的工程基础。</b> 你已经有 v-prediction + zero-SNR 的实现。这是<b>工程理由</b>，可以写，但不要当主论证。</li>
+</ol>
+<p>另外必须诚实写一句：<b>在速度与训练稳定性上，FM 优于 diffusion 是有直接先例支持的</b>（就是这篇）。不要假装这个 trade-off 不存在。</p>
+</div>
+
+<h3 id="s2-4">2.4 它的 backbone 是普通 U-Net —— 这一条直接支持换掉 SD1.5-style</h3>
+
+<p>你说「SD1.5 这套 U-Net 架构在病理虚拟染色里有直接先例」，引的是 HistDiST。但<b>你最接近的那个先例（浓度域 + 只生成缺失通道 + Beer–Lambert）用的是 Ronneberger 2015 的普通 U-Net</b>，而它在 256×256 patch、batch 16 上训得起来。</p>
+
+<div class="grid2">
+<div class="mini"><div class="mt">CFM-HES（浓度域，最接近）</div><p><b>普通 U-Net</b>（Ronneberger 2015）· 256×256 · batch 16 · 150 epochs · 全分辨率浓度域</p><p class="small">⇒ 证明「小 U-Net + 浓度域」这条路是走得通的</p></div>
+<div class="mini"><div class="mt">HistDiST（latent 扩散，你引的）</div><p><b>SD1.5 U-Net</b> · 512×512 <b>RGB</b> → 64×64 <b>latent</b> · batch 16 × 3 进程 · <b>24GB 显存</b> · gradient checkpointing</p><p class="small">⇒ 证明「SD U-Net 需要 latent 空间 + 24GB」</p></div>
+</div>
+
+<h3 id="s2-5">2.5 它的消融：确定性 UNet 反而赢 SSIM</h3>
+
+<div class="scroll"><table>
+<thead><tr><th>模型（liver test set）</th><th>PSNR ↑</th><th>SSIM ↑</th><th>LPIPS ↓</th><th>PieAPP ↓</th></tr></thead>
+<tbody>
+<tr><td>CycleGAN</td><td>27.65</td><td>0.957</td><td>0.048</td><td>0.82</td></tr>
+<tr><td>Pix2Pix</td><td>28.68</td><td>0.959</td><td>0.052</td><td>1.31</td></tr>
+<tr><td>PnP-FM</td><td>28.05</td><td>0.964</td><td>0.066</td><td>1.60</td></tr>
+<tr><td>Pyramid pix2pix</td><td>29.15</td><td>0.952</td><td>0.050</td><td>0.88</td></tr>
+<tr><td><b>PredS</b>（确定性 U-Net，<b>同一套</b>浓度域 + Beer–Lambert 管线）</td><td>31.34</td><td><b>0.978</b></td><td>0.047</td><td>1.06</td></tr>
+<tr><td><b>CFM (Ours)</b></td><td><b>32.06</b></td><td>0.968</td><td><b>0.030</b></td><td><b>0.66</b></td></tr>
+</tbody></table></div>
+
+<div class="box warn">
+<div class="bt">这条消融要读准（我上一份报告只引了 PSNR，此处更正）</div>
+<p>PredS 与 CFM <b>共享同一套浓度域 + Beer–Lambert 管线</b>，唯一差别是生成器（确定性 U-Net 回归 vs 条件生成模型）。读数：</p>
+<ul>
+<li>PSNR：31.34 → 32.06（<b>+0.72 dB</b>）</li>
+<li>LPIPS：0.047 → 0.030（<b>明显改善</b>）</li>
+<li>PieAPP：1.06 → 0.66（<b>明显改善</b>）</li>
+<li><b>SSIM：0.978 → 0.968（反而变差）</b></li>
+</ul>
+<p>⇒ <b>「在浓度域做」这件事的收益是小的、且是分指标混合的</b>；确定性回归在 SSIM 上还赢。这与你库内那条判断一致：「对一个能从 H&amp;E 推出的通道，生成模型几乎无收益；收益来自『在浓度域做』本身」。</p>
+<p><b>对你的用法</b>：既然 DAB 不像 saffron 那样能从 H&amp;E 推出，你的消融里<b>必须包含一个 PredS 式确定性 UNet 基线</b>（同一套浓度域管线，只换生成器）。这是证明「生成模型在你的任务上有必要」的唯一方式 —— 而且这个基线成本很低，几乎白送。如果你连它都赢不了，那就该老老实实做确定性回归 + 蛋白损失，而不是堆扩散。</p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>★ 硬件现实核查：SD1.5-style U-Net 在浓度分辨率上跑不动</h2>
+
+<div class="box stop">
+<div class="bt">结论：把 SD1.5 的 U-Net 搬到全分辨率浓度空间，是这套 spec 里唯一一个「物理上做不出来」的问题</div>
+<p>你在 §22 提到「4060 的显存压力」——所以按 <b>8 GB</b> 这个约束来核算。</p>
+</div>
+
+<h3>3.1 先看两个先例各自需要什么</h3>
+
+<div class="scroll"><table>
+<thead><tr><th>工作</th><th>backbone</th><th>工作空间</th><th>输入尺寸</th><th>显存 / 配置</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td><b>HistDiST</b></td><td>SD1.5 U-Net（微调）</td><td><b>VAE latent（1/8 下采样）</b></td><td>512×512 RGB → <b>64×64</b> latent</td><td><b>单卡或多卡 24 GB</b>；<code>--num_processes=3 --train_batch_size=16 --gradient_checkpointing --enable_xformers_memory_efficient_attention</code></td><td><span class="b high">README 逐字</span></td></tr>
+<tr><td><b>CFM-HES</b></td><td><b>普通 U-Net</b>（Ronneberger 2015）</td><td><b>全分辨率浓度域</b></td><td>256×256</td><td>未说明具体显存；<b>batch 16</b>、AMP、150 epochs</td><td><span class="b high">PDF 逐字</span></td></tr>
+<tr><td><b>你的 spec</b></td><td><b>SD1.5-style U-Net</b>（320/640/1280）</td><td><b>全分辨率浓度域</b></td><td>256×256（或更大）</td><td><b>8 GB</b></td><td>—</td></tr>
+</tbody></table></div>
+
+<p><b>关键观察</b>：HistDiST 能用 24 GB 跑 SD U-Net，靠的是 <b>latent 空间把空间尺寸压到 1/8</b>（512 → 64）。你既要用 SD U-Net 的通道宽度，又要用全分辨率，等于<b>把两个先例里最贵的部分叠加在一起</b>：SD U-Net 的宽度 × 浓度域的全分辨率。</p>
+
+<h3>3.2 为什么这在 8 GB 上不成立（数量级论证）</h3>
+
+<p>SD1.5 U-Net 的第一级是 <b>320 通道</b>，且第一级分辨率就是输入分辨率（没有前置下采样）。单个激活张量的显存：</p>
+
+<div class="formula">320 ch × 256 × 256 × 4 B ≈ <b>84 MB</b>（fp32，单个张量）</div>
+
+<p>而训练时每个 ResBlock 至少两个卷积、每个尺度要保留 skip 供反传、attention 在低分辨率尺度还会产生二次项。把 batch、层级叠加、梯度与优化器状态算进去，<b>总需求落在几十 GB 量级</b>，与 HistDiST 报告的 24 GB 是同一个数量级 —— 而 HistDiST 还是在 latent 空间、还开了 gradient checkpointing 与 xformers。</p>
+
+<div class="box warn">
+<div class="bt">换成小 U-Net 之后是什么量级（同一口径）</div>
+<p>base channels <b>64</b>、multipliers <b>[1,2,4,4]</b>、256×256 输入：第一级激活张量</p>
+<div class="formula">64 ch × 256 × 256 × 4 B ≈ <b>17 MB</b></div>
+<p>约为 SD 版的 <b>1/5</b>（通道 320→64 是 5×）。配合 AMP + gradient checkpointing，<b>batch 4–8 在 8 GB 上是可行的</b>。这也正是 CFM-HES 用普通 U-Net 在 256×256、batch 16 上训得起来的同一条路线。</p>
+<p class="small">诚实标注：以上是<b>数量级估算，不是实测</b>。我没有在你的硬件上跑过。但「SD1.5 U-Net 全分辨率 > 8 GB」这个结论的裕度足够大，不需要实测就能判定。</p>
+</div>
+
+<h3>3.3 更根本的问题：SD1.5 U-Net 的价值全部来自它的预训练权重，而你用不上</h3>
+
+<div class="scroll"><table>
+<thead><tr><th>SD1.5 U-Net 的设计前提</th><th>你的设定</th><th>后果</th></tr></thead>
+<tbody>
+<tr><td><code>conv_in = Conv2d(4, 320, 3, padding=1)</code>，输入是 4 通道 VAE latent</td><td>输入是浓度图（3 通道：DAB_t + C_H + C_E）</td><td>要改输入层 —— 而<b>改了输入层，<code>conv_in</code> 的预训练权重就作废了</b></td></tr>
+<tr><td>输入 latent 被 VAE scaling factor（≈0.18215）缩放到近似单位方差</td><td>浓度图是重尾、含大量零的非标准化量</td><td>预训练权重统计上完全不匹配</td></tr>
+<tr><td>带 <code>cross_attention_dim = 768</code> 的文本 cross-attention 层</td><td>你不需要文本条件；你的条件是空间特征 + 全局向量</td><td>这些层要么闲置（浪费参数与显存），要么要改造成你的注入形式 —— 那就不叫「复用 SD U-Net」了</td></tr>
+<tr><td>设计目标是 64×64 latent 上的 UNet2DConditionModel</td><td>全分辨率浓度域</td><td>架构假设不成立</td></tr>
+</tbody></table></div>
+
+<div class="box key">
+<div class="bt">一句话</div>
+<p><b>SD1.5 U-Net 的收益 = 预训练先验；你既换了输入空间、又换了条件形式，先验拿不到，只剩下一副为 64×64 latent 设计的重骨架。</b>这是「大而无效」。要么在 latent 空间用 SD 权重（那你得先把浓度图编码进某个 latent，等于多引入一个 VAE —— 又多一个要训的东西），要么换小 U-Net。</p>
+</div>
+
+<h3>3.4 推荐的三档规模（按你的 8 GB 约束）</h3>
+
+<div class="scroll"><table>
+<thead><tr><th>档</th><th>配置</th><th>输入</th><th>估计可行性（8 GB）</th><th>建议</th></tr></thead>
+<tbody>
+<tr><td><b>A（推荐）</b></td><td>from-scratch 2D U-Net · base <b>64</b> · mult <b>[1,2,4,4]</b> · 每级 2 ResBlock · attention 只在 32×32 / 16×16</td><td>256×256×3</td><td>AMP + gradient checkpointing 下 batch 4–8</td><td><span class="b high">第一版</span></td></tr>
+<tr><td>B</td><td>同上但 base <b>96</b></td><td>256×256×3</td><td>batch 2–4</td><td>容量不够时再升</td></tr>
+<tr><td>C</td><td>SD1.5-style U-Net</td><td>必须先降到 latent 或 ≤128×128</td><td>全分辨率不可行</td><td><span class="b bad">不采用</span></td></tr>
+</tbody></table></div>
+
+<div class="box teal">
+<div class="bt">一条独立的正面证据（库内已有）</div>
+<p>Min-SNR（arXiv:2303.09556, ICCV 2023）证明「用<b>更小的架构</b>」也能在 ImageNet 256×256 上拿到当时最好的 FID 2.06。⇒ 「小 U-Net 不够强」这个担心没有证据支持；而「小 U-Net 在这个任务上够用」有 CFM-HES 的直接先例。</p>
+</div>
+
+<h2 id="s4"><span class="num">4</span>逐组件审查</h2>
+
+<h3 id="s4-1">4.1 Stain Separation</h3>
+
+<p><b>判定：<span class="b high">成立</span></b>。你的「不做神经网络、用固定矩阵、并且加一个重建检查」是这套 spec 里最正确的一部分。</p>
+
+<div class="box good">
+<div class="bt">你的重建检查就是 Stage 0 门禁，写得对</div>
+<pre><code>IHC → [C_H, C_DAB] → M·C → Beer–Lambert → IHC_recon
+if ‖IHC_recon − IHC‖ 大:  先别训 diffusion</code></pre>
+<p>这个判断完全正确：<b>如果浓度表示本身不自洽，再好的扩散也救不回来</b>。CFM-HES 也把分离算法当成一个独立的关键环节（用的是 ICIP 的 unrolled projected gradient + TV 正则，不是 Macenko）。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">但有三点必须补上，否则这个检查会给出误导性的结论</div>
+<ol>
+<li><b>H&amp;E 侧的解混矩阵必须是 2 列 <code>[s_H, s_E]</code>。</b> 由你自己 E0.2 的实测结论直接推出：在 3×3 解混下，「E 通道」恒等于正交补残差通道（夹角 8.5e-7 度，<code>C_E/C_res = −1.5918</code> 纯常数）。若 H&amp;E 侧用 3 列，<b>C<sub>E</sub><sup>HE</sup> 就不是伊红</b>，后面 Structure Encoder 与 A 的输入语义全部失效。这一条不确认，§4.4 与 §4.5 都建立在流沙上。</li>
+<li><b>IHC 侧的重建残差必然非零，需要一个阈值而不是「差很多」。</b> E0.2 已证 IHC 片子没有伊红 ⇒ 真实 IHC 的 OD 有一个 ⊥ span([s_H, s_DAB]) 的分量 r。<b>先量 <code>‖r‖/‖Y‖</code>，把阈值写死</b>，否则你会把「本来就有残差」误判成「分离失败」。</li>
+<li><b>log 底数与 I₀ 要写死并注明。</b> CFM-HES 用的是 <code>I = I₀ exp(−HW)</code>、<b>I₀ = 255、自然对数</b>；Ruifrok 原始定义是 <b>log₁₀</b>，两者差 ln10 ≈ 2.303。库内已把这条列为澄清点，现在有了可对照的具体取值（CFM-HES: 自然对数 + I₀=255）。</li>
+</ol>
+</div>
+
+<h3 id="s4-2">4.2 主 Diffusion backbone</h3>
+
+<p><b>判定：<span class="b bad">不成立</span>（SD1.5-style）；<span class="b high">成立</span>（换成 from-scratch 小 U-Net）</b>。理由见 §3，此处只补三条与网络结构直接相关的点。</p>
+
+<div class="box key">
+<div class="bt">你 §5 里那句「你的创新发生在 representation + condition + protein + real-IHC score，而不是重新发明一个 U-Net」——这句话我完全同意，但它推出的结论与你的选型相反</div>
+<p>既然创新不在 backbone，那 backbone 的选型标准就应该是<b>「最省事、最容易定位问题、最不容易成为瓶颈」</b>，而不是「最大、最像 SD」。而且从可复现性看：</p>
+<ul>
+<li>SD1.5 U-Net 你要改 <code>conv_in</code>、<code>conv_out</code>、还要处理 768 维 cross-attention 层 —— <b>改动量反而比自己写一个小 U-Net 大</b>。</li>
+<li>自己写的 U-Net 每一层的通道数、注入点、attention 位置都是你自己定的，出问题时能定位；SD 骨架里哪一层是瓶颈要靠猜。</li>
+</ul>
+<p>⇒ 用 SD 骨架与「创新不在 backbone」是自相矛盾的：如果你不打算利用它的预训练先验，就没有任何理由承担它的复杂度。</p>
+</div>
+
+<div class="box good">
+<div class="bt">参数化：你（隐含）选的 v-prediction 是对的，而且现在有同数据集先例</div>
+<p>你 §19 说「考虑到你之前已经在主实验里用了 v-prediction，建议这里继续统一成 v-prediction」。<b>HistDiST README 摘要逐字</b>给了这条一个直接先例：</p>
+<pre><code>To overcome brightness biases, we incorporate a rescaled noise schedule,
+v-prediction, and trailing timesteps, enforcing a zero-SNR condition at the
+final timestep.</code></pre>
+<p>⇒ <b>v-prediction + 重标定噪声调度 + 终点零 SNR</b>，在一篇用<b>同样两个数据集（MIST / BCI）</b>的病理扩散工作里被独立采用。加上 Salimans &amp; Ho「predicting v is the most stable option」与 Min-SNR，这条不需要再论证。</p>
+<p><b>附带收益（库内已记录）</b>：辅助损失挂 <code>v̂</code> 时额外 Jacobian 因子是 <code>−σ_t</code>，<b>有界 [−1,0]</b>；挂 <code>x̂₀</code> 时是 <code>SNR(t)^(−1/2)</code>，t→T 发散。所以 v-prediction 同时是你后面要加的 FOD 蛋白损失的<b>前提条件</b>。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">输出通道数：确认是 1 通道，但要注意「1 通道输出」在文献里没有先例可借</div>
+<p>上一份报告已核实的阴性结论：<b>未找到任何用扩散生成 1–2 通道染色浓度场的工作</b>（已核实的虚拟染色扩散全部输出 3 通道 RGB 或 4 通道 VAE latent）。⇒ 「低通道数是否改变架构推荐」在文献里没有答案。实践含义：不要照搬任何论文的通道数配置，<b>base channels 按你的显存实测来定</b>，并且第一件事就是跑通一个 batch 看显存占用。</p>
+</div>
+
+<h3 id="s4-3">4.3 Input Adapter 与 Output Head</h3>
+
+<p><b>判定：<span class="b bad">Input Adapter 3→4 不成立</span>；<span class="b medium">Output Head 4→1 成立但不需要单独一个阶段</span></b>。</p>
+
+<div class="grid2">
+<div class="mini"><div class="mt">你的写法</div><pre><code>Input: [DAB_t, C_H, C_E]   (3ch)
+   ↓  3 → 4 Input Adapter
+SD1.5-style U-Net
+   ↓  4 → 1 Output Head
+predicted v</code></pre></div>
+<div class="mini"><div class="mt">应该的写法</div><pre><code>Input: [DAB_t, C_H, C_E]   (3ch)
+   ↓  conv_in = Conv2d(3, C, 3, p=1)
+U-Net
+   ↓  conv_out = Conv2d(C, 1, 3, p=1)
+predicted v</code></pre></div>
+</div>
+
+<p><b>为什么 3→4 适配层没有用途</b>：它的唯一可能理由是「保留 SD1.5 的 4 通道 <code>conv_in</code> 权重」。但：</p>
+<ul>
+<li>SD1.5 的 <code>conv_in</code> 权重是在 <b>VAE latent</b>（被 scaling factor 缩放到近似单位方差）上学的；你的输入是<b>未标准化的浓度图</b>，统计分布完全不同 ⇒ 权重本身没有迁移价值。</li>
+<li>而 §5 里要补的「C<sub>DAB</sub> 逐通道归一化」如果真的做了，那也只是把尺度调成近似单位方差，<b>但那是浓度图的方差，不是 VAE latent 的方差</b> —— 仍然不等于让预训练权重有意义。</li>
+</ul>
+<p>⇒ 直接 <code>Conv2d(3, C, 3, padding=1)</code>。少一层、少一次无意义的映射、少一个要调的参数量。</p>
+<p><b>Output Head</b>：<code>conv_out</code> 从 4 通道改成 1 通道是<b>一行改动</b>；你写的「4→1 Output Head」是把它当成一个额外阶段，没必要 —— 除非你保留 SD 的 4 通道 <code>conv_out</code> 然后再降维，那同样是无意义的（多一层参数 + 多一次梯度路径）。</p>
+
+<h3 id="s4-4">4.4 Structure Encoder</h3>
+
+<p><b>判定：<span class="b high">成立</span></b>。这是这份 spec 里我最赞成的部分。</p>
+
+<div class="box good">
+<div class="bt">三条都对</div>
+<ol>
+<li><b>「一个编码器，两种用途」</b>（§23）—— 消除了我上一份报告指出的「raw concat + f_morph + c_exp 三条同源条件路径导致收益无法归因」的问题。这是正确的收敛。</li>
+<li><b>不用 Phikon</b>（§22）—— 你的理由（染色信息泄漏 + 额外大模型 + 显存）与库内结论一致。补充一条：HistDiST 确实用了 Phikon 做 morphology 条件（README 逐字「Phikon-extracted morphological embeddings alongside VAE-encoded H&amp;E representations」），所以「不用 Phikon」是<b>与先例的有意分歧</b>，需要在论文里说明理由，并靠消融证明 C_H+C_E+低频够用。</li>
+<li><b>GroupNorm 不用 BatchNorm</b>（§8）—— 正确。病理图像 batch 内染色差异大，BatchNorm 的 running statistics 会把染色风格混进归一化里，这正是你想避免的。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">一个必须消融掉的疑问：LP(C_H) / LP(C_E) 与 C_H / C_E 的冗余</div>
+<p>你把 <code>I_struct = [C_H, C_E, LP(C_H), LP(C_E)]</code> 四条一起喂进 encoder。但一个带下采样的 CNN 本身就在逐级做低通 —— <b>LP(C_H) 与 C_H 在 encoder 的第一、二级里提供的信息高度重叠</b>。所以：</p>
+<ul>
+<li>v1 建议直接 <code>[C_H, C_E]</code> 两通道，把 <code>LP(·)</code> 当作<b>独立消融</b>去测（加 LP vs 不加 LP）。</li>
+<li>「低频 = 形态」这条语义承诺在文献里没有依据（上一份报告已核实的阴性结论），而 HER2 是<b>膜染色</b>，核/膜边界是<b>高频</b> —— 纯低通可能删掉你最需要的东西。若要加，用<b>多尺度</b>（低通 + 梯度）而不是纯低通。</li>
+</ul>
+</div>
+
+<div class="box teal">
+<div class="bt">Residual / ControlNet-lite 注入：选对了</div>
+<p>你选 <code>h_i' = h_i + Δh_i</code> 而不是 cross-attention，理由是「C_H、C_E 本身有明确的空间位置」。这条与 GLIGEN（CVPR 2023）的消融说明一致：<b>sum 注入更适合「空间对齐的条件」</b>，而 cross-attention 在该消融中 FID 相近但定位类指标更差（YOLO AP 16.6 vs 21.7）。</p>
+<p><b>两个实现细节</b>：① 若从零训练，ControlNet 的 <b>zero-conv 初始化</b>仍然值得保留（让 Δh 从 0 起，训练初期不破坏主干）；② 你这个结构严格说<b>不是 ControlNet</b>（没有可训练的 encoder 副本），而是<b>特征级加性条件注入</b>。论文里用准确的词，别叫 ControlNet —— 否则审稿人会问「你的 trainable copy 在哪」。</p>
+</div>
+
+<h3 id="s4-5">4.5 A 蛋白表达估计器</h3>
+
+<p><b>判定：<span class="b medium">有条件成立</span></b>。网络选型（ResNet18 + FPN）没问题，但有两个必须在动代码前解决的问题，其中一个会直接导致「白加参数」。</p>
+
+<div class="box stop">
+<div class="bt">★ 问题 1：protein map 没有任何监督信号 ⇒ 它会退化成常数图</div>
+<p>你给的监督只有：</p>
+<pre><code>HE → PSPStain → IHC_pseudo → DAB/FOD → c_exp^pseudo   (一个标量)</code></pre>
+<p>而 A 输出<b>两个</b>东西：<code>P_exp ∈ R^{1×H/8×W/8}</code>（protein map）与 <code>c_exp ∈ R^128</code>（全局条件）。</p>
+<p>按你 §11 的图，<code>c_exp</code> 来自 <b>Global Pool → MLP</b>。⇒ <b>标量标签的梯度只会流到 Global Pool 之后的分支</b>；<code>P_exp</code> 那条支路<b>没有任何一项损失直接作用在它上面</b>。</p>
+<p>后果可预测：<code>P_exp</code> 会收敛到「让上游共享 trunk 尽量好地预测 c<sub>exp</sub>」的副产品，最可能是<b>一张近似常数的图</b>（因为常数图对全局池化最"安全"）。然后你把这张常数图经 1×1 conv 注入 32×32 / 64×64 层 —— <b>等于注入了一个常量偏置</b>，白加参数、白加一条梯度路径、还多一个归因不清的模块。</p>
+<p><b>两条出路，选一条</b>：</p>
+<ul>
+<li><b>（推荐，省事）v1 砍掉 protein map</b>，A 只输出 <code>c_exp</code>。等 c<sub>exp</sub> 这条路验证有效后，再考虑加空间分支。</li>
+<li><b>（要空间就给它监督）</b> 用伪 IHC 的 DAB 图作 <code>P_exp</code> 的目标。但这会把 <b>PSPStain 的域偏差 + 10–50 px 错位</b> 一起引进 A —— 而错位的代价在库内已被记录为「把模型推向错误的解」（HER2 Score-Aware NCMT 的受控实验）。如果走这条，<code>P_exp</code> 必须降分辨率监督（≤1/8）并做平滑，且要单独消融。</li>
+</ul>
+</div>
+
+<div class="box warn">
+<div class="bt">问题 2：1/8 分辨率的理由用错了对象</div>
+<p>你写「为什么 1/8？因为你的真实 IHC/H&amp;E 配对本身存在漂移，我们不应该让 A 学成一个 pixel-perfect map」。</p>
+<p>这个推理对<b>监督目标</b>成立，但对 <code>P_exp</code> <b>不成立</b> —— <code>P_exp</code> 是喂给主 U-Net 的<b>输入条件</b>，不是被评价的<b>输出</b>。条件的分辨率不需要去匹配目标的可靠性；这两件事被混在一起了。混在一起的后果就是：<b>「因为有漂移所以降到 1/8」被用来给一个本来就没有监督的分支做辩护</b>。</p>
+<p>⇒ 先回答「P<sub>exp</sub> 的梯度从哪来」，再讨论它的分辨率。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">问题 3（沿用上一份报告，此处只重申不重复论证）：监督来源仍是伪标签</div>
+<p>你的 §12 明确保留了 <code>HE → PSPStain → IHC_pseudo → DAB/FOD → c_exp^pseudo</code> 这条链。上一份报告已给出三条独立论证判定它<b>不成立</b>（伪标签无先例 / 递归训练退化有 <i>Nature</i> 证据 / 连续标量与临床 ordinal 标签形状不匹配）。</p>
+<p><b>此处只补一条实现层面的建议</b>：既然你决定保留 A，那就把 A 设计成<b>可整体关闭</b>的模块 —— <code>c_exp</code> 训练时以概率 p 置零（p 从 0.3 起），并且<b>记录 <code>c_exp</code> 与输出 FOD 的相关性</b>。如果 A-zero 后输出完全失效 ⇒ 主模型在抄 pseudo-label shortcut ⇒ 撤销 A。这是零成本的「A 是否有害」的检测器。</p>
+</div>
+
+<h3 id="s4-6">4.6 B 真实 IHC score model</h3>
+
+<p><b>判定：<span class="b medium">有条件成立</span></b>。网络结构（4 层 64/128/256/256、attention 放低分辨率或 bottleneck）是合理的，与「B 不是最终生成器、不需要很大」的判断一致。<b>但有三点要改。</b></p>
+
+<div class="box stop">
+<div class="bt">★ 问题 1：用 LP(C_H) 当条件，会把 B 推向「只有 marginal」那一档 —— 而那一档已被证明伤 PSNR/IOD</div>
+<p>你 §15 的理由是「B 的 H condition 建议用 LP(C_H) 或 Downsample(C_H)，让 B 专门学<b>区域级</b>的 H→DAB 统计关系」，动机是回避 C<sub>H</sub><sup>HE</sup> 与 C<sub>H</sub><sup>IHC</sup> 不对齐。</p>
+<p><b>但这条路有代价，而且代价是可以量化的</b>：把条件低通/降采样，等价于<b>把 B 往无条件方向推</b>。而 MIU-Diff 的消融（在 BCI / MIST 上）显示：</p>
+<div class="scroll"><table>
+<thead><tr><th>配置（MIST<sub>HER2</sub>）</th><th>PSNR ↑</th><th>Hist ↑</th><th>IOD 偏差</th></tr></thead>
+<tbody>
+<tr><td>Ours（full）</td><td><b>14.368</b></td><td><b>0.670</b></td><td><b>−1.146</b></td></tr>
+<tr><td><b>U-guided（只有 marginal 项）</b></td><td>13.878</td><td>0.558</td><td>−2.095</td></tr>
+<tr><td>w/o guidance（完全无条件）</td><td>14.337</td><td>0.217</td><td>−2.178</td></tr>
+</tbody></table></div>
+<p>⇒ <b>条件越弱，越靠近 U-guided / w/o 那一档：Hist 掉、IOD 偏差变大</b>。你的 LP 条件是这两档之间的插值。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">更关键：LP / 降采样<b>根本不能修</b>域偏移</div>
+<p>域偏移的来源是 <b>M<sub>HE</sub> ≠ M<sub>IHC</sub></b>、白点不同、染色强度尺度不同 —— 这些是<b>乘性/加性的整体尺度差</b>。低通滤波与降采样只去掉高频细节，<b>不会改变整体的增益差</b>：</p>
+<div class="formula">LP( M<sub>HE</sub>·C<sub>H</sub><sup>HE</sup> ) &nbsp;≠&nbsp; LP( M<sub>IHC</sub>·C<sub>H</sub><sup>IHC</sup> )</div>
+<p>⇒ 你为了修域偏移而丢掉了空间信息，但域偏移并没有被修好。这是<b>付出了代价、没有拿到收益</b>。</p>
+<p><b>正确顺序</b>：先用 <code>T_H</code> 把 C<sub>H</sub><sup>HE</sup> 校准到 C<sub>H</sub><sup>IHC</sup> 的尺度（低容量 affine/monotone），<b>域对齐之后再决定用多大带宽</b>。不要用「模糊掉条件」来代替「校准域」。</p>
+</div>
+
+<div class="box key">
+<div class="bt">问题 3：先想清楚 B 到底买到什么 —— 答案是<b>数据规模</b>，不是精度</div>
+<p>你的主扩散已经是在<b>真实 IHC 的 DAB</b> 上训练的（弱配对），所以它已经在学 <code>p(C_DAB | H&E)</code>，<b>其中已经包含了 marginal</b>。B 额外提供的，只有「无配对 IHC」那部分信息 —— 也就是 MIU-Diff 的 U 项。</p>
+<p>⇒ <b>B 的价值 = 让你能用上没有 H&amp;E 配对的 IHC 数据。</b> MIU-Diff 的整个动机就是「unpaired」（配对数据稀缺）。</p>
+<div class="scroll"><table>
+<thead><tr><th>你的情况</th><th>B 的净收益</th><th>建议</th></tr></thead>
+<tbody>
+<tr><td>有<b>大量</b>无配对 IHC（远多于配对集）</td><td>正：B 把无配对数据变成可用的分布先验</td><td>值得做，但按 B0 → B1 → B2 分步</td></tr>
+<tr><td>无配对 IHC 与配对集<b>同量级或更少</b></td><td><b>≈ 0 或负</b>：marginal 信息主模型已从配对数据里学到，而 B 带来 IOD 偏差风险</td><td><b>B 降级为 v3 消融</b>，不作为 v1 组件</td></tr>
+</tbody></table></div>
+<p><b>动作（开工前就能做）</b>：清点你的无配对 IHC 池（张数、来源、是否同一染色协议）。<b>这个数字直接决定 B 该不该进 v1。</b> 这是本轮对你路线图最有用的一个重构 —— 它把「B 好不好」变成一个可查的事实问题。</p>
+</div>
+
+<div class="box good">
+<div class="bt">你 §18 那句「B 不是 real/fake 分类器，它输出 s_B」—— 完全正确，而且它带来一个有用的工程后果</div>
+<p>score model 用 <b>denoising score matching（回归）</b> 训练，不是对抗训练。⇒ B 可以<b>离线训好、冻结、单独评估质量</b>。这正好允许一个干净的 go/no-go 门禁：</p>
+<pre><code>B0 prior audit（零配对，只用真实 IHC）
+  训练无条件 score → 测它能否区分「真实 IHC 的 DAB」与「合成的 DAB」
+  分不出来 ⇒ B 整条线终止，不再投入
+  分得出来 ⇒ 再考虑 B1（加 T_H 校准后的 H 条件）</code></pre>
+<p>注意 B0 恰好<b>没有</b>你担心的域偏移问题（它不条件 H），所以它是最便宜的起点。</p>
+</div>
+
+<h3 id="s4-7">4.7 Guidance 模块</h3>
+
+<p><b>判定：<span class="b high">成立</span></b>。你 §19 的两条决定都对：<b>主模型与 B 用同一 noise schedule + 同一 parameterization</b>（统一 v-prediction），以及 guidance 是数学组合不是网络。</p>
+
+<div class="box warn">
+<div class="bt">但组合的「名分」要写准：这是 product-of-experts，不是贝叶斯后验</div>
+<p>你写 <code>s_final = s_diff + λ_B(t)·s_B</code>。数学上，<b>score 相加 = 密度相乘</b>：</p>
+<div class="formula">s<sub>θ</sub> + λ·s<sub>B</sub> = ∇log( p<sub>θ</sub> · p<sub>B</sub><sup>λ</sup> )</div>
+<p>这是 <b>product-of-experts / energy-guidance</b> 构造，<b>不是</b> <code>p(C_DAB | H&E, real-IHC-domain)</code> 的后验采样。两个直接后果：</p>
+<ol>
+<li><b>可能过度自信</b>：两项各自都含 marginal 信息，相乘等于把共享信息算了两遍。</li>
+<li><b>两个 score 的尺度不可比</b>：直接相加会让「有效 λ」随 t 漂移。</li>
+</ol>
+<p>⇒ 两个要求：① 组合前做<b>尺度归一化</b>（逐样本 RMS 匹配或方向归一化后再乘 <code>‖s_main‖</code>）；② 论文里用 <b>energy-guided / product-of-experts</b> 的措辞 —— MIU-Diff 用的就是「energy-guided」，这是正确的词汇。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">λ_B(t) 的调度：spec 里没写，必须定</div>
+<p>你的图里写的是 <code>λ(t) Score Guidance</code>，但没给形式。三条硬约束（来自库内 `MEMORY_梯度冲突.md`）：</p>
+<ul>
+<li><b>从 0 起扫</b>，只在中/晚时间步开（高 t 段被噪声样本主导，B 的 score 在那里语义最弱）。</li>
+<li><b>先做 score 归一化，再定 λ</b>；不要「先调 λ 再想办法」。MIU-Diff 用的形式是 <code>λ_t = t/S</code>（随 t 线性增长），这是一个可直接试的起点。</li>
+<li><b>上界写进配置</b>：若 λ_B 加大后 FOD 直方图变好但 membrane DICE / ranking 变差 ⇒ 判为先验过强，<b>回退，不要继续调参</b>。</li>
+</ul>
+</div>
+
+<h3 id="s4-8">4.8 物理渲染</h3>
+
+<p><b>判定：<span class="b high">成立</span></b>。「V1 完全固定、不让网络学 renderer」是对的，保住了 concentration → physical RGB 的干净解释。</p>
+
+<div class="box warn">
+<div class="bt">一处与库内既有结论的分歧，我说明理由</div>
+<p>库内 `MEMORY.md` 记录的分工是：<b>监督 target 侧固定队列级 M</b>（否则浓度带每图自由度 ⇒ H-score 不可比）；<b>渲染侧可学习 M + 色一致性锚定</b>。</p>
+<p>你的 spec 是<b>渲染侧也完全固定</b>。我认为 <b>v1 固定是对的</b>（更少的自由度、更好的可解释性、更少的失败模式），但要接受一个代价：<b>如果 M 估计不准，色偏会系统性地留在输出里，而模型无法补偿</b>。所以 v1 必须在 Stage 0 把 M 标定好，并把「M 敏感性」作为一条独立检查（库内 E0.3 已有脚本与结论：NMF 稳、Macenko-arc 不稳）。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">还有一件事 spec 里没写：C<sub>H</sub><sup>HE</sup> 用 M<sub>HE</sub> 分解，渲染却用 M<sub>IHC</sub></div>
+<p>你的最终渲染是 <code>[C_H^HE, Ĉ_DAB] → M·C → Beer–Lambert</code>。但 C<sub>H</sub><sup>HE</sup> 是用 <b>M<sub>HE</sub></b> 解出来的。⇒ 这一步实际上是<b>跨矩阵搬运一个浓度值</b>。</p>
+<p>两个后果：① 必须有 <code>T_H</code> 把 C<sub>H</sub><sup>HE</sup> 校准到 M<sub>IHC</sub> 口径（这条在你上一版 spec 里有，这一版不见了）；② 损失必须在<b>同一个 M</b> 下比较，否则浓度空间的监督与 RGB 空间的监督不在同一个度量里。</p>
+<p><b>动作</b>：把 <code>T_H</code> 加回 spec，并明确它的形式（全局 affine 或单调低容量映射，<b>不要</b>让高容量网络自由改 H）。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>spec 里没写的六个缺口</h2>
+
+<p>这一节列的都是<b>「不补就会出问题」</b>的项，按严重性排序。第 1、2 条是我认为最可能直接让训练失败的两个。</p>
+
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>缺口</th><th>为什么必须有</th><th>建议做法</th><th>严重性</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><b>C<sub>DAB</sub> 的归一化</b></td><td>浓度分布极度偏斜（背景大量 0 + 深染区重尾），而标准扩散假设近似单位方差。<b>不做这一步，训练不会收敛</b>（库内 `PSP-Diffusion_浓度空间扩散_思路澄清.md` 澄清点已列为「必须做」，你的 spec 里没有）</td><td>逐通道 robust 标准化（按 99 分位缩放或 z-score），统计量在训练集上算、<b>训练与推理用同一套</b>；与 <code>log(1+·)</code> 变换一起定，写进配置</td><td><span class="b bad">P0</span></td></tr>
+<tr><td>2</td><td><b>训练配对的边界</b></td><td>这一版 spec 只说了架构，没说数据。标准条件扩散需要 target 至少弱配对；完全随机非配对会退化成 <code>p(C_DAB)</code></td><td>明确写「连续切片 / 弱配对」；论文里不要写「非配对」（已核实的 MIU-Diff / PST-Diff / SheafStain 没有一个是真非配对）</td><td><span class="b bad">P0</span></td></tr>
+<tr><td>3</td><td><b>T<sub>H</sub> 校准</b></td><td>上一版有、这一版丢了。M<sub>HE</sub> ≠ M<sub>IHC</sub> ⇒ 跨矩阵复用 H 会带系统色偏</td><td>加回：低容量 affine/monotone，先做 identity baseline 对照</td><td><span class="b bad">P0</span></td></tr>
+<tr><td>4</td><td><b>损失清单</b></td><td>spec 只描述架构，没有损失。而库内已定「蛋白约束第一优先级 = 端点上的 FOD 分布损失」</td><td>v1 = <code>L_diff</code> + <b>FOD 全局均值 + 20-bin 直方图（挂 v̂）</b>；<code>λ_FOD(t) ∝ √SNR(t)</code>。理由见上一份报告 §4.3</td><td><span class="b medium">P1</span></td></tr>
+<tr><td>5</td><td><b>H&amp;E 侧矩阵列数</b></td><td>若是 3 列，C<sub>E</sub><sup>HE</sup> 退化成残差轴 ⇒ §4.4 与 §4.5 的输入语义失效</td><td>固定 2 列 <code>[s_H, s_E]</code>，标定时加断言</td><td><span class="b medium">P1</span></td></tr>
+<tr><td>6</td><td><b>残差 r 的量级</b></td><td>3×2 的 M 秩亏，而 E0.2 已证 IHC 无伊红 ⇒ r ≠ 0。深染区被指数放大</td><td>Stage 0 量 <code>‖r‖/‖Y‖</code>，定阈值；必要时加 C<sub>res</sub>（有符号 + 向零收缩）</td><td><span class="b medium">P1</span></td></tr>
+</tbody></table></div>
+
+<div class="box key">
+<div class="bt">一个可以现在就做的成本核算</div>
+<p>上面第 1、3、4 条都是<b>几十行代码量级</b>的改动，但它们决定训练能不能收敛、输出有没有系统色偏、以及这篇工作有没有可主张的蛋白贡献。相比之下，「SD1.5-style U-Net vs 小 U-Net」的改动成本要大得多，收益却是负的（§3）。<b>先把便宜的必填项补齐，再动架构。</b></p>
+</div>
+
+<h2 id="s6"><span class="num">6</span>修正后的 V1 组件表</h2>
+
+<div class="scroll"><table>
+<thead><tr><th>模块</th><th>你的 spec</th><th>修正建议</th><th>改动成本</th><th>可复现性</th></tr></thead>
+<tbody>
+<tr><td>Stain Separation</td><td>固定矩阵，非神经网络</td><td><b>保持</b>；补：H&amp;E 侧固定 2 列、I₀ 与 log 底数写死、残差阈值</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>主 Diffusion backbone</td><td>SD1.5-style U-Net</td><td><b>换成 from-scratch 2D U-Net</b>：base 64（或 96）· mult [1,2,4,4] · 2 ResBlock/级 · attention 只在 32×32/16×16</td><td>中</td><td><span class="b high">高</span></td></tr>
+<tr><td>参数化</td><td>v-prediction</td><td><b>保持</b>；配 zero-terminal-SNR 调度（HistDiST 同款）</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>Input Adapter</td><td>3→4</td><td><b>删除</b>；<code>conv_in = Conv2d(3, C, 3, p=1)</code></td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>Output Head</td><td>4→1</td><td><code>conv_out = Conv2d(C, 1, 3, p=1)</code>（一行）</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>扩散变量</td><td>C<sub>DAB</sub></td><td><b>保持</b>；但用 <code>u = log(1+C)</code> 参数化，逆变换 <code>exp(u)−1</code>；<b>补逐通道 robust 归一化</b></td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>Structure Encoder</td><td>轻量 CNN-FPN 32/64/128/256，GroupNorm</td><td><b>保持</b>；v1 输入先只给 <code>[C_H, C_E]</code>，LP 作为独立消融；多尺度而非纯低通</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>结构注入</td><td>Residual / ControlNet-lite</td><td><b>保持</b>；保留 zero-conv 初始化；论文里改称「特征级加性条件注入」</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>A Protein Estimator</td><td>ResNet18+FPN → map + c<sub>exp</sub></td><td><b>v1 砍掉 protein map</b>，只留 c<sub>exp</sub>；或给 map 显式监督。必须可 dropout + 记录与 FOD 的相关性</td><td>中</td><td><span class="b medium">中</span></td></tr>
+<tr><td>B Real-IHC Score</td><td>小型 conditional score U-Net</td><td><b>先做 B0（无条件）prior audit</b>；H 条件改为「先 T<sub>H</sub> 校准再选带宽」，<b>不要用 LP 代替校准</b>；清点无配对 IHC 池决定是否进 v1</td><td>高</td><td><span class="b medium">中</span></td></tr>
+<tr><td>Guidance</td><td>s<sub>diff</sub> + λ(t)·s<sub>B</sub></td><td><b>保持</b>；补 <b>score 尺度归一化</b> 与 λ 上界；措辞改为 energy-guided / product-of-experts</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>物理渲染</td><td>Beer–Lambert，固定</td><td><b>保持</b>；补 <b>T<sub>H</sub></b>（跨矩阵校准）与「损失必须在同一 M 下比较」</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>Phikon</td><td>不上</td><td><b>保持</b>；论文里说明这是与 HistDiST 的有意分歧，并用消融证明 H/E 浓度够用</td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+
+<h2 id="s7"><span class="num">7</span>开工顺序（修正版）</h2>
+
+<p>你的 §25 顺序（Stain Separation → Structure Encoder → DAB Diffusion → +A → +B → +morphology 消融）<b>大方向是对的</b>，一次只加一个模块的纪律也对。我只在前面补一个 <b>Stage 0</b>，并加一条你可能没考虑的对照。</p>
+
+<div class="flow"><pre><code>Stage 0  门禁（零训练，全部是几十行脚本）
+   0.1  H&E 侧解混矩阵列数审计 —— 必须 2 列 [s_H, s_E]
+   0.2  IHC 侧重建残差 ‖r‖/‖Y‖ —— 定阈值，判断 K=2 够不够
+   0.3  R²(C_E ~ C_H, C_DAB)（库内遗留，半小时）
+   0.4  C_DAB 归一化统计量 —— 逐通道 99 分位 / z-score，写进配置
+   0.5  M 标定 + 无色轴断言（E0.3 已有脚本）
+   ↓ 全过才动架构
+Stage 1  最核心的一步：Stain Separation → Structure Encoder → DAB Diffusion
+   变量 u = log(1+C_DAB)；v-prediction；条件 [u_t, C_H^cond, C_E]
+   损失 = L_diff
+   判据：DAB 非负、空间合理、无幻觉色、renderer 后 clamp 比例极低
+   ★ 同时跑 PredS 式确定性 UNet 基线（同一套浓度域管线，只换生成器）
+   ↓
+Stage 2  + FOD 分布损失（全局均值 + 20-bin 直方图，挂 v̂，λ(t) ∝ √SNR(t)）
+   判据：FOD 分布误差下降且结构指标不显著退化
+   ↓
+Stage 3  消融三件套：H-reuse vs H-gen vs H-zero/shuffle
+   ↓
+Stage 4  + A（只加 c_exp，可 dropout；记录与 FOD 的相关性）
+   ↓
+Stage 5  + morphology 消融（加 LP / 多尺度 encoder vs 不加）
+   ↓
+Stage 6  B：B0 prior audit → B1（T_H 校准后）→ B2（采样 guidance，λ 从 0 起扫）
+   ↓
+Stage 7  评测：五层（图像相似 / 语义一致 / 物理合规 / 临床效用 / 伪影），禁单一 PSNR
+</code></pre></div>
+
+<div class="box key">
+<div class="bt">★ Stage 1 里加的那个 PredS 基线，是本报告最实用的一个建议</div>
+<p>CFM-HES 的消融正是这个结构：<b>PredS = 同一套 stain separation + 浓度域 + Beer–Lambert 管线，只把生成器换成确定性 U-Net 回归</b>。它给出了 31.34 PSNR / 0.978 SSIM，而 CFM 是 32.06 / 0.968。</p>
+<p>在你这里，这个基线的价值更大：</p>
+<ul>
+<li>它是<b>证明「生成模型在你的任务上有必要」的唯一方式</b>。如果你的扩散赢不了确定性回归，那么整条 diffusion 路线在你的数据上就没有依据 —— 这是必须知道的事实，而且要趁早知道。</li>
+<li>它的成本<b>极低</b>：同一个数据管线、同一个 Structure Encoder、同一套渲染，只把 U-Net 换成回归头。你几乎是在白送一个对照。</li>
+<li>它同时是<b>最好的 debug 工具</b>：如果 PredS 都跑不好，说明问题在分离/归一化/M 标定（Stage 0），不在扩散。</li>
+</ul>
+</div>
+
+<div class="box warn">
+<div class="bt">一句话纪律</div>
+<p>你在 §25 说「尤其重要的是，我现在不建议你同时做 A+B+Morphology+H multi-scale」——<b>这条我完全同意，而且上面这个顺序就是它的严格执行</b>。唯一新增的是：<b>在 Stage 1 就把 PredS 基线一起跑掉</b>，因为它便宜、且它决定了后面所有工作的意义。</p>
+</div>
+
+<h2 id="s8"><span class="num">8</span>未核实清单与诚实标注</h2>
+
+<div class="box stop">
+<div class="bt">明确未核实 / 未取到原文的事项（<b>不要当作事实引用</b>）</div>
+<ol>
+<li><b>PST-Diff 的 IEEE Xplore 全文未取到</b>（付费墙）。你在 §10 说它「通过结构引导和分阶段 frequency guidance 来控制 diffusion」—— 库内已有报告核实过它包含 AAM + LT + CFG，且摘要点名「the bias introduced by direct connection」，所以你的描述<b>方向可信</b>，但<b>我本轮没有独立复核它的 frequency guidance 细节</b>。</li>
+<li><b>CFM-HES 的显存需求未说明</b>（论文只给 batch 16 / AMP / 150 epochs，未给 GPU 型号或显存）。所以 §3 里「普通 U-Net 在 256×256 batch 16 可行」是<b>从配置反推</b>，不是实测。</li>
+<li><b>§3 的显存估算是数量级论证，不是实测</b>。我没有在 8 GB 硬件上跑过任何配置。但「SD1.5 U-Net 全分辨率 &gt; 8 GB」的裕度足够大。</li>
+<li><b>未找到任何「1–2 通道染色浓度场 + 扩散」的先例</b>（沿用上一份报告的阴性结论）⇒ 「低通道数是否改变架构推荐」在文献里无答案。</li>
+<li><b>「protein map 会退化成常数图」是基于损失结构的推理，不是实测</b>。可证伪预测：按你 §11 的结构、只用标量标签训练后，打印 <code>P_exp</code> 的空间标准差 —— 若接近 0，则该分支无信息。这个验证只需要几行代码。</li>
+<li><b>「LP(C_H) 会把 B 推向 marginal 档」是机制推理</b>。可证伪预测：训练 B 时逐 epoch 记录 <code>corr(LP(C_H), C_DAB)</code> 与 B 的 score 方差 —— 若 LP 条件的相关系数显著低于全分辨率 C_H，则该担忧成立。</li>
+<li><b>HistDiST 的具体参数量我未核实</b>（README 未给）。库内 `MEMORY_HistDiST审查.md` 记录的是 860M 量级，来源是当时的代码审查，本轮未复核。</li>
+<li><b>我没有跑过任何实验</b>。本报告全部结论来自一手文献核实 + 代数/显存数量级推导 + 对库内既有结论的复用。</li>
+</ol>
+</div>
+
+<div class="box good">
+<div class="bt">本轮已结案的未核实项（前一份报告 §10 的第 1 条）</div>
+<p><b>「CFM-HES 的正文未取到（Springer 登录墙）」→ 已结案。</b> 通过用户提供的 MICCAI 官方开放获取页取到 PDF（11 页）并逐字读完。核实结果见 §2。同时结案的相关项：其 DOI 与 MICCAI 2026 身份（现在有官方开放获取页）、backbone（Ronneberger 2015 普通 U-Net）、配对要求（paired）、超参、消融数字（Table 1 全文）。</p>
+<p>⇒ <b>前一份报告 §3.2 与 §10 需要按本报告回填</b>（已执行，见该文件的勘误标记）。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">三条高置信度假设（可证伪）</div>
+<ol>
+<li><b>高置信度</b>：SD1.5-style U-Net 在全分辨率浓度空间上无法在 8 GB 显存训练。<b>可证伪预测</b>：跑一个 batch，OOM。若未 OOM，说明我高估了（那我建议你贴出实际配置，我会修正结论）。</li>
+<li><b>高置信度</b>：A 的 protein map 在只有标量监督时会退化成近似常数。<b>可证伪预测</b>：训练后 <code>P_exp.std() ≈ 0</code>。</li>
+<li><b>中置信度</b>：PredS 式确定性 UNet 在你的任务上会显著弱于扩散 —— <b>但这一点我并不确定，正因如此才要测</b>。若 PredS 打平，你应当重新考虑是否真的需要扩散（并把这个负面结果诚实写出来）。</li>
+</ol>
+</div>
+
+<h2 id="s9"><span class="num">9</span>参考文献</h2>
+
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>文献</th><th>出处</th><th>等级</th><th>本报告用它做什么</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><b>Making HE Histopathological Images More Colorful by Conditional Flow Matching</b>（CFM-HES），Ben Omrane, Martin, Kaaniche, Laurent-Bellue, Miled Souid, Guettier, Pesquet</td><td>MICCAI 2026 开放获取 · <code>papers.miccai.org/miccai-2026/0607-Paper5285.html</code> · PDF: <code>paper/5285_paper.pdf</code> · 代码 github.com/MedSalimBenOmrane/CFM-HES</td><td><span class="b high">VERIFIED（全文 11 页）</span></td><td>浓度域 + 只生成缺失通道 + Beer–Lambert 的最接近先例；backbone、配对要求、超参、Table 1 消融、选 FM 的理由</td></tr>
+<tr><td>2</td><td><b>HistDiST</b>（官方实现 README）</td><td>github.com/ErikGro/HistDiST · 论文 arXiv:2505.06793</td><td><span class="b high">VERIFIED（README 逐字）</span></td><td>SD1.5 LDM + <b>latent 空间</b> + <b>24 GB 显存</b> + batch 16 × 3 进程；Phikon 用于 morphology 条件；v-prediction + 重标定调度 + 终点零 SNR</td></tr>
+<tr><td>3</td><td><b>U-Net: Convolutional Networks for Biomedical Image Segmentation</b>，Ronneberger, Fischer, Brox</td><td>MICCAI 2015, pp. 234–241</td><td><span class="b high">VERIFIED（作为 CFM-HES 的 [22] 引用）</span></td><td>CFM-HES 的 backbone 是这一版普通 U-Net，<b>不是 SD U-Net</b></td></tr>
+<tr><td>4</td><td><b>Unrolled projected gradient algorithm for stain separation in digital histopathological images</b>，Sadraoui et al.</td><td>IEEE ICIP</td><td><span class="b high">VERIFIED（作为 CFM-HES 的 [24] 引用）</span></td><td>CFM-HES 实际使用的分离算法（非 Macenko / Vahadane）</td></tr>
+<tr><td>5</td><td><b>Quantification of histochemical staining by color deconvolution</b>，Ruifrok &amp; Johnston</td><td>Anal Quant Cytol Histol 23(4):291–299（2001）</td><td><span class="b high">VERIFIED（作为 [23] 引用）</span></td><td>log₁₀ 口径的原始定义（与 CFM-HES 的自然对数口径相对照）</td></tr>
+<tr><td>6</td><td><b>GLIGEN: Open-Set Grounded Text-to-Image Generation</b></td><td>arXiv:2301.07093 · CVPR 2023</td><td><span class="b high">VERIFIED</span></td><td>sum 注入适合空间对齐条件的受控消融（YOLO AP 16.6 vs 21.7）</td></tr>
+<tr><td>7</td><td><b>Progressive Distillation for Fast Sampling of Diffusion Models</b>，Salimans &amp; Ho</td><td>arXiv:2202.00512 · ICLR 2022</td><td><span class="b high">VERIFIED</span></td><td>「predicting v is the most stable option」</td></tr>
+<tr><td>8</td><td><b>Efficient Diffusion Training via Min-SNR Weighting Strategy</b>，Hang et al.</td><td>arXiv:2303.09556 · ICCV 2023</td><td><span class="b high">VERIFIED</span></td><td>小架构可达 SOTA；不加权会 divergence</td></tr>
+<tr><td>9</td><td><b>Score-based Diffusion Model for Unpaired Virtual Histology Staining</b>（MIU-Diff）</td><td>arXiv:2506.23184 · CMMCA 2025 · DOI 10.1007/978-3-032-06624-4_4</td><td><span class="b high">VERIFIED（PDF 全文）</span></td><td>U-guided / I-guided / w/o guidance 的消融数字（BCI + MIST）</td></tr>
+<tr><td>10</td><td><b>PST-Diff</b></td><td>IEEE TMI 2024 · DOI 10.1109/TMI.2024.3430825</td><td><span class="b medium">UNVERIFIED（付费墙）</span></td><td>仅在 §8 的未核实清单中标注，未采用其细节</td></tr>
+</tbody></table></div>
+
+<div class="foot">
+<p><b>V1 网络结构定稿审查</b> · 2026-10-08 · 归入 <code>06_方案可行性审查/</code></p>
+<p>本报告是 `DAB-only浓度扩散_文献先例地图与模型选型审查.html` 的下一环：母文档回答「文献上谁已经占了」，本报告回答「你这份具体结构能不能落地」。<b>CFM-HES 全文已取到并结案</b>（母文档 §10 第 1 条），母文档的 CFM-HES 段与消融数字已按本报告回填并保留勘误标记。未取到原文的事项集中列在 §8，<b>不要当作事实引用</b>。</p>
+</div>
+</main>
+</div>
+</body>
+</html>

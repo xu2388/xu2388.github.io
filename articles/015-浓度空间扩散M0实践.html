@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>从零实现浓度空间扩散基线 M0：H&amp;E→IHC 虚拟染色的最小可行实践</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"从零实现浓度空间扩散基线 M0：H&E→IHC 虚拟染色的最小可行实践","date":"2026-10-25","tags":["虚拟染色", "扩散模型", "浓度域", "Beer-Lambert", "实践教程"],"category":"研究","summary":"本文给出 H&E→IHC 虚拟染色最小可行基线 M0 的完整实现方案：以比尔-朗伯定律将两模态解混为染料浓度，仅在 DAB 单通道上做 v-参数化条件扩散、H/E 浓度全程保持干净作为条件，经 DDIM 百步采样与物理回投重建 IHC；并配套四道工程闸门、三级 baseline 与 U0→U1→U2 条件消融判据，使\"浓度空间扩散能否工作\"成为可证伪的问题。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1 class="site-title">我的个人博客</h1>
+    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+  </div>
+</header>
+<article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
+<h1>从零实现浓度空间扩散基线 M0：H&amp;E→IHC 虚拟染色的最小可行实践</h1>
+<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<h2>摘要</h2>
+<p>虚拟染色的核心争议不在&quot;能否生成逼真的图像&quot;，而在&quot;生成对象应当定义在何种表示空间&quot;。本文记录最小可行基线 M0（Concentration-space Diffusion Baseline）的完整实现方案：以比尔-朗伯定律为物理基础，将 H&amp;E 与 IHC 分别解混为染料光学密度浓度；仅以 DAB 单通道作为扩散目标，H/E 浓度全程保持干净并作为条件；以 v-参数化训练一个小型 U-Net，经 DDIM 百步采样得到生成浓度，再经染色矩阵与指数衰减回投重建 IHC RGB。方案刻意排除了预训练潜空间、VAE、ControlNet 与一切辅助损失，目的是先回答一个可证伪的问题：浓度空间 DAB 扩散能否工作。本文同时给出四道工程闸门（重建自检、八项 sanity check、tiny-set 过拟合、条件增益检验）、三级 baseline 与 $U_0\to U_1\to U_2$ 条件消融链，以及条件复制与方差塌缩两项反退化诊断，供复现与批判。</p>
+<p><strong>关键词</strong>：虚拟染色；浓度域扩散；v-参数化；条件扩散；比尔-朗伯定律；最小可行基线</p>
+<blockquote>说明：本文为设计文档兼实践教程，所给配置均可在单卡 RTX 4060 上运行；文中报告的性能结论仅截至合成数据探针，真实切片上的判定实验见 §9。</blockquote>
+<h2>一、引言：先做最小基线，而不是先堆模型</h2>
+<p>虚拟染色领域存在一种持续的诱惑：把扩散模型、ControlNet、形态学基础模型、蛋白估计器与评分引导一次性堆进同一条流水线，再在大规模训练中等待结果。这条路径的问题不在于复杂，而在于<strong>不可归因</strong>——一旦结果不佳，无法区分是表示选择错误、条件注入失效，还是某个模块的实现缺陷，调试成本以&quot;训练数天后发现方向错误&quot;计量。</p>
+<p>M0 是对这种诱惑的反向设计。它的目标不是追求最终效果，而是把研究问题压缩为一个可判定命题：</p>
+<p>$$ \text{Can concentration-space DAB diffusion work?} $$</p>
+<p>即：把 H&amp;E 表示为 $[C_H^{HE}, C_E^{HE}]$、把 IHC 表示为 $[C_H^{IHC}, C_{DAB}^{IHC}]$，<strong>只在 DAB 浓度空间做扩散、以 H/E 浓度为条件</strong>，能否稳定地从 H&amp;E 生成合理的 DAB 浓度场？该命题拆为三个递进的子问题：</p>
+<ol><li>浓度分离本身可靠吗？（解混—重建闭环是否成立）</li><li>DAB 在浓度空间里能被扩散模型学出来吗？（无条件扩散是否成立）</li><li>H/E 浓度是否真的能帮助 DAB 生成？（条件是否带来严格增益）</li></ol>
+<p>三者中任一失败，后续更复杂的模块都失去立论基础。因此 M0 阶段显式禁止引入：预训练潜空间（SD1.5/SD2.1）、VAE、ControlNet、蛋白估计器、评分模型、H-score 与任何额外损失。这不是谦逊，而是实验设计——只有先把变量减到最少，&quot;扩散在浓度域能否工作&quot;才有明确答案。</p>
+<h2>二、数据表示：从 RGB 到染料浓度</h2>
+<h3>2.1 染色分离：RGB → OD → C</h3>
+<p>染色分离是整个项目的地基，基本关系为</p>
+<p>$$ OD=-\log\frac{I+\epsilon}{I_0},\qquad OD=MC,\qquad C=M^{\dagger}OD, $$</p>
+<p>其中 $I_0$ 为入射光强，$\epsilon$ 为防止对零取对数的极小常数，$M$ 为染色矩阵（stain matrix），其第 $k$ 列为染料 $k$ 在 RGB 三通道上的单位浓度光学密度&quot;指纹&quot;。H&amp;E 使用 $3\times2$ 的 H/E 矩阵得到 $[C_H^{HE},C_E^{HE}]$；IHC 使用 H/DAB 矩阵得到 $[C_H^{IHC},C_{DAB}^{IHC}]$。</p>
+<p>工程上有一条硬规则：<strong>染色矩阵必须外置为配置项</strong>（如 <code>he_stain_matrix</code> / <code>ihc_stain_matrix</code>），不得硬编码进训练代码——它的取值直接决定全部下游量的物理含义。若工程中已有成熟的浓度提取代码，优先复用而非重新实现：通道顺序与 $\epsilon$ 取值的细微差异足以造成静默的不一致。</p>
+<h3>2.2 为什么只生成 DAB</h3>
+<p>IHC 解混后得到两个通道，M0 只把 $C_{DAB}^{IHC}$ 作为扩散目标，<strong>显式丢弃</strong> $C_H^{IHC}$。理由是连续切片的苏木精并不等价：其差异来自切片厚度、染色批次、扫描白平衡与配准残差，是一个无法从 H&amp;E 推断的量；若作为监督目标，训练信号将混入不可归因的噪声。输出侧的苏木精直接继承 H&amp;E：</p>
+<p>$$ C_H^{out}=C_H^{HE}. $$</p>
+<p>由此生成自由度收敛至单一标量场，&quot;多通道耦合失败&quot;这一解释被结构性排除，剩余失败只可能是空间分布错误或强度尺度错误，各有对应诊断（§7.4）。</p>
+<h3>2.3 浓度归一化</h3>
+<p>浓度值量纲跨度大且呈长尾，直接入网会导致激活饱和与梯度失稳。第一版采用稳健分位数归一化：在<strong>训练集</strong>上统计各通道的 $p_1$ 与 $p_{99}$，裁剪后线性映射至 $[-1,1]$：</p>
+<p>$$ x_{\mathrm{norm}}=2\cdot\frac{\operatorname{clip}(x,p_1,p_{99})-p_1}{p_{99}-p_1}-1. $$</p>
+<p>两条纪律：统计量只允许由 training split 计算，测试集参与即构成泄漏；统计量必须落盘为 <code>normalization_stats.json</code>，推理端按同一文件反归一化，否则回投的 OD 偏离真实尺度，颜色会系统性偏深或偏浅。</p>
+<h3>2.4 Patch 与数据划分</h3>
+<p>统一采用 $128\times128$ patch——该尺度下 H 通道空间自相关较强，条件与目标的对应关系最易建模。配对沿用工程中已有的 H&amp;E/IHC 成对数据与坐标规则，<strong>不新增配准</strong>，且代码中不得假设 $HE(x,y)=IHC(x,y)$ 逐像素成立。划分必须以 case / patient / slide 为单位：禁止先把一张 WSI 切成数千 patch 再随机 80/20，同源 patch 在纹理、批次与噪声上高度相关，随机划分会使验证指标失去判别力。</p>
+<h2>三、方法设计</h2>
+<h3>3.1 前向过程与 v-参数化</h3>
+<p>采用 DDPM 前向过程，噪声调度 <code>squaredcos_cap_v2</code>，$T=1000$。记 $\alpha_t=\sqrt{\bar\alpha_t}$、$\sigma_t=\sqrt{1-\bar\alpha_t}$，则</p>
+<p>$$ z_t=\alpha_t z_0+\sigma_t\epsilon,\qquad \epsilon\sim\mathcal{N}(0,I), $$</p>
+<p>其中 $z_0=C_{DAB}^{IHC}$。模型不预测噪声 $\epsilon$，而预测速度量</p>
+<p>$$ v_t=\alpha_t\epsilon-\sigma_t z_0, $$</p>
+<p>损失为</p>
+<p>$$ \mathcal{L}(\theta)=\mathbb{E}_{z_0,c,t,\epsilon}\Bigl\|v_\theta\bigl([z_t,c],t\bigr)-v_t\Bigr\|_2^2 . $$</p>
+<p>选择 $v$ 而非 $\epsilon$ 的理由可以精确表述：由 $\alpha_t^2+\sigma_t^2=1$ 知映射 $(z_0,\epsilon)\mapsto(z_t,v_t)$ 的变换矩阵为正交阵，故 $\|v_t\|^2=\|z_0\|^2+\|\epsilon\|^2$，量级与 $t$ 无关；而 $\epsilon$ 目标在 $t$ 大时由噪声主导、$t$ 小时由信号主导，同一网络须拟合方差相差数个数量级的分布，梯度尺度失衡。$v$ 参数化将二者同权打包，训练更平稳。其逆变换亦为显式：</p>
+<p>$$ \hat z_0=\alpha_t z_t-\sigma_t\hat v_\theta,\qquad \hat\epsilon=\sigma_t z_t+\alpha_t\hat v_\theta, $$</p>
+<p>供采样直接使用。</p>
+<h3>3.2 条件不加噪：本设计最关键的一步</h3>
+<p>加噪对象仅为 $C_{DAB}$，H/E 全程保持干净：</p>
+<p>$$ X_t=\bigl[z_t,\;C_H^{HE},\;C_E^{HE}\bigr]. $$</p>
+<p>若条件一并加噪，模型退化为三通道联合去噪，条件与目标在目标函数中地位等同，&quot;H&amp;E 决定 DAB&quot;的因果路径被稀释，条件消融也失去解释力。保持条件干净，等价于学习条件 score $\nabla_{z_t}\log p_t(z_t\mid c)$，条件仅通过每一步的去噪方向起作用，其贡献可被单独度量。</p>
+<p>一个直观的类比：训练扩散模型好比教一个人&quot;去雾&quot;。桌上放一张清晰的 DAB 浓度图 $z_0$，随机选一档&quot;雾浓度&quot; $t$ 往上盖一层高斯噪声得到 $z_t$，把 $z_t$ 与一张干净的 H&amp;E 一起交给学生，问他&quot;刚盖上去的雾长什么样&quot;。反复训练后，学生学会的是&quot;看着雾图与 H&amp;E，反推噪声是怎么盖上去的&quot;——推理时从全雾状态（纯噪声）出发，把这份本事用一百步走完，雾擦尽即得 $\hat C_{DAB}$。H&amp;E 自始至终是干净的，因为它就是&quot;题目本身&quot;；没有谁考试时会把题目也糊掉。</p>
+<h3>3.3 网络结构</h3>
+<p>不使用 Stable Diffusion、VAE 或 latent 表示：浓度图是单通道标量场，自然图像权重的统计与浓度域量纲不匹配。直接使用 <code>diffusers.UNet2DModel</code> 从零训练：</p>
+<pre><code>from diffusers import UNet2DModel, DDPMScheduler
+
+unet = UNet2DModel(
+    sample_size=128,
+    in_channels=3,            # [z_t, C_H^HE, C_E^HE]
+    out_channels=1,           # 仅预测 DAB 单通道的 v
+    down_block_types=(&quot;DownBlock2D&quot;, &quot;DownBlock2D&quot;,
+                      &quot;AttnDownBlock2D&quot;, &quot;AttnDownBlock2D&quot;),
+    up_block_types=(&quot;AttnUpBlock2D&quot;, &quot;AttnUpBlock2D&quot;,
+                    &quot;UpBlock2D&quot;, &quot;UpBlock2D&quot;),
+    block_out_channels=(64, 128, 256, 256),
+    layers_per_block=2,
+    attention_head_dim=8,
+    norm_num_groups=32,
+    act_fn=&quot;silu&quot;,
+)
+
+scheduler = DDPMScheduler(
+    num_train_timesteps=1000,
+    beta_schedule=&quot;squaredcos_cap_v2&quot;,
+    prediction_type=&quot;v_prediction&quot;,
+)</code></pre>
+<p>通道语义固定：0 为加噪 DAB，1 为 $C_H^{HE}$，2 为 $C_E^{HE}$。条件注入采用最朴素的通道拼接，不引入 cross-attention、蛋白注意力或 ControlNet——第一阶段要回答的正是&quot;仅靠拼接，扩散是否已可用&quot;；在未获答案前叠加复杂注入机制，一旦失败便无法区分假设不成立还是注入不适配。</p>
+<h3>3.4 训练配置</h3>
+<p>AdamW，学习率 $1\times10^{-4}$，$\beta=(0.9,0.999)$，权重衰减 $1\times10^{-4}$；混合精度 fp16；梯度裁剪 <code>max_norm=1.0</code>；EMA 衰减 0.9999。RTX 4060 上分辨率 128、batch size 8、梯度累积 1；显存不足降至 4，但不因 batch size 反向修改模型容量。第一版只有一项损失，不得附加 DAB 直方图损失、H 通道重建、RGB 一致性、SSIM 或蛋白表达损失——M0 的职能是判定而非优化，辅助项会改变最优解并遮蔽&quot;扩散能否学到分布&quot;的答案。</p>
+<h2>四、训练流程：六步与张量形状</h2>
+<p>取一对配对切片（H&amp;E 与 IHC），各裁为 $128\times128$ patch，batch size 记为 $B$。一个训练迭代由六步构成：</p>
+<p><strong>第 0 步：准备数据。</strong> H&amp;E 解混并归一化，得条件 $c=[C_H^{HE},C_E^{HE}]$，形状 $(B,2,128,128)$；IHC 解混并归一化，仅保留 $C_{DAB}^{IHC}$ 作为干净目标 $z_0$，形状 $(B,1,128,128)$。</p>
+<p><strong>第 1 步：随机采时间步。</strong> $t\sim U\{0,999\}$，$t=0$ 为干净、$t=999$ 为全噪声。</p>
+<p><strong>第 2 步：加噪。</strong> 采 $\epsilon\sim\mathcal{N}(0,I)$，按前向公式得 $z_t=\sqrt{\bar\alpha_t}\,z_0+\sqrt{1-\bar\alpha_t}\,\epsilon$。</p>
+<p><strong>第 3 步：拼输入。</strong> $X_t=\mathrm{concat}([z_t,c],\mathrm{dim}=1)$，形状 $(B,3,128,128)$；条件通道不做任何加噪。</p>
+<p><strong>第 4 步：模型前向。</strong> UNet 将 $t$ 编码为时间嵌入逐层注入，输出 $v_\theta(X_t,t)$，形状 $(B,1,128,128)$。</p>
+<p><strong>第 5 步：算损失。</strong> 以同样的 $\bar\alpha_t$、$\epsilon$、$z_0$ 构造真值 $v_t=\sqrt{\bar\alpha_t}\,\epsilon-\sqrt{1-\bar\alpha_t}\,z_0$，损失 $\mathcal{L}=\|v_\theta-v_t\|_2^2$，全程仅此一项。</p>
+<p><strong>第 6 步：更新。</strong> 反向传播，梯度裁剪至 <code>max_norm=1.0</code>，AdamW 走一步，同步 EMA 权重。</p>
+<p>核心代码如下：</p>
+<pre><code>t = torch.randint(0, scheduler.config.num_train_timesteps, (B,))
+noise = torch.randn_like(z0)
+z_t = scheduler.add_noise(z0, noise, t)          # 加噪的 DAB
+x = torch.cat([z_t, cond], dim=1)                # (B,3,128,128)
+v_pred = unet(x, t).sample                       # (B,1,128,128)
+v_target = scheduler.get_velocity(z0, noise, t)  # v-参数化真值
+loss = F.mse_loss(v_pred, v_target)</code></pre>
+<p>值得强调的一点是：训练时模型从未&quot;见过&quot;IHC 图像本身，IHC 只贡献了&quot;真实 DAB 浓度&quot;这一个监督量，其苏木精部分被丢弃。训练步数分阶段推进：先 10,000 步，再 20,000 步，视样本质量决定是否至 30,000 步；每 1,000 步保存 checkpoint 并采样，以观察生成何时进入稳定区间。<code>best.pt</code> 不以训练损失为准，而以验证集 DAB 的 MAE 与相关系数综合选定——扩散损失与感知质量弱相关，以其选模易得过度平滑的解。</p>
+<h2>五、推理与物理回投</h2>
+<p>推理从纯噪声起步，$z_T\sim\mathcal{N}(0,I)$，条件全程固定，第一版使用 DDIM 100 步而非完整 1,000 步：</p>
+<p>$$ \hat z_0^{(t)}=\alpha_t z_t-\sigma_t\hat v_\theta,\quad \hat\epsilon^{(t)}=\sigma_t z_t+\alpha_t\hat v_\theta,\quad z_{t-1}=\sqrt{\bar\alpha_{t-1}}\,\hat z_0^{(t)}+\sqrt{1-\bar\alpha_{t-1}}\,\hat\epsilon^{(t)} . $$</p>
+<p>得到 $\hat z_0$ 后反归一化回物理量纲，与 H&amp;E 的苏木精拼接，经染色矩阵与指数衰减回投：</p>
+<p>$$ C^{pred}=\bigl[C_H^{HE},\hat C_{DAB}\bigr],\qquad OD=MC^{pred},\qquad I_{pred}=I_0e^{-OD}, $$</p>
+<p>截断至 $[0,255]$ 得虚拟 IHC RGB。完整链路为：</p>
+<pre><code>H&amp;E → 解混 → [C_H, C_E] ─┐
+                          ├→ 条件拼接 → U-Net → v → DDIM 100 步 → Ĉ_DAB
+C_DAB,0 → 加噪 → C_DAB,t ─┘                                        │
+                                                                    ▼
+              [C_H^HE, Ĉ_DAB] → OD = M·C → I = I_0·exp(−OD) → IHC RGB</code></pre>
+<p>回投环节不含任何可学习参数，输出必落物理可行域：浓度非负则 OD 非负，OD 非负则 $I\in(0,I_0]$。这意味着&quot;颜色溢出&quot;&quot;负浓度&quot;一类失败被结构性排除，剩下的问题只有空间分布与强度尺度两类。</p>
+<h2>六、工程纪律：四道闸门</h2>
+<p>M0 的可信度不来自最终指标，而来自四道依次设置的闸门。任一闸门不过，训练不予继续。</p>
+<p><strong>闸门一：物理层重建自检。</strong> 对真实 IHC 执行 $I_{IHC}\to[C_H,C_{DAB}]\to OD=MC\to I^{recon}$，比较 PSNR、SSIM、MAE，并保存五联图（真实 IHC、H 浓度、DAB 浓度、重建 IHC、绝对误差）。若指标明显偏低，应报告 &quot;stain separation reconstruction is poor&quot; 并中止——此时瓶颈在解混而非扩散，继续训练只会把物理误差误判为模型能力不足。</p>
+<p><strong>闸门二：八项 sanity check。</strong> 依次通过：H&amp;E 解混；IHC 解混；IHC 重建闭环；patch 数据集输出三元组；扩散前向得 $(B,3,128,128)$；网络前向得 $(B,1,128,128)$；损失有限；梯度有限且一步优化可落盘。</p>
+<p><strong>闸门三：tiny-set 过拟合。</strong> 取 16–32 个 patch 训练 1,000–3,000 步，要求损失显著下降且采样明显复现训练样本。该检查成本极低，却能一次性排除归一化错误、配对错误、噪声采样错误、v-target 计算错误、通道顺序错误与采样公式错误——这些错误在大规模训练中仅表现为&quot;损失不降&quot;或&quot;生成模糊&quot;。</p>
+<p><strong>闸门四：条件增益检验。</strong> 即 §7.2 的 $U_0\to U_1\to U_2$ 消融链，判定 H/E 浓度是否提供真实可利用的信息。</p>
+<p>此外两条贯穿性纪律：按 case 划分训练/测试（§2.4）；除 $\mathcal{L}=\|v_\theta-v_t\|_2^2$ 外不加任何损失（§3.4）。训练结束后须输出一份 Markdown 报告，至少覆盖：数据集与 patch 数量、划分方式、解混方法与染色矩阵、重建指标、归一化范围、模型结构与参数量、训练超参、best checkpoint、三个 baseline 的结果、DAB 与 RGB 指标、生成图、是否发生模式塌缩、tiny-set 是否过拟合，以及下一步建议。</p>
+<h2>七、评测：三级 baseline、消融链与反退化诊断</h2>
+<h3>7.1 三级 baseline</h3>
+<table>
+<tr><th>Baseline</th><th>模型输入</th><th>回答的问题</th></tr>
+<tr><td>B0：Mean DAB</td><td>无（输出训练集 DAB 均值场）</td><td>sanity 下界：不利用空间信息的模型能到什么水平</td></tr>
+<tr><td>B1：无条件扩散</td><td>$z_t$</td><td>浓度域扩散本身能否学到真实 DAB 分布</td></tr>
+<tr><td>B2：条件扩散（M0）</td><td>$[z_t,C_H^{HE},C_E^{HE}]$</td><td>H/E 浓度是否带来严格增益</td></tr>
+</table>
+<p>三者共用同一渲染链路与评估协议，差异仅在条件输入。任何模型若不能显著优于常数场，即未利用空间信息。</p>
+<h3>7.2 条件消融链与判据</h3>
+<p>最关键的一组实验直接回答&quot;H/E 浓度到底有没有用&quot;：</p>
+<p>$$ U_0:\ z_t\to z_0;\qquad U_1:\ [z_t,C_H]\to z_0;\qquad U_2:\ [z_t,C_H,C_E]\to z_0 . $$</p>
+<p>判据以配对 bootstrap 的 95% 置信区间表述：记 patch 级相关系数为 $r$，若 $\Delta r_{10}=r(U_1)-r(U_0)$ 的区间不含 0 且下界大于 0.02，判定 H 条件有效；若 $\Delta r_{21}$ 同向显著，判定 E 通道有独立贡献。采用区间而非单点，是因为 patch 级指标方差大。</p>
+<h3>7.3 指标体系</h3>
+<p>不以 RGB PSNR 为主指标——连续切片错位使 pixel 级指标系统性偏低且偏差方向恒定。至少报告四类：DAB MAE（仅作辅助）；DAB 相关系数（分 pixel 级与 patch 级，后者以 $16\times16$ 聚合均值计算 Pearson 与 Spearman，权重更高）；DAB 分布统计（均值、标准差、直方图与分位数，仅用于评估，不得转为训练损失）；RGB 质量（PSNR、SSIM、FID，并注明 pixel metrics are affected by continuous-section misalignment）。每个验证样本输出七联图：H&amp;E RGB、H 浓度、E 浓度、真实 IHC RGB、真实 DAB、生成 IHC RGB、生成 DAB。</p>
+<h3>7.4 两项反退化诊断</h3>
+<p><strong>条件复制检查。</strong> 计算 $\operatorname{Corr}(\hat C_{DAB},C_H^{HE})$ 与 $\operatorname{Corr}(C_{DAB}^{real},C_H^{HE})$。若前者显著大于后者，说明模型把 H 的形态直接搬运为 DAB，而非学习蛋白表达的独立空间模式。定义复制比 $\gamma=\operatorname{Corr}_{pred}/\operatorname{Corr}_{real}$，$\gamma&gt;1.2$ 视为可疑。此项必要，是因为 H 与 DAB 在空间上确有一定相关（核区 H 高、DAB 常位于胞质或膜），模型沿此相关外推即可获得不低的相关系数，却未学到新信息。</p>
+<p><strong>方差塌缩检查。</strong> 比较 $\operatorname{Var}(\hat C_{DAB})$ 与 $\operatorname{Var}(C_{DAB}^{real})$，定义方差比 $\rho=\operatorname{Var}_{pred}/\operatorname{Var}_{real}$，$\rho&lt;0.6$ 视为塌缩。此项须与损失函数联合理解：均方误差的贝叶斯最优解正是条件均值 $\mathbb{E}[z_0\mid z_t,c]$，故塌缩并非实现缺陷，而是 $L_2$ 目标的必然倾向。若塌缩发生，说明单靠扩散先验不足以恢复表达强度的真实离散度，后续引入蛋白先验与评分引导具有必要性而非偏好性。</p>
+<h2>八、与现有工作的关系</h2>
+<p>&quot;在 OD/浓度域做扩散&quot;本身已不新，M0 的定位必须在三项近邻工作的差异中界定。</p>
+<p><strong>Jeong 等（2023）</strong> 在染色分离空间以 score-based diffusion 做染色归一化，输入与输出同模态，属&quot;同模态风格对齐&quot;；M0 为跨模态翻译，条件为空间浓度场。</p>
+<p><strong>TT-SaD（ECCV 2024）</strong> 在 relative OD 空间扩散，借 DDNM 式投影在采样中注入观测一致性，用于分类前的测试时染色适配。其投影算子在 M0 设定中无对应物：目标模态在推理时完全缺失，不存在可投影的观测；它在 OD 空间工作的理由是把非线性逆问题线性化，与 M0&quot;直接在物理量上建模&quot;的动机不同。</p>
+<p><strong>Kang 等（2025）</strong> 在 OD 空间做渐进式 H&amp;E→IHC 翻译，并引入 DAB 浓度损失与梯度损失作为物理正则，与 M0 最为接近。差异在于：该工作在 OD 空间整体翻译，浓度损失作为正则附加于重建目标之上，生成对象仍为多通道图像；M0 则将生成对象限定为单染料通道，H 通道被固定为干净条件，条件贡献可被单独消融。M0 的差异不是增加损失项，而是改变被生成对象的定义域。</p>
+<p>综上，可主张的空白是&quot;单染料通道条件扩散 + H/E 浓度固定条件 + 比尔-朗伯物理回投&quot;的端到端解耦流水线；创新落在坐标选择与条件结构的组合，而非任何单一模块。在本文写作时，MICCAI 2026 上亦出现了采用&quot;染色分离—浓度域生成—物理重建&quot;路线的虚拟染色工作，表明该表示选择正在获得独立认同——这只会强化而非削弱对该组合做严格消融的必要性。</p>
+<h2>九、当前进展与下一步</h2>
+<p>当前已完成的是<strong>合成任务探针</strong>：在受控合成数据上，从 H&amp;E 条件生成 DAB 再渲染 IHC 的链路达 0.99 指标，说明解混、加噪、条件拼接、v-target 计算、DDIM 采样与物理回投六个环节在已知真值下自洽可复现，工程性错误已被排除。由此不确定性收敛至唯一剩余问题：<strong>真实配对切片上，模型能否从 H&amp;E 推断应生成的 DAB 空间模式</strong>。该问题由 tiny-set 过拟合与 $U_0\to U_1\to U_2$ 消融判定，不能由合成结果外推。</p>
+<p>若条件扩散严格优于无条件扩散，后续演进即具依据：H 多尺度注入 → 蛋白估计器 A → 真实 IHC 评分模型 B；若条件增益不显著，则须重审条件注入方式而非继续堆叠模块。以可证伪的门禁序列替代整体调参，是 M0 在方法之外试图确立的研究纪律。</p>
+<h2>参考文献</h2>
+<ol><li>Jeong J, Kim K-D, Nam Y, Cho C E, Go H, Kim N. Stain normalization using score-based diffusion model through stain separation and overlapped moving window patch strategies. <em>Computers in Biology and Medicine</em>, 2023, 152: 106335.</li><li>Graziani M, et al. Test-time stain adaptation with diffusion models for histopathology image classification. <em>ECCV</em>, 2024.</li><li>Kang Y, Su Z, Wang T, Li Z, Chen W, Niazi M K K. Progressive translation of H&amp;E to IHC with enhanced structural fidelity. <em>arXiv:2511.01698</em>, 2025.</li><li>Ho J, Jain A, Abbeel P. Denoising diffusion probabilistic models. <em>NeurIPS</em>, 2020.</li><li>Song J, Meng C, Ermon S. Denoising diffusion implicit models. <em>ICLR</em>, 2021.</li><li>Salimans T, Ho J. Progressive distillation for fast sampling of diffusion models. <em>ICLR</em>, 2022.</li><li>Wang Y, Yu J, Zhang J. Zero-shot image restoration using denoising diffusion null-space model. <em>ICLR</em>, 2023.</li><li>Ruifrok A C, Johnston D A. Quantification of histochemical staining by color deconvolution. <em>Analytical and Quantitative Cytology and Histology</em>, 2001, 23(4): 291–299.</li><li>Macenko M, et al. A method for normalizing histology slides for quantitative analysis. <em>ISBI</em>, 2009.</li></ol>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

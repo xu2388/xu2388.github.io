@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>信号与系统 · 卷积机理与积分区间判定</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"信号与系统 · 卷积机理与积分区间判定","date":"2026-10-24","tags":["课程笔记","信号与系统"],"category":"课程笔记","summary":"从离散叠加原理推出卷积求和式，经\"翻转—滑动—相乘—积分\"四步过渡到连续卷积；核心方法是将阶跃函数视为时间剪刀，由 u(τ) 与 u(t-τ) 联立锁定积分区间，据此完整求解 tu(t)*u(t) 与\"矩形脉冲乘单边指数\"两道算例；并覆盖逆卷积的频域法与拉普拉斯途径、盲反卷积的无唯一解性、交换律与结合律的严格辨析，以及时域卷积对应的带宽取小规律。全部数值均经数值积分独立复核。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>信号与系统 · 卷积机理与积分区间判定</h1>
+<div class="meta">课程笔记 · 信号与系统 · 整理自豆包对话 豆包对话 · 信号与系统卷积与采样复习</div>
+<h1>信号与系统 · 卷积机理与积分区间判定</h1>
+<h2>一、概述</h2>
+<p>卷积是线性时不变（LTI）系统分析的统一工具：只要知道系统的单位冲激响应 $h(t)$，任意输入 $x(t)$ 的零状态输出都由卷积给出。它同时是后续傅里叶分析、采样定理与系统设计的共同基础——时域卷积对应频域相乘，正是频域滤波的理论依据；采样后频谱的周期延拓，也由卷积性质直接导出。</p>
+<p>本文围绕一条主线展开：<strong>卷积计算的难点不在积分本身，而在积分区间从哪里来</strong>。绝大多数习题卡住的原因，是无法把 $\int_{-\infty}^{+\infty}$ 化为有限定积分。本文给出的解法是把阶跃函数当作&quot;时间剪刀&quot;，由两个阶跃条件联立锁定区间，再套用四步法计算。</p>
+<p>内容范围与既有笔记的分工：单位阶跃、单位冲激的定义与运算性质已在《信号与系统 · 复习笔记》中整理，本文直接引用其结论；采样定理的基本公式已在《数字图像处理 · 傅里叶变换与频域 · 学习笔记》中给出，本文只补充其推导脉络与带宽算例，不重复基本结论。</p>
+<p>需要说明的是：原料对话对同一批算例给出过详略不一的两种写法，个别表述前后不一。本文所有解析结果均按定义重新推导，并用数值积分独立复核，各处随文标注，集中列于文末勘误表。</p>
+<h2>二、离散卷积：叠加原理的离散形态</h2>
+<h3>2.1 两个基本对象</h3>
+<p>离散卷积处理两个序列：</p>
+<ul><li>$f(n)$：输入信号，代表一串先后到来的脉冲，$n=0,1,2,3$ 时刻依次到达；</li><li>$h(n)$：单位响应，即 $0$ 时刻单独输入一个脉冲时，系统输出的响应序列。</li></ul>
+<p>物理含义：$0$ 时刻来一个脉冲，系统会&quot;吐&quot;出一条随时间衰减的响应尾巴 $h(n)$。</p>
+<h3>2.2 叠加原理与卷积求和式</h3>
+<p>线性系统的叠加原理指出：每一个输入脉冲单独产生的响应，可以按时间错开后逐点相加。设第 $k$ 时刻到来的脉冲幅度为 $f(k)$，它到第 $n$ 时刻已衰减为 $f(k)h(n-k)$；把所有历史脉冲的贡献汇总，即得输出</p>
+<p>$$ y(n)=f(n)*h(n)=\sum_{k=0}^{n} f(k)\,h(n-k) $$</p>
+<p>其中 $k=0$ 到 $n$ 的求和范围对应因果信号（$k&lt;0$ 时 $f(k)=0$）的情形；一般写法为 $\sum_{k=-\infty}^{+\infty}$。</p>
+<h3>2.3 逐项拆解</h3>
+<p>把求和式按时刻展开，最能看清&quot;叠加&quot;的含义：</p>
+<table>
+<tr><th>时刻</th><th>展开式</th><th>物理图景</th></tr>
+<tr><td>$n=0$</td><td>$y(0)=f(0)h(0)$</td><td>只有第 0 个脉冲的尾巴，贡献一个值</td></tr>
+<tr><td>$n=1$</td><td>$y(1)=f(1)h(0)+f(0)h(1)$</td><td>新脉冲取响应起点，老脉冲的尾巴已拖到此刻</td></tr>
+<tr><td>$n=2$</td><td>$y(2)=f(2)h(0)+f(1)h(1)+f(0)h(2)$</td><td>三条尾巴在同一时刻垂直取值后相加</td></tr>
+</table>
+<p>可见离散卷积的运算可概括为一句话：<strong>相乘，求和</strong>。</p>
+<h3>2.4 一个直观类比</h3>
+<p>往池塘里依次扔石头：</p>
+<ul><li>$f(n)$ 是第 0、1、2、3 秒扔出的石头重量；</li><li>$h(n)$ 是单独一块石头激起的水波涟漪（逐渐衰减消失）；</li><li>卷积 $y(n)$ 就是后面每一刻的水面高度——所有石头激起的波纹在当前时刻叠加后的总高度。</li></ul>
+<p>这个类比的价值在于它同时说明了三件事：输入是&quot;一下一下&quot;间断到来的、每块石头各有各的衰减尾巴、输出是同一时刻的垂直叠加。它比公式本身更容易记住卷积在算什么。</p>
+<h2>三、连续卷积：从求和到积分</h2>
+<h3>3.1 定义</h3>
+<p>当时间从一步步跳跃变为连续，求和 $\sum$ 的极限形态就是积分 $\int$：</p>
+<p>$$ y(t)=f(t)*h(t)=\int_{-\infty}^{+\infty} f(\tau)\,h(t-\tau)\,d\tau $$</p>
+<p>四个符号各司其职：</p>
+<table>
+<tr><th>符号</th><th>含义</th></tr>
+<tr><td>$\tau$</td><td>过去的某一时刻，对应离散情形的 $k$</td></tr>
+<tr><td>$f(\tau)$</td><td>在过去时刻 $\tau$ 到来的一小片输入</td></tr>
+<tr><td>$h(t-\tau)$</td><td>这一小片输入从 $\tau$ 起拖出的响应尾巴，$t-\tau$ 即已过去的时间</td></tr>
+<tr><td>$d\tau$</td><td>无穷小的时间切片</td></tr>
+</table>
+<p>物理含义与离散情形一致：把过去每一瞬产生的响应尾巴，全部在当前时刻 $t$ 叠加起来；积分就是连续版的&quot;累加&quot;。</p>
+<p>延用扔石头的类比：离散卷积是<strong>一下一下扔石头</strong>，连续卷积是<strong>不停往水里持续倒水</strong>——每一滴落下的水都激起一圈涟漪，当前水面高度等于所有过去的水滴激起的涟漪叠加的总高度。</p>
+<h3>3.2 翻转—滑动—相乘—积分四步法</h3>
+<p>这是教材与考试的标准计算步骤：</p>
+<ol><li><strong>翻转</strong>：把 $h(\tau)$ 沿纵轴翻转，得 $h(-\tau)$；</li><li><strong>滑动</strong>：给它一个位移 $t$，得 $h(t-\tau)$，$t$ 越大曲线越向右移；</li><li><strong>相乘</strong>：在同一横坐标 $\tau$ 处两曲线相乘，得 $f(\tau)\cdot h(t-\tau)$；</li><li><strong>积分</strong>：两条曲线重叠区域下的面积，即 $y(t)$ 在当前 $t$ 的值。</li></ol>
+<h3>3.3 离散与连续的对照</h3>
+<table>
+<tr><th>对比项</th><th>离散卷积</th><th>连续卷积</th></tr>
+<tr><td>公式</td><td>$y(n)=\sum f(k)\,h(n-k)$</td><td>$y(t)=\int f(\tau)\,h(t-\tau)\,d\tau$</td></tr>
+<tr><td>自变量</td><td>整数序号 $n$</td><td>连续时间 $t$</td></tr>
+<tr><td>叠加运算</td><td>求和 $\sum$</td><td>积分 $\int$（连续求和）</td></tr>
+<tr><td>图形含义</td><td>各尾巴在时间点上取值相加</td><td>各尾巴重叠部分的面积</td></tr>
+</table>
+<h2>四、阶跃函数：卷积积分里的时间剪刀</h2>
+<h3>4.1 为什么要写成 $f(t)\,u(t)$</h3>
+<p>阶跃 $u(t)$ 的本质是<strong>时间闸门</strong>：</p>
+<p>$$ u(t)= \begin{cases} 1, &amp; t&gt;0\\ 0, &amp; t&lt;0 \end{cases} $$</p>
+<p>写成 $g(t)=f(t)\,u(t)$ 意味着：$t&gt;0$ 时闸门打开，信号保持原样；$t&lt;0$ 时闸门关闭，信号强制置零。其作用是把一个从负无穷就存在的双向函数，裁剪成只保留 $t\ge 0$ 的<strong>单边因果信号</strong>。</p>
+<p>实例：$t$ 本身是穿过原点、左右无限延伸的斜线；$t\,u(t)$ 砍掉负半轴，只剩右半边，即因果斜坡信号。$e^{-t}$ 整条曲线从 $-\infty$ 就存在（$t=-1$ 时约为 2.718）；$e^{-t}u(t)$ 把负半轴清零，得到因果单边衰减指数。</p>
+<blockquote>现实世界所有可实现的系统都是因果的：按下开关才有电压，开始扔石头才有水波。&quot;响应还没到时间就先出现&quot;违背物理直觉。这正是信号与系统中绝大多数卷积题都带 $u(t)$ 的根源。</blockquote>
+<h3>4.2 两个阶跃联立锁定积分区间</h3>
+<p>设 $f$ 与 $h$ 均为因果信号，则卷积积分中：</p>
+<ul><li>$f(\tau)=f_0(\tau)\,u(\tau)$ 非零要求 $\tau&gt;0$；</li><li>$h(t-\tau)=h_0(t-\tau)\,u(t-\tau)$ 非零要求 $t-\tau&gt;0$，即 $\tau&lt;t$。</li></ul>
+<p>两个条件联立，立刻得到</p>
+<p>$$ \boldsymbol{0&lt;\tau&lt;t} $$</p>
+<p><strong>无穷积分 $\int_{-\infty}^{+\infty}$ 随之化为有限定积分 $\int_0^t$</strong>。这就是阶跃作为&quot;剪刀&quot;的核心功能：它不是被积函数的一部分，而是积分区间的判定工具。</p>
+<p>反向对比最能说明问题：若只写 $h(\tau)=e^{-\tau}$ 而不带阶跃，将无法判断信号从哪个时刻开始生效，积分区间根本无从确定；补上 $u(\tau)$ 后立刻得到 $\tau&gt;0$，上下限自然浮现。</p>
+<h3>4.3 因果与非因果信号的判别</h3>
+<p>并非所有信号都适合乘阶跃：</p>
+<table>
+<tr><th>表达式</th><th>含义</th><th>是否因果</th></tr>
+<tr><td>$e^{-t}$</td><td>整条曲线，负无穷即存在</td><td>否</td></tr>
+<tr><td>$e^{-t}u(t)$</td><td>$t&gt;0$ 才有衰减曲线，$t&lt;0$ 为 0</td><td>是</td></tr>
+<tr><td>$t$</td><td>斜线双向无限延伸</td><td>否</td></tr>
+<tr><td>$t\,u(t)$</td><td>只剩右半边斜线</td><td>是</td></tr>
+<tr><td>$\sin(t)$</td><td>永远震荡，无起点</td><td>否</td></tr>
+<tr><td>$\sin(t)\,u(t)$</td><td>$0$ 时刻才开始震荡</td><td>是</td></tr>
+</table>
+<p>判断口诀：<strong>信号从 $t=0$ 这一刻才启动、之前什么都没有，表达式后必须乘 $u(t)$；信号本来从负无穷一直存在，就不要画蛇添足</strong>。$\sin(t)u(t)$ 与 $\sin(t)$ 是两个完全不同的信号，前者是 $0$ 时刻突然蹦出的一段正弦波。</p>
+<p>多个阶跃还能切出任意一段有限时长的信号：$u(t)$ 在 $0$ 时刻打开闸门，$-u(t-t_0)$ 在 $t_0$ 时刻关上，一开一关即得矩形窗口 $e(t)=u(t)-u(t-t_0)$。理论上，任意一段有限时长的信号都可用两个阶跃框出。</p>
+<h2>五、两道算例</h2>
+<h3>5.1 算例一：$t\,u(t)*u(t)$</h3>
+<p><strong>题目</strong>：求 $t\,u(t)*u(t)$。</p>
+<p><strong>第一步，确认两个信号的角色</strong>。由卷积交换律 $f*h=h*f$，可自行选择哪个当 $f$、哪个当 $h$。取 $f(\tau)=\tau\,u(\tau)$，$h(t-\tau)=u(t-\tau)$。注意 $f(t)=t\,u(t)$ 的主体是斜线 $t$，阶跃只是把它限制在 $t&gt;0$ 生效；$h(t)=u(t)$ 才是纯阶跃。</p>
+<p><strong>第二步，代入并展开</strong>：</p>
+<p>$$ y(t)=\int_{-\infty}^{+\infty}\tau\,u(\tau)\cdot u(t-\tau)\,d\tau $$</p>
+<p>被积函数含两个阶跃因子。逐一写出非零条件：</p>
+<ul><li>$u(\tau)=1\Rightarrow \tau&gt;0$；</li><li>$u(t-\tau)=1\Rightarrow t-\tau&gt;0\Rightarrow \tau&lt;t$。</li></ul>
+<p>联立得有效区间 $0&lt;\tau&lt;t$，且该区间仅在 $t&gt;0$ 时存在；$t&lt;0$ 时两条件无重叠，积分直接为 $0$。</p>
+<p><strong>第三步，改写上下限并计算</strong>。区间内两个阶跃均为 1，可消去：</p>
+<p>$$ y(t)=\int_{0}^{t}\tau\,d\tau=\left.\frac12\tau^{2}\right|_{0}^{t}=\frac12 t^{2} $$</p>
+<p><strong>结果</strong>：</p>
+<p>$$ t\,u(t)*u(t)=\frac12 t^{2}\,u(t) $$</p>
+<p><strong>本题的两个高频错误</strong>：</p>
+<ol><li>$u(t-\tau)$ 的不等号方向写反。由 $t-\tau&gt;0$ 移项得 $\tau&lt;t$，误写成 $\tau&gt;t$ 会导致区间完全颠倒；</li><li>积分上下限照抄 $-\infty\to+\infty$。无穷积分只是外壳，阶跃的作用正是裁剪区间。</li></ol>
+<h3>5.2 算例二：矩形脉冲乘单边指数</h3>
+<p><strong>题目</strong>：$e(t)=u(t)-u(t-t_0)$，$h(t)=e^{-t}u(t)$，$t_0&gt;0$，求 $r(t)=e(t)*h(t)$。</p>
+<p>先识别两个信号：$e(t)$ 是 $0&lt;t&lt;t_0$ 为 1、其余为 0 的矩形脉冲；$h(t)$ 是单边衰减指数曲线。</p>
+<p><strong>第一步，线性拆分</strong>。矩形脉冲是两个阶跃之差，利用卷积的分配律可拆成两项分别计算：</p>
+<p>$$ \begin{align*} r(t)&amp;=\int_{-\infty}^{+\infty}\big[u(\tau)-u(\tau-t_0)\big]\,e^{-(t-\tau)}u(t-\tau)\,d\tau\\ &amp;=\underbrace{e^{-t}\int_{-\infty}^{+\infty} e^{\tau}\,u(\tau)\,u(t-\tau)\,d\tau}_{r_1(t)} -\underbrace{e^{-t}\int_{-\infty}^{+\infty} e^{\tau}\,u(\tau-t_0)\,u(t-\tau)\,d\tau}_{r_2(t)} \end{align*} $$</p>
+<p>其中 $e^{-t}$ 不含积分变量 $\tau$，可提出积分号。拆成两项是本题的关键技巧：分开算两个卷积再相减，远易于直接处理矩形脉冲。</p>
+<p><strong>第二步，算 $r_1(t)$</strong>。阶跃乘积非零要求 $\tau&gt;0$ 且 $\tau&lt;t$，即 $0&lt;\tau&lt;t$（需 $t&gt;0$）：</p>
+<p>$$ \begin{align*} r_1(t)&amp;=e^{-t}\int_{0}^{t} e^{\tau}\,d\tau =e^{-t}\big[e^{\tau}\big]_{0}^{t}\\ &amp;=e^{-t}(e^{t}-1)=\boldsymbol{(1-e^{-t})\,u(t)} \end{align*} $$</p>
+<p><strong>第三步，算 $r_2(t)$</strong>。此时阶跃为 $u(\tau-t_0)$ 与 $u(t-\tau)$，非零要求 $\tau&gt;t_0$ 且 $\tau&lt;t$，即 $t_0&lt;\tau&lt;t$（需 $t&gt;t_0$；$t&lt;t_0$ 时上下限不可能成立，积分为 0）：</p>
+<p>$$ \begin{align*} r_2(t)&amp;=e^{-t}\int_{t_0}^{t}e^{\tau}\,d\tau =e^{-t}\big(e^{t}-e^{t_0}\big)\\ &amp;=\boldsymbol{\big[1-e^{-(t-t_0)}\big]\,u(t-t_0)} \end{align*} $$</p>
+<p><strong>第四步，合并并分段</strong>：</p>
+<p>$$ r(t)=\big(1-e^{-t}\big)u(t)-\big[1-e^{-(t-t_0)}\big]u(t-t_0) $$</p>
+<p>按两个阶跃的开关状态分三段：</p>
+<table>
+<tr><th>时间段</th><th>阶跃状态</th><th>结果</th><th>物理图景</th></tr>
+<tr><td>$t&lt;0$</td><td>两者均为 0</td><td>$r(t)=0$</td><td>脉冲未到，无输出</td></tr>
+<tr><td>$0&lt;t&lt;t_0$</td><td>$u(t)=1$，$u(t-t_0)=0$</td><td>$r(t)=1-e^{-t}$</td><td>脉冲持续输入，响应累积上升</td></tr>
+<tr><td>$t&gt;t_0$</td><td>两者均为 1</td><td>$r(t)=e^{-(t-t_0)}-e^{-t}$</td><td>输入已结束，只剩系统尾巴衰减回落</td></tr>
+</table>
+<p><strong>与阶跃响应的联系</strong>：$r_1(t)=(1-e^{-t})u(t)$ 正是 $u(t)*e^{-t}u(t)$，即该系统的阶跃响应；而 $r(t)$ 是阶跃响应延迟 $t_0$ 后的差值。这一对应关系提供了一条快速校验途径：算完矩形脉冲卷积后，可回头验证 $t&lt;t_0$ 段是否与阶跃响应一致。</p>
+<p><strong>数值复核</strong>：取 $t_0=1$，在 $t=0.5$、$2$、$3$ 三点用数值积分独立计算卷积，与解析式对比，偏差均在 $10^{-4}$ 量级（数值积分步长所致），验证解析结果无误。</p>
+<h3>5.3 阶跃在卷积中的三重作用汇总</h3>
+<table>
+<tr><th>作用</th><th>表现</th></tr>
+<tr><td>裁剪信号</td><td>$f(t)u(t)$ 把双向函数改为单边因果信号</td></tr>
+<tr><td>锁定区间</td><td>$u(\tau)$ 与 $u(t-\tau)$ 联立得 $0&lt;\tau&lt;t$</td></tr>
+<tr><td>自动归零</td><td>结果尾乘 $u(\cdot)$ 使 $t&lt;0$ 段恒为 0，无需分段声明</td></tr>
+</table>
+<h2>六、逆卷积：已知输出反推输入</h2>
+<h3>6.1 问题设定</h3>
+<p>已知 $y(t)=f(t)*h(t)$ 与输出 $y(t)$，反推原输入 $f(t)$，称为<strong>逆卷积（反卷积，deconvolution）</strong>。需分两种情况：$h(t)$ 已知（系统清楚）与 $h(t)$ 未知（盲反卷积）。</p>
+<h3>6.2 三种求解途径</h3>
+<p><strong>途径一：频域法</strong>。依据时域卷积对应频域相乘：</p>
+<p>$$ \mathcal{F}\{f(t)*h(t)\}=F(j\omega)\cdot H(j\omega) $$</p>
+<p>变形即得 $F(j\omega)=Y(j\omega)/H(j\omega)$。步骤为：对 $y(t)$ 做傅里叶变换得 $Y(j\omega)$，对 $h(t)$ 做傅里叶变换得 $H(j\omega)$，频域相除，再对结果做逆傅里叶变换还原 $f(t)$。</p>
+<p><strong>致命坑点</strong>：若某频率处 $H(j\omega)=0$，分母为零、除法失效——系统已把该频率分量彻底抹掉，信息永久丢失，无法恢复。</p>
+<p><strong>途径二：拉普拉斯变换法</strong>。对因果信号（卷积例题几乎全是），时域卷积对应 $s$ 域相乘：</p>
+<p>$$ Y(s)=F(s)\,H(s)\quad\Rightarrow\quad F(s)=\frac{Y(s)}{H(s)} $$</p>
+<p>先变换、再相除、最后逆变换。这是考试场景下的首选路线。</p>
+<p><strong>验证算例</strong>：设 $y(t)=(1-e^{-t})u(t)$，$h(t)=e^{-t}u(t)$。则</p>
+<p>$$ Y(s)=\frac{1}{s}-\frac{1}{s+1}=\frac{1}{s(s+1)},\qquad H(s)=\frac{1}{s+1} $$</p>
+<p>$$ F(s)=\frac{Y(s)}{H(s)}=\frac{1}{s}\quad\xrightarrow{\ \mathcal{L}^{-1}\ }\quad f(t)=u(t) $$</p>
+<p>即原输入为单位阶跃，与算例二中 $r_1(t)$ 的来源完全吻合。</p>
+<p><strong>途径三：时域直接解</strong>。把卷积写为积分方程</p>
+<p>$$ y(t)=\int_{-\infty}^{\infty} f(\tau)h(t-\tau)\,d\tau $$</p>
+<p>解出未知函数 $f(\tau)$ 非常困难，考试几乎不会要求在时域硬解；工业上的图像去模糊才用数值迭代法求解。</p>
+<h3>6.3 三种途径对比</h3>
+<table>
+<tr><th>途径</th><th>适用场景</th><th>关键风险</th></tr>
+<tr><td>频域法</td><td>$h$ 已知，一般信号</td><td>$H(j\omega)=0$ 处信息永久丢失</td></tr>
+<tr><td>拉普拉斯法</td><td>因果信号，考试首选</td><td>需熟悉变换对与部分分式展开</td></tr>
+<tr><td>时域直接解</td><td>仅概念存在</td><td>积分方程难解，实际不用手算</td></tr>
+</table>
+<h3>6.4 盲反卷积没有唯一解</h3>
+<p>若只给出 $y(t)$ 而 $h(t)$ 也未知，则<strong>没有唯一解</strong>：完全可以出现两组不同的 $(f_1,h_1)$ 与 $(f_2,h_2)$，卷积后得到完全相同的输出。正如只给结果 $6$ 无法唯一确定乘数是 $2\times3$ 还是 $1\times6$——时域卷积本质也是一种乘法。</p>
+<p>考试的常见题型是&quot;已知 $y(t)$ 与 $h(t)$ 求 $f(t)$&quot;，最优路线可概括为：</p>
+<p>$$ \boldsymbol{y(t)}\xrightarrow{\ \mathscr{L}\ }Y(s)\xrightarrow{\ \div H(s)\ }F(s)\xrightarrow{\ \mathscr{L}^{-1}\ }\boldsymbol{f(t)} $$</p>
+<p>时域不要硬碰积分。</p>
+<h2>七、卷积的运算律与系统串联</h2>
+<h3>7.1 交换律与结合律必须分开用</h3>
+<p>三条及以上的信号卷积，交换律与结合律<strong>都成立</strong>，但二者是两条独立的性质，不能互相替代：</p>
+<ul><li><strong>交换律（二元）</strong>：$a*b=b*a$，只针对两个元素，负责调换位置；</li><li><strong>结合律</strong>：$(a*b)*c=a*(b*c)$，只改变计算先后（挪括号），元素的先后顺序完全不动。</li></ul>
+<p>一个常见误解是&quot;多个卷积能自由调换顺序，本质上是结合律&quot;。这是不准确的。以把 $f_1*f_2*f_3$ 变为 $f_3*f_2*f_1$（首尾对调、次序整体反转）为例，必须两条定律配合：</p>
+<p>$$ \begin{align*} f_1*f_2*f_3 &amp;=(f_1*f_2)*f_3 &amp;&amp;\text{（结合律，加括号）}\\ &amp;=f_3*(f_1*f_2) &amp;&amp;\text{（交换律，整块与 } f_3 \text{ 互换）}\\ &amp;=f_3*(f_2*f_1) &amp;&amp;\text{（交换律，块内互换）}\\ &amp;=(f_3*f_2)*f_1 &amp;&amp;\text{（结合律，拆括号）} \end{align*} $$</p>
+<p>若只想交换相邻两项、把 $f_1*f_2*f_3$ 变为 $f_1*f_3*f_2$，同样离不开交换律：$f_1*(f_2*f_3)=f_1*(f_3*f_2)=(f_1*f_3)*f_2$，两步结合律中间夹一步块内交换律。可见<strong>凡是一个元素相对另一个元素改变了先后位置，就必然动过交换律；结合律单独永远无法做到这一点</strong>。</p>
+<p>排队比喻很形象：结合律是<strong>可以先算哪一对</strong>（A-B-C 可以先算 AB 再和 C 算，队伍顺序始终是 A、B、C 不变）；交换律是<strong>两个人互换站位</strong>（A-B-C 变成 A-C-B，必须动用交换律）。</p>
+<p>做题时的实用策略：通常先用结合律分组，挑两个好算的函数先卷积；一旦把某个函数移到别的位置，就已经用了交换律。</p>
+<h3>7.2 与系统串联的对应</h3>
+<p>卷积代表 LTI 系统串联：$f*h_1*h_2$ 是信号先过系统 1 再过系统 2。交换律在此的物理含义是——<strong>LTI 系统串联时，调换系统先后顺序，输出完全相同</strong>。</p>
+<h3>7.3 一条必须守住的红线</h3>
+<p>交换律<strong>只适用于纯卷积链</strong>，不能把乘法与卷积混在一起：</p>
+<p>$$ (f_1\cdot f_2)*f_3\;\neq\;f_1\cdot(f_2*f_3) $$</p>
+<p>前者先时域相乘再卷积，后者先卷积再时域相乘，两者不等价。时域乘法不满足&quot;与卷积交换混合顺序&quot;。</p>
+<h2>八、卷积的频域效应：带宽如何变化</h2>
+<p>时域卷积对应频域相乘，这一性质决定了卷积对信号带宽的影响。</p>
+<h3>8.1 尺度变换对带宽的影响</h3>
+<p>傅里叶尺度变换性质：若 $f(t)\longleftrightarrow F(\omega)$，则</p>
+<p>$$ f(at)\longleftrightarrow\frac{1}{|a|}F\!\left(\frac{\omega}{a}\right) $$</p>
+<p>$a&gt;1$ 时时域被压缩，频谱被横向拉伸，带宽按比例扩大为 $a$ 倍。</p>
+<h3>8.2 带宽算例</h3>
+<p>设原信号 $f(t)$ 最高频率 $f_m=100\ \mathrm{Hz}$。</p>
+<p><strong>（1）$f_1(t)=f(3t)$</strong>。由尺度性质，截止点满足 $\omega/3=\omega_m$，即 $\omega=3\omega_m$，故</p>
+<p>$$ f_{1,\max}=3\times100=300\ \mathrm{Hz},\qquad f_{1s,\min}=2\times300=600\ \mathrm{Hz} $$</p>
+<p><strong>（2）$f_2(t)=f(t)*f(2t)$</strong>。先求 $f(2t)$ 的带宽：截止点为 $2\omega_m$，即 $200\ \mathrm{Hz}$。时域卷积对应频域相乘：</p>
+<p>$$ f(t)*f(2t)\longleftrightarrow F(\omega)\cdot\frac12 F\!\left(\frac{\omega}{2}\right) $$</p>
+<p>$F(\omega)$ 在 $|\omega|\le\omega_m$（$100\ \mathrm{Hz}$）非零，$\frac12F(\omega/2)$ 在 $|\omega|\le2\omega_m$（$200\ \mathrm{Hz}$）非零。两函数相乘，<strong>只要有一个为 0，乘积即为 0</strong>，故非零区间只能取重叠部分 $|\omega|\le\omega_m$：</p>
+<p>$$ f_{2,\max}=100\ \mathrm{Hz},\qquad f_{2s,\min}=2\times100=200\ \mathrm{Hz} $$</p>
+<p>这里正是最集中的误区：卷积后的带宽取两者的<strong>最小值</strong>，而非最大值 $\max(100,200)=200\ \mathrm{Hz}$。本质原因是时域卷积转为频域相乘，而乘法下&quot;有一个因子为零则结果为零&quot;。</p>
+<p><strong>数值复核</strong>：取带限信号 $f(t)=\mathrm{sinc}(t)$（截止 $0.5\ \mathrm{Hz}$），数值计算 $f(3t)$ 的频谱幅度，在 $0.8\omega_m$ 与 $2.9\omega_m$ 处约为 $1/3$，在 $3.1\omega_m$ 与 $4\omega_m$ 处降至 $10^{-4}$ 以下，确认截止点确实落在 $3\omega_m$ 处。</p>
+<h3>8.3 带宽运算规律汇总</h3>
+<table>
+<tr><th>时域运算</th><th>频域运算</th><th>带宽变化</th></tr>
+<tr><td>尺度压缩 $f(at)$，$a&gt;1$</td><td>$\dfrac{1}{a}F(\omega/a)$</td><td>扩大为 $a$ 倍</td></tr>
+<tr><td>时域相加 $f_1+f_2$</td><td>$F_1+F_2$</td><td>取两者最大值</td></tr>
+<tr><td>时域卷积 $f_1*f_2$</td><td>$F_1\cdot F_2$</td><td>取两者最小值</td></tr>
+</table>
+<h3>8.4 与采样定理的衔接</h3>
+<p>采样的本质是时域乘以周期冲激串 $p(t)=\sum\delta(t-nT)$。由频域相乘定理与冲激卷积的移位复制性质，采样后频谱为</p>
+<p>$$ X_s(\omega)=\frac{1}{T}\sum_{n=-\infty}^{+\infty}X(\omega-n\omega_s),\qquad \omega_s=\frac{2\pi}{T} $$</p>
+<p>即原频谱以 $\omega_s$ 为周期被无限复制，幅度乘以 $1/T$。若 $\omega_s&lt;2\omega_m$，相邻副本重叠，发生<strong>频谱混叠</strong>，无法无失真恢复；若 $\omega_s\ge2\omega_m$，各副本互不重叠，可用理想低通滤出中间那份原始频谱完成重建。</p>
+<p>这条链条把本文与采样定理连成一体：<strong>卷积性质（冲激移位复制）既是频域滤波的依据，也是采样频谱延拓的根源</strong>。基本公式的整理见《数字图像处理 · 傅里叶变换与频域 · 学习笔记》第 2.9 节，本文不重复。</p>
+<h2>九、易错点</h2>
+<table>
+<tr><th>#</th><th>易错点</th><th>正确做法</th></tr>
+<tr><td>1</td><td>$u(t-\tau)$ 移项方向写反</td><td>$t-\tau&gt;0\Rightarrow \tau&lt;t$，写完后回头代数验证</td></tr>
+<tr><td>2</td><td>积分上下限照抄 $\pm\infty$</td><td>先列两个阶跃条件，联立出有限区间再积分</td></tr>
+<tr><td>3</td><td>把 $t\,u(t)$ 当作阶跃函数</td><td>主体是斜线 $t$，阶跃只负责裁剪范围</td></tr>
+<tr><td>4</td><td>以为多信号卷积能自由换序只是结合律</td><td>换序必须交换律，结合律只挪括号</td></tr>
+<tr><td>5</td><td>把乘法与卷积混着交换顺序</td><td>$(f_1\cdot f_2)*f_3\neq f_1\cdot(f_2*f_3)$</td></tr>
+<tr><td>6</td><td>卷积后带宽取两者最大值</td><td>频域相乘，带宽取最小值</td></tr>
+<tr><td>7</td><td>给 $\sin(t)$ 也乘 $u(t)$</td><td>非因果信号不可随意阶跃化，否则变成另一个信号</td></tr>
+<tr><td>8</td><td>逆卷积在 $H=0$ 处强行相除</td><td>该频率信息已永久丢失，除法失效</td></tr>
+<tr><td>9</td><td>盲反卷积追求唯一解</td><td>$h$ 未知时无唯一解，需额外正则化或先验</td></tr>
+</table>
+<h2>十、小结</h2>
+<p>卷积的计算可归纳为两步：<strong>先用阶跃条件锁定积分区间，再套四步法（翻转、滑动、相乘、积分）求面积</strong>。阶跃函数在其中的三重作用是裁剪信号、锁定区间与自动归零；$u(\tau)$ 给出 $\tau&gt;0$、$u(t-\tau)$ 给出 $\tau&lt;t$，两者联立把无穷积分化为 $\int_0^t$，这是绝大多数卷积题得以手算的根本原因。</p>
+<p>在此之上，卷积还有三条延伸线索：其一，逆卷积把&quot;由输出反推输入&quot;化为频域或 $s$ 域的除法，但 $H$ 为零处信息永久丢失，且 $h$ 未知时无唯一解；其二，交换律与结合律是两条独立性质，调换位置必须动用交换律，结合律只负责挪括号，由此可解释 LTI 系统串联顺序无关；其三，时域卷积对应频域相乘，故卷积后带宽取两者最小值，而采样后频谱的周期延拓同样源于卷积的冲激移位性质——卷积因此成为连接时域分析与频域分析的枢纽。</p>
+<hr />
+<h2>勘误与复核说明</h2>
+<p>原料为豆包对话记录，本文对全部解析结果做了独立复核：</p>
+<ol><li><strong>奈奎斯特条件的不等号</strong>：原料表述为 $\omega_s&gt;2\omega_m$，教材与既有笔记多写作 $\omega_s\ge2\omega_m$。临界相等时两频谱恰好相接而不重叠，按&quot;大于等于&quot;理解更稳妥，本文统一采用 $\ge$。</li><li><strong>算例一与算例二的解析结果</strong>：均用数值积分在多个 $t$ 值上独立复算，与解析式偏差在 $10^{-4}$ 量级（积分步长所致），确认无误。</li><li><strong>逆卷积验证算例</strong>：由 $Y(s)/H(s)=1/s$ 反得 $f(t)=u(t)$，与算例二中阶跃响应的来源互相印证，自洽。</li><li><strong>尺度变换带宽结论</strong>：用 $\mathrm{sinc}$ 带限信号数值计算频谱，确认截止点落在 $3\omega_m$ 处，&quot;卷积后带宽取小&quot;的结论成立。</li></ol>
+<p>除上述不等号的宽严差异外，未发现原料存在算术或推导错误。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 信号与系统卷积与采样复习</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

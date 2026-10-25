@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGCD 精读 · 代码级复核与可迁移性判定 · H&amp;E→IHC 调研</title>
+
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.route{border:1px solid var(--border);border-radius:10px;padding:14px 17px;margin:14px 0;background:var(--softer)}.route .rt{font-weight:750;font-size:15px;margin-bottom:5px}.route .rmeta{font-size:12px;color:var(--muted)}.cite{font-size:11.5px;color:var(--muted)}.tag{font-size:11px;font-weight:700;color:var(--muted);background:#eef0f3;padding:2px 6px;border-radius:4px}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+<div class="brand">SGCD Deep Read</div>
+<div class="sub">Stain-Guided CycleDiffusion<br>代码级复核 + 可迁移性判定 · 2026-10-07</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · 论文事实卡片</a>
+<a class="l1" href="#s2">2 · 方法逐件拆解</a>
+<a class="l2" href="#s2-1">2.1 双扩散 + 两阶段循环</a>
+<a class="l2" href="#s2-2">2.2 stain-guided 过程（Eq.3）</a>
+<a class="l2" href="#s2-3">2.3 SGC 损失与 task 损失</a>
+<a class="l2" href="#s2-4">2.4 交替训练</a>
+<a class="l1" href="#s3">3 · ★★ 代码级复核</a>
+<a class="l2" href="#s3-1">3.1 仓库现状与可复现性</a>
+<a class="l2" href="#s3-2">3.2 ★ 旗舰机制被硬关掉</a>
+<a class="l2" href="#s3-3">3.3 ★ 被关掉的「梯度」不是梯度</a>
+<a class="l2" href="#s3-4">3.4 ★ 若打开会怎样：一个算术</a>
+<a class="l2" href="#s3-5">3.5 ★ 超参与论文对不上</a>
+<a class="l2" href="#s3-6">3.6 其余六处缺陷</a>
+<a class="l2" href="#s3-7">3.7 与 HistDiST 的同一故障类</a>
+<a class="l1" href="#s4">4 · ★★★ 与 E0.3/E0.3b 的三重互证</a>
+<a class="l1" href="#s5">5 · ★★ 可迁移性判定</a>
+<a class="l2" href="#s5-1">5.1 I_ref 构造的语义错位</a>
+<a class="l2" href="#s5-2">5.2 染色列排序只在同染色域内成立</a>
+<a class="l2" href="#s5-3">5.3 cycle L2 只保证分布匹配</a>
+<a class="l2" href="#s5-4">5.4 任务错位：分类 ≠ 染色保真</a>
+<a class="l2" href="#s5-5">5.5 作者自认：H&amp;E→IHC 是 future work</a>
+<a class="l1" href="#s6">6 · 能搬三件 / 不要搬三件</a>
+<a class="l1" href="#s7">7 · 实验建议（含一个零成本可视化）</a>
+<a class="l1" href="#s8">8 · 证据边界与未核实清单</a>
+<a class="l1" href="#s9">9 · 与库内既有报告的分工</a>
+<a class="l1" href="#s10">10 · 参考文献</a>
+</nav>
+
+<main>
+
+<header class="doc">
+<div class="kicker">论文精读 · 代码级复核</div>
+<h1>SGCD：Stain-Guided CycleDiffusion<br>—— 代码级复核与「能不能搬到 H&amp;E→IHC」的判定</h1>
+<p class="desc">一篇 NeurIPS 2025 Spotlight 的病理 UDA 论文，用「双扩散 + 双向约束 + stain-guided 一致性损失」做跨医院/跨扫描仪的图像转换。它和本项目最像，也最容易误引。本报告读完了原文 31 页，并<b>把官方实现逐行看了一遍</b>——发现它的旗舰机制在代码里是死代码。</p>
+<div class="meta">
+<span>NeurIPS 2025 · Spotlight Poster</span>
+<span>DOI 10.52202/085713-1305</span>
+<span>pp. 39107–39137</span>
+<span>任务：UDA <b>分类</b>（非虚拟染色）</span>
+<span>原文 31 页已通读</span>
+<span>官方实现已逐行复核</span>
+<span>2026-10-07</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box stop">
+<div class="bt">★ 一句话</div>
+<p><b>它是「同染色、跨实验室」的域适应论文，不是虚拟染色论文；它的核心机制在 H&amp;E→IHC 上语义错位；而且它的官方实现把这个机制硬关掉了。</b>它可以给你三条关于染色标定的<b>独立互证</b>，但不能当基线、也不能当先例引用。</p>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>判断</th><th>依据 / 强度</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><b>它是什么</b>：NeurIPS 2025 <b>Spotlight Poster</b>（Main Conference Track，DOI 10.52202/085713-1305）。任务是<b>病理图像的 UDA 分类</b>——染色转换只是手段，最终指标是下游分类 AUC / ACC</td><td><span class="b high">已核实</span> 官方虚拟会场页写 <em>「2025 Spotlight Poster」</em>；官方 proceedings 页给 DOI 与卷页</td></tr>
+<tr><td class="c">2</td><td><b>它不解决 H&amp;E→IHC，而且是作者自己写明的。</b>原文 Future Work 逐字：<em>「…adaptation between entirely different staining protocols (<b>e.g., H&amp;E to immunohistochemistry</b>).」</em>⇒ 作者把它列为<b>未做的工作</b></td><td><span class="b high">原文逐字</span> §6 Future Work（p.9–10）</td></tr>
+<tr><td class="c">3</td><td><b>它处理的域差比你的小一个量级。</b>Camelyon17 = 荷兰五家医院、<b>全是 H&amp;E</b>；Camelyon16 = 两家医院、全是 H&amp;E；MITOS&amp;ATYPIA14 = 同一批片子用 Aperio 与 Hamamatsu <b>两台扫描仪</b>各扫一遍。⇒ 是「同染色、不同实验室/扫描仪」</td><td><span class="b high">已核实</span> Appendix A.2</td></tr>
+<tr><td class="c">4</td><td><b>★★ 核心机制在 H&amp;E→IHC 上语义错位（本报告最硬的一条）。</b>它的参考图是 <code>I_ref = I₀·exp(−W_T·H_S)</code>：<b>源域的染色密度图 × 目标域的染色颜色矩阵</b>。这要求两个域<b>共享同一套染色、且列顺序一致</b>。H&amp;E 是 {H, E}，IHC 是 {H, DAB} ⇒ 实际算的是 <code>w_H·H密度 + w_DAB·<b>E密度</b></code>，即<b>把伊红密度当 DAB 密度用</b></td><td><span class="b high">代码级数据流</span> 见 <a href="#s5-1">§5.1</a>（含源码）</td></tr>
+<tr><td class="c">5</td><td><b>★★★ 官方实现的旗舰机制被硬关掉了。</b>仓库里 <code>reverse_from_t_wtih_guide_snmf_checkpoint</code> 的函数体第 5 行写死 <code>guide = False</code>，<b>覆盖了所有调用方传入的 <code>guide=True</code></b> ⇒ 整个 stain-guided 分支是<b>死代码</b></td><td><span class="b high">两次独立抓取一致</span> 见 <a href="#s3-2">§3.2</a></td></tr>
+<tr><td class="c">6</td><td><b>★★ 被关掉的那段「梯度」并不是梯度。</b><code>norm_grad = l2_diff / l2_norm</code> 是<b>残差方向的单位向量</b>，不是 <code>∇‖x̂₀−I_ref‖</code>；且 <code>residual</code> 被 <code>.detach()</code>，<b>没有任何梯度回传到网络</b>。变量名 <code>norm_grad</code> 属命名陷阱</td><td><span class="b high">两次独立抓取一致</span> 见 <a href="#s3-3">§3.3</a></td></tr>
+<tr><td class="c">7</td><td><b>★ 若把它打开，数值上不可用。</b><code>scale</code> 被写死为 <b>10</b>，而 <code>norm_grad</code> 是单位向量、<code>sample</code> 是 [-1,1] 的图像（跨度 2）⇒ <b>每步移动 10 = 数据跨度的 5 倍</b>。这很可能正是它被关掉的原因（标记为<b>假设</b>）</td><td><span class="b medium">算术事实 + 我的推断</span> 见 <a href="#s3-4">§3.4</a></td></tr>
+<tr><td class="c">8</td><td><b>★ 超参与论文对不上。</b>论文写 T=1000、guidance 从 600 到 100；代码 <code>T=30</code> 且<b>训练前被改成 <code>config.T = 5</code></b>，<code>step = -10</code> ⇒ <code>arange(5,-1,-10) = [5]</code>，<b>只走 1 步去噪</b>。README 示例给 Accuracy 85.1% / AUC 0.925，与论文的 94.0 / 95.8 不是一回事</td><td><span class="b high">两次独立抓取一致</span> 见 <a href="#s3-5">§3.5</a></td></tr>
+<tr><td class="c">9</td><td><b>★★★ 正面发现：它的染色预处理独立印证了本项目 E0.3 / E0.3b 的三条结论。</b>代码用 Vahadane 参考实现：<code>read_image</code> 做<b>每图 90 分位白点归一化</b>；<code>getW</code> 的 NMF <b>只在组织像素上标定</b>（背景按 L 通道阈值剔除）；<code>SPCN</code> 再做<b>每图 99 分位密度归一化</b>；且用 <b>NMF 而非 Macenko-arc</b></td><td><span class="b high">代码级</span> 见 <a href="#s4">§4</a>——这是本报告最有价值的正面结论</td></tr>
+<tr><td class="c">10</td><td><b>判定：不要当基线，也不要当先例引用。</b>代码只有 5 个文件、<b>预训练权重不提供</b>（需要 2 个 per-domain DDPM + per-domain ResNet50，均无下载路径）、<code>root_path</code> 是作者集群绝对路径、<code>spams</code> 难装、无误差棒，代码里还有 T→S→T 两支都用 <code>model_T</code> 等缺陷。<b>它能给你的是「边界案例」+「三条互证」，不是「可复现基线」</b></td><td><span class="b high">已核实</span> 见 <a href="#s3-1">§3.1</a> / <a href="#s3-6">§3.6</a></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">这份报告和你的项目是什么关系</div>
+<p>你的优先级是 <b>可复现 &gt; 可解释 &gt; 改动小</b>。按这三条读 SGCD：</p>
+<ul>
+<li><b>可复现：不合格。</b>论文自己的 NeurIPS checklist 第 5 项答 <b>[No]</b>（不提供代码）；后来出现的 GitHub 仓库<b>不含预训练权重</b>，跑不起来。</li>
+<li><b>可解释：名义上有，实质上没有。</b>它确实用了 Beer–Lambert（已核实），但那是<b>用来造参考图</b>，不是<b>把渲染器放进生成空间</b>——所以它<b>不是</b>你那条「可微物理渲染器 × 扩散」空白的先例。</li>
+<li><b>改动小：不适用。</b>任务不同（分类 vs 生成），指标体系不同（AUC vs 染色保真），没法在同一个改动量下比较。</li>
+</ul>
+</div>
+
+<h2 id="s1"><span class="num">1</span>论文事实卡片</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>字段</th><th>值</th><th>核实状态</th></tr></thead>
+<tbody>
+<tr><td>标题</td><td>SGCD: Stain-Guided CycleDiffusion for Unsupervised Domain Adaptation of Histopathology Image Classification</td><td><span class="b high">原文 + 官方页一致</span></td></tr>
+<tr><td>作者</td><td>Hsi-Ling Chen（NCKU，Miin-Wu School of Computing）· Chun-Shien Lu（Academia Sinica, IIS）· Pau-Choo Chung（NCKU / NCCU）</td><td><span class="b high">原文</span></td></tr>
+<tr><td>会场 / 类型</td><td><b>NeurIPS 2025 · Spotlight Poster</b>（39th Conference on Neural Information Processing Systems）</td><td><span class="b high">已核实</span> neurips.cc 虚拟会场页逐字写「2025 Spotlight Poster」</td></tr>
+<tr><td>卷 / 页 / DOI</td><td>Advances in NeurIPS <b>38, Main Conference</b>，pp. <b>39107–39137</b>，DOI <b>10.52202/085713-1305</b>，Curran Associates</td><td><span class="b high">已核实</span> 官方 BibTeX</td></tr>
+<tr><td>OpenReview</td><td>forum?id=<b>z2SGaPIhLT</b></td><td><span class="b high">已核实</span></td></tr>
+<tr><td>任务</td><td><b>无监督域适应（UDA）图像分类</b>。用「跨域染色转换」生成带标签的目标域风格图，再微调目标域分类器。<b>不是虚拟染色</b></td><td><span class="b high">原文</span></td></tr>
+<tr><td>数据（4 套）</td><td>Camelyon17（C1–C5，五家医院，跨医院）· Camelyon16（RUMC→UMCU）· Camelyon17-WILDS（平衡版）· MITOS&amp;ATYPIA14（Aperio vs Hamamatsu，同片双扫描仪）</td><td><span class="b high">原文 §5.1 + Appendix A.2</span></td></tr>
+<tr><td>指标</td><td>主：目标域分类 <b>AUC</b>（Camelyon16/17）或 <b>Accuracy</b>（WILDS）。副：MITOS&amp;ATYPIA14 上算染色转换的 <b>SSIM / PSNR</b></td><td><span class="b high">原文 §5.2</span></td></tr>
+<tr><td>主结果</td><td>Camelyon17 平均 AUC <b>94.0</b>（次优 SPA 92.1）· Camelyon16 AUC <b>95.8</b>（次优 StainNet 93.5）· WILDS ACC 94.7 · MITOS&amp;ATYPIA14 SSIM <b>0.88</b> / PSNR <b>27.5</b>（次优 StainGAN 0.71 / 17.1）</td><td><span class="b high">原文 Table 2/3/4/6</span></td></tr>
+<tr><td>骨干</td><td>分类器：DenseNet121（WILDS）/ ResNet50（Camelyon16、17）。扩散：<b>per-domain 预训练 DDPM</b>（UNet2DModel，pixel-space 96×96）</td><td><span class="b high">原文 + 代码</span></td></tr>
+<tr><td>代码</td><td>论文提交时<b>未发布</b>（checklist 第 5 项 <b>[No]</b>，原文承诺「未来会放到 GitHub」）。2026-02 出现仓库 <code>yunchieh0227/SGCD-Histopathology</code>，<b>自称 official implementation</b></td><td><span class="b medium">自称官方，<b>未能双向确认</b></span> 论文与仓库之间没有互链，账号名与作者名无直接对应</td></tr>
+<tr><td>误差棒</td><td><b>无。</b>checklist 第 7 项答 <b>[No]</b>：三次独立重复取平均，但未做差异分析</td><td><span class="b high">原文 checklist</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">一条必须先说清的引用纪律</div>
+<p>库内既有报告曾把 SGCD 标为「<b>未核实</b>」，因为当时拿不到原文 PDF。本报告拿到了原文，并把官方实现也读了，因此<b>可以结案</b>。但请注意区分两件事：</p>
+<ul>
+<li><b>论文说了什么</b> —— 已核实（原文 31 页通读）。</li>
+<li><b>代码做了什么</b> —— 已核实（<code>main.py</code> / <code>vahadane.py</code> 逐行复核，关键结论经<b>两次独立抓取互相验证</b>）。</li>
+</ul>
+<p>本报告<b>不</b>声称这两者一致——恰恰相反，<a href="#s3">§3</a> 的核心结论就是<b>它们不一致</b>。</p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>方法逐件拆解</h2>
+
+<p>先把它<b>怎么工作</b>讲清楚，后面才有资格判定「哪一件能搬」。SGCD 的全部构件只有四个：<b>两个预训练 DDPM</b>、<b>一个循环</b>、<b>一个 stain-guided 引导项</b>、<b>一个一致性损失</b>。</p>
+
+<h3 id="s2-1">2.1 双扩散 + 两阶段循环</h3>
+
+<p>它假设你手上<b>已经</b>有两个分别在源域 S、目标域 T 上训好的 DDPM（记 <code>D_S</code>、<code>D_T</code>）。转换不做「学一个映射」，而是做<b>「先加噪到第 k 步，再换另一个域的模型反向去噪」</b>：</p>
+
+<pre><code>阶段一（单程）：
+  S′ = { f_DS(x, k) | x ∈ S }          # 源图加噪到第 k 步
+  T′ = { f_DT(x, k) | x ∈ T }          # 目标图加噪到第 k 步
+  T_S = { r_DT(x^(k_G), k′) | x ∈ S′ } # 用目标模型反向 → 目标风格图
+  S_T = { r_DS(x^(k_G), k′) | x ∈ T′ } # 用源模型反向 → 源风格图
+  k′ = k − k_G
+
+阶段二（回程，形成闭环）：
+  T′_S = { f_DT(x, k) | x ∈ T_S }      # 再给 T_S 加噪
+  Ŝ    = { r_DS(x^(k_G), k′) | x ∈ T′_S }   # 用源模型反向 → 回到源域
+  Ŝ_T  = { f_DS(x, k) | x ∈ S_T }
+  T̂    = { r_DT(x^(k_G), k′) | x ∈ S′_T }   # 回到目标域
+
+⇒ 得到两个完整的环：S → T → S  和  T → S → T</code></pre>
+
+<div class="box key">
+<div class="bt">关键点：它不需要配对数据</div>
+<p>因为两个 DDPM 都是<b>各自域内预训练</b>的，所以「加噪 + 换模型去噪」本身就会落到另一个域的分布上。<b>环的两端都是自己的原图</b> ⇒ 不需要配对、也不需要指定参考图。这是它 Table 1 里主打「<b>X</b>（不需要 paired data / reference image）」的原因，也是它相对 StainDiff / BBDM / A-Bridge（都要配对或参考）的卖点。</p>
+<p class="small">注：<b>代价</b>是它必须先在两个域上各训一个 DDPM。对 H&amp;E→IHC 来说，这要求你有一个 IHC 的 DDPM——这个你其实能有（IHC 非配对数据你有），但见 <a href="#s5">§5</a>：<b>真正卡住的不是这一步。</b></p>
+</div>
+
+<h3 id="s2-2">2.2 stain-guided 过程（Eq.3）</h3>
+
+<p>光靠「加噪 + 换模型」会丢特征（这是它 Fig.1(a) 的动机实验：噪声加得越多，越像目标域，但越丢源域特征）。所以它加了一个引导项。给定参考图 <code>I_ref</code>：</p>
+
+<div class="formula">G(x<sub>t</sub>, I<sub>ref</sub>) = x̂<sub>t−1</sub> − ∇<sub>x<sub>t</sub></sub> ‖ x̂<sub>0</sub>(x<sub>t</sub>) − I<sub>ref</sub> ‖ &nbsp;&nbsp;&nbsp; (Eq.3)</div>
+
+<p>其中单步估计的干净图是 <code>x̂₀(x_t) = a_t·x_t − b_t·D(x_t, t)</code>，<code>a_t = √(1/β̄_t)</code>、<code>b_t = √(1/β̄_t − 1)</code>。这个 <code>x̂₀</code> 形式与 DDPM 的标准写法一致（<code>b_t = √(1−ᾱ_t)/√ᾱ_t = SNR(t)<sup>−1/2</sup></code>，<b>记住这个 <code>SNR<sup>−1/2</sup></code>，§3.3 会用到</b>）。</p>
+
+<p><b>★ 参考图怎么造——这是整篇论文最关键、也最不能迁移的一步：</b></p>
+
+<pre><code>I_ref = I₀ · exp(− W_T · H_S)        # 目标域的染色颜色矩阵 × 源域的染色密度图
+                                     # 对回程方向：I_ref = I₀ · exp(− W_S · H_S)</code></pre>
+
+<p>也就是说，<b>它把「源图的染色密度」用「目标图的染色颜色」重新渲染一遍</b>，当成引导目标。这一步是 Beer–Lambert 正演——而库内既有报告此前把这一点标为「未核实」，<b>本报告已结案：确实用了</b>（代码见 <a href="#s4">§4</a>）。</p>
+
+<div class="box warn">
+<div class="bt">这一步为什么能在 Camelyon17 上成立</div>
+<p>因为 <b>S 和 T 都是 H&amp;E</b>。两个域的染色集合相同（都是 {苏木素, 伊红}），所以「把 A 医院的密度图用 B 医院的颜色渲染一遍」是<b>良定义</b>的：密度图的两行（H 密度、E 密度）与颜色矩阵的两列（H 色、E 色）<b>一一对应</b>。</p>
+<p><b>H&amp;E→IHC 时这个对应关系断裂</b>——详见 <a href="#s5-1">§5.1</a>。这是本报告判定「不可直接迁移」的核心依据。</p>
+</div>
+
+<p><b>引导只在时间窗内施加。</b>论文设置是「guidance 从 timestep <b>600</b> 施加到 <b>100</b>」，其余 timestep 走标准反向扩散（Eq.2）。<code>k_G</code> 就是控制引导范围的那个超参。Appendix Table 10 的消融显示：<code>k=600, k_G=100</code> 最优（AUC 95.8），<code>k_G=150</code> 掉到 90.9，<code>k=1000</code> 时掉到 83.9。</p>
+
+<div class="box teal">
+<div class="bt">这条消融对你其实有用（先记下，§6 再展开）</div>
+<p>它给出了一个<b>「引导项不该铺满整条轨迹」</b>的实测证据：<b>末期不引导更好</b>，<b>起点也不能太高</b>。这和你在梯度冲突报告里得到的「训练进程 s 轴：warmup 渐入 + 末期关闭」是<b>同一个直觉作用在另一个轴上</b>——但注意<b>两者不是一回事</b>：Lantern 是<b>训练期</b>末期关闭辅助损失；SGCD 是<b>采样期</b>末期不施加引导。<b>不要混为一谈。</b></p>
+</div>
+
+<h3 id="s2-3">2.3 SGC 损失与 task 损失</h3>
+
+<p><b>Stain-Guided Consistency（SGC）损失</b>（Eq.8）——用来微调两个扩散模型：</p>
+
+<div class="formula">loss<sub>SGC</sub> = ‖S − Ŝ‖² − Σ y·C<sub>S</sub>(Ŝ) + ‖T − T̂‖² − Σ y·C<sub>T</sub>(T<sub>S</sub>)</div>
+
+<p>四项分别是：源域环回重建 L2 · 源分类器对回程图的分类约束 · 目标域环回重建 L2 · 目标分类器对目标风格图的分类约束。<b>注意后两项是负号</b>——原文写的是 <code>−Σ y·C(·)</code>，实现里用 <code>CrossEntropyLoss</code>（内部已含负号），等价。</p>
+
+<p><b>task 损失</b>（Eq.9）——用来训目标分类器：</p>
+
+<div class="formula">loss<sub>task</sub> = − Σ y·C<sub>T</sub>(T<sub>S</sub>) + loss<sub>MMD</sub>( C<sub>T</sub>(T<sub>S</sub>), C<sub>T</sub>(T) )</div>
+
+<p>即「在带标签的合成目标风格图上做交叉熵」+「用 MMD 拉近合成图与真实目标图的特征分布」。Appendix Table 7 拆了这两步的贡献：Source-Only 75.9 → <b>只用 T_S 训就 92.6</b> → 再加真实 T 到 <b>95.8</b>。</p>
+
+<h3 id="s2-4">2.4 交替训练</h3>
+
+<pre><code>循环：
+  ├─ 阶段 D（训扩散）：固定 C_S、C_T
+  │     用 loss_SGC 更新 D_S、D_T
+  └─ 阶段 C（训分类器）：固定 D_S、D_T
+        用 loss_task 更新 C_T
+
+C_S 全程冻结（原文：「CS is fixed during all the training phases」）</code></pre>
+
+<div class="box warn">
+<div class="bt">这个「交替」结构本身值得警惕</div>
+<p>你在梯度冲突报告里已经证明过一条：<b>当两个损失的参数子集不相交时，<code>g₁ᵀg₂ ≡ 0</code>，PCGrad 空转，冲突不会消失——它变成「序列耦合 → 振荡」。</b></p>
+<p>SGCD 的交替训练<b>正是</b>一个参数子集不相交的设计（阶段 D 只更新 UNet，阶段 C 只更新 ResNet50 的 fc）。所以：<b>它理论上没有梯度冲突，但也没有任何机制防止两个阶段互相拆台。</b>论文对这个稳定性是<b>断言</b>（「Since the process involves only fine-tuning, it is inherently stable」），<b>不是测量</b>——checklist 第 7 项答 [No]，没有误差棒。</p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>★★ 代码级复核</h2>
+
+<div class="box stop">
+<div class="bt">为什么必须读代码</div>
+<p>你的项目已经有一条硬教训：<b>「静态读代码会错，实例化实测才对」</b>，还有一条更贵的：<b>HistDiST 的 <code>render_ihc</code> 是零调用点的死代码</b>，而它在论文里是核心。</p>
+<p>SGCD 是<b>第二次</b>撞上同一件事。所以这一节不是「顺便看看实现」，而是<b>本报告的主要发现</b>。</p>
+</div>
+
+<h3 id="s3-1">3.1 仓库现状与可复现性</h3>
+
+<p>仓库：<code>github.com/yunchieh0227/SGCD-Histopathology</code>，自称 <em>「Official implementation of NIPS 2025 spotlight paper」</em>。全仓<b>只有 5 个文件</b>：</p>
+
+<pre><code>README.md            (2 次提交：Add abstract / Restructure README)
+README_CH.md
+main.py              ← 全部训练逻辑（单文件）
+resize_method.py
+vahadane.py          ← 染色分离 + SPCN（Vahadane 参考实现）</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>可复现性检查项</th><th>状态</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>代码是否发布</td><td><span class="b medium">是（迟于论文）</span></td><td>论文 checklist 第 5 项答 [No]；仓库首提交 2026-02-07，README 整理 2026-02-22</td></tr>
+<tr><td><b>预训练权重是否提供</b></td><td><span class="b bad">否</span></td><td>★ 需要 <code>CAMELYON17_domain_X_resnet.pt</code>（每个域一个 ResNet50）+ <code>ddpm_CAMELYON17/domain_X/</code>（每个域一个 diffusers 格式 DDPM）。README 只说「请放在项目根目录」，<b>全文没有给出任何下载地址，也没有给出训练它们的脚本</b></td></tr>
+<tr><td>数据路径</td><td><span class="b bad">硬编码作者集群路径</span></td><td><code>root_path = '/work/CAMELYON17_temp/center_'+str(domain)+'_patches_CL0_RL5_256/'+folder</code>；README 让用户自己改</td></tr>
+<tr><td>数据分辨率</td><td><span class="b medium">README 自承不一致</span></td><td>目录名写 <code>_256</code>，而 <code>IMG_SIZE = 96</code>。README 原话提醒用户「请确保图像实际尺寸与代码设置一致」</td></tr>
+<tr><td>依赖</td><td><span class="b medium">有一处难装</span></td><td>需要 <code>spams</code>（Vahadane 稀疏 NMF 的依赖）。README 自己建议改用 <code>conda install -c conda-forge spams</code></td></tr>
+<tr><td>随机种子</td><td><span class="b bad">未见设置</span></td><td>全文无 <code>seed</code> 固定</td></tr>
+<tr><td>结果可复现性</td><td><span class="b bad">示例与论文不符</span></td><td>README 的期望输出是 <code>Accuracy: 85.1% / ROC AUC: 0.925</code>，而论文 Camelyon17 平均 AUC 是 94.0、Camelyon16 是 95.8</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 这与你已经踩过的坑逐字相同</div>
+<p>你的 HistDiST 审查里有一条勘误：<b>「检查点没随包」</b>——README 承诺有，实际没有，导致实验 A/B/C/E 无法执行。</p>
+<p>SGCD 是<b>同一个坑的第二次</b>：仓库给了 <code>main.py</code>，但它<b>第一行有效代码就是在 <code>torch.load()</code> 一个不存在于仓库的权重</b>。<b>没有权重 = 这个仓库跑不起来。</b></p>
+<p class="small">⇒ 结论：<b>「有公开代码」这个优先级条目，对 SGCD 判「名义满足、实质不满足」。</b>不要因为它有 GitHub 就把它排进候选。</p>
+</div>
+
+<h3 id="s3-2">3.2 ★ 旗舰机制被硬关掉：<code>guide = False</code></h3>
+
+<p>论文的旗舰是 stain-guided 引导。代码里负责它的函数是 <code>reverse_from_t_wtih_guide_snmf_checkpoint</code>（注意函数名里的拼写错误 <code>wtih</code>）。<b>它的函数体前 5 行是：</b></p>
+
+<pre><code>def reverse_from_t_wtih_guide_snmf_checkpoint(
+    scheduler, model, sample, x0, x0_path, ref_T_path, k, scale=1,
+    early_stop=True, guide_until=10, guide=True        # ← 默认 guide=True
+):
+    device = sample.device
+    step = -10
+    timesteps = torch.arange(k, -1, step, device=device)
+    scale = 10
+    guide = False          # ★★★ 这一行把参数覆盖掉了</code></pre>
+
+<p>而函数体内部是：</p>
+
+<pre><code>    if guide:                                   # ← 永远为 False，此分支永不执行
+        vhd = vahadane(LAMBDA1=0.01, LAMBDA2=0.01, fast_mode=0, getH_mode=0, ITER=50)
+        for t in timesteps:
+            grad_term = denoise_step_with_guidance(...)   # ← 永不执行
+            sample = checkpoint(denoise_step, ...) - grad_term
+        del vhd
+        return sample
+
+    else:                                       # ← 实际永远走这里
+        for t in timesteps:
+            sample = checkpoint(denoise_step, sample, t, model, scheduler)
+        return sample</code></pre>
+
+<div class="box stop">
+<div class="bt">★★★ 结论：stain-guided 引导在发布的代码里是死代码</div>
+<p>所有调用点都传 <code>guide=True</code>（共 6 处），但函数体第 5 行无条件把它改成 <code>False</code>。<b>因此：</b></p>
+<ul>
+<li>整个 <code>if guide:</code> 分支<b>一次都不会执行</b>；</li>
+<li><code>denoise_step_with_guidance</code> <b>一次都不会被调用</b>；</li>
+<li><code>vahadane</code> 对象在训练主循环里<b>从不构造</b>；</li>
+<li>反向过程退化成<b>纯粹的无引导 DDPM 采样</b>；</li>
+<li><code>guide_until</code>（论文的 <code>k_G</code>）<b>完全无效</b>——因为引导根本没开，关不关它都一样。</li>
+</ul>
+<p><b>也就是说：论文里名为 SGC 的「stain-guided 一致性」机制，在代码里只剩下 Eq.8 的环回 L2 + 分类约束两项，stain 引导那一项是不存在的。</b></p>
+</div>
+
+<p><b>为什么我确信这不是我读错：</b>我把同一份文件<b>用两条独立路径抓取</b>（raw.githubusercontent 的 raw 文本、GitHub blob 页），两次都返回了完全相同的 <code>scale = 10 / guide = False</code> 两行，以及相同的函数签名（<code>guide=True</code> 默认值）。这是<a href="#s8">§8</a>里说明的核实方式。</p>
+
+<h3 id="s3-3">3.3 ★ 被关掉的那段「梯度」并不是梯度</h3>
+
+<p>假设你把 <code>guide = False</code> 改成 <code>True</code> 让它跑起来，会发生什么？看 <code>denoise_step_with_guidance</code> 里真正算引导的那几行：</p>
+
+<pre><code>    residual = model(sample, t_tensor, return_dict=False)[0].detach()   # ★ 注意 .detach()
+    alpha_prod_t = scheduler.alphas_cumprod[t_int]
+    beta_prod_t = 1 - alpha_prod_t
+    pred_x0 = (sample - residual * (beta_prod_t).sqrt()) / (alpha_prod_t).sqrt()
+
+    ref_x0 = batch_process_vahadane(x0_path, ref_T_path, vhd)
+
+    l2_diff = pred_x0 - ref_x0.to(sample.device)
+    l2_norm = torch.norm(l2_diff)
+
+    norm_grad = (l2_diff / l2_norm)      # ★★ 这不是梯度，是残差方向的单位向量
+
+    return norm_grad * guidance_scale</code></pre>
+
+<div class="box stop">
+<div class="bt">★★ 三处偏差，逐个说</div>
+<ol>
+<li><b>它不是 <code>∇‖x̂₀ − I_ref‖</code>。</b>按链式法则，<code>∇<sub>x_t</sub>‖x̂₀(x_t) − I_ref‖ = (x̂₀ − I_ref)/‖x̂₀ − I_ref‖ · ∂x̂₀/∂x_t</code>。代码<b>把 Jacobian <code>∂x̂₀/∂x_t</code> 整个丢掉了</b>，只留了前面那个单位向量。所以它做的是「<b>沿残差方向推一个固定长度</b>」，不是梯度下降。</li>
+<li><b>没有梯度回传。</b><code>residual</code> 后面挂了 <code>.detach()</code>，而 <code>pred_x0</code> 完全由 <code>sample</code> 和 <code>residual</code> 算出。<code>sample.requires_grad_(True)</code> 因此<b>无意义</b>——<code>norm_grad</code> 到不了任何参数。<b>引导只移动样本，从不更新网络。</b></li>
+<li><b>变量名是命名陷阱。</b>叫 <code>norm_grad</code>，实际是 normalized residual。你的方法论里已经记过这条（命名陷阱是真实成本）。</li>
+</ol>
+</div>
+
+<div class="box teal">
+<div class="bt">★ 这条偏差反而解开了一个你担心的隐患</div>
+<p>你在梯度冲突报告里给「把 FOD 挂在 <code>x̂₀</code> 上」标过一个隐患：<b>Jacobian 含 <code>SNR(t)<sup>−1/2</sup></code>，高 t 处发散 ⇒ 幅度劫持</b>。</p>
+<p><b>SGCD 恰好绕开了它——不是设计出来的，是因为它压根没求导。</b>它用 <code>.detach()</code> + 单位向量，把「对 <code>x̂₀</code> 求导」这件事<b>整个删掉了</b>。代价是引导失去了「距离越远推得越多」的自适应能力，收益是不存在 <code>1/√ᾱ_t</code> 放大。</p>
+<p><b>对你的启示：</b>「挂 <code>x̂₀</code> 有 <code>SNR<sup>−1/2</sup></code> 隐患」这句话是<b>有条件的</b>——<b>条件是你对 <code>x̂₀</code> 求导</b>。如果你只把 <code>x̂₀</code> 当<b>被监督的变量</b>（损失作用在它上面、梯度经它回传），隐患成立；如果你像 SGCD 一样把它当<b>引导方向</b>且 detach，隐患不成立，但你也拿不到梯度。这是两条不同的路，别混。</p>
+</div>
+
+<h3 id="s3-4">3.4 ★ 若打开会怎样：一个算术</h3>
+
+<p><code>scale</code> 被写死为 <b>10</b>（覆盖了默认值 <code>scale=1</code>，也覆盖了调用方传入的值）。而更新式是：</p>
+
+<pre><code>sample = checkpoint(denoise_step, sample, t, model, scheduler) - grad_term
+# 其中 grad_term = norm_grad * 10，norm_grad 是单位向量（‖norm_grad‖ = 1）</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>量</th><th>值</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td><code>‖norm_grad‖</code></td><td><b>1</b>（严格）</td><td><code>l2_diff / ‖l2_diff‖</code></td></tr>
+<tr><td><code>guidance_scale</code></td><td><b>10</b></td><td>函数体内 <code>scale = 10</code> 硬编码</td></tr>
+<tr><td>∴ <code>‖grad_term‖</code></td><td><b>10</b></td><td>乘积</td></tr>
+<tr><td><code>sample</code> 的取值域</td><td><b>[−1, 1]</b>，跨度 <b>2</b></td><td>pixel-space DDPM：<code>transforms.Normalize([0.5],[0.5])</code> ⇒ 图像张量在 [-1,1]；<code>UNet2DModel</code> 输入 3 通道、<code>DDPMPipeline</code></td></tr>
+<tr><td><b>每步位移 / 数据跨度</b></td><td><b>10 / 2 = 5 倍</b></td><td>⇒ 单步就把样本推出合法域 5 倍</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">假设（明确标记为假设，不是事实）</div>
+<p>上面是<b>算术事实</b>。下面是<b>我的推断</b>：<b>这很可能正是作者把 <code>guide</code> 写死成 <code>False</code> 的原因</b>——这段引导一旦打开，每个 timestep 会把样本平移 10，而样本只在 [-1,1] 内，反向过程会被彻底破坏。</p>
+<p><b>可证伪的预测：</b>把 <code>guide = True</code> 打开、同时把 <code>scale</code> 从 10 改成 0.01 量级，如果生成的 <code>recon.png</code> 明显劣化或出现色块，则「引导不可用」成立；如果反而变好，则「作者只是调试时忘删」成立。<b>我没跑这个实验（需要权重，而权重不存在），所以这仍是假设。</b></p>
+</div>
+
+<p>顺带一处：<code>l2_norm = torch.norm(l2_diff)</code> 后面直接做除法，<b>没有加 <code>ε</code></b>。当 <code>x̂₀ ≈ I_ref</code> 时是 <code>0/0</code> ⇒ NaN。这是你项目里已经出现过<b>两次</b>的模式（<code>physics.py</code> L49 的 <code>log10</code>、<code>losses.py</code> L63 的 <code>log(sx)</code>），<b>这里是第三次，属「无防护的 1/x」同一族</b>。区别是：这里因为 detach 了，危险只在<b>前向值</b>，不在梯度。</p>
+
+<h3 id="s3-5">3.5 ★ 超参与论文对不上</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>超参</th><th>论文写的</th><th>代码实际</th><th>差多少</th></tr></thead>
+<tbody>
+<tr><td>扩散总步数 <code>T</code></td><td><b>1000</b></td><td>配置里 <code>T = 30</code>；<b>训练前 <code>config.T = 5</code></b>（一行覆盖，紧挨着 <code>notebook_launcher</code>）</td><td><span class="b bad">200×</span></td></tr>
+<tr><td>引导起始 timestep <code>k</code></td><td><b>600</b></td><td><b>5</b>（被覆盖后）</td><td><span class="b bad">120×</span></td></tr>
+<tr><td>引导范围 <code>k_G</code>（<code>guide_until</code>）</td><td><b>100</b></td><td><code>10</code></td><td><span class="b bad">10×</span></td></tr>
+<tr><td>反向步长</td><td>未说明</td><td><code>step = -10</code> ⇒ <code>arange(5, -1, -10) = [5]</code></td><td><span class="b bad">只走 1 步去噪</span></td></tr>
+<tr><td>引导是否启用</td><td>是（核心贡献）</td><td><b>否</b>（<code>guide = False</code>）</td><td><span class="b bad">—</span></td></tr>
+<tr><td>噪声调度来源</td><td>未说明</td><td><code>DDIMScheduler.from_config("google/ddpm-church-256")</code></td><td><span class="b medium">借用自然图像 DDPM 的调度配置</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">这说明什么</div>
+<p><b>发布的这份代码，不是产生论文那张表的那份代码。</b>证据有三条，任何一条单独都足以成立：</p>
+<ul>
+<li><b>数值量级完全不同</b>：论文的引导发生在 t∈[100, 600]（高噪声区），代码 <code>config.T = 5</code> 意味着只加极轻的噪声、只走 1 步反向——这是两个完全不同的 regime。</li>
+<li><b>引导根本没开</b>：论文 Table 8 的消融明确报告「SGC loss」贡献 95.8 vs 89.4，而代码里没有 SGC 的 stain 引导部分。</li>
+<li><b>README 示例数字对不上</b>：85.1% / 0.925 vs 论文的 94.0 / 95.8。</li>
+</ul>
+<p>可能是调试残留（<code>config.T = 5</code> 和 <code>guide = False</code> 都长得像「临时关掉以加速调试」），也可能是发布的是早期版本。<b>无论哪种，结论一样：这份代码不能用来复现论文。</b></p>
+</div>
+
+<h3 id="s3-6">3.6 其余六处缺陷</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>缺陷</th><th>代码</th><th>后果 / 判级</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><b>T→S→T 的两支都用了 <code>model_T</code></b></td><td>该段第一次调用应传 <code>model_S</code>（去源域），实际传了 <code>model_T</code>；第二次也传 <code>model_T</code>。对比：S→T→S 那段是 <code>model_T</code> 然后 <code>model_S</code>，<b>逻辑正确</b></td><td>这一段实际是 <b>T→T→T</b>，不是 T→S→T。变量名 <code>S_recon</code> 名不副实。<span class="b medium">中</span>（论文 Eq.6/7 明确写了两支用不同模型）</td></tr>
+<tr><td class="c">2</td><td><b><code>StopIteration</code> 兜底写错变量名</b></td><td><code>except StopIteration: iter1 = iter(train_dataloader_S)</code> 然后仍调用 <code>next(iter_S)</code>——新迭代器赋给了 <code>iter1</code>，被消耗的 <code>iter_S</code> 又调一次 ⇒ <b>再次抛 StopIteration 且未捕获</b></td><td>只有 <code>mini_batch</code> 超过 dataloader 长度时才触发。潜在崩溃。<span class="b low">低-中</span></td></tr>
+<tr><td class="c">3</td><td><b>模式 C 不调用 <code>optimizer.zero_grad()</code></b></td><td>模式 D 分支末尾有 <code>optimizer.zero_grad()</code>；模式 C 分支<b>没有</b>（每个 epoch 新建 optimizer 但不清 <code>.grad</code>）</td><td>模式 C 内梯度跨 <code>mini_batch</code> 步累加 ⇒ 等效超大 batch。<span class="b medium">中</span>（若抓取有遗漏则此条不成立，见 <a href="#s8">§8</a>）</td></tr>
+<tr><td class="c">4</td><td><b>每个 timestep 深拷贝整个 UNet</b></td><td><code>denoise_step_with_guidance</code> 内：<code>model = copy.deepcopy(model)</code></td><td>因为引导是死代码，<b>目前不触发</b>；一旦按 §3.3 打开引导，每步每样本深拷贝一个 UNet。<span class="b bad">高（打开后）</span></td></tr>
+<tr><td class="c">5</td><td><b>调度器设置是空调用</b></td><td><code>noise_scheduler.set_timesteps(num_inference_steps=100)</code> 之后，自定义 <code>denoise_step</code> 直接索引 <code>scheduler.alphas_cumprod[t]</code>，不用 <code>scheduler.timesteps</code></td><td><code>set_timesteps(100)</code> 无任何效果。死调用。<span class="b low">低</span></td></tr>
+<tr><td class="c">6</td><td><b>两个分类器加载同一份权重</b></td><td><code>CLF</code> 与 <code>CLF2</code> 都 <code>torch.load("CAMELYON17_domain_" + SOURCE_DOMAIN + "_resnet.pt")</code></td><td>论文说 <code>C_S</code> 固定、<code>C_T</code> 是要适应的目标分类器；代码把 <code>C_T</code> <b>从源分类器热启动</b>。论文未说明这一点。<span class="b low">低（但属「论文未说清」）</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="small">另有若干工程质量问题（大量 <code>del</code> + <code>gc.collect()</code> + <code>torch.cuda.empty_cache()</code> 写在训练热循环里，提示作者遇到过 OOM；<code>recon_x0</code> 里 <code>epoch = 0</code> 硬编码导致每次都覆盖同一个 <code>0000_recon.png</code>；<code>vahadane.SPCN_C0</code> 是无人调用的第二个死函数），不逐条展开。</p>
+
+<h3 id="s3-7">3.7 与 HistDiST 的同一故障类</h3>
+
+<div class="box stop">
+<div class="bt">★★ 这是本报告最值得你记住的一条模式</div>
+<p>两个<b>互相独立</b>的扩散/物理项目，同一个故障：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>项目</th><th>论文里的核心机制</th><th>代码里的实际状态</th><th>发现方式</th></tr></thead>
+<tbody>
+<tr><td><b>HistDiST</b>（你自己的代码）</td><td><code>render_ihc</code>：Beer–Lambert 可微前向渲染，是「物理正演」的全部依据</td><td><b>零调用点 = 死代码</b>；实际走的是 scheme B 反演</td><td>你审查自己的代码时发现</td></tr>
+<tr><td><b>SGCD</b>（NeurIPS 2025 Spotlight）</td><td>stain-guided 引导（Eq.3）+ SGC 损失，是论文三大贡献之一</td><td><b><code>guide = False</code> 硬编码 = 死代码</b>；实际走无引导反向</td><td>本报告读官方实现时发现</td></tr>
+</tbody>
+</table>
+</div>
+<p><b>模式：</b>「物理/一致性机制」是这类论文最容易被写成死代码的部分——因为它是<b>后加的、数值上最脆弱的</b>那一段，调试时最先被关掉，而关掉之后主流程照样跑、指标照样出数。</p>
+<p><b>可操作的纪律（建议加进你的审查清单）：</b></p>
+<ol>
+<li><b>凡论文把某个机制列为贡献，交付前必须 <code>grep</code> 它的调用点</b>，确认调用点数 &gt; 0 且<b>不被函数体内的赋值覆盖</b>。</li>
+<li><b>特别注意「函数签名默认 True、函数体写死 False」这种形态</b>——<code>grep</code> 调用点会显示 <code>guide=True</code>，看起来完全正常，只有读函数体才能发现。</li>
+<li><b>把「论文超参 vs 代码超参」做一张对账表</b>（如 §3.5）。差 1 个数量级就该怀疑发布的不是跑出论文数字的那一版。</li>
+</ol>
+</div>
+
+<h2 id="s4"><span class="num">4</span>★★★ 与 E0.3 / E0.3b 的三重互证</h2>
+
+<div class="box good">
+<div class="bt">这一节是本报告最有价值的正面结论</div>
+<p>你刚做完 E0.3 / E0.3b，核心结论是三条关于<b>染色矩阵 M 怎么标定</b>的操作决定。我读完 SGCD 的 <code>vahadane.py</code> 后发现：<b>它的实现把这三条全部独立做了一遍</b>——不是引用你的结论，而是另一个团队在另一个任务上自己走到了同一处。</p>
+<p><b>对「可复现 &gt; 可解释」的你来说，这比任何新方法都值钱：它说明你的 E0.3b 结论不是孤例，而是这个领域的既定做法。</b></p>
+</div>
+
+<p>先看代码（<code>vahadane.py</code>，逐字）：</p>
+
+<pre><code>def read_image(path):
+    img = cv2.imread(path)
+    img = cv2.resize(img, (96, 96))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    p = np.percentile(img, 90)                          # ★ 每图 90 分位
+    img = np.clip(img * 255.0 / p, 0, 255).astype(np.uint8)   # ★ 白点归一化
+    return img</code></pre>
+
+<pre><code>class vahadane(object):
+    def __init__(self, STAIN_NUM=2, THRESH=0.9, ...):    # ★ STAIN_NUM 固定为 2
+        ...
+
+    def getV(self, img):
+        I0 = img.reshape((-1,3)).T
+        I0[I0==0] = 1
+        V0 = np.log(255 / I0)                            # ★ Beer–Lambert：OD = log(255/I)
+        img_LAB = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+        mask = img_LAB[:, :, 0] / 255 < self.THRESH      # ★ 组织掩膜（L 通道 < 0.9）
+        I = img[mask].reshape((-1, 3)).T                 # ★ 只取组织像素
+        I[I == 0] = 1
+        V = np.log(255 / I)
+        return V0, V                                     # V0=全像素，V=组织像素
+
+    def getW(self, V):                                   # ★ W 只用 V（组织像素）拟合
+        W = spams.trainDL(np.asfortranarray(V), K=self.STAIN_NUM,
+                          lambda1=self.LAMBDA1, iter=self.ITER,
+                          mode=2, modeD=0, posAlpha=True, posD=True, verbose=False)
+        W = W / np.linalg.norm(W, axis=0)[None, :]
+        if (W[0,0] < W[0,1]):
+            W = W[:, [1,0]]                              # ★ 列排序规范化
+        return W
+
+    def getH(self, V, W):
+        if (self.getH_mode == 0):
+            H = spams.lasso(np.asfortranarray(V), np.asfortranarray(W),
+                            mode=2, lambda1=self.LAMBDA2, pos=True, verbose=False).toarray()
+        ...
+
+    def stain_separate(self, img):
+        V0, V = self.getV(img)
+        W = self.getW(V)                                 # ★ 组织像素拟合 W
+        H = self.getH(V0, W)                             # ★ 全像素求 H
+        return W, H
+
+    def SPCN(self, img, Ws, Hs, Wt, Ht):
+        Hs_RM = np.percentile(Hs, 99)                    # ★ 每图 99 分位
+        Ht_RM = np.percentile(Ht, 99)
+        Hs_norm = Hs * Ht_RM / Hs_RM                     # ★ 密度归一化
+        Vs_norm = np.dot(Wt, Hs_norm)                    # ★ 目标颜色 × 源密度
+        Is_norm = 255 * np.exp(-1 * Vs_norm)             # ★ Beer–Lambert 正演
+        I = Is_norm.T.reshape(img.shape).astype(np.uint8)
+        return I</code></pre>
+
+<h3>逐条对账</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>你的 E0.3 / E0.3b 结论</th><th>SGCD 代码里对应什么</th><th>判定</th></tr></thead>
+<tbody>
+<tr>
+<td><b>① 白点/背景归一化是主要误差项。</b>E0.3b 实测：把 <code>X0</code> 从 <code>[1,1,1]</code> 换成每瓦片白点后，<code>M_A</code> 的 MAE <b>0.02396 → 0.00779（好 3.08×）</b>；「固定 M 的代价」里约 <b>2/3 其实是背景/白点误差，不是染色矩阵误差</b></td>
+<td><code>read_image</code> 里 <code>p = np.percentile(img, 90); img = clip(img*255/p)</code>——<b>每张图先做 90 分位白点归一化</b>，然后才做染色分离。另外 <code>SPCN</code> 里还有第二道 <code>np.percentile(Hs, 99)</code> 密度归一化</td>
+<td><span class="b high">方向一致</span><br>一个公开实现<b>独立地</b>认为必须逐图做白点归一化</td>
+</tr>
+<tr>
+<td><b>② M 应在「减背景后的组织像素」上标定。</b>E0.3b：减背景后 <code>u</code> 移出 <code>cone(M)</code>（NMF 残差 2.8e-2），而减背景前 <code>u</code> 在锥内（系数 +0.73/+0.34）⇒ <b>光照泄漏进 <code>C_DAB</code></b></td>
+<td><code>getV</code> 用 <code>mask = L/255 &lt; 0.9</code> 建<b>组织掩膜</b>；<code>getW(V)</code> <b>只在组织像素上拟合 W</b>；<code>getH(V0, W)</code> 才用全像素求密度。<b>这正是「减背景后再标定 M」</b></td>
+<td><span class="b high">做法一致</span><br>而且它同时保住了 <code>H</code> 的全像素求解——<b>W 去背景、H 不去</b>，分工干净</td>
+</tr>
+<tr>
+<td><b>③ 用 NMF，不要用 Macenko-arc。</b>E0.3b：Macenko-arc 减背景后 MAE <b>0.00338 → 0.01690（差 5×）</b>、两列自夹角塌到 21.79°、<code>s_H</code> 变成蓝通道最大（<b>不是苏木素</b>）；NMF 0.00334 最好</td>
+<td><code>spams.trainDL(..., posAlpha=True, posD=True)</code> = <b>稀疏 NMF</b>（Vahadane 2016 的方法）；<code>getH</code> 用 <code>spams.lasso(..., pos=True)</code> 求<b>非负</b>密度</td>
+<td><span class="b high">选择一致</span><br>用 NMF，且 W 与 H <b>都加了非负约束</b></td>
+</tr>
+<tr>
+<td><b>④（E0.3b 的新判据）</b><code>angle(u, span(M)) &gt; 5°</code> 且 <code>u ∉ cone(M)</code>，其中 <code>u=(1,1,1)/√3</code> 是无色轴</td>
+<td>代码<b>没有显式写这条判据</b>，但通过「拟合 W 时剔除背景像素」<b>在构造上就避开了把无色轴包进锥内</b>（E0.3b 实测：减背景后 u 移出锥外）</td>
+<td><span class="b medium">等价效果、不同实现</span><br>它没有判据，是<b>用数据裁剪代替了断言</b></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">诚实标注：这条互证的边界</div>
+<ul>
+<li><b>这不是 SGCD 的创新。</b>这段是 <b>Vahadane 2016 的参考实现</b>（<code>spams</code> + 那套 <code>getV/getW/getH</code> 在 GitHub 上被广泛复制），SGCD 只是原样使用。<b>所以证据的强度是「一个 NeurIPS spotlight 的流水线依赖 Vahadane 的这套预处理」，不是「SGCD 验证了它」。</b></li>
+<li><code>THRESH=0.9</code>（组织掩膜阈值）、90 / 99 分位都是 Vahadane 的<b>默认值</b>，不是 SGCD 调的。</li>
+<li>它证明的是<b>方向</b>（该做白点归一化、该在组织像素上标定 M、该用 NMF），<b>不是量级</b>（不能推出你的 3.08× 或 2.33× 数字）。</li>
+<li>阈值不同：你用 <b>p95</b>，它用 <b>p90</b>（白点）和 <b>p99</b>（密度）。<b>这是一个可以直接对照的小实验</b>（见 <a href="#s7">§7</a>）。</li>
+</ul>
+</div>
+
+<div class="box key">
+<div class="bt">这条互证怎么用在你的决策上</div>
+<ol>
+<li><b>E0.3b 的结论可以从「我的实测」升级为「我的实测 + 一个公开实现的做法」。</b>在写论文/报告时可以这样表述：「我们独立发现固定 stain matrix 的代价主要来自背景归一化，且标定必须在组织像素上进行——这与广泛使用的 Vahadane 实现的做法一致。」</li>
+<li><b>它降低了 <code>X0</code> 决策的风险。</b>你原来担心「先定 <code>X0</code>，否则标签带 3–8° 系统色偏」。现在有一个第三方实现支持「逐图白点归一化」这条路线。</li>
+<li><b>它给了你一个现成的对照点：p90 vs p95。</b>零成本，见 <a href="#s7">§7</a> 实验 A。</li>
+</ol>
+</div>
+
+<h2 id="s5"><span class="num">5</span>★★ 可迁移性判定：为什么不能直接套到 H&amp;E→IHC</h2>
+
+<div class="box stop">
+<div class="bt">总判定</div>
+<p><b>SGCD 的四个构件里，只有一个能搬（时间窗调度），一个能借形状（损失结构），两个在 H&amp;E→IHC 上根本立不住（stain-guided 参考图、环回一致性）。</b></p>
+<p>下面逐条给依据。核心是 §5.1——它是代码级的数据流论证，不是「感觉不对」。</p>
+</div>
+
+<h3 id="s5-1">5.1 <code>I_ref</code> 构造在 H&amp;E→IHC 上语义错位</h3>
+
+<p>论文说 <code>I_ref = I₀·exp(−W_T·H_S)</code>。看代码里这条数据流实际怎么走的：</p>
+
+<pre><code># main.py：引导函数里唯一构造参考图的地方
+ref_x0 = batch_process_vahadane(x0_path, ref_T_path, vhd)
+#            ↑ 源图路径        ↑ 目标图路径（S→T 方向传的是 (x1_path, x2_path)）
+
+# main.py：batch_process_vahadane 内部
+Ws, Hs = vhd.stain_separate(source_image)     # 源图 → W_s, H_s
+Wt, Ht = vhd.stain_separate(target_image)     # 目标图 → W_t, H_t
+processed_image_np = vhd.SPCN(source_image, Ws, Hs, Wt, Ht)
+
+# vahadane.py：SPCN 内部（这才是真正的 I_ref）
+Vs_norm = np.dot(Wt, Hs_norm)                 # ★ OD_ref = W_t @ H_s
+Is_norm = 255 * np.exp(-1 * Vs_norm)          # ★ I_ref = 255·exp(−OD_ref)</code></pre>
+
+<p><b>关键就是 <code>Wt @ Hs</code> 这一个矩阵乘法。</b>把维度写开：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>场景</th><th><code>W_t</code> 的两列（目标域染色颜色）</th><th><code>H_s</code> 的两行（源域染色密度）</th><th><code>W_t @ H_s</code> 实际算的是</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Camelyon17 内部</b><br><span class="small">（论文的场景，H&amp;E → H&amp;E）</span></td>
+<td><code>[ 苏木素色 , 伊红色 ]</code></td>
+<td><code>[ H密度 ; E密度 ]</code></td>
+<td><code>苏木素色·H密度 + 伊红色·E密度</code><br><span class="b high">语义正确</span>——目标域就是 H&amp;E，两列本来就对应 H 和 E</td>
+</tr>
+<tr>
+<td><b>H&amp;E → IHC</b><br><span class="small">（你要做的）</span></td>
+<td><code>[ 苏木素色 , <b>DAB色</b> ]</code></td>
+<td><code>[ H密度 ; <b>E密度</b> ]</code></td>
+<td><code>苏木素色·H密度 + <b>DAB色·E密度</b></code><br><span class="b bad">语义错位</span>——<b>把伊红的密度图当成 DAB 的密度图渲染</b></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★★★ 这就是判定：矩阵乘法在维度上完全合法，在语义上是错的</div>
+<p><code>Wt</code> 是 3×2、<code>Hs</code> 是 2×n，乘积 3×n —— <b>不会报错，会安静地产出一张看起来很像 IHC 的图</b>。而它渲染的内容是「<b>伊红分布用 DAB 的颜色画出来</b>」。</p>
+<p><b>为什么这个错误在 SGCD 里不会被发现：</b>因为 S 和 T <b>都是 H&amp;E</b>。两个域的染色集合相同、<code>STAIN_NUM=2</code> 相同、列序经 <code>getW</code> 的排序规则统一 ⇒ 「第 2 行 = 伊红」在两个域里都成立，对应关系<b>恒等地</b>成立。论文的整个实验设计<b>没有能力暴露这个假设</b>。</p>
+</div>
+
+<h4>对你项目最具体的后果：HER2 是膜染色</h4>
+
+<p>你在 StainFuser 审查里已经确立过一条领域事实：<b>「HER2 是膜染色，H&amp;E 里膜/胞质形态主要由伊红承载」</b>。把这两件事接起来：</p>
+
+<pre><code>I_ref 里 DAB 的分布  =  源图里「伊红」的分布
+                     ≈  胞质 / 间质 / 胶原 的区域
+                     ≠  细胞膜（HER2 真正该着色的位置）
+
+⇒ 若照搬这个引导，它会主动把生成的 IHC 往「DAB 在胞质」推
+⇒ 而 DAB 在胞质正是 HER2 评分里最典型的假阳性形态</code></pre>
+
+<div class="box stop">
+<div class="bt">所以这一条不是「效果可能差一点」，而是「引导方向本身是错的」</div>
+<p>引导项的作用是<b>把生成结果往 <code>I_ref</code> 拉</b>。如果 <code>I_ref</code> 的 DAB 位置就是错的，那么<b>引导越强，错得越系统</b>——它不会随机地伤害图像质量，它会<b>定向地</b>把膜染色做成胞质染色。</p>
+<p>这比「不适用」更糟：它是<b>一个会主动伤害你最关心的指标（膜定位）的机制</b>。</p>
+</div>
+
+<h3 id="s5-2">5.2 染色列排序只在同染色域内成立</h3>
+
+<p><code>getW</code> 里有一条排序规则，容易被忽略但很关键：</p>
+
+<pre><code>if (W[0,0] < W[0,1]):
+    W = W[:, [1,0]]        # 保证第 0 列的「红通道 OD」更大</code></pre>
+
+<p>这条规则的<b>唯一作用</b>就是让「第 1 列 = 哪个染色」在两个域之间保持一致——因为 <code>SPCN</code> 的 <code>Wt @ Hs</code> <b>逐行逐列地</b>假定「目标的第 i 列」对应「源的第 i 行」。没有这条规则，两个域的列序可能互换，<code>Wt @ Hs</code> 会算出「用苏木素色渲染伊红密度」。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>问题</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>这条规则是什么</td><td>一个<b>数据驱动的启发式</b>（按红通道 OD 排序），不是语义标注。<code>spams.trainDL</code> 输出的列序本身是任意的，这条规则只是把它规范化</td></tr>
+<tr><td>为什么在 H&amp;E 内部够用</td><td>两个域都是 {H, E}，只要排序规则一致，两边的「第 0 列」就都是同一个染色（苏木素 R 通道吸收强于伊红）</td></tr>
+<tr><td>为什么 H&amp;E→IHC 不够用</td><td>两边的染色集合不同（{H,E} vs {H,DAB}）。<b>即使排序规则把两边都排成「第 0 列 = 苏木素」，第 1 列仍然是 E vs DAB——排序正确反而更危险</b>，因为它会让 <code>Wt @ Hs</code> 安静地跑完，不触发任何异常</td></tr>
+<tr><td><code>STAIN_NUM=2</code> 的结构性限制</td><td>构造函数里 <code>STAIN_NUM=2</code> 写死。而 {H&amp;E} ∪ {H&amp;DAB} 的染色并集是 <b>3 个</b>（H、E、DAB）。要表达「共享的 H + 独有的 E + 独有的 DAB」需要 3 通道 ⇒ <b>这个实现从结构上就表达不了</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">★ 有意思的呼应</div>
+<p>这条「<b>第 0 列共享、第 1 列不共享</b>」的结构，正是你项目里那条核心论证的<b>代码级镜像</b>：</p>
+<p><b>「H&amp;E 与 IHC 共享苏木素通道（DeReStainer 2409.00649）⇒ 苏木素=可保持的共享成分，DAB=必须生成的目标成分」</b></p>
+<p>SGCD 的 <code>Wt @ Hs</code> 恰好就是<b>「假定两列都共享」</b>。你在架构层面已经否决了这个假定（所以你要双 SPADE、要 <code>[C_H, C_DAB, C_res]</code> 而不是 <code>[H, DAB, H]</code>）。<b>SGCD 提供的是一个「如果假定两列都共享会怎样」的实测案例——它在同染色域内成功，正好说明这个假定在跨染色域内不成立。</b></p>
+</div>
+
+<h3 id="s5-3">5.3 cycle L2 只保证分布匹配，不保证实例正确</h3>
+
+<p>SGC 损失的环回项是纯像素 L2：<code>‖S − Ŝ‖²</code> 和 <code>‖T − T̂‖²</code>。这正是你在物理合规那一层已经确立的<b>理论事实</b>：</p>
+
+<div class="box stop">
+<div class="bt">你的既有结论（不是调参问题）</div>
+<p>非配对下 <code>p(IHC|H&amp;E)</code> 的 coupling <b>不可辨识</b>；<b>cycle consistency 只保证分布匹配、不保证实例正确</b>。</p>
+</div>
+
+<p><b>SGCD 是这个论断的一个教科书级实例</b>，而且——最有说服力的是——<b>论文自己给出了失败案例</b>。Appendix A.14 原文：</p>
+
+<pre><code>"However, while beneficial, this randomness is also the source of potential failure cases,
+ as shown in Figure 10. When the dynamic reference image leads to an overly aggressive
+ style shift or excessive distortion of fine-grained pathological structures, the resulting
+ synthetic image may become diagnostically ambiguous, leading to classifier errors."</code></pre>
+
+<p>换句话说：<b>环回一致性 + 分类约束都满足的情况下，生成图仍然可以「诊断上含糊」。</b>这就是「分布匹配 ≠ 实例正确」在别人论文里的直接观察。你在写自己的报告时，这条可以当作<b>外部旁证</b>引用（比只引理论更硬）。</p>
+
+<h3 id="s5-4">5.4 任务错位：分类 UDA ≠ 染色保真</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>维度</th><th>SGCD</th><th>你的项目</th><th>能不能共用结论</th></tr></thead>
+<tbody>
+<tr><td>目标</td><td>让目标域<b>分类器</b>变准</td><td>生成<b>可信的 IHC 图</b></td><td><span class="b bad">不能</span></td></tr>
+<tr><td>主指标</td><td>分类 AUC / ACC</td><td>染色保真 + 蛋白表达 + 物理合规 + 临床效用（四层）</td><td><span class="b bad">不能</span></td></tr>
+<tr><td>PSNR / SSIM 的地位</td><td>只在 MITOS&amp;ATYPIA14（<b>有配对</b>的双扫描仪数据）上算，作副指标</td><td>你已明确<b>禁止用单一 PSNR 判断成功</b></td><td><span class="b medium">理念上一致，数字不可比</span></td></tr>
+<tr><td>「好」的定义</td><td>分类器判对即可，<b>染色可以不准</b></td><td>染色必须准，<b>而且要能解释</b></td><td><span class="b bad">不能</span></td></tr>
+<tr><td>是否评估蛋白表达</td><td><b>完全没有</b>。没有 DAB 定量、没有 H-score、没有膜/胞质定位</td><td>这是你的核心</td><td><span class="b bad">不能</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>推论：即使 SGCD 的机制能迁移，它的指标体系也无法用来验证迁移是否成功。</b>你不能拿「AUC 涨了」当作「染色对了」的证据——恰恰相反，A.14 说明 AUC 可以建立在「诊断上含糊」的图上。</p>
+
+<h3 id="s5-5">5.5 作者自认：H&amp;E→IHC 是 future work</h3>
+
+<p>这一条最省事，也最该记住。原文 §6 <b>Future Work</b> 逐字：</p>
+
+<pre><code>"Our initial focus on binary classification within H&amp;E staining establishes foundational
+ efficacy. Future studies will explore applying SGCD to more complex scenarios, including
+ multi-class classification and adaptation between entirely different staining protocols
+ (e.g., H&amp;E to immunohistochemistry). We plan to tackle highly challenging cross-organ
+ domain adaptation tasks and generalize the methodology to other medical imaging domains..."</code></pre>
+
+<div class="box key">
+<div class="bt">这句话的用途</div>
+<p><b>它一次性关掉「SGCD 是不是 H&amp;E→IHC 的先例」这个问题。</b>作者自己把 H&amp;E→IHC 归到 future work，所以：</p>
+<ul>
+<li>✅ 可以引用它说「双扩散 + 双向约束在同染色跨域上有效」；</li>
+<li>❌ <b>不可以</b>引用它说「双扩散 + stain-guided 一致性对 H&amp;E→IHC 有效」；</li>
+<li>❌ <b>不可以</b>引用它说「扩散里的物理/染色约束已被验证」。</li>
+</ul>
+<p class="small">顺带：它的 Limitations 只承认「循环双向训练的计算开销大」，<b>没有</b>讨论跨染色协议的困难。所以 future work 那句话比 limitations 更有信息量。</p>
+</div>
+
+<h2 id="s6"><span class="num">6</span>能搬三件 / 不要搬三件</h2>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt" style="color:var(--green)">✅ 能搬 1 · 染色预处理的「三重做法」（最强）</div>
+<p><b>逐图白点归一化 + 在组织像素上标定 M + 用 NMF。</b></p>
+<p>这不是「搬方法」，是<b>给你的 E0.3b 结论加一个外部旁证</b>。做法见 <a href="#s4">§4</a> 的代码。</p>
+<p class="small">改动成本：<b>零</b>（你本来就要做）。可复现性：<b>高</b>（Vahadane 2016 参考实现，<code>spams</code> 有 conda 包）。</p>
+</div>
+<div class="mini">
+<div class="mt" style="color:var(--green)">✅ 能搬 2 · 损失形状（借结构，不借目标）</div>
+<p><b>「环回重建 + 分类器约束」这种「几何项 + 语义项」的联合形状</b>，可以借到你的「结构 + 蛋白」双约束设计里——你已经有了（FOD + 苏木素锚定），SGCD 只是<b>结构上的旁证</b>。</p>
+<p class="small">改动成本：<b>零</b>（只借形状）。可复现性：<b>高</b>。但<b>不要借它的 L2 环回项</b>——见 §5.3。</p>
+</div>
+</div>
+
+<div class="grid2" style="margin-top:16px">
+<div class="mini">
+<div class="mt" style="color:var(--red)">❌ 不要搬 1 · stain-guided 参考图机制</div>
+<p><b>在 H&amp;E→IHC 上语义错位，且会定向伤害膜定位。</b>见 <a href="#s5-1">§5.1</a>。</p>
+<p class="small">这是本报告最硬的一条否定。若强行照搬，你会得到一个「把 DAB 往胞质推」的引导项。</p>
+</div>
+<div class="mini">
+<div class="mt" style="color:var(--red)">❌ 不要搬 2 · 把 SGCD 当「扩散内物理约束」的先例</div>
+<p>它用 Beer–Lambert <b>只为造参考图</b>，<b>没有</b>把可微渲染器放进生成空间，输出仍是 RGB。</p>
+<p class="small">⇒ 你那条「<b>渲染器 × 蛋白约束</b>」的空白<b>仍然成立</b>（库内既有报告的措辞「没人把渲染器放进生成空间」已在 10-06 收窄为「渲染器 × 蛋白约束」，此结论不受影响）。</p>
+</div>
+</div>
+
+<div class="box stop" style="margin-top:18px">
+<div class="bt">❌ 不要搬 3 · 不要把它当基线</div>
+<p>理由已在 <a href="#s3-1">§3.1</a> 列全：<b>权重不提供</b>（跑不起来）、任务不同（分类 vs 生成）、指标不同（AUC vs 染色保真）、无误差棒、代码与论文超参差 1–2 个数量级。<b>把它排进候选会污染你的选型矩阵。</b></p>
+</div>
+
+<div class="box warn">
+<div class="bt">⚠ 一条要降级的证据：它的时间窗消融（Table 10）</div>
+<p>Table 10 报告 <code>k=600 / k_G=100</code> 最优、<code>k_G=150</code> 掉到 90.9、<code>k=1000</code> 掉到 83.9。直觉上这是「引导不该铺满整条轨迹」的实测证据，很有诱惑力。</p>
+<p><b>但我不建议你把它当决策依据</b>，三条理由：</p>
+<ol>
+<li><b>产生这张表的代码没发布</b>（发布的版本 <code>config.T = 5</code>，与 k=600 完全不同的 regime）；</li>
+<li><b>发布版本里引导是关掉的</b>（<code>guide = False</code>），所以连「引导是否起作用」都无法从代码验证；</li>
+<li><b>你没有必要冒这个险</b>——「辅助损失/引导不该铺满轨迹」你已经有更硬的证据（Lantern 的受控实验，训练轴），而且你自己的 P5 诊断会直接告诉你方向。</li>
+</ol>
+<p><b>⇒ 把 Table 10 记为「弱旁证，与既有结论方向一致」，不作为新增实验的理由。</b></p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>实验建议（含一个零成本可视化）</h2>
+
+<p>本节只给<b>值得做的</b>，并且明确标注成本。两个实验，都不需要训练、不需要 SGCD 的权重。</p>
+
+<div class="card">
+<div class="ch">
+<div>
+<div class="title">实验 A · p90 vs p95 白点归一化（零成本对照）</div>
+<div class="v">成本 ≈ 15 分钟 · 零训练 · 复用 E0.3b 脚本</div>
+</div>
+<span class="b high">建议做</span>
+</div>
+<div class="body">
+<p><b>动机：</b><a href="#s4">§4</a> 发现 SGCD 用 <code>np.percentile(img, 90)</code> 做白点，而你的 E0.3b 用 p95。两个数字差在哪、对 <code>M</code> 的标定与 <code>MAE</code> 有什么影响，你还没测过。</p>
+<p><b>做法：</b>把 E0.3b 的 <code>X0 = per-tile bg</code> 分支改成扫分位数 <code>p ∈ {85, 90, 95, 99, 100}</code>，其余不变，输出 <code>M_A_fixed</code> 的 <code>rgb_roundtrip_mae</code> 与新的无色轴判据 <code>angle(u, span(M))</code>。</p>
+<p><b>判据：</b>如果 MAE 对 p 不敏感（±10% 内），说明这条不是关键变量，<b>记录为「无关」并停止</b>；如果敏感，就得到一条可写进方法学的「白点分位数需固定为 X」。</p>
+<p class="small">★ 注意你已有的教训 #22：<b>换超参前先检查它有没有偷偷改变别的变量。</b>这里 p 会改变组织掩膜下的像素集，<b>掩膜必须只定义一次、各栏共用</b>，否则又是在不同像素集上比。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div>
+<div class="title">★★ 实验 B · 退化参考图的定量证据（决定性，零训练）</div>
+<div class="v">成本 ≈ 1 小时 · 零训练 · 只需要 BCI 的 H&amp;E 与 IHC 各一张</div>
+</div>
+<span class="b high">强烈建议</span>
+</div>
+<div class="body">
+<p><b>动机：</b><a href="#s5-1">§5.1</a> 说 <code>I_ref</code> 的 DAB 通道实际上就是源图的伊红密度。<b>这句话可以被直接测出来，不需要训练任何模型。</b></p>
+<p><b>做法：</b></p>
+<pre><code># 1. 取 BCI 的一张 H&amp;E 瓦片 x_HE 和一张 IHC 瓦片 x_IHC
+# 2. 各做一次染色分离（用你 E0.3 的 NMF，或 Vahadane 的 spams 版）
+W_HE, H_HE = deconvolve(x_HE)      # W_HE: 3×2 [苏木素, 伊红]; H_HE: 2×n
+W_IHC, H_IHC = deconvolve(x_IHC)   # W_IHC: 3×2 [苏木素, DAB]; H_IHC: 2×n
+
+# 3. 按 SGCD 的构造造参考图（这就是 Wt @ Hs）
+OD_ref = W_IHC @ H_HE              # ★ 目标颜色 × 源密度
+I_ref  = 255 * np.exp(-OD_ref)     # ★ Beer–Lambert 正演
+
+# 4. 关键测量：I_ref 里的「DAB 分量」到底是什么？
+DAB_of_ref   = H_HE[1]             # ← 因为 OD_ref 的第 2 项就是 W_IHC[:,1] * H_HE[1]
+DAB_of_true  = H_IHC[1]            # ← 真 IHC 的 DAB 密度
+
+# 5. 两个数：
+r1 = corr( DAB_of_ref, DAB_of_true )        # ★ 参考图的「DAB」和真 DAB 像不像
+r2 = corr( DAB_of_ref, H_HE[1] )            # 应当 ≈ 1（恒等，只是验证代码没写错）</code></pre>
+<p><b>判据（可证伪，三档）：</b></p>
+<div class="scroll">
+<table>
+<thead><tr><th>结果</th><th>含义</th><th>行动</th></tr></thead>
+<tbody>
+<tr><td><code>r1 &lt; 0.3</code></td><td>参考图的「DAB」与真 DAB 基本无关 ⇒ <b>机制确实不可迁移</b></td><td>把 §5.1 从「代码级论证」升级为「实测结论」，写进报告</td></tr>
+<tr><td><code>0.3 ≤ r1 &lt; 0.7</code></td><td>有部分相关（伊红与 DAB 在间质/胞质上有共同成分）</td><td>机制<b>部分</b>可用但方向偏 ⇒ 仍需改，但可以讨论「只借 H 通道」的变体</td></tr>
+<tr><td><code>r1 ≥ 0.7</code></td><td>伊红密度与 DAB 密度高度相关</td><td><b>我的 §5.1 判定需要修正</b>——请把这个结果告诉我，我会改报告</td></tr>
+</tbody>
+</table>
+</div>
+<p><b>为什么这个实验值钱：</b>它是<b>零训练、零权重、一小时</b>，但它把「能不能搬」从论证变成了数字。而且它还顺便产出一样东西——<b><code>r2 ≈ 1</code> 是一个自检（正例），<code>r1</code> 是待测（反例）</b>，符合你「自检要同时有正例和反例」的纪律 #18。</p>
+<p class="small"><b>前置条件：</b>需要先定 <code>X0</code>（每图白点），否则 H_HE 与 H_IHC 的密度不在同一尺度上，<code>r1</code> 会被系统色偏污染——这与你「C 阶段前置：先定 <code>X0</code>」的既有结论一致。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">明确不建议做的</div>
+<ul>
+<li><b>不要复现 SGCD。</b>权重不存在，且发布的代码不是产生论文数字的那一版（<a href="#s3-5">§3.5</a>）。投入产出比极差。</li>
+<li><b>不要照搬它的 <code>k / k_G</code>。</b>理由见 <a href="#s6">§6</a> 的降级说明。</li>
+<li><b>不要为「引用一篇 NeurIPS spotlight」而引用它。</b>它的适用边界（同染色跨域）比它的名声窄得多；误引会直接损害你报告的可信度。</li>
+</ul>
+</div>
+
+<h2 id="s8"><span class="num">8</span>证据边界与未核实清单</h2>
+
+<h3>核实方式（本报告的取证等级）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>结论类别</th><th>取证方式</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td>论文内容（方法、实验、消融、future work 引文）</td><td>PDF 全文 31 页通读，逐页提取文本</td><td><span class="b high">已核实（一手）</span></td></tr>
+<tr><td>venue / 类型 / DOI / 卷页</td><td>neurips.cc 虚拟会场页 + proceedings 官方页 + 官方 BibTeX，三个一手来源</td><td><span class="b high">已核实（一手）</span></td></tr>
+<tr><td><b>代码级结论</b>（<code>guide = False</code>、<code>norm_grad</code>、<code>scale = 10</code>、<code>config.T = 5</code>、T→S→T 用 <code>model_T</code>、<code>read_image</code> 的 p90）</td><td><b>两次独立抓取同一文件</b>（raw 文本 + GitHub blob 页），关键行逐字比对一致</td><td><span class="b high">已核实（双路径）</span></td></tr>
+<tr><td>仓库「official」身份</td><td>README 自称 + 含论文标题/摘要/OpenReview 引文；<b>但论文与仓库无互链，账号名与作者名无直接对应</b></td><td><span class="b medium">自称，未能双向确认</span></td></tr>
+<tr><td><code>SPCN_C0</code> 无调用点、<code>set_timesteps</code> 空调用</td><td>单次抓取阅读，未做调用点全量 grep</td><td><span class="b low">未完整核实</span></td></tr>
+<tr><td>「<code>guide = False</code> 是为了避开 scale=10 的数值爆炸」</td><td>我的推断，基于算术</td><td><span class="b medium">假设，已标可证伪预测</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">明确未核实 / 不要当事实引用</div>
+<ol>
+<li><b>「<code>optimizer.zero_grad()</code> 在模式 C 缺失」这一条</b>（<a href="#s3-6">§3.6</a> 第 3 项）。这是单次抓取的阅读结果，我<b>没有</b>做第二次针对性复核。<b>引用前请自己打开 <code>main.py</code> 的 mode 'C' 分支确认一次。</b></li>
+<li><b>Table 10 的具体单元格数值。</b>PDF 文本抽取时表头与数据列错位（表头 4 个 <code>k_G</code> 值，每行只抽出 3 个数据），<b>我无法确认第 4 列是否存在</b>。本报告只引用了与正文自述一致的两处（<code>k=600,k_G=100</code> 最优、<code>k=1000</code> 掉到 83.9）。</li>
+<li><b>内层梯度迭代次数 <code>n</code>。</b>论文 Eq.3 下面写了 <code>x_t^(n+1) = G(x_t^(n), I_ref)</code>，但<b>全文没有给出 <code>n</code> 取多少</b>；发布的代码里也没有这个循环（因为引导是死代码）。<b>不可复现项。</b></li>
+<li><b>两个 per-domain DDPM 是怎么训出来的。</b>论文只说「pre-trained diffusion model」，未给训练细节；仓库不提供权重也不提供训练脚本。<b>不可复现项。</b></li>
+<li><b>「发布代码 = 论文代码」的反面也未证实。</b>我只能证明<b>两者不一致</b>，不能证明作者手里有没有另一份。请不要写「作者造假」这类判断——正确的表述是<b>「发布版本与论文报告不一致」</b>。</li>
+</ol>
+</div>
+
+<h2 id="s9"><span class="num">9</span>与库内既有报告的分工</h2>
+
+<p>本报告不是重复劳动。库内既有一份报告已提到 SGCD，但<b>当时拿不到原文</b>，因此三处标为「未核实」。<b>本报告的主要作用之一就是给那三处结案。</b></p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>库内报告</th><th>它关于 SGCD 说了什么</th><th>本报告的关系</th></tr></thead>
+<tbody>
+<tr>
+<td><b>扩散模型虚拟染色_蛋白表达约束_约束位置地图.html</b><br><span class="cite">01_调研报告 · 142 KB</span></td>
+<td>三处提到 SGCD，<b>全部标 <span class="b low">未核实</span></b>：<br>① 正文：「有二手描述称它用 Beer–Lambert 染色矩阵 + 密度图构建参考——<b>但我未能核实这一点</b>（原文 PDF 被浏览器校验挡住）。<b>不要把它当作「扩散里的物理渲染器」引用</b>」<br>② §2 表：「<b>Beer–Lambert 的说法来自二手描述，未核实</b>」<br>③ §12 未核实清单第 1 条</td>
+<td><span class="b high">本报告给它结案</span><br>① <b>Beer–Lambert 确实用了</b>——<code>vahadane.py</code> 的 <code>SPCN</code> 里 <code>255*exp(-Wt@Hs)</code>，逐字核实（<a href="#s4">§4</a>）<br>② <b>「不要当物理渲染器引用」这个警告是对的</b>，而且本报告给出了机制级理由：BL 只用来造参考图，不进生成空间（<a href="#s6">§6</a>）<br>③ 清单第 1 条可划掉，改指向本报告</td>
+</tr>
+<tr>
+<td><b>Diffusion主损失与辅助损失的梯度冲突_机制分析.html</b><br><span class="cite">01_调研报告 · 169 KB · 10-07</span></td>
+<td>没有提 SGCD。它建立了 Jacobian 表、<code>λ_crit</code>、s 轴（warmup + 末期关闭）等机制</td>
+<td><span class="b tealb">正交 · 本报告反向引用它</span><br>本报告的 §3.3（<code>x̂₀</code> Jacobian 隐患是<b>有条件</b>的）和 §2.2（训练轴 vs 采样轴要区分）都是<b>建立在它的结论之上</b>的细化</td>
+</tr>
+<tr>
+<td><b>StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</b><br><span class="cite">06_方案可行性审查 · 128 KB</span></td>
+<td>没有提 SGCD。它建立了「<code>Z = [C_H, C_DAB, C_res]</code>」「两域共享苏木素」等结论</td>
+<td><span class="b tealb">正交 · 互为旁证</span><br>§5.2 发现 SGCD 的 <code>Wt @ Hs</code> 是「假定两列都共享」的代码级镜像，<b>正好反证了你「只共享 H、不共享第二列」的设计是对的</b></td>
+</tr>
+<tr>
+<td><b>HE2IHC_Diffusion_Research/HE2IHC_Diffusion_Loss_Combination_Guide.html</b><br><span class="cite">01_调研报告 · 105 KB（R3）</span></td>
+<td>没有提 SGCD。含 Lantern 受控实验（梯度组合规则）</td>
+<td><span class="b tealb">正交 · 本报告给它的证据降级</span><br>§6 把 SGCD 的 Table 10 记为「弱旁证」而不作为依据，正是因为 R3/Lantern 的证据更硬</td>
+</tr>
+<tr>
+<td><b>MEMORY_E0.md</b>（记忆，非报告）<br><span class="cite">E0 五项 + E0.3b</span></td>
+<td>E0.3b 的三条结论 + 无色轴判据</td>
+<td><span class="b high">本报告给它加外部旁证</span><br><a href="#s4">§4</a> 的三重互证就是给这三条结论找的独立实现证据</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">一句话定位</div>
+<p><b>约束位置地图</b>回答「SGCD 在文献地图的哪一格」（答案：采样期 guidance 格，但标未核实）。<b>本报告</b>回答「那一格到底装了什么、能不能搬到 H&amp;E→IHC」——并把它从「未核实」推进到「已核实 + 判定为不可迁移 + 但它的染色预处理有三条可借」。</p>
+</div>
+
+<h2 id="s10"><span class="num">10</span>参考文献</h2>
+
+<h3>本报告一手核实</h3>
+<ul>
+<li><b>[1] SGCD 原文</b> · Hsi-Ling Chen, Chun-Shien Lu, Pau-Choo Chung. <i>SGCD: Stain-Guided CycleDiffusion for Unsupervised Domain Adaptation of Histopathology Image Classification.</i> NeurIPS 2025（Spotlight Poster）, Advances in NeurIPS 38, Main Conference, pp. 39107–39137. DOI <b>10.52202/085713-1305</b>. OpenReview <code>z2SGaPIhLT</code>.<br><span class="small">官方页：<code>proceedings.neurips.cc/paper_files/paper/2025/hash/37964391303da7d70d07e83d2b0c3c5e-Abstract-Conference.html</code> · 会场页：<code>neurips.cc/virtual/2025/poster/115086</code>（逐字写「2025 Spotlight Poster」）</span></li>
+<li><b>[2] SGCD 官方实现（自称）</b> · <code>github.com/yunchieh0227/SGCD-Histopathology</code>，文件 <code>main.py</code> / <code>vahadane.py</code> / <code>resize_method.py</code>，首提交 2026-02-07。<b>本报告 §3 / §4 的全部代码引文来自此仓库。</b></li>
+<li><b>[3] Vahadane 染色分离</b> · Abhishek Vahadane, Tingying Peng, Amit Sethi, et al. <i>Structure-Preserving Color Normalization and Sparse Stain Separation for Histological Images.</i> IEEE TMI 35(8):1962–1971, 2016.<br><span class="small">SGCD 的 <code>vahadane.py</code> 即此方法的参考实现；本报告 §4 的「三重互证」应归因于此方法，<b>不是 SGCD 的创新</b>。</span></li>
+<li><b>[4] SPCN</b> · 同上（Vahadane 2016 的 Stain Pattern Consistency Normalization）。</li>
+</ul>
+
+<h3>本项目既有结论（本报告引用）</h3>
+<ul>
+<li><b>[5] E0.3 / E0.3b</b> · 染色矩阵敏感性 + 无色轴判据。产物：<code>/Users/hua/Downloads/E0_闭环验证/e03b_achromatic_test.py</code> → <code>out/e03b_results.json</code>；回执 <code>handoff/inbox/03_reply_E03.md</code>。<br><span class="small">本报告 §4 对账的正是它的三条结论：白点归一化 / 组织像素标定 / NMF 稳定。</span></li>
+<li><b>[6] 梯度冲突机制分析</b> · 库内报告 <code>01_调研报告/Diffusion主损失与辅助损失的梯度冲突_机制分析.html</code>（2026-10-07）。<br><span class="small">本报告 §3.3 引用其「挂 <code>x̂₀</code> 的 Jacobian 含 <code>SNR(t)<sup>−1/2</sup></code>」结论，并给出「该隐患是有条件的」这一细化。</span></li>
+<li><b>[7] Lantern 受控实验</b> · <i>Lantern: Conflict-Aware Gradient Blending for Physics-Guided Diffusion Models in Calorimeter Simulation.</i> arXiv:2607.25060。<br><span class="small">本报告 §6 用它作为「不该铺满轨迹」的主证据，并据此把 SGCD 的 Table 10 降级为弱旁证。</span></li>
+<li><b>[8] DeReStainer</b> · arXiv:2409.00649。H&amp;E 与 IHC 共享苏木素通道——本报告 §5.2 的理论依据。</li>
+<li><b>[9] 约束位置地图</b> · 库内报告 <code>01_调研报告/扩散模型虚拟染色_蛋白表达约束_约束位置地图.html</code>。本报告 <a href="#s9">§9</a> 给它三处「未核实」结案。</li>
+<li><b>[10] StainFuser 改造可行性</b> · 库内报告 <code>06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</code>。<code>Z = [C_H, C_DAB, C_res]</code> 与「HER2 是膜染色」结论的来源。</li>
+</ul>
+
+<h3>本报告涉及但未独立复核</h3>
+<ul>
+<li><b>[11] Camelyon16 / Camelyon17 / Camelyon17-WILDS / MITOS&amp;ATYPIA14</b> · 数据集本体未复核，仅按原文 Appendix A.2 转述其域划分方式。</li>
+<li><b>[12] 论文 Table 2–10 的第三方基线数字</b>（Connect Later、SPA、BCD-Net、StainNet 等）· 未逐篇回原文献核对，<b>按原文转述</b>。引用这些数字时请注明「转引自 SGCD」。</li>
+</ul>
+
+<div class="foot">
+<p><b>SGCD 精读 · 代码级复核与可迁移性判定</b> · 2026-10-07 · 归入 <code>01_调研报告/</code></p>
+<p>原文 31 页已通读；官方实现 <code>main.py</code> / <code>vahadane.py</code> 已逐行复核，关键代码结论经两次独立抓取互验。</p>
+<p>本报告的否定结论（§5）与正面结论（§4）<b>均可被 §7 实验 B 证伪</b>——若实测 <code>r1 ≥ 0.7</code>，请把结果反馈，我会修正 §5.1。</p>
+</div>
+
+
+
+</main>
+</div>
+</body>
+</html>

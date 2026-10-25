@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可复现的扩散虚拟染色工作推荐</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:18px;margin:34px 0 12px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15.5px;margin:24px 0 9px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:680px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:6px 18px 18px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.stars{color:#d99000;letter-spacing:1px}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">Reproducibility-first</div><div class="sub">扩散模型虚拟染色<br>可复现工作推荐</div>
+<a class="l1" href="#s0">0 · 先给结论</a><a class="l1" href="#s1">1 · 我筛选了什么</a><a class="l1" href="#s2">2 · 候选总表</a><a class="l2" href="#s2-1">直接匹配</a><a class="l2" href="#s2-2">可复现近邻</a><a class="l2" href="#s2-3">明确排除</a><a class="l1" href="#s3">3 · 第一推荐：Star-Diff</a><a class="l2" href="#s3-1">方法与解耦含义</a><a class="l2" href="#s3-2">代码与复现现状</a><a class="l2" href="#s3-3">复现实验协议</a><a class="l1" href="#s4">4 · 第二推荐：DiffVS</a><a class="l2" href="#s4-1">为什么值得复现</a><a class="l2" href="#s4-2">代码与数据</a><a class="l1" href="#s5">5 · 如果必须要显式解耦</a><a class="l1" href="#s6">6 · 其他候选评估</a><a class="l1" href="#s7">7 · 最终推荐排序</a><a class="l1" href="#s8">8 · 下一步执行单</a><a class="l1" href="#s9">9 · 文献与链接</a>
+</nav>
+<main>
+<header class="doc"><div class="kicker">Diffusion virtual staining · Reproducibility audit</div><h1>目前最值得复现的扩散虚拟染色工作</h1><p class="desc">针对“扩散模型 + 解耦/结构保持/染色条件”的公开代码、数据、运行脚本和实际复现风险筛选</p><div class="meta"><span>搜索日期：2026-10-03</span><span>优先级：可复现 &gt; 结构清晰 &gt; 与 H&amp;E→IHC 接近</span><span>已核对 GitHub / arXiv / CVF / AAAI</span><span>不把“条件控制”误称为“显式解耦”</span></div></header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="box key"><div class="bt">我给你的主推荐：Star-Diff</div><p><strong>如果你现在只想找一个今天可以开始复现的“扩散虚拟染色 + 结构/随机性分离”工作，我推荐：Star-Diff。</strong></p><ol><li>任务与研究方向最接近：<strong>H&amp;E → IHC</strong>，并且直接在 <strong>BCI-HER2</strong> 上报告结果。</li><li>方法上最接近你想要的解耦：它把确定性的<strong>结构/恢复路径</strong>与随机的<strong>噪声路径</strong>显式分开。</li><li>代码虽然是<strong>非官方实现</strong>，但 README 提供训练、采样、评估命令，并且给出了作者结果与复现结果的差距。</li><li>仓库含 YAML 配置、测试、插件式 runner、评价脚本，甚至明确报告“复现没有完全达到论文结果”的原因。这比只有一句“code will be released”可靠得多。</li></ol><p style="margin-bottom:0"><strong>但是要诚实：</strong>Star-Diff 不是“content/style/protein/physics”意义上的显式解耦。它是<strong>残差结构路径 + 随机噪声路径</strong>的结构—随机性解耦。对你来说，先复现它，再把 PSPStain 的 PALS/PCLS 加进去，是目前最稳妥的起点。</p></div>
+<div class="box good"><div class="bt">第二推荐：DiffVS</div><p><strong>如果你的第一目标是“官方代码 + 真实公开数据 + 训练/推理脚本完整”，选 DiffVS。</strong>它是 AAAI 2026 的官方实现，支持 ORION-CRC 和 HEMIT，代码含两阶段训练、推理、测试 split 脚本和数据布局说明。</p><p style="margin-bottom:0">但它不是显式解耦。它是<strong>marker-wise condition</strong>：用 marker token 控制目标染色，同一个模型共享不同 marker 的生成能力。它更适合作为<strong>可复现扩散 baseline</strong>，不是你的最终解耦模型。</p></div>
+<div class="box stop"><div class="bt">不推荐现在把 StainDiffuser 当作第一复现对象</div><p style="margin:0">方法概念很接近“结构 + 辅助任务”，但目前公开页面仍缺少可用官方仓库、checkpoint、环境文件、数据准备脚本和运行命令；数据还需要机构 DTA。它是很好的文献参考，不是当前最好的工程复现起点。</p></div>
+
+<h2 id="s1"><span class="num">1</span>我筛选了什么</h2>
+<p>你的原始要求是：目前市面上已有的、与扩散模型解耦虚拟染色相关、并且<strong>真正可以复现</strong>的工作。这里“解耦”我不再宽泛地把所有条件扩散都算进去，而是分为三类：</p>
+<div class="grid2"><div class="mini"><div class="mt">A · 显式结构—随机性解耦</div><p>模型内部明确分出两个路径、两个变量或两个扩散过程，例如确定性 residual/restoration path 与 stochastic noise path。</p><p><span class="b high">Star-Diff</span> 最符合这一类。</p></div><div class="mini"><div class="mt">B · 隐式任务/染色因素分离</div><p>通过辅助任务、双分支、marker token、双向训练或任务特定条件，让结构和染色因素在功能上分开，但没有显式 disentanglement loss。</p><p><span class="b blue">StainDiffuser / DiffVS / HistDiST</span> 属于这一类。</p></div><div class="mini"><div class="mt">C · 真正显式 content/style disentanglement</div><p>具有结构 latent、染色 latent、独立性/正交性/互信息约束，或者显式 style-content factorization，并且用于虚拟染色。</p><p><span class="b bad">本轮没有找到同时满足“扩散 + H&amp;E→IHC + 官方代码 + 可直接复现”的强候选。</span></p></div><div class="mini"><div class="mt">复现门槛</div><p>我重点核对：官方/非官方代码、训练脚本、配置文件、数据格式、checkpoint、评估脚本、许可、最近更新、数据获取限制、作者结果与复现结果差异。</p></div></div>
+
+<h2 id="s2"><span class="num">2</span>候选总表</h2>
+<h3 id="s2-1">2.1 直接匹配：优先考虑</h3>
+<div class="scroll"><table><thead><tr><th style="width:18%">工作</th><th style="width:16%">解耦类型</th><th style="width:17%">任务/数据</th><th style="width:15%">代码状态</th><th class="c">复现评分</th><th>结论</th></tr></thead><tbody>
+<tr style="background:var(--greenSoft)"><td><strong>Star-Diff</strong><br><span class="small">arXiv 2508.02528</span></td><td>显式 residual/restoration ↔ noise</td><td>H&amp;E→IHC<br>BCI-HER2</td><td>非官方 PyTorch；有 train/sample/eval/config/test</td><td class="c"><span class="b high">A−</span></td><td><strong>第一推荐</strong>。最符合“结构路径 + 随机路径”解耦，且 BCI 直接对口。</td></tr>
+<tr style="background:var(--tealSoft)"><td><strong>DiffVS</strong><br><span class="small">AAAI 2026</span></td><td>marker-wise condition；非显式解耦</td><td>H&amp;E→多 marker<br>ORION-CRC / HEMIT</td><td><strong>官方</strong>；两阶段脚本、split、inference 完整</td><td class="c"><span class="b high">A</span></td><td><strong>第二推荐</strong>。最适合先拿到稳定扩散 baseline 和多 marker 条件控制。</td></tr>
+<tr><td><strong>HistDiST</strong><br><span class="small">arXiv 2505.06793</span></td><td>dual conditioning；非显式解耦</td><td>H&amp;E→ER/HER2/Ki67/PR<br>BCI/MIST</td><td><strong>官方</strong>；checkpoint 在 Google Drive，训练/推理/eval 命令齐全</td><td class="c"><span class="b high">A−</span></td><td>如果只看官方代码与目标任务，实际上也很强；但它的核心是 morphology conditioning + H&amp;E latent，不是显式分解。</td></tr>
+<tr><td><strong>StainDiffuser</strong><br><span class="small">arXiv 2403.11340</span></td><td>双扩散多任务；非显式解耦</td><td>H&amp;E→CK8/18/CD3<br>机构数据</td><td>官方代码/模型目前不完整或不可用；数据需 DTA</td><td class="c"><span class="b low">C</span></td><td>方法思想很适合参考，但不适合作为现在的第一复现对象。</td></tr>
+</tbody></table></div>
+
+<h3 id="s2-2">2.2 可复现近邻：可作为补充 baseline</h3>
+<div class="scroll"><table><thead><tr><th style="width:18%">工作</th><th>适合验证什么</th><th>代码状态</th><th class="c">复现评分</th><th>为什么不是第一选择</th></tr></thead><tbody>
+<tr><td><strong>VSMT</strong><br>CVPR 2026</td><td>辅助任务/特征引导、结构语义对齐、弱配对 IHC</td><td>官方 PyTorch；environment.yml、train/test launcher、预训练生成器（百度网盘）</td><td class="c"><span class="b blue">B+</span></td><td><strong>不是扩散模型</strong>，本质是 CUT-inspired 虚拟 IHC；但它是最值得参考的“非扩散结构/语义对齐”近邻。</td></tr>
+<tr><td><strong>VIMs</strong><br>MICCAI-W 2024</td><td>文本/marker 条件控制、多 IHC 输出、LoRA 单步扩散</td><td>GitHub 只有占位说明：code will be updated soon；没有可用完整代码/checkpoint</td><td class="c"><span class="b low">D</span></td><td>方法有价值，但当前不能称为可复现工程。</td></tr>
+<tr><td><strong>DbBested diffusionstaining</strong></td><td>BCI 上的 conditional latent diffusion baseline</td><td>MIT；MONAI、配置、训练和 SLURM 目录齐全；但更像研究 prototype，暂无论文/权重/实证复现</td><td class="c"><span class="b medium">B−</span></td><td>可作为快速 baseline，但不属于已验证的“论文复现”。</td></tr>
+<tr><td><strong>PSPStain</strong></td><td>PALS/FOD + PCLS pathology-aware baseline</td><td>官方 GitHub；非扩散、非 disentanglement</td><td class="c"><span class="b high">A</span></td><td>不是扩散，但它是你后续加入结构/表达解耦时<strong>必须保留的 baseline</strong>。</td></tr>
+</tbody></table></div>
+
+<h3 id="s2-3">2.3 本轮明确排除</h3>
+<div class="scroll"><table><thead><tr><th>工作</th><th>排除原因</th></tr></thead><tbody><tr><td><strong>VIMs</strong></td><td>仓库明确写“code will be updated soon”，当前没有完整实现。</td></tr><tr><td><strong>StainDiffuser</strong></td><td>论文承诺 release，但实际复现所需代码、checkpoint、环境和数据获取仍不完整。</td></tr><tr><td><strong>DUST</strong></td><td>能找到论文/预印本，但本轮没有核实出可用官方代码与完整复现入口。</td></tr><tr><td><strong>CVPR 2026 VSMT</strong>作为扩散候选</td><td>它是可复现的，但不是扩散；保留为结构语义对齐的非扩散对照。</td></tr></tbody></table></div>
+
+<h2 id="s3"><span class="num">3</span>第一推荐：Star-Diff</h2>
+
+<h3 id="s3-1">3.1 它到底解耦了什么</h3>
+<p>Star-Diff 的核心不是经典的 content/style latent，而是把 H&amp;E→IHC 改写成一个 restoration diffusion：</p>
+<div class="box key"><div class="bt">确定性结构路径 + 随机噪声路径</div><pre><code>x_t = x_0 + ᾱ_t · ε + β̄_t · I_res
+
+I_res = I_IHC − I_HE
+
+Residual U-Net r_θ: 预测 H&E 与 IHC 之间的确定性结构残差
+Noise U-Net ε_θ:    预测随机高斯噪声，建模 IHC 的随机性/多样性
+
+反向过程：同时利用 r_θ 和 ε_θ，从 H&E 恢复 IHC</code></pre><p>论文将其描述为<strong>structure-diversity-balanced</strong>：残差路径负责结构保持，噪声路径负责分子表达的随机变化。</p></div>
+<p>因此它是：</p><ul><li><strong>显式的结构—随机性解耦</strong>；</li><li><strong>不是</strong>显式的 content—style—physics 三因素解耦；</li><li><strong>没有</strong>独立的蛋白表达 latent、物理染色 latent 或 disentanglement loss；</li><li>但它是目前我找到的、最接近“结构提取后再注入染色变化”的可复现扩散工作。</li></ul>
+
+<h3 id="s3-2">3.2 代码与复现现状</h3>
+<div class="card"><div class="ch"><div><div class="title">anomredux/Star-Diff</div><div class="v">非官方 PyTorch implementation · MIT License</div></div><div><span class="b high">有运行入口</span> <span class="b blue">有测试</span></div></div><div class="body"><p>仓库明确写明：这是依据论文与 RDDM framework 的独立重实现，<strong>不隶属于原作者</strong>。但它的工程透明度非常好：</p><div class="scroll"><table><thead><tr><th>项目</th><th>情况</th></tr></thead><tbody><tr><td>安装</td><td><code>pip install -e ".[dev]"</code></td></tr><tr><td>训练</td><td><code>python main.py --config configs/BCI_StarDiff_512.yaml --train --gpu_ids 0</code></td></tr><tr><td>采样</td><td><code>python main.py --config ... --sample_to_eval --gpu_ids 0 --resume_model ...</code></td></tr><tr><td>评估</td><td><code>python preprocess_and_evaluation.py -f LPIPS -s ... -t ... -n 1</code></td></tr><tr><td>数据格式</td><td><code>train/A</code> = H&amp;E，<code>train/B</code> = IHC；val/test 同样结构</td></tr><tr><td>工程结构</td><td>configs、datasets、evaluation、model、runners、tests、EMA/checkpointing</td></tr><tr><td>测试</td><td><code>PYTHONPATH=. pytest tests/ -v</code>；GPU slow tests 单独开</td></tr><tr><td>许可</td><td>MIT</td></tr></tbody></table></div></div></div>
+
+<h3 id="s3-3">3.3 作者结果与复现结果：这恰恰是它值得选的原因</h3>
+<div class="scroll"><table><thead><tr><th>结果来源</th><th class="c">PSNR</th><th class="c">SSIM</th><th class="c">Accuracy</th><th class="c">SFS</th></tr></thead><tbody><tr><td>原论文 Star-Diff（BCI，977 test patches，3 runs）</td><td class="c"><strong>21.30±0.01</strong></td><td class="c">0.53±0.00</td><td class="c"><strong>0.68±0.02</strong></td><td class="c"><strong>0.74±0.01</strong></td></tr><tr style="background:var(--amberSoft)"><td>独立复现仓库（3 seeds）</td><td class="c"><strong>21.63±0.14</strong></td><td class="c">0.444±0.003</td><td class="c">0.424±0.009</td><td class="c">0.466±0.015</td></tr></tbody></table></div>
+<p>复现结果的 PSNR 甚至略高，但 SSIM、Accuracy、SFS 明显低于论文。仓库作者主动给出的可能原因包括：</p><ul><li>原论文没有公开全部 architecture details；</li><li>图像分辨率可能不同（1024 vs 512）；</li><li>训练 schedule 未完全披露；</li><li>分类器实现可能不同。</li></ul><div class="box good"><div class="bt">为什么这反而比“完美复现”更可信</div><p style="margin:0">它没有只展示一个漂亮结果，而是把差距、可能原因和限制都写出来了。对于你的研究，<strong>这提供了一个现实的可复现上限</strong>：你可以先复现到 21.6 PSNR 左右，再逐项做差距诊断，而不是陷入“为什么我永远达不到论文数字”的黑箱。</p></div>
+
+<h3>3.4 我建议的 Star-Diff 复现路线</h3>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>Step 0 运行单元测试
+  ↓
+Step 1 准备 BCI 数据：train/A=H&E，train/B=HER2-IHC
+  ↓
+Step 2 只跑小规模 sanity check：少量 patch，确认 loss 下降、采样能输出 RGB
+  ↓
+Step 3 按 BCI_StarDiff_512.yaml 正式训练
+  ↓
+Step 4 生成 test set，先复现 PSNR/SSIM，再跑 Accuracy/SFS
+  ↓
+Step 5 对照论文结果与独立复现结果
+  ↓
+Step 6 再加入 PSPStain FOD/PCLS，形成你的方法</code></pre></div>
+<p><strong>最小实验目标：</strong>不要一开始追求论文全部表格；先确认能得到合理 IHC、PSNR 接近 21 dB、结构没有明显破坏，然后再接入 PALS/PCLS。</p>
+
+<h2 id="s4"><span class="num">4</span>第二推荐：DiffVS</h2>
+
+<h3 id="s4-1">4.1 为什么它非常值得先跑</h3>
+<p>DiffVS 是 AAAI 2026 的<strong>官方实现</strong>，和 Star-Diff 的定位不同：它不是结构—噪声解耦，而是<strong>同一个扩散模型通过 marker-wise condition 生成多个 marker</strong>。</p>
+<div class="box teal"><div class="bt">适合作为“干净的扩散 baseline”</div><p style="margin:0">它的 Stage 1 是 Marigold-style paired latent diffusion；Stage 2 是 Diffusion-FT 单步推理和像素级微调。H&amp;E latent 与 noisy target-stain latent 拼接，marker 用 learnable token/one-hot condition 指定。这个结构非常适合你之后增加“结构条件”和“蛋白/染色条件”对照。</p></div>
+
+<h3 id="s4-2">4.2 代码、数据与命令</h3>
+<div class="scroll"><table><thead><tr><th>项目</th><th>情况</th></tr></thead><tbody><tr><td>仓库</td><td><a href="https://github.com/hvcl/DiffVS">github.com/hvcl/DiffVS</a></td></tr><tr><td>论文</td><td>AAAI 2026，DOI <a href="https://doi.org/10.1609/aaai.v40i10.37764">10.1609/aaai.v40i10.37764</a></td></tr><tr><td>任务</td><td>H&amp;E→多重 IF/IHC marker</td></tr><tr><td>数据</td><td>ORION-CRC；HEMIT</td></tr><tr><td>训练阶段</td><td>Stage 1 Marigold paired latent diffusion；Stage 2 Diffusion-FT</td></tr><tr><td>数据准备</td><td>README 给出 dataframe、目录结构、HEMIT crop protocol、paper test split script</td></tr><tr><td>训练脚本</td><td><code>train_orion_stage1_marigold.sh</code>、<code>train_orion_stage2_diffusion_ft.sh</code>、HEMIT 对应脚本</td></tr><tr><td>推理</td><td><code>infer_orion_diffusion_ft.sh</code>、<code>infer_hemit_diffusion_ft.sh</code>；输出 manifest</td></tr><tr><td>依赖</td><td>requirements.txt + Hugging Face 模型登录</td></tr><tr><td>checkpoint</td><td>训练会保存 stage1/stage2 checkpoint；官方仓库未默认提供大模型权重</td></tr></tbody></table></div>
+
+<h3>4.3 论文结果与可复现价值</h3>
+<div class="scroll"><table><thead><tr><th>数据集</th><th class="c">SSIM</th><th class="c">R</th><th class="c">PSNR</th><th>说明</th></tr></thead><tbody><tr><td>HEMIT，3 marker</td><td class="c">0.836</td><td class="c">0.795</td><td class="c">30.60</td><td>最终 fine-tuned model；DAPI/CD3/panCK</td></tr><tr><td>ORION-CRC，18 marker</td><td class="c">0.763</td><td class="c">0.394</td><td class="c">35.06</td><td>所有 marker 共享一个模型；稀有 marker 的 R 下降</td></tr></tbody></table></div><p>关键消融：</p><ul><li>ORION-CRC 上 one-hot marker condition：SSIM 0.662、PSNR 30.663；text condition 只有 SSIM 0.288、PSNR 18.014。</li><li>Stage 2 fine-tuning 把 HEMIT 单步结果提升到 SSIM 0.757、PSNR 29.38；最终报告模型达到 SSIM 0.836、PSNR 30.60。</li><li>推理成本从 50-step + 10-ensemble 的 110–117 秒/样本降到单步约 0.13 秒/样本。</li></ul>
+
+<h2 id="s5"><span class="num">5</span>如果必须要显式“解耦”</h2>
+<div class="box stop"><div class="bt">目前没有找到一个完全满足条件的强候选</div><p style="margin:0">在本轮检索到的工作中，没有发现同时满足以下四项的公开工作：</p><ol><li>扩散模型；</li><li>H&amp;E→IHC 虚拟染色；</li><li>明确 factorized structure/content 与 stain/protein/style latent；</li><li>官方代码、checkpoint、数据和完整运行说明均可获得。</li></ol><p style="margin-bottom:0">所以建议把“显式 content/style disentanglement”作为你自己的研究改动，而不是强行寻找一个已经完成的同类工作。</p></div>
+<div class="card"><div class="ch"><div><div class="title">最现实的研究路线</div><div class="v">先复现，再做最小解耦改造</div></div><div><span class="b high">推荐</span></div></div><div class="body"><pre><code>Baseline 1: PSPStain（非扩散，PALS/PCLS）
+Baseline 2: Star-Diff（扩散，结构 residual ↔ noise path）
+Baseline 3: DiffVS 或 HistDiST（官方扩散条件 baseline）
+
+你的改造：
+Star-Diff / DiffVS
+  + H&E structure condition
+  + target-stain / protein condition
+  + 保留 FOD/PCLS
+  + 物理输出头或 OD-space supervision</code></pre><p><strong>这比直接从零设计“两 encoder + 两 latent + 三个解耦 loss”更可复现。</strong>你的贡献可以清楚地定义为：在一个可复现扩散 baseline 上，将结构保持、蛋白表达监督和物理染色约束显式分开。</p></div></div>
+
+<h2 id="s6"><span class="num">6</span>其他候选评估</h2>
+<div class="scroll"><table><thead><tr><th style="width:18%">工作</th><th style="width:17%">方法类型</th><th style="width:22%">代码情况</th><th style="width:16%">是否显式解耦</th><th>我的判断</th></tr></thead><tbody>
+<tr><td><strong>HistDiST</strong></td><td>Stable Diffusion LDM + Phikon morphology embedding + H&amp;E latent + v-pred</td><td>官方；Google Drive checkpoint；脚本完整</td><td>否，dual-conditioning</td><td><strong>可复现度很高</strong>，而且直接用 BCI/MIST、ER/HER2/Ki67/PR。若你不坚持“解耦”必须是 residual path，它可以与 Star-Diff 并列第一梯队。</td></tr>
+<tr><td><strong>VSMT</strong></td><td>CUT-inspired feature guidance</td><td>官方；environment.yml；训练 HE/IHC reconstruction/classification auxiliary models 后训练 VSMT；百度网盘权重</td><td>否，但显式做 feature alignment/task gap alignment</td><td>不是扩散，但非常适合用来学习“如何在错位配对下做结构语义对齐”。</td></tr>
+<tr><td><strong>StainDiffuser</strong></td><td>shared H&amp;E encoder + separate IHC/segmentation diffusion U-Nets</td><td>当前没有完整可用复现入口；数据受 DTA 限制</td><td>隐式任务分离</td><td>方法上最接近“结构辅助任务 + IHC”，工程上暂缓。</td></tr>
+<tr><td><strong>VIMs</strong></td><td>text-conditioned one-step latent diffusion + LoRA + adversarial</td><td>仓库明确写 code will be updated soon</td><td>否，marker prompt conditioning</td><td>不建议当前投入复现。</td></tr>
+<tr><td><strong>DbBested diffusionstaining</strong></td><td>conditional latent diffusion + MONAI + DDIM/DDPM</td><td>MIT；BCI 配置和 SLURM；无论文权重/已验证结果</td><td>否</td><td>适合作为工程 baseline，但论文证据弱于 Star-Diff/DiffVS/HistDiST。</td></tr>
+<tr><td><strong>PSPStain</strong></td><td>CUT + PALS/FOD + PCLS</td><td>官方 GitHub；成熟 pathology baseline</td><td>否</td><td>不是本轮扩散候选，但必须作为你的任务基准。</td></tr>
+</tbody></table></div>
+
+<h2 id="s7"><span class="num">7</span>最终推荐排序</h2>
+<div class="scroll"><table><thead><tr><th class="c">排序</th><th>工作</th><th class="c">代码/运行完整度</th><th class="c">与你的 H&amp;E→IHC 接近度</th><th class="c">解耦相关度</th><th>推荐用途</th></tr></thead><tbody><tr style="background:var(--greenSoft)"><td class="c"><strong>1</strong></td><td><strong>Star-Diff</strong></td><td class="c"><span class="b high">高</span></td><td class="c"><span class="b high">直接 BCI-HER2</span></td><td class="c"><span class="b high">结构↔随机性</span></td><td><strong>现在开始复现；作为你的扩散主 baseline。</strong></td></tr><tr style="background:var(--tealSoft)"><td class="c"><strong>2</strong></td><td><strong>DiffVS</strong></td><td class="c"><span class="b high">很高</span></td><td class="c"><span class="b high">ORION/HEMIT</span></td><td class="c"><span class="b blue">marker condition</span></td><td>作为官方扩散 baseline；验证多 marker 条件控制和训练流程。</td></tr><tr><td class="c"><strong>3</strong></td><td><strong>HistDiST</strong></td><td class="c"><span class="b high">高</span></td><td class="c"><span class="b high">BCI/MIST/四 marker</span></td><td class="c"><span class="b blue">dual condition</span></td><td>如果你优先重视官方代码、checkpoint 和 BCI/MIST 实际可运行性，选它。</td></tr><tr><td class="c"><strong>4</strong></td><td><strong>VSMT</strong></td><td class="c"><span class="b blue">中高</span></td><td class="c"><span class="b high">直接 H&amp;E→IHC</span></td><td class="c"><span class="b blue">feature alignment</span></td><td>非扩散辅助对照；可借鉴错位配对与语义特征对齐。</td></tr><tr><td class="c"><strong>5</strong></td><td><strong>StainDiffuser</strong></td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b medium">CD3/CK8-18</span></td><td class="c"><span class="b blue">双任务扩散</span></td><td>阅读方法、等待代码或向作者索取数据/实现；暂不作为第一复现。</td></tr></tbody></table></div>
+
+<div class="box key"><div class="bt">最终建议只有一个版本</div><p style="margin:0"><strong>第一周复现 Star-Diff；第二周用 DiffVS 或 HistDiST 做官方扩散交叉基线；第三步再把 PSPStain 的 FOD/PCLS 接到 Star-Diff 的干净输出上。</strong></p><p style="margin-bottom:0">如果你更看重“代码官方、数据公开、无需机构 DTA”，则把顺序改成：<strong>DiffVS → HistDiST → Star-Diff</strong>。如果你更看重“与结构—染色解耦的研究问题最接近”，则保持：<strong>Star-Diff → HistDiST → DiffVS</strong>。</p></div>
+
+<h2 id="s8"><span class="num">8</span>下一步执行单</h2>
+<div class="card"><div class="ch"><div class="title">A. 今天就能执行：Star-Diff sanity check</div><div><span class="b high">优先级 1</span></div></div><div class="body"><pre><code>git clone https://github.com/anomredux/Star-Diff.git
+cd Star-Diff
+pip install -e ".[dev]"
+PYTHONPATH=. pytest tests/ -v
+
+# 准备 BCI:
+# data/train/A = H&E
+# data/train/B = IHC
+# data/val/A, data/val/B
+# data/test/A, data/test/B
+
+python main.py --config configs/BCI_StarDiff_512.yaml --train --gpu_ids 0</code></pre><p>先不改任何代码。目标是验证：数据读取、forward、采样、checkpoint、评价链路都通。</p></div></div>
+<div class="card"><div class="ch"><div class="title">B. 之后做：保留 Star-Diff 结构，接入 PSPStain supervision</div><div><span class="b medium">优先级 2</span></div></div><div class="body"><pre><code>Star-Diff baseline
+  → x_hat_0 / predicted IHC
+  → OD / DAB deconvolution
+  → PALS/FOD loss
+  → PCLS feature/prototype loss
+  → compare: naive sum vs gated vs terminal denoising-only</code></pre><p>先只加 FOD，再加 PCLS。不要两个 loss 同时接入，否则无法判断失败来自哪里。</p></div></div>
+<div class="card"><div class="ch"><div class="title">C. 交叉核验：DiffVS 或 HistDiST</div><div><span class="b blue">优先级 3</span></div></div><div class="body"><p>用一个官方实现确认你的数据、颜色归一化、评价指标和 diffusion parameterization 没有被 Star-Diff 的独立实现绑死。这里重点比较：</p><ul><li>v-prediction / scheduler；</li><li>H&amp;E 条件注入；</li><li>单步或多步推理；</li><li>PSNR/SSIM 与蛋白表达指标之间的差异。</li></ul></div></div>
+
+<h2 id="s9"><span class="num">9</span>文献与代码链接</h2>
+<div class="scroll"><table><thead><tr><th>工作</th><th>论文</th><th>代码</th></tr></thead><tbody><tr><td>Star-Diff</td><td><a href="https://arxiv.org/abs/2508.02528">arXiv 2508.02528</a></td><td><a href="https://github.com/anomredux/Star-Diff">anomredux/Star-Diff</a>（unofficial）</td></tr><tr><td>DiffVS</td><td><a href="https://doi.org/10.1609/aaai.v40i10.37764">AAAI 2026 DOI</a> · <a href="https://arxiv.org/abs/2508.14681">arXiv</a></td><td><a href="https://github.com/hvcl/DiffVS">hvcl/DiffVS</a>（official）</td></tr><tr><td>HistDiST</td><td><a href="https://arxiv.org/abs/2505.06793">arXiv 2505.06793</a></td><td><a href="https://github.com/ErikGro/HistDiST">ErikGro/HistDiST</a>（official）</td></tr><tr><td>StainDiffuser</td><td><a href="https://arxiv.org/abs/2403.11340">arXiv 2403.11340</a></td><td>当前未核实到可用完整官方代码入口</td></tr><tr><td>VSMT</td><td><a href="https://openaccess.thecvf.com/content/CVPR2026/html/Xie_Virtual_Immunohistochemistry_Staining_with_Dual-Aligned_Multi-Task_Feature_Guidance_CVPR_2026_paper.html">CVPR 2026</a></td><td><a href="https://github.com/U-RBook/VSMT">U-RBook/VSMT</a></td></tr><tr><td>VIMs</td><td><a href="https://arxiv.org/abs/2407.19113">arXiv 2407.19113</a></td><td><a href="https://github.com/shikha-gist/VIMs-Virtual-Immunohistochemistry-Multiplex-staining">GitHub</a>（code pending）</td></tr><tr><td>PSPStain</td><td><a href="https://arxiv.org/abs/2407.03655">arXiv 2407.03655</a></td><td><a href="https://github.com/ccitachi/PSPStain">ccitachi/PSPStain</a></td></tr></tbody></table></div>
+<div class="box warn"><div class="bt">可信度声明</div><ul style="margin-bottom:0"><li>Star-Diff 的可运行代码是独立重实现，不是原作者官方代码；其“复现结果”应作为现实参考，不等于官方复现。</li><li>DiffVS 和 HistDiST 的官方仓库信息来自公开 README；大模型 checkpoint、Hugging Face 权限、数据访问仍可能需要额外配置。</li><li>StainDiffuser 的论文实验和方法很有价值，但“方法可复现”和“论文结果可复现”目前不是一回事，不能因为论文报告了详细数字就把它评为高复现度。</li><li>没有找到强证据证明上述任一工作已经完成经典意义上的 structure/content 与 stain/style 显式 disentanglement；Star-Diff 的“解耦”是 residual/restoration 与 stochastic noise 的解耦。</li></ul></div>
+<hr><p class="small" style="text-align:center">本报告根据公开论文、官方/非官方代码仓库与 README 检索整理 · 2026-10-03<br><strong>推荐起点：Star-Diff。官方代码优先：DiffVS 或 HistDiST。显式解耦：目前需要你在可复现 baseline 上自己完成。</strong></p>
+</main></div></body></html>

@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diffusion 主损失与辅助损失的梯度冲突 · 机制分析 · H&amp;E→IHC 调研</title>
+
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.route{border:1px solid var(--border);border-radius:10px;padding:14px 17px;margin:14px 0;background:var(--softer)}.route .rt{font-weight:750;font-size:15px;margin-bottom:5px}.route .rmeta{font-size:12px;color:var(--muted)}.cite{font-size:11.5px;color:var(--muted)}.tag{font-size:11px;font-weight:700;color:var(--muted);background:#eef0f3;padding:2px 6px;border-radius:4px}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+<div class="brand">Gradient Conflict</div>
+<div class="sub">Diffusion 主损失与辅助损失的梯度冲突<br>机制分析 · 2026-10-07</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · Q1：「冲突」是什么意思</a>
+<a class="l2" href="#s1-1">1.1 从参数更新严格定义</a>
+<a class="l2" href="#s1-2">1.2 三个必须区分的层次</a>
+<a class="l1" href="#s2">2 · ★ 核心：一个精确分解</a>
+<a class="l2" href="#s2-1">2.1 三个恒等式</a>
+<a class="l2" href="#s2-2">2.2 三个推论</a>
+<a class="l2" href="#s2-3">2.3 哪些损失适用、哪些不适用</a>
+<a class="l1" href="#s3">3 · 冲突由什么决定</a>
+<a class="l2" href="#s3-1">3.1 逐变量 Jacobian 表</a>
+<a class="l2" href="#s3-2">3.2 回答简报 §三-B</a>
+<a class="l1" href="#s4">4 · timestep：两个相反的病灶</a>
+<a class="l2" href="#s4-1">4.1 低 t 方向 / 高 t 幅度</a>
+<a class="l2" href="#s4-2">4.2 可证伪预测 P1–P5</a>
+<a class="l2" href="#s4-3">4.3 文献旁证</a>
+<a class="l1" href="#s5">5 · 预测参数化 ε / x₀ / v</a>
+<a class="l1" href="#s6">6 · λ 的几何与临界 λ</a>
+<a class="l1" href="#s7">7 · 挂载点：四种情况 A–D</a>
+<a class="l1" href="#s8">8 · ★ 参数子集不相交</a>
+<a class="l1" href="#s9">9 · 冲突什么时候是好事</a>
+<a class="l1" href="#s10">10 · 文献总表</a>
+<a class="l1" href="#s11">11 · 多目标方法在修什么</a>
+<a class="l1" href="#s12">12 · 训练进程（第二个时间轴）★</a>
+<a class="l1" href="#s13">13 · 逐类判定：你的五类辅助损失</a>
+<a class="l1" href="#s14">14 · 实验优先级与零训练诊断</a>
+<a class="l1" href="#s15">15 · 机制总结图</a>
+<a class="l1" href="#s16">16 · 与库内既有报告的分工</a>
+<a class="l1" href="#s17">17 · 证据边界与未核实清单</a>
+<a class="l1" href="#s18">18 · 参考文献</a>
+</nav>
+
+<main>
+
+<header class="doc">
+<div class="kicker">H&amp;E → IHC · Diffusion · Optimization</div>
+<h1>Diffusion 主损失与辅助损失的梯度冲突<br>——机制分析、精确分解与可执行诊断</h1>
+<p class="desc">回答一个被反复误答的问题：<strong>一个辅助损失是否与 diffusion 主损失冲突，到底由什么决定？</strong>本报告不从「多任务学习可能冲突所以要 PCGrad」出发，而是先写出 <code>g_diff</code> 与 <code>g_aux</code> 的<strong>精确关系</strong>，再据此推出「什么会冲突、什么不会、什么时候冲突、以及冲突在哪里是好事」。</p>
+<div class="meta">
+<span>2026-10-07</span>
+<span>文献 41 篇 · 12 篇承重引用由我逐条核对一手来源</span>
+<span>含 1 个自证恒等式 + 5 条可证伪预测</span>
+<span>每条引用标注核实等级</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box key">
+<div class="bt">一句话判定</div>
+<p><strong>「辅助损失是否与 diffusion 主损失冲突」不由 loss 的类型决定，而由三件事决定：① 辅助损失读的那个变量背后的 Jacobian；② 辅助目标与 diffusion 目标之间的差；③ 当前的 t。</strong>而且对「挂在 <code>x̂₀</code> 上的二次损失」这一类（也正是你最想用的那一类），我能给出一个<strong>精确恒等式</strong>，把 <code>g_aux</code> 拆成两项——一项永远与 <code>g_diff</code> 严格同向，另一项当且仅当目标不一致时出现。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 最重要的一个结论：信息与冲突同源</div>
+<p>由上面的精确分解（§2）可直接得到：</p>
+<ul>
+<li><strong>对齐项</strong>（永远与 <code>g_diff</code> 同向）<strong>即使辅助目标完全正确也存在</strong> ⇒ 它只是 diffusion 损失的重新加权版，是<strong>冗余监督</strong>；</li>
+<li><strong>失配项</strong>（唯一可能造成方向冲突的项）<strong>当且仅当辅助目标与 diffusion 目标不一致时才出现</strong> ⇒ 它是<strong>唯一携带新信息的项</strong>。</li>
+</ul>
+<p>⇒ <strong>你不可能只要「信息」不要「冲突」。一个与主损失零冲突的辅助损失，必然是一个什么也没说的辅助损失。</strong>所以设计目标不是「让 cos = 1」，而是「让失配项在 <code>g_diff</code> 上的投影不为负，同时让失配项足够大」。</p>
+</div>
+
+<h3>七个必须记住的判断</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">1 · 严格判据不是 <code>gᵀg &lt; 0</code></div>
+<p>而是 <code>gᵀg &lt; −‖g_diff‖²</code>。在 <code>−‖g_diff‖² &lt; gᵀg &lt; 0</code> 这一段里主损失<strong>仍在下降，只是变慢</strong>——那是减速，不是冲突。两者的药不一样。</p>
+</div>
+<div class="mini">
+<div class="mt">2 · 余弦只给方向，伤害由幅度比决定</div>
+<p><code>cos = −0.2</code> 配极小的 <code>‖g_aux‖</code> 几乎无害；<code>cos = 0.5</code> 配极大的 <code>‖g_aux‖</code> 照样能主导训练。两个数要合成一个<strong>临界 λ</strong> 才有用（§6）。</p>
+</div>
+<div class="mini">
+<div class="mt">3 · 「L1 是否天然冲突」问错了对象</div>
+<p>决定因素不是 loss 的名字，而是「<strong>读哪个变量</strong>」+「<strong>目标差多少</strong>」。同一个 L1 挂在 <code>ε̂</code>、<code>x̂₀</code>、解码 RGB、浓度图上，行为完全不同（§3、§7）。</p>
+</div>
+<div class="mini">
+<div class="mt">4 · ★ timestep 有两个相反的病灶</div>
+<p><strong>低 t 是方向冲突区</strong>（失配项相对权重 ∝ √SNR，在低 t 主导）；<strong>高 t 是幅度劫持区</strong>（对齐项权重 <code>1/SNR → ∞</code>）。<strong>这与简报 §四 的直觉草图方向相反</strong>（§4）。</p>
+</div>
+<div class="mini">
+<div class="mt">5 · ★ 参数子集不相交时冲突恒等于零</div>
+<p><code>supp(g₁) ∩ supp(g₂) = ∅ ⇒ g₁ᵀg₂ ≡ 0</code>（平凡数学事实）。但冲突会转成<strong>序列耦合</strong>——风险从「冲突」变成「震荡」。<code>detach()</code> 就是切换这两种状态的开关（§8）。</p>
+</div>
+<div class="mini">
+<div class="mt">6 · ★ 最硬的负面证据只有 8 天大</div>
+<p>arXiv:2609.38465（2026-09-29）在受控 testbed 上做了 63 配置 / 372 checkpoint 的审计：<strong>没有任何方向性冲突指标与最终 trade-off 的 |Spearman| 达到 0.3</strong>，且单调压制冲突的干预对 trade-off <strong>无影响</strong>（§9）。</p>
+</div>
+<div class="mini">
+<div class="mt">7 · ★★ 收益最大的一条在「训练进程」轴，不在 t 轴</div>
+<p>Lantern 的受控实验（arXiv:2607.25060，<strong>2026-07-27</strong>）：<strong>PCGrad / GradNorm / IMTL-G / ConFIG 把 FPD 相对纯去噪基线放大 2–100×</strong>；而<strong>「末期关闭辅助损失」一项就把 FPD 从 236.3 降到 32.84（7×）</strong>——零额外模块、零额外损失。<strong>⇒ 先做调度，再谈别的</strong>（§12）。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">但第 6 条不要读过头 —— 它的边界必须说清</div>
+<p>该审计的 testbed 是<strong>统一多模态模型（UMM）</strong>的受控复现（GRIDUMM），<strong>不是 diffusion 训练本身</strong>；作者原文也写「Our results do not show that conflict is useless; they show that its validity as a diagnostic target must be established, not assumed」。⇒ 正确的读法是：<strong>「冲突」作为机制解释仍然成立，但「把冲突指标当作调参目标」这件事的有效性，刚刚被证明需要先验证。</strong>本报告的 §14 因此把「诊断」和「调参」拆成两件事。</p>
+</div>
+
+<h3>你最想知道的 5 个问题的直接答案</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:30%">问题</th><th style="width:52%">直接答案</th><th style="width:18%">依据</th></tr></thead>
+<tbody>
+<tr><td>「像素重建损失看起来和 diffusion 目标完全一致，它一定不冲突吗？」</td><td><strong>不只是「一致」，而是严格共线。</strong>在 ε-预测 + 目标配对时 <code>g_rec = SNR(t)⁻¹·g_diff</code>，<code>cos ≡ +1</code>。它<strong>不可能发生方向冲突</strong>；唯一的问题是幅度 <code>1/SNR(t)</code> 在高 t 发散。</td><td>§2 恒等式 1、2（已核到 Salimans &amp; Ho 正文 Eq.9）</td></tr>
+<tr><td>「感知损失保留高层语义，是否天然与 diffusion 一致？」</td><td><strong>不一定。</strong>链上多一个 <code>∂φ/∂x̂</code>，这个因子<strong>会旋转梯度</strong> ⇒ 即使目标完全配对也可能方向冲突。这是感知损失与像素损失的<strong>结构性区别</strong>，不是程度区别。</td><td>§2 推论 C（自证）</td></tr>
+<tr><td>「频域损失与 diffusion 天然兼容吗？」</td><td><strong>取决于方向。</strong>若你的频域损失是<strong>补高频</strong>，与 diffusion 的低 t 目标同向，风险低；若是<strong>平滑/压高频</strong>，它和 diffusion 争夺同一批高频系数，风险高。<strong>但检索未找到任何论文讨论这个冲突</strong>——现有频域论文方向一致，全是补高频。</td><td>§13、§17（干净负结果）</td></tr>
+<tr><td>「浓度损失什么时候协同、什么时候冲突？」</td><td>协同：挂 <code>x̂₀</code> 且走<strong>前向</strong> Beer–Lambert。冲突：走<strong>逆算子</strong>（<code>M⁻¹</code> / <code>log10</code>）时 Jacobian 有奇点，且错位使 <code>x₀' ≠ x₀</code> 的失配项在低 t 主导。⇒ <strong>你已计划的第一优先级实验有一个自带隐患</strong>，见 §13。</td><td>§2 推论 C、§7-D、§13</td></tr>
+<tr><td>「是否应该对所有辅助损失统一做 gradient surgery？」</td><td><strong>不应该。</strong>① 由 §2，点式重建类本来就没有方向冲突，PCGrad 是空操作；② 由 §8，参数不交时投影也是空操作；③ 由 §9、§11，冲突规避有代价且有负面审计。正确做法是<strong>分类处理</strong>（§13、§14）。</td><td>§2、§8、§9、§11</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s1"><span class="num">1</span>Q1：「两个 loss 是否冲突」到底是什么意思</h2>
+
+<h3 id="s1-1">1.1 从参数更新严格定义</h3>
+
+<p>先回到最小的事实。单损失梯度下降一步：</p>
+<div class="formula">θ<sub>new</sub> = θ − η·g，&nbsp;&nbsp;g = ∇<sub>θ</sub>L</div>
+<p>损失的一阶变化是 <code>ΔL ≈ −η‖g‖² &lt; 0</code>。永远下降——这是为什么单损失不需要讨论「冲突」。</p>
+
+<p>现在两个损失、一步合并更新 <code>θ ← θ − η(g_diff + g_aux)</code>。主损失的一阶变化是：</p>
+<div class="formula">ΔL<sub>diff</sub> ≈ −η( ‖g<sub>diff</sub>‖² + g<sub>diff</sub><sup>T</sup>g<sub>aux</sub> )</div>
+
+<p>这一个式子就把全部情形分完了：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:24%">区间</th><th style="width:26%">名称</th><th style="width:50%">L_diff 会怎样</th></tr></thead>
+<tbody>
+<tr><td><code>gᵀg &gt; 0</code></td><td><span class="b high">加速</span></td><td>比单独走还降得快。<strong>两个损失互相帮忙。</strong></td></tr>
+<tr><td><code>gᵀg = 0</code></td><td><span class="b low">正交</span></td><td>一阶上互不影响。各走各的路，谁也不拖谁。</td></tr>
+<tr><td><code>−‖g_diff‖² &lt; gᵀg &lt; 0</code></td><td><span class="b medium">减速（软冲突）</span></td><td><strong>仍在下降，只是变慢。</strong>这是「被拖累」，不是「被推翻」。绝大多数被称为「冲突」的情形都在这一段。</td></tr>
+<tr><td><code>gᵀg &lt; −‖g_diff‖²</code></td><td><span class="b bad">硬冲突</span></td><td><strong>L_diff 真的上升。</strong>这才叫优化目标被推翻。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">为什么这个区分不是抠字眼</div>
+<p>因为两段的<strong>处置方式完全不同</strong>：软冲突只需<strong>降 λ</strong>（或调权重）就能把主损失拉回下降；硬冲突意味着<strong>在当前的 λ 下主任务根本走不动</strong>，必须先降 λ 或改挂载点。如果你的诊断脚本只报 <code>cos &lt; 0</code>，你会把这两种混成一类，然后给软冲突开硬冲突的药。</p>
+</div>
+
+<p><strong>直觉层：两个梯度分别想往哪里推参数。</strong></p>
+<ul>
+<li><code>g_diff</code> 说：「把参数改成<strong>能更准确预测噪声</strong>的方向」。</li>
+<li><code>g_aux</code> 说：「把参数改成<strong>让生成结果满足另一个性质</strong>的方向」。</li>
+<li>参数是共享的（同一个 U-Net）。所以一个让噪声预测变好的改动，可能同时让那个「另一个性质」变差。<strong>是否变差，取决于两个「想改的方向」在共享参数上是否指向相反。</strong></li>
+</ul>
+
+<h3 id="s1-2">1.2 三个必须区分的层次</h3>
+
+<p>简报 §十七 点名要区分的那件事，我把它拆成三个层次，因为「冲突」这个词被用在三个不同的意思上：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">层次</th><th style="width:34%">问的是什么</th><th style="width:44%">怎么测</th></tr></thead>
+<tbody>
+<tr><td><strong>① 数值层</strong><br><span class="small">ΔL₁, ΔL₂</span></td><td>两个 loss 的<strong>数值</strong>朝哪个方向变</td><td>看 loss 曲线。<strong>★ 这一层不是冲突的判据</strong>——两个 loss 同时下降完全可能伴随梯度冲突（例如一个下降快一个下降慢，慢的那个是被拖累的）。</td></tr>
+<tr><td><strong>② 优化层</strong><br><span class="small">cos(g₁,g₂)</span></td><td>在当前 θ、当前 batch、当前 t 下，两个<strong>梯度</strong>是否同向</td><td>逐 block 求两个梯度、算 cos 与幅度比。<strong>这是唯一真正的冲突判据。</strong></td></tr>
+<tr><td><strong>③ 语义层</strong><br><span class="small">task compatibility</span></td><td>两个<strong>目标</strong>在任务意义上是否相容（有没有共同最优解）</td><td>不需要测——需要<strong>推</strong>。§2 给出的分解就是把它变成一个可计算的量。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 一个必须记住的反例（本文自证）：冲突 ≠ 目标不相容</div>
+<p>取 <code>L₁(θ) = (θ−1)²</code>、<code>L₂(θ) = (θ+1)²</code>。两者显然有共同最优 <code>θ* = 0</code>（<code>L₁+L₂ = 2θ²+2</code> 的最小值就在 0）——<strong>语义层完全相容</strong>。</p>
+<p>但在 <code>θ = 0</code> 处：<code>g₁ = 2(0−1) = −2</code>、<code>g₂ = 2(0+1) = +2</code> ⇒ <code>cos(g₁,g₂) = −1</code>。</p>
+<p>⇒ <strong>在共同最优点上，梯度冲突达到最大值。</strong>反过来，两个没有共同最优的目标，在参数空间的某些区域梯度也可能完全同向。</p>
+<p><strong>所以 <code>gᵀg &lt; 0</code> 是关于<em>当前局部几何</em>的陈述，不是关于<em>目标是否相容</em>的证明。</strong>你问「浓度损失和 diffusion 是否相容」，和问「它俩的梯度在 θ 处是否同向」，是两个不同的问题。</p>
+</div>
+
+<div class="box pur">
+<div class="bt">cos 是随机变量，不是一个数 —— 三条测量纪律</div>
+<ol>
+<li><strong>必须设幅度下限。</strong>接近收敛时两个梯度都 → 0，<code>cos</code> 变成 <code>0/0</code>，数值无意义。凡是 <code>‖g_diff‖</code> 或 <code>‖g_aux‖</code> 低于阈值的样本，cos 应当<strong>丢弃而不是平均进去</strong>。</li>
+<li><strong>必须报分布，不能报单值。</strong>cos 是 batch 与 t 的函数。报均值 + 分位数（例如 P10 / P50 / P90），否则你会把「偶尔极负」和「一直略负」当成同一件事。</li>
+<li><strong>必须逐 block 算。</strong>全局 cos 被梯度质量最大的那几层主导——如果 <code>down_blocks</code> 的梯度范数比 <code>conv_in</code> 大两个量级，全局 cos 实际上只是在报 <code>down_blocks</code> 的 cos。<strong>「某几层在冲突」会被全局平均值完全掩盖。</strong>这条如果你早做，能提前抓到 HistDiST 那条 P0。</li>
+</ol>
+</div>
+
+<h2 id="s2"><span class="num">2</span>★ 核心：一个精确分解</h2>
+
+<p>这一节是整个报告的地基。它把「冲突」从一个需要测量的<strong>现象</strong>，变成一个可以代数推导的<strong>量</strong>。</p>
+
+<h3 id="s2-1">2.1 三个恒等式</h3>
+
+<h4>记号</h4>
+<pre><code>z_t  = α_t·x₀ + σ_t·ε          α_t = √ᾱ_t ,  σ_t = √(1−ᾱ_t)
+SNR(t) = α_t² / σ_t²            （信噪比）
+L_diff = ‖ε̂_θ(z_t,t) − ε‖²      （ε-预测的 diffusion 主损失）
+x̂_θ   = (z_t − σ_t·ε̂_θ) / α_t    （网络隐含的干净图估计）</code></pre>
+
+<h4>恒等式 1 —— 重建损失是 diffusion 损失的精确倍数</h4>
+<div class="formula">x̂<sub>θ</sub> − x₀ = (σ<sub>t</sub>/α<sub>t</sub>)(ε − ε̂<sub>θ</sub>) &nbsp;⟹&nbsp; ‖x̂<sub>θ</sub> − x₀‖² = SNR(t)<sup>−1</sup> · L<sub>diff</sub></div>
+<p>展开一行就能验证：<code>x̂_θ − x₀ = (α_t x₀ + σ_t ε − σ_t ε̂_θ)/α_t − x₀ = (σ_t/α_t)(ε − ε̂_θ)</code>。</p>
+<p class="small">★ 这条<strong>已核对到一手正文</strong>：Salimans &amp; Ho（arXiv:2202.00512）Eq.9 逐字写 <code>‖ε−ε̂‖² = (α_t²/σ_t²)‖x−x̂‖²</code>，并紧接着说它「can thus equivalently be seen as a weighted reconstruction loss in x-space, where the weighting function is given by <code>w(λ_t) = exp(λ_t)</code>」。</p>
+
+<h4>恒等式 2 —— 目标配对时，方向完全一致</h4>
+<p>令 <code>L_rec = ‖x̂_θ − x₀‖²</code>（用<strong>同一个</strong> x₀，即训练对里那张干净图）。对 θ 求导：</p>
+<div class="formula">g<sub>rec</sub> = ∇<sub>θ</sub>L<sub>rec</sub> = SNR(t)<sup>−1</sup> · g<sub>diff</sub></div>
+<p>⇒ <strong><code>cos(g_diff, g_rec) = +1</code> 恒成立</strong>，唯一的差别是幅度 <code>1/SNR(t)</code>。</p>
+
+<div class="box good">
+<div class="bt">这条直接回答简报 §六 Example 1</div>
+<p>「像素重建损失为什么看起来和 diffusion 目标完全一致？它一定不冲突吗？」</p>
+<p><strong>答案：在 ε-预测 + 目标配对时，它不只是「一致」，而是严格共线。</strong>它<strong>在方向上不可能冲突</strong>。它唯一的问题是<strong>幅度</strong>：<code>1/SNR(t)</code> 在 t→T 时发散。⇒ <strong>这不是一个冲突问题，是一个加权问题，而且是精确可解的加权问题。</strong></p>
+</div>
+
+<h4>恒等式 3 —— ★ 一般情形的精确分解</h4>
+<p>现在把辅助目标换成 <code>x₀'</code>，允许 <code>x₀' ≠ x₀</code>（可以是另一张切片、另一层、或者任何代理量）：</p>
+<div class="formula">L<sub>aux</sub> = ‖x̂<sub>θ</sub> − x₀'‖² = ‖(x̂<sub>θ</sub> − x₀) + (x₀ − x₀')‖²</div>
+<p>展开（第三项 <code>‖x₀−x₀'‖²</code> 与 θ 无关，求导为零），得到：</p>
+<div class="formula" style="font-size:15px">g<sub>aux</sub> = SNR(t)<sup>−1</sup>·g<sub>diff</sub> &nbsp;−&nbsp; 2·SNR(t)<sup>−1/2</sup>·(∂ε̂<sub>θ</sub>/∂θ)<sup>T</sup>(x₀ − x₀')</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:16%">项</th><th style="width:30%">表达式</th><th style="width:16%">何时为零</th><th style="width:20%">与 g_diff 的关系</th><th style="width:18%">t 缩放</th></tr></thead>
+<tbody>
+<tr><td><strong>对齐项</strong></td><td><code>SNR(t)⁻¹ · g_diff</code></td><td><strong>永不为零</strong></td><td><strong>严格同向</strong>（cos = +1）</td><td><code>SNR⁻¹</code>（高 t 发散）</td></tr>
+<tr><td><strong>失配项</strong></td><td><code>−2·SNR(t)^(−1/2)·(∂ε̂/∂θ)ᵀ(x₀−x₀')</code></td><td><strong>当且仅当 x₀' = x₀</strong></td><td>方向由网络 Jacobian 与目标差共同决定</td><td><code>SNR^(−1/2)</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pur">
+<div class="bt">★ 标记：这是本文自证，不是文献结论</div>
+<p>恒等式 1、2 与 Salimans &amp; Ho 的 Eq.9 等价（已核到正文）。<strong>恒等式 3 及其推论是我自己推的</strong>——五路检索中，专门负责「冲突度量 / Pareto / 正交分量」的那一路明确报告：<strong>未找到任何论文把辅助梯度分解为「平行主梯度的分量 + 正交分量」并论证正交分量才是价值所在</strong>。所以这一节请当作<strong>推导</strong>读，不要当作引用。</p>
+</div>
+
+<h3 id="s2-2">2.2 三个推论</h3>
+
+<div class="box key">
+<div class="bt">推论 A —— 回答简报 §十七：语义相容 vs 优化相容，被这个分解分开了</div>
+<ul>
+<li><strong>对齐项 = optimization compatibility。</strong>它只是 diffusion 损失的重新加权版。<strong>即使辅助目标完全正确，它也存在。</strong>⇒ 这部分<strong>是冗余监督</strong>，不携带任何 diffusion 损失没有的信息。</li>
+<li><strong>失配项 = semantic / task compatibility。</strong>它<strong>只在 x₀' ≠ x₀ 时出现</strong>。⇒ 这是<strong>唯一携带新信息的部分</strong>，也是<strong>唯一可能造成方向冲突的部分</strong>。</li>
+</ul>
+<p><strong>⇒ 「信息」与「冲突」来自同一个源头：辅助目标与 diffusion 目标之间的差。</strong></p>
+</div>
+
+<div class="box key">
+<div class="bt">推论 B —— 回答简报 §三-A 与 §十三</div>
+<p>简报问：「如果结构保持与正确生成本身是一致的，是否可能 <code>g_diffᵀg_aux &gt; 0</code>，即两个目标实际上互相帮助？」</p>
+<p><strong>答案：是，而且在目标完全一致时更强——<code>cos = +1</code>。</strong>反过来，一旦辅助目标与 diffusion 最优解不一致，失配项就出现，cos 才掉下来。</p>
+<p><strong>⇒ 「适度冲突」不是 bug，它是辅助损失在做事的证据。</strong>这一点在 §9 会展开（含一个必须说清的反面证据）。</p>
+</div>
+
+<div class="box key">
+<div class="bt">推论 C —— 把「哪类损失容易冲突」变成结构问题</div>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26%">辅助损失类型</th><th style="width:38%">为什么</th><th style="width:36%">结论</th></tr></thead>
+<tbody>
+<tr><td><strong>点式重建</strong><br><span class="small">L1 / L2 on x̂₀</span></td><td>梯度是 <code>(x̂−x₀')</code> 的倍数 ⇒ 上述分解<strong>精确成立</strong></td><td><span class="b high">冲突可归因、可测量</span>：方向冲突完全由 <code>x₀−x₀'</code> 驱动</td></tr>
+<tr><td><strong>感知 / 特征损失</strong><br><span class="small">‖φ(x̂)−φ(x₀')‖²</span></td><td>链上多一个 <code>∂φ/∂x̂</code>。这个因子<strong>不是恒等映射，会旋转梯度</strong></td><td><span class="b medium">即使目标完全配对也可能方向冲突</span>。这是与像素损失的<strong>结构性区别</strong></td></tr>
+<tr><td><strong>分布 / 统计损失</strong><br><span class="small">均值、直方图、FOD 分布</span></td><td><code>∇<sub>x̂</sub>L</code> <strong>不是</strong> <code>(x̂−x₀')</code> 的倍数，而是一个<strong>平滑、低秩</strong>的泛函（均值 → 常向量；直方图 → 分箱指示权重）</td><td><span class="b bad">上述分解不适用</span>，方向<strong>没有共线保证</strong>；而且零空间巨大（置换不变）</td></tr>
+<tr><td><strong>走逆算子的损失</strong><br><span class="small">浓度 = M⁻¹·OD</span></td><td>再乘一层逆算子 Jacobian，含 <code>log10</code> / <code>1/x</code> 奇点</td><td><span class="b bad">额外奇异点</span>，与损失形式无关</td></tr>
+<tr><td><strong>走饱和解码器的损失</strong><br><span class="small">decoded RGB</span></td><td>再乘 decoder Jacobian，在输出被 clamp 的饱和区 ≈ 0</td><td><span class="b bad">梯度消失</span>——辅助损失在那里<strong>恒为零</strong></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>⇒ 这就是简报 §三 那个 boxed 命题的准确答案：</strong>「loss 的数学形式 ≠ 冲突的唯一决定因素」——<strong>成立</strong>。而且更进一步：<strong>loss 形式只在两个地方起作用——(i) 读出的量是否是 diffusion 残差的标量倍数（点式 vs 非点式），(ii) 读出路径的 Jacobian。其余全部是「目标差多少」。</strong></p>
+</div>
+
+<h3 id="s2-3">2.3 哪些损失适用、哪些不适用</h3>
+
+<p>必须说清这个分解的<strong>适用边界</strong>，否则会被误用：</p>
+<ul>
+<li><strong>适用</strong>：辅助损失是 <code>x̂_θ</code> 的<strong>二次函数</strong>（L2 重建、加权 L2、以及任何在 <code>x̂</code> 上可写成二次型的量）。</li>
+<li><strong>需要改写但结论仍成立</strong>：<code>L1</code>。此时 <code>g_aux = Jᵀ·sign(x̂−x₀')</code>，而 <code>sign(x̂−x₀') = sign((x̂−x₀)+(x₀−x₀'))</code> ⇒ <strong>「失配驱动冲突」这个结论不变</strong>，只是对齐项不再有精确的 <code>SNR⁻¹</code> 系数。</li>
+<li><strong>不适用</strong>：感知/特征损失、分布损失。此时要用 §3 的 Jacobian 视角重新分析，不能再套 <code>(x₀−x₀')</code> 的分解。</li>
+<li><strong>注意</strong>：<code>x₀'</code> 是「辅助损失的目标」，不一定是图像。当目标是浓度图、FOD、直方图时，要先把它映射回 x 空间才能用这个分解——这本身就是一次 Jacobian 操作。</li>
+</ul>
+
+<h2 id="s3"><span class="num">3</span>冲突到底由什么决定：不是 loss 的形式，是 Jacobian</h2>
+
+<p>简报 §三 要求明确回答那个 boxed 命题。我先给出答案，再给推导。</p>
+
+<div class="box key">
+<div class="bt">答案</div>
+<p><strong>「loss 的数学形式 ≠ gradient conflict 的唯一决定因素」—— 成立。</strong>而且比这句话更强：</p>
+<p><strong>loss 的形式常常还不是主要因素。</strong>因为对任何挂在中间变量 <code>z</code> 上的辅助损失，</p>
+<div class="formula">∇<sub>θ</sub>L<sub>aux</sub> = J<sup>T</sup> · ∇<sub>z</sub>L<sub>aux</sub>，&nbsp;&nbsp;J = ∂z/∂θ</div>
+<p><code>J</code> 是<strong>主导项</strong>；<code>L_aux</code> 长什么样只决定 <code>∇<sub>z</sub>L_aux</code> 这一个因子。<strong>同一个 L1，挂在 <code>ε̂</code> 上和挂在解码 RGB 上，是两个完全不同的优化问题。</strong></p>
+</div>
+
+<h3 id="s3-1">3.1 逐变量 Jacobian 表（回答简报 §三-B）</h3>
+
+<p>简报点名要求区分辅助损失作用在哪一个变量上。逐项算出来是这样：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:20%">辅助损失读的变量</th><th style="width:24%">额外 Jacobian</th><th style="width:22%">性质</th><th style="width:34%">后果</th></tr></thead>
+<tbody>
+<tr><td><strong>① <code>ε̂_θ</code></strong><br><span class="small">预测噪声</span></td><td>无额外因子</td><td><span class="b high">最干净</span></td><td>与 <code>L_diff</code> 同一层。此时「辅助损失」实际上就是主损失的一个变体。</td></tr>
+<tr><td><strong>② <code>x̂_θ(ε̂)</code></strong><br><span class="small">预测的干净图</span></td><td><code>∂x̂/∂ε̂ = −σ_t/α_t = −SNR(t)<sup>−1/2</sup></code></td><td><span class="b bad">t→T 时发散</span></td><td>★ 增益随 t 单调增大、在 t→T 无界。见 §4、§5。</td></tr>
+<tr><td><strong>③ <code>v̂_θ</code></strong><br><span class="small">预测速度</span></td><td><code>∂x̂/∂v̂ = −σ_t</code></td><td><span class="b high">有界 [−1, 0]</span></td><td>★ 天然安全。这是 v-prediction 除「端点恢复不除法」之外的<strong>第二个硬收益</strong>。</td></tr>
+<tr><td><strong>④ <code>Dec(x̂₀)</code></strong><br><span class="small">解码出的 RGB</span></td><td>再乘一层 decoder Jacobian</td><td><span class="b bad">饱和区 J ≈ 0</span></td><td>★ 在输出被 clamp 的饱和区（<strong>正是黑团区</strong>）辅助梯度<strong>恒为零</strong> ⇒ 黑团永远不会被辅助损失修好。</td></tr>
+<tr><td><strong>⑤ 浓度图 <code>C = M⁻¹·OD</code></strong></td><td>再乘一层<strong>逆算子</strong> Jacobian</td><td><span class="b bad">含 <code>log10</code>/<code>1/x</code> 奇点</span></td><td>★ 与损失形式无关，是<strong>逆算子本身</strong>带来的。你项目里已经在 <code>physics.py</code> L49 见过这一类。</td></tr>
+<tr><td><strong>⑥ 某个 feature <code>f_θ</code></strong></td><td>特征提取器 Jacobian</td><td><span class="b medium">可能近零</span></td><td>冻结的深层特征在部分区域 Jacobian 近零（死特征）⇒ 辅助梯度消失；attention 类模块则可能放大。</td></tr>
+<tr><td><strong>⑦ image formation output</strong><br><span class="small">最终成像结果</span></td><td>上述各层<strong>复合</strong></td><td><span class="b bad">复合放大</span></td><td>链越长，<code>J</code> 的奇异点越多，越难诊断。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s3-2">3.2 回答简报 §三-B 的那个疑问</h3>
+
+<div class="box teal">
+<div class="bt">你写的那句话是对的，我把它补完整</div>
+<p>你写：「辅助 loss 虽然没有直接作用在噪声上，但它通过计算图仍然会反向传播到 diffusion U-Net 参数，因此最终仍然会与 diffusion gradient 发生耦合。」</p>
+<p><strong>这句话对，但需要加一个前提条件，而这个前提条件正好是 §8 的主题：</strong></p>
+<ul>
+<li><strong>耦合发生在「共享参数」上。</strong><code>g_diff</code> 与 <code>g_aux</code> 都是<strong>整个参数向量</strong>上的向量，只不过各有零分量。</li>
+<li>如果 <code>L_aux</code> 只更新蛋白编码器、且你在送入 U-Net 前 <code>detach()</code> 了，那么 <code>g_aux</code> 在 U-Net 坐标上<strong>全是零</strong>，而 <code>g_diff</code> 在蛋白编码器坐标上全是零 ⇒ <strong>两个向量的支持集不相交 ⇒ 内积恒等于零 ⇒ 一阶梯度冲突根本不存在</strong>（§8）。</li>
+<li>如果<strong>不</strong> <code>detach</code>，蛋白编码器会同时收到两个损失的梯度，U-Net 也会通过特征收到辅助损失的梯度 ⇒ <strong>共享参数出现 ⇒ 冲突可能出现</strong>。</li>
+</ul>
+<p><strong>⇒ 所以「是否耦合」不是架构问题，是<code>detach</code>放不放在那里的问题。</strong>这一点简报 §十 问得非常准，见 §8 的判定表。</p>
+</div>
+
+<p>把 §2 的恒等式与这里的 Jacobian 表合起来，冲突的完整依赖关系是：</p>
+<div class="formula" style="font-size:15px">Gradient&nbsp;Conflict = f( <span style="color:var(--blue)">读出路径的 Jacobian J</span>, <span style="color:var(--red)">辅助目标与 diffusion 目标之差 x₀−x₀'</span>, <span style="color:var(--teal)">t</span>, <span style="color:var(--purple)">共享参数集</span>, <span style="color:var(--amber)">λ</span> )</div>
+<p class="small">简报 §十八 给出的那个 <code>f(objective, parameterization, t, current parameters, data, loss weight, gradient path, shared parameters, prediction target)</code> 基本正确——本报告把其中的 <code>objective</code> 与 <code>loss weight</code> 降级（它们通过 J 与 λ 起作用），把 <code>gradient path</code>（= J）与 <code>target 之差</code>升级为主因。</p>
+
+<h2 id="s4"><span class="num">4</span>timestep：两个方向相反的病灶</h2>
+
+<p>简报 §四 给的直觉草图是「低 t 一致 / 中 t 开始冲突 / 高 t 冲突严重」。<strong>由 §2 的分解，我预期实测结果与它相反。</strong></p>
+
+<h3 id="s4-1">4.1 低 t 是方向冲突区，高 t 是幅度劫持区</h3>
+
+<p>关键是把两个项的 t 缩放分开看（恒等式 3）：</p>
+<ul>
+<li><strong>对齐项</strong>权重 <code>SNR(t)⁻¹ = σ_t²/α_t²</code> —— 随 t 增大而<strong>发散</strong>；</li>
+<li><strong>失配项</strong>权重 <code>SNR(t)^(−1/2) = σ_t/α_t</code> —— 也增大，但<strong>慢一半</strong>。</li>
+</ul>
+<p>所以<strong>失配项在对齐项中的相对占比 ∝ √SNR(t)</strong>——<strong>它在低 t 主导，在高 t 消失</strong>。这直接决定了两个病灶的位置：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:12%">t 区间</th><th style="width:12%">SNR(t)</th><th style="width:16%">对齐项权重 <code>SNR⁻¹</code></th><th style="width:18%">失配项相对占比 <code>∝√SNR</code></th><th style="width:16%">预期 cos</th><th style="width:12%">预期 ‖g_aux‖/‖g_diff‖</th><th style="width:14%">病灶</th></tr></thead>
+<tbody>
+<tr><td><strong>低 t</strong><br><span class="small">t→0</span></td><td>大</td><td>小</td><td><strong>大（主导）</strong></td><td><strong>明显 &lt; 1</strong></td><td>小</td><td><span class="b bad">方向冲突</span></td></tr>
+<tr><td><strong>中 t</strong></td><td>中</td><td>中</td><td>中</td><td>中</td><td>中</td><td><span class="b medium">过渡区</span></td></tr>
+<tr><td><strong>高 t</strong><br><span class="small">t→T</span></td><td>→0</td><td><strong>→∞</strong></td><td>小</td><td><strong>→ +1</strong></td><td><strong>爆炸</strong></td><td><span class="b bad">幅度劫持</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 为什么这个反转重要：两个病灶的药完全不同</div>
+<ul>
+<li><strong>低 t 的方向冲突</strong>：来自 <code>x₀' ≠ x₀</code>。<strong>药是改目标</strong>（提高配对质量 / 换成对错位不敏感的目标 / 换更弱的代理量），<strong>不是加 gradient surgery</strong>。</li>
+<li><strong>高 t 的幅度劫持</strong>：来自 <code>SNR⁻¹</code>。<strong>药是 t-权重</strong>（<code>λ(t) ∝ √SNR(t)</code>）或<strong>换参数化</strong>（§5），<strong>也不是 gradient surgery</strong>。</li>
+</ul>
+<p><strong>⇒ 两种病灶下，PCGrad 类方法都是错药</strong>——它们只修方向（cos），而低 t 的方向冲突根源在目标、高 t 的问题根本不在方向。这是本报告最有操作价值的一条结论。</p>
+</div>
+
+<div class="box good">
+<div class="bt">★ 一个必须注意的反向直觉</div>
+<p>「低 t 方向冲突」听起来很严重，但要注意<strong>低 t 时 <code>‖g_aux‖/‖g_diff‖</code> 很小</strong> ⇒ 一个方向很歪但幅度很小的辅助梯度，对合并更新 <code>g_diff + λg_aux</code> 的<strong>实际危害有限</strong>（由 §6 的临界 λ 公式可精确判断）。</p>
+<p><strong>反过来，高 t 的「cos ≈ +1」听起来很安全，但那里 <code>‖g_aux‖</code> 可能比 <code>‖g_diff‖</code> 大几个量级 ⇒ 它会主导整个更新方向。</strong>一个方向正确的巨大梯度，同样能毁掉训练——因为它把更新变成了「只服务辅助损失」。</p>
+<p><strong>⇒ 只报 cos 的诊断会在这两个地方同时给出误导性的结论。</strong></p>
+</div>
+
+<h3 id="s4-2">4.2 可证伪预测 P1–P5</h3>
+
+<p>全部零训练可测。P5 最便宜，建议先做。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:8%">编号</th><th style="width:44%">预测</th><th style="width:20%">如果成立说明</th><th style="width:28%">如果被证伪说明</th></tr></thead>
+<tbody>
+<tr><td><strong>P1</strong></td><td>在 ε-预测下，<code>‖g_aux‖/‖g_diff‖</code> 与 <code>SNR(t)⁻¹</code> 成正比（直接检验这个比例，而不是拟合斜率，因为斜率依赖噪声调度）。</td><td>对齐项主导，恒等式 1/2 成立</td><td>读出路径里有别的 Jacobian 因子在起作用（去查 §3.1 哪一行）</td></tr>
+<tr><td><strong>P2</strong></td><td><code>cos(g_diff, g_aux)</code> 在<strong>低 t 最低</strong>、随 t 增大<strong>趋于 +1</strong>。<strong>与简报 §四 的草图相反。</strong></td><td>失配项在低 t 主导，恒等式 3 成立</td><td>我的分解有遗漏，或者 <code>x₀'</code> 与 <code>x₀</code> 的相关性结构不是我想的那样</td></tr>
+<tr><td><strong>P3</strong></td><td>把辅助损失从 <code>x̂₀</code> 改挂到 <code>v̂</code> 后，幅度比从 <code>SNR⁻¹</code>（无界）变成 <code>σ_t² = 1−ᾱ_t</code>（<strong>有界 [0,1]</strong>）⇒ 高 t 的幅度劫持消失。<strong>这一条是可证的，不只是预测</strong>（见 §5）。</td><td>参数化切换是有效的加权手段</td><td>我的 Jacobian 推导错了</td></tr>
+<tr><td><strong>P4</strong></td><td>把辅助损失挂在<strong>解码 RGB</strong> 上时，在输出被 clamp 的饱和区（黑团区）该辅助损失的梯度 ≈ 0。</td><td>decoder Jacobian 在饱和区确实近零 ⇒ <strong>黑团不会被辅助损失修好</strong>，必须用别的手段</td><td>该区域并未饱和，或 clamp 的实现是软的（如 tanh）</td></tr>
+<tr><td><strong>P5</strong><br><span class="b high">最便宜</span></td><td><strong>做一次「假配对」实验</strong>：把辅助损失的目标 <code>x₀'</code> 设成<strong>与 diffusion 训练对完全相同的 <code>x₀</code></strong>，实测 <code>cos</code> 应趋近 <code>+1</code>，且幅度比应等于 <code>SNR(t)⁻¹</code>。</td><td>恒等式 2 成立，整条分析链的地基是稳的</td><td><strong>要么实现里有额外的 Jacobian 因子，要么 <code>detach</code>/stop-gradient 的位置与你的预期不符</strong>——这是最值得优先排除的情形</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s4-3">4.3 文献旁证（已逐条核对到一手来源）</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">Min-SNR-γ（arXiv:2303.09556）<span class="b high">正文逐字</span></div>
+<p>摘要原文：「the slow convergence is partly due to <strong>conflicting optimization directions between timesteps</strong>」；「we treat the diffusion training as a <strong>multi-task learning problem</strong>」；方法按 clamped SNR 调权重以「balance the conflicts among timesteps」。</p>
+<p><strong>⇒ 把「timestep 之间的冲突」直接当多任务冲突处理，是扩散领域已有的、被引用的做法。</strong></p>
+</div>
+<div class="mini">
+<div class="mt">PIDM（arXiv:2403.14404，ICLR 2025）<span class="b high">正文逐字</span></div>
+<p>正文 §3.3 原文：「otherwise introduce a <strong>conflicting objective between the data and residual loss with increasing t</strong>」，理由是 <code>R(E[x₀|x_t]) ≠ E[R(x₀|x_t])</code>（<strong>Jensen gap</strong>）；损失写成 <code>λ_t‖x₀−x̂₀‖² + 1/(2Σ̄_t)‖R(x₀*)‖²</code>，并说「We <strong>tighten the variance</strong> of the virtual likelihood as t→0」。</p>
+<p><strong>⇒ 这是「扩散主损失 + 物理残差损失」冲突的最直接先例，而且它的处方是在高 t 降低辅助项权重——与我推的 <code>λ(t) ∝ √SNR(t)</code> 同向。</strong></p>
+</div>
+<div class="mini">
+<div class="mt">Salimans &amp; Ho（arXiv:2202.00512）<span class="b high">正文逐字</span></div>
+<p>正文 §4 原文：「As the signal-to-noise ratio goes to zero, the effect of small changes in the neural network output <code>ε̂_θ(z_t)</code> on the implied prediction in x-space is increasingly <strong>amplified</strong>, since <code>x̂_θ(z_t) = 1/α_t(z_t − σ_t ε̂_θ(z_t))</code> <strong>divides by α_t→0</strong>」。</p>
+<p>另：ε + truncated-SNR 加权被实测为<strong>不稳定</strong>；v 被称「the most stable option, as it has the unique property of making DDIM step-sizes independent of the SNR」。</p>
+</div>
+<div class="mini">
+<div class="mt">Lin et al.（arXiv:2305.08891，WACV 2024）<span class="b high">正文逐字</span></div>
+<p>原文：「When SNR is zero, ε prediction becomes a <strong>trivial task</strong> and ε loss <strong>cannot guide the model to learn anything meaningful</strong> about the data.」</p>
+<p><strong>⇒ 高 t 处 ε 损失本身信号就弱 ⇒ 同量级的辅助梯度在高 t 的相对权重被进一步抬高</strong>，与 §4.1 的结论一致。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">旁证的方向一致，但推导不同 —— 不要把两者混为一谈</div>
+<p><strong>PIDM 的处方（高 t 降辅助权重）与我的处方同向，但推导完全不同</strong>：PIDM 是<strong>贝叶斯似然方差</strong>论证（噪声大时约束不该被硬性满足），我的是<strong>Jacobian 幅度</strong>论证（回传增益按 <code>SNR^−1/2</code> 放大）。</p>
+<p><strong>两条独立路径得出同一个处方，是强旁证</strong>——但正因推导不同，它们对「换成 L1 会怎样」「换成 v-参数化会怎样」会给出不同的预测（我的能预测，PIDM 的不能）。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>预测参数化 ε / x₀ / v：它改变的不是生成目标，而是辅助损失的增益</h2>
+
+<p>简报 §五 明确要求：「不要只说『三种 parameterization 数学上等价』」。正确。</p>
+
+<h3>三种参数化下，同一个辅助目标的增益不同</h3>
+
+<p>用 <code>z = α_t x₀ + σ_t ε</code>、<code>v = α_t ε − σ_t x₀</code>（Salimans &amp; Ho 的定义）。反解：<code>x = α_t z − σ_t v</code>，<code>ε = σ_t z + α_t v</code>。于是：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:14%">参数化</th><th style="width:22%"><code>∂x̂/∂(网络输出)</code></th><th style="width:26%">aux-on-x̂₀ 相对 <code>g_diff</code> 的幅度比</th><th style="width:16%">是否有界</th><th style="width:22%">含义</th></tr></thead>
+<tbody>
+<tr><td><strong>ε-预测</strong></td><td><code>−σ_t/α_t = −SNR<sup>−1/2</sup></code></td><td><code>σ_t²/α_t² = SNR<sup>−1</sup></code></td><td><span class="b bad">✗ 高 t 发散</span></td><td>你现在的设定。高 t 幅度劫持</td></tr>
+<tr><td><strong>v-预测</strong></td><td><code>−σ_t</code></td><td><code>σ_t² = 1−ᾱ_t</code></td><td><span class="b high">✓ ∈ [0,1]</span></td><td><strong>两端都有界</strong>。P3 由此变成可证</td></tr>
+<tr><td><strong>x₀-预测</strong></td><td><code>1</code></td><td><code>1</code></td><td><span class="b high">✓ 常数</span></td><td>但此时 <code>L_aux ≡ L_diff</code>（目标配对时）⇒ <strong>零信息、零冲突</strong>的退化情形</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">★ 这就是「三种参数化等价」这句话的准确边界</div>
+<p>「三种参数化等价」这个说法的适用域是<strong>生成目标本身</strong>——它们只是同一个 NELBO 的不同<strong>加权</strong>写法。文献支持：</p>
+<ul>
+<li><strong>Kingma &amp; Gao</strong>（arXiv:2303.00848）：「all commonly used diffusion model objectives equate to a weighted integral of ELBOs… The only real difference between diffusion objectives is their <strong>difference in weighting w(λ)</strong>.」</li>
+<li><strong>Loss Functions in Diffusion Models: A Comparative Study</strong>（arXiv:2507.01516）：NELBO 各参数化「fundamentally equivalent」，但「these weighted loss functions are <strong>not</strong> equivalent, even though they are all initially derived from the same NELBO formulation」。</li>
+</ul>
+<p><strong>⇒ 一旦在 <code>x̂₀</code> 上挂一个任意的辅助损失，参数化就不再等价——因为辅助损失的增益 <code>∂x̂/∂(输出)</code> 在三种参数化下分别是 <code>SNR<sup>−1/2</sup></code>、<code>σ_t</code>、<code>1</code>，它们连<em>有界性</em>都不一样。</strong></p>
+<p class="small">★ 检索<strong>未找到</strong>任何论文逐字写出 <code>∂x̂₀/∂ε̂ = −1/√SNR(t)</code> 这个记号（「未说明」）；但<strong>放大/发散的结论有明确文献支持</strong>（Salimans &amp; Ho 逐字、EDM 的 <code>σ</code> 放大、ECCV 2026 的界）。所以：<strong>发散性 [已核实]；精确记号 [未核实]。</strong></p>
+</div>
+
+<h3>一条需要标注边界的旁证</h3>
+
+<div class="box warn">
+<div class="bt">ECCV 2026（arXiv:2607.00647）—— 机制同构，但它是推理期 guidance</div>
+<p>该文（<strong>已核到 Comments 字段：Accepted to ECCV 2026</strong>）摘要原文：「Because its objective (a classifier or energy) is defined on clean images, <strong>ε- and v-prediction models must first estimate the clean image x̂ from the noisy state at each step</strong>, and <strong>the accuracy of that estimate determines how easily guidance drifts off the data manifold</strong>. <code>x</code>-prediction… outputs the clean image directly, <strong>removing this source of error even at high noise</strong>」。</p>
+<p><strong>⇒ 机制与 §2 完全同构</strong>：目标定义在干净图上 ⇒ 必须从噪声态反推 <code>x̂</code> ⇒ ε-预测的反推会放大误差。而且它<strong>恰好也是「挂在 x̂ 上的额外项」</strong>（guidance 的梯度）。</p>
+<p><strong>但必须标注：它讨论的是推理期的 training-free guidance，不是训练期的辅助损失。</strong>子 agent 报告该文正文给出 O(1/t)（ε）vs O(1)（v）的梯度界——<strong>这一点我只核到摘要层面的机制描述，O(1/t) 的具体界未逐字复核</strong>，引用时请按「摘要级」对待。</p>
+</div>
+
+<h2 id="s6"><span class="num">6</span>λ 的几何与「临界 λ」</h2>
+
+<p>简报 §十二 要求用向量几何解释 <code>g_total = g_1 + λg_2</code>。这里有一个可直接用来定 λ 的公式。</p>
+
+<h3>λ 只改变长度，不改变方向</h3>
+
+<pre><code>                        g_2  （辅助损失想走的方向）
+                         ╱
+                        ╱
+                       ╱   ← cos(g_1, g_2) 只由这个夹角决定
+                      ╱
+  ───────────────────●───────────────────▶  g_1 （主损失方向）
+                     θ
+
+  g_total = g_1 + λ·g_2
+
+  λ 是正标量 ⇒ 它只改变 g_2 的长度，不改变方向
+  ⇒ cos(g_1, λ·g_2) = cos(g_1, g_2)  与 λ 无关
+  ⇒ 但「危害」与 λ 线性相关
+</code></pre>
+
+<p>合并一步后主损失的一阶变化（与 §1.1 同一个式子，只是把 <code>g_aux</code> 写成 <code>λg_2</code>）：</p>
+<div class="formula">ΔL<sub>1</sub> ≈ −η( ‖g<sub>1</sub>‖² + λ·g<sub>1</sub><sup>T</sup>g<sub>2</sub> )</div>
+<p>于是「主损失仍然下降」的条件是 <code>λ·g_1ᵀg_2 &gt; −‖g_1‖²</code>。当 <code>g_1ᵀg_2 &lt; 0</code>（存在方向冲突）时，这给出一个<strong>临界权重</strong>：</p>
+
+<div class="formula" style="font-size:17px">λ<sub>crit</sub> = ‖g<sub>1</sub>‖² / |g<sub>1</sub><sup>T</sup>g<sub>2</sub>| = ‖g<sub>1</sub>‖ / ( ‖g<sub>2</sub>‖ · |cos| )</div>
+
+<div class="box key">
+<div class="bt">★ 这个公式把「方向」和「幅度」合成了一个数</div>
+<p>它是本报告<strong>唯一可以直接拿来定 λ 的东西</strong>。读法：</p>
+<ul>
+<li><strong><code>λ &lt; λ_crit</code> ⇒ 保证主损失这一步仍在下降。</strong>这是一个充分条件，不保证收敛，但保证「没被推翻」。</li>
+<li><code>λ_crit</code> <strong>大</strong>（容易满足）当：<code>‖g_2‖</code> 小，或 <code>|cos|</code> 小（接近正交）。⇒ <strong>一个「冲突很轻」的辅助损失可以配很大的 λ。</strong></li>
+<li><code>λ_crit</code> <strong>小</strong>（危险）当：<code>‖g_2‖</code> 大，或 <code>|cos|</code> 接近 1（几乎反向）。⇒ <strong>一个「几乎反向」的辅助损失，即使 λ 很小也能推翻主损失。</strong></li>
+</ul>
+<p><strong>⇒ 「cos 很负」本身不构成任何行动理由；「<code>λ/λ_crit</code> 是多少」才是。</strong>建议的诊断口径是报 <code>λ/λ_crit</code> 而不是报 cos。</p>
+</div>
+
+<div class="box good">
+<div class="bt">实用配方（零训练可算）</div>
+<ol>
+<li>对每个 block、每个 t 分箱，测 <code>‖g_1‖</code>、<code>‖g_2‖</code>、<code>cos</code>；</li>
+<li>算 <code>λ_crit = ‖g_1‖ / (‖g_2‖·|cos|)</code>；</li>
+<li>把当前的 <code>λ</code> 与 <code>λ_crit</code> 相除，得到 <strong><code>λ/λ_crit</code> 的分布</strong>；</li>
+<li>判读：<code>λ/λ_crit &gt; 1</code> 的样本占比就是「主损失被推翻的样本占比」。<strong>这个数才是要不要动 λ 的依据。</strong></li>
+</ol>
+<p class="small">注意：<code>λ_crit</code> 只在 <code>g_1ᵀg_2 &lt; 0</code> 时有定义；<code>cos ≥ 0</code> 时不存在临界 λ（主损失永远下降），此时应报 <code>+∞</code> 或直接记为「无风险」。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>挂载点：四种情况的完整对照</h2>
+
+<p>简报 §十一 给的计算图，我先把梯度路径补全：</p>
+
+<pre><code>  H&amp;E  ──▶  Structure Encoder ──┐
+                                ├──▶  Diffusion U-Net  ──▶  ε̂_θ / x̂_θ
+  H&amp;E  ──▶  Protein Encoder  ──┘            │
+        （或可学习 token）                    │
+                                             ▼
+                                        x̂₀（干净图估计）
+                                             │
+                        ┌────────────────────┼────────────────────┐
+                        ▼                    ▼                    ▼
+                  [情况 B] 直接挂        [情况 D] 浓度          [情况 C] VAE Decode
+                  ε̂_θ 或 x̂_θ            C = M⁻¹·OD                  │
+                  （梯度止于 U-Net）      （多一层逆算子）              ▼
+                                                                [情况 C] RGB
+                        ▲                                       （多一层 decoder）
+                        │
+                  [情况 A] 蛋白特征 / 蛋白编码器
+                  （若不 detach，梯度继续往上走进 U-Net）</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:12%">情况</th><th style="width:22%">梯度路径</th><th style="width:16%">共享参数集</th><th style="width:28%">主要风险</th><th style="width:10%">改动成本</th><th style="width:12%">可复现性</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong><br>蛋白特征</td><td>aux → 蛋白编码器；<strong>若 detach 则止步于此</strong>，否则继续进 U-Net</td><td><strong>detach：无</strong><br>不 detach：全部</td><td>detach：<strong>序列耦合 → 震荡</strong>；不 detach：冲突 + 蛋白编码器被两个目标同时拉扯</td><td><span class="b high">最小</span></td><td><span class="b high">高</span></td></tr>
+<tr><td><strong>B</strong><br>U-Net 输出</td><td>aux → U-Net（不经过 decoder）</td><td>全部 U-Net</td><td>若挂 <code>x̂_θ</code>：<code>SNR⁻¹</code> 增益；若挂 <code>ε̂_θ</code>：<strong>与 <code>L_diff</code> 几乎同一个损失 ⇒ 几乎没有新信息</strong></td><td><span class="b high">小</span></td><td><span class="b high">高</span></td></tr>
+<tr><td><strong>C</strong><br>解码 RGB</td><td>aux → decoder → x̂₀ → U-Net</td><td>全部 U-Net（+ 冻结 decoder）</td><td>★ <strong>饱和区 decoder Jacobian ≈ 0 ⇒ 黑团区辅助梯度恒为零</strong>；另有 <code>SNR⁻¹</code> 增益</td><td><span class="b high">小</span></td><td><span class="b medium">中</span><br><span class="small">VAE 尺度易错</span></td></tr>
+<tr><td><strong>D</strong><br>浓度图</td><td>aux → 逆算子 → x̂₀ → U-Net</td><td>全部 U-Net</td><td>★ <strong>逆算子奇点</strong>（<code>log10</code> / <code>1/x</code>）；非负截断引入的额外偏差</td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 情况 C 与 D 的两个「静默失效」——这两条最容易踩</div>
+<p><strong>情况 C：</strong>如果 VAE decoder 的输出被 clamp 到 <code>[−1,1]</code>（或类似），那么在<strong>已经饱和的区域</strong>，<code>∂Dec/∂x̂ ≈ 0</code> ⇒ <code>g_aux ≈ 0</code>。<strong>这意味着辅助损失在「输出最坏的地方」恰好完全没有梯度。</strong>你项目里的黑团正是这一类——所以<strong>黑团不可能被任何挂在解码 RGB 上的辅助损失修好</strong>，必须从 decoder / 潜码分布那一侧解决。这也是方法论「防护要写在必然发生的那一侧」在梯度层面的版本。</p>
+<p><strong>情况 D：</strong>浓度 = 逆算子作用于 OD。<code>log10</code> 与除法在 OD→0（背景）处有奇点。<strong>这一类你已经踩过</strong>——<code>physics.py</code> L49 的 <code>log10</code>。已有的结论在这里同样适用：<strong>根治是「别对逆算子求导」（改用前向渲染），不是「加 ε」。</strong></p>
+</div>
+
+<div class="box good">
+<div class="bt">挂载点决策树</div>
+<pre style="border:none;background:none;padding:0;margin:8px 0"><code>这个辅助目标需要「哪一张图」的信息？
+│
+├─ 只需要最终 RGB 观感 ────────────▶ 情况 C，但先确认输出不在饱和区
+│
+├─ 需要浓度 / 光密度 ──────────────▶ 情况 D，但**必须用前向**（浓度→RGB），
+│                                     不要用逆算子（RGB→浓度）
+│
+├─ 需要「干净图估计 x̂₀」───────────▶ 情况 B（挂 x̂_θ），
+│                                     并加 λ(t) ∝ √SNR(t) 抵消增益
+│
+├─ 需要蛋白身份 / 表达语义 ────────▶ 情况 A
+│                                     ├─ 想让蛋白分支**只**被 aux 训 ▶ detach + 交替优化
+│                                     └─ 想端到端联合训 ▶ 不 detach，但要接受冲突
+│
+└─ 只需要「和主损失差不多」 ───────▶ 别加了，它只会是冗余监督</code></pre>
+</div>
+
+<h2 id="s8"><span class="num">8</span>★ 参数子集不相交：什么时候冲突根本不存在</h2>
+
+<p>简报 §十 是整份简报里问得最准的一段。我把它拆成「数学事实」与「文献证据」两部分，因为第一部分<strong>不需要文献</strong>。</p>
+
+<div class="box pur">
+<div class="bt">★ 数学事实（本文自证，不归因任何论文）</div>
+<p>把两个梯度看成<strong>整个参数向量 θ 上的向量</strong>（各有零分量）：</p>
+<div class="formula">supp(g<sub>1</sub>) ∩ supp(g<sub>2</sub>) = ∅ &nbsp;⟹&nbsp; g<sub>1</sub><sup>T</sup>g<sub>2</sub> ≡ 0</div>
+<p>即：<strong>两个损失作用在完全不相交的参数子集上时，一阶梯度冲突恒等于零，且 PCGrad 类投影变成空操作</strong>（没有东西可投影）。</p>
+<p class="small">★ 五路检索中专门负责这一轴的那一路明确报告：<strong>未找到任何论文显式写下这一点</strong>。PCGrad 原文只讨论共享参数场景。所以这条请当作<strong>平凡数学推论</strong>读，不要当成引用。</p>
+</div>
+
+<h3>但冲突不会消失，它换了个名字</h3>
+
+<p>参数拆开之后，三件事会接管：</p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">① 共享激活（前向耦合）</div>
+<p>两个损失读<strong>同一批前向激活</strong>。改蛋白编码器会改变 U-Net 的输入 ⇒ 影响 <code>L_diff</code>。<strong>但这是跨步的二阶效应</strong>——不是同一步里的一阶梯度冲突。所以它不会出现在 cos 诊断里，却会出现在训练曲线上。</p>
+</div>
+<div class="mini">
+<div class="mt">② 序列耦合 → 震荡</div>
+<p>变成<strong>双层 / 交替优化</strong>问题。风险从「冲突」变成<strong>震荡 / 循环 / 非平稳</strong>（类似 GAN 训练的那种动力学）。★ 检索<strong>未找到</strong>专门分析这个失败模式的论文——这是一个真实的文献空白，我用双层优化的通用文献作方法论入口。</p>
+</div>
+<div class="mini">
+<div class="mt">③ 容量竞争</div>
+<p>即便参数不交，两条路仍共享<strong>前向表示</strong>。文献把资源竞争从「共享参数」推广到「共享表示」：Mao et al., <em>Rethinking Resource Competition in Multi-Task Learning: From Shared Parameters to Shared Representation</em>, IEEE Access 12:128717, 2024。<span class="b medium">子 agent 核实，我未复核</span></p>
+</div>
+<div class="mini">
+<div class="mt">④ 蛋白分支失去主损失的信号</div>
+<p>如果 <code>detach</code> 了，蛋白编码器<strong>只</strong>被辅助损失训练 ⇒ 它不再被「生成质量」约束。这通常不是你要的。所以 detach 不是免费的。</p>
+</div>
+</div>
+
+<h3>文献证据（三篇已逐字核对到一手来源）</h3>
+
+<div class="box key">
+<div class="bt">★ 最有力的两条：梯度手术治标，参数稀疏治本</div>
+<ul>
+<li><strong>Recon</strong>（ICLR 2023，arXiv:2302.11289）摘要逐字：「our empirical study shows that <strong>'gradient surgery' cannot effectively reduce the occurrence of conflicting gradients</strong>」。它的做法是<strong>逐共享层</strong>算 conflict score，把高分层改成 task-specific 层 ⇒ 「greatly reduce the occurrence of conflicting gradients <strong>in the remaining shared layers</strong>」，代价是「a <strong>slight increase in model parameters</strong>」。<span class="b high">摘要逐字核实</span></li>
+<li><strong>Proactive Gradient Conflict Mitigation: A Sparse Training Perspective</strong>（arXiv:2411.18615）摘要逐字：「Although several optimization methods have been developed to address this issue by manipulating task gradients for better task balancing, <strong>they cannot decrease the incidence of gradient conflict</strong>」；它证明「<strong>sparse training (ST)</strong>, wherein <strong>only a portion of the model's parameters are updated</strong>… effectively mitigates conflicting gradients」，且「ST can be easily <strong>integrated with gradient manipulation techniques</strong>」。<span class="b high">摘要逐字核实</span></li>
+</ul>
+<p><strong>⇒ 两篇独立工作、同一结论：<em>改梯度（手术）不减少冲突的发生率；改参数子集才减少。</em>这与 §2 的分解完全一致——方向冲突的根源是目标与路径，不是梯度本身。</strong></p>
+</div>
+
+<div class="box teal">
+<div class="bt">另外三条（子 agent 核实，我未逐条复核）</div>
+<ul>
+<li><strong>ConsMTL</strong>（CVPR 2025）：把 MTL 建成<strong>双层优化</strong>——上层在共享参数上聚合梯度，下层为 task-specific 参数引入额外损失，使共享梯度逐渐收敛到联合更新向量。⇒ <strong>「分开参数」后冲突仍在，经由共享表示传播。</strong></li>
+<li><strong>DPT</strong>（ECCV 2026，arXiv:2607.19971）：Disjoint Parameter Training，把各任务关键参数区域分离再合并，观察到<strong>稀疏合并优于全量合并</strong>（否则相邻特征互相干扰）。</li>
+<li><strong>SimSiam</strong>（arXiv:2011.10566）：证明 <strong>stop-gradient 是防止表示坍塌的关键</strong>（去掉即坍塌），并把 stop-gradient 解释为隐式的教师–学生非对称优化。代价是<strong>阻断梯度流 ⇒ 联合优化退化为交替/半独立优化</strong>。★ 未找到把 detach 明确表述为「冲突规避」并量化其代价的专门论文。</li>
+</ul>
+</div>
+
+<h3>★ 对你模型的判定表</h3>
+
+<p>你的规划是 <code>Diffusion U-Net + Structure encoder + Protein encoder</code>，辅助损失挂蛋白分支。三种接法：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26%">接法</th><th style="width:16%">参数支持集</th><th style="width:16%">一阶梯度冲突</th><th style="width:22%">真正的风险</th><th style="width:20%">该用什么工具</th></tr></thead>
+<tbody>
+<tr><td>aux 只更新蛋白编码器 + <strong>detach</strong></td><td><span class="b high">不相交</span></td><td><strong>恒为 0</strong></td><td><strong>序列耦合 → 震荡</strong>；蛋白编码器只被 aux 训、失去生成质量约束</td><td><strong>交替优化 / 双层优化</strong>；监控震荡而不是 cos</td></tr>
+<tr><td>aux 只更新蛋白编码器，<strong>不 detach</strong></td><td><span class="b medium">相交</span><br><span class="small">U-Net + 蛋白编码器</span></td><td>可能出现</td><td>冲突 + 蛋白编码器被两个目标同时拉扯</td><td>§13 的分类处理</td></tr>
+<tr><td>aux 直接挂 U-Net 输出</td><td><span class="b medium">全部 U-Net</span></td><td>可能出现</td><td>见 §7 的四种情况</td><td>§13 的分类处理</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">结论</div>
+<p><strong><code>detach()</code> 就是切换「梯度冲突」与「序列耦合」的开关。</strong>它不消灭问题，只把问题从「两个梯度打架」换成「两个优化过程互相追尾」。</p>
+<p><strong>⇒ 如果目标是「让蛋白损失不干扰扩散主损失」，detach + 交替优化是一条干净的路；但它不是免费的——蛋白分支会脱离生成质量约束。如果你的目标是「让蛋白损失改善生成」，那就必须让它进入共享参数，也就必须面对冲突。</strong></p>
+</div>
+
+<h2 id="s9"><span class="num">9</span>冲突什么时候是好事</h2>
+
+<p>简报 §十三 问的是一个很容易被答错的问题。我分三层答。</p>
+
+<h3>第一层：由 §2 的分解，信息与冲突同源</h3>
+
+<div class="box key">
+<div class="bt">一个与主损失零冲突的辅助损失，必然什么也没说</div>
+<p>恒等式 3 的两个项：对齐项永远存在（冗余），失配项只在目标不一致时出现（信息）。</p>
+<p><strong>⇒ 如果 <code>cos ≡ +1</code>（完全对齐），说明失配项为零 ⇒ 这个辅助损失只是主损失的重新加权版 ⇒ 它不携带任何主损失没有的信息。</strong></p>
+<p><strong>所以「零冲突」不是目标，它是「零信息」的同义词。</strong>真正该优化的是：<strong>失配项足够大（有信息），且它在 <code>g_diff</code> 上的投影不为负（不打架）。</strong></p>
+<p class="small">★ 标记：检索<strong>未找到</strong>直接论证「完全对齐的辅助损失 = 冗余监督」的论文（子 agent 明确报告为负结果）。这条是我从恒等式 3 推出的，<strong>请当作推导而非引用</strong>。</p>
+</div>
+
+<h3>第二层：Pareto 视角 —— 该优化的是 trade-off，不是零冲突</h3>
+
+<p>这是多目标优化领域的共识立场：把 MTL 当作多目标问题，求一组分布良好的 Pareto 解，由使用者挑选（Pareto MTL，arXiv:1912.12854，NeurIPS 2019；<span class="b medium">子 agent 核实</span>）。CAGrad（arXiv:2110.14048）的思路也是「冲突不必清零，只需约束」——它用最差单任务的局部改进来正则化轨迹，同时<strong>可证明收敛到平均损失的最小值</strong>。</p>
+
+<h3>第三层：★ 最硬的反面理论 —— 冲突规避本身有代价</h3>
+
+<div class="box stop">
+<div class="bt">JMLR 2024：冲突规避可能妨碍最优泛化率</div>
+<p><strong>Three-Way Trade-Off in Multi-Objective Learning: Optimization, Generalization and Conflict-Avoidance</strong><br>
+Lisha Chen, Heshan Fernando, Yiming Ying, Tianyi Chen · <strong>JMLR 25 (2024) 1–53</strong>（NeurIPS 2023 有初步结果）<span class="b high">摘要逐字核实</span></p>
+<p>摘要逐字：「Recent works have developed various dynamic weighting algorithms for MOL, where the central idea is to find an update direction that <strong>avoids conflicts</strong> among objectives. Albeit its appealing intuition, <strong>empirical studies show that dynamic weighting methods may not outperform static ones</strong>.」</p>
+<p>「We find that <strong>the key rationale behind MGDA—updating along conflict-avoidant direction—may hinder dynamic weighting algorithms from achieving the optimal O(1/√n) population risk</strong>, where n is the number of training samples.」</p>
+<p>「We further demonstrate the impact of dynamic weights on the <strong>three-way trade-off among optimization, generalization, and conflict avoidance</strong> unique in MOL.」</p>
+<p><strong>⇒ 「避开冲突」与「达到最优泛化率」之间被证明存在张力。这是「冲突不总是坏事」最强的理论支撑。</strong></p>
+<p class="small">★ 更正记录：子 agent 报告该结论为 <code>O(1/n)</code>，我下载 JMLR 原文（第 1 页摘要）核实，正确写法是 <strong><code>O(1/√n)</code> 总体风险（population risk）</strong>。这类数字必须查一手来源。</p>
+</div>
+
+<h3>★ 但这里必须停下来，说清一条反面证据</h3>
+
+<div class="box warn">
+<div class="bt">2026-09-29：方向性冲突指标作为诊断目标，其有效性刚刚被审计挑战</div>
+<p><strong>Does Gradient Conflict Predict the Understanding–Generation Trade-off? A Controlled Audit of Conflict-Metric Validity in Unified Multimodal Models</strong><br>
+Shuyang Jiang, Fucheng Deng, Yuchuan Luo, Zhenyu Wu · arXiv:2609.38465，提交于 <strong>2026-09-29</strong>（本报告写作前 8 天）<span class="b high">摘要逐字核实</span></p>
+<p>摘要逐字：「Unified multimodal models (UMMs) are increasingly designed around gradient conflict between understanding and generation objectives. <strong>The premise that reducing these metrics improves the downstream understanding-generation trade-off has never been tested directly.</strong> We audit it in a controlled testbed, <strong>GRIDUMM</strong>… Across <strong>63 configurations and 372 measured checkpoints, no directional conflict metric reaches an absolute Spearman correlation of 0.3</strong> with a confidence interval excluding zero for conflict measured during training against the eventual trade-off. <strong>A dose-response intervention that monotonically suppresses conflict leaves the trade-off flat, separating correlation from causation.</strong> The norm ratio is a generation-failure detector and becomes null among configurations that master generation. <strong>Functional interference measures outperform directional conflict metrics</strong>, while training loss tracks the trade-off strongly.」</p>
+<p>「Our results <strong>do not show that conflict is useless</strong>; they show that <strong>its validity as a diagnostic target must be established, not assumed</strong>.」</p>
+</div>
+
+<div class="box pur">
+<div class="bt">怎么读这两条看似矛盾的证据</div>
+<p>它们不矛盾，因为它们说的是两件事：</p>
+<ul>
+<li><strong>「冲突的存在可以是有益的」</strong> —— 有理论支撑（JMLR 三方权衡、Pareto、§2 的信息同源）。</li>
+<li><strong>「把冲突指标当作调参目标」</strong> —— 刚刚被审计挑战（|Spearman| &lt; 0.3；压制冲突不改善 trade-off）。</li>
+</ul>
+<p><strong>⇒ 正确的操作含义：把 cos 当作「机制解释与故障定位」的工具，不要当作「优化目标」。</strong>如果你测出 cos 很负，那说明目标不一致或路径有奇异点——去修那个原因；<strong>不要为了把 cos 调上去而加 gradient surgery。</strong>这与 §11 的结论汇合。</p>
+<p><strong>另外一条可操作的线索：</strong>该审计发现「<strong>functional interference measures outperform directional conflict metrics</strong>」而「training loss tracks the trade-off strongly」。⇒ 如果一定要一个诊断量，<strong>「主任务损失在辅助任务上的影响」（功能干扰）比方向性 cos 更有预测力</strong>。这一点值得在你的诊断脚本里加一路对照。</p>
+</div>
+
+<h3>还要说一条：文献的主流立场与我相反</h3>
+
+<div class="box warn">
+<div class="bt">我的「正交分量承载价值」这个说法，检索未找到文献支持 —— 且主流立场相反</div>
+<ul>
+<li><strong>Aligned-MTL</strong>（CVPR 2023，arXiv:2305.19000）把<strong>正交分量</strong>视为不稳定来源并加以「对齐」，同时把「冲突」与「支配」统一成梯度线性系统的<strong>条件数</strong>。</li>
+<li><strong>GradOPS</strong>（WSDM 2025，arXiv:2503.03438）把冲突梯度<strong>投影到其他任务张成子空间的正交补</strong>上——即主动<strong>消除</strong>正交分量。</li>
+</ul>
+<p><strong>⇒ 「正交分量是价值所在」是本报告基于恒等式 3 提出的观点，不是文献结论。</strong>如果你要在论文里用这个说法，必须先自己做实验验证（§14 的 P2 就是这个用途），不要引文献。</p>
+</div>
+
+<h2 id="s10"><span class="num">10</span>文献总表</h2>
+
+<p>按简报 §十六 Part 3 要求的 8 列格式组织。因为不同轴的问题结构不同，我拆成五张表——<strong>表 A 用简报指定的 8 列</strong>，B–E 用适配后的列（原列在那些轴上不适用，硬套会产生大量「不适用」单元格）。</p>
+
+<div class="box warn">
+<div class="bt">核实等级说明（全表通用）</div>
+<p><span class="b high">★核</span> = 我<strong>本人</strong>抓取原始页面/正文并读到该结论；<span class="b medium">子核</span> = 子 agent 抓取并标注 VERIFIED，<strong>我未逐条复核</strong>；<span class="b low">未核</span> = 只见摘要或二手来源。<strong>「未说明」表示来源没有说，不是「默认没有」。</strong></p>
+</div>
+
+<h3>表 A · Diffusion + 辅助损失的直接先例（8 列，简报指定格式）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:15%">Paper</th><th style="width:5%">年</th><th style="width:10%">Diffusion 任务</th><th style="width:11%">主损失</th><th style="width:12%">辅助损失</th><th style="width:20%">冲突处理方式</th><th style="width:12%">是否直接验证梯度冲突</th><th style="width:15%">对你的启发</th></tr></thead>
+<tbody>
+<tr><td><strong>Physics-Informed Diffusion Models (PIDM)</strong><br><span class="small">arXiv:2403.14404 · ICLR 2025</span> <span class="b high">★核</span></td><td>2024</td><td>科学生成</td><td>扩散去噪</td><td>一阶物理残差（PDE）</td><td><strong>残差项权重 <code>1/(2Σ̄_t)</code> ⇒ 高 t 降权、t→0 收紧</strong>（正文逐字：<em>increase the variance… as t increases</em>）</td><td><strong>是</strong>——正文逐字承认 <em>conflicting objective between the data and residual loss with increasing t</em>，归因于 Jensen gap</td><td><span class="b high">★★★ 最直接先例</span>处方与 §4 同向</td></tr>
+<tr><td><strong>Min-SNR-γ</strong><br><span class="small">arXiv:2303.09556</span> <span class="b high">★核</span></td><td>2023</td><td>扩散训练加速</td><td>加权去噪</td><td>—（时间步权重）</td><td><strong><code>w_t = min{SNR(t), γ}</code></strong>（默认 γ=5，见正文）</td><td><strong>是</strong>——摘要逐字：<em>conflicting optimization directions between timesteps</em>，并把训练当作 <em>multi-task learning problem</em></td><td><span class="b high">★★★ 把 timestep 当 MTL 的权威先例</span></td></tr>
+<tr><td><strong>REPA</strong><br><span class="small">arXiv:2410.06940 · ICLR 2025</span> <span class="b medium">子核</span></td><td>2024</td><td>DiT/SiT 生成</td><td>velocity / DDPM 去噪</td><td>与 DINOv2 特征对齐（投影后）</td><td><strong>固定 λ=0.5 加权和</strong>；无 schedule、无 warm-up、非 t-dependent；仅作用于前 8 层</td><td>否（正文未见讨论）</td><td>结构一致性可直接借用；<strong>但它是「固定 λ」的干净基线，可作你的对照组</strong></td></tr>
+<tr><td><strong>DRaFT</strong><br><span class="small">arXiv:2309.17400 · ICLR 2024</span> <span class="b medium">子核</span></td><td>2023</td><td>微调 T2I</td><td>奖励损失</td><td>—</td><td><strong>DRaFT-K：只对最后 K 步回传</strong>（前段截断梯度 ⇒ 等价于对早期时间步 stop-gradient）</td><td>未说明</td><td><span class="b high">梯度截断策略可迁移</span></td></tr>
+<tr><td><strong>Spectral Regularization for Diffusion Models</strong><br><span class="small">arXiv:2603.02447</span> <span class="b high">★核</span></td><td>2026</td><td>图像 / 音频生成</td><td>点式重建去噪</td><td>Fourier + 小波域 L1（幅度 / 相位）</td><td>常数 λ（λ_EDM 或 λ=1），<strong>无 t 退火</strong></td><td>未说明——自我定位为 <em>soft inductive biases</em>，<strong>不称其为冲突</strong></td><td><span class="b high">频域损失的直接先例</span>；方向是<strong>补频率平衡</strong>，不是压高频</td></tr>
+<tr><td><strong>ADD / SDXL-Turbo</strong><br><span class="small">arXiv:2311.17042</span> <span class="b medium">子核</span></td><td>2023</td><td>少步蒸馏</td><td>score distillation</td><td>对抗损失</td><td>未说明</td><td>未说明</td><td>医学少步采样的可借鉴范式</td></tr>
+<tr><td><strong>LADD / SD3-Turbo</strong><br><span class="small">arXiv:2403.12015</span> <span class="b medium">子核</span></td><td>2024</td><td>高分辨率蒸馏</td><td>蒸馏损失</td><td>潜空间对抗（预训练 LDM 特征）</td><td>未说明</td><td>未说明</td><td>中</td></tr>
+<tr><td><strong>UFOGen</strong><br><span class="small">arXiv:2311.09257</span> <span class="b medium">子核</span></td><td>2023</td><td>一步 T2I</td><td>diffusion-GAN 目标</td><td>对抗损失</td><td>未说明</td><td>未说明</td><td>中</td></tr>
+<tr><td><strong>Diffusion-GAN</strong><br><span class="small">arXiv:2206.02262 · ICLR 2023</span> <span class="b medium">子核</span></td><td>2022</td><td>GAN 训练</td><td>对抗损失</td><td>前向扩散链（instance noise）</td><td><strong>判别器按扩散时间步条件化</strong>（t-dependent 判别器）</td><td>未说明</td><td>「t-dependent 判别器」思想可借</td></tr>
+<tr><td><strong>DMD</strong><br><span class="small">arXiv:2311.18828 · CVPR 2024</span> <span class="b medium">子核</span></td><td>2023</td><td>一步蒸馏</td><td>近似 KL（双 score 差）</td><td>回归损失（匹配大尺度结构）</td><td>未说明</td><td>未说明</td><td>蒸馏场景，非训练期 aux</td></tr>
+<tr><td><strong>Bring Metric Functions into Diffusion Models</strong><br><span class="small">arXiv:2401.02414</span> <span class="b medium">子核</span></td><td>2024</td><td>DDPM 图像生成</td><td>DDPM 去噪（ε）</td><td>LPIPS + 像素 metric</td><td>未说明</td><td>未说明</td><td>LPIPS 加入去噪目标的直接先例</td></tr>
+<tr><td><strong>Diffusion Model with Perceptual Loss</strong><br><span class="small">arXiv:2401.00110</span> <span class="b medium">子核</span></td><td>2023</td><td>无条件生成</td><td>MSE 去噪</td><td>self-perceptual loss</td><td>未说明</td><td>未说明</td><td>论证感知损失可部分替代 guidance</td></tr>
+<tr><td><strong>Boosting Latent Diffusion with Perceptual Objectives</strong><br><span class="small">arXiv:2411.04873</span> <span class="b medium">子核</span></td><td>2024</td><td>潜空间扩散 / flow matching</td><td>LDM 去噪</td><td>Latent Perceptual Loss（AE 解码器内部特征）</td><td>未说明</td><td>未说明</td><td><span class="b high">高</span>——latent 域感知损失，正合 LDM 场景</td></tr>
+<tr><td><strong>Diffuse and Disperse（Dispersive Loss）</strong><br><span class="small">arXiv:2506.09027</span> <span class="b medium">子核</span></td><td>2025</td><td>扩散生成</td><td>回归去噪</td><td>无正样本对的对比式正则</td><td>常数 λ，无时间步调度</td><td>未说明</td><td>无需外部编码器的自洽正则</td></tr>
+<tr><td><strong>Diffusion-DPO</strong><br><span class="small">arXiv:2311.12908 · CVPR 2024</span> <span class="b medium">子核</span></td><td>2023</td><td>偏好对齐</td><td>ELBO 化 DPO 目标</td><td>—</td><td>未说明</td><td>未说明</td><td>中</td></tr>
+<tr><td><strong>ReFL / ImageReward</strong><br><span class="small">arXiv:2304.05977 · NeurIPS 2023</span> <span class="b medium">子核</span></td><td>2023</td><td>微调 T2I</td><td>奖励反馈损失</td><td>—</td><td>未说明</td><td>未说明</td><td>中</td></tr>
+<tr><td><strong>Physics-Informed Distillation of Diffusion Models for PDE</strong><br><span class="small">arXiv:2505.22391</span> <span class="b medium">子核</span></td><td>2025</td><td>PDE 约束生成</td><td>扩散去噪</td><td>PDE 残差（<strong>只在最终 x₀ 上</strong>）</td><td><strong>刻意避开 t 加权</strong>——post-hoc 施加于干净样本</td><td>隐含——明确批评中间 t 用 posterior mean 受 Jensen gap 影响</td><td><span class="b high">另一条思路</span>：与其加 t 权重，不如把约束挪到端点</td></tr>
+<tr><td><strong>Consistency Models</strong><br><span class="small">arXiv:2303.01469 · ICML 2023</span> <span class="b medium">子核</span></td><td>2023</td><td>一致性蒸馏</td><td>一致性损失</td><td>—</td><td><code>λ(t_n)</code> 形式上 t-dependent，但作者逐字说 <code>λ(t_n) ≡ 1</code> 就够</td><td>未说明</td><td>低</td></tr>
+<tr><td><strong>Hyperspectral Unmixing Guided Diffusion</strong><br><span class="small">arXiv:2506.02601</span> <span class="b medium">子核</span></td><td>2025</td><td>高光谱生成</td><td>丰度潜空间扩散</td><td>非负 + sum-to-one 物理约束</td><td>未说明（偏架构/潜空间约束）</td><td>未说明</td><td>中</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 表 A 里的四个「干净负结果」——这些空缺本身是结论</div>
+<ol>
+<li><strong>把语义 / 分割 / 分类损失直接加到扩散训练目标上：未找到直接先例。</strong>（SegDiff 一类是「用扩散做分割」，方向相反。）</li>
+<li><strong>把 Beer–Lambert / 光学密度约束作为训练损失项：未找到直接先例。</strong>计算机病理里的 BL 工作（见 §13）全部用在<strong>前向渲染</strong>或架构约束上，不是损失项。</li>
+<li><strong>训练期的「一致性 / 结构约束损失」：未找到直接先例。</strong>Consistency Models 是另一套范式。</li>
+<li><strong>「扩散在低 t 需要高频细节 vs 频域约束压制高频」这个冲突：未找到任何论文讨论。</strong>现有频域论文（FFL / Spectral Regularization / HR-Loss）<strong>方向完全一致——都是补高频</strong>。</li>
+</ol>
+<p>第 4 条对你的频域损失设计是<strong>直接可用的判断</strong>：如果你的频域约束是「补高频」，文献里没有先例显示它会与扩散冲突；如果是「压高频 / 平滑」，你是在走一条<strong>没有先例的路</strong>，必须自己先做 §14 的 P2 诊断。</p>
+</div>
+
+<h3>表 B · 多目标优化 / 梯度冲突方法：它们到底在修什么</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:18%">方法</th><th style="width:14%">出处</th><th style="width:20%">操作对象</th><th style="width:16%">修 loss 形状还是梯度几何</th><th style="width:14%">是否显式测冲突</th><th style="width:18%">关键负面信息</th></tr></thead>
+<tbody>
+<tr><td><strong>PCGrad</strong></td><td>arXiv:2001.06782 · NeurIPS 2020 <span class="b medium">子核</span></td><td><strong>per-task 梯度</strong>（负余弦时投影到法平面）</td><td><span class="b bad">梯度几何</span></td><td>是（核心证据）</td><td>原文把成因定位为「multi-task optimization <strong>landscape</strong> 的三种条件」——是几何不是 loss 形状</td></tr>
+<tr><td><strong>GradNorm</strong></td><td>arXiv:1711.02257 · ICML 2018 <span class="b medium">子核</span></td><td><strong>梯度幅度</strong>（动态调 loss 权重）</td><td><span class="b medium">幅度平衡</span></td><td>只测幅度，不测方向</td><td>修的是「训练速度不均衡」，<strong>不是方向冲突</strong></td></tr>
+<tr><td><strong>CAGrad</strong></td><td>arXiv:2110.14048 · NeurIPS 2021 <span class="b medium">子核</span></td><td>per-task 梯度（最差任务局部改进的正则）</td><td><span class="b bad">梯度几何</span></td><td>是（「not well aligned」）</td><td>可证收敛到<strong>平均损失</strong>的最小值——即「冲突不必清零」</td></tr>
+<tr><td><strong>MGDA / MGDA-UB</strong></td><td>arXiv:1810.04650 · NeurIPS 2018 <span class="b medium">子核</span></td><td>per-task 梯度（求 Pareto 下降方向）</td><td><span class="b bad">梯度几何</span></td><td>隐含（以能否共同下降定义）</td><td>措辞最像「loss 固有」，但判据是当前点的局部 Pareto 平稳性</td></tr>
+<tr><td><strong>IMTL / IMTL-G</strong></td><td>ICLR 2021 <span class="b medium">子核</span></td><td>共享参数的 per-task 梯度（闭式缩放因子）</td><td><span class="b medium">投影相等 / 尺度不变</span></td><td>测投影不等，非余弦</td><td>修的是「部分任务训练不足」</td></tr>
+<tr><td><strong>GradVac</strong></td><td>arXiv:2010.05874 <span class="b medium">子核</span></td><td>per-task 梯度（沿轨迹对齐到目标余弦）</td><td><span class="b bad">梯度几何</span></td><td><strong>是，且是全文核心</strong></td><td>—</td></tr>
+<tr><td><strong>Nash-MTL</strong></td><td>arXiv:2202.01017 · ICML 2022 <span class="b medium">子核</span></td><td>per-task 梯度的组合（Nash 议价解）</td><td><span class="b bad">梯度几何</span></td><td>隐含</td><td>—</td></tr>
+<tr><td><strong>Aligned-MTL</strong></td><td>arXiv:2305.19000 · CVPR 2023 <span class="b medium">子核</span></td><td><strong>梯度线性系统的条件数</strong></td><td><span class="b bad">几何 + 条件数</span></td><td>是（冲突 + 支配统一为条件数）</td><td>批评多数 MTL 方法「could converge to any Pareto-stationary point」</td></tr>
+<tr><td><strong>ConFIG</strong> ★</td><td>arXiv:2408.11104 · ICLR 2025 spotlight <span class="b medium">子核</span></td><td><strong>每个 loss 项的梯度</strong>；保证更新与各梯度点积为正</td><td><span class="b bad">梯度几何</span></td><td>是（dot product）+ 按冲突程度动态调幅度</td><td><strong>措辞在 loss 层（「multiple additive terms that can disagree」），判据在梯度层</strong>——这是 diffusion 多损失场景最可移植的方法</td></tr>
+<tr><td><strong>Pareto MTL</strong></td><td>arXiv:1912.12854 · NeurIPS 2019 <span class="b medium">子核</span></td><td>求一组 Pareto 解供挑选</td><td><span class="b tealb">多目标</span></td><td>—</td><td>「优化 trade-off」而非「消除冲突」的奠基立场</td></tr>
+<tr><td><strong>Recon</strong></td><td>arXiv:2302.11289 · ICLR 2023 <span class="b high">★核</span></td><td><strong>逐共享层的 conflict score</strong>；把高分层改为 task-specific</td><td><span class="b high">改架构（参数子集）</span></td><td>是（逐层）</td><td><strong>摘要逐字：「gradient surgery cannot effectively reduce the occurrence of conflicting gradients」</strong></td></tr>
+<tr><td><strong>Sparse Training</strong></td><td>arXiv:2411.18615 <span class="b high">★核</span></td><td><strong>参数子集</strong>（只更新一部分参数）</td><td><span class="b high">改架构（参数子集）</span></td><td>是（跨方法系统比较）</td><td><strong>摘要逐字：「they cannot decrease the incidence of gradient conflict」</strong>；ST 可与梯度操纵叠加</td></tr>
+<tr><td><strong>RLW / RGW</strong>（随机加权）</td><td>arXiv:2111.10603 <span class="b medium">子核</span></td><td><strong>随机</strong> loss / 梯度加权</td><td><span class="b bad">—</span></td><td>—</td><td><strong>★ 最硬的负结果之一</strong>：对 12 个 SOTA 平衡方法做对照，<strong>随机加权即可取得相当性能</strong></td></tr>
+<tr><td><strong>GCond</strong></td><td>arXiv:2509.07252 · IEEE Access 14:42086, 2026 <span class="b medium">子核</span></td><td>先梯度累积降方差，再解冲突</td><td><span class="b bad">梯度几何 + 方差</span></td><td>是（把冲突当含方差随机量）</td><td>承认冲突<strong>被梯度方差污染</strong></td></tr>
+<tr><td><strong>GradOPS</strong></td><td>arXiv:2503.03438 · WSDM 2025 <span class="b medium">子核</span></td><td>投影到其他任务张成子空间的<strong>正交补</strong></td><td><span class="b bad">梯度几何</span></td><td>是</td><td><strong>主动消除正交分量</strong>（与 §9 我的观点相反）</td></tr>
+<tr><td><strong>SAM-GS</strong></td><td>arXiv:2506.06130 · ECMLPKDD 2025 <span class="b medium">子核</span></td><td>改用<strong>梯度幅度</strong>相似度而非余弦</td><td><span class="b bad">梯度几何</span></td><td>是</td><td><strong>明确指出「余弦不够用」</strong>——冲突来自幅度<em>或</em>方向</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>表 C · 预测参数化与损失加权</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">工作</th><th style="width:14%">出处</th><th style="width:64%">与本报告相关的内容</th></tr></thead>
+<tbody>
+<tr><td><strong>Progressive Distillation（v-参数化）</strong></td><td>arXiv:2202.00512 · ICLR 2022 <span class="b high">★核正文</span></td><td>Eq.9 逐字：<code>‖ε−ε̂‖² = (α_t²/σ_t²)‖x−x̂‖²</code>，「can thus equivalently be seen as a weighted reconstruction loss in x-space, where the weighting function is given by <code>w(λ_t) = exp(λ_t)</code>」；正文逐字：SNR→0 时 ε̂ 的微小变化对 x̂ 的影响「increasingly <strong>amplified</strong>… divides by α_t→0」；<strong>ε + truncated-SNR 被实测不稳定</strong>，v「most stable option, as it has the unique property of making DDIM step-sizes independent of the SNR」。</td></tr>
+<tr><td><strong>Min-SNR-γ</strong></td><td>arXiv:2303.09556 · ICCV 2023 <span class="b high">★核摘要</span></td><td>摘要逐字：「conflicting optimization directions between timesteps」+「treat the diffusion training as a multi-task learning problem」+「balances the conflicts among timesteps」。<strong>这是「timestep 冲突」最权威的扩散领域引用。</strong></td></tr>
+<tr><td><strong>Common Diffusion Noise Schedules and Sample Steps are Flawed</strong></td><td>arXiv:2305.08891 · WACV 2024 <span class="b high">★核</span></td><td>zero terminal SNR；逐字：「When SNR is zero, ε prediction becomes a trivial task and ε loss <strong>cannot guide the model to learn anything meaningful</strong> about the data.」⇒ 支持 §4 的高 t 分析。</td></tr>
+<tr><td><strong>EDM</strong></td><td>arXiv:2206.00364 · NeurIPS 2022 <span class="b medium">子核正文</span></td><td>损失写作 <code>E[λ(σ)‖D−y‖²]</code>，改写后出现标注为 <em>effective weight</em> 的因子 <code>λ(σ)c_out(σ)²</code>；为均衡有效权重取 <code>λ(σ)=1/c_out(σ)²</code>；「at large σ… any errors made by the network are <strong>amplified by a factor of σ</strong>」。</td></tr>
+<tr><td><strong>P2（Perception Prioritized Training）</strong></td><td>arXiv:2204.00227 · CVPR 2022 <span class="b medium">子核</span></td><td><code>λ'_t = λ_t/(k+SNR(t))^γ</code>，k=1，γ∈{0.5,1}。三阶段（coarse/content/clean-up）假设，<strong>抑制大 SNR 段</strong>。</td></tr>
+<tr><td><strong>Understanding the Diffusion Objective as a Weighted Integral of ELBOs</strong></td><td>arXiv:2303.00848 <span class="b medium">子核</span></td><td>逐字：「The only real difference between diffusion objectives is their <strong>difference in weighting w(λ)</strong>.」⇒ 「三种参数化等价」的准确边界。</td></tr>
+<tr><td><strong>Loss Functions in Diffusion Models: A Comparative Study</strong></td><td>arXiv:2507.01516 <span class="b medium">子核</span></td><td>NELBO 各参数化「fundamentally equivalent」，但「these weighted loss functions are <strong>not</strong> equivalent」。给出重缩放系数：ε→σ_t²/α_t²，v→σ_t²/(α_t²+σ_t²)，x→1。</td></tr>
+<tr><td><strong>Not All Prediction Targets Keep Training-Free Diffusion Guidance on the Manifold</strong></td><td>arXiv:2607.00647 · <strong>ECCV 2026</strong> <span class="b high">★核（venue 已核）</span></td><td>摘要逐字：「its objective (a classifier or energy) is defined on clean images, ε- and v-prediction models <strong>must first estimate the clean image x̂</strong>… the accuracy of that estimate determines how easily guidance <strong>drifts off the data manifold</strong>」；x-prediction「removing this source of error even at high noise」。<strong>★ 但它是推理期 guidance，不是训练期辅助损失</strong>；正文的 O(1/t) vs O(1) 界我未逐字复核。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>表 D · 冲突的度量，与「冲突何时有益」</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">工作</th><th style="width:16%">出处</th><th style="width:62%">结论</th></tr></thead>
+<tbody>
+<tr><td><strong>Adapting Auxiliary Losses Using Gradient Similarity</strong></td><td>arXiv:1812.02224 <span class="b high">★核</span></td><td><strong>★ 这是「辅助损失 vs 主损失」最直接的前身。</strong>摘要逐字：「We propose to use <strong>the cosine similarity between gradients of tasks as an adaptive weight</strong> to detect when an auxiliary loss is helpful to the main loss」；「guaranteed to converge to critical points of <strong>the main task</strong>」。⇒ 你问的 Q1，2018 年就有人把它变成了方法。</td></tr>
+<tr><td><strong>Gradient Conflict 审计（GRIDUMM）</strong></td><td>arXiv:2609.38465 · 2026-09-29 <span class="b high">★核</span></td><td>63 配置 / 372 checkpoint：<strong>没有任何方向性冲突指标与最终 trade-off 的 |Spearman| 达到 0.3</strong>；单调压制冲突的干预<strong>对 trade-off 无影响</strong>；norm ratio 只是「生成失败探测器」；<strong>functional interference 优于方向性指标</strong>。</td></tr>
+<tr><td><strong>Three-Way Trade-Off in MOL</strong></td><td>JMLR 25(2024) 1–53 <span class="b high">★核</span></td><td>摘要逐字：动态加权「may not outperform static ones」；MGDA 式<strong>冲突规避方向可能妨碍达到最优 <code>O(1/√n)</code> population risk</strong>；给出 optimization–generalization–conflict-avoidance <strong>三方权衡</strong>。<span class="small">（子 agent 报为 O(1/n)，我已按 JMLR 原文更正为 O(1/√n)）</span></td></tr>
+<tr><td><strong>SAM-GS</strong></td><td>arXiv:2506.06130 · ECMLPKDD 2025 <span class="b medium">子核</span></td><td>「余弦不够用」的直接证据：冲突来自幅度<em>或</em>方向，改用梯度<strong>幅度</strong>相似度。</td></tr>
+<tr><td><strong>GCond</strong></td><td>arXiv:2509.07252 <span class="b medium">子核</span></td><td>把冲突建模为<strong>含方差的随机量</strong>，先梯度累积稳定再解冲突。★ 但检索<strong>未找到</strong>系统报告逐 batch cos <strong>分布</strong>（均值/方差/分位数）的论文——这仍是空白。</td></tr>
+<tr><td><strong>Recon</strong></td><td>arXiv:2302.11289 · ICLR 2023 <span class="b high">★核</span></td><td><strong>逐共享层</strong>算 conflict score（不是只算全局）。⇒ 支持 §1.2 的「必须逐 block 算」。</td></tr>
+<tr><td><strong>Aligned-MTL / GradOPS</strong></td><td>arXiv:2305.19000 / arXiv:2503.03438 <span class="b medium">子核</span></td><td><strong>主流立场是把正交分量当作要消除的对象。</strong>⇒ §9 我提出的「正交分量承载价值」<strong>没有文献支持，且与主流相反</strong>。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>表 E · 参数子集 / 停梯度</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:24%">工作</th><th style="width:16%">出处</th><th style="width:60%">结论</th></tr></thead>
+<tbody>
+<tr><td><strong>Sparse Training</strong></td><td>arXiv:2411.18615 <span class="b high">★核</span></td><td>只更新一部分参数即可<strong>有效减少冲突</strong>，且可与梯度操纵方法叠加。⇒ §8 的核心证据。</td></tr>
+<tr><td><strong>Recon</strong></td><td>arXiv:2302.11289 · ICLR 2023 <span class="b high">★核</span></td><td>把高冲突层改成 task-specific ⇒ 剩余共享层冲突大降，代价是参数增加。⇒ <strong>冲突是「被搬走」不是「被根除」</strong>。</td></tr>
+<tr><td><strong>ConsMTL</strong></td><td>CVPR 2025 <span class="b medium">子核</span></td><td>把 MTL 建成<strong>双层优化</strong>：task-specific 参数会反过来影响回传到共享参数的梯度。⇒ <strong>分开参数后冲突仍经由共享表示传播。</strong></td></tr>
+<tr><td><strong>From Shared Parameters to Shared Representation</strong></td><td>IEEE Access 12:128717, 2024 <span class="b medium">子核</span></td><td>资源竞争从「共享参数」推广到「<strong>共享表示</strong>」。⇒ 仅拆参数不足以消除竞争。</td></tr>
+<tr><td><strong>DPT</strong></td><td>arXiv:2607.19971 · ECCV 2026 <span class="b medium">子核</span></td><td>Disjoint Parameter Training：分离各任务关键参数区域再合并；<strong>稀疏合并优于全量合并</strong>。</td></tr>
+<tr><td><strong>SimSiam</strong></td><td>arXiv:2011.10566 <span class="b medium">子核</span></td><td><strong>stop-gradient 是防止表示坍塌的关键</strong>（去掉即坍塌）。代价：阻断梯度流 ⇒ 联合优化退化为交替/半独立优化。★ 未找到把 detach 明确表述为「冲突规避」并量化代价的论文。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s11"><span class="num">11</span>多目标优化方法到底在修什么</h2>
+
+<p>简报 §八 要求「不要只是罗列」。表 B 已经回答了核心问题，这里给出结论。</p>
+
+<div class="box key">
+<div class="bt">答案：它们修的全都是「多个目标在参数空间中的梯度冲突」，没有一个在修「loss 本身不好」</div>
+<p>逐条看表 B 的第三列——PCGrad 投影 per-task 梯度、GradNorm 平衡梯度幅度、CAGrad 正则化最差任务、MGDA 求 Pareto 下降方向、GradVac 对齐轨迹余弦、Aligned-MTL 调条件数、ConFIG 保证点积为正——<strong>全部作用于「当前 θ 处的 per-task 梯度」</strong>。</p>
+<p>而且原文措辞也印证：PCGrad 把成因定位为「multi-task optimization <strong>landscape</strong> 的三种条件」（几何），CAGrad 说「gradients… <strong>not well aligned</strong>」，Nash-MTL 说「gradients… may conflict」，Aligned-MTL 更进一步把冲突与支配统一成<strong>梯度线性系统的条件数</strong>——一个纯局部（point-wise）准则。</p>
+<p><strong>⇒ 「loss 函数」决定冲突在参数空间中何时何地可能出现；但被测量、被优化的「conflict」始终是当前 θ 处的梯度几何。</strong></p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 四条负面证据（这是本报告最该记住的一组）</div>
+<ol>
+<li><strong>梯度手术不减少冲突的发生率。</strong>Recon（ICLR 2023）与 Sparse Training（arXiv:2411.18615）<strong>两篇独立工作给出同一结论</strong>，后者摘要逐字：「they <strong>cannot decrease the incidence of gradient conflict</strong>」。<span class="b high">★核</span></li>
+<li><strong>随机加权就够了。</strong>RLW/RGW（arXiv:2111.10603）对 12 个 SOTA 平衡方法做对照，发现<strong>随机 loss/梯度加权即可取得相当性能</strong>。⇒ 许多「冲突修复」的增益可能来自随机性/正则化，而不是真的解决了冲突。<span class="b medium">子核</span></li>
+<li><strong>冲突规避有泛化代价。</strong>JMLR 25(2024)：MGDA 式冲突规避方向<strong>可能妨碍达到最优 <code>O(1/√n)</code> population risk</strong>，并给出三方权衡。<span class="b high">★核</span></li>
+<li><strong>冲突指标作为诊断目标的有效性未被建立。</strong>arXiv:2609.38465（2026-09-29）：|Spearman| &lt; 0.3，且压制冲突不改善 trade-off。<span class="b high">★核</span></li>
+</ol>
+<p><strong>⇒ 合起来：这些方法解决的是「梯度几何」，而且这个「解决」本身在（a）是否真能减少冲突、（b）是否改善最终 trade-off、（c）是否有泛化代价 三个方向上都存疑。</strong></p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 那到底该不该上 PCGrad？—— 四条理由说「不要」，且有一条硬证据</div>
+<ol>
+<li><strong>由 §2，点式重建类的辅助损失本来就没有方向冲突</strong>（<code>cos = +1</code>）。在无冲突的地方做梯度手术是空操作，只会增加不可复现的代码。</li>
+<li><strong>由 §8，参数子集不相交时投影也是空操作</strong>（<code>g₁ᵀg₂ ≡ 0</code>）。</li>
+<li><strong>由本节四条负面证据</strong>，梯度手术的收益在「减少冲突发生率」上被证伪、在「改善 trade-off」上被审计挑战、在「泛化」上被证明有代价。</li>
+<li><strong>★★ 最强的一条（详见 §12.2）：Lantern 的受控实验直接测了这件事，结果是灾难性的。</strong>在「唯一变量是梯度组合规则」的受控设置下，<strong>PCGrad / GradNorm / IMTL-G / ConFIG 把 FPD 相对纯去噪基线放大 2–100×</strong>（摘要逐字：<em>inflates FPD by 2-100x relative to denoising alone</em>）。它们失败的共同原因是<strong>把去噪损失当成与辅助损失平级的任务</strong>——而去噪损失是尺度基准，不是平级任务。</li>
+</ol>
+<p><strong>⇒ 正确顺序是：先做 §14 的诊断（P0 最便宜），把冲突定位到「方向（目标问题）」「幅度（t 加权问题）」还是「阶段（训练进程问题）」，再决定药。</strong></p>
+<p><strong>★★ 关于梯度层干预的推荐更正：</strong>本报告第一版曾推荐 <strong>ConFIG</strong> 作为「最贴近本场景的可移植选择」——<strong>该推荐作废</strong>，因为 Lantern 的受控实验显示 ConFIG 在两个辅助损失上分别恶化 <strong>6.6× 与 8.5×</strong>（见 §12.2）。当时我把「措辞最贴合」误当成「效果最好」，这是从文本相似度推断性能，方法论上不成立。</p>
+<p><strong>目前的诚实结论：没有任何通用的多目标梯度方法被证明能在「扩散 + 辅助损失」场景下无损工作。</strong>唯一在受控实验中无损的是 Lantern 的 <strong>GradBlend</strong>，而它的设计原则恰恰是<strong>不对称</strong>——方向可以让辅助损失参与，幅度必须锚定在去噪梯度上。若你确实需要梯度层干预，应把它当作<strong>需要自己重新验证的方法</strong>，而不是可以直接引用的现成方案。</p>
+</div>
+
+<h2 id="s12"><span class="num">12</span>训练进程：第二个时间轴（★ 收益最大的一个，本报告第一版漏掉了）</h2>
+
+<div class="box stop">
+<div class="bt">★ 诚实声明</div>
+<p>本节是我在核对库内既有报告 <code>HE2IHC_Diffusion_Loss_Combination_Guide.html</code> 时补上的。<strong>本报告第一版只考虑了「样本内的 t 轴」（§4），完全漏掉了「优化步 s 轴」——而 s 轴是文献里收益最大、也最容易实现的一个轴。</strong>漏掉它意味着第一版的实验优先级排序是有偏的，已在此修正。</p>
+</div>
+
+<h3>12.1 两个「时间轴」必须分开</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:16%">轴</th><th style="width:30%">是什么</th><th style="width:24%">调度量</th><th style="width:30%">本报告在哪一节</th></tr></thead>
+<tbody>
+<tr><td><strong>t 轴</strong><br><span class="small">样本内</span></td><td>同一个样本在扩散过程中所处的噪声水平</td><td><code>λ(t)</code>，例如 <code>∝ √SNR(t)</code></td><td>§4（两个病灶）、§5（参数化）</td></tr>
+<tr><td><strong>s 轴</strong><br><span class="small">训练进程</span></td><td>优化步。同一个损失在不同训练阶段的行为不同</td><td><code>w(s)</code>：warmup ramp + <strong>末期关闭</strong></td><td><strong>本节</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>两者都叫「时间」，所以极易混淆。但它们的<strong>处置手段完全不同</strong>：t 轴的药是「改加权 / 换参数化」，s 轴的药是「改训练调度」——后者<strong>不需要改挂载点、不需要改目标、不需要动架构</strong>。</p>
+
+<h3>12.2 s 轴上的决定性证据：Lantern 的受控实验</h3>
+
+<div class="box key">
+<div class="bt">为什么这个实验特别有说服力</div>
+<p><strong>Lantern</strong>（arXiv:2607.25060，提交于 <strong>2026-07-27</strong>；Farzana Yasmin Ahmad, Vanamala Venkataswamy, Geoffrey Fox）<span class="b high">★核摘要</span> 在量热器模拟任务上做了一个<strong>受控实验</strong>：架构固定、辅助损失固定、权重调度固定、预处理固定——<strong>唯一变量是「梯度组合规则」</strong>。因此它测的就是「辅助损失与去噪损失到底能不能一起加」这个纯粹的问题。任务领域是高能物理而非病理，但它描述的是<strong>优化器行为</strong>，与数据领域无关。</p>
+</div>
+
+<p><strong>主结果</strong>（数值转录自既有报告对 Lantern 原文 Table 1 的整理；FPD 越低越好）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26%">梯度组合规则</th><th style="width:16%">辅助损失</th><th style="width:22%">FPD ↓</th><th style="width:36%">相对纯去噪基线</th></tr></thead>
+<tbody>
+<tr><td><strong>Base（纯去噪，无辅助损失）</strong></td><td>—</td><td><strong>30.87</strong> ± 1.26</td><td><span class="b high">基线</span></td></tr>
+<tr><td>+ PCGrad</td><td>Voxel</td><td>68.50 ± 44.58</td><td><span class="b medium">2.2× 恶化</span></td></tr>
+<tr><td>+ GradNorm</td><td>Voxel</td><td>60.27 ± 11.15</td><td><span class="b medium">2.0× 恶化</span></td></tr>
+<tr><td>+ IMTL-G</td><td>Voxel</td><td>406.9 ± 80.9</td><td><span class="b bad">13× 恶化</span></td></tr>
+<tr><td><strong>+ ConFIG</strong></td><td>Voxel</td><td>204.7 ± 31.2</td><td><span class="b bad">6.6× 恶化</span></td></tr>
+<tr><td><strong>Lantern（GradBlend）</strong></td><td>Voxel</td><td>32.84 ± 3.27</td><td><span class="b high">≈ 基线</span></td></tr>
+<tr><td>+ PCGrad</td><td>Laplacian</td><td>169.0 ± 72.8</td><td><span class="b bad">5.5× 恶化</span></td></tr>
+<tr><td>+ GradNorm</td><td>Laplacian</td><td>133.5 ± 51.5</td><td><span class="b bad">4.3× 恶化</span></td></tr>
+<tr><td>+ IMTL-G</td><td>Laplacian</td><td>3454 ± 4820</td><td><span class="b bad">112× 恶化 · 发散</span></td></tr>
+<tr><td>+ ConFIG</td><td>Laplacian</td><td>262.8 ± 73.9</td><td><span class="b bad">8.5× 恶化</span></td></tr>
+<tr><td><strong>Lantern（GradBlend）</strong></td><td>Laplacian</td><td><strong>25.97 ± 1.44</strong></td><td><span class="b high">优于基线</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>摘要逐字：「On CaloChallenge Dataset 2, injecting the physics losses through <strong>task-symmetric rules such as PCGrad, GradNorm, IMTL-G, and ConFIG inflates FPD by 2-100x relative to denoising alone</strong>, whereas GradBlend admits the same signal without regression.」<span class="b high">★核</span></p>
+
+<p><strong>梯度诊断：冲突角实测 92°–128°</strong>（&gt;90° 即相互对抗）。<strong>⇒ §2 的失配项确实存在，而且幅度可观。这是对恒等式 3 最直接的实测支持。</strong></p>
+
+<h3>12.3 为什么这些方法会失败 —— 与 §11 汇合</h3>
+
+<p>关键词是摘要里的 <strong>「task-symmetric」</strong>：这些方法<strong>把两个梯度当作平级的任务</strong>来处理。但去噪损失不是平级任务——它是<strong>尺度基准</strong>，而且它是唯一出现在采样公式里的量。Lantern 的诊断表显示：</p>
+<ul>
+<li><strong>ConFIG 与 IMTL-G</strong> 让 <code>cos_d = cos_a</code>（中立对待）⇒ 两个目标都没做好；</li>
+<li><strong>GradNorm</strong> 的 Balance 甚至 &lt; 1（偏向辅助）⇒ 反而压制了去噪；</li>
+<li>只有 <strong>GradBlend</strong> 明确站在去噪一边（Balance 3.26）。</li>
+</ul>
+<p>Lantern 原文：「<em>Denoising is the objective that makes the network generative, so it must stay primary; an auxiliary that overrides it degrades the samples it is meant to improve.</em>」</p>
+
+<div class="box stop">
+<div class="bt">★★ 更正：我 §11 的推荐作废</div>
+<p>我在 §11 里写「如果诊断后确实需要梯度层干预，<strong>ConFIG</strong> 是最贴近你这个场景的可移植选择」。<strong>这条推荐作废。</strong></p>
+<p>Lantern 的受控实验显示：<strong>ConFIG 在两个辅助损失上分别把 FPD 恶化 6.6× 与 8.5×</strong>。它属于摘要点名失败的那一类「task-symmetric rules」。<strong>我把「措辞最贴合」当成了「效果最好」，这是从文本相似度推断性能，方法论上站不住。</strong></p>
+<p>正确的结论是：<strong>目前没有任何通用的多目标梯度方法被证明能在扩散 + 辅助损失场景下无损工作。</strong>唯一在受控实验中无损的是 Lantern 的 GradBlend，而它的设计原则恰恰是<strong>「不对称」</strong>——方向可以协商，幅度必须锚定在去噪梯度上。</p>
+</div>
+
+<h3>12.4 收益最大的一条：末期关闭</h3>
+
+<p>调度消融（同一架构、同一损失，<strong>唯一变量是门控时间</strong>）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:12%">调度</th><th style="width:44%">定义</th><th style="width:22%">FPD ↓（Voxel）</th><th style="width:22%">判定</th></tr></thead>
+<tbody>
+<tr><td><strong>S1</strong></td><td>第一步就打开辅助损失门控</td><td>173.4</td><td><span class="b bad">很差</span></td></tr>
+<tr><td><strong>S2</strong></td><td>warmup 后打开，保持到最后</td><td>236.3</td><td><span class="b bad">最差</span></td></tr>
+<tr><td><strong>S3</strong></td><td>同 S2，但在结束前关闭</td><td><strong>32.84</strong></td><td><span class="b high">唯一可用</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>摘要逐字：「Our ablation on the auxiliary loss scheduler shows that <strong>the voxel residual loss, whose gradient conflicts with denoising, requires a terminal denoising-only phase</strong> to preserve shower fidelity, whereas the <strong>non-conflicting Laplacian loss is insensitive to the schedule</strong>.」<span class="b high">★核</span></p>
+
+<div class="box good">
+<div class="bt">三条可直接照搬的结论</div>
+<ol>
+<li><strong>S2 → S3 是 7× 改善（236.3 → 32.84），而这是零额外模块、零额外损失的纯调度收益。</strong>它是整条文献里性价比最高的一条改动。</li>
+<li><strong>门控「在冲突处必要，在不冲突处无作用」。</strong>Laplacian 损失（不冲突）在 S1/S2/S3 下 FPD 只在 23.5–26.0 波动，完全不敏感。⇒ <strong>「要不要做调度」取决于该损失是否冲突——所以必须先诊断冲突角。</strong></li>
+<li><strong>冲突程度会随训练进程变化。</strong>Lantern 原文：「<em>The voxel gradient turns from cooperative to opposing over training.</em>」⇒ <strong>训练早期测到的冲突角不能代表全程。</strong></li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">★ 第 3 条直接修正我 §14.2 的诊断设计</div>
+<p>我原本把 P1/P2 设计成「一次分箱统计」——<strong>这是不够的</strong>。由 Lantern 第 3 条，<strong>冲突角必须沿训练步周期性记录（建议每 500 步），画成曲线</strong>。这也解释了为什么 S2（warmup 后一直开）反而比 S1（一开始就开）更差——因为 S2 让冲突损失在<strong>后期持续发挥作用</strong>，而后期正是它从合作转为对抗的时候。</p>
+</div>
+
+<h3>12.5 两个轴的关系与各自的药</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:14%">轴</th><th style="width:24%">病灶</th><th style="width:26%">药</th><th style="width:18%">改动成本</th><th style="width:18%">文献收益</th></tr></thead>
+<tbody>
+<tr><td><strong>t 轴</strong><br><span class="small">样本内</span></td><td>低 t 方向冲突（失配项主导）<br>高 t 幅度劫持（<code>SNR⁻¹</code>）</td><td><code>λ(t) ∝ √SNR(t)</code>；或换 v-参数化（§5）</td><td>低（改一行权重）</td><td>本报告预测（P1–P3），<strong>待验证</strong></td></tr>
+<tr><td><strong>s 轴</strong><br><span class="small">训练进程</span></td><td>辅助梯度在训练后期从合作转为对抗</td><td><strong>warmup ramp + 末期关闭</strong>（最后 15–25% 关闭）</td><td><strong>最低（纯调度）</strong></td><td><strong>Lantern 实测 7×（★核）</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>⇒ 处置顺序应该是：先 s 轴（免费、收益大、有硬证据），再 t 轴（便宜但需要先验证），最后才考虑梯度层干预（Lantern 显示通用方法反而有害）。</strong>这个顺序与我 §14（原 §13）里给的优先级不同，已在下节修正。</p>
+
+<h2 id="s13"><span class="num">13</span>逐类判定：你的五类辅助损失</h2>
+
+<p>按简报 §十六 Part 5 的形式 <code>L = L_diff + λ₁L_protein + λ₂L_freq + λ₃L_structure + λ₄L_physics</code>（再加 distribution matching），逐项给判定。</p>
+
+<h3>12.1 先给简报 §十四 要的三分类</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:16%">类别</th><th style="width:34%">包含</th><th style="width:50%">为什么（依据）</th></tr></thead>
+<tbody>
+<tr><td><span class="b high">第一类<br>通常兼容</span></td><td>点式重建 on <code>x̂₀</code>（<strong>目标配对</strong>）；<strong>前向</strong> Beer–Lambert 渲染损失；与 <code>x₀</code> 重建高度一致的约束</td><td>由 §2 恒等式 2，<code>cos = +1</code> <strong>恒成立</strong>——不是「通常」，是<strong>精确共线</strong>。唯一要处理的是幅度 <code>SNR⁻¹</code>。</td></tr>
+<tr><td><span class="b medium">第二类<br>需验证 alignment</span></td><td>频域（<strong>补高频</strong>方向）；感知 / 结构 / 语义；蛋白表达（点式）；concentration reconstruction（<strong>前向</strong>）</td><td>读出路径里多了 <code>∂φ/∂x̂</code>（感知）或一个低秩泛函（分布），<strong>不再有共线保证</strong>。必须实测 cos 与 λ_crit（§14）。</td></tr>
+<tr><td><span class="b bad">第三类<br>结构性易冲突</span></td><td>① 走<strong>逆算子</strong>的损失；② 走<strong>饱和解码器</strong>的损失；③ 频域<strong>压高频</strong>损失；④ 分布匹配损失</td><td><strong>★ 这四类没有一个是「loss 形式」的问题，全部是 Jacobian 病态或结构失配</strong>——正好印证 §3 的主命题。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">第三类四条的具体病在哪</div>
+<ol>
+<li><strong>逆算子</strong>：<code>C = M⁻¹·OD</code> 里 <code>log10</code> 在 OD→0 处发散、<code>M⁻¹</code> 在病态时放大噪声。<strong>药：改用前向（浓度→RGB），别对逆算子求导。</strong>（你项目里已有同一结论。）</li>
+<li><strong>饱和解码器</strong>：输出被 clamp 的区域 <code>∂Dec/∂x̂ ≈ 0</code> ⇒ 辅助梯度恒为零。<strong>药：改挂载点，或把 clamp 换成软饱和。</strong></li>
+<li><strong>频域压高频</strong>：与低 t 的 diffusion 目标<strong>争夺同一批高频系数</strong>——这是一个真实的方向冲突。<strong>★ 但检索未找到任何论文讨论它（干净负结果）</strong>，所以这是一条没有先例的路，必须自己先验。</li>
+<li><strong>分布匹配</strong>：<code>∇<sub>x̂</sub>L</code> 是平滑低秩泛函（均值 → 常向量），与重建梯度方向差很远，<strong>没有共线保证</strong>；且零空间巨大（置换不变）⇒ 它<strong>结构上不约束位置</strong>。</li>
+</ol>
+</div>
+
+<h3>12.2 逐项判定表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:13%">损失</th><th style="width:15%">建议挂载点</th><th style="width:17%">Jacobian 风险</th><th style="width:16%">目标差来源</th><th style="width:15%">预期 cos 行为</th><th style="width:12%">λ 建议</th><th style="width:12%">要不要 gradient surgery</th></tr></thead>
+<tbody>
+<tr><td><strong>L_protein</strong><br><span class="small">浓度 / DAB / FOD</span></td><td>情况 B（挂 <code>x̂₀</code>），且<strong>走前向 BL</strong></td><td><span class="b medium">对齐项 <code>SNR⁻¹</code></span><br><span class="b bad">若走逆算子则另加奇点</span></td><td>错位 ⇒ <code>x₀' ≠ x₀</code>（<strong>你的数据必然存在</strong>）</td><td>低 t 偏离、高 t → +1；<strong>幅度在高 t 爆炸</strong></td><td><strong><code>λ(t) ∝ √SNR(t)</code></strong>，或换 v-参数化</td><td><span class="b high">不要</span>——问题是幅度与目标，不是方向</td></tr>
+<tr><td><strong>L_freq</strong><br><span class="small">频域</span></td><td>情况 B（挂 <code>x̂₀</code>）</td><td><span class="b medium">Fourier 变换是线性等距 ⇒ Jacobian 条件数好</span></td><td>参考图与 <code>x₀</code> 不同（若用非配对参考）</td><td><strong>取决于方向</strong>：补高频 ⇒ 与低 t 目标同向；压高频 ⇒ <strong>直接对抗</strong></td><td>先固定小 λ（如 1e-2），做 λ 扫描</td><td><span class="b medium">仅在「压高频」且实测 cos 很负时</span></td></tr>
+<tr><td><strong>L_structure</strong><br><span class="small">结构 / 感知</span></td><td>情况 A 或 B</td><td><span class="b bad">感知损失多一层 <code>∂φ/∂x̂</code>，<strong>会旋转梯度</strong></span></td><td>若 <code>φ</code> 是外部编码器，其归纳偏置本身就是「目标差」</td><td><strong>即使目标配对也可能偏离 +1</strong></td><td>从 REPA 的 λ=0.5 起调</td><td><span class="b medium">只在实测 cos 明显为负时</span></td></tr>
+<tr><td><strong>L_physics</strong><br><span class="small">BL 前向渲染</span></td><td>情况 B（挂 <code>x̂₀</code>）</td><td><span class="b high">前向、可微、条件数好</span>——<strong>这是它比逆算子强的地方</strong></td><td>stain matrix 的标定误差（≈ 你 E0 阶段在测的东西）</td><td>接近共线，偏离主要由 M 的误差造成</td><td>可较大（如 0.1–1）</td><td><span class="b high">不要</span></td></tr>
+<tr><td><strong>L_dist</strong><br><span class="small">分布匹配</span></td><td>情况 B（挂 <code>x̂₀</code>）</td><td><span class="b medium">读出泛函低秩平滑</span></td><td>无「目标图」概念，方向差来自泛函本身</td><td><strong>无共线保证</strong>，通常远离 +1</td><td>需要实测，建议与 FOD 均值项分开调</td><td><span class="b high">不要</span>——它的低 cos 是结构性的，不是病</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 关于你已定的第一优先级实验：FOD 分布损失挂在 x̂₀ 上</div>
+<p>这个选择在「挂载点」意义上是<strong>对的</strong>（挂端点、有先例、改动最小、抗错位）。但它<strong>自带一个你目前没有计入的结构性隐患</strong>：</p>
+<ul>
+<li><strong>Jacobian 是 <code>SNR(t)^(−1/2)</code></strong> ⇒ 辅助梯度被<strong>高噪声样本主导</strong>。而高噪声处 <code>x̂₀</code> 基本是噪声，<strong>「DAB 分布对不对」在那里没有语义</strong>。</li>
+<li>更糟的是：高 t 处 ε 损失本身信号就弱（Lin et al. 逐字：「ε loss cannot guide the model to learn anything meaningful」）⇒ <strong>同量级的辅助梯度在高 t 的相对权重被进一步抬高</strong>。</li>
+</ul>
+<p><strong>三选一的修法（按改动量排序）：</strong></p>
+<ol>
+<li><strong>加 t 权重 <code>λ(t) ∝ √SNR(t)</code></strong>——抵消 Jacobian，改动一行。<span class="b high">推荐先试</span></li>
+<li><strong>换 v-参数化</strong>——<code>∂x̂/∂v̂ = −σ_t</code> 有界 [−1,0]，<strong>从根上消除 1/x 型增益</strong>（§5）。这是「v-prediction 更好」的第二个理由，与「端点恢复不除法」并列。</li>
+<li><strong>照 PIDM 的做法用方差调度</strong>（arXiv:2403.14404 正文：<code>1/(2Σ̄_t)</code>，高 t 降权、t→0 收紧）——<strong>处方与方案 1 同向，但推导是贝叶斯的</strong>；引用时要说清是借它的结论还是借它的推导。</li>
+</ol>
+<p><strong>★ 不要用 gradient surgery 修这个。</strong>它不是方向问题。</p>
+</div>
+
+<div class="box good">
+<div class="bt">另外一条来自本报告的独立建议</div>
+<p>由 §13.1 第三类第 4 条，<strong>分布匹配损失结构上不约束位置</strong>（置换不变）。而你真正想约束的是「DAB 在正确的地方」。</p>
+<p><strong>⇒ 分布项与位置项必须成对出现，不能只上分布项。</strong>位置项可以用点式（前向 BL 渲染到 RGB 后做重建）或关系级（两两相似度结构）。这与你在蛋白约束地图里已有的「L0 与 L1 瞎点互补」结论一致——<strong>本报告为它补上了梯度层面的解释</strong>：两者的方向性来源不同，所以它们不会互相取代。</p>
+</div>
+
+<h2 id="s14"><span class="num">14</span>实验优先级与零训练诊断</h2>
+
+<div class="box key">
+<div class="bt">总原则：先诊断，再决定要不要上任何梯度层干预</div>
+<p>由 §11 的四条负面证据，<strong>默认答案是「不上 gradient surgery」</strong>。要改变这个默认，必须先有诊断证据。</p>
+</div>
+
+<h3>13.1 优先级排序</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:8%">优先级</th><th style="width:24%">做什么</th><th style="width:14%">训练成本</th><th style="width:54%">它回答什么</th></tr></thead>
+<tbody>
+<tr><td><span class="b high">P0</span><br><span class="small">新增</span></td><td><strong>末期关闭辅助损失</strong>（s 轴）：warmup ramp 后保持，在最后 15–25% 迭代把 <code>w(s)</code> cosine 衰减到 0</td><td><strong>零</strong>（纯调度）</td><td><strong>★ 这是整份文献里性价比最高的一条改动。</strong>Lantern 实测 S2→S3 使 FPD 从 236.3 降到 32.84（<strong>7×</strong>），且不需要改挂载点、目标或架构。同时报告「门控在冲突处必要、在不冲突处无作用」——所以它同时也是<strong>一个廉价的冲突探测器</strong>：如果末期关闭带来明显收益，说明该辅助损失确实在冲突。</td></tr>
+<tr><td><span class="b high">P0</span></td><td><strong>假配对实验</strong>（预测 P5）：把辅助目标设成与 diffusion 训练对<strong>完全相同</strong>的 <code>x₀</code></td><td><strong>零</strong>（一个 batch）</td><td>验证恒等式 2：<code>cos</code> 应 → +1、幅度比应 = <code>SNR⁻¹</code>。<strong>这是整条分析链的地基检验；不通过说明实现里有额外的 Jacobian 因子或 <code>detach</code> 位置与预期不符。</strong></td></tr>
+<tr><td><span class="b high">P0</span></td><td><strong>逐 block 梯度冲突诊断</strong>（脚本见 13.2）</td><td><strong>零</strong>（一个 batch）</td><td>输出：每个 block 的 <code>cos</code>、幅度比、<strong>硬冲突占比</strong>、<code>λ/λ_crit</code>、<strong>以及「该 block 是否在辅助梯度路径上」</strong>。后者直接实测 §8 的参数子集是否相交。</td></tr>
+<tr><td><span class="b medium">P1</span></td><td><strong>冲突角随训练步的曲线</strong>（s 轴）：每 500 步记录一次 <code>θ_conf</code>，画成曲线</td><td><strong>零</strong>（复用 P0 的诊断）</td><td>★ Lantern 发现「<em>the voxel gradient turns from cooperative to opposing over training</em>」⇒ <strong>训练早期测到的冲突角不能代表全程</strong>。这条曲线决定 warmup 时长与末期关闭的起点。</td></tr>
+<tr><td><span class="b medium">P1</span></td><td><strong>cos 随 t 的形状</strong>（预测 P2）</td><td><strong>零</strong>（分箱统计）</td><td>确认「低 t 方向冲突 / 高 t 幅度劫持」是否成立。<strong>若与我的预测相反，说明分解有遗漏，必须先解决再往下走。</strong></td></tr>
+<tr><td><span class="b medium">P1</span></td><td><strong>λ(t) 扫描</strong>：固定模型，只扫 <code>λ(t)</code> 的常数 / <code>√SNR</code> / min-SNR 三档</td><td>零（不改模型）</td><td>确认「加 <code>λ(t) ∝ √SNR(t)</code> 后幅度比是否被拉平」。这比直接重训便宜得多。</td></tr>
+<tr><td><span class="b medium">P2</span></td><td><strong>换 v-参数化</strong>（预测 P3）</td><td>中（要重训）</td><td>验证幅度比从 <code>SNR⁻¹</code> 变成有界的 <code>σ_t²</code>。<strong>这一条在代数上已经是可证的</strong>，实验只是确认实现。</td></tr>
+<tr><td><span class="b low">P3</span></td><td><strong>饱和区梯度检验</strong>（预测 P4）：在解码 RGB 上挂一个 L2，看黑团区梯度是否 ≈ 0</td><td>零</td><td>确认「黑团不可能被辅助损失修好」。</td></tr>
+<tr><td><span class="b bad">不做</span></td><td><strong>先上 PCGrad / GradNorm / CAGrad</strong></td><td>—</td><td>由 §11：在无冲突处是空操作，且收益在三方向上都存疑。<strong>等 P0/P1 给出「确实是方向问题」的证据再说。</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>13.2 诊断脚本骨架（零训练，逐 block + 按 t 分箱）</h3>
+
+<pre><code>import torch
+
+def named_trainable(model):
+    return [(n, p) for n, p in model.named_parameters() if p.requires_grad]
+
+def grad_conflict_report(model, loss_diff, loss_aux, t_bin, eps=1e-9):
+    """
+    在同一份 forward 上分别求 g_diff 与 g_aux，逐 block 统计。
+    ★ 关键纪律：幅度下限 + 逐 block + 报分布 + 报硬冲突 + 报 λ_crit
+    """
+    params = [p for _, p in named_trainable(model)]
+
+    g_diff = torch.autograd.grad(loss_diff, params,
+                                 retain_graph=True, allow_unused=True)
+    g_aux  = torch.autograd.grad(loss_aux, params,
+                                 retain_graph=False, allow_unused=True)
+
+    rows = []
+    for (name, _), gd, ga in zip(named_trainable(model), g_diff, g_aux):
+        # ★ 这一条就是 §8「参数子集不相交」的实测判据：
+        #   辅助损失对该 block 完全没有梯度 ⇒ 支持集不相交 ⇒ gᵀg ≡ 0
+        if ga is None or ga.abs().max() == 0:
+            rows.append((name, t_bin, "NOT_IN_AUX_PATH", None, None, None, None))
+            continue
+        if gd is None:
+            rows.append((name, t_bin, "NOT_IN_DIFF_PATH", None, None, None, None))
+            continue
+
+        nd, na = gd.norm(), ga.norm()
+        # ★ 幅度下限：接近收敛时两个梯度都→0，cos 变成 0/0，必须丢弃而不是平均进去
+        if nd &lt; eps or na &lt; eps:
+            rows.append((name, t_bin, "BELOW_FLOOR", None, None, None, None))
+            continue
+
+        dot  = (gd * ga).sum()
+        cos  = (dot / (nd * na)).item()
+        ratio = (na / nd).item()
+        # ★ 严格判据：硬冲突 = L_diff 在这一步真的上升
+        hard = bool(dot &lt; -(nd ** 2))
+        # ★ 临界 λ：只在 cos &lt; 0 时有定义
+        lam_crit = (nd / (na * abs(cos))).item() if cos &lt; 0 else float("inf")
+
+        rows.append((name, t_bin, "OK", cos, ratio, hard, lam_crit))
+    return rows
+
+# 用法：按 t 分箱（例如 8 箱），对每个箱跑一次，然后聚合
+#   for tb in range(8):
+#       ...取该箱的 batch...
+#       rows += grad_conflict_report(model, L_diff, L_aux, tb)
+# 聚合时：报 cos 的 P10/P50/P90（不要只报均值）、ratio 的中位数、
+#         hard 的占比、以及 λ/λ_crit &gt; 1 的占比</code></pre>
+
+<div class="box pur">
+<div class="bt">★ 脚本里两条纪律的出处</div>
+<ul>
+<li><strong>逐 block</strong>：Recon（ICLR 2023）的做法就是「逐共享层算 conflict score」。全局 cos 会被梯度质量最大的层主导，掩盖「某几层在冲突」。</li>
+<li><strong>报分布不报单值</strong>：检索<strong>未找到</strong>系统报告逐 batch cos 分布的论文（子 agent 明确报告为空白），所以这一条是我从「cos 是随机变量」这个事实推出的，不是引用。</li>
+</ul>
+</div>
+
+<h3>13.3 诊断结果 → 处置（决策表）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:38%">诊断现象</th><th style="width:20%">说明</th><th style="width:42%">处置</th></tr></thead>
+<tbody>
+<tr><td><code>NOT_IN_AUX_PATH</code> 覆盖全部 U-Net block</td><td>参数支持集<strong>不相交</strong>（§8）</td><td><strong>不要管 cos</strong>。改去监控<strong>震荡</strong>（loss 曲线的周期性、两个优化器的相对步长）。工具是交替/双层优化，不是梯度手术。</td></tr>
+<tr><td><code>cos ≈ +1</code> 且 <code>ratio ≈ SNR⁻¹</code></td><td>恒等式 2 成立 ⇒ 这是<strong>冗余监督</strong>（§9）</td><td>考虑<strong>删掉这个辅助损失</strong>，或把它改成有独立目标的形式。它没有在提供新信息。</td></tr>
+<tr><td><code>cos &lt; 0</code> 且集中在<strong>低 t</strong> 箱</td><td><strong>方向冲突</strong>，根源是目标差 <code>x₀−x₀'</code>（§2、§4）</td><td><strong>改目标</strong>：提高配对质量 / 换成对错位不敏感的代理量（分布级、ranking 级）/ 换更弱的约束。<strong>不要上 gradient surgery。</strong></td></tr>
+<tr><td><code>ratio ≫ 1</code> 且集中在<strong>高 t</strong> 箱</td><td><strong>幅度劫持</strong>（§4）</td><td><strong>加 <code>λ(t) ∝ √SNR(t)</code></strong>，或换 v-参数化。<strong>不要上 gradient surgery</strong>（它只改方向）。</td></tr>
+<tr><td><code>λ/λ_crit &gt; 1</code> 的样本占比 &gt; 5%</td><td>主损失在该批样本上<strong>被推翻</strong>（§6）</td><td><strong>降 λ</strong>到 <code>0.1·λ_crit</code> 以下，再重测。</td></tr>
+<tr><td>某 block 的 <code>cos</code> 长期为负而其余 block 正常</td><td><strong>局部冲突</strong></td><td>学 Recon 的做法：考虑把该 block 改为<strong>任务专属</strong>（对你不一定可行，因为只有一个主干），或在该 block 上加 stop-gradient 隔离。</td></tr>
+<tr><td><strong>末期关闭</strong>带来明显收益（S3 vs S2）</td><td>该辅助损失确实在冲突，且冲突<strong>随训练进程加剧</strong>（§12.4）</td><td><strong>保持三阶段调度</strong>（warmup → 全权重 → 末期关闭）。这是最稳的处置，也是文献唯一有受控实验支持的。</td></tr>
+<tr><td>末期关闭<strong>毫无差别</strong>（S1≈S2≈S3）</td><td>该辅助损失<strong>不与去噪冲突</strong>（Lantern 的 Laplacian 就是这一类）</td><td>可以全程常开，<strong>不必做调度</strong>。省下的复杂度放到别处。</td></tr>
+<tr><td>辅助梯度在输出饱和区 ≈ 0</td><td>decoder Jacobian 饱和（§7-C）</td><td><strong>改挂载点</strong>（移到潜空间），或把硬 clamp 换成软饱和。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s15"><span class="num">15</span>机制总结图</h2>
+
+<p>简报 §十六 Part 4 要求的图，我按本报告的结论重画（把「cosine」从一个抽象箭头展开成有判据、有权重、有共享参数集的结构）。</p>
+
+<h3>14.1 冲突的结构</h3>
+
+<pre><code>  ┌───────────────────────┐                    ┌────────────────────────┐
+  │  L_diff（主损失）       │                    │  L_aux（辅助损失）       │
+  │  ‖ε̂_θ − ε‖²           │                    │  ‖x̂_θ − x₀'‖²         │
+  └───────────┬───────────┘                    └────────────┬───────────┘
+              │ ∂/∂θ                                        │ ∂/∂z
+              ▼                                            ▼
+        ┌───────────┐                              ┌─────────────────┐
+        │  g_diff   │                              │  J = ∂z/∂θ      │
+        └─────┬─────┘                              │  ★ 冲突的主因     │
+              │                                    └────────┬────────┘
+              │                                             │
+              └──────────────┬──────────────────────────────┘
+                             ▼
+        ┌──────────────────────────────────────────────────────────┐
+        │  共享参数集：UNet 的哪些 block 同时收到两个梯度？            │
+        │  ★ 不相交  ⇒  gᵀg ≡ 0  ⇒  无梯度冲突（改看序列耦合/震荡）    │
+        │  ★ 相交    ⇒  继续往下                                     │
+        └────────────────────────────┬─────────────────────────────┘
+                                     ▼
+                          ┌────────────────────┐
+                          │   cos(g_diff,g_aux) │   cos &gt; 0  → 加速
+                          │   ★ 但只报方向不够   │   cos = 0  → 正交
+                          └──────────┬─────────┘   cos &lt; 0  → 冲突
+                                     │
+                                     ▼
+                  ┌──────────────────────────────────────────┐
+                  │  危害 ∝ λ · ‖g_aux‖ · |cos|               │
+                  │  临界 λ = ‖g₁‖ / (‖g₂‖ · |cos|)           │
+                  │  ★ λ 只缩放长度，不改变方向                │
+                  └──────────────────────────────────────────┘</code></pre>
+
+<h3>14.2 t 轴上的两个病灶</h3>
+
+<pre><code>  SNR(t)  高  ──────────────────────────────────────────▶  低
+  t  →  0                                              t  →  T
+    │                                                      │
+    │  失配项占比 ∝ √SNR  →  大                             │  失配项占比 → 0
+    │  ⇒ 方向冲突：cos 明显 &lt; 1                             │  ⇒ 方向一致：cos → +1
+    │                                                      │
+    │  但 ‖g_aux‖/‖g_diff‖ = SNR⁻¹ → 小                     │  但 SNR⁻¹ → ∞
+    │  ⇒ 实际危害有限（歪但小）                              │  ⇒ 幅度劫持（正但巨大）
+    │                                                      │
+    ▼                                                      ▼
+  ┌────────────────────────────┐              ┌────────────────────────────┐
+  │ 药：改目标                  │              │ 药：λ(t) ∝ √SNR(t)          │
+  │   · 提高配对质量            │              │   · 或换 v-参数化            │
+  │   · 换成对错位不敏感的代理量  │              │   · 或 PIDM 式方差调度       │
+  │ ★ 不是 gradient surgery     │              │ ★ 不是 gradient surgery     │
+  └────────────────────────────┘              └────────────────────────────┘</code></pre>
+
+<div class="box key">
+<div class="bt">五句话概括整张图</div>
+<ol>
+<li><strong>冲突的载体是共享参数</strong>——先问「这两个梯度在参数空间里有没有重叠的支持集」。</li>
+<li><strong>冲突的主因是 <code>J</code></strong>，不是 loss 的名字——同一个 L1 挂在 <code>ε̂</code> / <code>x̂₀</code> / 解码 RGB / 浓度图上，是四个不同的问题。</li>
+<li><strong>方向冲突的唯一来源是目标差</strong>——由恒等式 3，<code>x₀' = x₀</code> 时失配项为零、<code>cos = +1</code>。</li>
+<li><strong>幅度问题由 t 与 λ 共同决定</strong>——临界 λ 把两者合成一个数。</li>
+<li><strong>冲突与信息同源</strong>——所以正确的目标不是「零冲突」，是「有信息且不打架」。</li>
+</ol>
+</div>
+
+<h2 id="s16"><span class="num">16</span>与库内既有报告的分工</h2>
+
+<p><strong>★ 先说一个过程错误：</strong>本报告第一版扫既有报告时用的是不递归的 glob（<code>01_调研报告/*.html</code>），因此<strong>漏掉了 <code>HE2IHC_Diffusion_Research/</code> 子目录下的 5 份报告</strong>——其中包括与本报告最相邻的那份 Loss Combination Guide。发现后已补读并做对账，下面这张表是按<strong>递归扫描后的完整清单</strong>写的。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:30%">既有报告</th><th style="width:22%">它回答什么</th><th style="width:48%">与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><strong>★ HE2IHC_Diffusion_Research/HE2IHC_Diffusion_Loss_Combination_Guide.html</strong><br><span class="small">「Training Objectives for Diffusion Models · 噪声预测损失与其他损失能否一起训练」2026-10-01，75 KB</span></td><td><strong>实操配方</strong>：六种范式 A–F 的对照与推荐顺序、10 条实操细节清单、决策流程图、给 PSPStain+Diffusion 的三阶段训练配方、8 条常见误解澄清</td><td><strong>★ 这是与我最相邻的一份，分工必须说清。</strong>那份回答「<em>怎么做</em>」——给配方、给清单、给决策树；本报告回答「<em>为什么</em>」——给精确分解、给 Jacobian 表、给临界 λ 公式。<br><strong>★ 本报告为它补上三件它没有的东西：</strong>① 恒等式 3 的代数分解（它测冲突角，但没推导冲突角的来源）；② 逐变量的 Jacobian 表（它把「挂 ε̂ 还是 x̂₀」列为一条清单项，本报告展开成 7 个变量）；③ <code>λ_crit</code> 公式（它说「调 λ 只改幅度不改方向」，但没给出「λ 要小于多少才安全」的判据）。<br><strong>★ 本报告从它那里复用了三组已核实事实</strong>（不重新检索）：Lantern 的受控实验数值 · RDDM/Star-Diff 的双扩散结构 · StainDiffuser / MIU-Diff / HistDiST 的做法。<br><strong>★ 两份报告在两处独立得出同一结论（互为旁证）：</strong>(a) 它的 Part 2.1「高 t 辅助损失主导、低 t 几乎不起作用」= 本报告 §4.1 的「高 t 幅度劫持、低 t 方向冲突但幅度小」；(b) 它的 Part 6「判据只有一条：冲突角；不是看损失的类型」= 本报告 §3 的「决定冲突的是 Jacobian，不是 loss 形式」。</td></tr>
+<tr><td><strong>扩散模型虚拟染色_蛋白表达约束_约束位置地图</strong></td><td>「有哪些蛋白约束方法、各自挂在扩散的哪一格、对配准的依赖多高」（三轴：位置 / 对象 / 配准等级）</td><td><strong>互补，且本报告为它补上一层。</strong>那份的「位置总表」回答「挂在哪一格」；本报告回答「挂在那一格时，梯度回传路径的 Jacobian 是什么」。<strong>本报告复用它的三条已核实结论</strong>：cycle consistency 只保证分布匹配不保证实例正确 · 错位的代价是「模型被推向错误的解」而非精度下降 · 错位量级 10–50 px。→ 不重新推导。</td></tr>
+<tr><td><strong>流匹配虚拟染色_蛋白表达约束_约束位置地图</strong></td><td>同上，但框架换成流匹配</td><td><strong>同构姊妹篇。</strong>本报告的 §5（参数化）与它直接相关：流匹配的端点恢复 <code>x̂₁ = x_t + (1−t)v̂_t</code> <strong>无除法</strong>，等价于本报告 §5 里「v-参数化 Jacobian 有界」的同一件事。<strong>⇒ 两份报告在这一点上互相印证，可以合并成一句结论。</strong></td></tr>
+<tr><td><strong>PSP-Diffusion_方案说明_变量注释版</strong></td><td>施工书：整条生成链路、物理约束挂哪里、Stage 0–4 分阶段验证</td><td><strong>本报告是它 Stage 2 / Stage 3 的前置机制分析。</strong>它的「九、物理约束到底挂在哪里」给出<strong>选择</strong>（非负性 / 真实 IHC 浓度分布 / DAB 专属约束）；本报告给出<strong>选择依据与自带风险</strong>（§7 的四种情况、§13 的逐项判定）。<strong>建议的衔接方式：把 §14 的 P0 诊断插在它 Stage 2 之前。</strong></td></tr>
+<tr><td><strong>PSP-Diffusion_解耦扩散范式</strong></td><td>五条解耦轴与范式家族（RDCS 推荐）</td><td><strong>正交。</strong>那份讲「解耦什么」（表示设计）；本报告讲「多个损失怎么共存」（优化行为）。两份在「解耦轴 = 结构 ↔ 染色」这一点上不冲突。</td></tr>
+<tr><td><strong>PSP-Diffusion_基座模型调研</strong></td><td>浓度空间扩散建在谁身上（四代演进 + 八个候选基座体检）</td><td><strong>上游。</strong>本报告假定基座已选定。它的「第四代：流匹配与基础模型条件化」与 §5 相关。</td></tr>
+<tr><td><strong>PSPStain_频域条件注入_文献综述报告</strong></td><td>频域<strong>作为条件</strong>注入</td><td><strong>不同挂载格。</strong>那份讲「频域当条件输入」；本报告 §13 讲「频域当<strong>损失</strong>」。两者的 Jacobian 完全不同（条件注入走 cross-attn，损失走逐像素回传）——<strong>这正是 §3「读哪个变量决定一切」的一个实例</strong>。</td></tr>
+<tr><td><strong>protein-expression-representation-survey</strong></td><td>蛋白/分子表达的<strong>表示、量化、保持与约束</strong>（物理 / 统计 / 频域 / 对象级）</td><td><strong>上游。</strong>那份回答「表达量该用什么量表示」（OD / IOD / FOD / 直方图 / 空间统计）；本报告回答「这些量一旦作为损失挂上去，优化行为如何」。<strong>本报告复用它的核心区分</strong>：训练约束 vs 评价指标必须严格分开。</td></tr>
+<tr><td><strong>扩散模型黑团伪影_成因诊断与解决方案</strong>（05 目录）</td><td>黑团的成因与解决方案</td><td><strong>本报告 §7-C 为它补一条新证据</strong>：挂在解码 RGB 上的辅助损失<strong>在黑团区梯度恒为零</strong>（decoder Jacobian 饱和）⇒ <strong>辅助损失类手段原理上不可能修好黑团</strong>，必须从 decoder / 潜码分布那一侧解决。</td></tr>
+<tr><td><strong>OT-StainNet_论文中文翻译</strong>（02 目录）</td><td>弱配对下的语义级对齐（OTSM + SCC）</td><td><strong>本报告为它补上梯度层解释。</strong>SCC 属本报告 §13 的「关系级」——它<strong>尺度不变</strong>，所以在 §2 的分解里它<strong>没有「对齐项」</strong>（不是 diffusion 残差的倍数），这正是它与点式重建类行为不同的原因。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">一句话定位</div>
+<p><strong>库内既有报告回答「挂在哪一格」；本报告回答「挂上去之后梯度会怎样」。两者合起来才是完整的挂载点决策依据。</strong></p>
+</div>
+
+<h2 id="s17"><span class="num">17</span>证据边界与未核实清单</h2>
+
+<div class="box stop">
+<div class="bt">★ A. 自证项 —— 这些是推导，不是引用，不要当文献结论用</div>
+<ol>
+<li><strong>恒等式 3 及其全部推论</strong>（对齐项 / 失配项分解、推论 A/B/C）。恒等式 1、2 与 Salimans &amp; Ho Eq.9 等价（已核正文），但<strong>恒等式 3 是我推的</strong>。</li>
+<li><strong>「信息与冲突同源」</strong>（§9 第一层）。检索未找到直接论证。</li>
+<li><strong>「正交分量承载价值」</strong>（§9）。<strong>不仅没有文献支持，主流立场（Aligned-MTL、GradOPS）恰好相反</strong>——它们主动消除正交分量。</li>
+<li><strong><code>supp(g₁) ∩ supp(g₂) = ∅ ⇒ g₁ᵀg₂ ≡ 0</code></strong>（§8）。平凡数学事实，检索确认无论文显式写下。</li>
+<li><strong>「cos 是随机变量，必须报分布不报单值」</strong>（§1.2、§14.2）。检索未找到系统报告逐 batch cos 分布的论文。</li>
+<li><strong>「必须逐 block 算」</strong>（§1.2、§14.2）。Recon 的做法支持这个方向，但「全局 cos 会被梯度质量最大的层主导」这句话是我推的。</li>
+<li><strong>§13.1 的第三类分类</strong>（四条 Jacobian 病态）。四条各自的机制有文献支撑（见 §7、§13.2），但把它们<strong>归成同一类</strong>是我的组织方式。</li>
+<li><strong>§4.1 的 t 表</strong>（低 t 方向 / 高 t 幅度）。缩放关系是代数结论，但「cos 在低 t 最低」是<strong>预测</strong>（P2），不是定理。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">★ B. 修正记录 —— 子 agent 报告有误、我按一手来源更正的地方</div>
+<ol>
+<li><strong>JMLR 三方权衡的数字。</strong>子 agent 报为 <code>O(1/n)</code>；我下载 JMLR 原文第 1 页摘要核实，正确是 <strong><code>O(1/√n)</code> population risk</strong>。</li>
+<li><strong>PIDM 的「冲突」表述。</strong>子 agent 说它「明确讨论梯度冲突」——<strong>该内容不在摘要里</strong>。我抓了 arXiv HTML 正文（v4）才确认逐字存在（「conflicting objective between the data and residual loss with increasing t」、Jensen gap、<code>1/(2Σ̄_t)</code>、tighten as t→0）。<strong>⇒ 摘要级的检索会漏掉它。</strong></li>
+<li><strong>Spectral Regularization 的「over-smoothing」。</strong>子 agent 说它「明确诊断 over-smoothing」——<strong>摘要里没有这个词</strong>。摘要只说「agnostic to the spectral and multi-scale structure」「encourage appropriate frequency balance」。⇒ 本报告只按摘要的表述写。</li>
+<li><strong>ECCV 2026（arXiv:2607.00647）的定位。</strong>子 agent 把它当作参数化与辅助损失的证据。我核到摘要后确认：<strong>它是推理期的 training-free guidance，不是训练期辅助损失</strong>，只能作<strong>类比</strong>用。另外它的 venue 我核到了 Comments 字段（Accepted to ECCV 2026），但正文的 <code>O(1/t)</code> vs <code>O(1)</code> 梯度界<strong>我未逐字复核</strong>。</li>
+<li><strong>Salimans &amp; Ho 的放大表述。</strong>摘要里没有，我抓了 arXiv HTML 正文（v2）确认逐字存在。</li>
+</ol>
+</div>
+
+<div class="box stop">
+<div class="bt">★★ B2. 我自己的三处错误（本轮自查发现，全部已修正）</div>
+<ol>
+<li><strong>★ 我推荐了一个被受控实验证明有害的方法。</strong>本报告第一版在 §11 写「<strong>ConFIG</strong> 是最贴近你这个场景的可移植选择」——理由只是它的<strong>措辞</strong>最贴合（「一个损失里有多项、各项方向可能不一致」）。但 Lantern 的受控实验显示 <strong>ConFIG 在两个辅助损失上分别把 FPD 恶化 6.6× 与 8.5×</strong>（摘要逐字点名了 ConFIG）。<br><strong>错误性质：把「文本相似度」当成了「性能证据」。</strong>这是本报告最严重的一处错误，已作废该推荐（§11、§12.3）。<strong>教训：方法推荐必须来自受控实验或直接实测，不能来自摘要措辞的契合度。</strong></li>
+<li><strong>★ 我漏掉了收益最大的一个轴。</strong>第一版只考虑了「样本内的 t 轴」，完全没有「优化步 s 轴」。而文献里<strong>收益最大、最便宜</strong>的一条改动（末期关闭，7× 改善）恰好在 s 轴上。发现路径：核对库内既有报告时看到 Lantern 的调度消融。<strong>已新增 §12 整章，并据此改写了 §14 的实验优先级（把「末期关闭」提到最高）。</strong></li>
+<li><strong>★ 我的库内扫描漏了一整个子目录。</strong>第一遍扫既有报告时，我用的 glob 是 <code>01_调研报告/*.html</code>——<strong>不递归</strong>，因此漏掉了 <code>01_调研报告/HE2IHC_Diffusion_Research/</code> 下的 <strong>5 份报告</strong>（含与本报告最相邻的那份 Loss Combination Guide）。<strong>教训：库内扫描必须递归，且扫完要按文件名清单复核总数。</strong>本条已写入交付 skill。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">★ C. 我本人未逐条复核、只有子 agent 核实的引用（引用时请降一级）</div>
+<p>以下工作在子 agent 报告中标注为 VERIFIED（抓取并读到结论），<strong>但我本人没有复核</strong>：</p>
+<ul>
+<li><strong>多目标方法</strong>：PCGrad（2001.06782）· GradNorm（1711.02257）· CAGrad（2110.14048）· MGDA（1810.04650）· IMTL（ICLR 2021）· GradVac（2010.05874）· Nash-MTL（2202.01017）· Aligned-MTL（2305.19000）· FairGrad（2402.15638）· SDMGrad（2305.18409）· ConFIG（2408.11104）· Pareto MTL（1912.12854）· RLW（2111.10603）· GCond（2509.07252）· GradOPS（2503.03438）· SAM-GS（2506.06130）</li>
+<li><strong>扩散 + 辅助损失</strong>：REPA（2410.06940）· DRaFT（2309.17400）· ADD（2311.17042）· LADD（2403.12015）· UFOGen（2311.09257）· Diffusion-GAN（2206.02262）· DMD（2311.18828）· Bring Metric（2401.02414）· Perceptual Loss（2401.00110）· Boosting Latent（2411.04873）· Dispersive（2506.09027）· Diffusion-DPO（2311.12908）· ReFL（2304.05977）· PID distillation（2505.22391）· Consistency Models（2303.01469）· Hyperspectral（2506.02601）</li>
+<li><strong>参数化与加权</strong>：EDM（2206.00364）· P2（2204.00227）· Kingma &amp; Gao（2303.00848）· Comparative Study（2507.01516）</li>
+<li><strong>参数子集与表示竞争</strong>：ConsMTL（CVPR 2025）· From Shared Parameters to Shared Representation（IEEE Access 12:128717, 2024）· DPT（2607.19971）· SimSiam（2011.10566）</li>
+<li><strong>频域与物理</strong>：FFL（2012.12821）· RealisVSR（2507.19138）· FrePolad（2311.12090）· HDW-SR（2511.13175）· Beer–Lambert Autoencoder（2601.11336）· PGDIPS（MICCAI 2025）· Deceptron（NeurIPS 2025）· P-Flow（2605.08328）· TopoDiffusionNet（2410.16646）· Topology-Preserving Segmentation（1906.05404）</li>
+</ul>
+<p><strong>★ 其中子 agent 已标注 <code>[UNVERIFIED]</code> 的（只有检索摘要、未读正文）：</strong>RI-PCGrad（DOI 10.1007/s10489-024-05805-3）· RestainNet（DOI 10.1016/j.compbiomed.2022.106304）· TopoGAN（ECCV 2020）· FrePolad 的正式 proceedings · HDW-SR 的 CVPR 2026 camera-ready · GRASFormer · thuml/DARE 的冲突分析模块 · Ortho-LoRA。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ D. 干净负结果 —— 「没找到」本身是结论，请不要当成「不存在」</div>
+<ol>
+<li><strong>把语义 / 分割 / 分类损失直接加到扩散训练目标上：未找到直接先例。</strong></li>
+<li><strong>把 Beer–Lambert / 光学密度约束作为训练损失项：未找到直接先例。</strong></li>
+<li><strong>训练期的「一致性 / 结构约束损失」：未找到直接先例。</strong></li>
+<li><strong>「扩散在低 t 需要高频 vs 频域约束压制高频」这个冲突：未找到任何论文讨论。</strong>现有频域论文方向完全一致——都是补高频。</li>
+<li><strong>系统报告逐 batch 梯度冲突 cos 分布的论文：未找到。</strong></li>
+<li><strong>直接论证「完全对齐的辅助损失 = 冗余监督」的论文：未找到。</strong></li>
+<li><strong>支持「正交分量承载辅助损失价值」的论文：未找到，且主流立场相反。</strong></li>
+<li><strong>专门分析「参数不相交但共享激活 ⇒ 震荡/循环/非平稳」的论文：未找到。</strong>双层优化综述可作方法论入口。</li>
+<li><strong>把 <code>detach</code> 明确表述为「冲突规避」并量化其代价的论文：未找到</strong>（只找到 SimSiam 的「防坍塌」用途）。</li>
+<li><strong>以「抵消参数化增益」为目的设计的 t-dependent 辅助损失权重 <code>w_aux(t)</code>：未找到。</strong>PIDM 的方差调度目的不同（贝叶斯似然），但处方同向；REPA / Consistency Models / Diffuse-and-Disperse 全部是常数权重。</li>
+<li><strong>把 MOO 方法与「扩散主损失 + 辅助损失」直接对接的论文：未找到。</strong></li>
+</ol>
+</div>
+
+<div class="box teal">
+<div class="bt">E. 检索范围与时间边界</div>
+<ul>
+<li><strong>检索截止：2026-10-07。</strong>五路并行子 agent，按「问题的轴」而非关键词切分（多目标方法 / 扩散辅助损失 / 参数化与加权 / 频域与逆算子 / 度量与参数子集）。</li>
+<li><strong>按简报要求，2025-12 之后的关键论文均查一手来源</strong>：arXiv:2609.38465（2026-09-29）· arXiv:2607.00647（2026-07-01，ECCV 2026）· arXiv:2603.02447（2026-03-02）· arXiv:2607.19971（ECCV 2026）· arXiv:2601.11336（2026-01）· arXiv:2605.08328（2026）。<strong>其中 2609.38465、2607.00647、2603.02447 三篇我本人抓了 arXiv 页面逐字核对。</strong></li>
+<li><strong>未覆盖</strong>：中文期刊 / 学位论文 · 付费墙内无法访问的正文（已在 C 节标注）· 会议 workshop 论文。</li>
+<li><strong>没有为了迎合简报的预设结论而调整措辞。</strong>简报 §十八 给出的那个 <code>f(...)</code> 判断基本正确，本报告对它的<strong>两处修正</strong>是：把 <code>objective</code> 与 <code>loss weight</code> 降级（它们通过 <code>J</code> 与 <code>λ</code> 起作用），把 <code>gradient path</code>（= <code>J</code>）与 <code>target 之差</code> 升级为主因。此外，简报 §四 的 timestep 直觉草图<strong>与我的分析方向相反</strong>，已在 §4.1 明确写出。</li>
+</ul>
+</div>
+
+<h2 id="s18"><span class="num">18</span>参考文献</h2>
+
+<p><span class="b high">★核</span> = 我本人抓取原始页面/正文核对；<span class="b medium">子核</span> = 子 agent 核实，我未复核。</p>
+
+<h3>17.1 承重引用（全部由我本人核对）</h3>
+<ol>
+<li>Tim Salimans, Jonathan Ho. <em>Progressive Distillation for Fast Sampling of Diffusion Models.</em> ICLR 2022. arXiv:2202.00512. <span class="b high">★核正文</span> — Eq.9 的加权重建恒等式；SNR→0 时 ε̂ 变化被放大；v 最稳；ε+truncated-SNR 不稳定。</li>
+<li>Yunshu Du, Wojciech M. Czarnecki, Siddhant M. Jayakumar, Mehrdad Farajtabar, Razvan Pascanu, Balaji Lakshminarayanan. <em>Adapting Auxiliary Losses Using Gradient Similarity.</em> arXiv:1812.02224（2018-12-05，v2 2020-11-25）。<span class="b high">★核摘要</span> — 用梯度余弦作自适应权重判断辅助损失何时开始伤害主损失；保证收敛到主任务的临界点。</li>
+<li>Tiankai Hang, Shuyang Gu, Chen Li, Jianmin Bao, Dong Chen, Han Hu, Xin Geng, Baining Guo. <em>Efficient Diffusion Training via Min-SNR Weighting Strategy.</em> arXiv:2303.09556（v3, 2024-03-11）。<span class="b high">★核摘要</span> — 「conflicting optimization directions between timesteps」；把扩散训练当 MTL。</li>
+<li>Shanchuan Lin, Bingchen Liu, Jiashi Li, Xiao Yang. <em>Common Diffusion Noise Schedules and Sample Steps are Flawed.</em> arXiv:2305.08891（WACV 2024）。<span class="b high">★核摘要</span> — zero terminal SNR；SNR=0 时 ε 损失「cannot guide the model to learn anything meaningful」。</li>
+<li>Jan-Hendrik Bastek, WaiChing Sun, Dennis M. Kochmann. <em>Physics-Informed Diffusion Models.</em> ICLR 2025. arXiv:2403.14404（v4, 2025-03-13）。<span class="b high">★核正文</span> — 「conflicting objective between the data and residual loss with increasing t」；Jensen gap；<code>1/(2Σ̄_t)</code> 权重；t→0 收紧。</li>
+<li>Yunsung Lee, Hyeongmin Lee. <em>Not All Prediction Targets Keep Training-Free Diffusion Guidance on the Manifold.</em> <strong>ECCV 2026</strong>. arXiv:2607.00647（2026-07-01）。<span class="b high">★核摘要+venue</span> — 目标定义在干净图上 ⇒ 必须先估 <code>x̂</code> ⇒ ε/v 在高噪声处误差被放大。<strong>注意：推理期 guidance，非训练期损失。</strong></li>
+<li>Shuyang Jiang, Fucheng Deng, Yuchuan Luo, Zhenyu Wu. <em>Does Gradient Conflict Predict the Understanding–Generation Trade-off? A Controlled Audit of Conflict-Metric Validity in Unified Multimodal Models.</em> arXiv:2609.38465（2026-09-29）。<span class="b high">★核摘要</span> — GRIDUMM testbed；63 配置 / 372 checkpoint；方向性冲突指标 |Spearman| &lt; 0.3；压制冲突对 trade-off 无影响。</li>
+<li>Lisha Chen, Heshan Fernando, Yiming Ying, Tianyi Chen. <em>Three-Way Trade-Off in Multi-Objective Learning: Optimization, Generalization and Conflict-Avoidance.</em> <strong>JMLR 25 (2024) 1–53</strong>（NeurIPS 2023 初步结果）。<span class="b high">★核摘要（下载 PDF 第 1 页）</span> — 冲突规避方向可能妨碍达到最优 <code>O(1/√n)</code> population risk。</li>
+<li>Guangyuan Shi, Qimai Li, Wenlong Zhang, Jiaxin Chen, Xiao-Ming Wu. <em>Recon: Reducing Conflicting Gradients from the Root for Multi-Task Learning.</em> ICLR 2023. arXiv:2302.11289。<span class="b high">★核摘要</span> — 「gradient surgery cannot effectively reduce the occurrence of conflicting gradients」；逐共享层 conflict score；把高冲突层改为 task-specific。</li>
+<li>Zhi Zhang, Jiayi Shen, Congfeng Cao, Gaole Dai, Shiji Zhou, Qizhe Zhang, Shanghang Zhang, Ekaterina Shutova. <em>Proactive Gradient Conflict Mitigation in Multi-Task Learning: A Sparse Training Perspective.</em> arXiv:2411.18615（2024-11-27）。<span class="b high">★核摘要</span> — 「they cannot decrease the incidence of gradient conflict」；稀疏训练有效缓解冲突且可与梯度操纵叠加。</li>
+<li>Satish Chandran, Nicolas Roque dos Santos, Yunshu Wu, Greg Ver Steeg, Evangelos Papalexakis. <em>Spectral Regularization for Diffusion Models.</em> arXiv:2603.02447（2026-03-02）。<span class="b high">★核摘要</span> — 在扩散训练上加可微 Fourier + 小波域损失，不改扩散过程/架构/采样；定位为 soft inductive bias。</li>
+<li><strong>★ Farzana Yasmin Ahmad, Vanamala Venkataswamy, Geoffrey Fox. <em>Lantern: Conflict-Aware Gradient Blending for Physics-Guided Diffusion Models in Calorimeter Simulation.</em> arXiv:2607.25060（2026-07-27）。<span class="b high">★核摘要</span></strong> — <strong>本报告 §12 的核心证据。</strong>受控实验（唯一变量 = 梯度组合规则）：PCGrad / GradNorm / IMTL-G / <strong>ConFIG</strong> 使 FPD 相对纯去噪恶化 <strong>2–100×</strong>；GradBlend 无损；<strong>末期关闭辅助损失是必需的</strong>（S2 236.3 → S3 32.84）。<span class="small">venue 未在 arXiv 页标注（子 agent 推测代码库名指向 KDD 投稿，<strong>未核实</strong>）。</span></li>
+</ol>
+
+<h3>17.2 其余引用（子 agent 核实，我未逐条复核）</h3>
+<p class="small">多目标方法：PCGrad arXiv:2001.06782 · GradNorm arXiv:1711.02257 · CAGrad arXiv:2110.14048 · MGDA arXiv:1810.04650 · IMTL ICLR 2021 · GradVac arXiv:2010.05874 · Nash-MTL arXiv:2202.01017 · Aligned-MTL arXiv:2305.19000 · FairGrad arXiv:2402.15638 · SDMGrad arXiv:2305.18409 · ConFIG arXiv:2408.11104 · Pareto MTL arXiv:1912.12854 · RLW arXiv:2111.10603 · GCond arXiv:2509.07252 · GradOPS arXiv:2503.03438 · SAM-GS arXiv:2506.06130 · 综述 arXiv:2501.10945<br>
+扩散 + 辅助损失：REPA arXiv:2410.06940 · DRaFT arXiv:2309.17400 · ADD arXiv:2311.17042 · LADD arXiv:2403.12015 · UFOGen arXiv:2311.09257 · Diffusion-GAN arXiv:2206.02262 · DMD arXiv:2311.18828 · Bring Metric arXiv:2401.02414 · Perceptual Loss arXiv:2401.00110 · Boosting Latent arXiv:2411.04873 · Dispersive arXiv:2506.09027 · Diffusion-DPO arXiv:2311.12908 · ReFL arXiv:2304.05977 · PID distillation arXiv:2505.22391 · Consistency Models arXiv:2303.01469 · Hyperspectral arXiv:2506.02601<br>
+参数化与加权：EDM arXiv:2206.00364 · P2 arXiv:2204.00227 · Kingma &amp; Gao arXiv:2303.00848 · Comparative Study arXiv:2507.01516<br>
+参数子集与表示竞争：ConsMTL CVPR 2025 · IEEE Access 12:128717 (2024) · DPT arXiv:2607.19971 · SimSiam arXiv:2011.10566<br>
+频域与物理：FFL arXiv:2012.12821 · RealisVSR arXiv:2507.19138 · FrePolad arXiv:2311.12090 · HDW-SR arXiv:2511.13175 · Beer–Lambert Autoencoder arXiv:2601.11336 · PGDIPS MICCAI 2025 (DOI 10.1007/978-3-032-04981-0_43) · Deceptron NeurIPS 2025 · P-Flow arXiv:2605.08328 · TopoDiffusionNet arXiv:2410.16646 · Topology-Preserving Segmentation arXiv:1906.05404</p>
+
+<h3>17.3 内部交叉引用</h3>
+<p class="small">★ <strong>HE2IHC_Diffusion_Research/HE2IHC_Diffusion_Loss_Combination_Guide.html</strong>（最相邻，实操配方）· HE2IHC_Diffusion_Research/index.html · 扩散模型虚拟染色_蛋白表达约束_约束位置地图.html · 流匹配虚拟染色_蛋白表达约束_约束位置地图.html · PSP-Diffusion_方案说明_变量注释版.html · PSP-Diffusion_解耦扩散范式.html · PSP-Diffusion_基座模型调研.html · protein-expression-representation-survey.html · PSPStain_频域条件注入_文献综述报告.html · OT-StainNet_论文中文翻译.html · 05_伪影与失败模式/扩散模型黑团伪影_成因诊断与解决方案.html</p>
+
+<div class="foot">
+<p><strong>本报告的性质</strong>：§2 的恒等式 3 与 §4.1 的 t 表是本报告的核心贡献，二者<strong>均为自证推导</strong>（已明确标注），请按「待验证的推导」而非「已确立的结论」使用。§14 给出了验证它们的最便宜路径（P0 假配对实验，零训练）。</p>
+<p>H&amp;E→IHC 扩散模型调研 · 01_调研报告 · 2026-10-07 · 文献 41 篇（12 篇本人逐条核对一手来源，含 4 篇 2026 年新作）· 已与库内既有报告做跨文档对账</p>
+</div>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H&E→IHC 扩散模型研究资料库 · 索引</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:680px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff;transition:box-shadow .15s,border-color .15s}
+.card:hover{border-color:#c2d4f7;box-shadow:0 3px 14px rgba(26,86,219,.08)}
+.card .ch{background:#f2f4f7;padding:13px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15.5px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:10px 18px 18px}
+.card .body p{font-size:13.5px}
+.card .linkrow{margin-top:12px}
+.card .linkrow a{display:inline-block;font-size:13px;font-weight:650;text-decoration:none;background:var(--blue);color:#fff;padding:7px 16px;border-radius:8px}
+.card .linkrow a:hover{background:#1546b4}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.small{font-size:12.5px;color:var(--muted)}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">H&amp;E→IHC · Research Library</div><div class="sub">扩散模型 + 虚拟染色<br>五份调研 · 索引与阅读路径</div>
+<a class="l1" href="#s0">0 · 这个文件夹是什么</a>
+<a class="l1" href="#s1">1 · 研究脉络</a>
+<a class="l1" href="#s2">2 · 五份报告总览</a>
+<a class="l2" href="#r1">R1 扩散解耦调研</a>
+<a class="l2" href="#r2">R2 物理合规性</a>
+<a class="l2" href="#r3">R3 损失组合讲解</a>
+<a class="l2" href="#r4">R4 正演工具箱评估</a>
+<a class="l2" href="#r5">R5 可复现工作推荐</a>
+<a class="l1" href="#s3">3 · 建议阅读顺序</a>
+<a class="l1" href="#s4">4 · 结论速查表</a>
+<a class="l1" href="#s5">5 · 执行路线图</a>
+<a class="l1" href="#s6">6 · 项目设定备忘</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Diffusion virtual staining · Research archive</div>
+<h1>H&amp;E→IHC 扩散模型研究资料库</h1>
+<p class="desc">围绕「以 PSPStain 为 baseline，用扩散模型替换生成框架并引入解耦学习」这一主线，累计产出的五份调研报告的归档索引</p>
+<div class="meta"><span>共 5 份报告</span><span>跨度 2026-09-30 → 2026-10-03</span><span>主线：扩散 + 解耦 + 物理合规 + 可复现</span><span>baseline：PSPStain（PALS / PCLS）</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>这个文件夹是什么</h2>
+<p>这是你从 9 月 30 日起，围绕同一个研究问题连续提出的五个子问题，我逐一做了独立调研，现在把它们全部归档在这里。五份报告彼此不是孤立的，而是同一条研究链路上的五个环节：</p>
+<div class="box key"><div class="bt">一句话概括这条研究链路</div>
+<p style="margin-bottom:0">我们要把 <strong>PSPStain</strong>（H&amp;E→IHC 虚拟染色，PALS/FOD + PCLS）的生成框架换成<strong>扩散模型</strong>并加入<strong>解耦学习</strong>。要做到这件事，需要同时回答五个问题：<strong>解耦什么、怎么保证物理合规、多损失怎么共存、物理正演能不能借用现成工具、以及现在市面上有什么能直接复现。</strong></p></div>
+<div class="grid2">
+<div class="mini"><div class="mt">你反复强调的优先级</div><p>可复现 &gt; 可解释 &gt; 改动小 &gt; 有公开代码 &gt; 有实验收益 &gt; 复杂度。</p><p>反对「为了创新而创新」和机械堆模块——这条原则贯穿了全部五份报告。</p></div>
+<div class="mini"><div class="mt">贯穿全部报告的硬约束</div><p>① 不能丢掉 PSPStain 原有的两个 loss（PALS/FOD、PCLS）；</p><p>② 禁止用单一 PSNR 判断成败；</p><p>③ 非配对设定下 coupling 不可辨识，必须诚实标注。</p></div>
+</div>
+
+<h2 id="s1"><span class="num">1</span>研究脉络</h2>
+<p>五份报告的关系如下。箭头表示「哪一份是在回答上一份暴露出的新问题」：</p>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>R1 扩散解耦调研  ← 起点：解耦什么、在哪解耦、怎么解耦
+        │
+        │ 暴露问题：没有配对真值 → 生成图的物理成图规律无法保证
+        ▼
+R2 物理合规性与可信性调研
+        │
+        │ 暴露问题：物理模块 = 额外损失 → 和噪声预测损失能不能共存？
+        ▼
+R3 损失组合讲解（噪声损失 vs 其他损失）
+        │
+        │ 顺带发现：Beer–Lambert 正演可复用现成工具箱
+        ▼
+R4 多重成像正演工具箱评估（multiplex2brightfield）
+        │
+        │ 回到落地：说了这么多，现在有什么能直接跑起来？
+        ▼
+R5 可复现扩散虚拟染色工作推荐（Star-Diff / DiffVS / HistDiST ...）</code></pre></div>
+<div class="box teal"><div class="bt">一个关键的物理连接点（R2 与 R4 的交汇）</div>
+<p style="margin-bottom:0">Beer–Lambert 定律里的指数项 <code>exp(−S·Dᵀ)</code> 等价于<strong>光密度（Optical Density, OD）</strong>，而 OD 正是 PSPStain 的 <strong>FOD（Focal Optical Density）</strong>所操作的同一种物理量。这意味着：R4 里的正演工具箱和你 baseline 里的核心 loss，<strong>在物理量层面是同一个东西</strong>。这是本系列最有价值的一条发现。</p></div>
+
+<h2 id="s2"><span class="num">2</span>五份报告总览</h2>
+
+<div class="card" id="r1">
+<div class="ch"><div><div class="title">R1 · 扩散模型解耦学习文献调研与可复现实验方案</div><div class="v">HE2IHC_Diffusion_Disentanglement_Report.html · 161 KB · 2026-09-30</div></div><div><span class="b purple">文献调研</span> <span class="b blue">方案设计</span></div></div>
+<div class="body">
+<p><strong>回答的问题：</strong>在 H&amp;E→IHC 里，扩散模型可以解耦什么、在哪个层级解耦、用什么机制解耦？有哪些可迁移的方法？</p>
+<p><strong>核心结论：</strong>最好的解耦轴不是经典的 content↔style，而是 <strong>structure/anatomy ↔ stain-expression</strong>。推荐架构是<strong>单一扩散主干 + 双 SPADE 条件调制</strong>（空间调制承载结构、通道调制承载染色），而不是「双 encoder → 双 latent 相加」。推理时无 IHC reference 的解法是<strong>可学习 target-domain stain token</strong>。</p>
+<p><strong>包含：</strong>22 篇扩散+解耦论文 + 8 张深度卡片；16 篇病理论文；10 篇非医学可迁移工作；Type 1/2/3 解耦分类；S/A/B/C 迁移性打分；3 套实验方案（A/B/C）；M0–M6 消融树；Step 0–6 路线图。</p>
+<div class="linkrow"><a href="HE2IHC_Diffusion_Disentanglement_Report.html">打开报告 →</a></div>
+</div></div>
+
+<div class="card" id="r2">
+<div class="ch"><div><div class="title">R2 · 物理合规性与生成可信性调研</div><div class="v">HE2IHC_Physical_Fidelity_and_Trustworthiness_Report.html · 102 KB · 2026-10-01</div></div><div><span class="b purple">理论分析</span> <span class="b tealb">可信性</span></div></div>
+<div class="body">
+<p><strong>回答的问题：</strong>没有真实配对数据，我们无法知道真实的物理配对图像，那怎么保证生成图符合真实物理成图规律？</p>
+<p><strong>核心结论：</strong>非配对设定下 <code>p(IHC|H&amp;E)</code> 的 coupling <strong>在数学上不可辨识</strong>——这是理论事实，不是调参问题；cycle consistency 只保证分布匹配，不保证实例正确。因此只能做三件事：<strong>可约束</strong>（Beer–Lambert 可微前向）、<strong>可检测</strong>（AQuA 幻觉检测）、<strong>可量化</strong>（不确定性图）。</p>
+<p><strong>包含：</strong>三种不可知性；不可辨识性证明梗概；5 条逼近配对的路径；BeerLaNet / StainQuant；AQuA（Nature BME 2025，无需真值即可检测幻觉，准确率 97.8–99.8%）；四层评价金字塔；模块 M1–M5；路线 A–G。</p>
+<div class="linkrow"><a href="HE2IHC_Physical_Fidelity_and_Trustworthiness_Report.html">打开报告 →</a></div>
+</div></div>
+
+<div class="card" id="r3">
+<div class="ch"><div><div class="title">R3 · 噪声预测损失与其他损失能否共存</div><div class="v">HE2IHC_Diffusion_Loss_Combination_Guide.html · 105 KB · 2026-10-01</div></div><div><span class="b blue">原理讲解</span> <span class="b medium">训练实操</span></div></div>
+<div class="body">
+<p><strong>回答的问题：</strong>扩散模型的核心是噪声预测损失，但条件生成要加很多辅助损失——它们到底能不能和噪声损失一起训练？</p>
+<p><strong>核心结论：</strong>能一起训练，但<strong>噪声预测损失是特殊的</strong>——它是唯一出现在采样公式里的项（它参数化了 score/velocity 场），辅助损失只能通过扰动 ε_θ 间接起作用。硬证据：Lantern/GradBlend 显示朴素的梯度平衡会把 FPD 放大 2–100 倍；<strong>训练末段只跑去噪损失</strong>是性价比最高的单项修复（FPD 236.3 → 32.84）。</p>
+<p><strong>包含：</strong>ε/x₀/v 三种参数化对比（v 最稳）；Min-SNR-γ（γ=5，收敛快 3.4×）；P2 加权；zero terminal SNR；六种范式 A–F（含分阶段替换范式 F）；6.2 常见误解澄清；PCLS→双 SPADE 条件注入；训练循环伪代码；M0–M6 消融矩阵。</p>
+<div class="linkrow"><a href="HE2IHC_Diffusion_Loss_Combination_Guide.html">打开报告 →</a></div>
+</div></div>
+
+<div class="card" id="r4">
+<div class="ch"><div><div class="title">R4 · 多重成像正演工具箱 · 深度调研与迁移评估</div><div class="v">HE2IHC_Multiplex2Brightfield_Toolkit_Review.html · 86 KB · 2026-10-01</div></div><div><span class="b tealb">工具核实</span> <span class="b blue">迁移评估</span></div></div>
+<div class="body">
+<p><strong>回答的问题：</strong>Whitmarsh 等人（<em>Frontiers in Bioinformatics</em> 2026, DOI 10.3389/fbinf.2026.1765143）的虚拟明场正演工具箱到底是什么、能不能为我所用？</p>
+<p><strong>核心结论：</strong>工具箱包名 <code>multiplex2brightfield</code>（BSD 3-Clause，只吃 OME-TIFF）。<strong>推荐用法 A：把它的 Beer–Lambert 渲染器改造成可微输出头（零风险，今天就能做）</strong>；用法 B：借用 ORION-CRC 做三角验证协议。<strong>必须避免</strong>用合成 H&amp;E→IHC 配对去训练模型。</p>
+<p><strong>包含：</strong>相对你已有摘要的增量信息；完整 13 位作者书目；工具箱核实；完整物理公式；6 个数据集及 DOI；六类验证与数字；LLM 通道选择（H&amp;E 共识 Jaccard 0.909）；NAFNet 增强；局限表；迁移评估 A/B/C；四处不匹配；执行清单。</p>
+<div class="box warn" style="margin-top:14px"><div class="bt">关键缺口（务必记住）</div><p style="margin:0">论文里<strong>没有任何公开数据集提供 HER2 / Ki67 / ER / PR 的乳腺癌真值</strong>。ORION 是结直肠癌且不含这四个 marker；Breast-Cancer-IMC 是 1 μm 分辨率（踩在 &gt;1 μm 幻觉红线上）。也就是说，这个工具箱<strong>不能直接给你目标 marker 的监督信号</strong>，只能提供物理渲染能力。</p></div>
+<div class="linkrow"><a href="HE2IHC_Multiplex2Brightfield_Toolkit_Review.html">打开报告 →</a></div>
+</div></div>
+
+<div class="card" id="r5">
+<div class="ch"><div><div class="title">R5 · 可复现的扩散虚拟染色工作推荐</div><div class="v">HE2IHC_Reproducible_Diffusion_Virtual_Staining_Recommendation.html · 35 KB · 2026-10-03</div></div><div><span class="b high">可复现优先</span> <span class="b blue">落地推荐</span></div></div>
+<div class="body">
+<p><strong>回答的问题：</strong>先不管自己的思路，现在市面上已有的「扩散模型解耦虚拟染色」工作，哪个是真正可以复现的？</p>
+<p><strong>核心结论：</strong>本轮<strong>没有找到</strong>同时满足「扩散 + H&amp;E→IHC + 经典显式 content/style 解耦 + 官方代码/checkpoint/数据/完整运行说明」的强候选。推荐排序：<strong>Star-Diff → DiffVS → HistDiST → VSMT → StainDiffuser</strong>。建议先复现 Star-Diff 拿到「结构—随机性解耦」的扩散基线，再把 PSPStain 的 FOD/PCLS 加进去。</p>
+<p><strong>包含：</strong>结论优先排序；筛选标准（A/B/C 三类解耦定义）；候选总表（直接匹配 / 可复现近邻 / 明确排除）；Star-Diff 深度卡片（含精确命令）；DiffVS；「如果必须要显式解耦」；最终排序；执行单；链接。</p>
+<div class="box stop" style="margin-top:14px"><div class="bt">必须澄清的一点</div><p style="margin:0">报告明确拒绝把 StainDiffuser / DiffVS 称为「解耦」。它们属于<strong>条件控制 / 多任务</strong>，不是显式 disentanglement。把条件控制误称为解耦，是本领域最常见的表述膨胀。</p></div>
+<div class="linkrow"><a href="HE2IHC_Reproducible_Diffusion_Virtual_Staining_Recommendation.html">打开报告 →</a></div>
+</div></div>
+
+<h2 id="s3"><span class="num">3</span>建议阅读顺序</h2>
+<div class="grid2">
+<div class="mini"><div class="mt">路线甲 · 先建立全局认识（推荐）</div><p>R1 → R2 → R3 → R4 → R5</p><p>按研究逻辑推进，先知道解耦什么，再逐步收敛到「今天该跑哪个代码」。</p></div>
+<div class="mini"><div class="mt">路线乙 · 只想马上开工</div><p>R5 → R3 → R1</p><p>先看能跑什么（Star-Diff），再看多损失怎么加（R3），最后补解耦设计（R1）。</p></div>
+<div class="mini"><div class="mt">路线丙 · 关心可信性/审稿人视角</div><p>R2 → R4 → R3</p><p>先解决「凭什么相信生成图」这个根本质疑，再谈工程实现。</p></div>
+<div class="mini"><div class="mt">路线丁 · 只读一页</div><p>直接看本页第 4 节「结论速查表」</p><p>五份报告的一句话结论都压缩在那里。</p></div>
+</div>
+
+<h2 id="s4"><span class="num">4</span>结论速查表</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:12%">报告</th><th style="width:26%">问题</th><th>一句话结论</th></tr></thead>
+<tbody>
+<tr><td><strong>R1</strong> 解耦</td><td>扩散模型该解耦什么？</td><td>解耦轴选 <strong>structure ↔ stain-expression</strong>（而非 content↔style）；架构用<strong>单主干 + 双 SPADE</strong>；推理时用<strong>可学习 stain token</strong>。</td></tr>
+<tr><td><strong>R2</strong> 物理</td><td>没有配对真值，凭什么相信生成图？</td><td>coupling <strong>不可辨识</strong>是理论事实；只能做<strong>可约束 / 可检测 / 可量化</strong>三件事；最强工程手段是让 U-Net 输出<strong>浓度/光密度图</strong>再过 Beer–Lambert。</td></tr>
+<tr><td><strong>R3</strong> 损失</td><td>辅助损失能和噪声损失共存吗？</td><td>能，但噪声损失<strong>唯一出现在采样公式里</strong>，是主项；辅助损失只能间接扰动 ε_θ；<strong>末段只跑去噪损失</strong>是最高性价比修复。</td></tr>
+<tr><td><strong>R4</strong> 工具箱</td><td>现成正演工具能直接用吗？</td><td>能，但只借它的 <strong>Beer–Lambert 可微渲染器</strong>（用法 A）；<strong>绝不能用合成配对训练</strong>；且它<strong>给不了 HER2/Ki67/ER/PR 真值</strong>。</td></tr>
+<tr><td><strong>R5</strong> 复现</td><td>现在该跑哪个代码？</td><td><strong>Star-Diff 第一</strong>（BCI-HER2 对口、结构—随机性显式分离、有完整命令）；<strong>DiffVS 第二</strong>（官方代码 + 公开数据）；但两者都不是显式解耦。</td></tr>
+</tbody></table></div>
+
+<h2 id="s5"><span class="num">5</span>执行路线图</h2>
+<p>把五份报告的建议合并成一条可执行路径：</p>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>Step 0  复现 PSPStain baseline                      ← 唯一不可跳过的一步
+        （拿到 PALS/FOD + PCLS 的参考指标）
+
+Step 1  复现 Star-Diff，拿到扩散基线              ← R5
+        （BCI-HER2，结构残差路径 + 噪声路径）
+
+Step 2  把 PALS/FOD 与 PCLS 迁移进扩散训练        ← R3
+        · PCLS → 双 SPADE 条件注入（空间=结构，通道=染色）
+        · 用 Min-SNR-γ 加权，v-prediction
+        · 末段切换为「只跑去噪损失」
+
+Step 3  加入物理输出头                            ← R2 + R4
+        · U-Net 输出浓度/OD 图，而非 RGB
+        · 用 Beer–Lambert 可微前向转 RGB（借用 R4 工具箱渲染器）
+        · 与 PSPStain 的 FOD 目标天然对接
+
+Step 4  加可信性模块                              ← R2
+        · M3 不确定性图
+        · AQuA 幻觉检测（无需真值）
+
+Step 5  四层评价                                  ← R2
+        ① 图像相似 ② 语义一致 ③ 物理合规 ④ 临床效用
+        （禁止用单一 PSNR 下结论）</code></pre></div>
+<div class="box good"><div class="bt">为什么是这个顺序</div><p style="margin-bottom:0">每一步都只在上一步可复现的前提下进行，且每一步都对应一个可单独验证的产出（baseline 指标 → 扩散基线 → 双 loss 生效 → 物理一致性 → 可信性证据 → 完整评价）。这符合你「可复现 &gt; 可解释 &gt; 改动小」的优先级，也避免了「一次性堆满模块却无法定位问题」的常见陷阱。</p></div>
+
+<h2 id="s6"><span class="num">6</span>项目设定备忘</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">项</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><strong>任务</strong></td><td>H&amp;E → IHC 虚拟染色（免疫组化），非配对 / 弱配对设定</td></tr>
+<tr><td><strong>Baseline</strong></td><td>PSPStain（MICCAI 2024, arXiv 2407.03655, 代码 <code>ccitachi/PSPStain</code>）<br>两个核心策略：PALS（FOD 焦点光密度图 + MLPA，保持蛋白表达一致性）、PCLS（原型一致性学习，解决病理语义空间错位）<br>构建于 CUT + ASP 之上；期刊扩展版 = PGVMS（IEEE TMI 2026, <code>ccitachi/PGVMS</code>）</td></tr>
+<tr><td><strong>数据集</strong></td><td>BCI（HER2）、MIST（HER2 / Ki67 / ER / PR）</td></tr>
+<tr><td><strong>目标</strong></td><td>把生成框架换成扩散模型并加入解耦学习，<strong>保留 PSPStain 原有的两个 loss</strong></td></tr>
+<tr><td><strong>优先级</strong></td><td>可复现 &gt; 可解释 &gt; 改动小 &gt; 有公开代码 &gt; 有实验收益 &gt; 复杂度</td></tr>
+<tr><td><strong>评价规范</strong></td><td>禁止用单一 PSNR 判断成功；必须四层评价；<strong>分布级 ≠ 实例级</strong>，FID 低不代表单张图对</td></tr>
+</tbody></table></div>
+
+<hr>
+<p class="small">本索引由 WorkBuddy AI 生成 · 归档日期 2026-10-03 · 五份报告均为独立 HTML 文件，可直接双击打开或分享。</p>
+</main>
+</div></body>
+</html>

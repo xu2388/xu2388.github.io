@@ -34,7 +34,7 @@ THEME_INIT = ('<script id="theme-init">try{var t=localStorage.getItem("theme");'
 
 NAV_RE = re.compile(r'<nav class="site-nav">.*?</nav>', re.DOTALL)
 TITLE_RE = re.compile(r'<h1 class="site-title">.*?</h1>', re.DOTALL)
-SITE_TITLE = "科研与学习档案"
+SITE_TITLE = "我的个人博客"
 
 
 LIST_FILE = {"研究文章": "list-research.html", "学习笔记": "list-notes.html", "课程笔记": "list-courses.html",

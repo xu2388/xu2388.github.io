@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>训练一个好的 VAE：公开资源地图（面向扩散潜空间）· H&amp;E→IHC 调研</title>
+
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.route{border:1px solid var(--border);border-radius:10px;padding:14px 17px;margin:14px 0;background:var(--softer)}.route .rt{font-weight:750;font-size:15px;margin-bottom:5px}.route .rmeta{font-size:12px;color:var(--muted)}.cite{font-size:11.5px;color:var(--muted)}.tag{font-size:11px;font-weight:700;color:var(--muted);background:#eef0f3;padding:2px 6px;border-radius:4px}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+<div class="brand">VAE Training</div>
+<div class="sub">训练一个好 VAE 的公开资源<br>面向扩散潜空间 · 2026-10-07</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · 资源地图（总表）</a>
+<a class="l1" href="#s2">2 · ★ 唯一称得上「指南」的两份</a>
+<a class="l2" href="#s2-1">2.1 权威参考实现（事实标准）</a>
+<a class="l2" href="#s2-2">2.2 工程技巧集（最像教程）</a>
+<a class="l1" href="#s3">3 · ★★ 参考实现的逐字损失</a>
+<a class="l2" href="#s3-1">3.1 完整损失公式</a>
+<a class="l2" href="#s3-2">3.2 自适应判别器权重（梯度平衡）</a>
+<a class="l2" href="#s3-3">3.3 官方示例配置逐字</a>
+<a class="l2" href="#s3-4">3.4 判别器延迟启动 = warmup</a>
+<a class="l1" href="#s4">4 · 只调解码器：四条 drop-in 路线 + 一份可跑脚本</a>
+<a class="l1" href="#s5">5 · 潜空间本身的研究（第二层含义）</a>
+<a class="l2" href="#s5-1">5.1 VA-VAE（CVPR 2025）</a>
+<a class="l2" href="#s5-2">5.2 REPA-E（ICCV 2025）</a>
+<a class="l1" href="#s6">6 · 两处技术分歧（诚实呈现）</a>
+<a class="l2" href="#s6-1">6.1 logvar 可学习 vs 钉死</a>
+<a class="l2" href="#s6-2">6.2 KL 权重与潜空间高频噪声</a>
+<a class="l1" href="#s7">7 · ★ 对你的具体建议</a>
+<a class="l1" href="#s8">8 · 未核实清单</a>
+<a class="l1" href="#s9">9 · 与库内既有报告的分工</a>
+<a class="l1" href="#s10">10 · 参考文献</a>
+</nav>
+
+<main>
+
+<header class="doc">
+<div class="kicker">资源调研 · VAE 训练</div>
+<h1>训练一个好的 VAE<br>—— 公开资源地图与逐字损失配方</h1>
+<p class="desc">你问的是「有没有公开的指南」。答案是：<b>真正的「教程」只有两份，但「可抄的配方」很完整</b>——SD/SDXL 的 VAE 训练代码是开源的，损失公式与超参都能逐字拿到。本报告把它们整理出来，并指出一件事：<b>你要解决的问题可能不在这些资源瞄准的那个方向上。</b></p>
+<div class="meta">
+<span>含 SD/SDXL VAE 逐字损失</span>
+<span>含官方示例配置超参</span>
+<span>4 条 decoder-only 路线</span>
+<span>2 篇潜空间研究（CVPR/ICCV 2025）</span>
+<span>2026-10-07</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box key">
+<div class="bt">直接回答</div>
+<p><b>有，但「指南」这个词要拆开看。</b>公开资源分三类，质量差很多：</p>
+<ul>
+<li><b>① 事实标准 = Stability-AI 的 <code>generative-models</code></b>。它就是训练 SD/SDXL VAE 的那份代码，<b>损失函数、判别器、自适应权重、示例配置全部开源</b>。这是最接近「官方指南」的东西——它不是教程，但比教程更可靠。<b>本报告 §3 把它逐字抄了出来。</b></li>
+<li><b>② 唯一像「教程」的 = <code>cloneofsimo/vqgan-training</code></b>（"Train VAE like a boss"）。它把工程技巧写成了清单：低通 MSE、梯度归一化、常数方差、hinge GAN 阈值。<b>这份的信息密度最高。</b></li>
+<li><b>③ 你要的其实可能是「改解码器」而不是「训 VAE」</b>。公开的 <code>decoder-only</code> 微调路线有 <b>4 条</b>（含一条病理专用的），都是 drop-in、不动潜空间、不需要重训扩散模型。<b>这是投入产出比最高的方向。</b></li>
+</ul>
+</div>
+
+<div class="box stop">
+<div class="bt">★★ 但有一条你必须先知道的认知（本报告最重要的一句）</div>
+<p><b>「训练一个好的 VAE」有两个完全不同的目标，公开资源也是分开的：</b></p>
+<div class="scroll">
+<table>
+<thead><tr><th>目标</th><th>问的是什么</th><th>公开资源在哪</th><th>和你的黑团问题</th></tr></thead>
+<tbody>
+<tr><td><b>A · 重建保真</b></td><td>「给定潜码，解码出来的图对不对」</td><td>ft-ema / ft-mse · Stony Brook 病理版 · consistency decoder · TAESD（<a href="#s4">§4</a>）</td><td><span class="b medium">只治一半</span>——它让<b>落在分布内</b>的潜码解得更准，对<b>落在分布外</b>的潜码没有义务</td></tr>
+<tr><td><b>B · 潜空间适合扩散</b></td><td>「这个潜空间好不好学、扩散模型会不会生成分布外的潜码」</td><td>VA-VAE（CVPR 2025）· REPA-E（ICCV 2025）（<a href="#s5">§5</a>）</td><td><span class="b high">正对症</span>——你的黑团根因是<b>潜码落到 VAE 没见过的区域</b></td></tr>
+</tbody>
+</table>
+</div>
+<p><b>⇒ 你去搜「VAE 训练指南」，搜到的 90% 是目标 A。而你的黑团问题在目标 B。</b>更麻烦的是：<b>目标 A 做得越好，目标 B 的问题可能越隐蔽</b>——一个更强的解码器能更自信地把分布外潜码解成「看起来像那么回事但完全错」的图，而不是黑团。<b>黑团是幸运的，它至少可见。</b></p>
+</div>
+
+<div class="box warn">
+<div class="bt">对你的三条最短建议</div>
+<ol>
+<li><b>先别训 VAE。</b>你已有两条零成本诊断（AE 重建上限分层测试、位置 vs 最强 DAB 区），它们能区分「解码器不够好」和「潜码跑出分布」——<b>先分清是哪一种，再决定要不要重训</b>。</li>
+<li><b>如果要动，从 decoder-only 开始。</b><a href="#s4">§4</a> 的四条路线都不动潜空间，因此<b>不破坏你已有的扩散权重</b>，可回退。其中病理专用那条（<code>sd-vae-ft-ema-path</code>，MICCAI 2025）与你的域最接近。</li>
+<li><b>如果你怀疑是「潜空间本身不好学」，那要读的是 <a href="#s5">§5</a>，不是 §2–§4。</b>VA-VAE 与 REPA-E 都在讲同一件事：标准 VAE 的潜空间对扩散模型不友好，而这个问题是<b>可以修的</b>——修法在 VAE 侧，不在扩散侧。</li>
+</ol>
+</div>
+
+<h2 id="s1"><span class="num">1</span>资源地图（总表）</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>资源</th><th>类型</th><th>目标</th><th>代码</th><th>权重</th><th>对你的可用性</th></tr></thead>
+<tbody>
+<tr>
+<td class="c">1</td>
+<td><b>Stability-AI/generative-models</b><br><span class="cite">SD/SDXL VAE 的官方训练代码</span></td>
+<td>参考实现</td>
+<td class="c">A</td>
+<td><span class="b high">全开源</span></td>
+<td><span class="b high">SDXL VAE 有</span></td>
+<td><span class="b high">★ 最高</span>——<b>这是唯一能逐字抄到损失与超参的地方</b>（<a href="#s3">§3</a>）。注意 AE 训练只支持 pytorch1.13</td>
+</tr>
+<tr>
+<td class="c">2</td>
+<td><b>cloneofsimo/vqgan-training</b><br><span class="cite">"Train VAE like a boss"</span></td>
+<td><b>教程式</b></td>
+<td class="c">A</td>
+<td><span class="b high">全开源</span></td>
+<td><span class="b medium">部分</span></td>
+<td><span class="b high">高</span>——技巧清单可直接搬（低通 MSE / 梯度归一化 / 常数方差）。基于 <b>FLUX 的 VAE</b>，架构与 SD 略有差异</td>
+</tr>
+<tr>
+<td class="c">3</td>
+<td><b>CompVis/latent-diffusion</b> + <b>taming-transformers</b></td>
+<td>参考实现（祖先）</td>
+<td class="c">A</td>
+<td><span class="b high">全开源</span></td>
+<td><span class="b high">kl-f4/f8 有</span></td>
+<td><span class="b medium">中</span>——<code>LPIPSWithDiscriminator</code> 的原始出处，之后所有实现都是它的变体</td>
+</tr>
+<tr>
+<td class="c">4</td>
+<td><b>stabilityai/sd-vae-ft-ema / ft-mse</b></td>
+<td>drop-in 解码器</td>
+<td class="c">A</td>
+<td><span class="b low">无训练代码</span></td>
+<td><span class="b high">有</span></td>
+<td><span class="b high">高</span>——<b>只换解码器，配方与数字在模型卡里写得很清楚</b>（<a href="#s4">§4.1</a>）</td>
+</tr>
+<tr>
+<td class="c">5</td>
+<td><b>StonyBrook-CVLab/sd-vae-ft-ema-path</b><br><span class="cite">MICCAI 2025 · 病理专用</span></td>
+<td>drop-in 解码器</td>
+<td class="c">A</td>
+<td><span class="b bad">无</span></td>
+<td><span class="b high">有</span></td>
+<td><span class="b high">★ 高</span>——<b>与你的域最接近</b>（H&amp;E 病理，只调解码器，83.7M）。<b>但代码未发布</b>（<a href="#s4">§4.2</a>）</td>
+</tr>
+<tr>
+<td class="c">6</td>
+<td><b>openai/consistency-decoder</b></td>
+<td>drop-in 解码器</td>
+<td class="c">A</td>
+<td><span class="b high">有</span>（原仓库）</td>
+<td><span class="b high">有</span></td>
+<td><span class="b medium">中</span>——0.7B 参数，比 SD VAE 大很多；<b>不是 GAN 训练，是一致性蒸馏</b>（<a href="#s4">§4.3</a>）</td>
+</tr>
+<tr>
+<td class="c">7</td>
+<td><b>madebyollin/sdxl-vae-fp16-fix</b></td>
+<td>数值修复</td>
+<td class="c">—</td>
+<td><span class="b low">无</span></td>
+<td><span class="b high">有</span></td>
+<td><span class="b high">★ 高（若你在 fp16 跑）</span>——<b>直接针对你已确认的「fp16 指数溢出」那条成因</b>（<a href="#s4">§4.4</a>）</td>
+</tr>
+<tr>
+<td class="c">8</td>
+<td><b>diffusers</b> <code>examples/research_projects/autoencoder_rae</code></td>
+<td><b>可跑的 decoder-only 训练脚本</b></td>
+<td class="c">A</td>
+<td><span class="b high">全开源</span></td>
+<td><span class="b high">基座有</span></td>
+<td><span class="b high">★ 高</span>——<b>「冻结 encoder、只训 decoder」的现成脚本</b>，用 <code>accelerate launch</code>（<a href="#s4">§4.5</a>）</td>
+</tr>
+<tr>
+<td class="c">9</td>
+<td><b>VA-VAE</b>（CVPR 2025）<br><span class="cite">arXiv 2501.01423 · hustvl/LightningDiT</span></td>
+<td>潜空间研究</td>
+<td class="c"><b>B</b></td>
+<td><span class="b high">有</span></td>
+<td><span class="b high">有</span></td>
+<td><span class="b high">★ 高（认知层）</span>——<b>把「重建 vs 生成」的困境讲得最清楚</b>（<a href="#s5-1">§5.1</a>）</td>
+</tr>
+<tr>
+<td class="c">10</td>
+<td><b>REPA-E</b>（ICCV 2025）<br><span class="cite">arXiv 2504.10483</span></td>
+<td>潜空间研究</td>
+<td class="c"><b>B</b></td>
+<td><span class="b high">有</span></td>
+<td><span class="b high">E2E-VAE 有</span></td>
+<td><span class="b high">★ 高</span>——<b>证明「用标准扩散损失端到端训 VAE 无效」，必须换表示对齐损失</b>（<a href="#s5-2">§5.2</a>）</td>
+</tr>
+<tr>
+<td class="c">11</td>
+<td><b>TAESD</b>（madebyollin/taesd）</td>
+<td>微型 AE</td>
+<td class="c">A</td>
+<td><span class="b high">有</span></td>
+<td><span class="b high">有</span></td>
+<td><span class="b medium">中（诊断用途）</span>——<b>本报告未独立核实</b>，见 <a href="#s8">§8</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">怎么读这张表</div>
+<p><b>「目标」那一列是关键。</b>第 1–8 项全在目标 A（重建保真），第 9–10 项在目标 B（潜空间）。<b>你搜到的绝大多数资源会是 1–8</b>，因为「重建」是可以用 PSNR/SSIM 直接量化的、可比的、好写论文的；而「潜空间适不适合扩散」直到 2025 年才有像样的工作。</p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>★ 唯一称得上「指南」的两份</h2>
+
+<h3 id="s2-1">2.1 权威参考实现：Stability-AI/generative-models</h3>
+
+<p>这是训练 SD / SDXL VAE 的那份代码。<b>它不是教程</b>——没有「第一步、第二步」的说明文字——但它是<b>事实标准</b>：你看到的每一份「VAE 训练指南」（包括下面 2.2 那份）都是在复述或修改它的做法。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>项</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>训练入口</td><td><code>python main.py --base configs/&lt;config&gt;.yaml</code>（<b>没有</b>独立的 <code>train_vae.py</code>，全部走配置驱动）</td></tr>
+<tr><td>示例配置</td><td><code>configs/example_training/autoencoder/kl-f4/imagenet-attnfree-logvar.yaml</code></td></tr>
+<tr><td>损失实现</td><td><code>sgm/modules/autoencoding/losses/discriminator_loss.py</code> → <code>GeneralLPIPSWithDiscriminator</code></td></tr>
+<tr><td>判别器</td><td><code>NLayerDiscriminator</code>（<code>n_layers=3</code>，<code>use_actnorm=False</code>），权重初始化用 <code>weights_init</code></td></tr>
+<tr><td>KL 正则</td><td><code>DiagonalGaussianRegularizer</code>，通过 <code>regularization_weights: {kl_loss: 1.0}</code> 接入</td></tr>
+<tr><td>★ 版本坑</td><td>README 原话：AE 训练（如 <code>kl-f4/imagenet-attnfree-logvar.yaml</code>）<b>只支持 pytorch1.13</b>（仓库同时支持 pytorch1.13 与 pytorch2，但 AE 训练不行）</td></tr>
+<tr><td>数据格式</td><td>webdataset 分片；<code>DATA-PATH</code> 占位符需替换</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">它没有告诉你的</div>
+<ul>
+<li><b>没有任何「怎么调参」的说明。</b>超参全在 YAML 里，改哪个、为什么改，要自己读代码。</li>
+<li><b>SDXL VAE 的微调过程没有文档。</b>仓库只告诉你<b>怎么加载</b> <code>stabilityai/sdxl-vae</code> 的冻结权重（替换 <code>CKPT_PATH</code>），<b>不告诉你怎么得到它</b>。SDXL VAE 的微调细节不在这个仓库里。</li>
+<li><b>示例配置是 kl-f4 不是 kl-f8。</b>你的 VAE 是 f8（4 通道、<code>ch_mult=[1,2,4,4]</code>），示例配置的编码器是 <code>ch_mult=[1,2,4]</code>（f4）。<b>不能直接照抄架构，但损失与训练超参可以照抄。</b></li>
+</ul>
+</div>
+
+<h3 id="s2-2">2.2 工程技巧集：cloneofsimo/vqgan-training</h3>
+
+<p>仓库自述：<em>"The famous VAE of latent diffusion models, such as stable diffusion, FLUX, SORA, etc. How are they trained? This is my attempt to write distributed VAE trainer. It is largely based on LDM's VAE."</em></p>
+
+<p><b>这是目前最像「指南」的一份</b>，因为它把工程经验写成了清单。它的 VAE 架构基于 <b>FLUX 的 VAE</b>（不是 SD），并做了若干修改。全部技巧如下（逐条来自 README）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>技巧</th><th>原文说明</th><th>为什么重要</th></tr></thead>
+<tbody>
+<tr>
+<td><b>① GAN 损失用带阈值的 hinge</b></td>
+<td><div class="formula">L<sub>GAN</sub> = max( 0, D(x) − D(x̂) − 0.1 )</div>原话：<em>"This way, the generator (Decoder/Encoder) is only trained when the discriminator is good enough, leaving early stage training more stable."</em></td>
+<td>判别器不够强时<b>不给生成器梯度</b> ⇒ 早期训练稳定。等价于一个「自适应 warmup」，比固定步数更稳</td>
+</tr>
+<tr>
+<td><b>② 梯度归一化（Gradient Normalization）</b></td>
+<td><div class="formula">∇<sub>θ</sub>L = (1/‖∇<sub>X</sub>L<sub>GAN</sub>‖)·∇<sub>θ</sub>L<sub>GAN</sub> + (1/‖∇<sub>X</sub>L<sub>percep</sub>‖)·∇<sub>θ</sub>L<sub>percep</sub></div>用一个自定义 <code>autograd.Function</code> 在 backward 里把梯度归一化成单位范数</td>
+<td><b>★ 这是本报告里与你梯度冲突工作最相关的一条。</b>它不去调 loss 权重，而是<b>直接按对输入的梯度范数归一化</b>，让 GAN 项与感知项在参数空间里量级可比 —— <b>这正是「幅度平衡」而非「方向解决」的思路</b></td>
+</tr>
+<tr>
+<td><b>③ 常数方差 0.1</b></td>
+<td>原话：<em>"a fixed variance of 0.1, deviating from the conventional learnable variance in VAE architectures. This modification addresses the tendency of VAEs to <b>indiscriminately decrease log variance, regardless of KL divergence penalty coefficients</b>."</em></td>
+<td>作者观察到可学习 logvar 会<b>无差别地下压</b>（与 KL 权重无关）⇒ 直接钉死。<b>注意这与 Stability 的做法相反</b>——见 <a href="#s6">§6.1</a></td>
+</tr>
+<tr>
+<td><b>④ 池化 MSE（Pooled MSE）</b></td>
+<td>原话：<em>"A pooled MSE was introduced to modify the original VAE reconstruction loss, reducing the model's sensitivity to high-frequency input details."</em></td>
+<td>降低对高频细节的敏感度 ⇒ 与「潜空间高频噪声」问题（<a href="#s5">§5</a>）相关</td>
+</tr>
+<tr>
+<td><b>⑤ ★ 低通重建损失</b></td>
+<td>原话：<em>"While MSE and L1 losses often result in blurred outputs ... retaining some MSE loss is crucial for accurate color tone calibration. To address this, we found using <b>MSE loss on a low-pass filtered version of the image</b> is helpful."</em>做法：先对<b>灰度图</b>做类 Laplacian 滤波，只在<b>低频区域</b>算 MSE</td>
+<td><b>★ 这条最实用。</b>它解决的是 LPIPS 与 MSE 的<b>内在冲突</b>：MSE 要准色但会糊，LPIPS 要锐但色偏。<b>把 MSE 限制在低频，冲突就被空间上分开了</b>——高频交给 LPIPS、低频交给 MSE</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">诚实标注</div>
+<p>该仓库 README <b>末尾自述「Above readme was written by claude」</b>（由 AI 撰写）。所以上面的引文我按「仓库文档自述」对待，<b>没有</b>逐条去核对 <code>vae_trainer.py</code> / <code>utils.py</code> 的实现是否与描述一致。<b>如果你要采用其中某条（尤其②和⑤），请先读对应源码确认。</b></p>
+<p>仓库规模很小（<code>ae.py</code> / <code>vae_trainer.py</code> / <code>utils.py</code> / <code>tae.py</code> 等），最后提交集中在 <b>2024-10</b>。<b>它是一份个人实践总结，不是长期维护的项目。</b></p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>★★ 参考实现的逐字损失</h2>
+
+<p>这一节是本报告最可直接使用的部分。<b>以下全部来自 Stability-AI <code>generative-models</code> 的源码与官方示例配置，逐字。</b></p>
+
+<h3 id="s3-1">3.1 完整损失公式</h3>
+
+<p>类名 <code>GeneralLPIPSWithDiscriminator</code>（<code>sgm/modules/autoencoding/losses/discriminator_loss.py</code>）。构造签名与默认值逐字：</p>
+
+<pre><code>def __init__(
+    self,
+    disc_start: int,                       # 必需，无默认值 —— 判别器从第几步开始
+    logvar_init: float = 0.0,
+    disc_num_layers: int = 3,
+    disc_in_channels: int = 3,
+    disc_factor: float = 1.0,
+    disc_weight: float = 1.0,
+    perceptual_weight: float = 1.0,
+    disc_loss: str = "hinge",              # 或 "vanilla"
+    scale_input_to_tgt_size: bool = False,
+    dims: int = 2,
+    learn_logvar: bool = False,
+    regularization_weights: Union[None, Dict[str, float]] = None,
+    ...
+)</code></pre>
+
+<p><b>前向里的四条公式（逐字）：</b></p>
+
+<pre><code># 1) 重建 + 感知
+rec_loss = torch.abs(inputs - reconstructions)
+if self.perceptual_weight > 0:
+    p_loss = self.perceptual_loss(inputs, reconstructions)     # LPIPS
+    rec_loss = rec_loss + self.perceptual_weight * p_loss
+
+# 2) NLL 化（含 logvar）
+nll_loss = rec_loss / torch.exp(self.logvar) + self.logvar
+
+# 3) 生成器（= 编码器 + 解码器）总损失
+loss = weighted_nll_loss + d_weight * self.disc_factor * g_loss
+#     其中 g_loss = -torch.mean(logits_fake)
+
+# 4) 判别器损失（第二个 optimizer_idx）
+d_loss = self.disc_factor * self.disc_loss(logits_real, logits_fake)
+#     默认 self.disc_loss = hinge_d_loss</code></pre>
+
+<div class="formula">L<sub>AE</sub> = [ |x − x̂| + λ<sub>percep</sub>·LPIPS(x, x̂) ] / exp(logvar) + logvar + λ<sub>KL</sub>·L<sub>KL</sub> + d<sub>w</sub>·λ<sub>disc</sub>·(−E[D(x̂)])</div>
+
+<p class="small">其中 <code>λ_percep</code> = <code>perceptual_weight</code>，<code>λ_KL</code> 由 <code>regularization_weights["kl_loss"]</code> 给出（<b>不在这个类里，走外部正则项</b>），<code>d_w</code> 是下面的自适应权重。</p>
+
+<h3 id="s3-2">3.2 ★ 自适应判别器权重 = 梯度范数平衡</h3>
+
+<p>这是整个损失里最巧的一处，也是<b>与你梯度冲突工作最相关的一处</b>。逐字：</p>
+
+<pre><code>def calculate_adaptive_weight(self, nll_loss, g_loss, last_layer):
+    nll_grads = torch.autograd.grad(nll_loss, last_layer, retain_graph=True)[0]
+    g_grads   = torch.autograd.grad(g_loss,   last_layer, retain_graph=True)[0]
+
+    d_weight = torch.norm(nll_grads) / (torch.norm(g_grads) + 1e-4)
+    d_weight = torch.clamp(d_weight, 0.0, 1e4).detach()
+    d_weight = d_weight * self.discriminator_weight
+    return d_weight</code></pre>
+
+<div class="formula">d<sub>w</sub> = clamp( ‖∇<sub>z</sub>L<sub>nll</sub>‖ / (‖∇<sub>z</sub>L<sub>GAN</sub>‖ + 10<sup>−4</sup>), 0, 10<sup>4</sup> ) × λ<sub>disc</sub></div>
+
+<div class="box key">
+<div class="bt">★★ 为什么这条对你重要</div>
+<p>它在<b>解码器最后一层</b>上分别求两个损失对<b>该层激活</b>的梯度范数，然后<b>用比值把 GAN 项的幅度拉回与重建项同一量级</b>。</p>
+<p><b>这正是你在梯度冲突报告里区分的那个东西</b>：</p>
+<ul>
+<li>它<b>不解决方向冲突</b>（两个梯度仍然可能反向）；</li>
+<li>它<b>只解决幅度失衡</b>——即「幅度劫持」那一类。</li>
+</ul>
+<p><b>★ 而且它用的是「对激活的梯度范数」而不是「对参数的梯度范数」</b>，只在一个层上算（<code>last_layer</code>）。这个选择的含义是：<b>用一个便宜的、单层的代理量代替全局的梯度平衡</b>，避免了对全部参数求两次梯度的开销。<b>这是一个可以直接搬到你的辅助损失上的便宜机制</b>——前提是你的辅助损失也有一个明确的「最后一层」。</p>
+<p class="small"><b>注意 <code>clamp(0, 1e4)</code> 与 <code>+1e-4</code>：</b>作者显然知道这个比值会爆（<code>g_grads → 0</code> 时），所以两头都设了防护。<b>这与你项目里反复出现的「无防护的 1/x」形成对照</b>——这里是<code>1/(·+ε)</code> 再加 clamp，是<b>有防护</b>的写法。</p>
+</div>
+
+<h3 id="s3-3">3.3 官方示例配置逐字</h3>
+
+<p><code>configs/example_training/autoencoder/kl-f4/imagenet-attnfree-logvar.yaml</code>（只摘关键段）：</p>
+
+<pre><code>model:
+  base_learning_rate: 4.5e-6            # ★ 极低
+  target: sgm.models.autoencoder.AutoencodingEngine
+  params:
+    monitor: val/rec_loss
+    loss_config:
+      target: sgm.modules.autoencoding.losses.GeneralLPIPSWithDiscriminator
+      params:
+        perceptual_weight: 0.25
+        disc_start: 20001               # ★ GAN 从 20001 步才开始
+        disc_weight: 0.5
+        learn_logvar: True
+        regularization_weights:
+          kl_loss: 1.0                  # ★ KL 权重 = 1.0
+    encoder_config:
+      params:
+        attn_type: none
+        double_z: True
+        z_channels: 4                   # 4 通道潜空间
+        resolution: 256
+        in_channels: 3
+        out_ch: 3
+        ch: 128
+        ch_mult: [1, 2, 4]              # ★ f4（不是 SD 的 [1,2,4,4] = f8）
+        num_res_blocks: 4
+        attn_resolutions: []
+        dropout: 0.0
+    decoder_config:
+      params: ${model.params.encoder_config.params}   # 解码器复用编码器配置
+
+data:
+  params:
+    train:
+      loader:
+        batch_size: 8
+        num_workers: 4</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>超参</th><th>官方示例值</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>学习率</td><td><b>4.5e-6</b></td><td>比常见的扩散训练（1e-4）低 <b>约 22 倍</b>。VAE 训练的学习率极低是常态</td></tr>
+<tr><td>KL 权重</td><td><b>1.0</b></td><td>在 <code>regularization_weights</code> 里</td></tr>
+<tr><td>感知权重</td><td><b>0.25</b></td><td>LPIPS 只占重建项的 1/4</td></tr>
+<tr><td>判别器权重</td><td><b>0.5</b></td><td>且实际生效值 = 0.5 × 自适应比值</td></tr>
+<tr><td>判别器启动步</td><td><b>20001</b></td><td>见 <a href="#s3-4">§3.4</a></td></tr>
+<tr><td>logvar</td><td><b>可学习</b>（<code>learn_logvar: True</code>）</td><td>与 2.2 的「常数 0.1」相反</td></tr>
+<tr><td>batch size</td><td><b>8</b></td><td>示例值；真实的 SD VAE 训练用了大得多的 batch（见 <a href="#s4">§4.1</a> 的 192）</td></tr>
+<tr><td>潜通道数</td><td><b>4</b></td><td>与你一致</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s3-4">3.4 判别器延迟启动 = warmup（和你已有的结论同源）</h3>
+
+<p><code>disc_start: 20001</code> 意味着<b>前 20000 步完全没有 GAN 损失</b>，只在重建 + 感知 + KL 上训；之后才逐步引入对抗项，且引入时还用自适应权重压住幅度。</p>
+
+<div class="box key">
+<div class="bt">★ 这是「辅助损失不该从第一步就开」的第三个独立证据</div>
+<p>你已经有两个：</p>
+<ul>
+<li><b>Lantern</b>（受控实验）：物理残差损失需要 <b>terminal denoising-only phase</b>（末期关闭），FPD 236.3 → 32.84。</li>
+<li><b>SGCD</b>（弱旁证，其代码与论文不符，见库内 SGCD 精读）：引导只在时间窗内施加。</li>
+</ul>
+<p><b>现在是第三个，而且来自 VAE 训练而不是扩散训练</b>：<code>disc_start: 20001</code> 是 <b>warmup 方向</b>的证据（辅助项延迟引入）。<b>三个独立场景、同一个模式：辅助损失需要调度，不能一视同仁地从 t=0 全程施加。</b></p>
+<p class="small">注意方向差异：<b>这里要的是「warmup（延迟开）」</b>，Lantern 要的是「<b>末期关</b>」。两者不矛盾——GAN 项是「容易在早期主导」所以要晚开；物理残差项是「容易在末期主导」所以要早关。<b>判断标准是「哪一端更容易被它劫持」，而不是统一的「warmup + 末期关」。</b></p>
+</div>
+
+<h2 id="s4"><span class="num">4</span>只调解码器：四条 drop-in 路线 + 一份可跑脚本</h2>
+
+<div class="box good">
+<div class="bt">为什么这一类对你最重要</div>
+<p><b>「只训解码器、冻结编码器」意味着潜空间不变</b> ⇒ 你已有的扩散权重<b>完全兼容</b>、可以随时换回来、不需要重训扩散模型。这是<b>改动最小、可回退、且公开配方最完整</b>的一类资源。</p>
+<p>你的待办里已经有「换 <code>sd-vae-ft-ema-path</code> 解码器」这一条。<b>下面是它的全貌和三个替代项。</b></p>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th>路线</th><th>训练数据</th><th>训练目标</th><th>训了什么</th><th>规模 / 成本</th><th>代码</th></tr></thead>
+<tbody>
+<tr>
+<td><b>4.1 ft-EMA / ft-MSE</b><br><span class="cite">stabilityai</span></td>
+<td>LAION-Aesthetics + LAION-Humans（1:1）<br><span class="small">原 kl-f8 训于 OpenImages</span></td>
+<td>ft-EMA：<b>L1 + LPIPS</b>（与原 checkpoint 同配置）<br>ft-MSE：<b>MSE + 0.1·LPIPS</b></td>
+<td><b>只有解码器</b></td>
+<td>ft-EMA 313,198 步 → ft-MSE 再 +280k 步<br>batch 192（16×A100）</td>
+<td><span class="b low">未发布</span></td>
+</tr>
+<tr>
+<td><b>4.2 病理专用</b><br><span class="cite">StonyBrook-CVLab · MICCAI 2025</span></td>
+<td><b>24M 张 256×256 病理瓦片</b>（20×），来自 2,500 张 TCGA WSI（乳腺 / 结肠 / 前列腺）</td>
+<td><b>UNI 嵌入 L1</b> + 像素 L1 + <b>PatchGAN</b> 对抗项</td>
+<td><b>编码器冻结、只调解码器</b></td>
+<td>83.7M 参数（SD-1.5 VAE）<br>8×A100，120k 迭代，lr 5e-5</td>
+<td><span class="b bad">未发布</span></td>
+</tr>
+<tr>
+<td><b>4.3 Consistency Decoder</b><br><span class="cite">openai</span></td>
+<td>未在本轮核实</td>
+<td><b>一致性蒸馏</b>（不是 GAN）</td>
+<td>替换解码器（<code>ConsistencyDecoderVAE</code>）</td>
+<td><b>0.7B 参数</b>（远大于 SD VAE）</td>
+<td><span class="b high">有</span>（原仓库）</td>
+</tr>
+<tr>
+<td><b>4.4 fp16 数值修复</b><br><span class="cite">madebyollin/sdxl-vae-fp16-fix</span></td>
+<td>未在本轮核实</td>
+<td><b>与原 VAE 相同的目标</b>，只是改为<b>在 fp16 下不产生 NaN</b></td>
+<td>整个 VAE（改的是数值实现，不是结构）</td>
+<td>SDXL VAE 规模<br><span class="small">与 SD2.1 <b>不兼容</b>，不能直接替换</span></td>
+<td><span class="b low">未发布</span></td>
+</tr>
+<tr>
+<td><b>4.5 decoder-only 训练脚本</b><br><span class="cite">huggingface/diffusers</span></td>
+<td>ImageFolder 格式，任意</td>
+<td>像素重建（<code>l1</code> 可选）+ <b>可选编码器特征一致性</b>（权重 0.1）</td>
+<td><b>编码器冻结、只训解码器</b></td>
+<td>用 <code>accelerate launch</code>，单机可跑</td>
+<td><span class="b high">★ 有，可直接跑</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>4.1 自然图像：<code>sd-vae-ft-ema</code> / <code>sd-vae-ft-mse</code></h3>
+
+<p>这两个就是你现在用的那类 VAE 的官方改进版。模型卡写得非常清楚，逐字要点：</p>
+
+<ul>
+<li><b>只调解码器</b>：<em>"To keep compatibility with existing models, <b>only the decoder part was finetuned</b>; the checkpoints can be used as a drop-in replacement for the existing autoencoder."</em> ⇒ <b>这是「decoder-only 是安全的 drop-in」这条做法的原始出处。</b></li>
+<li><b>两阶段的配方差异</b>：ft-EMA 从原 checkpoint 续训，<b>用与原版相同的损失配置（L1 + LPIPS）</b>，313,198 步，用 EMA 权重；ft-MSE <b>从 ft-EMA 续训</b>，再用不同损失训 280k 步，<b>重建损失 = MSE + 0.1 × LPIPS</b>，输出更平滑。</li>
+<li><b>数据动机</b>：原 kl-f8 训于 OpenImages，他们想改用 SD 的训练集，并<b>加入人物图像以改善人脸重建</b>。</li>
+</ul>
+
+<div class="scroll">
+<table>
+<thead><tr><th>数据集（256×256）</th><th>指标</th><th>original</th><th>ft-EMA</th><th>ft-MSE</th></tr></thead>
+<tbody>
+<tr><td rowspan="3">COCO 2017 val（5000 张）</td><td>rFID ↓</td><td>4.99</td><td><b>4.42</b></td><td>4.70</td></tr>
+<tr><td>PSNR ↑</td><td>23.4 ± 3.8</td><td>23.8 ± 3.9</td><td><b>24.5 ± 3.7</b></td></tr>
+<tr><td>SSIM ↑</td><td>0.69</td><td>0.69</td><td><b>0.71</b></td></tr>
+<tr><td rowspan="3">LAION-Aesthetics 5+（10000 张）</td><td>rFID ↓</td><td>2.61</td><td><b>1.77</b></td><td>1.88</td></tr>
+<tr><td>PSNR ↑</td><td>26.0</td><td>26.7</td><td><b>27.3</b></td></tr>
+<tr><td>SSIM ↑</td><td>0.81</td><td>0.82</td><td><b>0.83</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="small"><b>读法</b>：ft-EMA 的 <b>FID 更好</b>（分布更接近），ft-MSE 的 <b>PSNR/SSIM 更好</b>（逐像素更准但更平滑）。<b>这是一次典型的「分布级 vs 实例级」分歧</b>——和你在评价规范里定的「不能只看一个指标」是同一件事。对你的用途（病理结构保真），<b>PSNR/SSIM 更相关的 ft-MSE 未必更好，因为「更平滑」意味着核纹理被磨掉</b>。</p>
+
+<h3>4.2 ★ 病理专用：<code>sd-vae-ft-ema-path</code>（MICCAI 2025）</h3>
+
+<p>这是与你域最接近的一份，来自 Stony Brook 计算机视觉实验室 + Argonne 国家实验室，MICCAI 2025。<b>它把三个「原本是潜扩散前端」的自编码器拿来，只在病理图像上微调解码器</b>：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>被微调的 AE</th><th>下采样</th><th>潜通道</th><th>参数量</th><th>UNI 余弦相似度（微调前 → 后）</th></tr></thead>
+<tbody>
+<tr><td><b>SD 1.5 VAE</b></td><td>8×</td><td>4</td><td><b>83.7M</b></td><td>0.837 → <b>0.932</b></td></tr>
+<tr><td>SD 3.5 Large VAE</td><td>8×</td><td>16</td><td>83.8M</td><td>0.959 → <b>0.978</b></td></tr>
+<tr><td>DC-AE</td><td>32×</td><td>32</td><td>323.4M</td><td>0.733 → <b>0.906</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">★★ 它的核心设计决定，正好回答了你的一个开放问题</div>
+<p>原文（bio.rodeo 收录）：<em>"PSNR and SSIM, the standard image-quality metrics, <b>correlate poorly with whether a pathology model can still do its job</b> on a reconstruction. So the fine-tuning objective is instead a perceptual loss computed in the embedding space of <b>UNI</b>, a pathology foundation model: the decoder is trained to produce reconstructions that <b>a pathology encoder sees as the original</b>, not reconstructions that a pixel metric likes."</em></p>
+<p><b>⇒ 这与你「禁止用单一 PSNR 判断成功」的规范是同一条结论，而且它给出了可执行的替代：用一个病理基础模型的嵌入空间当感知损失。</b></p>
+<p><b>对你的直接含义</b>：如果你要微调解码器，<b>感知损失不应该用 LPIPS（自然图像 VGG）</b>，而应该用 <b>UNI / Phikon / Prov-GigaPath</b> 这类病理基础模型的嵌入。<b>这与你在 StainFuser 侧已经确立的「蛋白语义需要专门的表征」是同一条思路。</b></p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 但必须知道的两个限制</div>
+<ol>
+<li><b>代码未发布。</b>原文明确：<em>"no training or fine-tuning code has been released, so reproducing the fine-tuning procedure requires reimplementation from the described recipe."</em> ⇒ <b>你能拿到权重，拿不到训练代码。</b>好消息是配方足够详细（见下表），可以自己复现。</li>
+<li><b>训练数据是 TCGA H&amp;E，不是 IHC。</b>与你库内既有记忆一致：<b>前提是「微调于 H&amp;E 非 IHC」</b>。它改善的是「H&amp;E 重建」，而你的目标是生成 IHC。<b>换它是安全的（解码器更懂病理纹理），但不要指望它解决 IHC 侧的问题。</b></li>
+</ol>
+</div>
+
+<p><b>可复现的配方（逐项）</b>：</p>
+<pre><code>数据   24M × 256×256 瓦片 @20×，来自 2,500 张 TCGA WSI（乳腺 / 结肠 / 前列腺）
+目标   UNI 嵌入 L1（主） + 像素 L1 + PatchGAN 对抗项
+冻结   编码器冻结，只更新解码器
+硬件   8 × A100
+迭代   120,000
+lr     5e-5
+评估   UNI / Phikon-v2 / Prov-GigaPath 嵌入余弦相似度（不报 PSNR/SSIM）</code></pre>
+
+<h3>4.3 OpenAI Consistency Decoder</h3>
+
+<p>出自 DALL·E 3 技术报告。<b>它不是用 GAN 训的，是一致性蒸馏</b>，因此失效模式与 GAN 解码器不同（GAN 解码器倾向产生对抗性纹理）。用法是替换 VAE：</p>
+
+<pre><code>from diffusers import DiffusionPipeline, ConsistencyDecoderVAE
+
+vae  = ConsistencyDecoderVAE.from_pretrained("openai/consistency-decoder")
+pipe = StableDiffusionPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5", vae=vae, dtype=torch.float16
+).to("cuda")</code></pre>
+
+<p><b>代价</b>：<b>0.7B 参数</b>（SD VAE 解码器约 49M），推理开销大得多。<b>本报告未核实它是否与 SD2.1 的潜空间完全兼容</b>（它是为 SD1.x 发布的），见 <a href="#s8">§8</a>。</p>
+
+<h3>4.4 <code>sdxl-vae-fp16-fix</code>（针对你的 fp16 成因）</h3>
+
+<p>模型卡原话：<em>"SDXL-VAE-FP16-Fix is the SDXL VAE, but modified to run in fp16 precision <b>without generating NaNs</b>."</em></p>
+
+<div class="box warn">
+<div class="bt">它的定位要说清楚</div>
+<p><b>它不是「更好的 VAE」，是「同一个 VAE 的数值修复版」</b>——只解决 fp16 溢出/NaN，不改善重建质量。</p>
+<p><b>但对你可能有用</b>：你的黑团已被判定为<b>两个独立故障</b>，其中一个是<b>训练侧 fp16 指数溢出</b>（你已用 bf16 根治）。如果你出于显存/速度原因必须在某处保留 fp16，这类修复版是一个选项。<b>注意它是 SDXL 的 VAE（不是 SD2.1），架构不同，不能直接替换你的。</b></p>
+</div>
+
+<h3>4.5 ★ 现成可跑的 decoder-only 训练脚本（diffusers）</h3>
+
+<p><b>diffusers 没有官方的「训练 VAE」脚本</b>（这一点要明确，很多搜索结果会误导你）。但它有一个 research project 示例，做的正是你要的事：</p>
+
+<p><code>examples/research_projects/autoencoder_rae/train_autoencoder_rae.py</code>。README 逐字：<em>"This example trains the <b>decoder</b> of <code>AutoencoderRAE</code> (stage-1 style), while <b>keeping the representation encoder frozen</b>."</em> 训练配方四要素：</p>
+
+<pre><code>frozen encoder
+train decoder
+pixel reconstruction loss
+optional encoder feature consistency loss</code></pre>
+
+<p><b>可直接改用的启动命令（含超参）：</b></p>
+
+<pre><code>accelerate launch train_autoencoder_rae.py \
+  --pretrained_model_name_or_path nyu-visionx/RAE-dinov2-wReg-base-ViTXL-n08 \
+  --train_data_dir /path/to/your_data \
+  --output_dir /tmp/out \
+  --resolution 256 \
+  --train_batch_size 8 \
+  --learning_rate 1e-4 \
+  --num_train_epochs 10 \
+  --reconstruction_loss_type l1 \
+  --use_encoder_loss \
+  --encoder_loss_weight 0.1</code></pre>
+
+<div class="box teal">
+<div class="bt">它的价值与边界</div>
+<p><b>价值</b>：这是<b>唯一一份可以直接跑起来的 decoder-only 训练代码</b>（<code>accelerate launch</code>，ImageFolder 数据格式，不依赖 webdataset）。你可以把它的训练循环扒出来，把「像素 L1 + 编码器特征一致性」换成「像素 L1 + <b>UNI 嵌入 L1</b>」（按 <a href="#s4">§4.2</a> 的配方），就得到了一份病理版 decoder-only 微调脚本。</p>
+<p><b>边界</b>：它针对的是 <code>AutoencoderRAE</code>（编码器是 DINOv2，不是 SD 的 <code>AutoencoderKL</code>）。<b>不能直接用于你的 SD2.1 VAE</b>——要改的是「编码器 / 解码器的类」和「特征一致性的来源」。<b>它给你的是一条被验证过的训练循环骨架，不是一个即插即用的方案。</b></p>
+<p class="small">该示例的最后提交为 <b>2026-03-05</b>，属较新内容。<code>--resolution</code> 必须等于 <code>--image_size</code>（stage-1 重建损失要求输入输出同尺寸）。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>潜空间本身的研究（第二层含义）</h2>
+
+<div class="box key">
+<div class="bt">这一节才是你黑团问题真正该看的地方</div>
+<p>§2–§4 全部在回答「解码器够不够好」。<b>而你的黑团根因是「潜码落到了 VAE 没见过的区域」——这是潜空间的问题，不是解码器的问题。</b></p>
+<p>2025 年有两篇工作正面处理这件事，都来自顶会，都有代码。</p>
+</div>
+
+<h3 id="s5-1">5.1 VA-VAE：重建 vs 生成的优化困境（CVPR 2025）</h3>
+
+<p><b>Reconstruction vs. Generation: Taming Optimization Dilemma in Latent Diffusion Models</b> · Jingfeng Yao, Bin Yang, Xinggang Wang（华科）· arXiv <b>2501.01423</b> · <b>CVPR 2025</b> · 代码 <code>hustvl/LightningDiT</code></p>
+
+<p><b>它指出的困境（摘要逐字）</b>：</p>
+
+<pre><code>"recent studies reveal an optimization dilemma in this two-stage design: while
+ <b>increasing the per-token feature dimension in visual tokenizers improves
+ reconstruction quality</b>, it <b>requires substantially larger diffusion models and
+ more training iterations to achieve comparable generation performance</b>.
+ Consequently, existing systems often settle for sub-optimal solutions, either
+ producing visual artifacts due to information loss within tokenizers or failing
+ to converge fully due to expensive computation costs.
+
+ We argue that <b>this dilemma stems from the inherent difficulty in learning
+ unconstrained high-dimensional latent spaces</b>."</code></pre>
+
+<p><b>它的解法</b>：<em>"aligning the latent space with <b>pre-trained vision foundation models</b> when training the visual tokenizers"</em> ⇒ 提出 <b>VA-VAE</b>（Vision foundation model Aligned VAE）。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>项</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>核心论点</td><td><b>困境的根源是「无约束的高维潜空间难学」</b>，不是解码器不够强</td></tr>
+<tr><td>解法</td><td>训练 tokenizer 时把潜空间<b>对齐到一个预训练视觉基础模型</b></td></tr>
+<tr><td>效果</td><td>ImageNet 256 生成 FID <b>1.35</b>；<b>64 epoch 达到 FID 2.11</b>，相对原 DiT <b>21× 收敛加速</b></td></tr>
+<tr><td>代码 / 权重</td><td><span class="b high">有</span> · <code>github.com/hustvl/LightningDiT</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">★ 对你的直接含义</div>
+<p><b>你的现象与它描述的一模一样</b>：你想提高重建保真 → 提高潜维度或让 VAE 更强 → 但扩散模型变得更难训、更容易产生「分布外潜码」→ 黑团。</p>
+<p><b>它的诊断是：这不是「VAE 训练得不够好」，而是「潜空间没有被约束成适合扩散的形状」。</b>修法是<b>加一个对齐项</b>（把潜空间拉向一个基础模型的表征空间），而不是单纯加大 VAE 或换解码器。</p>
+<p><b>与你已有的思路高度一致</b>：你在 StainFuser 侧已经决定「解耦轴 = 共享组织形态 ↔ marker-specific 表达」，并在蛋白约束侧选了「用病理基础模型特征」。<b>VA-VAE 是同一个思路作用在 VAE 侧：用基础模型的特征空间来约束潜空间。</b></p>
+</div>
+
+<h3 id="s5-2">5.2 REPA-E：端到端训 VAE + 扩散（ICCV 2025）</h3>
+
+<p><b>REPA-E: Unlocking VAE for End-to-End Tuning with Latent Diffusion Transformers</b> · Xingjian Leng, Jaskirat Singh, Yunzhong Hou, Zhenchang Xing, Saining Xie, Liang Zheng · arXiv <b>2504.10483</b> · <b>ICCV 2025</b> · 代码 <code>end2end-diffusion.github.io</code></p>
+
+<p><b>它问的问题与结论（摘要逐字）</b>：</p>
+
+<pre><code>"Can we train latent diffusion models together with the variational auto-encoder
+ (VAE) tokenizer in an end-to-end manner?" ... However, for latent diffusion
+ transformers, it is observed that <b>end-to-end training both VAE and diffusion-model
+ using standard diffusion-loss is ineffective, even causing a degradation in final
+ performance</b>. We show that while diffusion loss is ineffective, <b>end-to-end training
+ can be unlocked through the representation-alignment (REPA) loss</b> ...</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>项</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>★ 最重要的发现</td><td><b>用标准扩散损失端到端训 VAE + 扩散模型是无效的，甚至会让最终性能变差。</b>必须换成表示对齐（REPA）损失才能解锁</td></tr>
+<tr><td>加速</td><td>相对 REPA <b>17×</b>，相对 vanilla 训练 <b>45×</b></td></tr>
+<tr><td>★ 附带发现</td><td>端到端微调 <b>同时改善了 VAE 本身</b> —— 潜空间结构更好、下游生成更好</td></tr>
+<tr><td>结果</td><td>ImageNet 256：FID <b>1.12</b>（有 CFG）/ <b>1.69</b>（无 CFG）</td></tr>
+<tr><td>代码 / 权重</td><td><span class="b high">有</span>，且发布了微调后的 <b>E2E-VAE</b> 可直接用于潜扩散训练</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">★ 这条对你有两个含义，第二个是警告</div>
+<ol>
+<li><b>正面</b>：VAE 与扩散模型<b>可以一起训</b>，而且能互相改善——这给你「换生成框架 + 加解耦」的路线提供了一个新的自由度。</li>
+<li><b>★ 警告</b>：<b>别用标准扩散损失去端到端训 VAE。</b>它明确说这样「ineffective, even causing a degradation」。如果你打算把 VAE 解冻一起训，<b>必须同时引入表示对齐项</b>，否则是在做一件已被证明无效的事。</li>
+</ol>
+</div>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">两篇的分工</div>
+<p><b>VA-VAE</b>：<b>只训 tokenizer</b>（两阶段里的第一阶段），用对齐项把潜空间约束好。改动小、思路清晰。</p>
+<p><b>REPA-E</b>：<b>把两阶段合成一个</b>，端到端。改动大，但给出了「联合训练为什么难、怎么才能成」的答案。</p>
+</div>
+<div class="mini">
+<div class="mt">共同点（最重要）</div>
+<p>两篇都指向同一个结论：<b>「潜空间的质量」不能只用重建指标衡量，必须用「它是否适合扩散模型学习」来衡量。</b></p>
+<p>⇒ <b>如果你只按 PSNR/SSIM 挑 VAE，你会挑到一个「重建好但扩散难学」的 VAE——这正是黑团的温床。</b></p>
+</div>
+</div>
+
+<h2 id="s6"><span class="num">6</span>两处技术分歧（诚实呈现）</h2>
+
+<p>公开资源之间不是一致的。有两处明确分歧，我不替你选，只把两边都摆出来。</p>
+
+<h3 id="s6-1">6.1 分歧一：logvar 该不该学？</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>Stability-AI（SD/SDXL 官方）</th><th>cloneofsimo/vqgan-training</th></tr></thead>
+<tbody>
+<tr><td>做法</td><td><b>可学习</b>：<code>logvar = nn.Parameter(torch.full((), logvar_init))</code>，示例配置里 <code>learn_logvar: True</code></td><td><b>常数 0.1</b>：钉死，不学</td></tr>
+<tr><td>损失形式</td><td>NLL 化：<code>rec_loss / exp(logvar) + logvar</code></td><td>直接用固定方差的 NLL</td></tr>
+<tr><td>理由</td><td>（未在代码/配置中说明）</td><td>原话：<em>"addresses the tendency of VAEs to <b>indiscriminately decrease log variance, regardless of KL divergence penalty coefficients</b>"</em></td></tr>
+<tr><td>防护</td><td>注意：<code>learn_logvar</code> 默认是 <code>False</code>，只有示例配置显式打开</td><td>直接消除这个自由度</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">怎么看待这个分歧</div>
+<p>两边都承认「logvar 会失控」这个现象。分歧在于<b>是用损失形式约束它（NLL + KL 的相互作用），还是直接钉死它</b>。</p>
+<p><b>对你的建议</b>：<b>默认跟官方（<code>learn_logvar: True</code>）</b>，理由是可复现性优先级最高、且官方配置是你想对齐的目标；<b>但要把 logvar 的轨迹记进日志</b>——如果你的 logvar 单调下降，就说明 cloneofsimo 观察到的现象在你的数据上也发生了，那时再考虑钉死。<b>注意这与你方法论里的「日志缺字段 = 信号消失」是同一件事。</b></p>
+</div>
+
+<h3 id="s6-2">6.2 分歧二：KL 权重与「潜空间高频噪声」</h3>
+
+<p>官方示例配置给 <code>kl_loss: 1.0</code>，也就是<b>不压制 KL</b>。但 VA-VAE / REPA-E 那一侧的核心论点恰恰是<b>标准 VAE 的潜空间不适合扩散</b>。</p>
+
+<p><b>这两者不矛盾，但要知道它们在说不同的事</b>：</p>
+<ul>
+<li><b>KL 权重 1.0 是在优化「重建 vs 正则」的权衡</b>——它保证潜空间是「连续、可采样」的。</li>
+<li><b>VA-VAE 说的是另一件事</b>：即使 KL 调得再好，<b>无约束的高维潜空间仍然难学</b>；需要额外的<b>结构约束</b>（对齐到基础模型），而不是只调 KL 系数。</li>
+</ul>
+
+<div class="box stop">
+<div class="bt">★ 我读到的一处二手说法，未核实</div>
+<p>在检索 REPA-E 的中文笔记时，看到一句转述：<em>「已有工作发现主流 VAE（如 SD-VAE）的潜空间存在<b>高频噪声成分</b>」</em>。</p>
+<p><b>我未能定位这句转述对应的原始论文</b>（可能是 REPA-E 的正文引用，也可能是 VA-VAE 的引用，也可能是笔记作者的概括）。<b>不要把它当事实引用。</b></p>
+<p><b>但如果这个说法成立，它与你的黑团高度相关</b>：潜空间的高频噪声成分，正是「扩散模型学到的高频结构与 VAE 解码器不匹配」的来源之一，也与 cloneofsimo 的「低通 MSE」技巧（<a href="#s2-2">§2.2 ⑤</a>）指向同一处。<b>这是一个值得你花 20 分钟去核实的点</b>——若成立，它给你一个可测的量（潜码的高频能量占比）。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>★ 对你的具体建议</h2>
+
+<div class="box key">
+<div class="bt">先做一件事：分清你的黑团属于哪一类</div>
+<p>你的黑团已被判定为<b>两个独立故障</b>：① 训练侧 fp16 指数溢出（已用 bf16 根治）② <b>采样侧潜码落到 VAE 未见区域 → decoder 输出 ≤ −1 → clamp 成纯黑</b>。</p>
+<p><b>本报告讨论的全是第 ②类。</b>在动手改 VAE 之前，你需要知道它属于下面哪一种：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>假设</th><th>含义</th><th>对应的资源</th><th>零成本判据（你已有）</th></tr></thead>
+<tbody>
+<tr><td><b>H1 · 解码器不够好</b></td><td>潜码在分布内，但解码器本身在病理纹理上重建差</td><td><a href="#s4">§4</a> 的 4 条 decoder-only 路线</td><td><b>AE 重建上限分层测试</b>：纯 encode→decode 的 PSNR。若「分布内潜码」的解码上限本身就很低 ⇒ H1</td></tr>
+<tr><td><b>H2 · 潜码跑出分布</b></td><td>解码器没问题，是扩散模型生成了 VAE 没见过的潜码</td><td><a href="#s5">§5</a>（VA-VAE / REPA-E）</td><td><b>AE 重建上限很高但采样仍崩</b> ⇒ H2。<b>再加一条</b>：统计采样潜码 vs 真实编码潜码的逐通道分位数偏移</td></tr>
+<tr><td><b>H3 · 结构幻觉</b></td><td>潜码在分布内、解码也正常，但扩散模型本身生成了错的病理结构</td><td>（不在本报告范围）</td><td>你的记忆里已标注「结构幻觉仍未排除」</td></tr>
+</tbody>
+</table>
+</div>
+<p><b>⇒ H1 和 H2 的处置完全不同：H1 换解码器（§4），H2 改潜空间（§5）。先测，别先训。</b></p>
+</div>
+
+<h3>7.1 按投入排序的行动表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">优先级</th><th>动作</th><th>成本</th><th>风险 / 可回退性</th><th>依据</th></tr></thead>
+<tbody>
+<tr>
+<td class="c"><b>P0</b></td>
+<td><b>跑 AE 重建上限分层测试</b>，判定 H1 vs H2</td>
+<td>半天，零训练</td>
+<td><span class="b high">零风险</span></td>
+<td>你已有此判据（R²≈0.67）。<b>不做这一步，后面全是盲猜</b></td>
+</tr>
+<tr>
+<td class="c"><b>P0</b></td>
+<td><b>加一条日志：被 clamp 像素比例</b>（你记忆里已列为必记项）</td>
+<td>半小时</td>
+<td><span class="b high">零风险</span></td>
+<td>它是「decoder 输出 ≤ −1」的直接证据，也是 H2 的直接证据</td>
+</tr>
+<tr>
+<td class="c"><b>P1</b></td>
+<td>若 H1 ⇒ <b>换 <code>sd-vae-ft-ema-path</code> 解码器</b>（病理版，83.7M，只调解码器 ⇒ 潜空间不变）</td>
+<td>1 小时（换权重）</td>
+<td><span class="b high">可回退</span>——不动潜空间 ⇒ 你的扩散权重仍兼容</td>
+<td><a href="#s4">§4.2</a>。你待办里已有此条。<b>注意前提：它微调于 H&amp;E 非 IHC</b></td>
+</tr>
+<tr>
+<td class="c"><b>P1</b></td>
+<td>若 H2 ⇒ <b>先做诊断，不要直接换 VAE</b>：统计采样潜码 vs 真实潜码的<b>逐通道均值/方差/分位数</b>偏移</td>
+<td>半天</td>
+<td><span class="b high">零风险</span></td>
+<td>这是把 H2 从假设变成数字的唯一办法。你已有「记录被 clamp 像素比例」的基础</td>
+</tr>
+<tr>
+<td class="c"><b>P2</b></td>
+<td>若 H2 确认 ⇒ <b>读 VA-VAE 与 REPA-E</b>，评估「用病理基础模型约束潜空间」这条路</td>
+<td>读 2 篇</td>
+<td><span class="b medium">概念风险</span>——会引入新的训练目标</td>
+<td><a href="#s5">§5</a>。<b>与你在 StainFuser 侧「用病理基础模型特征」的既定方向同源</b></td>
+</tr>
+<tr>
+<td class="c"><b>P3</b></td>
+<td>若决定自己训 decoder ⇒ 用 diffusers 的 <code>autoencoder_rae</code> 骨架，把感知项换成 <b>UNI 嵌入 L1</b></td>
+<td>数天 + GPU</td>
+<td><span class="b medium">中</span>——但不动潜空间</td>
+<td><a href="#s4">§4.5</a> + <a href="#s4">§4.2</a> 的配方组合</td>
+</tr>
+<tr>
+<td class="c"><b>不建议</b></td>
+<td><b>从零训一个 VAE</b></td>
+<td>周级 + 多卡</td>
+<td><span class="b bad">高</span>——潜空间一变，你所有扩散权重作废</td>
+<td>除非你要走 <a href="#s5">§5</a> 的路线（那是有理由的重训），否则没有理由</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.2 96×96 小瓦片带来的特殊考虑</h3>
+
+<div class="box warn">
+<div class="bt">你的分辨率比所有公开配方都小</div>
+<p>公开配方全部是 <b>256×256</b>（ft-ema/ft-mse、Stony Brook、官方示例配置、diffusers 示例）。<b>而你的瓦片是 96×96</b>，潜空间 4×12×12（f8）。</p>
+<p><b>三个具体后果</b>：</p>
+<ol>
+<li><b>下采样倍率的选择空间被压缩。</b>f8 在 256 上给 32×32 潜图；在 96 上只给 12×12。<b>12×12 的潜图很小，结构信息容量有限</b>——这可能本身就是「扩散模型容易生成分布外潜码」的原因之一（潜图太小，容错空间小）。<b>值得单独想一下是否该用 f4。</b></li>
+<li><b>感知损失的域偏移更严重。</b>LPIPS 的 VGG 是在自然图像上训的，<b>在小尺寸病理瓦片上更不可靠</b>——这加强了「用 UNI 而非 LPIPS」的理由（<a href="#s4">§4.2</a>）。</li>
+<li><b>直接套用公开配方的 batch size 不合适。</b>官方示例 batch 8、真实 SD VAE 训练 batch 192。<b>你的数据量（BCI 96 张瓦片量级）远小于 24M</b> ⇒ 如果你要微调，<b>必须重新考虑过拟合</b>。Stony Brook 用了 24M 张；你连它的千分之一都不到。</li>
+</ol>
+</div>
+
+<h3>7.3 一条可以直接做的检查</h3>
+
+<div class="card">
+<div class="ch">
+<div>
+<div class="title">检查 · 你的 VAE 潜空间的逐通道统计量</div>
+<div class="v">成本 ≈ 30 分钟 · 零训练 · 只需真实数据 + 你的 VAE 编码器</div>
+</div>
+<span class="b high">建议做</span>
+</div>
+<div class="body">
+<p><b>动机：</b>你已知 <code>scaling_factor</code> 与「同一 VAE 两个尺度」（<code>Target∈[0,1]</code> vs <code>Transformed∈[−1,1]</code>）。<b>但你没有潜空间逐通道的分布画像</b>——而黑团的直接机制是「潜码值超出 decoder 见过的范围」。</p>
+<p><b>做法：</b></p>
+<pre><code># 1. 用你的 VAE 编码器编一批真实 H&amp;E 瓦片（以及真实 IHC 瓦片）
+z = vae.encode(x).latent_dist.sample() * vae.config.scaling_factor
+
+# 2. 逐通道报：mean / std / min / max / 1%, 5%, 95%, 99% 分位
+for c in range(4):
+    print(c, z[:, c].mean().item(), z[:, c].std().item(), ...)
+
+# 3. 然后统计你【采样出来的】潜码在同一批分位数上的落点
+#    ⇒ 报「有多少比例的采样潜码落在真实分布的 [1%, 99%] 之外」</code></pre>
+<p><b>判据：</b>如果采样潜码有可观比例（&gt;5%）落在真实分布 [1%, 99%] 之外 ⇒ <b>H2 成立</b>，问题在潜空间/扩散侧，换解码器只能掩盖症状。</p>
+<p><b>为什么这条值钱：</b>它把「潜码跑出分布」从<b>假说</b>变成<b>一个数字</b>，而且直接对应你记忆里「潜码箱 ch2 下界 9.35σ」那类证据。<b>它也是 VA-VAE 那类工作会用来诊断的量。</b></p>
+<p class="small">★ 注意你已有的教训 #22：<b>换超参做对照前先检查它有没有偷偷改变别的变量。</b>这里如果 H&amp;E 与 IHC 用了不同的 <code>X0</code> / 归一化，两者的潜码统计<b>不可直接比</b>——<b>掩膜与归一化必须只定义一次、两套共用。</b></p>
+</div>
+</div>
+
+<h2 id="s8"><span class="num">8</span>未核实清单</h2>
+
+<div class="box stop">
+<div class="bt">不要当作事实引用</div>
+<ol>
+<li><b>「SD-VAE 潜空间存在高频噪声成分」这句话的原始出处。</b>我只在检索 REPA-E 的中文笔记时看到转述，<b>未能定位对应的原始论文</b>。见 <a href="#s6-2">§6.2</a>。</li>
+<li><b>TAESD（<code>madebyollin/taesd</code>）。</b>本报告在总表里列出了它，但<b>本轮没有独立核实</b>其模型卡内容、参数量、与 SD2.1 潜空间的兼容性。<b>引用前请自查。</b></li>
+<li><b>Consistency Decoder 与 SD2.1 潜空间的兼容性。</b>它是为 SD1.x 发布的；<b>我未核实</b>它能否用于 SD2.1。参数规模（0.7B）来自模型卡，已核实。</li>
+<li><b>cloneofsimo/vqgan-training 的五条技巧是否与源码一致。</b>该 README 自述由 AI 撰写（<em>"Above readme was written by claude"</em>），我<b>只读了 README，未逐条核对 <code>vae_trainer.py</code> / <code>utils.py</code> 的实现</b>。见 <a href="#s2-2">§2.2</a> 的标注。</li>
+<li><b>SDXL VAE 自己的微调配方。</b>Stability 的 <code>generative-models</code> 里<b>没有</b> SDXL VAE 的微调文档（只有加载冻结权重的说明）。<b>如果你要的正是「SDXL VAE 怎么来的」，本报告给不出答案。</b></li>
+<li><b>Stony Brook 那份的完整论文。</b>本报告依据的是 bio.rodeo 对该工作的收录页（含具体数字与配方），<b>未读 MICCAI 2025 原文</b>。数字（24M 瓦片、120k 迭代、lr 5e-5、UNI 相似度 0.837→0.932）来自该收录页。</li>
+<li><b>diffusers 是否在别处还有 VAE 训练脚本。</b>我只核实了 <code>examples/research_projects/autoencoder_rae</code> 这一处，并确认<b>没有官方 <code>train_vae.py</code></b>。<b>未穷举 <code>examples/</code> 全目录。</b></li>
+</ol>
+</div>
+
+<h3>核实方式</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>结论</th><th>取证</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td>Stability-AI 的损失公式、默认值、自适应权重实现</td><td><b>直接抓取 <code>discriminator_loss.py</code> 源码</b>，逐字</td><td><span class="b high">已核实（一手源码）</span></td></tr>
+<tr><td>官方示例配置的全部超参</td><td><b>直接抓取 YAML 原文</b></td><td><span class="b high">已核实（一手）</span></td></tr>
+<tr><td><code>sd-vae-ft-mse</code> 的配方与全部数字</td><td>HuggingFace 模型卡，逐字</td><td><span class="b high">已核实（一手）</span></td></tr>
+<tr><td>病理版 AE 的配方、数据量、硬件、数字</td><td>bio.rodeo 收录页（<b>二手，但内容详实且与 HF 模型卡互相印证</b>）</td><td><span class="b medium">二手</span></td></tr>
+<tr><td>VA-VAE / REPA-E 的题目、作者、venue、摘要结论</td><td>arXiv 摘要页，逐字</td><td><span class="b high">已核实（一手）</span></td></tr>
+<tr><td>diffusers <code>autoencoder_rae</code> 的训练配方与命令</td><td>GitHub README，逐字</td><td><span class="b high">已核实（一手）</span></td></tr>
+<tr><td>consistency-decoder / sdxl-vae-fp16-fix 的存在与定位</td><td>HF 模型卡标题与首段</td><td><span class="b high">已核实（一手）</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s9"><span class="num">9</span>与库内既有报告的分工</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>库内报告</th><th>关系</th></tr></thead>
+<tbody>
+<tr>
+<td><b>05_伪影与失败模式/扩散模型黑团伪影_成因诊断与解决方案.html</b></td>
+<td><span class="b high">本报告是它的下游</span><br>它回答「黑团是什么机制、怎么诊断」；本报告回答「<b>如果诊断结论是 H1 或 H2，公开资源里有哪些现成的东西可以用</b>」。<b>建议先读它、先做它的诊断流程，再回到本报告 §7。</b></td>
+</tr>
+<tr>
+<td><b>Diffusion主损失与辅助损失的梯度冲突_机制分析.html</b></td>
+<td><span class="b tealb">互为旁证</span><br>本报告 <a href="#s3-2">§3.2</a> 的自适应判别器权重 = <b>「只修幅度不修方向」的工业级实例</b>；<a href="#s3-4">§3.4</a> 的 <code>disc_start</code> = <b>「辅助项需要调度」的第三个独立证据</b>（前两个是 Lantern、SGCD）。<b>它给那份报告的 s 轴结论加了一个来自 VAE 训练领域的证据。</b></td>
+</tr>
+<tr>
+<td><b>SGCD_..._精读_代码级复核与可迁移性判定.html</b></td>
+<td><span class="b tealb">同批次产物</span><br>SGCD 精读里那条「<b>论文超参 vs 代码超参要对账</b>」的方法，本报告在 <a href="#s2-1">§2.1</a> 与 <a href="#s3-3">§3.3</a> 用上了（核对官方示例配置与真实 SD VAE 训练的差异）。</td>
+</tr>
+<tr>
+<td><b>06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html</b></td>
+<td><span class="b tealb">正交</span><br>它处理「生成架构怎么改」；本报告处理「<b>潜空间这一层要不要动</b>」。两者交汇于一点：<b>如果 §7 判定为 H2（潜码跑出分布），那 StainFuser 侧的架构改动都是在治症状。</b></td>
+</tr>
+<tr>
+<td><b>MEMORY_黑团与VAE.md</b>（记忆）</td>
+<td><span class="b high">本报告给它补料</span><br>它已记录「<code>sd-vae-ft-ema-path</code> 是最便宜行动项」。本报告补上了：<b>它的完整配方、训练数据量级（24M vs 你的 96 张）、以及「代码未发布」这个限制。</b>另补了三条同级替代（ft-ema/ft-mse、consistency decoder、diffusers 脚本）。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s10"><span class="num">10</span>参考文献</h2>
+
+<h3>一手核实</h3>
+<ul>
+<li><b>[1] Stability-AI/generative-models</b> · <code>sgm/modules/autoencoding/losses/discriminator_loss.py</code>（<code>GeneralLPIPSWithDiscriminator</code>）· <code>configs/example_training/autoencoder/kl-f4/imagenet-attnfree-logvar.yaml</code>。本报告 <a href="#s3">§3</a> 全部引文的来源。</li>
+<li><b>[2] sd-vae-ft-mse / sd-vae-ft-ema</b> · <code>huggingface.co/stabilityai/sd-vae-ft-mse</code>（模型卡的 "Decoder Finetuning" 与评估表）。</li>
+<li><b>[3] VA-VAE</b> · Jingfeng Yao, Bin Yang, Xinggang Wang. <i>Reconstruction vs. Generation: Taming Optimization Dilemma in Latent Diffusion Models.</i> <b>CVPR 2025</b>. arXiv <b>2501.01423</b>。代码 <code>github.com/hustvl/LightningDiT</code>。</li>
+<li><b>[4] REPA-E</b> · Xingjian Leng, Jaskirat Singh, Yunzhong Hou, Zhenchang Xing, Saining Xie, Liang Zheng. <i>REPA-E: Unlocking VAE for End-to-End Tuning with Latent Diffusion Transformers.</i> <b>ICCV 2025</b>. arXiv <b>2504.10483</b>（v3, 2025-10-22）。代码 <code>end2end-diffusion.github.io</code>。</li>
+<li><b>[5] diffusers autoencoder_rae</b> · <code>github.com/huggingface/diffusers/tree/main/examples/research_projects/autoencoder_rae</code>（<code>train_autoencoder_rae.py</code>）。</li>
+<li><b>[6] openai/consistency-decoder</b> · <code>huggingface.co/openai/consistency-decoder</code>；原始仓库 <code>github.com/openai/consistencydecoder</code>；方法出自 DALL·E 3 技术报告。</li>
+<li><b>[7] madebyollin/sdxl-vae-fp16-fix</b> · <code>huggingface.co/madebyollin/sdxl-vae-fp16-fix</code>。</li>
+<li><b>[8] cloneofsimo/vqgan-training</b> · <code>github.com/cloneofsimo/vqgan-training</code>（"Train VAE like a boss"，作者 Simo Ryu，2024）。</li>
+<li><b>[9] StonyBrook-CVLab/sd-vae-ft-ema-path</b> · <code>huggingface.co/StonyBrook-CVLab/sd-vae-ft-ema-path</code>。</li>
+</ul>
+
+<h3>二手（已标注）</h3>
+<ul>
+<li><b>[10] Pathology Fine-Tuned AEs</b>（MICCAI 2025，Stony Brook University + Argonne National Laboratory）· 依据 <code>bio.rodeo/models/pathology-fine-tuned-aes</code> 的收录页，<b>未读原文</b>。§4.2 的全部数字来自该页。</li>
+<li><b>[11] CompVis/latent-diffusion · taming-transformers</b> · <code>LPIPSWithDiscriminator</code> 的原始出处。本报告<b>未逐行核实</b>其与 Stability 版本的差异。</li>
+<li><b>[12] TAESD</b> · <code>madebyollin/taesd</code>。<b>本轮未核实</b>，见 <a href="#s8">§8</a>。</li>
+</ul>
+
+<div class="foot">
+<p><b>训练一个好的 VAE：公开资源地图</b> · 2026-10-07 · 归入 <code>01_调研报告/</code></p>
+<p>核心可抄配方（§3 损失 / §3.3 配置 / §4.1 解码器微调）均来自一手源码或模型卡。<br>
+§7 的 H1/H2 判据建立在你自己已有的零训练诊断之上——<b>本报告不替代那些诊断</b>。</p>
+</div>
+
+
+
+</main>
+</div>
+</body>
+</html>

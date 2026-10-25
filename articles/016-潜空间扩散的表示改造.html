@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>潜空间扩散该预测什么：从 x-prediction、流匹配到病理模态转移的表示改造</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"潜空间扩散该预测什么：从 x-prediction、流匹配到病理模态转移的表示改造","date":"2026-10-25","tags":["扩散模型", "潜空间", "流匹配", "x-prediction", "虚拟染色"],"category":"研究","summary":"潜空间扩散有三个可独立改动的旋钮：表示空间、预测目标、条件注入。ε、x₀、v 只是同一目标在不同噪声水平上的加权差异，三者对 x₀ 误差的隐含加权之比为 α²:1:σ²；x₀-预测在原生像素上可行靠的是流形假设，潜空间压缩掩盖而非解决容量问题。而病理模态转移缺配对切片，目标模态作条件只能约束分布、给不出像素级对应，前两个旋钮的改造因此无法单独兑现。原料中的论文编号与指标已逐条联网核实，不符者列入勘误。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1 class="site-title">我的个人博客</h1>
+    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+  </div>
+</header>
+<article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
+<h1>潜空间扩散该预测什么：从 x-prediction、流匹配到病理模态转移的表示改造</h1>
+<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<blockquote><strong>一句话概括</strong>：潜空间扩散可改造的地方不止「把计算搬到潜空间」这一处；表示空间、预测目标、条件注入是三个能分开动的旋钮，而病理模态转移真正的瓶颈是没有配对切片，这使前两个旋钮的一切优化都无法单独兑现。</blockquote>
+<h2>一、背景与问题</h2>
+<p>任务设定来自肾穿刺活检的常规制片流程。同一块组织在不同染色下强调的结构并不相同：Masson 三色把胶原纤维染成蓝或绿、胞质与肌纤维染成红，主要看纤维化；PAS 用过碘酸氧化基底膜与系膜基质中的糖蛋白，呈紫红；PASM 用六胺银把基底膜染成黑。临床上这几张切片是分别制备的，因而常常出现「需要做 PAS 时只剩 Masson」的情况。大创项目要做的，是从一张 Masson 图像合成对应的 PAS 或 PASM 图像，用计算手段补上缺失的模态。</p>
+<p>工程条件相当有限：训练在一块笔记本级单卡 RTX 4060 上进行，AutoDL 远程实例经常要关机释放，长训练无法连续。这条约束在后文会反复出现，它决定了一个方案属于「读起来合理」还是「跑得起来」。</p>
+<p>写作依据的原料是 68 条对话，主线是集中阅读 Kaiming He 团队及其合作者在 2025 年 11 月至 2026 年 1 月间的一组工作：JiT、Bidirectional Normalizing Flow（BiFlow）、improved MeanFlow（iMF）、VTP、Pixel Mean Flow（pMF），再回头看 Stable Diffusion 一系潜扩散设计是否必须照搬。对话里既有表示空间与预测目标的推演，也有「这个 BiFlow 其实就是扩散模型吧，归一化的地方在哪」这样尖锐的自我质问，还有一连串关于条件注入的否定与自我推翻。</p>
+<p>笔者把问题拆成三个可以独立改动的维度：</p>
+<ol><li>表示空间：网络在哪一组坐标上工作，原生像素、预训练 VAE 潜空间，还是语义更强的 tokenizer；</li><li>预测目标：网络回归什么量，噪声 ε、干净数据 x₀、混合量 v，还是流匹配的速度场；</li><li>条件注入：源图像与目标模态的信息以什么形式、在什么位置进入网络。</li></ol>
+<p>第三点在病理任务上是一条硬约束，而非可选细节。同一病例、同一视野、相邻切片在不同染色下的配对图像不可得：连续切片在制片过程中会有平移、撕裂与厚度差异，即使有整套切片也无法逐像素对齐。原料里那句原话被记录为：手上没有同一个切片在不同染色模态下的对比图，损失没法算。这个事实决定了本文对前两个维度的所有评价都不能脱离它单独成立。</p>
+<h2>二、表示空间：像素与潜空间的取舍</h2>
+<p>潜扩散模型（Rombach 等，arXiv:2112.10752，CVPR 2022）的构造是三件套：一个变分自编码器做感知压缩，把图像降到空间尺寸缩小若干倍、通道数很少的潜张量；一个去噪主干（U-Net，后被 DiT 替换）在潜空间上迭代去噪；一个条件编码器 $\tau_\theta(y)$，其输出通过 cross-attention 注入去噪主干。原始动机主要落在计算上：在高分辨率图像上，注意力代价与显存占用都随像素数增长，而潜空间把二者同时压下去。</p>
+<p>原料里笔者对这个设计给过两个类比，值得原样保留：</p>
+<ul><li>「latent space 之于扩散，就像魔方盲拧里的 setup 与 reverse：先把状态转成熟悉朝向，做操作，再转回来。」当时的推论是「背完 818 公式之后发现 setup 本身没有意义」，即编码这一步只是把难度挪了个位置。</li><li>「LDM 相对 SD 只是把计算搬到 latent space 省显存，VAE 只是一个工程 trick。」</li></ul>
+<p>第一个类比里有一处准确、一处失效，第五、六节回到它。第二个类比前半句在工程上成立，后半句被两篇工作从相反方向推翻。</p>
+<p>先说 VTP（Yao 等，arXiv:2512.13687，2025 年 12 月 15 日提交）。该文指出，「重建 + 感知损失 + 对抗损失」这套常规 VAE 训练范式产出的潜空间偏向低层信息，形成一处基础性缺陷：像素级精度更好，并不带来更好的生成。原文实验里一个很硬的数据可以说明代价：只优化重建时，重建 rFID 从 2.0 改善到 0.5，而生成 FID 反而从 55.04 恶化到 58.56。其解法是把图文对比、自监督与重建三项损失联合训练（重建权重 $\lambda_{\mathrm{rec}}=0.1$，另外两项取 0 或 1），并把预训练规模做大：在不改动标准 DiT 训练配置的前提下，仅把更多算力投到 tokenizer 预训练，就带来 65.8% 的 FID 改善，而传统自编码器在 1/10 算力处已停滞；生成侧收敛速度比蒸馏类方法快 4.1 倍。</p>
+<p>这组数字直接否定了「VAE 只是工程 trick」：tokenizer 决定的不只是显存，还有主干能够触及的语义上限。</p>
+<p>再说 JiT（Li 与 He，arXiv:2511.13720，2025 年 11 月 17 日提交）。该文把「预测干净数据」与「预测加噪量」区分开来，论证依据是流形假设：自然数据应位于低维流形上，而加噪后的量不在。因此直接预测干净数据，可以让表观容量不足的网络在很高维的空间上工作。其实现是概念上极朴素的大 patch Transformer，按原文「不使用 tokenizer、不预训练、不附加额外损失」，在 ImageNet 256² 与 512² 上取得竞争性结果；而同一批网络改去预测高维加噪量时，原文的说法是会「灾难性失败」。这反过来给潜空间压缩一个不太舒服的解读：把像素压成潜张量确实降低了维度，但它同时也把「流形假设不再需要成立」这一优势让渡了出去——压缩掩盖了容量问题，而不是解决了它。这句概括是笔者对两文结论的合并推论，非原文陈述。</p>
+<table>
+<tr><th>维度</th><th>原生像素</th><th>预训练 VAE 潜空间</th><th>语义化 tokenizer</th></tr>
+<tr><td>计算与显存</td><td>差，注意力随像素数平方增长</td><td>好，空间下采样数倍</td><td>好，同潜空间</td></tr>
+<tr><td>误差可否直接算</td><td>可以，逐像素比较有意义</td><td>不可以，潜误差与视觉误差不同向</td><td>不可以</td></tr>
+<tr><td>信息保留</td><td>完整，含高频染色纹理</td><td>由重建目标决定，可能丢语义</td><td>主动偏向高层语义</td></tr>
+<tr><td>主干容量需求</td><td>高，但 x₀-预测可绕开（JiT）</td><td>低</td><td>低</td></tr>
+<tr><td>已知风险</td><td>高维加噪量预测会崩（JiT）</td><td>重建好但生成差（VTP）</td><td>对比目标过强会丢结构细节</td></tr>
+</table>
+<p>对该病理任务，全切片图像分辨率极高，单个 40 倍视野常在 $1024^2$ 以上，原生像素路线在 4060 上基本不可行，潜空间压缩因此首先是工程必然。但 VTP 的结论留下一个隐忧：如果自训练的 VAE 只做重建，潜空间很可能把「染色特异性」这类高层信息压成纹理，主干学到的是颜色迁移而非结构对应。笔者目前没有证据，只能列为待验证的推测。</p>
+<h2>三、预测目标：ε、x₀、v 与速度场</h2>
+<p>前向加噪取标准的方差保持形式：</p>
+<p>$$ z_t=\alpha_t z_0+\sigma_t\epsilon,\qquad \alpha_t=\sqrt{\bar\alpha_t},\quad \sigma_t=\sqrt{1-\bar\alpha_t},\quad \bar\alpha_t=\prod_{s\le t}(1-\beta_s) $$</p>
+<p>三个回归量之间的换算完全初等。由前向式可直接解出</p>
+<p>$$ z_0=\frac{z_t-\sigma_t\epsilon}{\alpha_t},\qquad \epsilon=\frac{z_t-\alpha_t z_0}{\sigma_t} $$</p>
+<p>再定义混合量 $v_t=\alpha_t\epsilon-\sigma_t z_0$。利用 $\alpha_t^2+\sigma_t^2=1$，可验证它与 $z_t$ 组合后能还原另两个量：</p>
+<p>$$ \alpha_t z_t-\sigma_t v_t=z_0,\qquad \sigma_t z_t+\alpha_t v_t=\epsilon $$</p>
+<p>也就是说，网络无论输出 $\hat\epsilon$、$\hat z_0$ 还是 $\hat v$，另外两个量都能由同一张 $z_t$ 换算得到，差别不在表达能力，而在损失如何分配到不同噪声水平。设预测误差在三种参数化下分别为 $\Delta\epsilon$、$\Delta z_0$、$\Delta v$，固定 $z_t$ 时两两关系为</p>
+<p>$$ \Delta z_0=-\frac{\sigma_t}{\alpha_t}\Delta\epsilon=-\sigma_t\Delta v,\qquad \lVert\Delta v\rVert^{2}=\frac{1}{\sigma_t^{2}}\lVert\Delta z_0\rVert^{2} $$</p>
+<p>于是每种损失都可以写成对 x₀ 误差的加权版本：</p>
+<p>$$ \lVert\Delta\epsilon\rVert^{2}=\frac{\alpha_t^{2}}{\sigma_t^{2}}\lVert\Delta z_0\rVert^{2} =\mathrm{SNR}_t\,\lVert\Delta z_0\rVert^{2},\qquad \mathrm{SNR}_t=\frac{\bar\alpha_t}{1-\bar\alpha_t} $$</p>
+<p>把三者的隐含 x₀ 加权以 v 为基准归一，比值恰为 $\alpha_t^2:1:\sigma_t^2$。由于 $\alpha_t^2+\sigma_t^2=1$，可以逐段读出含义：低噪声段 $\alpha_t\to 1,\ \sigma_t\to 0$，ε-目标与 v-目标对 x₀ 的约束远强于 x₀-目标；高噪声段 $\alpha_t\to 0,\ \sigma_t\to 1$，v-目标与 x₀-目标仍大致同等约束 x₀，而 ε-目标的隐含权重趋于零——此时它几乎不要求网络给出正确的干净图，只要求认得出噪声。</p>
+<table>
+<tr><th>预测目标</th><th>回归量</th><th>隐含 x₀ 加权（以 v 为 1）</th><th>高噪声段</th><th>低噪声段</th><th>主要代价</th></tr>
+<tr><td>ε-预测</td><td>噪声</td><td>$\alpha_t^2$</td><td>几乎不管 x₀</td><td>极强</td><td>早期步只管认噪声，结构易被拖偏</td></tr>
+<tr><td>x₀-预测</td><td>干净数据</td><td>$\sigma_t^2$</td><td>与 v 接近</td><td>最弱</td><td>目标尺度随数据分布，条件数较差</td></tr>
+<tr><td>v-预测</td><td>混合速度</td><td>$1$</td><td>保留 x₀ 约束</td><td>极强</td><td>需同时知道系数才能换算</td></tr>
+<tr><td>流匹配速度</td><td>$\epsilon-x_0$</td><td>视系数而定</td><td>直线路径，步长可放大</td><td>同</td><td>采样器与噪声调度需重设</td></tr>
+</table>
+<p>v-目标常被解释为「在 ε 与 x₀ 之间插值」，更准确的说法是：它把回归目标本身的二阶矩拉平。交叉项期望为零，故</p>
+<p>$$ \mathbb{E}\lVert v_t\rVert^{2}=\alpha_t^{2}\,\mathbb{E}\lVert\epsilon\rVert^{2}+\sigma_t^{2}\,\mathbb{E}\lVert z_0\rVert^{2} $$</p>
+<p>在两项方差同量级时 $\mathbb{E}\lVert v_t\rVert^{2}$ 大致不随 $t$ 漂移。前文《浓度空间扩散 M0 实践》把这条写成 $\lVert v_t\rVert^{2}=\lVert z_0\rVert^{2}+\lVert\epsilon\rVert^{2}$，严格说漏掉了 $\alpha_t^{2}$ 与 $\sigma_t^{2}$ 两个系数；结论方向不变，本文按带系数的式子书写，并在此更正。</p>
+<p>流匹配与整流流把前向过程改写成直线插值，网络回归常数速度：</p>
+<p>$$ z_t=(1-t)x_0+t\epsilon,\qquad u_t=\frac{\mathrm{d}z_t}{\mathrm{d}t}=\epsilon-x_0 $$</p>
+<p>SD3（Esser 等，arXiv:2403.03206）把这条路线搬到潜空间与大规模文生图设置。可核实的改动有三处：用对时间步采样的偏置把训练算力集中到感知上重要的噪声区间，其分布带位置参数与尺度参数，原文在均值取 $-1$ 到 $1$、标准差取 $0.2$ 到 $2.2$ 的网格上做过对照，最终标出的设置是均值 $0.00$、标准差 $1.00$；一个对文本与图像 token 使用各自权重、允许双向信息交换的 Transformer 主干；以及全部模型统一采用 $f=8$ 的潜空间下采样因子。原料给出的「FID 从 7.1 降到 4.3、提升 40%」在原文与可核实材料中找不到对应，本文不采信。</p>
+<p>少步化这条线把预测目标问题推到了极端。MeanFlow（Geng 等，arXiv:2505.13447，2025 年 5 月 19 日提交）不再回归瞬时速度，而是回归区间上的平均速度</p>
+<p>$$ u(z_t,r,t)=\frac{1}{t-r}\int_{r}^{t} v(z_\lambda,\lambda)\,\mathrm{d}\lambda $$</p>
+<p>并用两者之间的恒等式自举训练（用到对网络输出沿轨迹的全导数，实现上走 JVP），从而不依赖蒸馏与分阶段日程；原文报告 ImageNet 256² 上 1-NFE 的 FID 为 3.43。iMF（Geng、Lu 等，arXiv:2512.02012，2025 年 12 月 1 日提交）指出这条路线的两处困难并分别处理：其一，原目标同时依赖真值场与网络自身，改写为对瞬时速度 $v$ 的损失、网络仍以平均速度 $u$ 输出重参数化，回归问题更标准、训练更稳；其二，原方法在训练时固定 classifier-free guidance 尺度、牺牲灵活性，iMF 把 guidance 当作显式条件变量、用 in-context conditioning 处理，同时减小模型规模。从零训练的 iMF 报告 1-NFE 的 FID 为 1.72。按核实到的 3.43 与 1.72 可换算出相对改善约一半，但原料把该百分比当作论文既有结论引用，本文只作笔者换算。</p>
+<p>Pixel Mean Flow（Lu 等，arXiv:2601.22158，2026 年 1 月 29 日提交）把两件事合起来：既走平均速度的少步化路线，又彻底放弃潜空间直接在像素上工作，并且明确以 x-prediction 为目标，用一次函数评估在 ImageNet 256² 与 512² 上给出竞争性结果。它与 JiT 一起构成对「生成必须先有 tokenizer」这一默认前提的反例。</p>
+<h2>四、生成器主干的另一支：BiFlow 与一句质问</h2>
+<p>原料里最有价值的一问是笔者自己提出的：「这个 BiFlow 其实就是扩散模型吧，归一化的地方在哪」。回答要分两层。</p>
+<p>第一层，「归一化」指概率密度归一化，不是数值归一化。归一化流用一串可逆变换 $\phi$ 把 $x$ 映到 $z$，密度按换元公式显式给出：</p>
+<p>$$ p_X(x)=p_Z\bigl(\phi(x)\bigr)\,\Bigl\lvert \det \partial \phi(x)/\partial x \Bigr\rvert $$</p>
+<p>因此可以直接做最大似然；变换层通常取耦合或三角结构，使雅可比行列式可解析计算（平面流见 Rezende 与 Mohamed，arXiv:1505.05770，ICML 2015；带 $1\times1$ 可逆卷积的 Glow 见 Kingma 与 Dhariwal，arXiv:1807.03039）。</p>
+<p>第二层，扩散与流匹配里没有这个行列式项。前向加噪 $z_t=\alpha_t z_0+\sigma_t\epsilon$ 在给定噪声时确实可解回，但它不是一个归一化的生成映射：训练目标是「对随机注入的噪声做去噪回归」，得到的是似然的界而非显式密度。原料中「NF 的加噪是显式可记录的轨迹，扩散的加噪是随机注入」这一区分，说的正是前者学一个确定的双射、后者学一步条件期望。</p>
+<p>BiFlow（Lu、Sun 等，arXiv:2512.10953，2025 年 12 月 11 日提交）的处理方式值得单独注意：它保留双向映射的框架，但放弃解析可逆——正向（数据到噪声）与逆向（噪声到数据）的过程设计互相解耦，逆向侧由独立网络学习，采样只需一次函数评估。按原文可核实的设定与结果是：模型实现在一个预训练 VAE tokenizer 的潜空间上；ImageNet 256² 上 1-NFE 的 FID 为 2.39；文中称采样加速可达两个数量级，相似规模模型在 TPU 上最高 42 倍；逐张延迟（生成器加解码器）在 TPU 为 0.29 加 1.3 毫秒，在 GPU 为 2.15 加 2.7 毫秒，在 CPU 为 80 加 240 毫秒。条件通过多 token 的 in-context 方式注入，实验配置使用 8 个类别 token。</p>
+<p>原料把 BiFlow 的速度写成「比 NF 快 60 至 697 倍」「CPU 上 1600 倍」「2.15 毫秒」「TARFlow 需 129 至 400 毫秒」，与上述原文口径不符，本文不采信这些数字。</p>
+<p>笔者当时另一条观察也保留下来：「中间状态监督其实不新颖」。他把这件事与读过的 Vision-Mamba 联系起来——后者是把长程依赖写进结构化参数化的局部核，而不是靠额外监督信号。类比的启发在于：如果 BiFlow 同时训练数据到噪声方向并在中间状态加约束，它做的仍只是「让逆过程可学」，并没有给表示注入结构先验。该判断属笔者推测，无实验支持。</p>
+<table>
+<tr><th>方法</th><th>表示空间</th><th>预测目标</th><th>条件注入</th><th>NFE</th><th>核实到的报告结果</th></tr>
+<tr><td>LDM (2112.10752)</td><td>预训练 VAE 潜空间</td><td>噪声 ε</td><td>cross-attention 接文本编码</td><td>多步</td><td>奠基性潜扩散框架</td></tr>
+<tr><td>DiT (2212.09748)</td><td>VAE 潜空间</td><td>噪声 ε</td><td>adaLN-Zero，类别与时间调制</td><td>多步</td><td>ImageNet 256² FID 2.27（ICCV 2023）</td></tr>
+<tr><td>SD3 (2403.03206)</td><td>VAE 潜空间（f=8 下采样）</td><td>整流流速度</td><td>双流 token 交互的 Transformer</td><td>多步</td><td>可核实项为公式与架构，效果数值不采信</td></tr>
+<tr><td>MeanFlow (2505.13447)</td><td>自训练潜空间</td><td>平均速度</td><td>类别条件</td><td>1</td><td>ImageNet 256² FID 3.43</td></tr>
+<tr><td>iMF (2512.02012)</td><td>自训练潜空间</td><td>瞬时速度回归、平均速度输出</td><td>类别与 guidance 作 in-context 条件</td><td>1</td><td>ImageNet 256² FID 1.72</td></tr>
+<tr><td>BiFlow (2512.10953)</td><td>预训练 VAE tokenizer 潜空间</td><td>显式可逆双向映射（放弃解析逆）</td><td>8 个类别 token 的 in-context</td><td>1</td><td>FID 2.39；加速最高两个数量级、TPU 42 倍</td></tr>
+<tr><td>JiT (2511.13720)</td><td>原生像素</td><td>干净数据 x₀</td><td>类别条件</td><td>多步</td><td>256² JiT-B/16 为 4.37（200 轮）与 3.66（600 轮），JiT-G/16 为 2.15 与 1.82</td></tr>
+<tr><td>pMF (2601.22158)</td><td>原生像素</td><td>干净数据 x₀，平均速度约束</td><td>类别条件</td><td>1</td><td>256² 与 512² 一步生成，原文称结果具竞争性</td></tr>
+<tr><td>VTP (2512.13687)</td><td>语义 tokenizer 潜空间</td><td>不改主干，改表示</td><td>供文生图主干使用</td><td>取决于主干</td><td>0.36 rFID、78.2 零样本；仅增预训练算力 FID 改善 65.8%</td></tr>
+</table>
+<h2>五、条件注入与模态转移的信息不对称</h2>
+<p>条件进入网络的位置有三类。其一调制归一化统计量，DiT 的 adaLN-Zero 把时间步与类别嵌入变成每个 block 的缩放平移；其二进 cross-attention 的 key 与 value，这是 LDM 的 $\tau_\theta(y)$ 路线；其三直接进 token 序列，BiFlow 用 8 个类别 token、iMF 把 guidance 尺度也做成条件 token。三者的差别在病理任务上并非风格问题：类别标签类条件天然稀疏，而源图像是稠密的像素输入，注入哪一侧决定了它会不会被语义条件淹没。</p>
+<table>
+<tr><th>注入方式</th><th>条件载体</th><th>机制</th><th>是否需配对样本</th><th>对模态转移的适配性</th></tr>
+<tr><td>adaLN-Zero</td><td>类型标签、时间步</td><td>缩放平移调制</td><td>否</td><td>适合「染成哪一种」，不适合「哪一段该染」</td></tr>
+<tr><td>cross-attention</td><td>文本或图像编码序列</td><td>key/value 查询</td><td>否</td><td>稠密条件可用，但主干需能接受图像 token</td></tr>
+<tr><td>in-context token</td><td>若干条件 token 拼进序列</td><td>注意力内部交换</td><td>否</td><td>便宜且能减模型规模，token 数 K 是可调旋钮</td></tr>
+<tr><td>参考图特征分支</td><td>源图多尺度特征</td><td>逐层相加或拼接</td><td>需要监督信号</td><td>保结构最强，但无配对时损失无法写</td></tr>
+</table>
+<p>Classifier-free guidance（Ho 与 Salimans，arXiv:2207.12598，NeurIPS 2021 研讨会）在这里有一个容易被忽略的副作用：训练时以一定概率丢弃条件，得到同时会条件评分与无条件评分的一个模型，推理时线性组合两者，在保真度与多样性之间取权衡。guidance 越高，输出越像「目标模态的典型图像」，也越容易脱离源图的解剖结构。对病理而言这是危险的方向，因为「典型 PAS」与「这一片组织的 PAS」之间的差别恰是诊断价值所在。</p>
+<p>条件载体选什么，原料里走过一段弯路。笔者一度想把源图经 CLIP 或 DINO 类编码器压成语义向量再注入，并讨论过 AnyDoor（Chen 等，arXiv:2307.09481，CVPR 2024）那类用参考图特征分支注入的做法。随后他自己做了关键修正：需要的是染色模态的语义向量，对细节与轮廓的需求不大——细节本应由输入的 Masson 图自己提供，条件只负责说明「染成哪一种」。这把问题从「如何注入更多信息」翻转成「如何避免条件覆盖源图信息」，与 guidance 过高会吞掉源结构是同一件事的两面。</p>
+<p>两处文献事实必须更正。MedCLIP（arXiv:2210.10163）在原料中被描述为在「大量病理切片」上预训练；核实到的原文用的是胸部 X 光数据 MIMIC-CXR 与 CheXpert，且视觉主干是带 ImageNet 预训练权重的 Swin Transformer。它是放射影像的图文对比模型，与病理切片之间隔着成像模态，把它当病理语义编码器缺少依据，本文不采用。DINOv2 在原料中被记成 2022 年，核实为 Oquab 等人的 arXiv:2304.07193（2023 年），它是通用自监督视觉表示，与染色特异性之间仍需一步域适配。</p>
+<p>最要紧的一条区分在于信息本身。PAS 显示的基底膜与系膜基质、PASM 的银染结构，在 Masson 图上并不总是存在可对应的信号。若把目标模态当作「损失」——用真实 PAS 样本监督输出——需要配对；若只当作「条件」——一个类型标签——网络可以学到 PAS 的分布与纹理习惯，却不知道应当把哪一段染成紫红。条件只能约束分布，不能提供像素级对应。这是笔者目前对无配对困境的核心理解，属方法层面的论证，不是实证结论。</p>
+<h2>六、笔者先前判断的修正</h2>
+<p>把第二至第四节的材料合起来看，几处早先的判断需要改写。</p>
+<p>「LDM 只是把计算搬到 latent space，VAE 是工程 trick」。前半句在工程上成立，后半句被两个方向同时反对：VTP 说明潜空间的语义质量决定主干的上限；JiT 与 pMF 说明一旦改为直接预测干净数据，潜空间带来的维度红利就不再必要，而它带来的流形信息损失反而成了负担。结论是表示空间并不中立，它同时改变了问题难度与可学上限。</p>
+<p>「latent space 像盲拧里的 setup 与 reverse」。在归一化流里 $\phi$ 与 $\phi^{-1}$ 是同一组参数的两个方向，这个类比近乎成立；BiFlow 放弃解析可逆之后，正逆两侧是两个解耦训练的网络，类比失效。而扩散框架里所谓「逆过程」从来不是编码的解析逆，而是一个被另外学出来的去噪网络。所以盲拧类比当时只描述了「存在一个确定的编码」，没有描述「逆过程需要学习」，这恰是笔者当初误判「setup 没有意义」的原因。</p>
+<p>「CLIP 文本编码器不适配图到图任务」。方向上成立，因为 $\tau_\theta$ 按文本条件设计；但原料给出的替代方案 MedCLIP 经核实与病理无关，因此这条推理链在本文里没有被落地，只能停在「问题成立、候选方案被否」。</p>
+<h2>七、本文的设想：三个旋钮的分开消融</h2>
+<p>以下内容明确标注为设想。它们均未在 4060 单卡上跑通，也未在任何已核实工作中找到直接对应的先例。</p>
+<table>
+<tr><th>设计维度</th><th>本文设想的配置</th><th>最近的已有工作</th><th>差别所在</th></tr>
+<tr><td>表示空间</td><td>原生像素、1/4 下采样、自训 VAE、语义 tokenizer 四档</td><td>VTP、JiT、pMF</td><td>全部在 ImageNet 类别条件下，无染色特异性约束</td></tr>
+<tr><td>预测目标</td><td>ε、x₀、v 三档同预算对跑，比较早期步的结构一致性</td><td>JiT、015 的 v-参数化</td><td>病理上关心的不是 FID，而是基底膜位置是否漂移</td></tr>
+<tr><td>条件注入</td><td>K 个模态 token、类型标签加 guidance 扫描、源图走轻量特征分支</td><td>BiFlow 的 8 token、iMF 的 guidance token</td><td>类别 token 换成模态 token，且需同时输入源图</td></tr>
+<tr><td>无配对监督</td><td>把目标模态拆为颜色先验与结构先验</td><td>PSPStain 等语义保持类工作</td><td>颜色先验用少量真实 PAS 的统计量，结构先验由同图亮度通道提供</td></tr>
+</table>
+<p>消融顺序沿用前文《浓度空间扩散 M0 实践》里 U₀→U₁→U₂ 的排法，只是把其中一档换成预测目标的切换，以便在同等训练预算下观察 x₀ 加权差异是否真能体现在结构对齐上。关于无配对监督的两条先验拆解是笔者给出的设想，其中「亮度通道能提供结构」这一步并不稳妥：三种染色的明暗分布都同时受细胞密度与基质厚度影响，亮度与基底膜之间不是一一对应。此处仅作候选方案记录，不写成结论。</p>
+<h2>八、局限与下一步</h2>
+<p>诚实标注未完成部分：</p>
+<ul><li>本文没有实现任何一条设想，也没有产生新的实验数据；所有数值均引自可核实的公开材料。</li><li>第四节的方法对比表与第五节的条件注入表，其证据都来自 ImageNet 类别条件设置；从类别标签迁移到「同一组织的另一种染色」这一条件语义，本身未被任何已核实工作验证过。图到图设置可参考 Palette（arXiv:2111.05826）与 AnyDoor，但它们不含染色特异性的约束。</li><li>「条件只能约束分布，不能提供像素级对应」是论证而非定理。若存在可行的非配对对齐代理（例如同一视野在不同切片上的形变配准），这条结论可能松动，笔者尚未查证病理制片中是否可获得这样的配准结果。</li><li>BiFlow 与扩散的边界，本文只回答到「有无密度归一化」这一层；两者的似然或界的具体可比性没有做。</li><li>原料给出的具体数值未能核实者已在下一节逐条列出，本文一律不采信，也不以估计值代替。</li></ul>
+<p>下一步按可执行性排序：先在 4060 上做预测目标的两档对照（ε 与 x₀，同预算、同主干），只看一件事——高噪声段起步时结构的偏移量；这一步不需要配对数据，可用同图亮度通道的空间一致性做代理指标。tokenizer 的替换与 BiFlow 式双向结构都留到这一步有结论之后再谈。</p>
+<h2>九、关于原料数值与引用的勘误</h2>
+<p>原料中混有编造的论文编号与无法核实的指标。按「保留原值并写明复核结果」的原则逐条列出，正文不引用其中不通过的部分。</p>
+<table>
+<tr><th>原料表述</th><th>联网核实结果</th><th>处理</th></tr>
+<tr><td>iMF 编号 arXiv:2512.03857</td><td>该编号是另一篇数学物理论文；iMF 实为 arXiv:2512.02012</td><td>按正确编号引用</td></tr>
+<tr><td>JiT 编号 arXiv:2511.10973</td><td>该编号是另一篇几何论文；JiT 实为 arXiv:2511.13720</td><td>按正确编号引用</td></tr>
+<tr><td>BiFlow 编号 arXiv:2512.12345</td><td>实为 arXiv:2512.10953</td><td>按正确编号引用</td></tr>
+<tr><td>l-DAE，arXiv:2512.10522</td><td>检索不到同名文献，最接近的自监督去噪工作也不是它</td><td>整条删除，正文不引用</td></tr>
+<tr><td>Palette 为 OpenAI 的 ICML 2023 工作，编号 2211.09800</td><td>实为 Saharia、Chan、Chang 等，arXiv:2111.05826，2021 年 11 月提交</td><td>更正，机构与会议年份不采信</td></tr>
+<tr><td>SD3 标题为「Stable Diffusion 3: Scaling Latent Diffusion Models with Transformers」</td><td>实为「Scaling Rectified Flow Transformers for High-Resolution Image Synthesis」</td><td>更正标题</td></tr>
+<tr><td>SD3 带来 FID 7.1 降至 4.3、提升 40%</td><td>可核实材料中找不到对应数值</td><td>不采信，正文只作定性表述</td></tr>
+<tr><td>BiFlow 快 60 至 697 倍、CPU 1600 倍、2.15 毫秒、TARFlow 129 至 400 毫秒</td><td>原文口径为「最高两个数量级」「相似规模在 TPU 上最高 42 倍」，逐张延迟 GPU 为 2.15 加 2.7 毫秒</td><td>按原文口径改写，倍数不采信</td></tr>
+<tr><td>iMF 相比 MeanFlow 提升 50%</td><td>两文报告值 3.43 与 1.72 可核实，百分比可自行换算</td><td>保留两个数值，百分比注明为笔者换算</td></tr>
+<tr><td>MedCLIP 在大量病理切片上预训练</td><td>实为 MIMIC-CXR 与 CheXpert 胸部 X 光，视觉主干为 ImageNet 预训练 Swin</td><td>更正，并不再作为病理编码器候选</td></tr>
+<tr><td>DINOv2 为 2022 年 Meta 工作</td><td>实为 arXiv:2304.07193，2023 年提交</td><td>更正年份，机构不予断言</td></tr>
+<tr><td>VTP 的 λ_rec=0.1、4.1 倍收敛、65.8% 改善、rFID 2.0 至 0.5、gFID 55.04 至 58.56</td><td>均可在原文对应小节核实</td><td>保留</td></tr>
+<tr><td>Video Diffusion Transformer、FLAVA-Diffusion、PathDiffusion（MICCAI 2024）、GSPN、Laplacian-Former、MobileViT v3、BioCLIP arXiv:2204.09817</td><td>检索不到同名文献或编号不符</td><td>全部删除，正文不引用</td></tr>
+<tr><td>015 中 $\lVert v_t\rVert^{2}=\lVert z_0\rVert^{2}+\lVert\epsilon\rVert^{2}$</td><td>少 $\alpha_t^{2}$ 与 $\sigma_t^{2}$ 系数</td><td>已在第三节按带系数形式更正</td></tr>
+</table>
+<h2>参考文献</h2>
+<ol><li>Rombach, Blattmann, Lorenz, Esser, Ommer. High-Resolution Image Synthesis with Latent Diffusion Models. CVPR 2022. https://arxiv.org/abs/2112.10752</li><li>Peebles, Zhu. Scalable Diffusion Models with Transformers. ICCV 2023. https://arxiv.org/abs/2212.09748</li><li>Ho, Salimans. Classifier-Free Diffusion Guidance. NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications. https://arxiv.org/abs/2207.12598</li><li>Saharia, Chan, Chang 等. Palette: Image-to-Image Diffusion Models. arXiv 提交于 2021 年 11 月 10 日. https://arxiv.org/abs/2111.05826</li><li>Esser, Kulal, Blattmann 等. Scaling Rectified Flow Transformers for High-Resolution Image Synthesis. arXiv 提交于 2024 年 3 月 5 日. https://arxiv.org/abs/2403.03206</li><li>Rezende, Mohamed. Variational Inference with Normalizing Flows. ICML 2015. https://arxiv.org/abs/1505.05770</li><li>Kingma, Dhariwal. Glow: Generative Flow with Invertible 1x1 Convolutions. arXiv 提交于 2018 年 7 月 9 日. https://arxiv.org/abs/1807.03039</li><li>Geng, Deng, Bai, Kolter, He. Mean Flows for One-step Generative Modeling. arXiv 提交于 2025 年 5 月 19 日. https://arxiv.org/abs/2505.13447</li><li>Geng, Lu, Wu, Shechtman, Kolter, He. Improved Mean Flows: On the Challenges of Fastforward Generative Models. arXiv 提交于 2025 年 12 月 1 日. https://arxiv.org/abs/2512.02012</li><li>Lu, Sun, Wang, Jiang, Zhao, He. Bidirectional Normalizing Flow: From Data to Noise and Back. arXiv 提交于 2025 年 12 月 11 日. https://arxiv.org/abs/2512.10953</li><li>Li, He. Back to Basics: Let Denoising Generative Models Denoise. arXiv 提交于 2025 年 11 月 17 日. https://arxiv.org/abs/2511.13720</li><li>Lu, Lu, Sun 等. One-step Latent-free Image Generation with Pixel Mean Flows. arXiv 提交于 2026 年 1 月 29 日. https://arxiv.org/abs/2601.22158</li><li>Yao, Song, Zhou, Wang. Towards Scalable Pre-training of Visual Tokenizers for Generation. arXiv 提交于 2025 年 12 月 15 日. https://arxiv.org/abs/2512.13687</li><li>Oquab 等. DINOv2: Learning Robust Visual Features without Supervised Pretraining. arXiv 提交于 2023 年 4 月. https://arxiv.org/abs/2304.07193</li><li>MedCLIP: Contrastive Baselines for Learning Medical Image-Text Representations. arXiv:2210.10163. https://arxiv.org/abs/2210.10163</li><li>Chen, Huang, Liu, Shen, Zhao, Zhao. AnyDoor: Self-supervised Conditional Object Replication. CVPR 2024. https://arxiv.org/abs/2307.09481</li><li>Karras 等. Elucidating the Design Space of Diffusion-Based Generative Models. NeurIPS 2022. https://arxiv.org/abs/2205.02311</li></ol>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

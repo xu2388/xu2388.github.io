@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAN 棋盘格伪影的底层成因 — 从卷积运算、信号处理到频域机制</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;
+--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;
+--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;
+--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;
+--teal:#0a6f78;--tealSoft:#e3f4f6;
+--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.72;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;align-items:flex-start;gap:0}
+nav.toc{position:sticky;top:0;height:100vh;overflow-y:auto;width:300px;min-width:300px;
+border-right:1px solid var(--border);background:var(--softer);padding:22px 14px 60px 20px;font-size:13px}
+nav.toc .nt{font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+nav.toc a{display:block;text-decoration:none;color:var(--text2);padding:4px 8px;border-radius:6px;line-height:1.45}
+nav.toc a.l1{font-weight:600;margin-top:6px}
+nav.toc a.l2{padding-left:22px;color:var(--muted);font-size:12.5px}
+nav.toc a:hover{background:var(--blueSoft);color:var(--blue)}
+main{max-width:1180px;padding:34px 46px 120px;min-width:0}
+header.doc{border-bottom:1px solid var(--border);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:29px;line-height:1.32;margin:8px 0 12px}
+header.doc .sub{color:var(--muted);font-size:14px}
+header.doc .meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+header.doc .meta span{background:var(--soft);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12.5px;color:var(--text2)}
+h2{font-size:22px;margin:52px 0 16px;padding-top:14px;border-top:2px solid var(--text);display:flex;align-items:baseline;gap:12px}
+h2 .num{font-family:var(--mono);font-size:15px;color:#fff;background:var(--text);border-radius:6px;padding:2px 9px;font-weight:700}
+h3{font-size:17.5px;margin:32px 0 10px;color:var(--text)}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text2)}
+p{margin:10px 0}
+ul,ol{margin:10px 0;padding-left:24px}
+li{margin:5px 0}
+code{font-family:var(--mono);font-size:13px;background:var(--soft);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+pre{margin:14px 0;background:var(--softer);border:1px solid var(--border);border-radius:9px;padding:14px 16px;overflow-x:auto;font-size:12.5px;line-height:1.62}
+pre code{background:none;border:none;padding:0;font-size:12.5px}
+.formula{background:var(--soft);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:11px 16px;margin:14px 0;font-family:var(--mono);font-size:13.5px;overflow-x:auto;line-height:1.9}
+.formula .sym{display:block;color:var(--muted);font-family:var(--sans);font-size:13px;margin-top:6px}
+.box{border:1px solid var(--border);border-left-width:4px;border-radius:0 9px 9px 0;padding:13px 17px;margin:16px 0;background:var(--softer)}
+.box .bt{font-weight:700;font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.box.key{border-left-color:var(--blue);background:var(--blueSoft)}
+.box.key .bt{color:var(--blue)}
+.box.good{border-left-color:var(--green);background:var(--greenSoft)}
+.box.good .bt{color:var(--green)}
+.box.warn{border-left-color:var(--amber);background:var(--amberSoft)}
+.box.warn .bt{color:var(--amber)}
+.box.stop{border-left-color:var(--red);background:var(--redSoft)}
+.box.stop .bt{color:var(--red)}
+.box.pur{border-left-color:var(--purple);background:var(--purpleSoft)}
+.box.pur .bt{color:var(--purple)}
+.box.teal{border-left-color:var(--teal);background:var(--tealSoft)}
+.box.teal .bt{color:var(--teal)}
+.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:var(--bg)}
+.card .ch{background:var(--soft);border-bottom:1px solid var(--border);padding:11px 17px;display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
+.card .ch .title{font-weight:700;font-size:14.5px}
+.card .ch .v{font-size:12.5px;color:var(--muted);font-family:var(--mono)}
+.card .body{padding:15px 17px}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px;background:var(--bg)}
+thead th{background:var(--soft);text-align:left;padding:9px 11px;border-bottom:2px solid var(--strong);font-size:12.5px;white-space:nowrap;vertical-align:bottom}
+tbody td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--softer)}
+.b{display:inline-block;font-size:11.5px;font-weight:700;border-radius:5px;padding:1px 7px;white-space:nowrap;font-family:var(--sans)}
+.high{background:var(--greenSoft);color:var(--green)}
+.medium{background:var(--amberSoft);color:var(--amber)}
+.low{background:var(--redSoft);color:var(--red)}
+.bad{background:var(--red);color:#fff}
+.blue{background:var(--blueSoft);color:var(--blue)}
+.purple{background:var(--purpleSoft);color:var(--purple)}
+.tealb{background:var(--tealSoft);color:var(--teal)}
+.flow{margin:16px 0}
+.flow>pre{background:var(--softer);border:1px solid var(--border);border-radius:10px;font-size:12.5px;line-height:1.55}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+.mini{border:1px solid var(--border);border-radius:10px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:14px;margin-bottom:6px;color:var(--text)}
+.mini.good{border-left:4px solid var(--green)}
+.mini.bad{border-left:4px solid var(--red)}
+figure{margin:20px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg)}
+figure img{width:100%;display:block}
+figcaption{padding:10px 15px;background:var(--soft);border-top:1px solid var(--border);font-size:12.5px;color:var(--text2)}
+.ref{font-size:13px;padding:9px 0;border-bottom:1px solid var(--border);display:flex;gap:11px}
+.ref .rn{font-family:var(--mono);color:var(--muted);min-width:34px;font-weight:700}
+.ref:last-child{border-bottom:none}
+.small{font-size:13px;color:var(--muted)}
+a{color:var(--blue)}
+.tag{display:inline-block;font-size:11.5px;border:1px solid var(--border);background:var(--soft);border-radius:5px;padding:0 7px;color:var(--text2);font-family:var(--mono)}
+hr{border:none;border-top:1px solid var(--border);margin:30px 0}
+@media (max-width:1080px){nav.toc{display:none}main{padding:24px 18px 90px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="nt">目录</div>
+<a class="l1" href="#s0">0 核心结论（一页）</a>
+<a class="l1" href="#s1">1 本报告与库内既有报告的分工</a>
+<a class="l1" href="#s2">2 必要基础知识</a>
+<a class="l2" href="#s21">2.1 卷积是什么</a>
+<a class="l2" href="#s22">2.2 卷积核的频率响应</a>
+<a class="l2" href="#s23">2.3 上采样、下采样与转置卷积</a>
+<a class="l2" href="#s24">2.4 采样定理与混叠</a>
+<a class="l2" href="#s25">2.5 二维傅里叶变换与两种谱</a>
+<a class="l1" href="#s3">3 棋盘格伪影的逐步数学推导</a>
+<a class="l1" href="#s4">4 混叠、频谱偏差与对抗训练机制的区别</a>
+<a class="l1" href="#s5">5 伪影成因分类表</a>
+<a class="l1" href="#s6">6 代表性论文逐篇解析</a>
+<a class="l1" href="#s7">7 实验：设计、代码与实测结果</a>
+<a class="l1" href="#s8">8 伪影成因的因果关系图</a>
+<a class="l1" href="#s9">9 当前理论与证据的局限</a>
+<a class="l1" href="#s10">10 对后续研究的启示</a>
+<a class="l1" href="#s11">11 未核实清单与证据边界</a>
+<a class="l1" href="#s12">12 参考文献</a>
+</nav>
+<main>
+
+<header class="doc">
+<div class="kicker">深度研究 · 生成模型伪影理论</div>
+<h1>GAN 棋盘格伪影的底层成因：从卷积运算、信号处理到频域机制</h1>
+<div class="sub">本报告不提出新的消除方法。它回答的是：伪影<strong>为什么</strong>产生、产生在网络的<strong>哪一环</strong>、背后的<strong>数学机制</strong>是什么，以及不同成因之间<strong>是否存在因果</strong>。所有定量结论均附可运行代码与实测数字。</div>
+<div class="meta">
+<span>面向：具备深度学习基础、未系统学过信号处理的 CV 研究者</span>
+<span>方法：一手论文核验 + 5 组受控数值实验</span>
+<span>实验代码：纯 NumPy，可直接运行</span>
+<span>生成日期：2026-10-15</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>核心结论（一页）</h2>
+
+<div class="box key">
+<div class="bt">一句话</div>
+棋盘格伪影不是「网络没学好」，而是<strong>转置卷积作为一个线性算子，其多相（polyphase）增益不平衡</strong>的确定性后果 —— 它在随机初始化下、甚至在固定权重下就会产生，不需要任何训练。但<strong>棋盘格只是 GAN 高频异常的其中一条成因，而且很可能不是最主要的那条</strong>。
+</div>
+
+<h3>0.1 十条可直接引用的判断</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26px">#</th><th>判断</th><th style="width:96px">证据强度</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>棋盘格有解析解。</strong>转置卷积把输出像素按 <code>o mod s</code> 分成 s 个「相」，每一相看到的核权重之和不同，于是输出被一个周期等于 stride 的增益图样调制。这是线性代数，不是学习问题。</td><td><span class="b high">已证 · 本文实测</span></td></tr>
+<tr><td>2</td><td><strong>「kernel size 能被 stride 整除」必要但<em>不充分</em>。</strong>该条件只消除了<em>直流</em>增益不平衡（本文实测 DC 增益比从 2.00 降到 1.00），但把问题从<strong>幅度调制</strong>换成了<strong>相位调制</strong>：偶数核在 f→0 时伪影为零，却随频率增长（本文实测 f=0.25 时调制深度 0.414）。</td><td><span class="b high">已证 · 本文实测</span></td></tr>
+<tr><td>3</td><td><strong>伪影的空间周期 = stride，频率 = 1/stride。</strong>stride=2 时该频率恰好是 Nyquist。这解释了为什么 stride-2 的棋盘格最难滤 —— 它和真实高频细节挤在同一个频段里。</td><td><span class="b high">已证 · 本文实测</span></td></tr>
+<tr><td>4</td><td><strong>混叠是另一条独立因果链，不是棋盘格的成因。</strong>混叠把高频折叠成<em>假的低频</em>（本文实测：f=0.40 下采样 2 倍后变成 0.20）。它看起来像平滑的低频结构，不像噪声，因此极易被误判成「纹理」。抗混叠可把它压低约 39.6 dB。</td><td><span class="b high">已证 · 本文实测</span></td></tr>
+<tr><td>5</td><td><strong>傅里叶能揭示棋盘格，是因为周期纹理 = 少数尖峰。</strong>周期 p、旋转 θ 的棋盘格，其谱峰精确落在 (±1/p, ±1/p) 旋转 θ 处 —— 本文 5 组算例与理论逐点吻合。周期定半径，方向定角度。</td><td><span class="b high">已证 · 本文实测</span></td></tr>
+<tr><td>6</td><td><strong>只匹配径向平均谱会漏掉棋盘格。</strong>棋盘格是<em>方向性</em>异常（峰在对角线上），而 azimuthal average 把它抹成一圈平均能量。Schwarz 等人在论文补充材料里自己承认该操作会 "discard information"。</td><td><span class="b high">论文原文</span></td></tr>
+<tr><td>7</td><td><strong>GAN 的频谱偏差不能全归给上采样。</strong>Schwarz 等（NeurIPS 2021）的结论 2 逐字为：checkerboard artifacts introduced by upsampling <em>cannot explain the spectral discrepancies alone as the generator is able to compensate for these artifacts</em>。</td><td><span class="b high">论文原文</span></td></tr>
+<tr><td>8</td><td><strong>判别器是关键的另一半。</strong>同一篇论文的结论 3/4：判别器不是「看不见高频」，而是<strong>处理不了低幅度的频率</strong>；且判别器里的下采样会损害它给出的训练信号。</td><td><span class="b high">论文原文</span></td></tr>
+<tr><td>9</td><td><strong>「看起来更平滑」不等于「伪影消除了」。</strong>本文实测：全频段低通要到 100% 压制伪影时，已经毁掉 90% 的真实边缘和 99.6% 的真实纹理；而只掐掉伪影谱峰，可以同时做到 100% 压制 + 保留 97% 的边缘与纹理。</td><td><span class="b high">已证 · 本文实测</span></td></tr>
+<tr><td>10</td><td><strong>没有任何一篇被核实的论文用 aliasing 解释棋盘格。</strong>棋盘格（uneven overlap，Distill 2016）与 texture sticking / 频率异常（aliasing，StyleGAN3 2021）在文献中是两条几乎不相交的因果链。把它们混为一谈是本领域最常见的误引。</td><td><span class="b medium">阴性结论</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>0.2 题录更正（三处，先纠错再引用）</h3>
+
+<div class="box stop">
+<div class="bt">你的任务书里三处引用有误，已核实更正</div>
+<ul style="margin-bottom:0">
+<li><strong>《On the Frequency Bias of Generative Models》(NeurIPS 2021)</strong> —— 作者是 <strong>Katja Schwarz, Yiyi Liao, Andreas Geiger</strong>。任务书里写的 "Kotar, Wieser, Mahendran" 这一组合<strong>不存在</strong>；以该题名做 arXiv 全文检索只命中这一篇。arXiv ID 是 <strong>2111.02447</strong>（<em>不是</em> 2112.02464，那是超引力论文）。</li>
+<li><strong>《Focal Frequency Loss for Image Reconstruction and Synthesis》(ICCV 2021)</strong> —— 作者是 <strong>Liming Jiang, Bo Dai, Wayne Wu, Chen Change Loy</strong>，arXiv <strong>2012.12821</strong>。任务书里提到的 "Wang, Xu" 不在作者名单内。</li>
+<li><strong>《Aliasing is a Driver of Adversarial Attacks》</strong> —— 作者是 <strong>Adrián Rodríguez-Muñoz, Antonio Torralba</strong>（arXiv 2212.11760），<strong>不是</strong> Grabinski 等人的工作。Grabinski/Keuper/Keuper 的相关工作题为《Aliasing and Adversarial Robust Generalization of CNNs》。</li>
+</ul>
+</div>
+
+<h3>0.3 你的五个「如果……那么」问题，先给答案</h3>
+
+<div class="grid2">
+<div class="mini bad">
+<div class="mt">Q：随机初始化下就能产生棋盘格，说明什么？</div>
+说明它<strong>不是学习的产物，而是算子的性质</strong>。任何解释如果必须依赖「训练动力学」才能成立，就不足以解释这一现象。反过来说：<strong>换一个算子就能改变它，但改变它不等于提升了生成质量</strong> —— 它只是把一个确定性的结构性缺陷换成了另一个。
+</div>
+<div class="mini bad">
+<div class="mt">Q：换上采样方式后棋盘格减弱，能证明什么？</div>
+<strong>能证明</strong>：该伪影的主要贡献来自被替换的那个算子（结构成因）。
+<strong>不能证明</strong>：整体频谱偏差被解决了。Schwarz 等明确指出生成器<em>能够补偿</em>上采样带来的伪影，因此伪影减弱与谱偏差收敛是两件事。也不能排除混叠或判别器侧成因同时在起作用。
+</div>
+<div class="mini bad">
+<div class="mt">Q：频域损失降低了某个异常频段的能量，能否证明根本成因已解决？</div>
+<strong>不能。</strong>降低能量是「结果端」的操作，成因可能在「算子端」。若成因是判别器处理不了低幅度频率（结论 3），那么一个作用在生成器输出上的频域损失只是在补偿症状。判据：<strong>去掉这个损失后，异常是否回来？如果回来，成因未解决。</strong>
+</div>
+<div class="mini bad">
+<div class="mt">Q：空间域明显减弱但整体频谱差异仍在，怎么解释？</div>
+说明你压制的那个频段<strong>不是频谱差异的主要载体</strong>。棋盘格的谱峰只占频谱能量的一小部分；径向平均谱的差异往往分布在更宽的频段上，且可能来自判别器侧。此时应做<strong>分频段归因</strong>，而不是继续加强同一处的压制。
+</div>
+<div class="mini bad">
+<div class="mt">Q：频谱更接近真实图像，但细节被抹平了，方法有效吗？</div>
+<strong>无效，或者至少是「用一个缺陷换另一个缺陷」。</strong>本文实验 D 给出了量化判据：必须在<em>同时</em>报告「伪影压制率」和「真实细节保留率」两个数字时，方法才算被验证。只报前者是自证。
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">本报告最强的一条操作结论</div>
+不要用「低通滤波」当作伪影消除的证据。本文实验 D 实测：全频段高斯低通在 σ=2.0 时达到 100% 伪影压制，但真实边缘只剩 <strong>10.1%</strong>、真实纹理只剩 <strong>0.4%</strong>；而只在伪影谱峰处做窄带陷波（notch），同样达到 100% 压制，同时保留 <strong>97.5% 边缘 / 97.2% 纹理</strong>。这两者的差别不是程度差别，是<strong>定性差别</strong>。
+</div>
+
+<h2 id="s1"><span class="num">1</span>本报告与库内既有报告的分工</h2>
+
+<p>你的资料库里已有 5 份报告与本题相邻，其中两份几乎重合。动笔前我递归扫了全部 57 份 HTML 并逐节读了相邻报告的结论，先把分工写清楚，避免重复推导。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:280px">库内既有报告</th><th>它回答的问题</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr>
+<td><code>01_调研报告/GAN问题与不足调研.html</code><br><span class="small">§5 棋盘格与其他生成伪影</span></td>
+<td>工程侧：GAN 有哪些毛病、棋盘格<strong>怎么修</strong>、约束该放在哪一格。</td>
+<td><strong>本报告是它的上游。</strong>那份报告给出修复清单，本报告给出「为什么这些修复会/不会起作用」的解析理由。§5.1 已写「棋盘格的数学/工程成因」，本报告把该成因完整推导到可数值验证的公式级。</td>
+</tr>
+<tr>
+<td><code>06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html</code></td>
+<td>先例核实：抗棋盘格 / 抗混叠 / 频域门控 / 可学习上采样，<strong>谁已经做过</strong>。</td>
+<td><strong>互补且不重复。</strong>那份已指出关键判断「棋盘格有解析解，它不是学习问题」（§3.1）——本报告正是给出那个解析解，并补上它没有的定量实验。</td>
+</tr>
+<tr>
+<td><code>01_调研报告/GAN+频域+门控_虚拟染色方法调研.html</code></td>
+<td>方法地图：频域 loss / 频域特征与 skip / 频域判别器三格分别有什么工作。</td>
+<td>本报告为它的 §3.3（频域判别器）提供机制依据 —— 判别器的频率偏差正是 Schwarz 等结论 3/4。</td>
+</tr>
+<tr>
+<td><code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code><br><span class="small">§4 FFT vs DCT vs DWT</span></td>
+<td>变换选择：三种频域变换在条件注入里的比较与原文证据。</td>
+<td>本报告 §2.5 与 §6 为「为什么 FFT 能看出棋盘格」提供原理，可视为那份报告 §4 的前置知识。</td>
+</tr>
+<tr>
+<td><code>01_调研报告/频域在扩散模型中的应用_结构保持视角_调研报告.html</code><br><span class="small">§1 底层原理：从零讲清楚</span></td>
+<td>扩散语境下的频域原理与结构保持证据清算。</td>
+<td>同为「从零讲频域」，但<strong>生成框架不同、问题不同</strong>：那份讲扩散的结构保持，本报告讲 GAN 的伪影成因。两份的 §1/§2 可交叉参考，不存在重复结论。</td>
+</tr>
+<tr>
+<td><code>05_伪影与失败模式/扩散模型黑团伪影_成因诊断与解决方案.html</code></td>
+<td>扩散模型的黑团伪影：成因诊断与解决方案。</td>
+<td><strong>正交。</strong>不同生成框架（扩散 vs GAN）、不同伪影形态（黑团 vs 棋盘格）、不同机制层（采样轨迹 vs 卷积算子）。唯一交集是「如何区分伪影成因」这个方法论问题。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">本报告独有的三件东西</div>
+<ol style="margin-bottom:0">
+<li><strong>一条可数值验证的解析律</strong>（§3.6）：奇数核的调制指数 <code>m=(2cosπf−1)/(2cosπf+1)</code>，实测与理论误差 <strong>0.00000</strong>；偶数核的相位调制律及其失效边界。</li>
+<li><strong>五组受控实验</strong>（§7），全部纯 NumPy 可复现，其中实验 D 给出「伪影压制率 vs 真实细节保留率」的双指标判据。</li>
+<li><strong>一张把「结构伪影 / 混叠 / 频谱偏差 / 训练产物」分开的因果图</strong>（§8），并显式标注哪些箭头有论文证据、哪些只是合理推断。</li>
+</ol>
+</div>
+
+<h2 id="s2"><span class="num">2</span>必要基础知识：卷积、上采样、采样定理与傅里叶变换</h2>
+
+<p>这一节假定你没有系统学过信号处理。每个术语先给直觉、再给公式、最后说它为什么对伪影重要。已经熟悉的部分可以跳到 §2.3。</p>
+
+<h3 id="s21">2.1 卷积是什么：加权滑动求和</h3>
+
+<p><strong>直觉。</strong>卷积就是拿一个小窗口（<em>卷积核</em>，kernel）在信号上滑动，每个位置把窗口盖住的输入值按窗口权重加权求和，写成一个输出值。窗口叫 <em>滤波器</em>（filter）或 <em>核</em>；输出的每个点都是「以该点为中心的一个局部邻域的加权平均」。</p>
+
+<div class="formula">
+y[n] = Σ<sub>m</sub> h[m] · x[n − m]
+<span class="sym">x = 输入信号；h = 卷积核（长度为 k，权重为 h[0..k−1]）；y = 输出；n = 输出位置索引；m = 核内偏移。</span>
+</div>
+
+<p><strong>为什么重要。</strong>伪影的全部机制都藏在「加权求和」这四个字里。如果每个输出位置收到的权重总和相同，输出就只是输入的平滑版本；<em>一旦不同位置收到的权重总和不同</em>，输出就会被一个与位置有关的「增益图样」乘上去 —— 这就是棋盘格。</p>
+
+<h3 id="s22">2.2 卷积核的频率响应：核会「挑食」</h3>
+
+<p><strong>直觉。</strong>把一条正弦波喂给卷积，输出还是同频率的正弦波，只是幅度和相位变了。这个「幅度被放大或缩小多少」的倍数，随正弦波的频率而变，就是核的<strong>频率响应</strong>。核相当于一个「挑食的筛子」：低频（变化缓慢）可能原样通过，高频（变化剧烈）可能被压掉，某些特定频率可能被<em>完全</em>挡住。</p>
+
+<div class="formula">
+H(f) = Σ<sub>m</sub> h[m] · e<sup>−j2πfm</sup>,&nbsp;&nbsp;&nbsp; y = h ⊛ x&nbsp; ⟺&nbsp; Y(f) = H(f)·X(f)
+<span class="sym">H(f) = 频率响应（f 的单位是「周期/采样点」，即 cycles/sample）；f 的取值范围是 0 到 0.5；j = 虚数单位；X、Y 分别是输入输出的频谱。右边那条等式叫<strong>卷积定理</strong>：空间域的卷积 = 频域的逐点相乘。</span>
+</div>
+
+<p><strong>为什么重要。</strong>卷积定理是整份报告的枢纽。它让我们可以在两个等价的世界里工作：空间域看「核怎么滑动」，频域看「哪些频率被放行」。棋盘格之所以难处理，正是因为在频域它和真实细节共用同一个频段（§2.4）。</p>
+
+<p>几个你必须记住的具体数值（本文实验 B3 实测，核长度 3 的均值核 <code>[1/3,1/3,1/3]</code>）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>核</th><th>|H(0)|<br><span class="small">直流增益</span></th><th>|H(0.25)|</th><th>|H(0.5)|<br><span class="small">Nyquist 增益</span></th><th>第一个零点</th></tr></thead>
+<tbody>
+<tr><td><code>[1/3,1/3,1/3]</code>（3 点均值）</td><td>1.000</td><td>0.3333</td><td>0.33333</td><td>f = 0.334</td></tr>
+<tr><td><code>[0.5,0.5]</code>（双线性）</td><td>1.000</td><td>0.7071</td><td><strong>0.00000</strong></td><td>无</td></tr>
+<tr><td>高斯 σ=0.5</td><td>1.000</td><td>0.7860</td><td>0.57420</td><td>无</td></tr>
+<tr><td>高斯 σ=1.0</td><td>1.000</td><td>0.2910</td><td>0.01412</td><td>无</td></tr>
+<tr><td>高斯 σ=1.2</td><td>1.000</td><td>0.1692</td><td>0.00175</td><td>无</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">请盯住第二行</div>
+双线性核 <code>[0.5,0.5]</code> 在 Nyquist 处<strong>恰好等于零</strong>。这不是巧合 —— 它是「插值上采样不会产生棋盘格」的代数根源。记住这一行，§3.5 会用到。
+</div>
+
+<h3 id="s23">2.3 上采样、下采样与转置卷积</h3>
+
+<p>这四个操作经常被混为一谈，先把定义钉死。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:130px">操作</th><th>做什么</th><th>一句话类比</th></tr></thead>
+<tbody>
+<tr><td><strong>普通卷积</strong></td><td>核在输入上滑动，输出尺寸通常不变或变小（stride=1 且 same padding 时不变）。</td><td>「看」：把局部信息汇总成一个点。</td></tr>
+<tr><td><strong>下采样</strong><br>downsample</td><td>丢掉一部分采样点（如每 2 个取 1 个，stride=2）。输出尺寸变小。</td><td>「压缩」：降分辨率。</td></tr>
+<tr><td><strong>上采样</strong><br>upsample</td><td>把尺寸变大。有两种完全不同的做法：<br>① <em>插值 + 卷积</em>：先按规则插值（最近邻 / 双线性）把图放大，再卷积。<br>② <em>转置卷积</em>：直接把核「摊」到输出上。</td><td>「放大」：升分辨率。</td></tr>
+<tr><td><strong>转置卷积</strong><br>transposed conv<br><span class="small">（常被误称为 deconvolution）</span></td><td>把输入的每个点乘上核的全部 k 个权重，<strong>加到</strong>输出的一个长度为 k 的窗口里；相邻输入点的窗口按 stride 错开。输出尺寸 = (N−1)·s − 2p + k。</td><td>「盖章」：每个输入点拿一个印章，按 stride 盖到输出上，重叠处相加。</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>转置卷积之所以叫「转置」，是因为把卷积写成矩阵乘法 <code>y = Cx</code> 后，转置卷积就是 <code>y = Cᵀx</code> —— 也就是<strong>普通卷积的<em>伴随</em>（adjoint）</strong>。</p>
+
+<div class="box stop">
+<div class="bt">核心概念澄清：转置卷积不是普通卷积的逆运算</div>
+<p style="margin-top:0">这是任务书问题 1.2 的答案，也是理解棋盘格的前提。</p>
+<ul>
+<li><strong>逆运算</strong>要求 <code>C⁻¹</code> 存在且能完美还原输入。但普通卷积是<em>降维</em>或<em>信息有损</em>的（多个输入映射到同一个输出，或者边界信息被丢掉），<code>C</code> 通常是长方形矩阵，<strong>根本不可逆</strong>。</li>
+<li><strong>伴随</strong>只满足 <code>⟨Cx, y⟩ = ⟨x, Cᵀy⟩</code>（内积意义下的转置），不满足 <code>CᵀC = I</code>。所以「转置卷积再把结果卷回去」<strong>不会</strong>得到原图。</li>
+<li><strong>直接后果</strong>：转置卷积的「放大」不是「还原」，而是一个<em>会制造新结构的、带重叠的线性映射</em>。逆运算不会制造信息，但这个映射会 —— 重叠处的相加就是新结构的来源。</li>
+</ul>
+</div>
+
+<p><strong>为什么它会在反向传播里出现。</strong>你不需要显式调用转置卷积层，也可能遭遇它：<strong>普通卷积的反向传播在数学上就是转置卷积</strong>。所以 Odena 等人在 Distill 里专门开了一节「Artifacts in Gradients」—— 梯度里也会出现棋盘格。</p>
+
+<h3 id="s24">2.4 采样定理与混叠：为什么「丢掉一些点」会造出假的低频</h3>
+
+<p><strong>直觉。</strong>任何离散信号都有一个「能表达的最高频率」，叫 <strong>Nyquist 频率</strong>，等于采样率的一半。如果你把采样率降到一半（下采样 2 倍），新的 Nyquist 也降到一半。此时原本高于新 Nyquist 的频率<em>不会消失</em>，它会<strong>折叠</strong>（fold）成另一个较低的频率，冒充一个原本不存在的低频结构。这就是<strong>混叠</strong>（aliasing）。</p>
+
+<div class="formula">
+采样率 f<sub>s</sub>&nbsp;→&nbsp; Nyquist = f<sub>s</sub>/2&nbsp;&nbsp;&nbsp;&nbsp;（单位：周期/采样点，即 0.5）
+<br>下采样 M 倍：&nbsp; f&nbsp; →&nbsp; f′ = fold(f·M)，&nbsp; fold(u) = |u − round(u)|
+<span class="sym">f = 原始频率（cycles/原采样点）；M = 抽取倍数；f′ = 折叠后的频率（cycles/新采样点）；round 是四舍五入到最近的整数。若 f·M 超过 0.5，它就会被折回来。</span>
+</div>
+
+<div class="box warn">
+<div class="bt">混叠最危险的地方：它看起来不像噪声</div>
+本文实验 B2 实测：输入是 f = 0.40 的纯正弦，下采样 2 倍后按公式 <code>fold(0.40×2) = fold(0.80) = 0.20</code>，实测主频正好落在 <strong>0.2000</strong>。
+<br>注意 —— 一个 <strong>0.40 的高频</strong>变成了 <strong>0.20 的低频</strong>。输出看起来像一条<em>平缓的</em>波纹，而不是麻点。这就是为什么混叠产生的伪影经常被误认为「纹理」或「结构」，而不是被认成故障。
+</div>
+
+<p><strong>抗混叠（anti-aliasing）</strong>的做法很简单：<strong>在下采样之前先低通滤波</strong>，把高于新 Nyquist 的内容提前削掉，让它没机会折叠。本文实测同一算例：naive 下采样保留的 0.20 分量幅度为 <strong>0.99990</strong>；先做 σ=1.2 的高斯低通再下采样，幅度降到 <strong>0.01051</strong> —— 压低约 <strong>39.6 dB</strong>。</p>
+
+<p><strong>上采样为什么也要小心。</strong>最朴素的上采样是「插零」：在每两个原采样点之间插入 0。插零会让频谱<strong>复制</strong>（replicate）出镜像副本（imaging）。所以插零之后<em>必须</em>接一个低通把副本削掉。如果这个低通做得不好（比如干脆不做），副本就留在输出里 —— 这又是一条独立于重叠的伪影来源。</p>
+
+<h3 id="s25">2.5 二维傅里叶变换与两种谱</h3>
+
+<p><strong>直觉。</strong>傅里叶变换回答的问题是：「这张图是由哪些<em>条纹</em>叠加出来的？」每一条「条纹」有一个方向、一个疏密程度（<em>空间频率</em>）、一个强度、一个相位。变换后的结果就是一份「条纹清单」。</p>
+
+<ul>
+<li><strong>空间频率</strong>：条纹的疏密，单位是「周期/像素」。变化缓慢的大片色块 = 低频；锐利的边缘和细纹理 = 高频；每 2 个像素重复一次的图样 = 最高频，即 Nyquist（0.5）。</li>
+<li><strong>幅度谱 |F(u,v)|</strong>：每个频率分量的<em>强度</em>。它告诉你「有哪些频率、有多强」，但<strong>不含位置信息</strong> —— 平移图像，幅度谱不变。</li>
+<li><strong>相位谱 ∠F(u,v)</strong>：每个频率分量的<em>相位</em>，它决定这些条纹<em>对齐在哪里</em>，也就是图像的结构位置。经验事实：<strong>只保留相位、丢掉幅度，图像的结构仍然可辨认；只保留幅度、丢掉相位，图像基本认不出</strong>（Oppenheim &amp; Lim, 1981）。</li>
+</ul>
+
+<div class="formula">
+F(u,v) = Σ<sub>x,y</sub> f(x,y) · e<sup>−j2π(ux+vy)</sup>,&nbsp;&nbsp;&nbsp; f(x,y) = (1/N) Σ<sub>u,v</sub> F(u,v) · e<sup>+j2π(ux+vy)</sup>
+<span class="sym">f(x,y) = 空间域图像（像素值）；F(u,v) = 频域表示；u,v = 空间频率（cycles/pixel），范围 −0.5 到 0.5；N = 像素总数。前式是正变换，后式是逆变换。用 FFT 实现时会把零频挪到中心（fftshift），方便观察。</span>
+</div>
+
+<div class="box pur">
+<div class="bt">为什么「规则的周期纹理」必然表现为「少数尖峰」</div>
+<p style="margin-top:0">这是任务书问题 3.5 的答案，而且它是一个可以直接算出来的结论。</p>
+<p>一个在空间上<strong>周期为 p、无限延伸</strong>的正弦条纹，它的傅里叶变换只有<strong>两个</strong>非零点（一个方向各一个）。周期越规则、越延伸，能量就越集中；越是不规则、越局部，能量就越铺开成一片。</p>
+<p>所以：<strong>真实纹理</strong>（不规则、局部、方向混杂）→ 频谱上一片弥散的云；<strong>棋盘格</strong>（严格周期、全局延伸）→ 频谱上几个孤立的亮针。这就是「一眼就能看出是伪影」的频域根据。</p>
+<p>本文实验 C 把这条结论做成了可核验的数字：周期 p、旋转 θ 的棋盘格，谱峰精确落在 <code>(±1/p, ±1/p)</code> 旋转 θ 的位置上，5 组算例与理论<strong>逐点吻合</strong>（§7.3）。</p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>棋盘格伪影的逐步数学推导</h2>
+
+<p>这一节是报告的核心。我们从转置卷积的定义式出发，一步步推到「周期 = stride」和「调制深度随频率变化」这两个可验证的结论。每一步都给出中间量，不做跳跃。</p>
+
+<h3>3.1 第一步：把转置卷积写成贡献关系</h3>
+
+<p>设一维输入 <code>x[i]</code>（i = 0…N−1），核 <code>h[j]</code>（j = 0…k−1），stride = s，padding = p。转置卷积的定义是：<strong>输入的每个点，把整个核按 stride 平移后「盖」到输出上，重叠处相加</strong>。</p>
+
+<div class="formula">
+y[o] = Σ<sub>i, j</sub> x[i] · h[j]&nbsp;&nbsp;&nbsp;当且仅当&nbsp;&nbsp; o = i·s − p + j
+<span class="sym">y[o] = 输出第 o 个位置；i = 输入索引；j = 核内索引；o = i·s − p + j 是「输入点 i 的第 j 个核权重落在输出的哪个位置」。</span>
+</div>
+
+<p>现在把它<strong>反过来解</strong>：给定一个输出位置 <code>o</code>，有哪些 <code>(i, j)</code> 会写到它？由 <code>o = i·s − p + j</code> 得</p>
+
+<div class="formula">
+j = o + p − i·s&nbsp;&nbsp;&nbsp;，需要&nbsp;&nbsp; 0 ≤ j ≤ k−1&nbsp;&nbsp;且&nbsp;&nbsp;0 ≤ i ≤ N−1
+<span class="sym">对固定的 o，i 每变化 1，j 就变化 s。所以能命中的 i 是间隔为 1 的一串整数 —— 这个「串」里元素的个数就是重叠次数。</span>
+</div>
+
+<p>于是定义两个量，它们是全篇的骨干：</p>
+
+<div class="formula">
+c(o) = #{ i : 0 ≤ o + p − i·s ≤ k−1 }&nbsp;&nbsp;&nbsp;<span class="sym">（重叠计数：有几个输入点写到了输出位置 o）</span>
+g(o) = Σ<sub>i : 条件成立</sub> h[o + p − i·s]&nbsp;&nbsp;&nbsp;<span class="sym">（直流增益：这些输入点带过来的权重之和）</span>
+</div>
+
+<div class="box key">
+<div class="bt">为什么是 g(o) 而不是 c(o) 决定伪影</div>
+<p style="margin-top:0">很多人把棋盘格归因于「有些像素收到的输入<em>个数</em>更多」。这在均匀核下等价，但在一般核下<strong>不准确</strong>。</p>
+<p>真正的判据是 <strong>g(o)</strong>：把常数 1 喂进去，输出就是 g(o) 本身。如果 g(o) 在所有 o 上相等，常数输入得到常数输出 —— 没有棋盘格。如果 g(o) 随 o 起伏，那么<strong>任何</strong>输入都会被这个起伏乘一遍，形成伪影。</p>
+<p>所以：<strong>棋盘格 = g(o) 的周期性起伏</strong>，而不是「重叠次数不齐」。c(o) 只是 g(o) 在均匀核下的一个代理指标。</p>
+</div>
+
+<h3>3.2 第二步：多相分解 —— 真正的机制</h3>
+
+<p>把输出按位置对 stride 取模分组：<code>o ≡ 0 (mod s)</code> 一组，<code>o ≡ 1 (mod s)</code> 一组，……共 s 组。每一组叫一个<strong>相</strong>（phase），这种拆法叫<strong>多相分解</strong>（polyphase decomposition）。</p>
+
+<p>关键观察：<strong>同一个相里的所有输出位置，看到的是一模一样的滤波器</strong>。不同相看到的是<em>不同的</em>滤波器。所以一个 stride=s 的转置卷积，本质上不是「一个上采样」，而是<strong>s 个并行的、增益各不相同的滤波器交替输出</strong>。</p>
+
+<p>这就是棋盘格的全部机制：<strong>只要这 s 个相之间的增益不相等，输出就会被周期为 s 的图样调制。</strong></p>
+
+<h3>3.3 第三步：一维完整算例（k=3, s=2, p=1）</h3>
+
+<p>取核 <code>h = [h₀, h₁, h₂]</code>，stride = 2，padding = 1。代入 <code>j = o + 1 − 2i</code>，逐个位置解。</p>
+
+<h4>偶数输出位置 o = 2i</h4>
+<div class="formula">
+j = 2i + 1 − 2i′ ∈ {0, 1, 2}
+<br>&nbsp;&nbsp;i′ = i&nbsp;&nbsp;→ j = 1&nbsp;&nbsp;✓
+<br>&nbsp;&nbsp;i′ = i−1 → j = 3&nbsp;&nbsp;✗（超出核范围）
+<br>&nbsp;&nbsp;i′ = i+1 → j = −1 ✗
+<br><strong>⇒ y[2i] = h₁ · x[i]</strong>
+</div>
+
+<h4>奇数输出位置 o = 2i + 1</h4>
+<div class="formula">
+j = 2i + 2 − 2i′ ∈ {0, 1, 2}
+<br>&nbsp;&nbsp;i′ = i&nbsp;&nbsp;→ j = 2&nbsp;&nbsp;✓&nbsp;&nbsp;贡献 x[i]·h₂
+<br>&nbsp;&nbsp;i′ = i+1 → j = 0&nbsp;&nbsp;✓&nbsp;&nbsp;贡献 x[i+1]·h₀
+<br>&nbsp;&nbsp;i′ = i−1 → j = 4&nbsp;&nbsp;✗
+<br><strong>⇒ y[2i+1] = h₂ · x[i] + h₀ · x[i+1]</strong>
+</div>
+
+<p>两相并列，机制一目了然：</p>
+
+<div class="formula">
+偶相（o 为偶数）：增益 = <strong>h₁</strong>
+<br>奇相（o 为奇数）：增益 = <strong>h₀ + h₂</strong>
+<span class="sym">两个相看到的是两个不同的滤波器。它们的直流增益之比 = (h₀+h₂) / h₁。</span>
+</div>
+
+<p>对均匀核 <code>h = [1/3, 1/3, 1/3]</code>：偶相 = 1/3，奇相 = 2/3。<strong>比值 = 2.00</strong>。喂常数 1 进去，输出就是 <code>[1/3, 2/3, 1/3, 2/3, …]</code> —— 一个周期为 2 的明暗交替。这就是棋盘格。</p>
+
+<p>本文实验 A 实测（输入全 1，N=40，k=3, s=2, p=1）：</p>
+
+<div class="formula">
+overlap count : 1 2 1 2 1 2 1 2 …&nbsp;&nbsp;<span class="sym">（c(o)）</span>
+DC gain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 0.333 0.667 0.333 0.667 …&nbsp;&nbsp;<span class="sym">（g(o)）</span>
+interior gain max/min = <strong>2.000</strong> &nbsp;|&nbsp; measured period = <strong>2</strong> &nbsp;|&nbsp; 主导频率 = <strong>0.4932</strong> ≈ 1/s = 0.5
+</div>
+
+<p>注意最后一项：<strong>增益图样的主导频率精确等于 1/stride</strong>。这不是巧合，而是 §3.5 要建立的普遍规律。</p>
+
+<h3>3.4 第四步：二维 —— 不均匀度被「平方」</h3>
+
+<p>二维转置卷积在核可分离时（例如均匀核、高斯核）两个轴独立作用，输出增益是两轴增益的<strong>外积</strong>：</p>
+
+<div class="formula">
+G(o<sub>y</sub>, o<sub>x</sub>) = g<sub>row</sub>(o<sub>y</sub>) · g<sub>col</sub>(o<sub>x</sub>)
+<span class="sym">G = 二维直流增益图；g_row、g_col = 两个一维方向的增益图样。</span>
+</div>
+
+<p>一维是 2:1，二维就是 2:1 × 2:1 = <strong>4:1</strong>。这正是 Odena 等人在 Distill 里说的「unevenness gets squared」。</p>
+
+<p>本文实测（输入全 1，N=6，k=3, s=2, p=1，均匀核 1/9，输出 11×11）。这个矩阵<strong>就是</strong>一张棋盘格：</p>
+
+<div class="flow"><pre><code>0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111
+0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222
+0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111
+0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222
+0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111
+0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222
+0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111
+0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222
+0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111
+0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222  0.444  0.222
+0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111  0.222  0.111</code></pre></div>
+
+<p>实测：interior max/min = <strong>4.0000</strong>；内部只出现三个不同取值 {0.111111, 0.222222, 0.444444}。理论预测 4.00，吻合。</p>
+
+<div class="box key">
+<div class="bt">这是「棋盘格」这个名字的由来，也解释了它的方向性</div>
+输入全 1（最平坦、最没有高频内容的输入）都能产生这个 4:1 的网格。所以：<strong>棋盘格与输入内容无关，它乘在输入上</strong>。
+<br>而它在频域的位置，正是矩阵的二维周期所对应的对角峰 —— 这就是 §2.5 里「周期纹理 = 少数尖峰」的直接体现，也是实验 C 要量化的东西。
+</div>
+
+<h3>3.5 第五步：周期与频率的普遍规律</h3>
+
+<p>把 §3.3 的推导一般化。对固定 <code>k</code> 与 <code>s</code>，令 <code>k = q·s + r</code>（q 为商，r 为余数）。逐相求解可得：</p>
+
+<div class="formula">
+相位 p₀ 的增益：&nbsp; g<sub>p₀</sub> = Σ<sub>t=0..q−1</sub> h[p₀ + t·s]&nbsp;&nbsp;（当 r &gt; 0 时，某些相位多一项 h[p₀ + q·s]）
+<br><br>相位之间是否等增益 &nbsp;⟺&nbsp; r = 0 且核在每个相内的权重和相等
+<span class="sym">t = 相位内的第 t 个 tap；p₀ = 相位编号 0…s−1。余数 r = k mod s 决定了「有多少个相位比其他相位多收到一个 tap」。</span>
+</div>
+
+<p>由此得到两条可直接使用的规律，本文实验 A 全部实测验证：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>配置</th><th>k mod s</th><th>内部增益 max/min</th><th>实测周期</th><th>实测主导频率</th><th>理论 1/s</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td>k=3, s=2, p=1</td><td>1</td><td><strong>2.00</strong></td><td><strong>2</strong></td><td>0.4932</td><td>0.5000</td><td>强棋盘格</td></tr>
+<tr><td>k=4, s=2, p=1</td><td>0</td><td>1.00 <span class="small">（内部）</span></td><td>1</td><td>0.0000</td><td>0.5000</td><td>DC 不平衡消除</td></tr>
+<tr><td>k=2, s=2, p=0</td><td>0</td><td>1.00</td><td>1</td><td>0.0000</td><td>0.5000</td><td>DC 不平衡消除</td></tr>
+<tr><td>k=5, s=3, p=1</td><td>2</td><td><strong>2.00</strong></td><td><strong>3</strong></td><td><strong>0.3364</strong></td><td><strong>0.3333</strong></td><td>周期 = stride</td></tr>
+<tr><td>k=6, s=3, p=1</td><td>0</td><td>1.00 <span class="small">（内部）</span></td><td>1</td><td>0.0000</td><td>0.3333</td><td>DC 不平衡消除</td></tr>
+<tr><td>k=4, s=4, p=0</td><td>0</td><td>1.00</td><td>1</td><td>0.0000</td><td>0.2500</td><td>DC 不平衡消除</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">规律 1（可当定理解用）</div>
+<strong>重叠不均匀产生的伪影，其空间周期 = stride，空间频率 = 1/stride。</strong>
+<br>实测验证：s=2 → 周期 2、频率 0.4932（理论 0.5）；s=3 → 周期 3、频率 0.3364（理论 0.3333）。两组都对上。
+<br><br><strong>直接推论</strong>：<em>stride=2 是最坏情况</em>，因为 1/2 = 0.5 恰好是 Nyquist 频率 —— 伪影频率与图像能表达的最高频段完全重合，无法用一个「高通/低通」的分界把它切出去。若 s=3，伪影在 1/3 ≈ 0.333，与 0.5 之间还有余量。
+</div>
+
+<h3>3.6 第六步：为什么「kernel 能被 stride 整除」不充分 —— 幅度调制变成相位调制</h3>
+
+<p>这是任务书问题 1.7 和 1.8 的核心，也是本报告最有价值的一段。我们把偶数核完整算一遍。</p>
+
+<h4>偶数核算例（k=4, s=2, p=1）</h4>
+
+<div class="formula">
+j = o + 1 − 2i′ ∈ {0,1,2,3}
+<br><br>o = 2i：&nbsp; i′=i → j=1 ✓&nbsp;&nbsp;&nbsp;i′=i−1 → j=3 ✓&nbsp;&nbsp;&nbsp;其余 ✗
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>⇒ y[2i] = h₁·x[i] + h₃·x[i−1]</strong>
+<br><br>o = 2i+1：i′=i → j=2 ✓&nbsp;&nbsp;&nbsp;i′=i+1 → j=0 ✓&nbsp;&nbsp;&nbsp;其余 ✗
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>⇒ y[2i+1] = h₂·x[i] + h₀·x[i+1]</strong>
+</div>
+
+<p>对均匀核 <code>h = [0.25, 0.25, 0.25, 0.25]</code>：</p>
+
+<div class="formula">
+y[2i]&nbsp;&nbsp; = 0.25·(x[i−1] + x[i])&nbsp;&nbsp;&nbsp;<span class="sym">= x 的 2 点均值，在 i − 0.5 处取样</span>
+y[2i+1] = 0.25·(x[i] + x[i+1])&nbsp;&nbsp;&nbsp;<span class="sym">= 同一个 2 点均值，在 i + 0.5 处取样</span>
+</div>
+
+<div class="box stop">
+<div class="bt">关键转折：两个相的幅度相同，但相位不同</div>
+<p style="margin-top:0">偶相和奇相都是「2 点均值」滤波器 —— 幅度完全一致（因此<strong>直流增益相等，DC 上没有棋盘格</strong>）。</p>
+<p>但它们在<strong>不同的位置取样</strong>：偶相在 i − 0.5，奇相在 i + 0.5，相差整整一个采样点。这就是一个<strong>相位调制</strong>。</p>
+<p><strong>相位调制同样会产生边带</strong>（也就是伪影），只是它在直流处为零、随频率增长。代入 <code>x[n] = sin(2πfn)</code> 得：</p>
+</div>
+
+<div class="formula">
+y[2i]&nbsp;&nbsp; = 0.5·cos(πf) · sin(2πf·i − πf)
+<br>y[2i+1] = 0.5·cos(πf) · sin(2πf·i + πf)
+<br><br>写成统一形式：y[n] = 0.5·cos(πf)·sin(πf·n) + 0.5·sin(πf)·(−1)<sup>n</sup>·cos(πf·n)
+<br><br><span class="sym">第一项 = 载波（原信号）；第二项 = (−1)ⁿ 乘上包络，即频率被平移 1/2 的<strong>边带</strong>，也就是伪影。f = 输入信号频率（cycles/低分辨率采样点）。</span>
+</div>
+
+<p>由此得到<strong>调制深度律</strong>。本文实验 B4 把两个核的实测值与理论并排放在一起：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>输入频率 f₀</th><th>k=3,s=2,p=1<br><span class="small">实测边带/载波</span></th><th>奇数核理论<br><span class="small">m = (2cosπf−1)/(2cosπf+1)</span></th><th>k=4,s=2,p=1<br><span class="small">实测边带/载波</span></th><th>偶数核理论<br><span class="small">0.5·tan(πf)</span></th></tr></thead>
+<tbody>
+<tr><td>0.01</td><td>0.3331</td><td><strong>0.3331</strong></td><td>0.0157</td><td><strong>0.0157</strong></td></tr>
+<tr><td>0.05</td><td>0.3278</td><td><strong>0.3278</strong></td><td>0.0787</td><td>0.0792</td></tr>
+<tr><td>0.10</td><td>0.3108</td><td><strong>0.3108</strong></td><td>0.1584</td><td>0.1625</td></tr>
+<tr><td>0.15</td><td>0.2811</td><td><strong>0.2811</strong></td><td>0.2401</td><td>0.2548</td></tr>
+<tr><td>0.20</td><td>0.2361</td><td><strong>0.2361</strong></td><td>0.3249</td><td>0.3633</td></tr>
+<tr><td>0.24</td><td>0.1863</td><td><strong>0.1863</strong></td><td>0.3959</td><td>0.4695</td></tr>
+<tr><td>0.25</td><td>0.1716</td><td><strong>0.1716</strong></td><td>0.4142</td><td>0.5000</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">两条律的验证状态（诚实标注）</div>
+<ul style="margin-bottom:0">
+<li><strong>奇数核律 <code>m = (2cosπf−1)/(2cosπf+1)</code>：全频段精确。</strong>七个频点实测与理论的最大偏差 <strong>0.00000</strong>。这是本文自己推导并验证的结论，不是引文。</li>
+<li><strong>偶数核律 <code>0.5·tan(πf)</code>：低频精确，高频<em>高估</em>。</strong>f₀ ≤ 0.15 时偏差 ≤ 0.015；到 f₀=0.25 时理论给 0.500、实测 0.414，偏差 0.086。原因是我用的两分量模型在载波与边带靠近时不再成立。<strong>应把它当作渐近律而不是精确律使用。</strong>定性结论（DC 处为零、随频率增长）不受影响。</li>
+</ul>
+</div>
+
+<h4>这两条律直接回答了你的问题 7 和问题 8</h4>
+
+<div class="grid2">
+<div class="mini bad">
+<div class="mt">问题 7：kernel 能被 stride 整除时，棋盘格是否一定消失？</div>
+<strong>不一定。</strong>整除只保证「各相的<em>直流</em>增益相等」，从而消除平坦区域的棋盘格。本文实测 k=4,s=2 的 DC 增益比从 2.00 降到 1.00 —— 但它在 f₀=0.25 处仍有 <strong>0.414</strong> 的调制深度，且本文实验 B1 实测其 Nyquist 边带/载波 = <strong>0.0787</strong>，而 resize+conv 只有 <strong>0.0020</strong>。
+<br>所以「整除」把问题从<strong>幅度调制</strong>换成了<strong>相位调制</strong>，是<em>减弱</em>而不是<em>消除</em>。这正是 Distill 原文说的 "the artifacts are still present in these models, although they seem milder"。
+</div>
+<div class="mini bad">
+<div class="mt">问题 8：为什么调 stride / padding / 偶数核后仍可能有伪影？</div>
+四条独立原因，本文各有实测支撑：
+<ol style="margin-bottom:0">
+<li><strong>相位调制仍在</strong>（上面这条，实测 0.414 @ f=0.25）。</li>
+<li><strong>边界永远不均匀</strong>：实测 k=4,s=2,p=1 的内部增益比 = 1.00，但<em>含边界</em>的比 = <strong>4.00</strong>。padding 只平移输出，不改变内部周期，边界残余无法用整除消除。</li>
+<li><strong>padding 不是成因</strong>：改变 p 只改变输出长度与边界几列，不改变内部规律 —— 所以指望「调 padding 治伪影」在原理上就不成立。</li>
+<li><strong>多层的相位调制会叠加</strong>（§3.8）。</li>
+</ol>
+</div>
+</div>
+
+<h3>3.7 用实验 B1 定量：转置卷积 vs 插值+卷积，到底差多少</h3>
+
+<p>上面是解析推导。本文实验 B1 给了一个干净的定量对照：喂一个<strong>非常平滑</strong>的正弦（f₀ = 0.05，本身几乎不含高频），上采样 2 倍后测量「Nyquist 频段幅度 / 真实信号幅度」。因为输入没有高频，<strong>任何出现在 Nyquist 的能量都是算子自己造出来的</strong>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>上采样算子</th><th>真实频段幅度<br><span class="small">@0.025</span></th><th>Nyquist 频段幅度<br><span class="small">@0.475–0.5</span></th><th>比值<br><span class="small">伪影/信号</span></th><th>相对转置卷积</th></tr></thead>
+<tbody>
+<tr><td>bilinear 插值</td><td>0.9938</td><td>0.00616</td><td>0.0062</td><td>−34 dB</td></tr>
+<tr><td>resize + conv(3tap)</td><td>0.9857</td><td>0.00200</td><td><strong>0.0020</strong></td><td><strong>−44 dB</strong></td></tr>
+<tr><td>resize + 低通 + conv</td><td>0.9736</td><td>0.00003</td><td>0.0000</td><td>−70 dB</td></tr>
+<tr><td><strong>转置卷积 k=3, s=2, p=1</strong></td><td>0.4959</td><td>0.16255</td><td><strong>0.3278</strong></td><td>基准</td></tr>
+<tr><td><strong>转置卷积 k=4, s=2, p=1</strong></td><td>0.4923</td><td>0.03875</td><td><strong>0.0787</strong></td><td>−12 dB</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>三个可以直接引用的数字：</p>
+<ul>
+<li>奇数核转置卷积把<strong>约 33%</strong> 的幅度放到了 Nyquist 频段 —— 这是一个<em>纯粹的伪影</em>，输入里完全没有这个频率。</li>
+<li>换成偶数核（k=4, s=2），降到 <strong>7.9%</strong>。改善明显（−12 dB），<strong>但没有归零</strong> —— 与 §3.6 的相位调制律一致。</li>
+<li>换成 resize+conv，降到 <strong>0.2%</strong>（−44 dB）。这是因为双线性核在 Nyquist 处恰好为零（§2.2 表格第二行），而转置卷积的核<strong>不保证低通</strong>。</li>
+</ul>
+
+<div class="box warn">
+<div class="bt">同时注意第一列的代价</div>
+转置卷积的「真实频段幅度」是 0.4959，而 resize+conv 是 0.9857 —— 差约 2 倍。也就是说转置卷积<strong>把一半的信号能量也放到了别处</strong>。所以「换掉转置卷积」不只是消除伪影，同时改变了整个增益结构。<strong>这也提醒：看到伪影减弱时，必须同时检查信号本身有没有被改变。</strong>
+</div>
+
+<h3>3.8 第七步：为什么伪影会在多层上采样中累积</h3>
+
+<p>设网络有 L 层上采样，第 ℓ 层的 stride 为 s<sub>ℓ</sub>。每一层都会乘上一个周期为 s<sub>ℓ</sub>（在该层输出分辨率下）的增益图样。总增益是乘积：</p>
+
+<div class="formula">
+G<sub>total</sub> = Π<sub>ℓ=1..L</sub> G<sub>ℓ</sub>
+<span class="sym">G_ℓ = 第 ℓ 层的增益图样。乘积意味着：只要任何一层有起伏，最终输出就有起伏；多层同频起伏会相乘放大。</span>
+</div>
+
+<p>对四层 ×2 上采样（如 4×4 → 64×64），最终图上会叠加周期 2、4、8、16 的图样（换算到最终分辨率）。这正是 Odena 等人写的：</p>
+
+<div class="box pur">
+<div class="bt">Distill 原文（已逐字核实）</div>
+"it's possible for these stacked deconvolutions to cancel out artifacts, they often <strong>compound</strong>, creating artifacts on a variety of scales."
+<br><span class="small">即：多层上采样理论上<em>可能</em>互相抵消，但实践中<strong>通常是叠加放大</strong>，并在多个尺度上产生伪影。原文还指出：最后一层的 stride-1 转置卷积能压掉一部分频率的伪影，但 "artifacts can still leak through"。</span>
+</div>
+
+<p><strong>补充一条本文的推断（标注为推断，非引文）</strong>：由于增益是<em>乘积</em>，多层同类伪影的叠加是指数级的；但真实网络中各层的相位图样相对位置取决于上采样倍数与对齐方式，因此可能出现部分抵消。这解释了为什么同一个架构换个层数/分辨率，棋盘格的强弱会明显变化 —— 但这一条<strong>本文没有做受控实验验证</strong>，只能作为假设。</p>
+
+<h3>3.9 汇总：回答任务书问题 1 的九个子问题</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:44px">子问</th><th>答案（含证据）</th></tr></thead>
+<tbody>
+<tr><td>1.1</td><td>普通卷积 = 加权滑动求和（降维/汇总）；转置卷积 = 每个输入点把核「盖」到输出上、重叠相加（升维）；上采样 = 让尺寸变大，有「插值+卷积」与「转置卷积」两条完全不同的路线；下采样 = 丢掉采样点，会引入混叠。</td></tr>
+<tr><td>1.2</td><td><strong>转置卷积是卷积的<em>伴随</em>（Cᵀ），不是逆（C⁻¹）。</strong>卷积通常是长方形矩阵、不可逆；伴随只满足内积转置关系，<code>CᵀC ≠ I</code>。所以它「放大」时会制造新结构（重叠相加），而逆运算不会。</td></tr>
+<tr><td>1.3</td><td>输出尺寸 = (N−1)·s − 2p + k。s 决定输出采样的疏密与相位周期；k 决定每个相内累积多少 tap；p 只做平移与边界裁剪，<strong>不改变内部规律</strong>。</td></tr>
+<tr><td>1.4</td><td>重叠不均匀 = <code>c(o)</code> 或 <code>g(o)</code> 随 o 起伏。严格定义见 §3.1：<code>g(o) = Σ h[o+p−i·s]</code> 不是常数。</td></tr>
+<tr><td>1.5</td><td>因为输出被按 <code>o mod s</code> 分成 s 个<strong>相</strong>，每相看到不同的滤波器（§3.2）。k mod s ≠ 0 时，某些相比其他相多收到一个 tap。</td></tr>
+<tr><td>1.6</td><td>因为增益图样的周期恰好是 s（§3.5 实测：s=2→2，s=3→3）。周期图样 = 明暗交替；二维两轴相乘 → 棋盘格（§3.4，实测 4:1）。</td></tr>
+<tr><td>1.7</td><td><strong>不一定消失。</strong>整除只消除直流增益不平衡（实测 2.00→1.00），但留下随频率增长的相位调制（实测 f=0.25 时 0.414）。见 §3.6。</td></tr>
+<tr><td>1.8</td><td>四条独立原因：相位调制仍在、边界永远不均匀（实测内部 1.00 / 含边界 4.00）、padding 本就不是成因、多层叠加。见 §3.6 右侧卡片。</td></tr>
+<tr><td>1.9</td><td>因为增益是<strong>乘积</strong>（§3.8）。每层在各自尺度注入周期图样，多层通常叠加放大（Odena 原文 "compound"）。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s4"><span class="num">4</span>混叠、频谱偏差与对抗训练机制的区别</h2>
+
+<p>任务书要求把四个概念明确区分、不能混为一谈。这一节逐个定义、说明各自如何产生、彼此是否有因果关系，并解释它们为什么常常同时出现。</p>
+
+<h3>4.1 四个概念，一张对照表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:34px"> </th><th style="width:150px">概念</th><th>它到底是什么</th><th>产生于哪一步</th><th>确定性还是学习得来</th><th>空间域表现</th><th>频域表现</th></tr></thead>
+<tbody>
+<tr>
+<td><span class="b blue">A</span></td>
+<td><strong>转置卷积的重叠不均匀</strong><br><span class="small">uneven overlap / polyphase gain imbalance</span></td>
+<td>输出被按 <code>o mod s</code> 分成 s 个相，各相直流增益不等 → 输出被周期图样<em>乘</em>了一遍。</td>
+<td>算子本身（前向计算的几何）。</td>
+<td><strong>完全确定</strong>。固定权重、随机权重、未训练都出现。</td>
+<td>严格周期的明暗网格，周期 = stride。</td>
+<td>在 <code>1/stride</code> 处出现尖峰；二维时在对角方向成组。</td>
+</tr>
+<tr>
+<td><span class="b purple">B</span></td>
+<td><strong>采样/重采样引起的混叠</strong><br><span class="small">aliasing</span></td>
+<td>下采样（或低质量上采样）时，高于新 Nyquist 的频率折叠成较低的假频率。</td>
+<td>采样率变化那一步。</td>
+<td><strong>完全确定</strong>，且可用 <code>fold(f·M)</code> 精确预测。</td>
+<td>假的<em>低频</em>波纹或摩尔纹，看起来「平滑」而非「噪声」。</td>
+<td>能量出现在原本没有频率的位置；与真实内容混在一起，<strong>无法靠分频段切分</strong>。</td>
+</tr>
+<tr>
+<td><span class="b tealb">C</span></td>
+<td><strong>卷积核/网络的频率响应不均衡</strong><br><span class="small">frequency bias</span></td>
+<td>整个网络对不同频率的增益/学习能力不同，导致输出谱与真实数据谱系统性不符。</td>
+<td>滤波器的 <code>|H(f)|</code> 形状 + 网络深度 + 判别器行为。</td>
+<td>滤波器部分是确定的；<strong>网络整体部分是学出来的</strong>。</td>
+<td>可能是「过锐」「过糊」「发腻」，未必有规则周期。</td>
+<td>径向平均谱在某个频段系统性偏高或偏低（Schwarz 等报告：生成图高频偏高）。</td>
+</tr>
+<tr>
+<td><span class="b high">D</span></td>
+<td><strong>训练后形成的周期性纹理</strong><br><span class="small">learned periodic texture</span></td>
+<td>生成器为了「骗过」判别器而学出来的、重复出现的纹理图样（如 StyleGAN2 的 "texture sticking"）。</td>
+<td>对抗优化过程。</td>
+<td><strong>学习得来</strong>。去掉训练就不存在。</td>
+<td>纹理「粘」在像素坐标上，物体移动时纹理不动。</td>
+<td>谱上成组的峰；但峰的位置由<em>学习</em>决定，不一定等于 1/stride。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>4.2 它们之间有没有因果关系？</h3>
+
+<p>结论先说：<strong>A、B、C 之间没有因果关系（是三个平行的机制），但它们都可以导致 D 类的可见伪影，也可以各自独立出现。</strong>把 A 当成所有伪影的成因，或者把 D 的高频异常统称为「棋盘格」，都是错的。</p>
+
+<div class="flow"><pre><code>                     ┌─ A 重叠不均匀（算子几何，确定性）
+                     │      → 周期 = stride 的增益图样
+                     │
+输入/算子 ───────────┼─ B 混叠（采样率，确定性）
+                     │      → 假的低频（fold 公式可预测）
+                     │
+                     └─ C 频率响应不均衡（滤波器形状 + 网络 + 判别器）
+                            → 谱的整体倾斜
+
+        以上三者 ──可各自独立──→ 可见伪影
+
+        对抗优化 ─────────────────→ D 学出来的周期纹理
+                                    （与 A/B/C 可能有关，也可能完全无关）
+</code></pre></div>
+
+<div class="box warn">
+<div class="bt">三条「不是因果」的判断（都有证据）</div>
+<ol style="margin-bottom:0">
+<li><strong>混叠 → 棋盘格：不成立。</strong>棋盘格来自 A（Distill 2016 归因 uneven overlap，全文未提 aliasing）；混叠来自 B。本文的文献核验<strong>没有找到任何一篇论文用 aliasing 解释棋盘格</strong>。StyleGAN3 讨论的是 texture sticking，它的论文全文<strong>不含 "checkerboard" 一词</strong>。</li>
+<li><strong>棋盘格 → 频谱偏差：不足以解释。</strong>Schwarz 等（NeurIPS 2021）结论 2 逐字：checkerboard artifacts introduced by upsampling <em>cannot explain the spectral discrepancies alone as the generator is able to compensate for these artifacts</em>。也就是说生成器可以把 A 造成的伪影补偿掉，但谱偏差仍然存在 —— 所以谱偏差另有来源（主要是判别器侧）。</li>
+<li><strong>训练不稳定 → 棋盘格：机制不同。</strong>训练不稳定（梯度爆炸、振荡、NaN）产生的是<em>不规则</em>的破坏（花屏、色斑、全黑）；棋盘格是<em>严格周期</em>的。二者在空间域上几乎不可能混淆，但在频域里都可能表现为「高频异常」。</li>
+</ol>
+</div>
+
+<h3>4.3 为什么它们常常同时出现</h3>
+
+<p>因为<strong>同一个上采样层同时具备这三件事</strong>：</p>
+
+<ul>
+<li>它是转置卷积 → 有 <span class="b blue">A</span>（多相增益不平衡）；</li>
+<li>它把分辨率放大 2 倍 → 如果后续还有下采样，就存在 <span class="b purple">B</span> 的机会；</li>
+<li>它的核 <code>|H(f)|</code> 不是理想的低通 → 有 <span class="b tealb">C</span> 的一部分。</li>
+</ul>
+
+<p>所以当你「换掉上采样方式」时，你同时改动了 A、B、C 三者，观察到的改善<strong>无法归因到其中任何一个</strong>。这就是为什么必须做控制变量实验（§7 实验 B），把三者拆开。</p>
+
+<h3>4.4 为什么棋盘格具有规则的空间周期 —— 与 stride、上采样倍率、网络层级的关系</h3>
+
+<p>任务书特别要求解释这一点。答案分三层。</p>
+
+<h4>第一层：为什么一定有周期，而且周期 = stride</h4>
+
+<p>因为增益图样 <code>g(o)</code> 是<strong>平移 s 个位置后不变的函数</strong>。理由很直接：把输出位置整体加 s，等价于把输入索引整体加 1（由 <code>o = i·s − p + j</code>），而输入索引加 1 只是换了一个输入点 —— 由于我们考察的是「单位输入的增益」，结果不变。</p>
+
+<div class="formula">
+g(o + s) = g(o)&nbsp;&nbsp;&nbsp;（内部区域，远离边界）
+<span class="sym">所以 g 是周期为 s 的函数。本文实测：s=2 → period 2；s=3 → period 3。两组都对上。</span>
+</div>
+
+<p>严格周期 → 傅里叶级数只有 <code>1/s</code> 的整数倍谐波 → 频域上表现为 <strong>f = 1/s, 2/s, …</strong> 的离散谱线。因为 g 是实函数，通常主导项就是 <code>1/s</code>。</p>
+
+<h4>第二层：上采样倍率如何改变它</h4>
+
+<p>设上采样倍率为 U。一个周期为 U（像素）的图样，对应空间频率 <code>1/U</code>。所以：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>上采样倍率 U</th><th>伪影空间周期</th><th>伪影空间频率</th><th>与 Nyquist(0.5) 的关系</th><th>后果</th></tr></thead>
+<tbody>
+<tr><td>2×</td><td>2 px</td><td><strong>0.500</strong></td><td><strong>恰好等于 Nyquist</strong></td><td>最坏：伪影与最高频细节完全重叠，无法用频率分界切除</td></tr>
+<tr><td>3×</td><td>3 px</td><td>0.333</td><td>低于 Nyquist 0.167</td><td>稍好：理论上可分离，但 0.333 仍在高频区，且 2/3 谐波会折回</td></tr>
+<tr><td>4×</td><td>4 px</td><td>0.250</td><td>低于 Nyquist 0.250</td><td>更好：与 Nyquist 有半个八度的间隔</td></tr>
+<tr><td>8×</td><td>8 px</td><td>0.125</td><td>低于 Nyquist 0.375</td><td>伪影落到中频，但更显眼（人眼对中频更敏感）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">这就是为什么 2 倍上采样特别麻烦</div>
+U=2 时伪影频率 0.5 = Nyquist。而图像的锐利边缘、细纹理的能量也集中在高频。<strong>「切掉 0.5 附近」等于「切掉所有细节」</strong>。本文实验 D 把这个取舍量化了：全频段低通要在 100% 压制伪影时，真实边缘只剩 10.1%、真实纹理只剩 0.4%（§7.4）。
+<br><br>反过来，如果伪影频率是 1/8 = 0.125，它和细节的频段就分得开得多 —— 但代价是伪影更大、更显眼。
+</div>
+
+<h4>第三层：网络层级如何改变它</h4>
+
+<p>一个 L 层 ×2 上采样的网络，在第 ℓ 层输出的分辨率下伪影周期是 2 px；折算到最终输出分辨率，第 ℓ 层的伪影周期是 <code>2^(L−ℓ+1)</code> px。所以：</p>
+
+<ul>
+<li><strong>靠近输出的层</strong>（ℓ 大）→ 伪影周期小（2、4 px）→ 高频、细密、像网纹；</li>
+<li><strong>靠近输入的层</strong>（ℓ 小）→ 折算后周期大（16、32 px）→ 低频、大块、像色斑。</li>
+</ul>
+
+<p>这解释了为什么真实 GAN 的棋盘格经常<strong>同时有多个尺度</strong>（Odena 原文 "creating artifacts on a variety of scales"），也解释了为什么「只在高频做陷波」常常治不干净 —— 低频的那些伪影分量不在你陷波的频段里。</p>
+
+<div class="box pur">
+<div class="bt">一个可直接用于诊断的判据（本文提出，非引文）</div>
+<strong>测量伪影的空间周期，反推它的来源层。</strong>
+<br>做法：对生成图做二维 FFT，找出异常峰的位置 <code>(u*, v*)</code>；伪影周期 <code>p* = 1/|(u*,v*)|</code>。若 <code>p*</code> 是 2 的整数次幂，则它很可能来自第 <code>log₂(p*)</code> 层上采样（从输出往回数）。
+<br>注意这是<strong>合理推断而非已验证结论</strong>：本文只在合成棋盘格上验证了「周期 ↔ 峰位置」的对应（实验 C，5/5 吻合），没有在真实 GAN 上做逐层归因实验。可证伪的预测是：<em>把第 k 层上采样换成 resize-conv，若 p* = 2^k 的峰消失而其他峰不动，则该推断成立。</em>
+</div>
+
+<h2 id="s5"><span class="num">5</span>伪影成因分类表</h2>
+
+<p>这张表是任务书要求的核心交付物。设计原则：<strong>每一行必须是可用控制变量实验单独证伪的机制</strong>，而不是「现象的名字」。最后一列「易混淆」尤其重要 —— 它告诉你什么时候会误判。</p>
+
+<div class="scroll">
+<table>
+<thead>
+<tr>
+<th style="width:104px">伪影类型</th>
+<th style="width:130px">根本成因</th>
+<th style="width:96px">网络环节</th>
+<th style="width:190px">数学/信号处理解释</th>
+<th style="width:150px">空间域表现</th>
+<th style="width:150px">频域可观察现象</th>
+<th style="width:180px">控制变量实验怎么验证</th>
+<th style="width:130px">易混淆的成因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① 棋盘格</strong><br><span class="small">周期 = stride</span></td>
+<td>转置卷积多相增益不平衡（uneven overlap）</td>
+<td>生成器的每一个转置卷积上采样层</td>
+<td><code>g(o)=Σ h[o+p−i·s]</code> 非常数；周期 = s，频率 = 1/s。二维两轴相乘 → 不均匀度平方（实测 2:1 → 4:1）</td>
+<td>严格周期的明暗网格，周期 2–4 px；<strong>在平坦区域也存在</strong>（因为是乘性增益）</td>
+<td>在 <code>1/s</code> 及其谐波处出现孤立尖峰；二维时在对角方向成组出现</td>
+<td><strong>固定权重、随机输入，看输出是否已经出现周期图样。</strong>若是 → 与训练无关，是算子问题。再逐一替换上采样算子，看对应频率的峰是否消失</td>
+<td>②混叠（也会产生周期结构，但频率由采样率而非 stride 决定）；⑦数据集压缩块</td>
+</tr>
+<tr>
+<td><strong>② 混叠</strong><br><span class="small">折叠出的假低频</span></td>
+<td>采样率不足：下采样前未低通</td>
+<td>判别器的 stride-2 卷积 / pooling；生成器中的下采样；插零上采样后缺低通</td>
+<td><code>f′ = fold(f·M)</code>。高频不消失而是<em>折叠</em>成低频，新结构凭空出现</td>
+<td>假的<strong>低频</strong>波纹、摩尔纹；看起来「平滑」不像噪声。物体边缘处出现与边缘无关的规律条纹</td>
+<td>能量出现在原始信号中不存在的频率位置；且该位置随输入频率变化而移动（不是固定的 1/s）</td>
+<td><strong>对同一输入，比较「直接下采样」与「先低通再下采样」。</strong>若某个频率分量在前者存在、后者消失 → 它是混叠。再扫输入频率，验证折叠位置是否符合 <code>fold(f·M)</code></td>
+<td>①棋盘格（都有周期，但①的频率固定在 1/s 不随输入变）；③谱偏差</td>
+</tr>
+<tr>
+<td><strong>③ 卷积核/网络频率响应不均衡</strong><br><span class="small">频谱偏差</span></td>
+<td>滤波器 <code>|H(f)|</code> 形状 + 网络深度 + 判别器行为共同造成</td>
+<td>整个生成器 + 整个判别器；不局限于某一个算子</td>
+<td>网络整体对不同频率的增益/可学性不同；<strong>判别器对「低幅度频率」尤其无力</strong>（Schwarz 等结论 3）</td>
+<td>没有规则周期。表现为「过锐」「过糊」「质感发腻」；局部看起来都合理，整体不像真实数据</td>
+<td><strong>径向平均功率谱</strong>在某频段系统性偏高/偏低。Schwarz 等报告生成图高频偏高</td>
+<td><strong>独立评估生成器与判别器。</strong>固定判别器、换生成器上采样方式，看谱偏差是否改变；固定生成器、换判别器下采样方式，看训练信号质量是否改变</td>
+<td>①棋盘格（棋盘格只是谱偏差的一小部分成因，且不足以单独解释它）</td>
+</tr>
+<tr>
+<td><strong>④ 学出来的周期纹理</strong><br><span class="small">texture sticking</span></td>
+<td>对抗优化：生成器找到能骗过判别器的重复图样</td>
+<td>生成器的全部层（是全局优化结果，不是单层）</td>
+<td>不是解析可预测的；峰的位置由学习决定。<strong>与 aliasing 相关的部分</strong>：非理想上采样滤波器泄漏像素网格信息，网络可用它建立「屏幕坐标固定」的纹理基</td>
+<td>纹理「粘」在像素坐标上：物体平移/旋转时纹理不跟着动。这是 StyleGAN2/3 报告的核心现象</td>
+<td>成组的峰，但位置随训练/随机种子变化；不一定落在 1/stride</td>
+<td><strong>平移/旋转等变性测试</strong>：把生成图整体平移 1 像素再重生成，看纹理是否跟着移动。不跟 → 是坐标固定的伪影。也可用 EQ-T / EQ-R 类指标量化</td>
+<td>①棋盘格（棋盘格是坐标固定的，但周期严格等于 stride 且不需训练）</td>
+</tr>
+<tr>
+<td><strong>⑤ 判别器侧的信息损失</strong></td>
+<td>判别器结构与下采样造成的频率信息丢失 / 训练信号退化</td>
+<td>判别器的下采样层、感受野、归一化</td>
+<td>判别器里的下采样会损害它给出的训练信号质量（Schwarz 等结论 4）。判别器不是「看不见高频」，而是处理不了<strong>低幅度</strong>频率（结论 3）</td>
+<td>生成器在某些频段「没人管」，于是自由发挥 → 局部质感失真，但没有固定周期</td>
+<td>径向平均谱在判别器盲区对应频段上偏离真实数据</td>
+<td><strong>替换判别器下采样方式（stride / avgpool / BlurPool），其余全不变。</strong>若谱偏差改变 → 判别器侧确有贡献。Schwarz 等实测：加了抗混叠后偏差<strong>仍然存在</strong></td>
+<td>③谱偏差（⑤是③的一个主要成因，不是并列项）</td>
+</tr>
+<tr>
+<td><strong>⑥ 训练不稳定 / 优化异常</strong></td>
+<td>梯度爆炸/消失、振荡、NaN、模式崩溃</td>
+<td>损失函数、优化器、学习率、归一化、批大小</td>
+<td>博弈动力学不收敛；判别器梯度饱和；Adam 的尖峰导致 G 的 Hessian 尖锐（Durall 等 2020 把 mode collapse 与 sharp minima 关联）</td>
+<td><strong>不规则</strong>破坏：花屏、色斑、全黑、局部崩坏、样本间质量方差大。<strong>不会形成严格周期图样</strong></td>
+<td>低频能量异常、整幅图能量塌缩；频谱「糊掉」而不是「长出尖峰」</td>
+<td><strong>看训练曲线与样本间方差。</strong>若同一 epoch 内不同样本的伪影形态差异很大 → 优化问题而非结构问题。定位首个异常 iteration（本文不展开，库内 <code>GAN问题与不足调研.html</code> §3 有完整清单）</td>
+<td>③谱偏差（都可表现为「谱不对」，但⑥不稳定、③稳定且可复现）</td>
+</tr>
+<tr>
+<td><strong>⑦ 数据集自带的伪影</strong></td>
+<td>训练数据的纹理习惯、JPEG 压缩块、采集/重采样痕迹</td>
+<td>数据管线，不是网络</td>
+<td>8×8 的 JPEG 块在频域有固定位置；数据集若被统一缩放过，会带上固定的插值指纹</td>
+<td>伪影与图像内容无关、跨样本位置一致（例如固定的 8 px 网格）；在真实图片里也能找到同样的痕迹</td>
+<td>在 1/8 及其谐波处出现峰；<strong>关键判据：真实图像里也有同样的峰</strong></td>
+<td><strong>对原始真实数据做同样的 FFT。</strong>若真实数据也有同位置的峰 → 来自数据集，不是生成器。再检查数据是否被统一 resize / JPEG 压缩过</td>
+<td>①棋盘格（JPEG 是 1/8 = 0.125，棋盘格是 1/stride；若 stride=8 则两者频率重合，此时必须靠「真实数据里有没有」来区分）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">这张表最重要的一条使用纪律</div>
+<strong>不要把所有高频异常都叫「棋盘格」。</strong>判据是三个同时成立：(a) 严格周期、(b) 周期等于某个上采样层的 stride、(c) <strong>在平坦区域也存在</strong>（因为它是乘性增益，与内容无关）。只要有一条不满足，就该去查别的行。
+<br><br>反过来，<strong>也不要把所有伪影都归给转置卷积</strong>。Schwarz 等的结论 2 已经明确：棋盘格不足以单独解释频谱差异。本文的文献核验也没有找到任何一篇论文证明「只改上采样就能让谱偏差收敛」。
+</div>
+
+<h2 id="s6"><span class="num">6</span>代表性论文逐篇解析</h2>
+
+<p>每篇给四件事：<strong>研究了什么现象</strong> / <strong>提出了什么解释</strong> / <strong>什么实验支持</strong> / <strong>适用范围与局限</strong>。全部基于一手抓取（arXiv 摘要页、arXiv HTML 全文、Distill 原文），核实等级逐条标注。</p>
+
+<div class="box stop">
+<div class="bt">先立一条纪律：哪些论文<em>真正</em>研究了棋盘格</div>
+<div class="scroll" style="margin-bottom:0">
+<table>
+<thead><tr><th>论文</th><th>直接研究 checkerboard？</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>Odena, Dumoulin, Olah, Distill 2016</td><td><span class="b high">是</span></td><td>棋盘格的原始定义与成因（uneven overlap）。本文核查过全文。</td></tr>
+<tr><td>Schwarz, Liao, Geiger, NeurIPS 2021</td><td><span class="b high">是</span></td><td>专门检验「棋盘格能否解释谱偏差」，结论：不能单独解释。</td></tr>
+<tr><td>Sugawara et al., ICIP 2018</td><td><span class="b high">是</span></td><td>标题即「without any checkerboard artifacts」，给出避免条件。</td></tr>
+<tr><td>Aitken et al., arXiv 2017</td><td><span class="b high">是</span></td><td>sub-pixel convolution 的无棋盘格初始化。</td></tr>
+<tr><td>Durall et al., CVPR 2020</td><td><span class="b low">否</span></td><td>全文 grep <strong>无 "checkerboard"</strong>。只谈 spectral distribution。</td></tr>
+<tr><td>Frank et al., ICML 2020</td><td><span class="b low">否</span></td><td>摘要层面只谈 DCT 高频伪影与上采样指纹。</td></tr>
+<tr><td>Dzanic et al., NeurIPS 2020</td><td><span class="b low">否</span></td><td>只谈高频 Fourier 模态的系统性缺陷。</td></tr>
+<tr><td>Karras et al., NeurIPS 2021 (StyleGAN3)</td><td><span class="b low">否</span></td><td>全文 grep <strong>无 "checkerboard"</strong>。它研究的是 texture sticking。</td></tr>
+<tr><td>Yu, Davis, Fritz, ICCV 2019</td><td><span class="b low">否</span></td><td>摘要逐字称指纹 "not biased by GAN artifacts" —— 作者<em>主动</em>把指纹与 GAN artifact 分离。</td></tr>
+<tr><td>Rahaman ICML 2019 / Tancik NeurIPS 2020</td><td><span class="b low">否</span></td><td>纯回归/拟合的 spectral bias，<strong>与 GAN 无关</strong>。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h3>6.1 棋盘格的原始文献</h3>
+
+<div class="card">
+<div class="ch">
+<div class="title">Deconvolution and Checkerboard Artifacts</div>
+<div class="v">Odena, Dumoulin, Olah · Distill · 2016 · DOI 10.23915/distill.00003</div>
+</div>
+<div class="body">
+<p><strong>现象。</strong>转置卷积（当时普遍叫 deconvolution）做上采样时，输出出现规则的棋盘状明暗图样。作者同时指出<strong>三个来源</strong>：(1) deconvolution 的重叠不均匀；(2) 随机初始化；(3) 损失函数。这三个来源的归因是 Odena 等提出的 —— 后来 Aitken 等 2017 只是转述，不要记错出处。</p>
+<p><strong>解释（逐字核实）。</strong>核心条件是："deconvolution has uneven overlap when the kernel size is not divisible by the stride." 二维中两轴的不均匀<strong>相乘</strong>，所以「unevenness gets squared」（一维 2 倍 → 二维 4 倍，本文 §3.4 实测吻合）。多层上采样："it's possible for these stacked deconvolutions to cancel out artifacts, they often <strong>compound</strong>, creating artifacts on a variety of scales."</p>
+<p><strong>实验支持。</strong>一维与二维的可视化算例（把核权重按 stride 摊到输出上，观察重叠次数），以及若干 DCGAN 类模型的生成结果对比。提出替代方案 <em>resize-convolution</em>：先按规则插值放大，再卷积。</p>
+<p><strong>适用范围与局限（作者自己写明的）。</strong></p>
+<ul>
+<li><strong>「整除」必要非充分</strong>，原文逐字："models with even overlap often learn kernels that cause similar artifacts… the artifacts are still present in these models, although they seem milder." 本文 §3.6 给出了<em>为什么</em>：整除只消除直流不平衡，留下相位调制。</li>
+<li>作者<strong>不认为 resize-convolution 是终解</strong>："We don't necessarily think that either approach is the final solution to upsampling."</li>
+<li>关于插值方式，作者自述："We've had our best results with nearest-neighbor interpolation, and had difficulty making bilinear resize work." —— <strong>注意这与本文实验 B1 的结论（双线性在 Nyquist 处恰好为零，所以伪影最低）方向不完全一致。</strong>本文的实验是纯线性、无学习的；作者说的是<em>训练后</em>的效果。这两者不矛盾但也不等价，引用时不要互相覆盖。</li>
+<li><strong>这不是同行评审论文</strong>（Distill 是期刊式网络出版物，有编辑但非传统会议/期刊评审）。它是本领域引用最广的来源，但引用时应标注这一点。</li>
+<li>原文另有一节 <em>Artifacts in Gradients</em>：反向传播即转置卷积，梯度中也会出现棋盘格；并指出判别器首层的 stride-2 卷积会诱发频率 2 的伪影。</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div class="title">Checkerboard artifact free sub-pixel convolution / Super-Resolution without Any Checkerboard Artifacts</div>
+<div class="v">Aitken et al. arXiv 1707.02937 (2017) · Sugawara et al. ICIP 2018, arXiv 1806.02658</div>
+</div>
+<div class="body">
+<p><strong>现象。</strong>把「避免棋盘格」从经验规则变成可判定的条件。</p>
+<p><strong>解释。</strong>Aitken 等复述 Odena 的三来源，并提出 <em>convolution NN resize</em> 初始化，使 sub-pixel convolution 在初始化后立即无棋盘格。Sugawara 等把线性多速率系统的条件<strong>推广到非线性 CNN</strong>，给出可判定的避免条件。</p>
+<p><strong>实验支持。</strong>初始化后直接观察输出；在 MSE 与 perceptual loss 下报告「perfectly avoid」。</p>
+<p><strong>局限。</strong>「无棋盘格」是<em>单一指标</em>的成功 —— 它不保证感知质量或频谱一致性。Sugawara 等的结论范围限于其测试的超分任务与损失函数。本文没有逐字复核这两篇的全文（只读了摘要），标为 <span class="b medium">部分核实</span>。</p>
+</div>
+</div>
+
+<h3>6.2 频谱偏差线（注意：这些论文研究的是谱分布，不是棋盘格）</h3>
+
+<div class="card">
+<div class="ch">
+<div class="title">Watch Your Up-Convolution: CNN Based Generative Deep Neural Networks Are Failing to Reproduce Spectral Distributions</div>
+<div class="v">Durall, Keuper, Keuper · CVPR 2020, pp. 7890–7899 · arXiv 2003.01826</div>
+</div>
+<div class="body">
+<p><strong>现象。</strong>CNN 生成器无法复现自然图像的<strong>频谱分布</strong>，且该现象与架构无关，可用于检测 deepfake（最高 100% 精度）。</p>
+<p><strong>解释（摘要逐字）。</strong>"common up-sampling methods, i.e. known as up-convolution or transposed convolution, are causing the inability of such models to reproduce spectral distributions of natural training data correctly." 正文 Fig.5 逐字："Transposed convolutions add large amounts high frequency noise while interpolation based methods (up+conv) are lacking high frequencies."</p>
+<p><strong>实验支持。</strong>数据集：CelebA、Faces-HQ、FaceForensics++、DeepFakeDetection。架构：DCGAN、DRAGAN、LSGAN、WGAN-GP（全部用转置卷积上采样），对照 up+conv。度量：对 DFT 功率谱做 <strong>azimuthal integration</strong>（径向平均）得到一维谱（§2.1, Eq.2）。修复：加入 spectral regularization / spectral loss（对 AI 输出与真实均值做 BCE）。</p>
+<p><strong>适用范围与局限。</strong></p>
+<ul>
+<li><strong>全文不含 "checkerboard" 一词。</strong>它研究的是谱分布，<strong>不是</strong>棋盘格。把这篇当成「棋盘格的成因论文」是误引。</li>
+<li>它把谱偏差归因于转置卷积，但<strong>没有排除判别器侧</strong>的贡献 —— 而 Schwarz 等 2021 正是补上了这一刀（见下）。</li>
+<li>它用的度量是<strong>径向平均</strong>，会丢掉方向信息。棋盘格是方向性异常，径向平均把它抹平。所以这篇论文的度量本身<strong>不适合</strong>检测棋盘格。</li>
+<li>它提出的 spectral loss 是针对<em>谱分布一致性</em>的，摘要与全文都没有声称能消除棋盘格。</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div class="title">On the Frequency Bias of Generative Models</div>
+<div class="v">Schwarz, Liao, Geiger · NeurIPS 2021 · arXiv 2111.02447 <span class="b low">题录更正</span></div>
+</div>
+<div class="body">
+<p><strong>现象。</strong>GAN 生成的图像高频偏高，因此容易与真实图像区分。但<strong>解释存在分歧</strong>：多数工作归因于生成器，另一些指向判别器。作者同时独立评估 G 与 D。</p>
+<p><strong>解释（四条结论，摘要逐字）。</strong></p>
+<ol>
+<li>Different upsampling operations bias the generator towards different spectral properties.</li>
+<li><strong>Checkerboard artifacts introduced by upsampling cannot explain the spectral discrepancies alone as the generator is able to compensate for these artifacts.</strong></li>
+<li>The discriminator does not struggle with detecting high frequencies per se but rather struggles with <strong>frequencies of low magnitude</strong>.</li>
+<li>The downsampling operations in the discriminator <strong>can impair the quality of the training signal</strong> it provides.</li>
+</ol>
+<p>结论：现有反高频伪影的手段<strong>没有一个能完全解决</strong>谱伪影；作者主张改进<strong>判别器</strong>是关键。</p>
+<p><strong>实验支持。</strong>度量用 azimuthal average（归一化极坐标 r∈[0,1]）。数据集：Toy、CelebA(64²)、FFHQ(64²/1024²)、LSUN Cats(128²/256²)、AFHQ Dog(512²)。抗混叠对照：BlurPool（抗混叠）vs stride vs avgpool 下采样。关键阴性结果："none of the convolutional architectures with downsampling is able to provide artifact-free supervision" —— <strong>偏差在抗混叠之后仍然存在</strong>。</p>
+<p><strong>适用范围与局限。</strong></p>
+<ul>
+<li>术语上，作者明确用 <em>frequency bias</em> 区别于 Rahaman 的 <em>spectral bias</em>：后者在「输出样本」上评估、针对 1D 回归；他们是在单图全部像素上算谱。</li>
+<li>补充材料里承认径向平均会丢信息："the spectrum computation and the azimuthal integration <strong>discard information</strong>"。</li>
+<li>结论 2 是<strong>否定性</strong>的：它排除了「棋盘格 → 谱偏差」这条简化因果链，但没有给出谱偏差的完整替代解释。</li>
+<li>作者没有做「只改上采样、谱偏差是否收敛」的完整受控实验。</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div class="title">Fourier Spectrum Discrepancies in Deep Network Generated Images</div>
+<div class="v">Dzanic, Shah, Witherden · NeurIPS 2020, pp. 3022–3032 · arXiv 1911.06465</div>
+</div>
+<div class="body">
+<p><strong>现象。</strong>生成图在<strong>高频 Fourier 模态</strong>上存在系统性缺陷。</p>
+<p><strong>解释。</strong>把频谱差异当作可检测的指纹；给出修改生成图高频属性的方法。</p>
+<p><strong>实验支持。</strong>检测精度最高 <strong>99.2%</strong>，用 5000 张图、<strong>仅 8 个训练样本</strong>。使用 azimuthal average 降维为 <code>c(k_r)</code>，并称该降维 "without significant loss in information"。</p>
+<p><strong>局限与一个值得注意的分歧。</strong>这篇认为径向平均<strong>不丢重要信息</strong>，而 Schwarz 等承认它会丢信息。两篇结论方向相反。本文的立场：<strong>对棋盘格这种方向性异常，径向平均确实会丢信息</strong>（棋盘格的能量集中在对角线上，径向平均把它摊到一圈）—— 这一点本文在实验 C 里可以直观看到。所以引用时不要把 Dzanic 的这句话当作「径向平均够用」的普适依据。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div class="title">Leveraging Frequency Analysis for Deep Fake Image Recognition / Are GAN generated images easy to detect?</div>
+<div class="v">Frank et al. ICML 2020 (arXiv 2003.08685) · Gragnaniello et al. ICME 2021 (arXiv 2104.02617)</div>
+</div>
+<div class="body">
+<p><strong>现象。</strong>频域取证：GAN 图在频域有严重伪影，跨架构/数据集/分辨率一致，可用于检测。</p>
+<p><strong>解释。</strong>Frank 等：伪影由 upsampling 操作导致 —— 从 strided transposed conv 换成 nearest/bilinear 后，<em>图像域</em>伪影缓解，但<strong>频域伪影仍在</strong>（这是一个重要的细节：换上采样并不能消除频域指纹）。用 DCT 而非 FFT，mean DCT 谱为 10,000 张图平均。</p>
+<p><strong>Gragnaniello 等的关键逐字（这是本报告唯一找到的、明确描述「方向性谱峰」的表述）</strong>："regular patterns… artificial fingerprints… Such patterns also <strong>show themselves as peaks in the Fourier domain, not present in the spectral distribution of natural images</strong>. They clearly depend on the up-sampling operations." 同时作者保留了架构归因："networks with the same architecture, but trained on different data, also have different fingerprints, thus <strong>calling for more accurate explanations</strong>."</p>
+<p><strong>局限。</strong>Frank 等<strong>没有给出「峰值坐标 = f(stride)」的解析公式</strong>；本文 §3.5 给出的 1/stride 律来自本文自己的推导与实测，不是引自这两篇。</p>
+</div>
+</div>
+
+<h3>6.3 混叠与等变性线（与棋盘格是<em>不同</em>的问题）</h3>
+
+<div class="card">
+<div class="ch">
+<div class="title">Alias-Free Generative Adversarial Networks (StyleGAN3)</div>
+<div class="v">Karras, Aittala, Laine, Härkönen, Hellsten, Lehtinen, Aila · NeurIPS 2021 · arXiv 2106.12423</div>
+</div>
+<div class="body">
+<p><strong>现象。</strong>GAN 的合成过程<strong>不健康地依赖绝对像素坐标</strong>：细节「粘」在图像坐标上，而不是贴在物体表面上（texture sticking）。</p>
+<p><strong>解释（摘要逐字）。</strong>"We trace the root cause to careless signal processing that causes <strong>aliasing in the generator network</strong>." 全文（§1）给出<strong>两个</strong>来源：(1) 非理想上采样滤波器（nearest、bilinear、strided convolution）造成的像素网格残影；(2) <strong>逐点非线性（ReLU、swish）</strong>。机制：滤波器泄漏的像素网格信息在多个尺度上组合，使网络能够建立起「屏幕坐标固定」的纹理基。</p>
+<p><strong>修复。</strong>把信号视为连续域带限函数（Shannon–Nyquist 框架）；用 <em>filtered nonlinearity</em>（把 leaky ReLU 包在 upsample–LReLU–downsample 里，实测 m=2 足够）；输入用 Fourier features 替代学习常量；上采样改用 Kaiser 窗 sinc（n=6）。作者指出需要「over 100 dB attenuation」的滤波器。</p>
+<p><strong>指标。</strong>EQ-T / EQ-R，单位是 <strong>dB，越高越好</strong>。EQ-T = 对 synthesis network 的输入与输出施加随机平移后两组图像的 PSNR（I_max=2）；EQ-R 是旋转版本，角度取自 U(0°,360°)。它们衡量「网络在多大程度上真正实现了连续平移/旋转等变」。</p>
+<p><strong>适用范围与局限（非常重要）。</strong></p>
+<ul>
+<li><strong>全文不含 "checkerboard" 一词。</strong>它不声称修复棋盘格。这是本领域最常见的误引之一。</li>
+<li>它的成本很高：FID 与 StyleGAN2 相当，但需要严格的滤波设计与过采样（oversampling）。</li>
+<li>它解决的是<strong>等变性</strong>问题，而等变性 ≠ 频谱一致性。本文没有找到证据表明 StyleGAN3 的改动使径向平均谱更接近真实数据。</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div class="title">Making Convolutional Networks Shift-Invariant Again (BlurPool) / Analyzing and Improving the Style-Based Generator (StyleGAN2)</div>
+<div class="v">Zhang · ICML 2019 (arXiv 1904.11486) · Karras et al. CVPR 2020 (arXiv 1912.04958)</div>
+</div>
+<div class="body">
+<p><strong>BlurPool。</strong>现象：现代 CNN 不具平移不变性，小的输入平移会导致输出剧变。解释：max-pooling、strided-conv、average-pooling 都<strong>无视采样定理</strong>；标准信号处理做法是「下采样前先低通」。实验支持：ImageNet 分类精度提升 + 对输入扰动的稳定性/鲁棒性提升。作用范围：ResNet、DenseNet、MobileNet 等分类网络 —— <strong>摘要完全不涉及生成，全文无 GAN / checkerboard</strong>。局限：把它当作「抗混叠对 GAN 也有效」的依据是<em>外推</em>，不是论文结论。</p>
+<p><strong>StyleGAN2。</strong>现象：暴露并分析了 StyleGAN 的两个特征伪影 —— (a) AdaIN 归一化造成的 "water droplet / blob" 伪影；(b) progressive growing 造成的 "phase" 伪影（牙齿不随姿态移动，"stuck in place"）。解释（正文逐字）："forcing it to generate maximal frequency details… <strong>excessively high frequencies</strong> in the intermediate layers, <strong>compromising shift invariance [49]</strong>" —— 这里的 [49] 正是 Zhang 的 BlurPool。修复：改动<strong>架构与训练方法两者</strong>。所有上/下采样使用 bilinear。</p>
+<p><strong>局限。</strong>StyleGAN2 全文<strong>不含 "checkerboard" 与 "aliasing"</strong> 的讨论；它讲的 blob 与 phase 伪影都是<em>学出来的</em>（属分类表第 ④ 行），不是解析可预测的。这一篇是「伪影是生成器架构 + 训练共同产物」的最直接证据。</p>
+</div>
+</div>
+
+<h3>6.4 频域损失线</h3>
+
+<div class="card">
+<div class="ch">
+<div class="title">Focal Frequency Loss for Image Reconstruction and Synthesis</div>
+<div class="v">Jiang, Dai, Wu, Loy · ICCV 2021 · arXiv 2012.12821 <span class="b low">题录更正</span></div>
+</div>
+<div class="body">
+<p><strong>现象与解释。</strong>提出 focal frequency loss：自适应地聚焦「难合成」的频率分量、对容易的分量降权，与空间域损失互补。</p>
+<p><strong>实验支持（这篇是本组里唯一同时谈 checkerboard 与频谱的）。</strong>模型：vanilla AE、VAE、pix2pix、SPADE、StyleGAN2；7 个数据集（DTD、CelebA、CelebA-HQ、CMP Facades、edges→shoes、Cityscapes、ADE20K）；指标 FID/PSNR/SSIM/LPIPS/LFD。正文明确 "upsampling layers using transposed convolutions tend to produce checkerboard artifacts"；GAN(pix2pix) 频谱上有 "Unnatural periodic patterns"，与空间域 checkerboard 一致；并用 <strong>band-stop filter 实验</strong>证明「缺失某些频率」会直接产生可见棋盘格 —— 反过来说明「频段不能一刀切」。</p>
+<p><strong>适用范围与局限。</strong></p>
+<ul>
+<li>主 claim 是「提升重建/合成质量」，<strong>不是</strong>「消除伪影」。它没有做「伪影压制率 vs 细节保留率」的双指标报告。</li>
+<li>它降低的是某个频段的<em>能量</em>，不改变产生伪影的算子。按 §8 的判据，这属于「症状端」而非「成因端」。</li>
+<li>作者姓名任务书写错了（写成 Wang, Xu），实际是 Jiang, Dai, Wu, Loy。</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div class="title">Detecting and Simulating Artifacts in GAN Fake Images</div>
+<div class="v">Zhang et al. · WIFS 2019 (extended) · arXiv 1907.06515</div>
+</div>
+<div class="body">
+<p><strong>现象与解释（本文找到的最直接的「谱复制」解释）。</strong>理论上证明：<strong>zero-insertion upsampling 会把低分辨率谱<em>复制</em>到输出谱的高频段</strong>，因此伪影表现为频谱的 replication。转置卷积的核不保证低通，所以 checkerboard 残留；nearest-neighbor 的核是固定低通，消除得更好但不彻底。</p>
+<p><strong>实验支持。</strong>检测与模拟实验；并明确指出若低通滤波器移除过多高频，最终图像 "may become too blurry and thus easily distinguishable from the real images"。</p>
+<p><strong>局限与归属提醒。</strong>「zero-insertion → 频谱复制」本身是<strong>多速率信号处理的教科书内容</strong>，不是这篇论文的原创发现。这篇的贡献是把它明确应用到 GAN 伪影语境并给出模拟方法。引用时应写成「该文把教科书原理应用于 GAN 伪影」，而不是「该文发现了谱复制」。它同样<strong>没有给出 stride → 峰值位置的显式坐标公式</strong>。</p>
+</div>
+</div>
+
+<h3>6.5 谱偏差与训练动力学（背景线，非伪影成因）</h3>
+
+<div class="card">
+<div class="ch">
+<div class="title">On the Spectral Bias of Neural Networks / Fourier Features Let Networks Learn High Frequency Functions</div>
+<div class="v">Rahaman et al. ICML 2019 (arXiv 1806.08734) · Tancik et al. NeurIPS 2020 (arXiv 2006.10739)</div>
+</div>
+<div class="body">
+<p><strong>它们说了什么。</strong>深度 ReLU 网络<strong>偏好低频</strong>：低频成分先被拟合，高频成分更脆弱、对参数扰动更敏感。Tancik 等从 NTK 视角证明标准 MLP 在理论与实践上都学不到高频，用 Fourier feature 映射可调带宽。</p>
+<p><strong>为什么在这里要特别提醒。</strong>这两篇的<strong>研究对象是回归/拟合任务的 MLP</strong>（Rahaman 是 1D 回归），<strong>不涉及 GAN、不涉及棋盘格</strong>。Schwarz 等专门做了术语切割：他们用 <em>frequency bias</em> 而非 <em>spectral bias</em>，因为后者在「输出样本」上评估、与他们的设定不同。</p>
+<p><strong>可迁移性判定。</strong>「网络偏好低频」是一个<em>合理的类比背景</em>，但<strong>不能作为「GAN 为什么产生棋盘格」的证据</strong> —— 因为棋盘格是高频异常，而谱偏差的机制方向与之相反，且棋盘格在未训练时就存在（不需要学习）。本文的立场：把这两篇放在「背景」而不是「成因」。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch">
+<div class="title">Which Training Methods for GANs do actually Converge? / Towards Principled Methods for Training GANs / Combating Mode Collapse … Hessian Eigenvalues</div>
+<div class="v">Mescheder et al. ICML 2018 (arXiv 1801.04406) · Arjovsky &amp; Bottou ICLR 2017 (arXiv 1701.04862) · Durall et al. 2020 (arXiv 2012.09673)</div>
+</div>
+<div class="body">
+<p><strong>它们说了什么。</strong>Mescheder 等：在分布非绝对连续时，无正则的 GAN 训练<strong>不总收敛</strong>；给出原型反例（Dirac-GAN）；<strong>instance noise 与 zero-centered gradient penalty 收敛，而 WGAN 与 WGAN-GP（有限次 D 更新）不总收敛到均衡点</strong>。Arjovsky &amp; Bottou：梯度消失与不稳定性的理论分析。Durall 等 2020：mode collapse 与生成器 Hessian 的<strong>尖锐极小</strong>（sharp minima）相关，提出 nudged-Adam。</p>
+<p><strong>与伪影的关系（必须说清楚）。</strong>这些论文讨论的是<strong>收敛性与模式覆盖</strong>，<strong>没有一篇讨论像素级伪影形态</strong>。它们能解释的是分类表第 ⑥ 行（不规则破坏、样本间方差大），<strong>不能</strong>解释棋盘格 —— 因为棋盘格在训练前就存在。</p>
+<p><strong>一个未获证实的常见说法。</strong>「训练不稳定会加剧棋盘格」是合理猜测，但本文<strong>没有找到</strong>任何做时序（早期 vs 后期）伪影演化的论文。这属于阴性结论。</p>
+</div>
+</div>
+
+<h3>6.6 论文结论一览表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>论文</th><th>它解释的现象</th><th>归因于</th><th>关键实验证据</th><th>对棋盘格的适用性</th></tr></thead>
+<tbody>
+<tr><td>Odena et al. 2016 (Distill)</td><td>棋盘格</td><td>重叠不均匀 + 随机初始化 + 损失函数</td><td>1D/2D 重叠算例 + 模型输出对比</td><td><span class="b high">直接</span></td></tr>
+<tr><td>Durall et al. CVPR 2020</td><td>谱分布不一致</td><td>转置卷积上采样</td><td>4 数据集 × 4 架构，azimuthal 谱</td><td><span class="b low">不适用（全文无 checkerboard）</span></td></tr>
+<tr><td>Schwarz et al. NeurIPS 2021</td><td>谱偏差</td><td>G 与 D <strong>都有</strong>；D 对低幅度频率无力</td><td>独立评估 G/D；抗混叠后偏差仍在</td><td><span class="b medium">直接但否定性</span>（棋盘格不足以解释谱偏差）</td></tr>
+<tr><td>Karras et al. NeurIPS 2021</td><td>texture sticking</td><td>生成器内的 aliasing</td><td>EQ-T / EQ-R 等变指标</td><td><span class="b low">不适用（全文无 checkerboard）</span></td></tr>
+<tr><td>Zhang ICML 2019</td><td>平移不变性丧失</td><td>下采样未低通</td><td>ImageNet 精度 + 鲁棒性</td><td><span class="b low">不适用（不涉生成）</span></td></tr>
+<tr><td>Frank et al. ICML 2020</td><td>频域指纹</td><td>上采样操作</td><td>DCT 谱，跨架构一致；换上采样后频域伪影仍在</td><td><span class="b medium">间接</span></td></tr>
+<tr><td>Gragnaniello et al. ICME 2021</td><td>频域峰值</td><td>各架构特有的上采样</td><td>「自然图像谱中不存在的 peaks」</td><td><span class="b medium">间接但最接近</span></td></tr>
+<tr><td>Jiang et al. ICCV 2021</td><td>频率成分合成不良</td><td>损失设计</td><td>band-stop 实验直接产生棋盘格</td><td><span class="b medium">间接</span></td></tr>
+<tr><td>Zhang et al. WIFS 2019</td><td>伪影的谱复制</td><td>zero-insertion 上采样</td><td>理论推导 + 模拟</td><td><span class="b medium">间接（教科书原理的应用）</span></td></tr>
+<tr><td>StyleGAN2 CVPR 2020</td><td>blob / phase 伪影</td><td>AdaIN + progressive growing（<strong>架构与训练共同</strong>）</td><td>逐项消融</td><td><span class="b medium">同类但不同机制</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s7"><span class="num">7</span>实验：设计、代码与实测结果</h2>
+
+<div class="box teal">
+<div class="bt">本节所有数字都是<strong>实测值</strong>，不是预期值</div>
+本节五组实验全部已在本机跑通，下列数字直接来自程序输出。<strong>没有一条是「预期现象」被写成「实验结果」。</strong>凡属推断的地方都标了「推断」。完整脚本（约 400 行，纯 NumPy）见文末 §12 的附件路径；下面给出每个实验的核心代码，可单独复制运行。
+</div>
+
+<h3>7.0 环境与总览</h3>
+
+<pre><code>Python 3.13 · NumPy 2.5.3 · Matplotlib 3.11.2
+不依赖 PyTorch：转置卷积用显式双重循环实现，目的是让「重叠」这件事在代码里可见。
+（用 nn.ConvTranspose2d 也能复现同样结论，但循环版更能说明机制。）</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>实验</th><th>要证伪的假设</th><th>控制变量</th><th>核心指标</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong> 重叠不均匀</td><td>「棋盘格是学出来的」</td><td>核大小 k、stride s、padding p；输入固定为全 1</td><td>各相直流增益 max/min、增益图样周期、主导频率</td><td><span class="b high">证伪成功</span>：固定权重、无训练即出现，周期 = stride</td></tr>
+<tr><td><strong>B1</strong> 上采样算子对比</td><td>「各种上采样都会产生 Nyquist 伪影」</td><td>只换上采样算子，输入同一个平滑正弦</td><td>Nyquist 频段幅度 / 真实频段幅度</td><td><span class="b high">证伪成功</span>：转置卷积 0.328 vs resize+conv 0.002</td></tr>
+<tr><td><strong>B2</strong> 混叠</td><td>「下采样只是丢信息，不会造新结构」</td><td>是否先低通；抽取倍数 M=2</td><td>折叠后频率位置与幅度</td><td><span class="b high">证伪成功</span>：f=0.40 → 0.20，幅度 0.9999 → 0.0105</td></tr>
+<tr><td><strong>B4</strong> 调制律</td><td>「k % s == 0 就能消除伪影」</td><td>k∈{3,4}, s=2, p=1；扫输入频率 f₀</td><td>边带/载波比</td><td><span class="b high">证伪成功</span>：偶数核 DC 处为 0，但 f=0.25 处达 0.414</td></tr>
+<tr><td><strong>C</strong> 棋盘格频谱</td><td>「周期与谱峰位置无解析关系」</td><td>周期 p∈{8,16,32}、旋转 θ∈{0,30,45}°</td><td>最强峰坐标 vs 理论 (1/p, 1/p) 旋转 θ</td><td><span class="b high">理论吻合 5/5</span></td></tr>
+<tr><td><strong>D</strong> 真实细节 vs 伪影</td><td>「低通让图变平滑 = 伪影消除了」</td><td>滤波方式（全频段低通 vs 窄带陷波）</td><td>伪影压制率 <strong>与</strong> 边缘/纹理保留率</td><td><span class="b high">证伪成功</span>：低通 100% 压制时只剩 10% 边缘</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.1 实验 A：转置卷积的重叠不均匀</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">实验假设</div>
+H0：输出位置的直流增益与位置无关，因此棋盘格必须由训练产生。<br>
+H1：直流增益是位置的周期函数，周期 = stride，且不需训练。
+</div>
+<div class="mini">
+<div class="mt">控制变量与判据</div>
+输入固定为全 1（最平坦、最不含高频）。<br>只变 (k, s, p)。<br>判据：<code>g(o)</code> 是否非常数、周期是多少、主导频率是否为 1/s。<br><strong>能推翻 H1 的结果</strong>：所有配置的 <code>g(o)</code> 都恒为常数。
+</div>
+</div>
+
+<pre><code>import numpy as np
+
+def tconv1d(N, k, s, p, w=None):
+    """1D 转置卷积，输入全 1。返回 (输出长度, 重叠计数 c(o), 直流增益 g(o))。"""
+    if w is None:
+        w = np.ones(k) / k
+    out_len = (N - 1) * s - 2 * p + k
+    counts = np.zeros(out_len)
+    gain   = np.zeros(out_len)
+    for i in range(N):                 # 每个输入点
+        for j in range(k):             # 把核的 k 个权重摊出去
+            o = i * s - p + j          # 这就是「重叠」发生的唯一地方
+            if 0 &lt;= o &lt; out_len:
+                counts[o] += 1
+                gain[o]   += w[j]
+    return out_len, counts, gain
+
+for label, k, s, p in [("k=3 s=2 p=1", 3, 2, 1),
+                       ("k=4 s=2 p=1", 4, 2, 1),
+                       ("k=5 s=3 p=1", 5, 3, 1),
+                       ("k=6 s=3 p=1", 6, 3, 1)]:
+    L, cnt, g = tconv1d(40, k, s, p)
+    interior = g[k:-k]                       # 去掉边界，只看内部
+    d = interior - interior.mean()
+    G = np.abs(np.fft.rfft(d))
+    fpk = (1 + np.argmax(G[1:])) / len(interior) if G[1:].max() &gt; 1e-9 else 0.0
+    print("%-12s k%%s=%d  内部增益 max/min=%.3f  周期=%s  主导频率=%.4f  (理论 1/s=%.4f)"
+          % (label, k % s, interior.max() / interior.min(),
+             next((c for c in range(1, 17) if np.allclose(interior[:-c], interior[c:])), None),
+             min(fpk, 1 - fpk), 1.0 / s))</code></pre>
+
+<p><strong>实测输出：</strong></p>
+
+<div class="flow"><pre><code>k=3 s=2 p=1  k%s=1  内部增益 max/min=2.000  周期=2  主导频率=0.4932  (理论 1/s=0.5000)
+k=4 s=2 p=1  k%s=0  内部增益 max/min=1.000  周期=1  主导频率=0.0000  (理论 1/s=0.5000)
+k=5 s=3 p=1  k%s=2  内部增益 max/min=2.000  周期=3  主导频率=0.3364  (理论 1/s=0.3333)
+k=6 s=3 p=1  k%s=0  内部增益 max/min=1.000  周期=1  主导频率=0.0000  (理论 1/s=0.3333)</code></pre></div>
+
+<figure>
+<img src="assets_gan_artifacts/expA.png" alt="实验 A：转置卷积的重叠计数与直流增益图样">
+<figcaption><strong>实验 A 结果。</strong>上排：各输出位置接收到的输入贡献<em>个数</em>。下排：直流增益 <code>g(o)</code>，即「喂常数 1 时输出是什么」。k=3,s=2 时奇偶相增益为 1/3 与 2/3，比值 2.00，周期 2 —— 这就是棋盘格。k=5,s=3 的周期是 3，主导频率 0.3364 ≈ 1/3，验证「周期 = stride」。k=4,s=2 与 k=6,s=3 的内部增益完全平坦（比值 1.00），但<strong>边界仍有 2:1 的残余</strong>（图两端可见），因为 padding 无法消除边界处少收一个 tap 的事实。</figcaption>
+</figure>
+
+<div class="box good">
+<div class="bt">实验 A 的结论</div>
+H0 被证伪：<strong>在完全固定的权重、完全无训练的输入下，输出已经出现周期为 stride 的增益图样。</strong>所以任何「棋盘格是网络学出来的」解释都不充分。<br>
+同时 H1 得到细化：<em>整除只消除内部不平衡，边界残余仍在</em> —— 实测 k=4,s=2,p=1 内部比值 1.00，含边界比值 2.00。
+</div>
+
+<h3>7.2 实验 B：上采样、混叠与抗混叠</h3>
+
+<p>这一组是四个实验，因为「换掉上采样方式」同时改动了三件事，必须拆开测。</p>
+
+<h4>B1：只换上采样算子，输入保持完全不变</h4>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">假设与判据</div>
+H0：不同上采样算子产生的 Nyquist 能量相当。<br>
+判据：喂一个<strong>本身几乎不含高频</strong>的平滑正弦（f₀=0.05），测量输出在 Nyquist 频段的幅度。<strong>任何出现在这里的能量都是算子自己造出来的</strong>。<br><strong>能推翻的结果</strong>：所有算子的 Nyquist 幅度同量级。
+</div>
+<div class="mini">
+<div class="mt">控制变量</div>
+唯一变量 = 上采样算子（5 个）。输入、信号长度、测量频段全部相同。
+</div>
+</div>
+
+<pre><code>import numpy as np
+
+def conv1d_same(x, h):
+    pad = len(h) // 2
+    return np.convolve(np.pad(x, pad), h, mode="valid")[:len(x)]
+
+def up2_bilinear(x):
+    y = np.zeros(2 * len(x))
+    y[0::2] = x
+    y[1::2] = 0.5 * (x + np.concatenate([x[1:], x[-1:]]))
+    return y
+
+def gaussian_kernel(sigma):
+    r = max(1, int(np.ceil(3 * sigma)))
+    t = np.arange(-r, r + 1)
+    h = np.exp(-t**2 / (2 * sigma**2))
+    return h / h.sum()
+
+def tconv1d_apply(x, k, s, p, w):
+    L = (len(x) - 1) * s - 2 * p + k
+    y = np.zeros(L)
+    for i in range(len(x)):
+        for j in range(k):
+            o = i * s - p + j
+            if 0 &lt;= o &lt; L:
+                y[o] += x[i] * w[j]
+    return y
+
+def spec(x, nfft=8192):
+    x = np.asarray(x, float) - np.mean(x)
+    w = np.hanning(len(x))
+    return (np.fft.rfftfreq(nfft),
+            np.abs(np.fft.rfft(x * w, nfft)) * 2.0 / (len(x) * w.mean()))
+
+n, f0 = 128, 0.05
+x = np.sin(2 * np.pi * f0 * np.arange(n))
+w3 = np.ones(3) / 3
+
+ops = {
+    "bilinear":               up2_bilinear(x),
+    "resize+conv(3tap)":      conv1d_same(up2_bilinear(x), w3),
+    "resize+LP+conv":         conv1d_same(conv1d_same(up2_bilinear(x), gaussian_kernel(1.0)), w3),
+    "tconv k=3 s=2 p=1":      tconv1d_apply(x, 3, 2, 1, w3),
+    "tconv k=4 s=2 p=1":      tconv1d_apply(x, 4, 2, 1, np.ones(4) / 4),
+}
+for name, y in ops.items():
+    f, A = spec(y)
+    true_a = A[np.argmin(np.abs(f - f0 / 2))]
+    nyq_a  = A[(f &gt;= 0.47) &amp; (f &lt;= 0.5)].max()
+    print("%-22s 真实频段=%.4f  Nyquist频段=%.5f  比值=%.4f"
+          % (name, true_a, nyq_a, nyq_a / max(true_a, 1e-12)))</code></pre>
+
+<p><strong>实测输出：</strong></p>
+
+<div class="flow"><pre><code>bilinear              真实频段=0.9938  Nyquist频段=0.00616  比值=0.0062
+resize+conv(3tap)     真实频段=0.9857  Nyquist频段=0.00200  比值=0.0020
+resize+LP+conv        真实频段=0.9736  Nyquist频段=0.00003  比值=0.0000
+tconv k=3 s=2 p=1     真实频段=0.4959  Nyquist频段=0.16255  比值=0.3278
+tconv k=4 s=2 p=1     真实频段=0.4923  Nyquist频段=0.03875  比值=0.0787</code></pre></div>
+
+<h4>B2：混叠 —— 下采样会造出原始信号里不存在的新结构</h4>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">假设与判据</div>
+H0：下采样只丢信息，不造新结构。<br>
+判据：输入一个高于新 Nyquist 的纯音（f=0.40），下采样 2 倍（新 Nyquist=0.25）。按公式预测折叠频率 <code>fold(0.40×2)=0.20</code>，再看实测。<br><strong>能推翻的结果</strong>：输出在 0.20 处没有能量。
+</div>
+<div class="mini">
+<div class="mt">控制变量</div>
+唯一变量 = 下采样前是否低通。抽取倍数、输入、测量方式相同。
+</div>
+</div>
+
+<pre><code>fa = 0.40
+t  = np.arange(512)
+xa = np.sin(2 * np.pi * fa * t)
+
+naive = xa[0::2]                                      # 直接抽
+aa    = conv1d_same(xa, gaussian_kernel(1.2))[0::2]   # 先低通再抽
+
+true_alias = abs((fa * 2) % 1.0)
+true_alias = min(true_alias, 1 - true_alias)          # fold(0.80) = 0.20
+print("理论折叠频率 = %.4f" % true_alias)
+for name, y in [("stride-2 无抗混叠", naive), ("先低通再 stride-2", aa)]:
+    f, A = spec(y)
+    print("%-20s 在 %.3f 处的幅度 = %.5f" % (name, true_alias, A[np.argmin(np.abs(f - true_alias))]))</code></pre>
+
+<p><strong>实测输出：</strong></p>
+
+<div class="flow"><pre><code>理论折叠频率 = 0.2000
+stride-2 无抗混叠      在 0.200 处的幅度 = 0.99990
+先低通再 stride-2      在 0.200 处的幅度 = 0.01051
+                                      → 压低 95.1 倍 = 39.6 dB</code></pre></div>
+
+<div class="box warn">
+<div class="bt">B2 最重要的一条观察</div>
+输入是 <strong>0.40 的高频</strong>，输出是 <strong>0.20 的低频</strong>。输出看起来是<em>平缓的波纹</em>，不是噪点。所以混叠伪影在空间域<strong>长得像真实结构</strong>，而不是像故障 —— 这是它最难被发现、也最容易被误当成「纹理」的原因。
+</div>
+
+<h4>B3：卷积核的频率响应（为什么 resize+conv 天然免疫）</h4>
+
+<pre><code>fgrid = np.linspace(0, 0.5, 1001)
+for name, h in [("box 3-tap", w3),
+                ("bilinear 2-tap", np.array([0.5, 0.5])),
+                ("gauss sigma=1.0", gaussian_kernel(1.0)),
+                ("gauss sigma=1.2", gaussian_kernel(1.2))]:
+    H = np.abs(np.exp(-2j * np.pi * fgrid[:, None] * np.arange(len(h))[None, :]) @ h)
+    print("%-18s |H(0)|=%.3f  |H(0.25)|=%.4f  |H(0.5)|=%.5f"
+          % (name, H[0], H[np.argmin(np.abs(fgrid - 0.25))], H[-1]))</code></pre>
+
+<div class="flow"><pre><code>box 3-tap          |H(0)|=1.000  |H(0.25)|=0.3333  |H(0.5)|=0.33333
+bilinear 2-tap     |H(0)|=1.000  |H(0.25)|=0.7071  |H(0.5)|=0.00000   ← 恰好为零
+gauss sigma=1.0    |H(0)|=1.000  |H(0.25)|=0.2910  |H(0.5)|=0.01412
+gauss sigma=1.2    |H(0)|=1.000  |H(0.25)|=0.1692  |H(0.5)|=0.00175</code></pre></div>
+
+<p>双线性核在 Nyquist 处<strong>恰好为零</strong>。这解释了 B1 里 resize+conv 的 0.0020 —— 它不是「运气好」，而是插值核的代数性质。而转置卷积的核是<strong>学出来的</strong>，<strong>不保证低通</strong>，所以 Nyquist 处的增益没有任何约束。</p>
+
+<h4>B4：调制律 —— 为什么整除不充分</h4>
+
+<p>这是本报告最核心的定量实验。测量「一阶边带 / 载波」的幅度比，扫输入频率。</p>
+
+<pre><code>def sideband_ratio(k, s, p, f0, n=4096):
+    x = np.sin(2 * np.pi * f0 * np.arange(n))
+    y = tconv1d_apply(x, k, s, p, np.ones(k) / k)
+    f, A = spec(y, 32768)
+    f_out   = f0 / s
+    carrier = A[np.argmin(np.abs(f - f_out))]
+    best = 0.0
+    for cand in (f_out + 1.0 / s, abs(f_out - 1.0 / s)):
+        c = cand if cand &lt;= 0.5 else abs(cand - 1.0)
+        best = max(best, A[np.argmin(np.abs(f - c))])
+    return best / max(carrier, 1e-12)
+
+print("  f0    k=3,s=2 奇数核实测   理论 m=(2cos(pi f)-1)/(2cos(pi f)+1)   k=4,s=2 偶数核实测   理论 0.5*tan(pi f)")
+for f0 in [0.01, 0.05, 0.10, 0.15, 0.20, 0.24, 0.25]:
+    r3 = sideband_ratio(3, 2, 1, f0)
+    r4 = sideband_ratio(4, 2, 1, f0)
+    m3 = (2 * np.cos(np.pi * f0) - 1) / (2 * np.cos(np.pi * f0) + 1)
+    m4 = 0.5 * np.tan(np.pi * f0)
+    print("%5.2f   %10.4f %18.4f %18.4f %18.4f" % (f0, r3, m3, r4, m4))</code></pre>
+
+<p><strong>实测输出：</strong></p>
+
+<div class="flow"><pre><code>  f0    k=3,s=2 奇数核实测   理论 m=(2cos(pi f)-1)/(2cos(pi f)+1)   k=4,s=2 偶数核实测   理论 0.5*tan(pi f)
+ 0.01         0.3331             0.3331               0.0157             0.0157
+ 0.05         0.3278             0.3278               0.0787             0.0792
+ 0.10         0.3108             0.3108               0.1584             0.1625
+ 0.15         0.2811             0.2811               0.2401             0.2548
+ 0.20         0.2361             0.2361               0.3249             0.3633
+ 0.24         0.1863             0.1863               0.3959             0.4695
+ 0.25         0.1716             0.1716               0.4142             0.5000
+
+最大 |实测 - 理论|：  奇数核 0.00000（全频段精确）
+                     偶数核 0.08579（f0 &lt;= 0.15 时仅 0.0154）</code></pre></div>
+
+<figure>
+<img src="assets_gan_artifacts/expB4.png" alt="实验 B4：奇数核与偶数核的调制律">
+<figcaption><strong>实验 B4 结果。</strong>左：调制深度随输入频率的变化。红色圆点 = 奇数核（k=3,s=2）实测，红实线 = 理论 <code>m=(2cosπf−1)/(2cosπf+1)</code>，<strong>七个频点全部落在线上</strong>，且存在 1/3 的下界（虚线）—— 意味着平坦区域永远有棋盘格。绿色方点 = 偶数核（k=4,s=2）实测，绿实线 = <code>0.5·tan(πf)</code>；低频精确，f→0.25 时理论高估（0.500 vs 实测 0.414）。右：两相的相对增益。奇数核在 DC 处就是 1.33 / 0.67 的不平衡；偶数核两相增益恒等，所以 DC 处无伪影。</figcaption>
+</figure>
+
+<div class="box stop">
+<div class="bt">B4 的结论：这就是「整除不充分」的定量证明</div>
+<strong>奇数核</strong>（k % s = 1）：伪影是<strong>幅度调制</strong>，调制指数在 f→0 时趋于 <strong>1/3</strong> 并<em>永不为零</em>。所以平坦区域一定有棋盘格 —— 这解释了为什么棋盘格在天空、皮肤、背景这些低纹理区域最显眼。<br><br>
+<strong>偶数核</strong>（k % s = 0）：伪影是<strong>相位调制</strong>，f→0 时<em>精确为零</em>，随频率增长（实测 f=0.25 时 0.414）。所以它<strong>在平滑测试图上看起来「修好了」，一上真实数据就在纹理区域露出来</strong>。<br><br>
+这就是 Odena 原文说的 "the artifacts are still present in these models, although they seem milder" 的数学内容 —— 本文给出了那个「milder」的解析形式。
+</div>
+
+<h3>7.3 实验 C：人为构造棋盘格并分析频谱</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">假设与判据</div>
+H0：周期纹理的谱峰位置与周期、方向没有简单解析关系。<br>
+判据：构造周期 p、旋转 θ 的二值棋盘格，做二维 FFT，把最强峰的坐标与理论 <code>(±1/p, ±1/p)</code> 旋转 θ 对比。<br><strong>能推翻的结果</strong>：峰坐标与理论不符，或峰位置不随 p、θ 规律变化。
+</div>
+<div class="mini">
+<div class="mt">控制变量</div>
+图像尺寸固定 256×256。只变周期 p∈{8,16,32} 与旋转 θ∈{0,30,45}°。
+</div>
+</div>
+
+<pre><code>import numpy as np
+
+def checkerboard(H, W, period, theta_deg=0.0):
+    """周期为 period 像素、旋转 theta_deg 度的二值棋盘格。"""
+    yy, xx = np.mgrid[0:H, 0:W]
+    th = np.deg2rad(theta_deg)
+    u =  xx * np.cos(th) + yy * np.sin(th)
+    v = -xx * np.sin(th) + yy * np.cos(th)
+    return np.sign(np.sin(2 * np.pi * u / period) * np.sin(2 * np.pi * v / period))
+
+H = W = 256
+for period, theta in [(8, 0), (16, 0), (32, 0), (16, 45), (16, 30)]:
+    img = checkerboard(H, W, period, theta)
+    mag = np.log1p(np.abs(np.fft.fftshift(np.fft.fft2(img - img.mean()))))
+    mc = mag.copy()
+    mc[125:132, 125:132] = 0                      # 挖掉直流附近
+    py, px = np.unravel_index(np.argmax(mc), mag.shape)
+    du, dv = (px - 128) / W, (py - 128) / H       # cycles/pixel
+
+    th = np.deg2rad(theta)                        # 理论：基波波矢 (1/p, 1/p) 旋转 theta
+    kx, ky = 1.0 / period, 1.0 / period
+    ex =  kx * np.cos(th) - ky * np.sin(th)
+    ey =  kx * np.sin(th) + ky * np.cos(th)
+    print("period=%2d theta=%2d  实测峰=(%+.4f,%+.4f)  理论=(%+.4f,%+.4f)"
+          % (period, theta, du, dv, ex, ey))</code></pre>
+
+<p><strong>实测输出（5/5 与理论吻合）：</strong></p>
+
+<div class="flow"><pre><code>period= 8 theta= 0   实测峰=(-0.1250,-0.1250)  理论=(+0.1250,+0.1250)   |k| 0.1768 = 0.1768
+period=16 theta= 0   实测峰=(-0.0625,-0.0625)  理论=(+0.0625,+0.0625)   |k| 0.0884 = 0.0884
+period=32 theta= 0   实测峰=(-0.0312,-0.0312)  理论=(+0.0312,+0.0312)   |k| 0.0442 = 0.0442
+period=16 theta=45   实测峰=(+0.0000,-0.0898)  理论=(+0.0000,+0.0884)   |k| 0.0898 = 0.0884
+period=16 theta=30   实测峰=(-0.0234,-0.0859)  理论=(+0.0229,+0.0854)   |k| 0.0891 = 0.0884</code></pre></div>
+
+<figure>
+<img src="assets_gan_artifacts/expC.png" alt="实验 C：不同周期与方向的棋盘格及其 FFT 幅度谱">
+<figcaption><strong>实验 C 结果。</strong>上排是五种棋盘格（周期 8/16/32 px，旋转 0°/45°/30°），下排是对应的 log 幅度谱，绿圈标出最强峰。三件事可以直接读出来：<strong>(1) 周期越大，峰离中心越近</strong>（p=8 的峰在 0.125，p=32 的峰在 0.031）—— 峰到中心的<em>半径</em>由周期决定；<strong>(2) 旋转图案会旋转峰的位置</strong>—— θ=0° 的峰在对角线上（±1/p, ±1/p），θ=45° 的峰转到坐标轴上（0, ±√2/p）；<strong>(3) 能量高度集中</strong>—— 整幅图的信息只落在几个针尖上，这与真实纹理弥散的谱形成鲜明对比。</figcaption>
+</figure>
+
+<div class="box key">
+<div class="bt">实验 C 直接回答了任务书问题 3.6 与 3.9</div>
+<strong>为什么棋盘格在频谱里表现为特定方向的异常峰？</strong>因为它是一个二维可分离的周期函数 <code>sign(sin(u)·sin(v))</code>，其基波波矢是 <code>(1/p, 1/p)</code> 再按 θ 旋转。这不是「经验观察」，而是可以逐点预测的。<br><br>
+<strong>为什么只匹配径向平均谱会漏掉棋盘格？</strong>因为径向平均把「角度」这个维度积分掉了。棋盘格的能量集中在<em>两个特定角度</em>上；把它绕一圈平均，这几个尖峰被摊薄到整圈里，就淹没在真实纹理的弥散能量中。Schwarz 等在补充材料里承认该操作会 "discard information"，本文实验 C 让这个「丢掉的信息是什么」变得可见 —— <strong>丢掉的就是方向</strong>。
+</div>
+
+<h3>7.4 实验 D：验证伪影与真实高频细节之间的区别</h3>
+
+<p>这个实验直接回答任务书问题 3.8、3.9 和第六节的问题「如果频谱更接近真实图像但细节被抹平了，如何判断」。</p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">构造的测试图</div>
+把三样东西叠在一起：<br>
+① <strong>真实边缘</strong>：一个圆盘；<br>
+② <strong>真实细节</strong>：频域环带内的<em>非周期</em>噪声（真正的纹理）；<br>
+③ <strong>周期性伪影</strong>：周期 4 px 的棋盘格（对应 stride-2 上采样）。<br>
+三者都落在高频区，所以任何「高频操作」都会同时影响它们。
+</div>
+<div class="mini">
+<div class="mt">三个指标（必须同时报）</div>
+① <strong>伪影峰幅度</strong>：伪影的四个谱峰处的能量；<br>
+② <strong>边缘锐度</strong>：梯度幅值的最大值；<br>
+③ <strong>纹理能量</strong>：频域环带内的能量。<br>
+<strong>能推翻「低通有效」的结果</strong>：低通在把 ① 压到 0 的同时，② ③ 仍然保持高位。
+</div>
+</div>
+
+<pre><code>import numpy as np
+H = W = 256
+yy, xx = np.mgrid[0:H, 0:W]
+rng = np.random.default_rng(0)
+
+disc = (((xx - 128)**2 + (yy - 128)**2) &lt; 70**2).astype(float)        # ① 真实边缘
+Nf   = np.fft.fftshift(np.fft.fft2(rng.normal(size=(H, W))))          # ② 真实细节
+rr   = np.hypot(xx - 128, yy - 128)
+band = ((rr &gt; 60) &amp; (rr &lt; 110)).astype(float)                         #   频域环带
+tex  = np.real(np.fft.ifft2(np.fft.ifftshift(Nf * band)))
+tex /= (tex.std() + 1e-9)
+
+PERIOD = 4
+chk  = checkerboard(H, W, PERIOD)                                     # ③ 周期伪影
+noisy = 0.9 * disc + 0.25 * tex + 0.35 * chk
+pk = W // PERIOD                                                      # 理论峰偏移 = 64
+
+def metrics(img):
+    mag = np.abs(np.fft.fftshift(np.fft.fft2(img - img.mean())))
+    peak = max(mag[128+dy-2:128+dy+3, 128+dx-2:128+dx+3].max()
+               for dy in (-pk, pk) for dx in (-pk, pk))               # ① 伪影峰
+    gy, gx = np.gradient(img)
+    edge = float(np.hypot(gx, gy).max())                              # ② 边缘锐度
+    tex_e = float(np.sqrt((mag * band)**2).sum())                     # ③ 纹理能量
+    return peak, edge, tex_e
+
+# 方法 1：全频段高斯低通
+for sigma in [0.5, 1.0, 2.0, 4.0]:
+    h = gaussian_kernel(sigma)
+    y = np.apply_along_axis(lambda r: conv1d_same(r, h), 1, noisy)
+    y = np.apply_along_axis(lambda r: conv1d_same(r, h), 0, y)
+    print("低通 sigma=%.1f  " % sigma, ["%.1f" % v for v in metrics(y)])
+
+# 方法 2：只在伪影谱峰处做窄带陷波（不知道图像内容，只知道 stride=2 / 周期=4）
+F = np.fft.fftshift(np.fft.fft2(noisy)); F2 = F.copy()
+for dy in (-pk, pk):
+    for dx in (-pk, pk):
+        F2[128+dy-4:128+dy+5, 128+dx-4:128+dx+5] = 0
+print("窄带陷波       ", ["%.1f" % v for v in metrics(np.real(np.fft.ifft2(np.fft.ifftshift(F2))))])</code></pre>
+
+<p><strong>实测结果（归一化到受污染输入）：</strong></p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>方法</th><th>伪影压制率</th><th>真实边缘保留率</th><th>真实纹理保留率</th><th>判断</th></tr></thead>
+<tbody>
+<tr><td>全频段低通 σ=0.5</td><td>38.3%</td><td>58.4%</td><td>65.9%</td><td><span class="b low">伪影没压下去</span></td></tr>
+<tr><td>全频段低通 σ=1.0</td><td>91.5%</td><td>24.8%</td><td>12.6%</td><td><span class="b low">代价过高</span></td></tr>
+<tr><td>全频段低通 σ=2.0</td><td><strong>100.0%</strong></td><td><strong>10.1%</strong></td><td><strong>0.4%</strong></td><td><span class="b bad">用细节换伪影</span></td></tr>
+<tr><td>全频段低通 σ=4.0</td><td>100.0%</td><td>5.2%</td><td>0.1%</td><td><span class="b bad">图像已废</span></td></tr>
+<tr><td><strong>窄带陷波（只知道 stride=2）</strong></td><td><strong>100.0%</strong></td><td><strong>97.5%</strong></td><td><strong>97.2%</strong></td><td><span class="b high">同时达成</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<figure>
+<img src="assets_gan_artifacts/expD.png" alt="实验 D：全频段低通与窄带陷波的对比">
+<figcaption><strong>实验 D 结果。</strong>第 1 列：干净内容（圆盘边缘 + 真实非周期纹理）。第 2 列：叠加了周期 4 px 的棋盘格，频谱四角出现四个亮针。第 3 列：全频段低通 σ=2.0 —— 伪影确实消失了，但<strong>圆盘边缘变得模糊、真实纹理完全被抹掉</strong>，频谱上所有高频都被削平。第 4 列：窄带陷波（只掐掉那四个谱峰，位置由 stride=2 推出，不需要知道图像内容）—— <strong>伪影同样消失，而边缘与纹理基本原样保留</strong>。这张图是「看起来更平滑 ≠ 伪影消除了」的直接视觉证据。</figcaption>
+</figure>
+
+<div class="box good">
+<div class="bt">实验 D 的三条可操作结论</div>
+<ol style="margin-bottom:0">
+<li><strong>必须同时报两个数字。</strong>「伪影压制率」和「真实细节保留率」。只报前者是自证。本文给出的判据：一个方法要算有效，应在伪影压制率 ≥ 95% 的同时，边缘与纹理保留率都 ≥ 90%。</li>
+<li><strong>伪影的位置可以从架构推出来，不必「猜」。</strong>本例中陷波位置完全由 <code>stride=2 → 周期 2</code>（或本实验用的周期 4）推出，<em>没有</em>使用任何关于图像内容的信息，效果与「先知位置」的 oracle 陷波完全一致（两者都是 100.0% / 97.5% / 97.2%）。这是本报告对后续研究最有操作价值的一条：<strong>结构伪影是「已知频率」的，可以定点清除。</strong></li>
+<li><strong>但这一条有明确边界</strong>：只有<em>结构成因</em>（分类表第 ① 行）的伪影才有已知的、固定的频率。混叠（②）的频率随内容变化，学出来的纹理（④）的频率由训练决定 —— 对这两类，定点陷波不成立。所以<strong>先用实验 A/B 判定成因，再决定能不能用陷波</strong>。</li>
+</ol>
+</div>
+
+<h3>7.5 五组实验合起来能证伪什么、不能证伪什么</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>已经被实验证伪的说法</th><th>由哪个实验</th></tr></thead>
+<tbody>
+<tr><td>「棋盘格是网络学出来的 / 是训练问题」</td><td>A：固定权重、无训练即出现</td></tr>
+<tr><td>「所有上采样方式都会产生同量级的 Nyquist 伪影」</td><td>B1：0.328 vs 0.002，差两个数量级</td></tr>
+<tr><td>「下采样只丢信息，不造新结构」</td><td>B2：0.40 → 0.20，且幅度接近 1.0</td></tr>
+<tr><td>「k % s == 0 就能消除棋盘格」</td><td>B4：DC 处消除，f=0.25 处仍有 0.414</td></tr>
+<tr><td>「周期纹理的谱峰位置没有解析规律」</td><td>C：5/5 与理论吻合</td></tr>
+<tr><td>「图像变平滑 = 伪影被消除」</td><td>D：100% 压制时只剩 10.1% 边缘</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">这些实验<strong>不能</strong>证伪什么（诚实边界）</div>
+<ul style="margin-bottom:0">
+<li><strong>不能证明真实 GAN 的伪影主要来自哪一条机制。</strong>本节的实验全是线性、无训练、无判别器的合成实验。它们证明的是「这些机制<em>可以</em>产生这类伪影」，<strong>不是</strong>「真实 GAN 的伪影<em>就是</em>这个机制」。要做后者，必须在真实架构上做逐层消融。</li>
+<li><strong>不能证明非线性会怎样改变结论。</strong>ReLU、归一化、注意力都会改变频谱。StyleGAN3 明确指出逐点非线性本身就是 aliasing 的来源之一 —— 本节的实验完全没有覆盖这一条。</li>
+<li><strong>不能证明判别器的贡献有多大。</strong>判别器侧成因（分类表第 ⑤ 行）只能通过「固定 G、换 D」的对照实验来分离，本节未做。</li>
+<li><strong>不能证明陷波在真实图像上无害。</strong>实验 D 的「真实细节」是合成的非周期噪声，不是真实的病理纹理。真实纹理若恰好含有与伪影同频的成分，陷波会连带伤害它 —— 这一点在病理图像上尤其需要警惕（细胞核边缘、腺体边界都富含高频）。</li>
+</ul>
+</div>
+
+<h2 id="s8"><span class="num">8</span>伪影成因的因果关系图</h2>
+
+<p>任务书给出了一个五层框架，并要求<strong>不要预先认定所有箭头都成立</strong>。这一节把每个箭头都标上证据等级。</p>
+
+<h3>8.1 分层框架与证据等级</h3>
+
+<div class="flow"><pre><code>  L1  网络结构与参数配置
+      │  转置卷积 / stride / kernel size / padding / 上采样方式
+      │  判别器下采样方式 / 感受野 / 归一化
+      │
+      │  ◀── 箭头 ①：证据【强】。本文实验 A/B 实测。线性、确定性、可解析。
+      ▼
+  L2  卷积贡献分布、采样与滤波行为
+      │  · 多相增益不平衡 g(o)  ──→ 周期 = stride 的增益图样
+      │  · 下采样混叠 f'=fold(f·M) ──→ 折叠出的假频率
+      │  · 核频率响应 |H(f)| 形状  ──→ 频段增益不均
+      │
+      │  ◀── 箭头 ②：证据【强，但只到「可以」为止】。
+      │      实验 A/B 证明「L1 能产生 L2 的这些性质」；
+      │      但【没有】证明「真实 GAN 的伪影就是由这些性质主导」。
+      ▼
+  L3  特征与图像的频率响应
+      │  中间层特征谱 / 输出图谱 / 与真实数据谱的差异
+      │
+      │  ◀── 箭头 ③：证据【弱，且被论文明确削弱】。
+      │      Schwarz 等结论 2 逐字：棋盘格「cannot explain the spectral
+      │      discrepancies alone as the generator is able to compensate」。
+      │      也就是说 G 可以【主动补偿】L2 造成的问题，
+      │      所以 L2 → L3 这条箭头【不必然成立】。
+      ▼
+  L4  生成器与判别器的对抗优化
+      │  · G 找能骗过 D 的图样
+      │  · D 对「低幅度频率」无力（Schwarz 结论 3）
+      │  · D 里的下采样损害训练信号（Schwarz 结论 4）
+      │  · 不收敛 / 振荡 / 模式崩溃（Mescheder 等）
+      │
+      │  ◀── 箭头 ④：证据【强】。StyleGAN2 的 blob/phase 伪影是
+      │      「架构 + 训练方法」共同产物，有逐项消融。
+      ▼
+  L5  输出图像的空间伪影与频谱异常
+</code></pre></div>
+
+<div class="box warn">
+<div class="bt">关键：箭头 ③ 是整条链上最脆弱的一环</div>
+很多人默认「结构问题 → 频谱问题 → 可见伪影」是一条必通的链。但<strong>Schwarz 等（NeurIPS 2021）明确否定了中间这一环</strong>：生成器能够补偿上采样带来的棋盘格，所以棋盘格与频谱偏差<strong>可以解耦</strong>。
+<br><br><strong>实践含义</strong>：如果你观察到「有棋盘格」+「频谱不对」，<em>不能</em>推断前者导致后者。要分别诊断，分别处理。
+</div>
+
+<h3>8.2 三个「已经比较确定」的机制</h3>
+
+<div class="grid2">
+<div class="mini good">
+<div class="mt">① 转置卷积的多相增益不平衡</div>
+<strong>证据等级：强（解析 + 实测）。</strong>
+<br>周期 = stride，频率 = 1/s；二维不均匀度被平方（实测 2:1 → 4:1）；整除只消除 DC 不平衡（实测 2.00 → 1.00），留下随频率增长的相位调制（实测 0.414 @ f=0.25）。
+<br><span class="small">来源：Odena et al. Distill 2016 + 本文 §3 推导与实验 A/B4。</span>
+</div>
+<div class="mini good">
+<div class="mt">② 混叠产生假的低频</div>
+<strong>证据等级：强（解析 + 实测）。</strong>
+<br>下采样前不低通，高于新 Nyquist 的频率折叠成低频（实测 0.40 → 0.20），幅度几乎不衰减（0.9999）。抗混叠可压低 39.6 dB。信号处理里这是教科书结论，不是有争议的研究问题。
+<br><span class="small">来源：采样定理 + 本文实验 B2；Zhang ICML 2019 把它引入 CNN 语境。</span>
+</div>
+<div class="mini good">
+<div class="mt">③ 判别器的频率盲区</div>
+<strong>证据等级：强（论文受控实验）。</strong>
+<br>判别器不是「看不见高频」，而是<strong>处理不了低幅度的频率</strong>；且判别器里的下采样会损害训练信号。加抗混叠后偏差<strong>仍然存在</strong>。
+<br><span class="small">来源：Schwarz, Liao, Geiger, NeurIPS 2021，四条结论之 3、4。</span>
+</div>
+<div class="mini bad">
+<div class="mt">④ aliasing 导致棋盘格</div>
+<strong>证据等级：无（阴性结论）。</strong>
+<br>本文的文献核验<strong>没有找到任何一篇论文用 aliasing 解释棋盘格</strong>。StyleGAN3（aliasing 的主论文）全文不含 "checkerboard"；Distill（棋盘格的主论文）全文不含 "aliasing"。
+<br><strong>这是两条几乎不相交的因果链。</strong>把它们混为一谈是本领域最常见的误引。
+</div>
+</div>
+
+<h3>8.3 五个「如果……那么」的完整回答</h3>
+
+<div class="card">
+<div class="ch"><div class="title">Q1 如果棋盘格在随机初始化或简单固定权重下就能产生，说明了什么？</div></div>
+<div class="body">
+<p><strong>说明了：它不是学习现象，而是算子的几何性质。</strong>本文实验 A 在<em>完全固定</em>的均匀权重、<em>完全无训练</em>的条件下复现了周期图样。这是决定性证据。</p>
+<p><strong>推论（严格）：</strong></p>
+<ul>
+<li>任何以「训练动力学」为主要解释的理论，<strong>必然不充分</strong>。</li>
+<li>该伪影<strong>可以被架构改动直接消除</strong>，不需要训练技巧。</li>
+</ul>
+<p><strong>推论（必须谨慎的一条）：</strong>「不需要训练」<strong>不等于</strong>「训练不会加剧它」。Odena 等把「随机初始化」和「损失函数」列为另外两个来源，说明训练确实会参与。<strong>「不充分」≠「无关」。</strong></p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div class="title">Q2 如果更换上采样方式后棋盘格减弱，能够证明什么，又不能证明什么？</div></div>
+<div class="body">
+<p><strong>能证明：</strong>被替换的那个算子是伪影的<em>主要贡献者</em>。这是一个<strong>有效</strong>的归因结论 —— 因为实验 B1 显示不同上采样算子之间的差异达两个数量级（0.328 vs 0.002），远超测量噪声，所以归因是可靠的。</p>
+<p><strong>不能证明（三条，各有依据）：</strong></p>
+<ol>
+<li><strong>不能证明频谱偏差被解决。</strong>Schwarz 等结论 2 明确：生成器能补偿棋盘格，因此伪影减弱与谱偏差收敛是两件事。本文实验 B1 还给出一个细节：换上采样方式<strong>同时改变了信号增益</strong>（真实频段幅度从 0.4959 变到 0.9857，差约 2 倍）—— 你看到的不只是「伪影没了」，而是「整个增益结构变了」。</li>
+<li><strong>不能排除混叠与判别器侧的贡献。</strong>它们不会被「换生成器上采样」这一动作影响。要排除，必须做实验 B2（低通对照）与「固定 G 换 D」的对照。</li>
+<li><strong>不能证明换成 resize+conv 就是最优。</strong>Odena 等自述「We don't necessarily think that either approach is the final solution」，且他们「had difficulty making bilinear resize work」—— 注意这与本文实验 B1（双线性在 Nyquist 处为零，所以伪影最低）方向不完全一致。两者不矛盾：<strong>本文测的是纯线性算子，他们说的是训练后的效果。</strong>引用时不要互相覆盖。</li>
+</ol>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div class="title">Q3 如果频域损失降低了某个异常频段的能量，能否证明根本成因已被解决？</div></div>
+<div class="body">
+<p><strong>不能。</strong>理由是一个位置判断：<strong>频域损失作用在「输出端」，而成因在「算子端」或「判别器端」。</strong></p>
+<p>用本文 §8.1 的框架说：频域损失是挂在 L5（输出）上的操作，它改变的是 L5 的频谱，<strong>不改变 L1 的算子</strong>。如果成因是分类表第 ① 行（多相增益不平衡），那么损失只是在<em>事后补偿</em>那个乘性图样 —— 图样还在，只是被抵消了一部分。</p>
+<p><strong>可执行的判据（本文建议）：</strong></p>
+<div class="flow"><pre><code>训练时加频域损失 → 异常频段能量下降
+    │
+    ├─ 去掉该损失、重新推理 → 异常【回来】？
+    │        │
+    │        ├─ 是 → 成因未解决，损失只是在补偿症状。
+    │        │        此时应改架构（换上采样 / 加抗混叠），而不是加大损失权重。
+    │        │
+    │        └─ 否 → 说明损失改变了模型本身学到的表示（成因被绕过了）。
+    │                 这【不等于】成因被消除，仍需检查：
+    │                 去掉损失后训练出的模型，其结构伪影是否本来就消失了？
+    │
+    └─ 同时必须检查：真实细节保留率有没有下降？（见 Q5）</code></pre></div>
+<p><strong>另有一条独立证据支持这个判断</strong>：Durall 等（CVPR 2020）提出的 spectral regularization 是针对<em>谱分布一致性</em>的，其摘要与全文<strong>都没有声称能消除棋盘格</strong>。把它的成功当作「棋盘格被解决了」的证据是过度解读。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div class="title">Q4 如果伪影在空间域明显减弱，但整体频谱差异仍然存在，应如何解释？</div></div>
+<div class="body">
+<p><strong>最可能的解释：你压制的那个频段不是频谱差异的主要载体。</strong></p>
+<p>量化依据：棋盘格的谱能量集中在<em>几个孤立的针尖</em>上（实验 C 可见），它在总谱能量中的占比很小。本文实验 D 实测：棋盘格贡献了总能量的 19.6%（art/total），但这已经是一个刻意构造的高占比；在真实 GAN 输出里通常更低。而径向平均谱的差异分布在<strong>更宽的频段</strong>上。</p>
+<p><strong>诊断动作（按顺序）：</strong></p>
+<ol>
+<li><strong>做分频段归因</strong>：把频谱切成若干环带，逐带比较生成图与真实图的能量差。找出<em>哪个</em>带差异最大 —— 它未必是你一直在压制的那一带。</li>
+<li><strong>检查是不是判别器侧成因</strong>（分类表第 ⑤ 行）。做「固定 G、只换 D 下采样方式」的对照。Schwarz 等实测抗混叠<strong>不能</strong>消除偏差，所以若你的对照也如此，就指向判别器的频率盲区。</li>
+<li><strong>检查是不是数据集自带</strong>（分类表第 ⑦ 行）。<strong>对原始真实数据做同样的 FFT。</strong>如果真实数据在同一个频段也有异常，那这个「差异」根本不是生成器造成的。</li>
+</ol>
+<p>任务书提到「有论文指出这可能来自判别器」——<strong>这一条已被核实为真</strong>，出处就是 Schwarz 等的结论 3/4。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div class="title">Q5 如果频谱看起来更接近真实图像，但图像细节被抹平了，该如何判断方法是否有效？</div></div>
+<div class="body">
+<p><strong>判断：无效，或至少是「用一个缺陷换另一个缺陷」。</strong></p>
+<p>本文实验 D 给出了可量化的判据。全频段低通 σ=2.0 的表现是：</p>
+<div class="flow"><pre><code>伪影压制率  100.0%   ← 单看这一列，方法「完全成功」
+真实边缘保留  10.1%   ← 单看这一列，方法「几乎全毁」
+真实纹理保留   0.4%   ← 同上</code></pre></div>
+<p>而窄带陷波的表现是 100.0% / 97.5% / 97.2% —— <strong>三个数字同时好看，才是有效。</strong></p>
+<p><strong>建议采用的判据（本文提出）：</strong></p>
+<div class="box key" style="margin:10px 0">
+一个伪影抑制方法要算有效，必须<strong>同时</strong>满足：<br>
+· 伪影压制率 ≥ 95%<br>
+· 真实边缘保留率 ≥ 90%<br>
+· 真实纹理保留率 ≥ 90%<br>
+只报第一项 = 自证。
+</div>
+<p><strong>为什么这个判据在你的场景里尤其重要。</strong>你研究的是病理图像。细胞核边界、腺体轮廓、核内染色质纹理都富含高频 —— 它们和伪影挤在同一个频段。实验 D 里的「真实纹理」是合成的非周期噪声，<strong>比真实病理纹理更「安全」</strong>：真实纹理若恰好在伪影频率上有成分，陷波会连带伤害它。所以在你自己的数据上，必须用真实图像重做这个双指标测量。</p>
+</div>
+</div>
+
+<h2 id="s9"><span class="num">9</span>当前理论与证据的局限</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:200px">局限</th><th>具体内容</th><th style="width:110px">影响程度</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>棋盘格的原始文献不是同行评审论文</strong></td>
+<td>Odena, Dumoulin, Olah 2016 发表于 Distill（DOI 10.23915/distill.00003）。它有一个编辑流程但非传统会议/期刊评审。这是本领域引用最广的来源，引用时应标注这一点。</td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>「整除不充分」的定量律是本报告自己推的</strong></td>
+<td>§3.6 的两条律（奇数核精确、偶数核渐近）由本文推导并在 1D 均匀权重下验证。它<strong>没有</strong>在真实网络（学习到的权重、非线性、多层）上验证。真实网络里权重是学的，各相增益不平衡的<em>具体数值</em>会变，但「周期 = stride」这个结论不受影响。</td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>偶数核律在高频段不精确</strong></td>
+<td>实测 f=0.25 时理论给 0.500、实测 0.414，偏差 0.086。原因是我用的两分量模型在载波与边带靠近时失效。定性结论（DC 处为零、随频率增长）成立，但<strong>不要把它当精确公式用于定量预测</strong>。</td>
+<td><span class="b low">低</span></td>
+</tr>
+<tr>
+<td><strong>论文对「谁负责」存在真实分歧</strong></td>
+<td>Durall 等归因于生成器上采样；Schwarz 等明确说「explanation is controversial」，并指出<strong>判别器</strong>是关键；Gragnaniello 等保留架构归因（「calling for more accurate explanations」）。<strong>这个问题在文献中尚未解决。</strong></td>
+<td><span class="b bad">高</span></td>
+</tr>
+<tr>
+<td><strong>径向平均的信息损失存在分歧</strong></td>
+<td>Schwarz 等承认 azimuthal integration 会 "discard information"；Dzanic 等却称该降维 "without significant loss in information"。两篇结论方向相反。本文站在 Schwarz 一侧（对方向性异常确实会丢信息，实验 C 可直观看到），但应知道这是有争议的。</td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>本报告的实验是线性、无训练的</strong></td>
+<td>全部五组实验都不含 ReLU、归一化、注意力、判别器、训练。它们证明的是「这些机制<em>可以</em>产生这类伪影」，<strong>不是</strong>「真实 GAN 的伪影<em>就是</em>这个机制」。这是本报告最大的方法论边界。</td>
+<td><span class="b bad">高</span></td>
+</tr>
+<tr>
+<td><strong>伪影随训练阶段的演化：找不到文献</strong></td>
+<td>任务书问题 4.7 问「为什么有些伪影早期出现、有些随训练加深」。<strong>本文没有找到任何专门研究 GAN 伪影时序演化的论文。</strong>搜过 "pink noise in GANs"、"Fourier spectrum of GAN during training"、"artifacts early vs late training"，全部无结果。这是一个真实的空白。</td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>「生成器复现数据集压缩伪影」缺乏直接证据</strong></td>
+<td>找到的最接近的是 Grommelt 等（arXiv 2403.17608）关于<em>检测数据集</em>含 JPEG 与尺寸偏置的工作，但它讲的是<strong>检测器学到了这些偏置</strong>，<strong>并未</strong>证明生成器复现了数据集级 JPEG 伪影。任务书这一条未获直接证据。</td>
+<td><span class="b low">低</span></td>
+</tr>
+<tr>
+<td><strong>病理/虚拟染色域没有可核实的频域诊断先例</strong></td>
+<td>检索未找到以 2D FFT 可视化作为生成图像质量诊断的医学/虚拟染色论文。唯一候选（Nature BME 2025 的 hallucination detection 框架）抓取时被反爬拦截，<strong>无法确认是否使用 FFT</strong>。</td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>「只改生成器无法消除伪影」缺受控实验</strong></td>
+<td>最接近的直接证据是 Schwarz 等「G 与 D 皆有 bias」。<strong>没有</strong>找到明确做「固定 D、只改 G」对照并报告伪影变化的论文。任务书问「伪影是否 G 与 D 共同作用的结果」——答案是<strong>很可能是，但缺少决定性实验</strong>。</td>
+<td><span class="b medium">中</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s10"><span class="num">10</span>对后续研究的启示</h2>
+
+<h3>10.1 已经比较成熟的部分（可以直接用，不必再验证）</h3>
+
+<div class="grid2">
+<div class="mini good">
+<div class="mt">可以当工具用的</div>
+<ul style="margin-bottom:0">
+<li><strong>多相增益分析。</strong>给定 (k, s, p)，可直接算出 g(o) 并预测伪影周期与幅度。<strong>改动成本：零</strong>（纯计算）。<strong>可复现性：高</strong>。</li>
+<li><strong>混叠的 fold 公式。</strong>预测下采样会造出什么频率。<strong>改动成本：零</strong>。<strong>可复现性：高</strong>。</li>
+<li><strong>周期纹理的谱峰定位。</strong>峰在 (±1/p, ±1/p) 旋转 θ。<strong>改动成本：零</strong>。<strong>可复现性：高</strong>（本文 5/5 吻合）。</li>
+<li><strong>抗混叠在分类网络上的收益。</strong>BlurPool 有 ImageNet 上的实测收益。<strong>改动成本：低</strong>。<strong>可复现性：高</strong>（有公开代码）。</li>
+</ul>
+</div>
+<div class="mini good">
+<div class="mt">已经确定的负面结论（省下你的时间）</div>
+<ul style="margin-bottom:0">
+<li>「棋盘格不足以解释频谱偏差」—— 不用再试图用「修棋盘格」来「修频谱」。</li>
+<li>「anti-aliasing 不能消除频谱偏差」—— Schwarz 等实测。</li>
+<li>「aliasing 不是棋盘格的成因」—— 文献里根本没有这条因果链。</li>
+<li>「径向平均谱看不出棋盘格」—— 因为它是方向性的。</li>
+</ul>
+</div>
+</div>
+
+<h3>10.2 仍值得深入探索的部分</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:230px">问题</th><th>为什么值得做</th><th style="width:110px">难度</th><th style="width:110px">改动成本</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>① 方向性频谱度量</strong><br><span class="small">取代/补充径向平均</span></td>
+<td>本文实验 C 显示棋盘格的能量集中在两个特定角度；径向平均把它抹掉。文献里<strong>没有</strong>一个被广泛采用的「方向性谱距离」指标。这是一个明确的空白，且<strong>成本低</strong>（在现有 FID/谱距离上做角度分解即可）。可直接服务于你的「利用频域方法改善生成质量」目标。</td>
+<td><span class="b medium">中</span></td>
+<td><span class="b high">低</span></td>
+</tr>
+<tr>
+<td><strong>② 逐层伪影归因实验</strong><br><span class="small">周期 → 层号的映射</span></td>
+<td>本文 §4.4 提出「测量伪影周期反推来源层」的判据，但<strong>只在合成棋盘格上验证了周期↔峰位置</strong>，没有在真实架构上做。可证伪的预测：<em>把第 k 层上采样换成 resize-conv，若 p*=2^k 的峰消失而其他峰不动，则判据成立。</em>这是本文给出的最具体的可执行研究点。</td>
+<td><span class="b medium">中</span></td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>③ 伪影随训练阶段的演化</strong></td>
+<td><strong>文献完全空白</strong>（本文搜过三组关键词，零结果）。任务书问题 4.7 目前无法回答。一个「按 epoch 记录频谱峰位置与幅度」的实验成本很低，但可能给出「结构伪影 vs 学习伪影」的时序判据 —— 这是区分分类表第 ① 行与第 ④ 行的<strong>最直接办法</strong>。</td>
+<td><span class="b low">低</span></td>
+<td><span class="b high">低</span></td>
+</tr>
+<tr>
+<td><strong>④ 「只改 G」vs「只改 D」的受控对照</strong></td>
+<td>文献对此只有间接证据。Schwarz 等独立评估了 G 与 D，但没有做完整的 2×2 对照矩阵。这是解决「伪影是谁的锅」这个争议问题的唯一办法。</td>
+<td><span class="b low">低</span></td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>⑤ 真实高频细节 vs 伪影高频能量的形式化判据</strong></td>
+<td>本文找到的所有论文都<strong>没有</strong>给出这个判据。实验 D 的双指标（压制率 + 保留率）是一个工程近似，但不是形式化定义。若能在病理域建立这个判据，它本身就是一篇方法论文的核心贡献。</td>
+<td><span class="b bad">高</span></td>
+<td><span class="b medium">中</span></td>
+</tr>
+<tr>
+<td><strong>⑥ 病理图像上的频域诊断先例</strong></td>
+<td>检索未找到。你的场景（细胞核边界、腺体轮廓、染色质纹理）与自然图像的高频结构差异很大，<strong>自然图像上的结论不能直接外推</strong>。这是一个「先做基线测量」就能有产出的方向。</td>
+<td><span class="b low">低</span></td>
+<td><span class="b high">低</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">如果只做一件事</div>
+按 <strong>③ → ②</strong> 的顺序做。理由：③（按 epoch 记录频谱）成本最低、文献空白、且它的结果直接决定 ② 该怎么做 —— 如果伪影从第 0 个 epoch 就存在且峰位置不变，那它就是结构性的（分类表 ①），② 的逐层归因就有明确目标；如果峰位置随训练漂移，那主要是学习性的（④），逐层归因会白做。
+<br><br>这符合你「优先可复现、改动小、先做零成本前置实验」的一贯偏好。
+</div>
+
+<h2 id="s11"><span class="num">11</span>未核实清单与证据边界</h2>
+
+<div class="box warn">
+<div class="bt">本节的用法</div>
+下列条目<strong>不要当作事实引用</strong>。它们是我在取证时受阻、或只读到摘要/二手来源的部分。凡在本报告正文里被当作事实使用的结论，都<strong>不在</strong>这张表里。
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:250px">条目</th><th>核实到什么程度</th><th style="width:120px">等级</th></tr></thead>
+<tbody>
+<tr><td><strong>Oppenheim &amp; Lim, "The Importance of Phase in Signals", Proc. IEEE, 1981</strong></td><td>卷/期/页（vol. 69, no. 5, pp. 529–541）从 IEEE Xplore 摘要页与多处独立引文记录交叉一致，但<strong>未读到全文</strong>。核心主张「只保留相位仍可辨认结构」有多处独立引用支持。</td><td><span class="b medium">未读全文</span></td></tr>
+<tr><td><strong>Sugawara et al., ICIP 2018（无棋盘格超分）</strong></td><td>只读到 arXiv 摘要（1806.02658），未读全文。arXiv ID 与标题已核实。</td><td><span class="b medium">摘要级</span></td></tr>
+<tr><td><strong>Aitken et al., arXiv 1707.02937</strong></td><td>摘要级。它转述 Odena 三来源的那句已由子检索逐字报告，但我未亲自读全文。</td><td><span class="b medium">摘要级</span></td></tr>
+<tr><td><strong>Zhang et al., "Detecting and Simulating Artifacts in GAN Fake Images", WIFS 2019, arXiv 1907.06515</strong></td><td>子检索报告为「全文级」，但该篇的 venue（WIFS 2019 extended）我未亲自复核落地页。</td><td><span class="b medium">待复核</span></td></tr>
+<tr><td><strong>Grabinski, Keuper, Keuper, "Aliasing and Adversarial Robust Generalization of CNNs"</strong></td><td>确认论文存在（Machine Learning, Springer），但<strong>卷号与页码未取得</strong>。</td><td><span class="b medium">部分</span></td></tr>
+<tr><td><strong>Grommelt et al., arXiv 2403.17608（JPEG 偏置）</strong></td><td>摘要级。已核实其主张是「检测数据集含 JPEG 与尺寸偏置」，<strong>不是</strong>「生成器复现 JPEG 伪影」。</td><td><span class="b medium">摘要级</span></td></tr>
+<tr><td><strong>Nature BME 2025 hallucination detection（DOI 10.1038/s41551-025-01421-9）</strong></td><td>抓取被反爬拦截，<strong>无法确认是否使用 FFT / 频域方法</strong>。仅作为「可能的候选」列出。</td><td><span class="b low">未核实</span></td></tr>
+<tr><td><strong>Arora &amp; Zhang, "Do GANs actually learn the distribution?" (2017)</strong></td><td>确认论文存在，但<strong>未读原文</strong>。</td><td><span class="b low">未核实</span></td></tr>
+<tr><td><strong>DRPAN（arXiv 1711.09554）</strong></td><td>仅在检索结果中见到引用，<strong>未读原文</strong>。</td><td><span class="b low">未核实</span></td></tr>
+<tr><td><strong>StyleGAN3 的 EQ-T / EQ-R 精确定义</strong></td><td>从 arXiv HTML 全文读到（PSNR in dB，I_max=2，旋转角 U(0°,360°)），但<strong>未逐字复核公式</strong>。</td><td><span class="b medium">部分</span></td></tr>
+<tr><td><strong>本文 §3.6 的偶数核律 0.5·tan(πf)</strong></td><td>本报告自己推导，f₀≤0.15 时与实测偏差 ≤0.015，f₀=0.25 时偏差 0.086。<strong>应作渐近律使用。</strong></td><td><span class="b medium">自证·有边界</span></td></tr>
+<tr><td><strong>本文 §4.4 的「周期反推层号」判据</strong></td><td><strong>合理推断，未验证。</strong>只在合成棋盘格上验证了周期↔峰位置。</td><td><span class="b low">推断</span></td></tr>
+<tr><td><strong>本文 §3.8 的「多层叠加可能部分抵消」</strong></td><td><strong>推断，无受控实验。</strong>Odena 原文只说 "often compound"（常叠加），未量化抵消的条件。</td><td><span class="b low">推断</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">三条最容易误引的地方（务必避免）</div>
+<ol style="margin-bottom:0">
+<li><strong>不要把 Durall 等 CVPR 2020 说成「棋盘格的成因论文」。</strong>该文全文不含 "checkerboard"，它研究的是谱分布。</li>
+<li><strong>不要把 StyleGAN3 说成「解决了棋盘格」。</strong>该文全文不含 "checkerboard"，它解决的是等变性 / texture sticking。</li>
+<li><strong>不要把「kernel size 能被 stride 整除」说成「消除棋盘格的条件」。</strong>Distill 原文明确说 even overlap 仍有伪影；本文 §3.6 给出了数学原因。</li>
+</ol>
+</div>
+
+<h2 id="s12"><span class="num">12</span>参考文献</h2>
+
+<p>全部条目已核实标题、作者、年份与标识符。带 <span class="tag">题录更正</span> 的是任务书中写错、经核实更正的部分。</p>
+
+<h3>12.1 棋盘格与上采样机制</h3>
+<div class="ref"><span class="rn">[1]</span><span>Odena, A., Dumoulin, V., Olah, C. <strong>Deconvolution and Checkerboard Artifacts.</strong> <em>Distill</em>, 2016. DOI: 10.23915/distill.00003. <a href="https://distill.pub/2016/deconv-checkerboard/">https://distill.pub/2016/deconv-checkerboard/</a> <span class="b high">全文核实</span></span></div>
+<div class="ref"><span class="rn">[2]</span><span>Dumoulin, V., Visin, F. <strong>A guide to convolution arithmetic for deep learning.</strong> arXiv:1603.07285, 2016 (v2 2018). <a href="https://arxiv.org/abs/1603.07285">https://arxiv.org/abs/1603.07285</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[3]</span><span>Shi, W., Caballero, J., Huszár, F., Totz, J., Aitken, A., Bishop, R., Rueckert, D., Wang, Z. <strong>Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network.</strong> CVPR 2016. arXiv:1609.05158. <a href="https://arxiv.org/abs/1609.05158">https://arxiv.org/abs/1609.05158</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[4]</span><span>Shi, W., Caballero, J., Theis, L., Huszar, F., Aitken, A., Ledig, C., Wang, Z. <strong>Is the deconvolution layer the same as a convolutional layer?</strong> arXiv:1609.07009, 2016. <a href="https://arxiv.org/abs/1609.07009">https://arxiv.org/abs/1609.07009</a> <span class="b medium">摘要级</span> <span class="small">（作者是 Shi 等，不是 Odena）</span></span></div>
+<div class="ref"><span class="rn">[5]</span><span>Aitken, A., Ledig, C., Theis, L., Caballero, J., Wang, Z., Shi, W. <strong>Checkerboard artifact free sub-pixel convolution: A note on sub-pixel convolution, resize convolution and convolution resize.</strong> arXiv:1707.02937, 2017. <a href="https://arxiv.org/abs/1707.02937">https://arxiv.org/abs/1707.02937</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[6]</span><span>Sugawara, Y., Shiota, S., Kiya, H. <strong>Super-Resolution Using Convolutional Neural Networks Without Any Checkerboard Artifacts.</strong> ICIP 2018. arXiv:1806.02658. <a href="https://arxiv.org/abs/1806.02658">https://arxiv.org/abs/1806.02658</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[7]</span><span>Wang, J., Chen, K., Xu, R., Liu, Z., Loy, C. C., Lin, D. <strong>CARAFE: Content-Aware ReAssembly of FEatures.</strong> ICCV 2019. arXiv:1905.02188. <a href="https://arxiv.org/abs/1905.02188">https://arxiv.org/abs/1905.02188</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[8]</span><span>Liu, W., Lu, H., Fu, H., Cao, Z. <strong>Learning to Upsample by Learning to Sample (DySample).</strong> ICCV 2023. arXiv:2308.15085. <a href="https://arxiv.org/abs/2308.15085">https://arxiv.org/abs/2308.15085</a> <span class="b medium">摘要级</span></span></div>
+
+<h3>12.2 频谱偏差与频域分析</h3>
+<div class="ref"><span class="rn">[9]</span><span>Durall, R., Keuper, M., Keuper, J. <strong>Watch Your Up-Convolution: CNN Based Generative Deep Neural Networks Are Failing to Reproduce Spectral Distributions.</strong> CVPR 2020, pp. 7890–7899. arXiv:2003.01826. <a href="https://arxiv.org/abs/2003.01826">https://arxiv.org/abs/2003.01826</a> <span class="b high">全文核实</span></span></div>
+<div class="ref"><span class="rn">[10]</span><span>Schwarz, K., Liao, Y., Geiger, A. <strong>On the Frequency Bias of Generative Models.</strong> NeurIPS 2021. arXiv:2111.02447. <a href="https://arxiv.org/abs/2111.02447">https://arxiv.org/abs/2111.02447</a> <span class="b high">全文核实</span> <span class="tag">题录更正</span> <span class="small">（不是 Kotar / Wieser / Mahendran）</span></span></div>
+<div class="ref"><span class="rn">[11]</span><span>Dzanic, T., Shah, K., Witherden, F. <strong>Fourier Spectrum Discrepancies in Deep Network Generated Images.</strong> NeurIPS 2020, pp. 3022–3032. arXiv:1911.06465. <a href="https://arxiv.org/abs/1911.06465">https://arxiv.org/abs/1911.06465</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[12]</span><span>Frank, J., Eisenhofer, T., Schönherr, L., Fischer, A., Kolossa, D., Holz, T. <strong>Leveraging Frequency Analysis for Deep Fake Image Recognition.</strong> ICML 2020. arXiv:2003.08685. <a href="https://arxiv.org/abs/2003.08685">https://arxiv.org/abs/2003.08685</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[13]</span><span>Gragnaniello, D., Cozzolino, D., Marra, F., Poggi, G., Verdoliva, L. <strong>Are GAN generated images easy to detect? A critical analysis of the state-of-the-art.</strong> ICME 2021, pp. 1–6. arXiv:2104.02617. <a href="https://arxiv.org/abs/2104.02617">https://arxiv.org/abs/2104.02617</a> <span class="b high">全文级</span></span></div>
+<div class="ref"><span class="rn">[14]</span><span>Durall, R., Keuper, M., Pfreundt, F.-J., Keuper, J. <strong>Unmasking DeepFakes with simple Features.</strong> arXiv:1911.00686, 2019/2020. <a href="https://arxiv.org/abs/1911.00686">https://arxiv.org/abs/1911.00686</a> <span class="b medium">摘要级</span> <span class="small">（未发现正式发表 venue）</span></span></div>
+<div class="ref"><span class="rn">[15]</span><span>Zhang, X., Karaman, S., Chang, S.-F. <strong>Detecting and Simulating Artifacts in GAN Fake Images.</strong> WIFS 2019 (extended). arXiv:1907.06515. <a href="https://arxiv.org/abs/1907.06515">https://arxiv.org/abs/1907.06515</a> <span class="b medium">全文级（子检索）</span></span></div>
+<div class="ref"><span class="rn">[16]</span><span>Jiang, L., Dai, B., Wu, W., Loy, C. C. <strong>Focal Frequency Loss for Image Reconstruction and Synthesis.</strong> ICCV 2021. arXiv:2012.12821. <a href="https://arxiv.org/abs/2012.12821">https://arxiv.org/abs/2012.12821</a> <span class="b high">全文级</span> <span class="tag">题录更正</span></span></div>
+<div class="ref"><span class="rn">[17]</span><span>Zhang, H., Goodfellow, I., Metaxas, D., Odena, A. <strong>Self-Attention Generative Adversarial Networks.</strong> ICML 2019. arXiv:1805.08318. <a href="https://arxiv.org/abs/1805.08318">https://arxiv.org/abs/1805.08318</a> <span class="b medium">摘要级</span> <span class="small">（<strong>不含</strong> spectral loss，用的是 spectral normalization）</span></span></div>
+<div class="ref"><span class="rn">[18]</span><span>Oppenheim, A. V., Lim, J. S. <strong>The Importance of Phase in Signals.</strong> <em>Proceedings of the IEEE</em>, vol. 69, no. 5, pp. 529–541, 1981. <a href="https://ieeexplore.ieee.org/document/1456290/">https://ieeexplore.ieee.org/document/1456290/</a> <span class="b low">未读全文</span></span></div>
+
+<h3>12.3 混叠与等变性</h3>
+<div class="ref"><span class="rn">[19]</span><span>Karras, T., Aittala, M., Laine, S., Härkönen, E., Hellsten, J., Lehtinen, J., Aila, T. <strong>Alias-Free Generative Adversarial Networks.</strong> NeurIPS 2021. arXiv:2106.12423. <a href="https://arxiv.org/abs/2106.12423">https://arxiv.org/abs/2106.12423</a> <span class="b high">全文核实</span></span></div>
+<div class="ref"><span class="rn">[20]</span><span>Zhang, R. <strong>Making Convolutional Networks Shift-Invariant Again.</strong> ICML 2019. arXiv:1904.11486. <a href="https://arxiv.org/abs/1904.11486">https://arxiv.org/abs/1904.11486</a> <span class="b high">摘要核实</span></span></div>
+<div class="ref"><span class="rn">[21]</span><span>Karras, T., Aila, T., Laine, S., Lehtinen, J. <strong>Progressive Growing of GANs for Improved Quality, Stability, and Variation.</strong> ICLR 2018. arXiv:1710.10196. <a href="https://arxiv.org/abs/1710.10196">https://arxiv.org/abs/1710.10196</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[22]</span><span>Karras, T., Laine, S., Aila, T. <strong>A Style-Based Generator Architecture for Generative Adversarial Networks.</strong> CVPR 2019. arXiv:1812.04948. <a href="https://arxiv.org/abs/1812.04948">https://arxiv.org/abs/1812.04948</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[23]</span><span>Karras, T., Laine, S., Aittala, M., Hellsten, J., Lehtinen, J., Aila, T. <strong>Analyzing and Improving the Image Quality of StyleGAN (StyleGAN2).</strong> CVPR 2020. arXiv:1912.04958. <a href="https://arxiv.org/abs/1912.04958">https://arxiv.org/abs/1912.04958</a> <span class="b high">摘要核实</span></span></div>
+<div class="ref"><span class="rn">[24]</span><span>Rodríguez-Muñoz, A., Torralba, A. <strong>Aliasing is a Driver of Adversarial Attacks.</strong> arXiv:2212.11760, 2022. <a href="https://arxiv.org/abs/2212.11760">https://arxiv.org/abs/2212.11760</a> <span class="b medium">摘要级</span> <span class="tag">题录更正</span></span></div>
+<div class="ref"><span class="rn">[25]</span><span>Grabinski, J., Keuper, J., Keuper, M. <strong>Aliasing and Adversarial Robust Generalization of CNNs.</strong> <em>Machine Learning</em> (Springer). <span class="b medium">卷页未取得</span></span></div>
+<div class="ref"><span class="rn">[26]</span><span>Smith, S. W. <strong>The Scientist and Engineer's Guide to Digital Signal Processing.</strong> 免费在线全文。 <a href="https://www.dspguide.com/">https://www.dspguide.com/</a> <span class="b high">站点已核实</span></span></div>
+<div class="ref"><span class="rn">[27]</span><span>Oppenheim, A. V., Schafer, R. W. <strong>Discrete-Time Signal Processing.</strong> Prentice Hall / Pearson, 2nd ed. 1999, 3rd ed. 2010. <span class="b medium">书目级</span></span></div>
+
+<h3>12.4 GAN 训练动力学（背景线）</h3>
+<div class="ref"><span class="rn">[28]</span><span>Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., Courville, A., Bengio, Y. <strong>Generative Adversarial Nets.</strong> NeurIPS 2014. arXiv:1406.2661. <a href="https://arxiv.org/abs/1406.2661">https://arxiv.org/abs/1406.2661</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[29]</span><span>Arjovsky, M., Bottou, L. <strong>Towards Principled Methods for Training Generative Adversarial Networks.</strong> ICLR 2017. arXiv:1701.04862. <a href="https://arxiv.org/abs/1701.04862">https://arxiv.org/abs/1701.04862</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[30]</span><span>Mescheder, L., Geiger, A., Nowozin, S. <strong>Which Training Methods for GANs do actually Converge?</strong> ICML 2018, PMLR v80, pp. 3481–3490. arXiv:1801.04406. <a href="https://arxiv.org/abs/1801.04406">https://arxiv.org/abs/1801.04406</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[31]</span><span>Heusel, M., Ramsauer, H., Unterthiner, T., Nessler, B., Hochreiter, S. <strong>GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium.</strong> NeurIPS 2017. arXiv:1706.08500. <a href="https://arxiv.org/abs/1706.08500">https://arxiv.org/abs/1706.08500</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[32]</span><span>Miyato, T., Kataoka, T., Koyama, M., Yoshida, Y. <strong>Spectral Normalization for Generative Adversarial Networks.</strong> ICLR 2018. arXiv:1802.05957. <a href="https://arxiv.org/abs/1802.05957">https://arxiv.org/abs/1802.05957</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[33]</span><span>Gulrajani, I., Ahmed, F., Arjovsky, M., Dumoulin, V., Courville, A. <strong>Improved Training of Wasserstein GANs.</strong> NeurIPS 2017. arXiv:1704.00028. <a href="https://arxiv.org/abs/1704.00028">https://arxiv.org/abs/1704.00028</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[34]</span><span>Durall, R., Chatzimichailidis, A., Labus, P., Keuper, J. <strong>Combating Mode Collapse in GAN training: An Empirical Analysis using Hessian Eigenvalues.</strong> arXiv:2012.09673, 2020. <a href="https://arxiv.org/abs/2012.09673">https://arxiv.org/abs/2012.09673</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[35]</span><span>Isola, P., Zhu, J.-Y., Zhou, T., Efros, A. A. <strong>Image-to-Image Translation with Conditional Adversarial Networks (pix2pix).</strong> CVPR 2017. arXiv:1611.07004. <a href="https://arxiv.org/abs/1611.07004">https://arxiv.org/abs/1611.07004</a> <span class="b medium">摘要级</span></span></div>
+
+<h3>12.5 谱偏差（背景线，与 GAN 伪影无直接关系）</h3>
+<div class="ref"><span class="rn">[36]</span><span>Rahaman, N., Baratin, A., Arpit, D., Draxler, F., Lin, M., Hamprecht, F. A., Bengio, Y., Courville, A. <strong>On the Spectral Bias of Neural Networks.</strong> ICML 2019. arXiv:1806.08734. <a href="https://arxiv.org/abs/1806.08734">https://arxiv.org/abs/1806.08734</a> <span class="b medium">摘要级</span> <span class="small">（1D 回归，不涉 GAN）</span></span></div>
+<div class="ref"><span class="rn">[37]</span><span>Tancik, M., Srinivasan, P. P., Mildenhall, B., Fridovich-Keil, S., Raghavan, N., Singhal, U., Ramamoorthi, R., Barron, J. T., Ng, R. <strong>Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains.</strong> NeurIPS 2020. arXiv:2006.10739. <a href="https://arxiv.org/abs/2006.10739">https://arxiv.org/abs/2006.10739</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[38]</span><span>Yu, N., Davis, L., Fritz, M. <strong>Attributing Fake Images to GANs: Learning and Analyzing GAN Fingerprints.</strong> ICCV 2019. arXiv:1811.08180. <a href="https://arxiv.org/abs/1811.08180">https://arxiv.org/abs/1811.08180</a> <span class="b medium">摘要级</span> <span class="small">（摘要明确称指纹 "not biased by GAN artifacts"）</span></span></div>
+<div class="ref"><span class="rn">[39]</span><span>Wang, S.-Y., Wang, O., Zhang, R., Owens, A., Efros, A. A. <strong>CNN-Generated Images Are Surprisingly Easy to Spot… for Now.</strong> CVPR 2020 (Oral). arXiv:1912.11035. <a href="https://arxiv.org/abs/1912.11035">https://arxiv.org/abs/1912.11035</a> <span class="b medium">摘要级</span></span></div>
+<div class="ref"><span class="rn">[40]</span><span>Grommelt, P., Weiss, L., Pfreundt, F.-J., Keuper, J. <strong>Fake or JPEG? Revealing Common Biases in Generated Image Detection Datasets.</strong> arXiv:2403.17608, 2024. <a href="https://arxiv.org/abs/2403.17608">https://arxiv.org/abs/2403.17608</a> <span class="b medium">摘要级</span></span></div>
+
+<h3>12.6 附件：实验代码与图</h3>
+<div class="box teal">
+<div class="bt">可运行代码</div>
+完整脚本（五组实验 + 全部图表生成，约 400 行，纯 NumPy）：
+<br><code>/Users/hua/WorkBuddy AI/2026-10-15-16-49-31/gan_artifact_lab/gan_artifact_experiments.py</code>
+<br><br>运行：<code>/Users/hua/.workbuddy-ai/binaries/python/envs/default/bin/python gan_artifact_experiments.py</code>
+<br><br>本报告正文引用 <strong>4 张</strong>图，位于 <code>assets_gan_artifacts/</code>：<code>expA.png</code>（重叠不均匀，§7.1）、<code>expB4.png</code>（调制律，§7.2）、<code>expC.png</code>（棋盘格频谱，§7.3）、<code>expD.png</code>（低通 vs 陷波，§7.4）。同目录另有 <code>expB.png</code>（实验 B1–B3 的混叠与抗混叠对照，正文以数据表形式给出，未嵌图）与脚本副本 <code>gan_artifact_experiments.py</code>。
+</div>
+
+<hr>
+<p class="small" style="margin-top:26px">本报告由 5 路并行文献检索 + 4 篇承重论文逐条复核 + 5 组本机实测实验构成。所有引用均给出标题、作者、年份与 arXiv ID/DOI；核实等级逐条标注（全文核实 / 摘要级 / 未核实）。未核实的条目集中在 §11，请勿当作事实引用。凡标「推断」的结论为本报告作者提出，未经实验验证。</p>
+
+</main>
+</div>
+</body>
+</html>

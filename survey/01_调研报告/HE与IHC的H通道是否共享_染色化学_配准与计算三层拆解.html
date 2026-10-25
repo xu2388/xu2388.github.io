@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H&amp;E 与 IHC 的「H 通道」到底共不共享？· 染色化学 / 数据配准 / 计算方法 三层拆解</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">Stain physics · Channel semantics</div><div class="sub">H&amp;E 与 IHC 的 H 通道<br>是否共享 · 三层拆解</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l2" href="#s0-1">一句话版本</a>
+<a class="l2" href="#s0-2">三层判定表</a>
+<a class="l1" href="#s1">1 · 本报告在库内的分工</a>
+<a class="l1" href="#s2">2 · 先把问题问准：四种「共享」</a>
+<a class="l1" href="#s3">3 · 第一层 · 化学与光谱</a>
+<a class="l2" href="#s3-1">3.1 苏木素染的是什么</a>
+<a class="l2" href="#s3-2">3.2 同一试剂，两套协议</a>
+<a class="l2" href="#s3-3">3.3 解混矩阵只有一个</a>
+<a class="l2" href="#s3-4">3.4 DAB 污染 H 的量化数字</a>
+<a class="l1" href="#s4">4 · 第二层 · 像素与配准</a>
+<a class="l2" href="#s4-1">4.1 两种数据范式</a>
+<a class="l2" href="#s4-2">4.2 配准残差有多大</a>
+<a class="l2" href="#s4-3">4.3 你自己的实测数字</a>
+<a class="l2" href="#s4-4">4.4 复染方案本身不统一</a>
+<a class="l1" href="#s5">5 · 第三层 · 计算方法</a>
+<a class="l2" href="#s5-1">5.1 唯一显式声称的：DeReStainer</a>
+<a class="l2" href="#s5-2">5.2 它的「共享」挂在哪里</a>
+<a class="l2" href="#s5-3">5.3 其余方法逐个体检</a>
+<a class="l2" href="#s5-4">5.4 综述的判定</a>
+<a class="l1" href="#s6">6 · 失效模式：五个环节</a>
+<a class="l1" href="#s7">7 · 分层回答与三条推论</a>
+<a class="l1" href="#s8">8 · 对你项目的直接含义</a>
+<a class="l2" href="#s8-1">8.1 决策树</a>
+<a class="l2" href="#s8-2">8.2 三条可执行动作</a>
+<a class="l1" href="#s9">9 · 证据边界与未核实清单</a>
+<a class="l1" href="#s10">10 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Stain channel semantics · Is the hematoxylin channel shared?</div>
+<h1>H&amp;E 与 IHC 的「H 通道」到底共不共享？</h1>
+<p class="desc">把「共享」这个词拆成化学 / 像素 / 表示三层，逐层给一手证据。H&amp;E→IHC 虚拟染色方向 · 2026-10-10</p>
+<div class="meta"><span>调研日期 2026-10-10</span><span>三层判定：化学 ✅ / 像素 ❌ / 表示 ⚠️</span><span>承重引用全部一手核实</span><span>含 5 个失效环节 + 决策树</span><span>复用库内既有结论并注明出处</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<h3 id="s0-1">一句话版本</h3>
+<div class="box key"><div class="bt">这个问题没有单一的「是」或「否」——因为「共享」这个词在做三件不同的事</div>
+<p style="margin-bottom:0"><strong>「共享」成立于「染料身份」这一层（是同一个发色团），不成立于「像素信号」这一层（两张图上的 H 根本不是同一份信号）；而虚拟染色文献里真正做的，是「在表示层对齐」，不是「在像素层复用」。</strong>把这三层混在一起谈，就会得出一个看起来有文献支撑、实际上跨过了原文没有跨的那一步的结论。</p></div>
+
+<h3 id="s0-2">三层判定表</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:11%">层</th><th style="width:26%">精确问题</th><th style="width:9%" class="c">答案</th><th>依据（全部一手核实）</th></tr></thead>
+<tbody>
+<tr><td><strong>① 化学 / 光谱</strong></td><td>两边的苏木素是不是同一种染料、同一个吸收谱？</td><td class="c"><span class="b high">是</span></td><td>同一个发色团（hematein–Al³⁺ 复合物，静电结合 DNA 磷酸基团）。但<strong>不是同一份信号</strong>：协议强度差约 10×（IHC 复染常 30 秒 vs H&amp;E 5 分钟）、批次差、且 IHC 复染方案本身不统一</td></tr>
+<tr><td><strong>② 像素 / 数据</strong></td><td>你手上的 H&amp;E 图和 IHC 图，像素级是不是同一个 H？</td><td class="c"><span class="b bad">否</span></td><td>主流数据（BCI / MIST）是<strong>相邻切片</strong>，配准残差 <strong>7.1–16.0 µm</strong>，与细胞核直径（5–10 µm）同量级；同片脱色再染才能降到 <strong>0.9–2.3 µm</strong></td></tr>
+<tr><td><strong>③ 计算 / 表示</strong></td><td>虚拟染色方法真的把输入 H 拿过来用吗？</td><td class="c"><span class="b medium">几乎没人</span></td><td>全文献只有 <strong>DeReStainer</strong> 明确说 "share the Hematoxylin channel"，而它的实现是<strong>特征空间余弦对齐</strong>，不是像素拷贝；其余方法一律走 DAB 通道损失</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">所以你该怎么用这个结论</div>
+<ul style="margin-bottom:0">
+<li>如果问的是<strong>「物理上是不是同一个东西」</strong> → 是（同一染料、同一吸收谱基向量）。但<strong>这个「是」不能直接当成建模假设用</strong>，因为它只保证"染色剂身份相同"，不保证"信号相同"。</li>
+<li>如果问的是<strong>「能不能把输入 H 直接拼进输出」</strong> → <strong>文献里没有先例</strong>，且在你的数据上<strong>物理上不成立</strong>（见 §4）。</li>
+<li>你自己已经量化过这件事：<code>Corr_128 = 0.407</code>（块级）vs <code>Corr_pixel = 0.061</code>（像素级）⇒ <strong>结构在块级共享，位置在像素级不共享</strong>。这是对"共享"最诚实的一句描述。</li>
+</ul></div>
+
+<h2 id="s1"><span class="num">1</span>本报告在库内的分工</h2>
+<p>资料库已有 50+ 份高度重叠的报告。本报告<strong>不重复</strong>它们已核实的推导，只做一件它们没做的事：把「共享」这个词在物理上拆开。以下是逐份分工。</p>
+<div class="scroll"><table>
+<thead><tr><th style="width:30%">既有文档</th><th style="width:34%">它回答的问题</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><code>06_方案可行性审查/DAB-only浓度扩散_文献先例地图与模型选型审查.html</code> §3.3 / §4.1</td><td>「你的架构里『H 复用』这一格，文献上谁占了？」</td><td><strong>本报告是它的上游</strong>。它回答"有没有先例"，本报告回答"共享这个前提在物理上成不成立"。它的 7 格先例表、<code>Corr 0.407/0.061</code>、<code>T_H</code> 校准建议，本报告直接复用并注明出处</td></tr>
+<tr><td><code>01_调研报告/浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</code> §6</td><td>Beer–Lambert 链条、M 矩阵、秩亏</td><td>正交。本报告不重复公式推导，只引用它的"3×2 的 M 秩为 2"结论</td></tr>
+<tr><td><code>01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Diffusion_Disentanglement_Report.html</code> §1</td><td>H&amp;E→IHC 的信息论结构（structure/anatomy ↔ stain-expression）</td><td>本报告 §3 是它的<strong>物理依据</strong>：为什么"structure"那一半可以被当成跨染色共享的</td></tr>
+<tr><td><code>06_方案可行性审查/E0.2_伊红复染判定_结论.md</code></td><td>你的 IHC 片子有没有伊红复染？</td><td><strong>被本报告 §4.4 引用</strong>：结论是"没有伊红，第三通道是未解释残差"</td></tr>
+<tr><td><code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code> §1.5</td><td>你基线的实测数字放在文献坐标里是什么位置？</td><td><strong>被本报告 §4.3 引用</strong>：<code>edge cross-corr ≈ 0.005~0.02</code>、BCI 原论文自述 "some positions cannot achieve pixel-level alignment"、CCPL 在 BCI 上 PCC 仅 0.2441</td></tr>
+<tr><td><code>06_方案可行性审查/M0条件扩散归因审查_目标函数还是注入路径.html</code> §6.4</td><td>0.061 与 0.407 的张力怎么解释？</td><td><strong>被本报告 §4.3 引用</strong>：解释是"空间错位的签名"；该报告已把 0.061 标为<strong>待查信号</strong>，本报告沿用这一诚实标注</td></tr>
+<tr><td><code>04_IHC评价与分级/弱配准下蛋白表达保真_评价与训练路线调研.html</code></td><td>弱配准下的评价体系（L1–L5 错位等级）</td><td>下游。本报告只给"配准残差有多大"，它给"配准坏了以后指标怎么设计"</td></tr>
+<tr><td><code>05_伪影与失败模式/</code> 两份</td><td>生成结果不对怎么排查</td><td>正交。本报告 §6 的失效环节可视为它们的<strong>物理侧成因清单</strong></td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>先把问题问准：四种「共享」</h2>
+<p>「这两个 H 染色的通道是共享的吗」——这句话里「共享」至少承担四种不同的含义，而它们的答案<strong>不一样</strong>。绝大多数混淆都来自把 A 层的事实搬到 C 层去用。</p>
+<div class="scroll"><table>
+<thead><tr><th style="width:6%" class="c">#</th><th style="width:20%">说法</th><th style="width:34%">精确含义</th><th style="width:10%" class="c">是否成立</th><th>怎么检验</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>A</strong></td><td><strong>同一试剂</strong></td><td>H&amp;E 的苏木素与 IHC 的复染苏木素是同一种染料</td><td class="c"><span class="b high">成立</span></td><td>查试剂配方与染色协议（§3.1–3.2）</td></tr>
+<tr><td class="c"><strong>B</strong></td><td><strong>同一基向量</strong></td><td>两者在 color deconvolution 里对应<strong>同一个 stain vector</strong></td><td class="c"><span class="b high">近似成立</span></td><td>看解混矩阵 M 的第 1 行是否被复用（§3.3）</td></tr>
+<tr><td class="c"><strong>C</strong></td><td><strong>同一信号</strong></td><td>两张图上的 H 强度场是同一份，可逐像素对应</td><td class="c"><span class="b bad">不成立</span></td><td>量 <code>Corr_pixel(C_H^HE, C_H^IHC)</code>（§4.3）</td></tr>
+<tr><td class="c"><strong>D</strong></td><td><strong>同一表示</strong></td><td>模型可以显式复用 / 拷贝输入 H 来得到输出 H</td><td class="c"><span class="b medium">无先例</span></td><td>查有没有方法这么做（§5）</td></tr>
+</tbody></table></div>
+<div class="box teal"><div class="bt">为什么必须先做这个区分</div>
+<p style="margin-bottom:0">A 层成立是一个<strong>化学事实</strong>，它几乎自动成立，因此也几乎不含信息量。真正决定你模型能不能这么做的，是 <strong>C 层和 D 层</strong>。把 A 层的事实当成 C 层的许可，是这一题上最常见的推理跳跃。</p></div>
+
+<h2 id="s3"><span class="num">3</span>第一层 · 化学与光谱：是同一个发色团，但不是同一份信号</h2>
+<p>这一层回答 A 与 B 两种「共享」。结论是：<strong>染料身份相同（A 成立），吸收基向量可复用（B 近似成立）</strong>——但同一层里还藏着两个会破坏 C 的事实（协议强度差、DAB 污染）。</p>
+
+<h3 id="s3-1">3.1 苏木素到底染的是什么</h3>
+<div class="card">
+<div class="ch"><div><div class="title">Kiernan JA · Biotech Histochem 93(2), 2018</div><div class="v">DOI 10.1080/10520295.2017.1399466 · PMID 29320873 <span class="b high">VERIFIED</span></div></div><div><span class="b blue">一手实验</span></div></div>
+<div class="body">
+<p>苏木素（hematoxylin）本身不是染料，它先被氧化成 <strong>hematein</strong>，再与 Al³⁺ 形成<strong>阳离子</strong>的金属–染料络合物（mordant complex）。该阳离子<strong>静电结合 DNA 的磷酸基团</strong>，而不是组蛋白。原文逐字：</p>
+<p style="padding-left:14px;border-left:3px solid var(--border)">"the red hemalum cation is electrostatically attracted to the phosphate anion of DNA"；"<strong>DNA, not histone</strong>, is progressively colored by hemalum"</p>
+<p>蓝化（bluing，pH &gt; 5.5）后沉淀为不溶性的蓝色聚合物，这就是我们在镜下看到的核染色。</p>
+<div class="box stop"><div class="bt">一个传播很广的错误</div><p style="margin-bottom:0">多家厂商与教学页面（Thermo Fisher、Bosterbio、Bitesize 等）写苏木素"结合核组蛋白的赖氨酸残基"。这与 Kiernan 的一手实验结论<strong>直接矛盾</strong>。本报告以一手为准。<span class="small">（这一条之所以值得写出来：如果你在论文里描述机制，引用错的那一版会被病理专业的审稿人一眼抓住。）</span></p></div>
+</div></div>
+
+<h3 id="s3-2">3.2 同一个试剂，两套协议</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">染料身份：同一个</div><p>Thermo Fisher 的 IHC 复染文档逐字：「Hematoxylin… usually used together with eosin (H&amp;E)… It is also used <strong>alone</strong> as a nuclear counterstain in IHC」。<span class="b high">VERIFIED</span></p><p class="small">即：H&amp;E = H + E；IHC = 只有 H（+ 你的项目里连 E 都没有，见 §4.4）。</p></div>
+<div class="mini"><div class="mt">协议强度：差约 10×</div><p>IHC World 的 Gill's 苏木素协议逐字：「Triple strength for immunohistochemistry counterstain (dilute 1:5) for <strong>30 seconds</strong> and H&amp;E (dilute 1:5) for <strong>5 minutes</strong>」。<span class="b high">VERIFIED</span></p><p class="small">同一瓶原液、同一稀释比，IHC 侧只染 30 秒，H&amp;E 侧染 5 分钟。</p></div>
+</div>
+<div class="box warn"><div class="bt">这两格合起来说明了什么</div>
+<p style="margin-bottom:0">「同一染料」是真的，但<strong>染出来的浓度不在一个尺度上</strong>。而且这还只是同一份协议内的差异——换成不同实验室、不同染液批次，差异会更大（见 §6 第 2 条）。<strong>所以 A 层成立，恰恰不能推出 C 层成立。</strong></p>
+<p style="margin-bottom:0" class="small">诚实标注：IHC World 是厂商协议页，不是同行评议文献。它是「30 s vs 5 min」这一具体数字的来源，可信但不构成学术引用。</p></div>
+
+<h3 id="s3-3">3.3 解混矩阵：Ruifrok 只给了「一个」矩阵</h3>
+<p>一个流传很广的说法是「H&amp;E 用 <code>[H, E, DAB]</code> 矩阵、IHC 用 <code>[H, DAB]</code> 矩阵」。<strong>这个说法在原始文献里不成立。</strong></p>
+<div class="card">
+<div class="ch"><div><div class="title">Ruifrok &amp; Johnston 2001 · Anal Quant Cytol Histol 23(4):291–299</div><div class="v">「Quantification of histochemical staining by color deconvolution」<span class="b high">VERIFIED 逐字</span></div></div><div><span class="b blue">奠基论文</span></div></div>
+<div class="body">
+<p>该文给出的<strong>唯一一个</strong>矩阵就是 H / E / DAB 三色联合矩阵。原始 OD 值（未归一化）：</p>
+<pre><code>OD = [ [0.18, 0.20, 0.08],    # Hematoxylin
+       [0.01, 0.13, 0.01],    # Eosin
+       [0.10, 0.21, 0.29] ]   # DAB</code></pre>
+<p>归一化后（每行除以模长）得到全文使用的 <code>M</code>：</p>
+<pre><code>M = [ [0.65, 0.70, 0.29],
+      [0.07, 0.99, 0.11],
+      [0.27, 0.57, 0.78] ]</code></pre>
+<p>也就是说：<strong>没有"H&amp;E 专用矩阵"和"IHC 专用矩阵"两套东西</strong>，只有一套三色矩阵。现行的 IHC 专用 H–DAB 解混（例如各类 wsiTools / 病理工具链的默认设置）是<strong>直接复用</strong>这个矩阵的 H 行 <code>(0.65, 0.704, 0.286)</code> 与 DAB 行 <code>(0.268, 0.57, 0.776)</code>。</p>
+<div class="box key"><div class="bt">这是「同一基向量」最硬的工程证据——但它同时是一个警告</div>
+<p style="margin-bottom:0">复用同一组 H / DAB 向量，等于<strong>在工程上默认了 B 层共享</strong>。但这个默认是<strong>继承来的</strong>，不是被重新验证过的：Ruifrok 的矩阵是在他自己的染色条件（见下）下标定的一次结果，此后被反复沿用。<strong>它成立的前提是"染色向量足够稳定"，而这个前提本身在文献里是有争议的</strong>（Macenko 2009 明确说染色向量会随厂商显著变化）。</p></div>
+<p>顺带一个容易被忽略的细节——Ruifrok 论文的 Materials &amp; Methods 逐字写：</p>
+<p style="padding-left:14px;border-left:3px solid var(--border)">"Counterstaining was performed with <strong>Mayer's Hematoxylin</strong> for 3–5 min <strong>and eosin</strong>"</p>
+<p>即：他标定这个矩阵时，IHC 侧的复染是 <strong>H + E</strong>，不是纯 H。<strong>所以那个被到处复用的「IHC 的 H 向量」，其实是在"H+E 复染"的条件下测出来的。</strong></p>
+</div></div>
+
+<h3 id="s3-4">3.4 DAB 会污染 H 通道 —— 有量化数字，而且是 65%</h3>
+<p>这是本报告<strong>最重要的一条物理证据</strong>，因为它说明：IHC 图上解出来的「H 通道」<strong>不等于该切片真实的苏木素信号</strong>——这与配准无关，是染色叠加本身的物理后果。</p>
+<div class="box stop"><div class="bt">Ruifrok 2001 原文逐字</div>
+<p>"the possible contribution of DAB saturated areas to the measured <strong>IOD for hematoxylin reached an average of 65%</strong>."</p>
+<p style="margin-bottom:0">以及共定位的原文："In regions with <strong>co-localization</strong> of the stains (e.g. staining with hematoxylin and DAB in <strong>Ki-67 positive nuclei</strong>), the quantification of each stain component <strong>cannot be determined at any single wavelength</strong>."</p>
+<p style="margin-bottom:0" class="small">旁证：eosin 侧受污染小得多——"only about 8% … while the mean amount was only 3%"。这说明污染是<strong>DAB 对 H 的定向污染</strong>，不是通用的解混噪声。</p></div>
+<div class="scroll"><table>
+<thead><tr><th style="width:26%">独立旁证</th><th style="width:30%">出处</th><th>它说明了什么</th></tr></thead>
+<tbody>
+<tr><td><strong>Ki-67 阳性核里 H 与 DAB 混色</strong></td><td>Shi, Zhong et al., <em>Sci Rep</em> 6:32127 (2016), DOI 10.1038/srep32127 <span class="b high">VERIFIED</span></td><td>原文明确讨论 "nuclei with <strong>fuzzy mixed colors</strong> that were stained by <strong>both DAB and hematoxylin</strong>"，并提到存在 "<strong>ghost nuclei</strong>"。他们的解法是借 hue 通道把同一个核内的 DAB 与 H 分开</td></tr>
+<tr><td><strong>明场下 H 与 DAB 无法分别观察</strong></td><td>Ghose et al., <em>Nature Machine Intelligence</em> 4:401–412 (2022), DOI 10.1038/s42256-022-00471-x（DeepLIIF）<span class="b high">VERIFIED</span></td><td>原文指出 brightfield 图像中 H 与 DAB "cannot be visualized or analyzed separately without … digital stain deconvolution"</td></tr>
+<tr><td><strong>反向也成立：H 过染会盖住阳性信号</strong></td><td>Bosterbio 复染故障排查页（厂商）<span class="b medium">非同行评议</span></td><td>苏木素过染会 "mask positive staining of nuclei"——说明 H 与 DAB 的遮挡是双向的</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">怎么读这条证据</div>
+<ul style="margin-bottom:0">
+<li><strong>不能读成</strong>「DAB 物理覆盖了苏木素」——本轮<strong>没有找到</strong>同行评议的定量论文直接刻画"覆盖"。最强的一手证据是 Ruifrok 的 IOD 污染（65%）与 Ki-67 的混色描述。</li>
+<li><strong>应该读成</strong>：在 <em>DAB 深染区与阳性核</em> 里，从 RGB 反解出来的"H 通道"里混着大量 DAB 成分。所以 <code>C_H^IHC</code> 在阳性区域是<strong>不可信</strong>的——而这恰恰是虚拟染色最关心的区域。</li>
+<li><strong>对建模的含义</strong>：如果你用 <code>C_H^IHC</code> 当监督目标去约束 <code>C_H^HE</code>，那么<strong>阳性越强的地方，这个监督信号越脏</strong>。这是一个系统性偏差，不是随机噪声。</li>
+</ul></div>
+
+<h2 id="s4"><span class="num">4</span>第二层 · 像素与配准：你的两张图根本不是同一张切片</h2>
+
+<h3 id="s4-1">4.1 两种数据范式，决定了 C 层成不成立</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:20%">范式</th><th style="width:30%">怎么做</th><th style="width:26%">代表数据</th><th>像素级 H 通道</th></tr></thead>
+<tbody>
+<tr><td><strong>连续切片</strong><br>serial section</td><td>同一组织块<strong>相邻切两片</strong>，一片染 H&amp;E、一片染 IHC，再各自扫描、配准</td><td><strong>BCI</strong>：4,873 对 1024×1024 tiles，51 位病人，0.46 mpp；<strong>MIST</strong>：21,295 张 tiles（HER2/ER/PgR/Ki67），0.46 mpp</td><td><span class="b bad">不共享</span> 不同细胞根本不在两张图里</td></tr>
+<tr><td><strong>同片脱色再染</strong><br>destain-restain</td><td>同一张片先染 H&amp;E → 成像 → <strong>脱色</strong> → 染 IHC → 再成像</td><td><strong>HER2match</strong>：21,172 对，0.25 mpp；DeReStainer 的框架命名即来自此</td><td><span class="b medium">近似共享</span> 同一批细胞，但仍有形变与协议差</td></tr>
+</tbody></table></div>
+<p class="small">数据来源：npj Digital Medicine 2025 综述（DOI 10.1038/s41746-025-01741-9）Table 1 <span class="b high">VERIFIED</span>；BCI 原论文 arXiv:2305.03546；MIST arXiv:2303.06193；HER2match arXiv:2506.18484。</p>
+
+<div class="box stop"><div class="bt">BCI / MIST 的原作者自己是怎么说的</div>
+<p>MIST 原论文逐字：「<strong>re-staining a slice is physically infeasible</strong>… two depth-wise consecutive cuts… prevents <strong>pixel-perfect image correspondences</strong> due to multi-slice registration errors」</p>
+<p style="margin-bottom:0">BCI 原论文逐字：配对取自「two depth-wise consecutive cuts」，因此「inevitably prevents pixel-perfect image correspondences due to <strong>morphology inconsistency and alignment error</strong>」。<span class="b high">VERIFIED</span></p></div>
+
+<h3 id="s4-2">4.2 配准残差到底有多大 —— 和细胞核一个量级</h3>
+<div class="card">
+<div class="ch"><div><div class="title">Lotz, Weiss, van der Laak, Heldmann · HyReCo</div><div class="v">J. Medical Imaging 10(6) 2023 · DOI 10.1117/1.JMI.10.6.067501 · arXiv:2106.13150 <span class="b high">VERIFIED</span></div></div><div><span class="b purple">决定性数字</span></div></div>
+<div class="body">
+<p>该研究构建了一个同时含「连续切片」与「同片再染」的公开数据集（HyReCo，81 对切片，约 3,000 个 landmark），并给出配准后的中位 landmark error：</p>
+<div class="scroll"><table>
+<thead><tr><th style="width:34%">配对方式</th><th class="c">中位配准误差（arXiv v2）</th><th class="c">中位配准误差（JMI 正式版）</th><th>能达到的对齐粒度</th></tr></thead>
+<tbody>
+<tr><td><strong>连续切片</strong>（HyReCo）</td><td class="c"><strong>7.1 µm</strong></td><td class="c">6.5 µm</td><td rowspan="2"><span class="b bad">仅 region-level</span></td></tr>
+<tr><td><strong>连续切片</strong>（ANHIR，230 对）</td><td class="c"><strong>16.0 µm</strong></td><td class="c">24.1 µm</td></tr>
+<tr><td><strong>同片再染</strong>（HyReCo 子集 1）</td><td class="c"><strong>2.3 µm</strong></td><td class="c">2.2 µm</td><td rowspan="2"><span class="b high">可达 nucleus-level</span></td></tr>
+<tr><td><strong>同片再染</strong>（HyReCo 子集 2）</td><td class="c"><strong>0.9 µm</strong></td><td class="c">0.9 µm</td></tr>
+</tbody></table></div>
+<p>原文结论逐字：「the registration of re-stained sections allows <strong>nucleus-level alignment</strong>…, consecutive sections only allow the transfer of <strong>region-level annotations</strong>.」</p>
+<p class="small">★ 版本差异说明：arXiv v2 摘要报 7.1 / 16.0 µm 与 2.3 / 0.9 µm；JMI 正式版报 6.5 / 24.1 µm 与 2.2 / 0.9 µm。<strong>引用时请注明版本</strong>，不要混用。</p>
+</div></div>
+<div class="box key"><div class="bt">把这个数字和细胞尺度对一下</div>
+<p style="margin-bottom:0">一个细胞核的直径约 <strong>5–10 µm</strong>。连续切片的配准残差是 <strong>7.1–16.0 µm</strong>——<strong>残差与细胞核本身同量级甚至更大</strong>。这意味着在 BCI / MIST 这类数据上，"逐像素对应的同一个 H"<strong>在物理上不可能存在</strong>，不是配准算法不够好，而是两张切片上本来就没有同一个像素这回事。</p></div>
+
+<h3 id="s4-3">4.3 你自己的实测已经把这件事量化了</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">块级：0.407</div><p><code>Corr_128(C_H^HE, C_H^IHC) = 0.407</code></p><p>在 128 px 的块上，两边的苏木素浓度仍有中等相关 ⇒ <strong>结构在区域尺度上是共享的</strong>。</p></div>
+<div class="mini"><div class="mt">像素级：0.061</div><p><code>Corr_pixel(C_H^HE, C_H^IHC) = 0.061</code></p><p>落到逐像素，相关几乎消失 ⇒ <strong>位置在像素尺度上不共享</strong>。</p></div>
+</div>
+<p>出处：库内 <code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code> §1.5 记录的是<strong>你自己基线的实测值</strong>；同一组数字也出现在 <code>DAB-only浓度扩散_文献先例地图…</code> 与 <code>M0条件扩散归因审查…</code> 中。另有 <code>edge cross-correlation ≈ 0.005~0.02</code>。</p>
+<div class="box teal"><div class="bt">这组数字的正确读法（库内已有一致结论，此处复用）</div>
+<p style="margin-bottom:0">「块级高、像素级低」正是<strong>空间错位的签名</strong>：组织结构在几毫米尺度上当然是同一块组织，但一旦落到像素尺度，切片错位 + 形变就让对应关系崩掉了。<strong>它支持 <code>C_H^HE</code> 作为「结构条件 / 确定性锚」，不支持 <code>C_H^HE(x,y) = C_H^IHC(x,y)</code> 作为硬像素 GT。</strong></p></div>
+<div class="scroll"><table>
+<thead><tr><th style="width:34%">文献侧的独立旁证</th><th>数字 / 原文</th></tr></thead>
+<tbody>
+<tr><td>BCI 数据集原论文自述</td><td>「<strong>some positions cannot achieve pixel-level alignment</strong>」<span class="b high">VERIFIED 转引</span></td></tr>
+<tr><td>CCPL (arXiv:2506.07559, 2025) 报告的最优方法相关性</td><td>BCI 上 <strong>PCC 仅 0.2441</strong>；MIST-HER2 上仅 <strong>0.1388</strong> <span class="b high">VERIFIED 转引</span></td></tr>
+<tr><td>跨染色核位置一致性（多染色 WSI 配准）</td><td>Jeyasangar et al., arXiv:2404.17041 原文：「nuclei… is prominent and consistent <strong>(to a large level)</strong> across different stains」——只有定性描述，<strong>无数值</strong></td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">★ 诚实标注（沿用 M0 报告的结论，不要当成已确立事实）</div>
+<p style="margin-bottom:0"><code>0.407</code> / <code>0.061</code> 是库内既有的实测值，<strong>我本轮没有独立复算</strong>，也没有核到它们当时的解混口径。<code>M0条件扩散归因审查</code> 已明确把它标为「<strong>待查信号，不是已确立事实</strong>」。你在引用这两个数之前，值得花半小时确认口径。</p></div>
+
+<h3 id="s4-4">4.4 复染方案本身就不统一 —— 连"第三个通道是什么"都不一致</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:30%">证据</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>Grosset et al. 2019<br><em>Appl Immunohistochem Mol Morphol</em> 27(7):558–563<br>DOI 10.1097/PAI.0000000000000626 <span class="b high">VERIFIED</span></td><td>原文逐字：「immunohistochemistry (IHC) interpretation is done <strong>exclusively with hematoxylin counterstaining</strong>」——该文正是<strong>首次提议</strong>改用 H&amp;E 复染，说明此前（以及相当一部分现行）IHC 是<strong>纯 H 复染</strong>。</td></tr>
+<tr><td>Ruifrok 2001 的标定条件 <span class="b high">VERIFIED</span></td><td>他自己用的是 <strong>Mayer's H 3–5 min + eosin</strong>（见 §3.3）</td></tr>
+<tr><td>你的实测（库内 <code>E0.2_伊红复染判定_结论.md</code>）</td><td>你的 IHC 片子<strong>没有伊红复染</strong>；3×3 解混下第 2 通道恒等于正交补残差通道，与伊红无关（实测 <code>C_E / C_res = −1.5918</code> 为纯常数）。⇒ 第三通道应记作 <code>C_res</code>，<strong>不是染色通道</strong>。</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">这一条推翻了「两边都是 HED、只是第三个不同」的图景</div>
+<p style="margin-bottom:0">DeReStainer 把 H&amp;E 与 IHC 的关系描述成「共享 H，差别只在 E vs DAB」——这在<strong>它假设的"同片"条件下</strong>大致成立。但落到真实数据上：IHC 侧第三个通道常常<strong>根本不是伊红</strong>，而是未解释残差。所以更准确的图景是：<strong>两边共享 H 的"身份"，但 H&amp;E 侧多一个真实的伊红通道，IHC 侧多一个非染色的残差通道。</strong>这个差异会直接影响你解混矩阵该设几列。</p></div>
+
+<h2 id="s5"><span class="num">5</span>第三层 · 计算方法：文献里到底谁「共享」了 H</h2>
+<p>这一层回答 D 种「共享」。检索方式是<strong>按"机制挂在哪里"组织</strong>，不按方法名罗列——因为同一句「用了 H 通道」，在"损失层面"和"像素合成层面"是完全不同的两件事。</p>
+
+<h3 id="s5-1">5.1 唯一显式声称的：DeReStainer</h3>
+<div class="card">
+<div class="ch"><div><div class="title">DeReStainer: H&amp;E to IHC Pathological Image Translation via Decoupled Staining Channels</div><div class="v">arXiv:2409.00649 · 2024（MICCAI）· Linda Wei, Shengyi Hua, Shaoting Zhang, Xiaofan Zhang（SJTU / Shanghai AI Lab）<span class="b high">VERIFIED 逐字</span></div></div><div><span class="b purple">全文献唯一</span></div></div>
+<div class="body">
+<p><strong>摘要逐字：</strong></p>
+<p style="padding-left:14px;border-left:3px solid var(--border)">"…leveraging the characteristic that H&amp;E staining and IHC staining of the same tissue sections <strong>share the Hematoxylin channel</strong>."</p>
+<p><strong>正文逐字（本报告最关键的一段引文）：</strong></p>
+<p style="padding-left:14px;border-left:3px solid var(--border)">"Therefore, <strong>we believe</strong> that in H&amp;E and IHC stained sections of the same tissue, the H channel is shared, with difference arising solely from the E and DAB channels. Our framework decouples the H channel from an H&amp;E image and <strong>aligns it with the H channel of the corresponding IHC image in a high-dimensional feature space</strong>."</p>
+<p>这三句话给了三个必须分开陈述的事实：</p>
+<ol>
+<li>这是<strong>一个被主张的假设</strong>（"we believe"），不是被验证过的结论；</li>
+<li>对齐发生在<strong>特征空间</strong>（high-dimensional feature space），不是像素空间；</li>
+<li><strong>论文没有报任何相关系数</strong>——npj 2025 综述也指出它只有一张定性图（Fig. 1b）来支撑这个假设。</li>
+</ol>
+</div></div>
+
+<h3 id="s5-2">5.2 它的「共享」到底挂在哪里 —— 与「像素级复用」的差别</h3>
+<p>逐字复核它的方法章节（2.1 DeStainer / 2.3 ReStainer / 2.4 Loss Functions）：</p>
+<pre><code>染色分离：RGB → HED 色彩空间（引 Ruifrok [10]）
+           → 投影矩阵 P^H 保留 H 分量、置零其余两个 → 转回 RGB
+          I_H&amp;E^H  = T⁻¹([v_H, 0, 0])        ← H&amp;E 的 H
+          I_IHC^H  = T⁻¹([v_H, 0, 0])        ← IHC 的 H（同一套分离）
+
+DeStainer：把【两张图的 H】都送进 encoder → 高层表示 → f_H
+           L_H = 1 − cos⟨ f_H(DeStainer(I_H&amp;E^H)), f_H(DeStainer(I_IHC^H)) ⟩
+           ↑ 这是一个【特征空间】的余弦相似损失
+
+ReStainer：与 encoder 对称的 decoder，"apply DAB staining"
+           → 生成整张 IHC 图 Î_IHC
+           L_DAB = ‖ Î_IHC^DAB − I_IHC^DAB ‖₁
+
+总损失：  L = λ_stain·L_stain + λ_content·L_content + λ_level·L_level + λ_GAN·L_GAN
+          L_stain = λ_H·L_H + λ_DAB·L_DAB</code></pre>
+<div class="box stop"><div class="bt">★ 关键结论：它没有把输入 H 拷贝进输出</div>
+<p style="margin-bottom:0">输出 IHC <strong>整张图由 ReStainer 重建</strong>。H 只在<strong>特征空间</strong>被约束"两张图的 H 应该编码成相似的东西"。所以即使是全文献唯一明确说 "share" 的工作，<strong>也没有做像素级的 H 复用</strong>——它跨出的那一步是"特征对齐"，不是"通道拷贝"。</p></div>
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">对比项</th><th style="width:39%">DeReStainer 实际做的</th><th>常被误以为它做的</th></tr></thead>
+<tbody>
+<tr><td>H 怎么用</td><td>H&amp;E 的 H 与 IHC 的 H 各自编码 → <strong>特征空间余弦对齐</strong>（L_H）</td><td>把输入 H 的像素直接拷贝进输出</td></tr>
+<tr><td>输出怎么来</td><td>ReStainer（对称 decoder）<strong>重建整张 IHC</strong></td><td>输入 H ⊕ 生成的 DAB 两通道合成</td></tr>
+<tr><td>有没有量化</td><td>无相关系数，只有 Fig. 1b 定性图</td><td>—</td></tr>
+<tr><td>数据</td><td>BCI benchmark（<strong>连续切片</strong>，见 §4.1）</td><td>同片脱色再染</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">一处值得注意的张力（这是本报告的分析，不是论文的说法）</div>
+<p style="margin-bottom:0">论文表述用的是 "the same tissue sections"（同一切片），而它实验用的 BCI 是<strong>相邻切片</strong>。也就是说：<strong>它的假设表述对应的是"同片"情形，而它的验证数据是"连续切片"情形。</strong>这不构成错误，但意味着<strong>它的 L_H 在训练时实际约束的是"两个不同切片上的 H 表示应该相似"</strong>——这恰好就是你在 §4.3 看到的"块级相似、像素级不相似"。</p></div>
+
+<h3 id="s5-3">5.3 其余方法逐个体检：没有一个共享输入 H</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:19%">方法</th><th style="width:33%">它怎么处理 H / 通道</th><th style="width:15%">机制挂在哪里</th><th class="c">共享输入 H？</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr><td><strong>CCPL</strong><br>arXiv:2506.07559 (2025)</td><td>把<strong>生成的 IHC</strong> 与<strong>真实 IHC</strong>各自解成 H、DAB；用 Gigapath Tile Encoder 提双通道特征算 cross-channel correlation，另对两通道 FOD 图做分布统计</td><td>损失<br><span class="small">（输出侧对齐）</span></td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td><strong>MCCL</strong><br>Springer LNCS 2025<br>10.1007/978-981-96-9863-9_32</td><td>摘要称引入 H&amp;E 的 <strong>E 通道</strong>，算 E / H / D 三者跨通道相关性 + 病理基础模型的 channel-level 特征蒸馏</td><td>损失</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b low">U</span></td></tr>
+<tr><td><strong>TDKstain</strong><br>MICCAI 2024<br>papers.miccai.org/…/3227_paper.pdf</td><td>用生成的/真实的 <strong>nuclei density map</strong> 做正则 + <strong>DAB 通道 L1</strong>；数据为 2,592 对 registered 的 RegH2I</td><td>损失</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td><strong>PSPStain</strong></td><td>PALS：从 DAB 通道导 FOD 图，算三类 DAB 专属损失；PCLS：原型一致性</td><td>损失</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td><strong>StainDiffuser</strong><br>arXiv:2403.11340</td><td>"<strong>shared H&amp;E encoder</strong>"——共享的是<strong>编码器</strong>（模型内部权重），不是 H 通道；分割掩膜由 <strong>DAB 通道阈值化</strong>得到</td><td>模型内部权重</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td><strong>OT-StainNet</strong><br>AAAI 2025, 39(3):3194<br>10.1609/aaai.v39i3.32329</td><td>原文自述相邻切片 "not precisely aligned at the pixel level"；用 optimal transport 做语义匹配 + 语义一致性约束</td><td>损失</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td><strong>Star-Diff</strong><br>arXiv:2508.02528</td><td>残差 U-Net 预测 H&amp;E 与 IHC 之间的<strong>结构差</strong></td><td>预测目标</td><td class="c"><span class="b bad">否</span></td><td class="c"><span class="b high">V</span></td></tr>
+</tbody></table></div>
+<p class="small">核实等级：<span class="b high">V</span> = 我抓取并读到一手页面；<span class="b low">U</span> = 仅见于摘要或二手来源（MCCL 正文被 Springer 付费墙挡住）。</p>
+<div class="box key"><div class="bt">这张表最重要的一列是最后一列</div>
+<p style="margin-bottom:0">七篇代表作，<strong>共享输入 H 的一篇都没有</strong>。它们全部走的是「把 DAB 通道拿来当约束/掩膜/评价量」这条路。<strong>这是一个阴性结论，而且它比阳性结论更有信息量</strong>——说明"把输入 H 拼进输出"这一步在文献上仍然是空位。</p></div>
+
+<h3 id="s5-4">5.4 综述的判定</h3>
+<div class="card">
+<div class="ch"><div><div class="title">H&amp;E to IHC virtual staining methods in breast cancer: an overview and benchmarking</div><div class="v">npj Digital Medicine 2025 · DOI 10.1038/s41746-025-01741-9 · PMC12222792 <span class="b high">VERIFIED 逐字</span></div></div><div><span class="b blue">唯一系统性综述</span></div></div>
+<div class="body">
+<p>该综述的方法总表（53 行）里，<strong>只有 DeReStainer 一行</strong>被描述为处理共享的苏木素通道，逐字：</p>
+<p style="padding-left:14px;border-left:3px solid var(--border)">"A GAN model that processes the <strong>shared haematoxylin channels</strong> of the H&amp;E and IHC images to constrain the training and uses a HER2-classifier to regularise the decoder."</p>
+<p>同一篇对整条路线的判定逐字：</p>
+<p style="padding-left:14px;border-left:3px solid var(--border)">"recent models have tried to incorporate loss functions that try to account for this by utilising the <strong>DAB channel</strong> or auxiliary classifiers. So far, <strong>no clear winning strategy</strong> ensuring that pathological information is correctly preserved has emerged."</p>
+<p>该综述的数据集表还给出了一个直接相关的列（Registered）：BCI / MIST / IHC4BC 为 <strong>Yes</strong>；HER2 Contest / AIDPATH / ACROBAT / ANHIR 为 <strong>No</strong>。<span class="small">（注意：这里的 "Registered = Yes" 指的是"做过配准"，<strong>不等于"像素级对齐"</strong>——见 §4.2。）</span></p>
+</div></div>
+
+<h2 id="s6"><span class="num">6</span>失效模式：五个环节会让「共享 H」翻车</h2>
+<p>把前面散落的证据集中成一张表。这张表的用法是：<strong>任何一个环节在你的数据上明显成立，就必须在论文里显式声明，而不是默认它不成立。</strong></p>
+<div class="scroll"><table>
+<thead><tr><th style="width:5%" class="c">#</th><th style="width:17%">环节</th><th style="width:33%">证据</th><th style="width:11%" class="c">对你数据的检验</th><th>后果</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>1</strong></td><td><strong>协议强度差</strong></td><td>同一瓶 Gill's 原液、同一稀释比：IHC 复染 <strong>30 秒</strong> vs H&amp;E <strong>5 分钟</strong>（IHC World 协议页，厂商来源）<span class="b high">V</span></td><td class="c"><span class="b medium">查协议</span></td><td>两边的 C_H 不在同一浓度尺度 ⇒ 直接复用会带系统色偏 ⇒ 需要低容量校准 T_H</td></tr>
+<tr><td class="c"><strong>2</strong></td><td><strong>批次 / 实验室差</strong></td><td>Prezja et al., <em>Applied Sciences</em> 12(15):7511 (2022), DOI 10.3390/app12157511：66 家实验室按各自常规法染 H&amp;E，结果<strong>仍可按实验室区分</strong>；Khan et al., arXiv:2506.19106 (2025)：66 实验室 multicenter benchmarking，差异 "often significantly" <span class="b high">V</span></td><td class="c"><span class="b medium">看来源</span></td><td>跨机构泛化时 H 通道分布会漂移。★ <strong>阴性结论：未检索到专门量化"IHC 复染 H 通道"实验室间差异的研究</strong>——上面两篇都是 H&amp;E</td></tr>
+<tr><td class="c"><strong>3</strong></td><td><strong>抗原修复（HIER）破坏核形态</strong></td><td>Hunt, Attanoos, Jasani, <em>J Clin Pathol</em> 49(9):767–770 (1996), DOI 10.1136/jcp.49.9.767：<strong>微波 HIER 后核形态细节（含 mitotic figures）丢失</strong>，autoclave 组未见 <span class="b high">V</span></td><td class="c"><span class="b medium">查前处理</span></td><td>IHC 必做 HIER、H&amp;E 不做 ⇒ <strong>两边的"核"在物理上已经不是同一个东西</strong>。这是比配准更早发生的一层不可逆差异</td></tr>
+<tr><td class="c"><strong>4</strong></td><td><strong>DAB 污染 / 遮挡 H</strong></td><td>Ruifrok 2001：DAB 饱和区对"苏木素"IOD 的贡献<strong>平均达 65%</strong>；Ki-67 阳性核内 H 与 DAB 共定位，单波长无法分离 <span class="b high">V</span>；Shi 2016 <em>Sci Rep</em> 6:32127 明确处理 "fuzzy mixed colors" 与 "ghost nuclei" <span class="b high">V</span></td><td class="c"><span class="b high">必查</span></td><td><strong>阳性越强的地方，C_H^IHC 越不可信</strong>——而这正是虚拟染色最关心的区域。用 C_H^IHC 当监督目标是<strong>系统性偏差</strong></td></tr>
+<tr><td class="c"><strong>5</strong></td><td><strong>配准残差</strong></td><td>HyReCo：连续切片中位残差 <strong>7.1–16.0 µm</strong>，同片再染 <strong>0.9–2.3 µm</strong>；细胞核直径约 5–10 µm <span class="b high">V</span></td><td class="c"><span class="b high">必查</span></td><td>连续切片上逐像素"同一个 H"物理上不存在。你自己的实测：块级 0.407 / 像素级 0.061</td></tr>
+<tr style="background:var(--amberSoft)"><td class="c"><strong>6</strong></td><td><strong>模型侧：幻觉</strong><br><span class="small">（不是"H 共享"的失效，是它的后果）</span></td><td>Huang et al., <em>Nature Biomedical Engineering</em> 2025, DOI 10.1038/s41551-025-01421-9（AQuA）检出 "realistic-looking images that <strong>could mislead diagnosticians</strong>"；Oh et al., arXiv:2411.15060 给出 latent-space 幻觉检测基线 <span class="b high">V</span></td><td class="c"><span class="b low">可选</span></td><td>★ <strong>两篇摘要都没有点名"编造细胞核"</strong>——所以<strong>不要</strong>把"虚拟染色会编造细胞核"写成有文献支撑的结论。只能说"存在结构幻觉风险，需要检测机制"</td></tr>
+</tbody></table></div>
+
+<h2 id="s7"><span class="num">7</span>分层回答与三条推论</h2>
+<div class="box good"><div class="bt">回到你的问题</div>
+<p><strong>「H&amp;E 与 IHC 的这两个 H 通道是共享的吗？」</strong></p>
+<p style="margin-bottom:0">→ <strong>是同一个染料（化学层），不是同一份信号（像素层）；而虚拟染色文献里真正做的，是在表示层对齐，不是在像素层复用。</strong>所以这个问题的正确答案不是一个字，而是一句话——<strong>而这句话的每一半都有可验证的依据，另一半也有可验证的反例。</strong></p></div>
+<h3>三条推论</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">推论 1 · 别把它当像素级恒等用</div><p>「共享」若被解读成 <code>C_H^HE(x,y) = C_H^IHC(x,y)</code>，你就在假设一个你的数据里不存在的东西（<code>Corr_pixel = 0.061</code>，配准残差与核同量级）。</p><p class="small">可用形式：结构条件 / 确定性锚 / 块级一致性约束。</p></div>
+<div class="mini"><div class="mt">推论 2 · 当分布级先验用是合理的</div><p>「两边的 H 表示应该相似」是一个<strong>有先例</strong>的约束（DeReStainer 的 L_H），但它只被验证在特征空间，且论文自己写的是 "we believe"。</p><p class="small">可用形式：特征空间一致性损失、核密度图一致性、分布对齐。</p></div>
+</div>
+<div class="mini" style="margin-top:16px"><div class="mt">推论 3 · 无论哪种用法，M_HE ≠ M_IHC</div><p>H&amp;E 侧的苏木素与 IHC 侧的复染苏木素是<strong>不同浓度、可能不同配方、且经过不同前处理（HIER）</strong>的。用 M_HE 解出的 <code>C_H^HE</code> 与用 M_IHC 渲染出的 H 通道<strong>不在同一个物理尺度上</strong>。Macenko 2009 一手材料已确认染色向量「can also vary significantly for the same stain depending on such factors as the manufacturer」。</p><p class="small">⇒ 必须有一个低容量的校准 <code>T_H</code>（全局 affine / monotone）。<strong>不要让网络自由改 H</strong>——那会把这个物理约束变成又一个可以被滥用的自由度。</p></div>
+
+<h2 id="s8"><span class="num">8</span>对你项目的直接含义</h2>
+
+<h3 id="s8-1">8.1 决策树：先判定你的数据属于哪一类</h3>
+<div class="flow"><pre><code>你的 IHC 数据是哪一种？
+│
+├─ 连续切片（BCI / MIST / 自建 serial section）
+│   │  判据：数据集文档写的是 adjacent / consecutive cuts
+│   ├─ H 通道在像素级【不共享】（残差 7–16 µm ≫ 核尺度 5–10 µm）
+│   ├─ 「把输入 H 拼进输出」= 把一个已知的错误对齐固化进模型
+│   └─ 只能：块级/分布级结构锚 + 论文里显式声明像素指标的上限
+│
+├─ 同片脱色再染（HER2match 式）
+│   │  判据：采集记录里有 destain / restain 步骤
+│   ├─ H 通道【近似共享】（残差 0.9–2.3 µm，可达 nucleus-level）
+│   ├─ 「复用 H」在物理上第一次变得合法 —— 但这是【你的数据给的许可】，
+│   │   不是文献给的（文献里仍无像素级复用的先例）
+│   └─ 仍需 T_H 校准：协议 30 s vs 5 min + 批次差 + HIER 的核形态改变
+│
+└─ 不确定 / 混合
+    └─ 先做零成本判定：抽 5 对图，量 Corr_128 与 Corr_pixel
+        ├─ 块级高、像素级低  → 按【连续切片】处理
+        └─ 两者都高          → 按【同片再染】处理</code></pre></div>
+
+<h3 id="s8-2">8.2 三条可执行动作（全部零训练）</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:5%" class="c">#</th><th style="width:26%">动作</th><th style="width:14%" class="c">成本</th><th>判据与分派</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>1</strong></td><td><strong>判定数据范式</strong>：查数据集文档里 H&amp;E 与 IHC 是不是相邻切片；自建数据查采集记录有无脱色再染步骤</td><td class="c"><span class="b high">10 分钟</span></td><td>是 BCI / MIST ⇒ 连续切片，<strong>H 复用这条路直接关掉</strong>；自建同片 ⇒ 打开，但必须做动作 2</td></tr>
+<tr><td class="c"><strong>2</strong></td><td><strong>量 T_H 的必要性</strong>：在配准好的对上，把 <code>C_H^HE</code> 与 <code>C_H^IHC</code> 的分位数对齐曲线画出来（<strong>不是相关系数</strong>）</td><td class="c"><span class="b high">半小时</span></td><td>两条分布只差一个仿射 ⇒ <code>T_H = affine</code> 够用；形状不同 ⇒ 不只是尺度问题，说明还有协议/前处理造成的非线性差异，需要重新考虑"复用"这个前提</td></tr>
+<tr><td class="c"><strong>3</strong></td><td><strong>写作纪律</strong>：论文里写 "H&amp;E and IHC share the hematoxylin channel" 时，必须同时给出三件事</td><td class="c"><span class="b high">0</span></td><td>(a) 你自己的量化（0.407 / 0.061）；(b) 声明这是<strong>染料身份层</strong>的共享而非像素层；(c) 引用 DeReStainer 时说明它<strong>只做特征对齐</strong>，未做像素复用</td></tr>
+</tbody></table></div>
+<div class="box pur"><div class="bt">顺带一条可能对你论文有用的判断</div>
+<p style="margin-bottom:0">库内 <code>DAB-only浓度扩散_文献先例地图…</code> 已经指出：<strong>「跨染色 H 通道共享的量化证据 + 跨矩阵复用的校准方法」这一格在文献里仍是空的</strong>——DeReStainer 只写 "we believe"、只做特征级对齐、无任何相关系数；本轮检索同样<strong>未找到任何论文报告 H(HE) 与 H(IHC) 的数值相关</strong>。你的 <code>0.407 / 0.061</code> 很可能是新的。<strong>但请注意这是"未找到"，不是"已确认唯一"。</strong></p></div>
+
+<h2 id="s9"><span class="num">9</span>证据边界与未核实清单</h2>
+<div class="box stop"><div class="bt">明确未核实的事项 —— 请勿当作事实引用</div>
+<ol style="margin-bottom:0">
+<li><strong>没有任何论文专门论证或反驳</strong>「H&amp;E 的 H 与 IHC 的 H 是否同一物」。检索 "hematoxylin channel consistency between H&amp;E and IHC"、"nuclear stain transfer H&amp;E IHC" 均无命中。<strong>DeReStainer 的一句 "we believe" 就是全部。</strong>这是一个真实的空白，不是我没搜到。</li>
+<li><strong>MCCL</strong>（Springer 10.1007/978-981-96-9863-9_32）正文被付费墙拦截，本报告<strong>只采用其摘要</strong>，标 <span class="b low">UNVERIFIED</span>，未采用其任何性能数字。</li>
+<li><strong>「DAB 物理覆盖核内苏木素」没有同行评议的定量论文。</strong>最强的一手证据是 Ruifrok 的 IOD 污染（平均 65%）与 Ki-67 的混色描述——两者都是"解混层面的混淆"，不是"光学遮挡"的直接测量。</li>
+<li><strong>「同一发色团 ⇒ 同一吸收谱」是物理推断</strong>，本轮未找到明文写这句话的原文。同发色团 + 工程上复用同一 stain vector 强烈暗示成立，但这是推断。</li>
+<li><code>0.407</code> / <code>0.061</code> 是<strong>库内既有的实测值</strong>，我本轮<strong>没有独立复算</strong>，也未核到其解混口径。库内 <code>M0条件扩散归因审查</code> 已将其标为"待查信号"。</li>
+<li><strong>HyReCo 的 arXiv v2 与 JMI 正式版数字不同</strong>（7.1/16.0 vs 6.5/24.1 µm）。本报告两个都列，引用时请注明版本。</li>
+<li><strong>IHC World 的 "30 s vs 5 min" 是厂商协议页</strong>，非同行评议。它作为"协议强度差约 10×"的例证是充分的，但不构成学术引用。</li>
+<li><strong>未检索到专门量化"IHC 复染 H 通道"实验室间差异的研究。</strong>Prezja 2022 与 Khan 2025 都只覆盖 H&amp;E。</li>
+<li><strong>虚拟染色的幻觉检测论文（AQuA、arXiv:2411.15060）摘要都没有点名"编造细胞核"。</strong>不要把这一条外推。</li>
+<li><strong>我没有在任何真实数据上跑过实验。</strong>本报告全部结论来自文献一手核实 + 对库内既有报告结论的复用（并注明出处）+ 代数量级推算。</li>
+</ol></div>
+<div class="box key"><div class="bt">核实等级约定（全文遵守）</div>
+<p style="margin-bottom:0"><span class="b high">VERIFIED</span> = 我抓取并读到一手页面（arXiv 摘要页 / HTML 全文 / PDF 正文 / 期刊落地页）。<span class="b low">UNVERIFIED</span> = 仅见于搜索摘要或二手来源。凡写「未说明」的地方，就是原文确实没写——<strong>没有用默认值补过</strong>。</p></div>
+
+<h2 id="s10"><span class="num">10</span>参考文献</h2>
+<h4>染色化学与光学</h4>
+<ul>
+<li>Kiernan JA. <em>Does progressive nuclear staining with hemalum (alum hematoxylin) involve DNA, and what is the nature of the dye-chromatin complex?</em> Biotech Histochem 93(2), 2018. DOI <code>10.1080/10520295.2017.1399466</code> · PMID 29320873</li>
+<li>Ruifrok AC, Johnston DA. <em>Quantification of histochemical staining by color deconvolution.</em> Anal Quant Cytol Histol 23(4):291–299, 2001.</li>
+<li>Macenko M, et al. <em>A method for normalizing histology slides for quantitative analysis.</em> ISBI 2009.</li>
+<li>Vahadane A, et al. <em>Structure-preserving color normalization and sparse stain separation.</em> IEEE TMI 35(8):1962–1971, 2016. DOI <code>10.1109/TMI.2016.2529665</code></li>
+<li>IHC World. <em>Gill's Hematoxylin Protocol.</em> 2024-01-20（厂商协议页）</li>
+<li>Thermo Fisher. <em>IHC Counterstains.</em>（厂商文档）</li>
+</ul>
+<h4>DAB 与苏木素的混叠</h4>
+<ul>
+<li>Shi P, Zhong J, et al. <em>Automated Ki-67 Quantification of Immunohistochemical Staining Image of Human Nasopharyngeal Carcinoma Xenografts.</em> Sci Rep 6:32127, 2016. DOI <code>10.1038/srep32127</code></li>
+<li>Ghose S, et al. <em>Deep learning-inferred multiplex immunofluorescence for immunohistochemical image quantification (DeepLIIF).</em> Nature Machine Intelligence 4:401–412, 2022. DOI <code>10.1038/s42256-022-00471-x</code></li>
+<li>Grosset AA, et al. <em>Hematoxylin and Eosin Counterstaining Protocol for Immunohistochemistry Interpretation and Diagnosis.</em> Appl Immunohistochem Mol Morphol 27(7):558–563, 2019. DOI <code>10.1097/PAI.0000000000000626</code></li>
+</ul>
+<h4>数据配准与染色变异</h4>
+<ul>
+<li>Lotz J, Weiss N, van der Laak J, Heldmann S. <em>Comparison of consecutive and re-stained sections for image registration in histopathology.</em> J Medical Imaging 10(6), 2023. DOI <code>10.1117/1.JMI.10.6.067501</code> · arXiv:2106.13150</li>
+<li>Liu S, et al. <em>Breast Cancer Immunohistochemical Image Generation: a Benchmark Dataset and Challenge Review（BCI）.</em> arXiv:2305.03546, 2023.</li>
+<li>Li F, et al. <em>Adaptive Supervised PatchNCE Loss for Learning H&amp;E-to-IHC Stain Translation with Inconsistent Groundtruth Image Pairs（MIST）.</em> arXiv:2303.06193, 2023（MICCAI）.</li>
+<li>Klöckner P, et al. <em>GANs vs. Diffusion Models for virtual staining with the HER2match dataset.</em> arXiv:2506.18484, 2025.</li>
+<li>Prezja F, et al. <em>H&amp;E Multi-Laboratory Staining Variance Exploration with Machine Learning.</em> Applied Sciences 12(15):7511, 2022. DOI <code>10.3390/app12157511</code></li>
+<li>Khan AM, et al. <em>Staining normalization in histopathology: Method benchmarking using multicenter dataset.</em> arXiv:2506.19106, 2025.</li>
+<li>Hunt NCA, Attanoos R, Jasani B. <em>High temperature antigen retrieval and loss of nuclear morphology.</em> J Clin Pathol 49(9):767–770, 1996. DOI <code>10.1136/jcp.49.9.767</code></li>
+<li>Jeyasangar V, Alsalemi A, Raza SEA. <em>Nuclei-Location Based Point Set Registration of Multi-Stained WSIs.</em> arXiv:2404.17041</li>
+</ul>
+<h4>H&amp;E→IHC 虚拟染色方法</h4>
+<ul>
+<li>Wei L, Hua S, Zhang S, Zhang X. <em>DeReStainer: H&amp;E to IHC Pathological Image Translation via Decoupled Staining Channels.</em> arXiv:2409.00649, 2024（MICCAI）★ 全文献唯一显式声称共享 H</li>
+<li><em>Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining（CCPL）.</em> arXiv:2506.07559, 2025.</li>
+<li><em>Enhancing H&amp;E-to-IHC Virtual Staining via Multi-Channel Correlation Learning（MCCL）.</em> Springer LNCS, 2025. DOI <code>10.1007/978-981-96-9863-9_32</code>（正文未取到）</li>
+<li><em>Advancing H&amp;E-to-IHC Virtual Staining with Task-Specific Domain Knowledge for HER2 Scoring（TDKstain）.</em> MICCAI 2024. papers.miccai.org/miccai-2024/paper/3227_paper.pdf</li>
+<li><em>OT-StainNet.</em> AAAI 2025, 39(3):3194. DOI <code>10.1609/aaai.v39i3.32329</code></li>
+<li><em>StainDiffuser.</em> arXiv:2403.11340</li>
+<li><em>Star-Diff.</em> arXiv:2508.02528（Computers in Biology and Medicine 2025）</li>
+<li>综述：<em>H&amp;E to IHC virtual staining methods in breast cancer: an overview and benchmarking.</em> npj Digital Medicine 2025. DOI <code>10.1038/s41746-025-01741-9</code> · PMC12222792</li>
+</ul>
+<h4>虚拟染色可信度</h4>
+<ul>
+<li>Huang Y, Li C, Pillar N, Keidar Haran T, Wallace WD, Ozcan A. <em>A robust and scalable framework for hallucination detection in virtual tissue staining and digital pathology.</em> Nature Biomedical Engineering, 2025. DOI <code>10.1038/s41551-025-01421-9</code> · arXiv:2404.18458</li>
+<li>Oh, Falahkheirkhah, Cheville, Bhargava. <em>Hallucination Detection in Virtually-Stained Histology: A Latent Space Baseline.</em> arXiv:2411.15060</li>
+</ul>
+<hr>
+<p class="small">本报告由 WorkBuddy 生成 · 2026-10-10 · 全部承重引用经一手 WebFetch / curl 复核 · 复用库内既有结论处均已注明出处</p>
+</main>
+</div>
+</body>
+</html>

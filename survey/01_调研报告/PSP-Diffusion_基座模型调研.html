@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSP-Diffusion 基座模型调研：浓度空间扩散该建在谁身上</title>
+<style>
+  :root{
+    --bg:#f6f7f9;
+    --card:#ffffff;
+    --fg:#1f2328;
+    --fg2:#57606a;
+    --fg3:#8b949e;
+    --line:#e3e6ea;
+    --line2:#eef0f3;
+    --accent:#2f6feb;
+    --accent-bg:#eaf1fe;
+    --ok:#1a7f37;
+    --ok-bg:#e8f5ec;
+    --warn:#9a6700;
+    --warn-bg:#fdf6e3;
+    --bad:#b42318;
+    --bad-bg:#fdeceb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15.5px; line-height:1.78;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1020px; margin:0 auto; padding:0 22px 100px;}
+
+  /* ---------- header ---------- */
+  header.top{
+    background:linear-gradient(180deg,#ffffff 0%,#fbfcfd 100%);
+    border-bottom:1px solid var(--line);
+    padding:38px 0 30px; margin-bottom:30px;
+  }
+  header.top .wrap{padding-bottom:0;}
+  .kicker{
+    display:inline-block; font-size:12.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--accent); background:var(--accent-bg); border-radius:20px;
+    padding:4px 13px; font-weight:600; margin-bottom:16px;
+  }
+  h1{font-size:29px; line-height:1.34; margin:0 0 14px; font-weight:700; letter-spacing:-.01em;}
+  .sub{color:var(--fg2); font-size:15px; margin:0; max-width:800px;}
+  .meta{margin-top:20px; font-size:13px; color:var(--fg3); display:flex; gap:22px; flex-wrap:wrap;}
+  .meta b{color:var(--fg2); font-weight:600;}
+
+  /* ---------- toc ---------- */
+  nav.toc{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:18px 22px; margin-bottom:34px;
+  }
+  nav.toc .t{font-size:12.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--fg3); font-weight:600; margin-bottom:10px;}
+  nav.toc ol{margin:0; padding-left:0; list-style:none; counter-reset:toc; columns:2; column-gap:30px;}
+  nav.toc li{counter-increment:toc; margin:3px 0; font-size:14px; break-inside:avoid;}
+  nav.toc li a{color:var(--fg2); text-decoration:none;}
+  nav.toc li a:hover{color:var(--accent);}
+  nav.toc li a::before{content:counter(toc) ". "; color:var(--fg3); font-variant-numeric:tabular-nums;}
+
+  /* ---------- sections ---------- */
+  section{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:26px 30px 30px; margin-bottom:22px;}
+  h2{font-size:20.5px; margin:0 0 6px; font-weight:700; letter-spacing:-.005em; scroll-margin-top:20px;}
+  h2 .num{color:var(--fg3); font-variant-numeric:tabular-nums; margin-right:9px; font-weight:600;}
+  h2 + .lede{color:var(--fg2); font-size:14.5px; margin:0 0 20px; padding-bottom:16px; border-bottom:1px solid var(--line2);}
+  h3{font-size:16.5px; margin:26px 0 9px; font-weight:650;}
+  h3:first-of-type{margin-top:14px;}
+  h4{font-size:14.5px; margin:18px 0 6px; font-weight:650; color:var(--fg);}
+  p{margin:0 0 13px;}
+  ul,ol{margin:0 0 13px; padding-left:22px;}
+  li{margin:5px 0;}
+  a{color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(47,111,235,.28);}
+  a:hover{border-bottom-color:var(--accent);}
+  code{font-family:var(--mono); font-size:.88em; background:#f2f4f7; padding:1.5px 5px; border-radius:4px; color:#37414d;}
+  b,strong{font-weight:650;}
+
+  /* ---------- verdict ---------- */
+  .verdict{
+    border:1px solid #cfe0fd; background:linear-gradient(180deg,#f4f8ff 0%,#eef4ff 100%);
+    border-radius:11px; padding:20px 24px; margin:0 0 22px;
+  }
+  .verdict .lbl{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:9px;}
+  .verdict p:last-child{margin-bottom:0;}
+  .verdict.big{padding:24px 26px;}
+  .verdict.big .ans{font-size:19px; font-weight:700; line-height:1.55; color:#123a80; margin:0 0 12px;}
+
+  /* ---------- boxes ---------- */
+  .box{border-radius:9px; padding:15px 19px; margin:0 0 16px; font-size:14.5px; border:1px solid;}
+  .box p:last-child{margin-bottom:0;}
+  .box .h{font-weight:650; margin-bottom:5px; display:flex; align-items:center; gap:7px;}
+  .box.good{background:var(--ok-bg); border-color:#c3e3cd; color:#14532d;}
+  .box.good .h{color:var(--ok);}
+  .box.warn{background:var(--warn-bg); border-color:#eddfb4; color:#5c4708;}
+  .box.warn .h{color:var(--warn);}
+  .box.bad{background:var(--bad-bg); border-color:#f3cdc9; color:#7a1c14;}
+  .box.bad .h{color:var(--bad);}
+  .box.info{background:#f6f8fa; border-color:var(--line); color:var(--fg2);}
+  .box.info .h{color:var(--fg);}
+
+  /* ---------- tables ---------- */
+  .tw{overflow-x:auto; margin:0 0 18px; border:1px solid var(--line); border-radius:10px;}
+  table{border-collapse:collapse; width:100%; font-size:13.6px;}
+  th,td{padding:9px 13px; text-align:left; border-bottom:1px solid var(--line2); vertical-align:top;}
+  thead th{background:#f6f8fa; font-weight:650; color:var(--fg2); font-size:12.8px; letter-spacing:.01em; white-space:nowrap; border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#fbfcfd;}
+  td.c,th.c{text-align:center;}
+  .tag{display:inline-block; font-size:11.5px; padding:1.5px 8px; border-radius:20px; font-weight:600; white-space:nowrap; line-height:1.6;}
+  .tag.g{background:var(--ok-bg); color:var(--ok);}
+  .tag.y{background:var(--warn-bg); color:var(--warn);}
+  .tag.r{background:var(--bad-bg); color:var(--bad);}
+  .tag.b{background:var(--accent-bg); color:var(--accent);}
+  .tag.n{background:#f0f2f5; color:var(--fg2);}
+
+  /* score chips */
+  .sc{display:inline-block; min-width:22px; text-align:center; font-family:var(--mono); font-size:12px; font-weight:700; padding:1px 6px; border-radius:5px;}
+  .sc5{background:#d7f0de; color:#14622f;}
+  .sc4{background:#e3f2e8; color:#1a7f37;}
+  .sc3{background:#fdf3d8; color:#8a6100;}
+  .sc2{background:#fbe4e1; color:#a8322a;}
+  .sc1{background:#f6d3d0; color:#8c1f18;}
+  .tot{font-family:var(--mono); font-weight:700; font-size:13.5px;}
+  .tot.a{color:#1a7f37;}
+  .tot.b{color:#8a6100;}
+  .tot.c{color:#a8322a;}
+
+  /* model card */
+  .card{border:1px solid var(--line); border-radius:11px; padding:0; margin:0 0 16px; overflow:hidden;}
+  .card > .hd{background:#f8f9fb; padding:13px 19px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:11px; flex-wrap:wrap;}
+  .card > .hd .nm{font-size:16px; font-weight:700;}
+  .card > .hd .yr{font-size:12.5px; color:var(--fg3);}
+  .card > .hd .rk{margin-left:auto; font-size:12px; font-weight:700; letter-spacing:.05em; padding:2.5px 11px; border-radius:20px;}
+  .card > .bd{padding:17px 19px 6px;}
+  .card > .bd p:last-child{margin-bottom:11px;}
+  .kv{display:grid; grid-template-columns:86px 1fr; gap:3px 14px; font-size:13.6px; margin:0 0 13px;}
+  .kv dt{color:var(--fg3); font-weight:600;}
+  .kv dd{margin:0;}
+
+  .pro::before{content:"＋"; color:var(--ok); font-weight:700; margin-right:6px;}
+  .con::before{content:"－"; color:var(--bad); font-weight:700; margin-right:6px;}
+  ul.tick{list-style:none; padding-left:0;}
+  ul.tick li{padding-left:2px;}
+
+  /* pipeline */
+  .flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 16px; font-size:13.4px;}
+  .node{background:#f6f8fa; border:1px solid var(--line); border-radius:8px; padding:8px 13px; font-family:var(--mono); font-size:12.6px;}
+  .node.hi{background:var(--accent-bg); border-color:#cfe0fd; color:#123a80; font-weight:600;}
+  .node.new{background:#e8f5ec; border-color:#c3e3cd; color:#14532d; font-weight:600;}
+  .arw{color:var(--fg3); font-weight:700;}
+
+  .foot{color:var(--fg3); font-size:12.8px; text-align:center; padding:26px 0 0; line-height:1.9;}
+  hr{border:none; border-top:1px solid var(--line2); margin:24px 0;}
+  .small{font-size:13.2px; color:var(--fg2);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="kicker">技术调研报告</div>
+    <h1>PSP-Diffusion 基座模型调研<br>——浓度空间扩散该建在谁身上</h1>
+    <p class="sub">针对"扩散模型直接输出染色浓度场 Ĉ、再由 Beer–Lambert 可微渲染成 RGB"这一技术路线，系统梳理 2023–2026 年虚拟染色/染色迁移领域的可改造基座，给出选型结论与改造清单。</p>
+    <div class="meta">
+      <span><b>调研时间</b> 2026-10-03</span>
+      <span><b>覆盖</b> 24 篇代表性工作 / 8 个候选基座</span>
+      <span><b>数据来源</b> arXiv · ACM DL · Springer · IEEE · 官方代码库</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+  <div class="t">目录</div>
+  <ol>
+    <li><a href="#s1">结论先行</a></li>
+    <li><a href="#s2">调研范围与方法</a></li>
+    <li><a href="#s3">现有方法全景（四代演进）</a></li>
+    <li><a href="#s4">关键发现：浓度空间生成是空白</a></li>
+    <li><a href="#s5">八个候选基座逐个体检</a></li>
+    <li><a href="#s6">选型打分矩阵</a></li>
+    <li><a href="#s7">最终结论：选谁、怎么改</a></li>
+    <li><a href="#s8">推荐改造方案（模块级）</a></li>
+    <li><a href="#s9">分阶段验证路径</a></li>
+    <li><a href="#s10">风险清单与备选</a></li>
+    <li><a href="#s11">评测口径建议</a></li>
+    <li><a href="#s12">参考资料</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <h2><span class="num">01</span>结论先行</h2>
+  <p class="lede">如果你只看一段，看这一段。</p>
+
+  <div class="verdict big">
+    <div class="lbl">直接回答</div>
+    <p class="ans">没有单一现成模型可以直接拿来做"浓度空间扩散"——所有生成式基座都在 <b>RGB 空间</b>或 <b>Stable Diffusion 的 VAE 隐空间</b>里工作。所以答案是"<b>骨架选 A，表示层必须自己换</b>"。</p>
+    <p style="margin-bottom:0">具体地：<b>以 HistDiST（SD1.5 LDM 工程骨架）为首选基座</b>，把它的 VAE 换成 <b>Beer–Lambert 自编码器</b>（编码器 RGB→C、解码器是可微 BL 渲染、染色矩阵 S 可学），再把条件从 Phikon 的 CLS 嵌入升级为 <b>UNI 稠密空间 token</b>。这样你保住了整套工业级扩散工程（v-prediction、zero-SNR、DDIM inversion、η-cosine 调度、diffusers 生态），同时让生成真正发生在浓度空间。</p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th style="width:74px">优先级</th><th>基座</th><th>定位</th><th>一句话理由</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag g">首选</span></td>
+          <td><b>HistDiST</b><br><span class="small">arXiv 2505.06793</span></td>
+          <td>工程骨架</td>
+          <td>唯一成熟、代码公开、病理域已适配的扩散工程；结构保持与生成多样性的解法（DDIM inversion + η 调度）正好命中你的错位数据难题</td>
+        </tr>
+        <tr>
+          <td><span class="tag g">必移植</span></td>
+          <td><b>Beer–Lambert Autoencoder</b><br><span class="small">arXiv 2601.11336</span></td>
+          <td>表示层组件</td>
+          <td>直接给你"RGB→C 编码器 + 可微 BL 解码器 + 可学 S"三件套，正是你缺的 VAE</td>
+        </tr>
+        <tr>
+          <td><span class="tag b">条件层</span></td>
+          <td><b>UNIStainNet</b><br><span class="small">arXiv 2603.12716</span></td>
+          <td>条件注入 + 强基线</td>
+          <td>冻结 UNI 稠密 token（1024 个 32×32 空间 token）+ FiLM 染色嵌入 + 错位感知损失，全部可直接抄</td>
+        </tr>
+        <tr>
+          <td><span class="tag b">备选</span></td>
+          <td><b>SPFLOW</b><br><span class="small">GitHub MIT</span></td>
+          <td>表示层备选</td>
+          <td>唯一已经"输出稠密 marker 场"而非 RGB 的基座；marker 条件流匹配 + coarse→target 线性轨迹，与 BL 渲染天然兼容</td>
+        </tr>
+        <tr>
+          <td><span class="tag y">慎选</span></td>
+          <td><b>StainDiffuser</b><br><span class="small">arXiv 2403.11340</span></td>
+          <td>架构参考</td>
+          <td>像素空间 DDPM + 多任务 + 多染色，架构最贴；但官方代码未公开，需自行复现</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box bad">
+    <div class="h">不要做的事</div>
+    <p>不要直接拿 Stable Diffusion 的 VAE 隐空间做 Beer–Lambert。SD 的 VAE 是自然图像域训练的，隐空间<b>不可微地映射到 OD 空间</b>，BL 渲染在隐空间里没有物理意义。要么把 VAE 换成染色域自编码器，要么退回像素空间。</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <h2><span class="num">02</span>调研范围与方法</h2>
+  <p class="lede">检索策略、筛选标准、覆盖范围。</p>
+
+  <h3>检索策略</h3>
+  <ul>
+    <li><b>关键词组合</b>：virtual staining / stain transfer / H&E-to-IHC / stain deconvolution / optical density / concentration space / diffusion / flow matching / Schrödinger bridge / foundation model</li>
+    <li><b>时间窗</b>：2023–2026（重点 2025–2026）</li>
+    <li><b>来源</b>：arXiv、ACM DL、Springer、IEEE Xplore、MICCAI/AAAI/CVPR 论文集、官方 GitHub</li>
+    <li><b>反向追溯</b>：从 UNIStainNet、HistDiST、MIU-Diff 的 baseline 表中反向抓取被比较的方法（ASP、MDCL、PyramidP2P、HEX、STFlow、HistoPlexer 等）</li>
+  </ul>
+
+  <h3>筛选标准（能不能当"可改造基座"）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:34px" class="c">#</th><th>标准</th><th>为什么关键</th></tr></thead>
+      <tbody>
+        <tr><td class="c">1</td><td>是生成式图像到图像（I2I）模型</td><td>你的任务本质是 H&E → 浓度场</td></tr>
+        <tr><td class="c">2</td><td>代码公开且工程质量过关</td><td>"可改造"的前提；论文再好、没代码就是复现成本</td></tr>
+        <tr><td class="c">3</td><td>输出表示可替换为 K 通道非负场</td><td>你要输出 Ĉ 而不是 RGB</td></tr>
+        <tr><td class="c">4</td><td>对 H&E/IHC 错位有鲁棒性设计</td><td>连续切片 10–50 px 错位是行业公认难题，也是你方案里的待确认问题之一</td></tr>
+        <tr><td class="c">5</td><td>有病理域先验（基础模型条件）</td><td>配对数据只有几千对，没先验训不动</td></tr>
+        <tr><td class="c">6</td><td>支持多染色/marker 条件切换</td><td>PSP-Diffusion 目标不止单一 IHC 标记</td></tr>
+        <tr><td class="c">7</td><td>单卡（≤24 GB）可训练</td><td>决定你能不能真跑起来</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box info">
+    <div class="h">一个重要的认知校准</div>
+    <p>虚拟染色这个领域在 2024–2025 年发生了<b>范式迁移</b>：2024 年前是 GAN 的天下（CycleGAN / CUT / ASP / PyramidP2P / MDCL），2025 年起扩散模型全面反超（HistDiST、MIU-Diff、StainDiffuser），2026 年出现流匹配与基础模型条件化（SPFLOW、UNIStainNet、marker-wise diffusion）。<b>你入场的时间点恰好是扩散刚成为主流、但浓度空间还没人做的窗口期。</b></p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <h2><span class="num">03</span>现有方法全景（四代演进）</h2>
+  <p class="lede">把 24 篇代表性工作按技术代际铺开，看清演化逻辑。</p>
+
+  <h3>第一代：颜色映射与色解卷积（经典，非学习）</h3>
+  <p>Macenko、Vahadane、Reinhard 等染色归一化方法，以及经典 Beer–Lambert 色解卷积（Ruifrok &amp; Johnston）。<b>在 OD 空间里染色是可加线性的</b>——这是你整个方案的物理基石，但这类方法只能"分离"不能"生成"。</p>
+  <div class="box warn">
+    <div class="h">已知失效边界</div>
+    <p>经典色解卷积在 <code>K ≤ 3</code> 时是正定或超定的，能解；一旦 <code>K &gt; 3</code>（多重 IHC），逐像素线性解混就变成<b>欠定问题</b>，通道间串扰严重。这正是 Beer–Lambert Autoencoder 这篇论文要解决的问题，也是你 K=2 场景下<b>不存在</b>的问题。</p>
+  </div>
+
+  <h3>第二代：GAN 系（2020–2024 主流）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>方法</th><th>核心思路</th><th>现状</th></tr></thead>
+      <tbody>
+        <tr><td>CycleGAN / CUT</td><td>无配对循环一致性 / 对比学习</td><td>结构保真差、模式崩塌</td></tr>
+        <tr><td>ASP（Attention-guided SPADE）</td><td>SPADE 归一化 + 注意力</td><td>长期是 MIST/BCI 的强基线</td></tr>
+        <tr><td>PyramidP2P</td><td>金字塔 pix2pix</td><td>基线</td></tr>
+        <tr><td>MDCL</td><td>多域对比学习</td><td>HistDiST 论文指出其常引入伪影、丢失分子细节</td></tr>
+        <tr><td>HEMIT</td><td>mIHC 生成</td><td>HEMIT 数据集配套方法</td></tr>
+        <tr><td><b>UNIStainNet</b></td><td>SPADE-UNet + 冻结 UNI 稠密 token + FiLM 染色嵌入</td><td><b>2026 年 MIST 上 SOTA</b>（四个染色全部最佳分布指标）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>第三代：扩散系（2024–2026 主流）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>方法</th><th>年份/venue</th><th>扩散框架</th><th>空间</th><th>关键设计</th></tr></thead>
+      <tbody>
+        <tr><td>BBDM</td><td>CVPR 2023</td><td>布朗桥</td><td>VQGAN 隐空间</td><td>首个 I2I 桥式扩散</td></tr>
+        <tr><td>I²SB</td><td>ICML 2023</td><td>薛定谔桥</td><td><b>像素空间</b></td><td>不假设源图无噪声，专治"配对但不完美"</td></tr>
+        <tr><td>PST-Diff</td><td>IEEE 2024</td><td>DDPM</td><td>像素空间</td><td>病理一致性 + 结构约束，非对称注意力</td></tr>
+        <tr><td><b>StainDiffuser</b></td><td>arXiv 2024/2025</td><td>DDPM（双分支）</td><td><b>像素空间</b></td><td>多任务（染色生成 + 分割）+ 多染色变体 + 双向变体</td></tr>
+        <tr><td><b>HistDiST</b></td><td>arXiv 2025</td><td>LDM（SD1.5 微调）</td><td>SD VAE 隐空间</td><td>双条件（Phikon + VAE 拼接）+ zero-SNR + v-pred + DDIM inversion + η-cosine</td></tr>
+        <tr><td><b>MIU-Diff</b></td><td>arXiv 2025 / Springer</td><td>score-based SDE</td><td>像素空间</td><td>互信息引导能量函数，<b>无配对、明确不假设对齐</b></td></tr>
+        <tr><td>Marker-wise Diffusion</td><td>AAAI 2026</td><td>LDM（SD v2）</td><td>SD VAE 隐空间</td><td>one-hot marker 条件，单模型出 <b>18 个 marker</b>，单步推理 0.13 s</td></tr>
+        <tr><td>HistDiT</td><td>arXiv 2026 / Springer</td><td>Latent DiT</td><td>隐空间</td><td>结构感知的扩散 Transformer</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>第四代：流匹配与基础模型条件化（2026 前沿）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>方法</th><th>核心思路</th><th>对你的意义</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>SPFLOW</b></td>
+          <td>marker 条件流匹配，从 H&amp;E 预测<b>稠密空间蛋白场</b>；线性轨迹 <code>z_t=(1−t)·z_coarse + t·y</code>，12 步 Heun 积分</td>
+          <td><b>表示层最接近你的思路</b>——它已经不做 RGB 了，直接出 marker 强度场</td>
+        </tr>
+        <tr>
+          <td>UNIStainNet</td>
+          <td>冻结 UNI 稠密 token 直接条件化生成器</td>
+          <td>证明"稠密空间 token"比 CLS token 强得多，你要逐像素浓度场，必须用稠密条件</td>
+        </tr>
+        <tr>
+          <td>I2I-RFR</td>
+          <td>把标准 I2I 回归网络重述为整流流</td>
+          <td>方法论参考：如何给已有的确定性网络加上流式生成</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>旁支：物理约束与色解卷积（分析方向）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>方法</th><th>年份</th><th>做什么</th><th>是否生成</th></tr></thead>
+      <tbody>
+        <tr><td>InverseAE（反演自编码器）</td><td>—</td><td>用互补色向量做反演重建正则，自监督解混</td><td>否</td></tr>
+        <tr><td>Semi-Unmix-AE</td><td>—</td><td>dot 标注 + SLIC 超像素 → 伪分割标签，半监督解混</td><td>否</td></tr>
+        <tr><td>PGDIPS</td><td>2025</td><td>物理引导深度图像先验，零样本染色解卷积</td><td>否</td></tr>
+        <tr><td><b>Beer–Lambert Autoencoder</b></td><td>2026</td><td>小 U-Net 编码 RGB→K 通道非负浓度，<b>可微 BL 解码器</b>，S 可学；5 染色 mIHC 面板，串扰显著低于矩阵法</td><td>否（是分析/分离）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box good">
+    <div class="h">这条旁支的价值被低估了</div>
+    <p>Beer–Lambert Autoencoder 看起来只是个"色解卷积改进版"，但它提供的组件恰好是你缺的：<b>一个把 RGB 和浓度场双向打通的、可微的、S 可学的自编码器</b>。它现在被用于"从已染色的图里反解浓度"，你只需要把它翻转成"从 H&amp;E 生成浓度"——<b>架构可以整块搬，任务方向反过来</b>。</p>
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <h2><span class="num">04</span>关键发现：浓度空间生成是空白</h2>
+  <p class="lede">这一节直接决定你的贡献是否成立。</p>
+
+  <h3>核查结论</h3>
+  <p>我把"生成方向"和"表示空间"两个维度交叉排查了一遍，结果如下：</p>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th style="width:150px">表示空间 ↓ / 任务 →</th><th class="c">RGB 空间</th><th class="c">SD-VAE 隐空间</th><th class="c">浓度 / OD 空间</th><th class="c">稠密 marker 场</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>生成</b>（H&amp;E → 目标）</td>
+          <td class="c"><span class="tag n">大量</span><br><span class="small">StainDiffuser, PST-Diff, MIU-Diff, UNIStainNet, ASP…</span></td>
+          <td class="c"><span class="tag n">多个</span><br><span class="small">HistDiST, Marker-wise, HistDiT</span></td>
+          <td class="c"><span class="tag g">空白</span></td>
+          <td class="c"><span class="tag y">仅 1 个</span><br><span class="small">SPFLOW（流匹配，非扩散）</span></td>
+        </tr>
+        <tr>
+          <td><b>分析</b>（RGB → 浓度）</td>
+          <td class="c">—</td>
+          <td class="c">—</td>
+          <td class="c"><span class="tag b">若干</span><br><span class="small">BL-AE, InverseAE, PGDIPS</span></td>
+          <td class="c">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box good">
+    <div class="h">结论：你的思路确实无人占坑</div>
+    <p>"<b>用扩散模型在浓度空间做生成</b>"这个格子是空的。已有的浓度空间工作（Beer–Lambert Autoencoder、InverseAE、PGDIPS）全部是<b>分析方向</b>——从已经染好的图里反解浓度，用于染色归一化与定量。没有一篇是<b>生成方向</b>——从 H&amp;E 直接生成浓度场再渲染成 IHC。</p>
+    <p style="margin-bottom:0">SPFLOW 是最接近的，但它（a）是流匹配不是扩散，（b）输出的是归一化强度场而非物理浓度，（c）没有 BL 渲染这一步。你的方案在<b>表示空间 + 物理渲染</b>两个点上都比它更靠前。</p>
+  </div>
+
+  <div class="box warn">
+    <div class="h">但这意味着没有现成基座，代价要认</div>
+    <p>空白 = 没有免费午餐。你不能"下载一个模型然后微调"，必须做<b>表示层替换</b>——这是实打实的工作量，也是你论文的核心贡献点所在。好消息是：所有需要的零件都已经单独存在，只是从来没人把它们拼在一起。</p>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <h2><span class="num">05</span>八个候选基座逐个体检</h2>
+  <p class="lede">每个候选回答同一组问题：它是什么、代码在哪、能不能改、致命问题是什么。</p>
+
+  <!-- HistDiST -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">1. HistDiST</span>
+      <span class="yr">arXiv 2505.06793 · 2025</span>
+      <span class="rk" style="background:var(--ok-bg); color:var(--ok);">推荐 · 工程骨架</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>代码</dt><dd><a href="https://github.com/ErikGro/HistDiST">github.com/ErikGro/HistDiST</a>（官方 PyTorch，含 Google Drive 权重）</dd>
+        <dt>框架</dt><dd>Latent Diffusion Model，基于 Stable Diffusion 1.5 微调，<code>diffusers==0.16.1</code></dd>
+        <dt>条件</dt><dd>双路：Phikon 形态嵌入（cross-attention）+ VAE 编码的 H&amp;E 隐变量（通道拼接，InstructPix2Pix 式）</dd>
+        <dt>硬件</dt><dd>单/多张 24 GB GPU，300 epochs，batch 16</dd>
+      </dl>
+      <h4>为什么它是首选骨架</h4>
+      <ul class="tick">
+        <li class="pro"><b>唯一成熟的病理域扩散工程</b>。代码基于 diffusers 官方训练脚本改写，意味着你想要的任何修改（换 VAE、加损失项、改采样器）都有清晰的接入点。</li>
+        <li class="pro"><b>v-prediction + zero-terminal-SNR + trailing timesteps</b> 三件套已经实现。这不是花活——它是解决"扩散模型生成 IHC 时亮度分布塌缩"的必要条件。你如果自己搭，大概率会踩这个坑。</li>
+        <li class="pro"><b>DDIM inversion + η-cosine 噪声调度</b>：这是全篇最有价值的部分。DDIM 反演把输入 H&amp;E 映射到噪声向量以保结构，但纯确定性采样会让 FID 变差（生成多样性塌缩）；他们用 <code>η_t(t)=0.6−0.4·cos(πt/T)</code> 注入受控随机性，在"结构保真"和"分布真实"之间找平衡点（最优配置：η-cosine 从 20% 处启动）。<b>你的方案要在错位数据上保结构，这套机制几乎是现成的答案。</b></li>
+        <li class="pro"><b>联合训练</b>（无条件 H&amp;E 生成 + H&amp;E→IHC 翻译）——这是 DDIM inversion 能生效的前提，设计巧妙。</li>
+        <li class="pro">提出 <b>MRA 指标</b>（Molecular Retrieval Accuracy，用 GigaPath 嵌入做分子检索），H&amp;E→Ki67 上比 MDCL 高 28%。这个指标对你也适用。</li>
+      </ul>
+      <h4>致命问题</h4>
+      <ul class="tick">
+        <li class="con"><b>隐空间不可做 Beer–Lambert。</b>SD1.5 的 VAE 是自然图像域训练的，它的隐空间与 OD 空间之间没有可微的物理映射。你必须换掉 VAE，或者退回像素空间。</li>
+        <li class="con"><b>单染色模型。</b>论文是 per-stain 训练（ER / HER2 / Ki67 / PR 各一个模型），没有统一的多染色条件机制。</li>
+        <li class="con">Phikon 用的是 CLS token 级别的形态嵌入，对"逐像素浓度"来说<b>空间分辨率不够</b>。需要升级为稠密 token（见 UNIStainNet）。</li>
+        <li class="con">论文<b>没有评估对配准误差的敏感性</b>——这是个未验证项，你用它就要自己补实验。</li>
+      </ul>
+      <div class="box info" style="margin-bottom:14px">
+        <div class="h">改造难度</div>
+        <p style="margin-bottom:0"><b>中等</b>。训练脚本、损失、采样器都可复用；主要工作量在"换 VAE / 加浓度头"这一步，以及把条件从 Phikon 换成 UNI 稠密 token。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Beer-Lambert AE -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">2. Beer–Lambert Autoencoder</span>
+      <span class="yr">arXiv 2601.11336 · 2026</span>
+      <span class="rk" style="background:#e8f5ec; color:#14532d;">必移植 · 表示层</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>代码</dt><dd><a href="https://github.com/measty/StainQuant">github.com/measty/StainQuant</a></dd>
+        <dt>作者</dt><dd>Mark Eastwood, Thomas McKee, Zedong Hu, Sabine Tejpar, Fayyaz Minhas（Warwick / Geneva / KU Leuven）</dd>
+        <dt>结构</dt><dd>小 U-Net 编码器（两次下采样 + 残差瓶颈 + 两次上采样 + skip）→ K 通道非负浓度图（末端 Softplus）；解码器是<b>可微 Beer–Lambert 前向模型</b>，染色矩阵 S 可学，用典型色素的 OD 向量初始化</dd>
+      </dl>
+      <h4>它给你的三件套</h4>
+      <div class="flow">
+        <span class="node hi">RGB patch X</span><span class="arw">→</span>
+        <span class="node new">U-Net 编码器 Eθ</span><span class="arw">→</span>
+        <span class="node new">浓度图 C ∈ ℝ^{H×W×K}_+</span><span class="arw">→</span>
+        <span class="node hi">可微 BL 解码器</span><span class="arw">→</span>
+        <span class="node">重建 RGB X̂</span>
+      </div>
+      <p>公式就是你要的那两行：<code>ô = S·c</code>，<code>x̂ = exp(−ô)</code>。S 初始化自典型色素色相，训练中微调（他们报告 H 从 <code>(0.620,0.637,0.458)</code> 学到 <code>(0.705,0.581,0.408)</code>，MUC2 从 <code>(0.033,0.343,0.939)</code> 学到 <code>(0.028,0.239,0.971)</code>——<b>S 确实能学，且学出来的还在物理合理范围内</b>）。</p>
+      <h4>损失函数（五项，全部可移植）</h4>
+      <div class="tw">
+        <table>
+          <thead><tr><th>损失</th><th>作用</th><th>对你的价值</th></tr></thead>
+          <tbody>
+            <tr><td><code>L_rec</code></td><td>L1 重建 + VGG-19 多层感知损失（层 2/7/16/27）</td><td>基础重建监督</td></tr>
+            <tr><td><code>L_ent</code></td><td>逐像素通道归一化浓度分布的 Shannon 熵，忽略背景（阈值 τ=1e-2）</td><td><b>抑制不必要的染色混合</b>，直接可用</td></tr>
+            <tr><td><code>L_col</code></td><td>S 与初始估计的逐元素 L1 软锚定</td><td>防止 S 漂移失去物理身份</td></tr>
+            <tr><td><code>L_ov</code></td><td>top-p（p=0.05）重叠惩罚：禁止同一像素同时是多个染色的最强激活</td><td>降低通道串扰</td></tr>
+            <tr><td><code>L_mask</code></td><td>稀疏强信号染色的掩码主导损失（色相阈值生成粗掩码）</td><td>可选</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>它的局限（你要绕开的）</h4>
+      <ul class="tick">
+        <li class="con">它是<b>分析方向</b>——输入是已染色的 mIHC RGB，输出浓度。你的任务是反向的。</li>
+        <li class="con">学到的 S 是<b>面板/队列特定</b>的，跨实验室需微调。</li>
+        <li class="con">不做绝对定量，只做相对分离（他们没有逐染色真值）。</li>
+        <li class="con">他们的场景是 <code>K=5</code>（H, CDX2, MUC2, MUC5, CD8）的欠定问题；你的 <code>K=2</code>（H + DAB）是超定的，会更简单。</li>
+      </ul>
+      <div class="box good" style="margin-bottom:14px">
+        <div class="h">怎么用</div>
+        <p style="margin-bottom:0">把它的<b>编码器 + 可微 BL 解码器整块搬过来当 VAE</b>：编码器保留（RGB→C），解码器换成 BL 渲染（C→RGB）。训练策略是先在已有 IHC 数据上预训练这个自编码器（自监督，只需 IHC 图，不需要配对），再冻结或半冻结它，把扩散模型放在中间——<b>扩散生成 C，BL 渲染成 RGB，端到端可微</b>。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNIStainNet -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">3. UNIStainNet</span>
+      <span class="yr">arXiv 2603.12716 · ACM-BCB 2026</span>
+      <span class="rk" style="background:#eaf1fe; color:#2f6feb;">条件层 + 强基线</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>代码</dt><dd><a href="https://github.com/facevoid/UNIStainNet">github.com/facevoid/UNIStainNet</a>（含 HuggingFace Space demo）</dd>
+        <dt>结构</dt><dd>SPADE-UNet 生成器 + 冻结 UNI ViT-L/16 稠密 token 条件 + FiLM 染色嵌入；42 M 生成器 + 11 M 判别器，UNI 冻结 303 M</dd>
+        <dt>性能</dt><dd>MIST 上四个染色（HER2/Ki67/ER/PR）全部最佳分布指标；BCI 上同样最佳</dd>
+      </dl>
+      <h4>三个必须抄的设计</h4>
+      <ul class="tick">
+        <li class="pro"><b>稠密空间 token 条件</b>：用 4×4 子裁剪平铺让冻结 UNI 输出 <b>32×32 = 1024 个空间 token</b>（每个 1024 维），比 CLS token 方案多 <b>64 倍</b>空间信息。你要生成逐像素浓度场，<b>必须</b>用稠密条件，CLS 级别的条件在空间上是糊的。</li>
+        <li class="pro"><b>错位感知损失套件</b>：明确针对连续切片 <b>10–50 px 错位</b>设计——感知损失 + 无条件判别器 + DAB 强度监督。这直接回答了你的待确认问题之一：<b>行业做法是承认不对齐，然后让损失对错位不敏感，而不是强行要求逐像素配准。</b></li>
+        <li class="pro"><b>FiLM 染色嵌入</b>：单模型 42 M 参数出四种染色，切换只改嵌入。你的 K 通道 / marker 条件可以天然映射到这上面。</li>
+        <li class="pro"><b>失败分析</b>：零样本组织分类揭示剩余误差是系统性的，集中在非肿瘤组织（MIST 上浸润性癌失败率 &lt;3%）。这个分析框架你写论文时用得上。</li>
+      </ul>
+      <h4>为什么不能直接当你的基座</h4>
+      <ul class="tick">
+        <li class="con"><b>它是 GAN 不是扩散模型。</b>你的技术路线是扩散，直接用它就讲不出"扩散"的故事。</li>
+        <li class="con">GAN 训练的稳定性问题（模式崩塌、判别器失衡）会叠加在你已经很高的改造复杂度上。</li>
+      </ul>
+      <div class="box good" style="margin-bottom:14px">
+        <div class="h">正确用法</div>
+        <p style="margin-bottom:0">两个用法：<b>(a)</b> 把它的条件栈（冻结 UNI 稠密 token + FiLM 嵌入 + 错位感知损失）移植到你的扩散骨架上；<b>(b)</b> 直接改它的输出头（K 通道 + Softplus + BL 渲染，约十几行代码），做一个"<b>浓度空间 GAN</b>"作为消融对照——用来证明"扩散比 GAN 更适合浓度空间"这个论点。这是很划算的一步。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPFLOW -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">4. SPFLOW</span>
+      <span class="yr">GitHub 2026 · 预印本</span>
+      <span class="rk" style="background:#eaf1fe; color:#2f6feb;">备选 · 表示层</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>代码</dt><dd><a href="https://github.com/HIT-JimmyXiao/SPFLOW">github.com/HIT-JimmyXiao/SPFLOW</a>（MIT License）</dd>
+        <dt>任务</dt><dd>从 H&amp;E 预测<b>稠密空间蛋白组场</b>（virtual CODEX / multiplex IHC），而非 RGB</dd>
+        <dt>方法</dt><dd>marker 条件流匹配；线性轨迹 <code>z_t = (1−t)·z_coarse + t·y</code>；12 步 Heun 积分</dd>
+      </dl>
+      <h4>为什么值得认真看</h4>
+      <ul class="tick">
+        <li class="pro"><b>它是唯一一个已经"不输出 RGB"的基座。</b>输出是 <code>224×224×C</code> 的稠密 marker 场（Ultivue C=10，MIST C=4）。对你来说，"把强度场换成浓度场"比"把 RGB 换成浓度场"小得多。</li>
+        <li class="pro"><b>marker conditioning 天然对应 K 个染色。</b>可学 marker embedding + 多头 marker 交叉注意力，通道身份稳定可审计。</li>
+        <li class="pro"><b>coarse→target 线性轨迹与 BL 渲染天然兼容</b>：<code>t=0</code> 精确等于 H&amp;E 条件粗预测，<code>t=1</code> 精确等于真值，网络只学残差。你的 BL 渲染可以挂在 <code>t=1</code> 端。</li>
+        <li class="pro"><b>benchmark 基建很完整</b>：统一协议下对比 HEX、ROSIE、STFlow、HistoPlexer、PyramidP2P、HistDiST 六个方法，有 source-faithful 适配层和逐 marker sidecar。</li>
+        <li class="pro">12 步 Heun + bf16，推理速度远优于 DDPM 的 1000 步。</li>
+      </ul>
+      <h4>风险</h4>
+      <ul class="tick">
+        <li class="con"><b>证据强度弱</b>：单作者预印本，全部结果为<b>单种子点估计</b>（seed 20260518），作者自己标注"完成前不报告 mean ± s.d."。</li>
+        <li class="con">依赖 H0-mini 权重（CC-BY-NC-ND 4.0，需申请访问），且数据与 checkpoint 不随仓库发布。</li>
+        <li class="con">它用 Q99.8/log2 归一化，输出的是<b>归一化强度</b>不是物理浓度——你要接 BL 还得做一步标定。</li>
+        <li class="con">MIST 上的外部迁移结果偏弱（v2.7 Pearson 0.516），且作者明确说 v1/v2 在 MIST 上不可靠。</li>
+      </ul>
+      <div class="box warn" style="margin-bottom:14px">
+        <div class="h">判断</div>
+        <p style="margin-bottom:0">作为<b>思想来源和消融对照</b>极有价值（"流匹配 vs 扩散在浓度空间谁更强"是一个很好的实验），作为<b>主基座</b>风险偏高——证据太薄，且依赖受限权重。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- StainDiffuser -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">5. StainDiffuser</span>
+      <span class="yr">arXiv 2403.11340 · 2024/2025</span>
+      <span class="rk" style="background:#fdf6e3; color:#9a6700;">架构参考 · 代码未公开</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>作者</dt><dd>Tushar Kataria, Beatrice Knudsen, Shireen Y. Elhabian（University of Utah）</dd>
+        <dt>框架</dt><dd><b>像素空间 DDPM</b>（不是 LDM），双分支同时训练</dd>
+        <dt>任务</dt><dd>H&amp;E → CD3 / CK8/18（溃疡性结肠炎监视结肠镜数据）</dd>
+      </dl>
+      <h4>为什么架构上最贴你的需求</h4>
+      <ul class="tick">
+        <li class="pro"><b>像素空间</b>：改输出通道数 → 加 Softplus → 接可微 BL，三步搞定。这是所有候选里表示层改造最轻的。</li>
+        <li class="pro"><b>多任务设计</b>：染色生成 + 细胞分割两个扩散过程共享 H&amp;E 编码器，通过注意力块交互。在数据有限（几千对而非几百万对）时这个正则化很关键——<b>你的 MIST 场景正好是数据有限</b>。</li>
+        <li class="pro"><b>多染色变体</b>：N 个染色并发生成，用配对 uniplex 数据训练（不需要 multiplex 数据）。</li>
+        <li class="pro"><b>双向变体</b>：无分割数据时，用单个 U-Net 同时训 H&amp;E→IHC 和 IHC→H&amp;E，促进域不变隐空间。</li>
+        <li class="pro">做了 20+ 基线（8 配对 + 15 非配对，含 5 个扩散）的系统评测，是虚拟染色领域少有的完整 benchmark 工作。</li>
+      </ul>
+      <h4>问题</h4>
+      <ul class="tick">
+        <li class="con"><b>官方代码未见公开。</b>论文写的是"接收后开源"，目前检索不到官方仓库——这意味着复现成本。</li>
+        <li class="con"><b>没有病理基础模型先验</b>，全靠数据量。</li>
+        <li class="con"><b>论文明确承认未评估配准敏感性</b>（列为 future work）——而错位恰恰是你的核心难题。</li>
+        <li class="con">推理慢（像素空间 DDPM，无 LDM 加速），论文自列为局限。</li>
+        <li class="con">数据是自己的结肠数据集（CD3、CK8/18），不在 MIST/BCI 上，<b>数字不可直接比较</b>。</li>
+      </ul>
+      <div class="box warn" style="margin-bottom:14px">
+        <div class="h">判断</div>
+        <p style="margin-bottom:0">当成<b>架构蓝图</b>读（"像素空间 DDPM 怎么在虚拟染色上做多任务多染色"），但别指望拿到能跑的开源代码。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIU-Diff -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">6. MIU-Diff</span>
+      <span class="yr">arXiv 2506.23184 · Springer 2025</span>
+      <span class="rk" style="background:#fdf6e3; color:#9a6700;">思路参考 · 代码未公开</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>作者</dt><dd>Anran Liu, Xiaofei Wang, Jing Cai, Chao Li（HK PolyU / Cambridge / Dundee）</dd>
+        <dt>框架</dt><dd>score-based diffusion（VP-SDE）+ 两阶段训练</dd>
+        <dt>关键点</dt><dd><b>无配对</b>、<b>明确不假设像素对齐</b></dd>
+      </dl>
+      <h4>它解决的是你最头疼的问题</h4>
+      <ul class="tick">
+        <li class="pro"><b>明确处理"配对但不对齐"</b>。论文原话：<i>"更高的 PSNR 在无配对虚拟染色中并不总是代表更好的生成质量，因为结构不匹配使得像素对齐不可能。"</i>——这句话值得你直接引用。</li>
+        <li class="pro"><b>互信息引导的能量函数</b>做染色风格与组织结构的解耦：因为 H&amp;E/IHC 错位，互信息估计器<b>只在 IHC 域内训练</b>（IHC 图 vs 其梯度图），完全绕开跨域对齐问题。</li>
+        <li class="pro"><b>时间步自适应反向 SDE</b>：<code>λ_t = t/S</code> 控制"先恢复染色细节、后恢复共享结构"的顺序，可调。</li>
+        <li class="pro"><b>局部互信息对比学习</b>（PatchNCE 思路）保证细胞级跨模态一致性。</li>
+        <li class="pro"><b>用了 IOD（Integrated Optical Density）作为临床相关指标</b>——说明这个圈子已经在用光学密度做评价，你的浓度空间叙事有现成的话语体系。</li>
+      </ul>
+      <h4>问题</h4>
+      <ul class="tick">
+        <li class="con"><b>代码未公开</b>（"upon acceptance"，虽已发表但未检索到仓库）。</li>
+        <li class="con">两阶段 score-based SDE 实现复杂度高于 DDPM，改造成本高。</li>
+        <li class="con">受显存限制把 1024×1024 缩到 <b>256×256</b>，分辨率损失明显。</li>
+        <li class="con">超参敏感（N=300、t'₀=40 最优，偏离就崩）。</li>
+      </ul>
+      <div class="box warn" style="margin-bottom:14px">
+        <div class="h">判断</div>
+        <p style="margin-bottom:0">作为<b>方法论参考</b>读：它的"不对齐怎么办"的思路（在目标域内做互信息估计，绕开跨域对齐）对你极有启发。但别把它当基座——没代码 + 实现复杂。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Marker-wise -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">7. Marker-wise Conditioned Diffusion</span>
+      <span class="yr">arXiv 2508.14681 · AAAI 2026</span>
+      <span class="rk" style="background:#f0f2f5; color:#57606a;">多染色参考</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>作者</dt><dd>Hyun-Jic Oh, Junsik Kim, Zhiyi Shi, Yichen Wu, Yu-An Chen, Peter K. Sorger, Hanspeter Pfister, Won-Ki Jeong（Korea Univ. / Harvard / CityU HK / HMS）</dd>
+        <dt>框架</dt><dd>Stable Diffusion v2 微调，两阶段训练</dd>
+        <dt>亮点</dt><dd>单模型生成 <b>18 个 marker</b>；单步推理 <b>0.13 s</b></dd>
+      </dl>
+      <h4>值得抄的</h4>
+      <ul class="tick">
+        <li class="pro"><b>one-hot marker 条件</b>替代文本条件。消融显示：3 个 marker 时文本和 one-hot 差不多（SSIM 0.667 vs 0.673），<b>18 个 marker 时 one-hot 碾压</b>（0.662 vs 0.288）。如果你的染色数量会增长，这是个必抄的设计。</li>
+        <li class="pro"><b>第二阶段像素级微调 + 单步采样</b>：固定 <code>t=T</code>、用零噪声替换随机噪声，直接在像素空间优化。结果：单步（0.13 s）的 SSIM 0.757 <b>反而超过</b> 50 步 + 10 折集成的 0.673，微调后到 0.836。<b>这直接解决了扩散模型推理慢的问题。</b></li>
+        <li class="pro"><b>H&amp;E 隐变量按 marker 数量复制</b>，让所有 marker 参数更新均衡——一个容易被忽略但重要的训练技巧。</li>
+        <li class="pro">U-Net 输入通道加倍时用"复制权重 + 权重减半"初始化（Marigold 做法）。</li>
+      </ul>
+      <h4>问题</h4>
+      <ul class="tick">
+        <li class="con">同样是 <b>SD VAE 隐空间</b>，BL 渲染不可行。</li>
+        <li class="con">输出是<b>单通道灰度</b>（三通道平均），不是 RGB 染色图，也不是浓度场。</li>
+        <li class="con">训练用了 <b>4× H100</b>，阶段二在 Orion-CRC 上要 2.5 天。成本高。</li>
+        <li class="con">latent diffusion 导致轻度模糊、某些 marker 过预测（无 skip connection）。</li>
+        <li class="con">稀有 marker（CD31、FOXP3）相关系数差，因为样本不足。</li>
+      </ul>
+      <div class="box info" style="margin-bottom:14px">
+        <div class="h">判断</div>
+        <p style="margin-bottom:0">不是你的基座，但它的 <b>marker 条件机制 + 单步推理微调</b> 两招要抄进你的方案。尤其单步推理那招——你如果要在浓度空间做扩散，采样步数直接决定可用性。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- I2SB -->
+  <div class="card">
+    <div class="hd">
+      <span class="nm">8. I²SB（Image-to-Image Schrödinger Bridge）</span>
+      <span class="yr">ICML 2023 · NVIDIA</span>
+      <span class="rk" style="background:#f0f2f5; color:#57606a;">通用骨架备选</span>
+    </div>
+    <div class="bd">
+      <dl class="kv">
+        <dt>代码</dt><dd><a href="https://github.com/NVlabs/I2SB">github.com/NVlabs/I2SB</a>（NVlabs，工程质量高）</dd>
+        <dt>核心</dt><dd>直接学习两个分布之间的非线性扩散桥，<b>不假设源图是无噪声的</b></dd>
+        <dt>关键参数</dt><dd><code>--cond-x1</code>：克服新先验中的大量信息损失</dd>
+      </dl>
+      <h4>为什么值得放进备选</h4>
+      <ul class="tick">
+        <li class="pro"><b>设计初衷就是"配对但不完美"</b>。I²SB 的桥式构造天然容忍源与目标之间的信息损失——这正是 H&amp;E/IHC 连续切片错位的数学描述。</li>
+        <li class="pro"><b>像素空间</b>，输出头改造轻。</li>
+        <li class="pro">NVIDIA 官方实现，代码质量与可维护性都是顶级的，有通用 I2I 训练脚本（<code>--cond-x1</code> 就是为通用 I2I 加的）。</li>
+        <li class="pro">可以自己加病理基础模型条件（在 U-Net 里注入 UNI token），自由度最大。</li>
+      </ul>
+      <h4>问题</h4>
+      <ul class="tick">
+        <li class="con"><b>完全没有病理域适配</b>：没有染色感知、没有基础模型先验、没有多染色机制。你等于从通用骨架开始造。</li>
+        <li class="con">需要配对数据（你的场景有，问题不大）。</li>
+        <li class="con">在虚拟染色上<b>没有被验证过</b>，没有可比较的数字。</li>
+      </ul>
+      <div class="box info" style="margin-bottom:14px">
+        <div class="h">判断</div>
+        <p style="margin-bottom:0">如果你对 HistDiST 的隐空间问题很反感、又不想从零写，I²SB 是最干净的像素空间骨架。代价是病理先验、错位处理、多染色全部要自己加。</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>被排除的候选</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>方法</th><th>排除理由</th></tr></thead>
+      <tbody>
+        <tr><td>BBDM</td><td>原版用 VQGAN 隐空间（同样的 BL 不可行问题），且整体性能已被 2025–2026 方法超越</td></tr>
+        <tr><td>HistDiT</td><td>Latent DiT，隐空间问题相同；代码可得性差；在虚拟染色上证据不充分</td></tr>
+        <tr><td>PST-Diff</td><td>2024 年工作，像素空间 DDPM，思路可参考但已被 StainDiffuser/HistDiST 覆盖</td></tr>
+        <tr><td>ASP / MDCL / PyramidP2P / HEX / STFlow / HistoPlexer</td><td>GAN 系基线，作为对照组保留，不适合当基座</td></tr>
+        <tr><td>Super-resolved virtual staining (Nature Comms 2025)</td><td>任务是 label-free → 染色（无标记显微），输入模态不同，不是 H&amp;E→IHC</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <h2><span class="num">06</span>选型打分矩阵</h2>
+  <p class="lede">七个维度各 1–5 分，满分 35。打分依据是"作为 PSP-Diffusion 基座的适配度"，不是方法本身的优劣。</p>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:170px">候选基座</th>
+          <th class="c">像素空间<br><span class="small">可直接换输出</span></th>
+          <th class="c">扩散/流<br><span class="small">符合路线</span></th>
+          <th class="c">错位鲁棒<br><span class="small">10–50px</span></th>
+          <th class="c">病理先验<br><span class="small">FM 条件</span></th>
+          <th class="c">多染色<br><span class="small">条件切换</span></th>
+          <th class="c">代码可得<br><span class="small">工程质量</span></th>
+          <th class="c">训练成本<br><span class="small">单卡可跑</span></th>
+          <th class="c">总分</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>UNIStainNet</b><br><span class="small">（若放弃"必须扩散"）</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc1">1</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c tot a">31</td>
+        </tr>
+        <tr style="background:#f4f8ff;">
+          <td><b>HistDiST</b> <span class="tag g">首选</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c tot a">25</td>
+        </tr>
+        <tr>
+          <td><b>SPFLOW</b> <span class="tag b">备选</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c tot a">30</td>
+        </tr>
+        <tr>
+          <td><b>I²SB</b></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc1">1</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c tot b">27</td>
+        </tr>
+        <tr>
+          <td><b>StainDiffuser</b></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc4">4</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c tot b">25</td>
+        </tr>
+        <tr>
+          <td><b>MIU-Diff</b></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c tot b">24</td>
+        </tr>
+        <tr>
+          <td><b>Marker-wise Diffusion</b></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c tot c">23</td>
+        </tr>
+        <tr>
+          <td><b>HistDiT</b></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc5">5</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc2">2</span></td>
+          <td class="c"><span class="sc sc3">3</span></td>
+          <td class="c tot c">20</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box info">
+    <div class="h">怎么读这张表</div>
+    <ul style="margin-bottom:0">
+      <li><b>UNIStainNet 得分最高</b>（31），但它唯一的短板是"不是扩散模型"——如果你的技术路线必须叫"扩散"，它就出局了。</li>
+      <li><b>HistDiST 得分只有 25，但我仍推荐它当首选</b>。原因：打分是"现状适配度"，而 HistDiST 的失分项（像素空间 2 分、多染色 2 分）<b>恰好都是可以通过改造解决的</b>，而它的加分项（扩散工程 5 分、代码 5 分、错位机制 4 分）是<b>改造不出来的</b>——那需要从零实现并调试。选基座的逻辑是"<b>选那些你改不动的东西已经做好的</b>"。</li>
+      <li><b>SPFLOW 的 30 分很有说服力</b>（像素空间 + 多染色 + 代码），如果它的证据强度能补上（多种子、可获取权重），它会反超 HistDiST。</li>
+      <li><b>I²SB 的 27 分集中在"骨架干净"</b>，但病理先验 1 分是硬伤——你要自己把整个病理条件栈搭起来。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <h2><span class="num">07</span>最终结论：选谁、怎么改</h2>
+  <p class="lede">把上面的分析收成一个可执行的决策。</p>
+
+  <div class="verdict big">
+    <div class="lbl">推荐决策</div>
+    <p class="ans">主基座：<b>HistDiST</b>（工程骨架）<br>必换组件：<b>Beer–Lambert Autoencoder</b>（表示层）<br>条件层：<b>UNIStainNet</b>（冻结 UNI 稠密 token + FiLM）<br>可选加速：<b>Marker-wise Diffusion</b>（单步推理微调）</p>
+    <p style="margin-bottom:0">这不是"拼凑"，而是<b>各取所长</b>：HistDiST 提供你改不动的扩散工程，BL-AE 提供你缺的物理表示层，UNIStainNet 提供你缺的病理先验与错位处理。四者的接口（像素/隐空间、条件注入点、损失项）都是清晰可对接的。</p>
+  </div>
+
+  <h3>三条路线，按你的资源选一条</h3>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:96px">路线</th><th>做法</th><th style="width:150px">成本</th><th style="width:170px">适合</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>A · 正宗<br>浓度空间 LDM</b><br><span class="tag g">推荐</span></td>
+          <td>HistDiST 骨架，<b>把 SD 的 VAE 换成染色域 VAE</b>（BL-AE 的编码器 + 可微 BL 解码器），扩散在浓度隐空间进行；条件用 UNI 稠密 token</td>
+          <td>中高（需先自监督预训练 VAE）</td>
+          <td>追求方法学完整性与论文贡献度</td>
+        </tr>
+        <tr>
+          <td><b>B · 轻量<br>像素空间浓度扩散</b></td>
+          <td>放弃 LDM，直接做<b>像素空间 DDPM</b>：U-Net 输出 K 通道 C（末端 Softplus）→ 可微 BL → RGB。骨架借 StainDiffuser 的架构思路，条件栈抄 UNIStainNet</td>
+          <td>中（无需 VAE，但没预训练先验）</td>
+          <td>想快速跑通、验证核心假设</td>
+        </tr>
+        <tr>
+          <td><b>C · 先出数字<br>浓度空间 GAN</b></td>
+          <td>直接改 UNIStainNet 输出头：K 通道 + Softplus + BL。约十几行代码</td>
+          <td>低（42 M 可训参数，单卡）</td>
+          <td>两周内拿到第一个可信数字 / 做消融对照</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box good">
+    <div class="h">我建议的顺序：C → B → A</div>
+    <p style="margin-bottom:0"><b>先走 C</b>，用最低成本回答最关键的问题："<b>在浓度空间生成，是不是真的比在 RGB 空间生成更好？</b>" 如果 C 的 DAB KL / IOD 指标明显优于 UNIStainNet 原版（RGB 输出），你的核心假设就立住了，再往上堆扩散才有意义。<b>如果 C 都赢不了，说明浓度空间这个表示层本身没带来增益，A/B 也不必做了</b>——这是最省钱的证伪路径。然后再走 B 验证"扩散 vs GAN"，最后走 A 补方法学完整性。</p>
+  </div>
+
+  <div class="box warn">
+    <div class="h">一个必须提前想清楚的问题</div>
+    <p style="margin-bottom:0">你的方案里 H&amp;E 输入本身<b>不含直接的蛋白信息</b>。浓度空间表示解决的是"输出的物理可解释性"，<b>不解决"信息从哪来"</b>。所以 <code>F_protein</code> 这个条件通路的来源必须先定下来——要么接受"从 H&amp;E 形态学推断蛋白表达"（这是整个虚拟染色领域都在做的事，合法但要明确承认其上限），要么引入外部信号。这件事不解决，浓度空间再漂亮也只是换了个输出编码。</p>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <h2><span class="num">08</span>推荐改造方案（模块级）</h2>
+  <p class="lede">以路线 A 为例，逐模块列出保留什么、改什么、从哪抄。</p>
+
+  <div class="flow" style="font-size:13px">
+    <span class="node hi">H&amp;E 输入</span><span class="arw">→</span>
+    <span class="node new">UNI 稠密 token<br>(冻结, 32×32)</span><span class="arw">↘</span>
+    <span class="node">染色嵌入<br>(FiLM/one-hot)</span><span class="arw">→</span>
+    <span class="node new">浓度域 U-Net<br>(v-pred, zero-SNR)</span><span class="arw">→</span>
+    <span class="node new">Ĉ ∈ ℝ^{H×W×K}_+<br>(Softplus)</span><span class="arw">→</span>
+    <span class="node hi">可微 BL 渲染</span><span class="arw">→</span>
+    <span class="node">ÎHC RGB</span>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:150px">模块</th><th style="width:74px">动作</th><th>具体做法</th><th style="width:130px">来源</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>扩散主干</b></td>
+          <td><span class="tag n">保留</span></td>
+          <td>SD1.5 U-Net 结构 + <b>v-prediction</b> + <b>zero-terminal-SNR 重缩放噪声调度</b> + <b>trailing timesteps</b>。这套组合解决 IHC 亮度分布塌缩问题，自己调不出来。</td>
+          <td>HistDiST</td>
+        </tr>
+        <tr>
+          <td><b>VAE / 隐空间</b></td>
+          <td><span class="tag r">替换</span></td>
+          <td>把 SD 的 VAE 换成<b>染色域自编码器</b>：编码器 = BL-AE 的小 U-Net（RGB→K 通道非负 C），解码器 = 可微 BL（<code>x̂ = exp(−S·c)</code>），S 用典型色素 OD 向量初始化并允许学习（用 <code>L_col</code> 软锚定防止漂移）。先在 IHC 数据上自监督预训练（无需配对），再冻结或半冻结。</td>
+          <td>BL-AE</td>
+        </tr>
+        <tr>
+          <td><b>条件注入</b></td>
+          <td><span class="tag r">替换</span></td>
+          <td>把 Phikon 的 CLS 级形态嵌入换成 <b>UNI ViT-L/16 的稠密空间 token</b>（4×4 子裁剪平铺 → 32×32 = 1024 个 token）。你要逐像素浓度场，条件必须有空间分辨率。注入方式用 SPADE（空间调制）而不是纯 cross-attention。</td>
+          <td>UNIStainNet</td>
+        </tr>
+        <tr>
+          <td><b>染色条件</b></td>
+          <td><span class="tag y">新增</span></td>
+          <td>加 <b>FiLM 染色嵌入</b>（或 one-hot + 位置编码，marker 数 &gt;10 时用后者）实现单模型多染色切换。H&amp;E 隐变量按染色数复制以均衡参数更新。</td>
+          <td>UNIStainNet / Marker-wise</td>
+        </tr>
+        <tr>
+          <td><b>错位处理</b></td>
+          <td><span class="tag y">新增</span></td>
+          <td>加<b>错位感知损失套件</b>：感知损失 + 无条件判别器 + DAB 强度监督（针对 10–50 px 错位）。配合 HistDiST 的 <b>DDIM inversion + η-cosine 调度</b>保结构。</td>
+          <td>UNIStainNet + HistDiST</td>
+        </tr>
+        <tr>
+          <td><b>浓度空间正则</b></td>
+          <td><span class="tag y">新增</span></td>
+          <td>移植 BL-AE 的 <code>L_ent</code>（激活熵，抑制不必要染色混合）+ <code>L_ov</code>（top-5% 重叠惩罚，降串扰）。这两个损失是"浓度空间"特有的正则，RGB 空间方法没有对应物——<b>可以成为你方法学贡献的一部分</b>。</td>
+          <td>BL-AE</td>
+        </tr>
+        <tr>
+          <td><b>推理加速</b></td>
+          <td><span class="tag y">可选</span></td>
+          <td>第二阶段像素级微调 + 单步采样（固定 <code>t=T</code>、零噪声、像素空间直接优化）。报告显示单步优于 50 步 + 集成。</td>
+          <td>Marker-wise</td>
+        </tr>
+        <tr>
+          <td><b>采样器</b></td>
+          <td><span class="tag n">保留</span></td>
+          <td>DDIM + η-cosine 调度（<code>η_t(t)=0.6−0.4·cos(πt/T)</code>，从 20% 处启动）。这是"结构保真 vs 分布真实"的调优旋钮。</td>
+          <td>HistDiST</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box info">
+    <div class="h">关于 S 怎么设（延续之前的讨论）</div>
+    <p>你的场景是 <b>H + DAB，K = 2</b>：<code>Y = S·C</code> 是 <b>3 方程 / 2 未知数，超定</b>，最小二乘解唯一 <code>pinv(S) = (SᵀS)⁻¹Sᵀ</code>。所以"S 与 C 互相补偿"的问题<b>不存在</b>（那只在 K ≥ 3 的欠定情形下出现，也就是 BL-AE 论文的 K=5 场景）。</p>
+    <p style="margin-bottom:0">结论：<b>第一版固定 S（用标准 H/DAB OD 向量）是安全的</b>，而且因为超定，C 是可辨识的。让 S 可学主要是为了吸收不同实验室的染色协议差异（BL-AE 的实验显示 S 确实会漂移且漂移方向与串扰一致）。建议：<b>固定 S 起步，把"可学 S"作为消融实验</b>。</p>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <h2><span class="num">09</span>分阶段验证路径</h2>
+  <p class="lede">每一步都有明确的"继续/停止"判据，避免做完三个月才发现方向不对。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:52px" class="c">阶段</th><th style="width:170px">做什么</th><th>判据（过 / 不过）</th><th style="width:110px">预估成本</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="c"><b>0</b></td>
+          <td>环境与数据落地</td>
+          <td>MIST（HER2/Ki67/ER/PR）+ BCI 下载完成；复现 UNIStainNet 或 HistDiST 的公开权重，在 MIST 上跑出接近论文的数字。<br><b>不过 →</b> 数据或评测脚本有问题，先解决。</td>
+          <td>低</td>
+        </tr>
+        <tr>
+          <td class="c"><b>1</b></td>
+          <td>训练 BL 自编码器</td>
+          <td>在 IHC 数据上自监督训练 RGB→C→RGB，重建质量达标，单通道渲染干净、串扰低于矩阵法。<br><b>不过 →</b> 说明 BL 表示层在你的数据上不稳，方案根基有问题。</td>
+          <td>中</td>
+        </tr>
+        <tr>
+          <td class="c"><b>2</b></td>
+          <td><b>关键证伪实验</b><br>浓度空间 GAN（路线 C）</td>
+          <td>改 UNIStainNet 输出头 + BL，与 RGB 版对比。<br><b>过</b>：DAB KL / IOD / 串扰指标优于 RGB 版 → 核心假设成立，继续。<br><b>不过</b>：浓度空间没带来增益 → <b>停下来重新想表示层设计</b>，不要盲目上扩散。</td>
+          <td>低</td>
+        </tr>
+        <tr>
+          <td class="c"><b>3</b></td>
+          <td>像素空间浓度扩散（路线 B）</td>
+          <td>与阶段 2 的 GAN 对比：扩散是否在分布指标（FID/KID）和染色量指标（DAB KL/IOD）上更好。<br><b>过</b> → 进入阶段 4。<br><b>不过</b> → 路线 B 作为消融保留，直接跳到 A。</td>
+          <td>中</td>
+        </tr>
+        <tr>
+          <td class="c"><b>4</b></td>
+          <td>浓度域 LDM（路线 A）</td>
+          <td>与 HistDiST / UNIStainNet / StainDiffuser 在 MIST + BCI 上全面对比。<br>重点看：<b>DAB KL、DAB JSD、IOD、MRA</b>（这些是浓度/分子相关指标），而不是 SSIM/PSNR（错位下无意义）。</td>
+          <td>高</td>
+        </tr>
+        <tr>
+          <td class="c"><b>5</b></td>
+          <td>消融与鲁棒性</td>
+          <td>必做消融：① 固定 S vs 可学 S；② 稠密 UNI token vs CLS token；③ 有无 <code>L_ent</code>/<code>L_ov</code>；④ 人工注入 0/10/20/50 px 错位测退化曲线；⑤ K=2 vs K=3+ 的表现。</td>
+          <td>中</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box good">
+    <div class="h">阶段 2 是整个项目的信息量最高点</div>
+    <p style="margin-bottom:0">它用最低成本（改十几行代码）回答最根本的问题。如果这里就赢了，后面所有工作都是在"把赢面做大"；如果这里输了，你需要重新审视的是<b>表示层设计</b>而不是"该用哪个扩散模型"。<b>先做这个，再谈基座选型。</b></p>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <h2><span class="num">10</span>风险清单与备选</h2>
+  <p class="lede">提前把可能翻车的地方列出来。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:34px" class="c">#</th><th style="width:170px">风险</th><th>表现与影响</th><th style="width:210px">应对</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="c">R1</td>
+          <td><b>BL 渲染的残差问题</b></td>
+          <td><code>Y_IHC = S·C_real + r</code>，其中 <code>r ⊥ span(S)</code>。也就是说即使拿到真实浓度，<code>BL(C_real) ≠ X_real</code>——渲染不出原图。这会让你的重建损失永远有下界。</td>
+          <td>加一个<b>残差通道</b>（K+1 维，非染色分量）或允许 S 可学来吸收。在论文里明确讨论这个下界，反而是严谨性的加分项。</td>
+        </tr>
+        <tr>
+          <td class="c">R2</td>
+          <td><b>log 底数不一致</b></td>
+          <td>log₁₀ 与 ln 差 2.303 倍。BL-AE 用的是 <code>o = −log(x+ε)</code>（自然对数），经典色解卷积用 log₁₀。混用会让 S 的数值完全错。</td>
+          <td>全程统一。建议跟 BL-AE 一致用自然对数，并在论文里显式说明。S 的初始化向量也要用同一底数重新标定。</td>
+        </tr>
+        <tr>
+          <td class="c">R3</td>
+          <td><b>负浓度 vs Softplus 约束</b></td>
+          <td>真实数据里可能出现负的 <code>C_real</code>（噪声/背景估计误差导致），而 Softplus ≥ 0 硬约束会让模型无法拟合。</td>
+          <td>加一个可学的背景/偏置项，或在 OD 域先做背景扣除。别指望 Softplus 能表达负值。</td>
+        </tr>
+        <tr>
+          <td class="c">R4</td>
+          <td><b>固定 S 时"物理损失"是恒等式</b></td>
+          <td>如果 S 固定且渲染就是 <code>exp(−S·C)</code>，那么"物理约束损失"在数学上是恒等映射——它不提供任何额外约束，写成损失项是自欺欺人。</td>
+          <td>要么让 S 可学（损失才有梯度意义），要么把物理约束改成<b>对 C 的先验</b>（稀疏性、非负性、通道重叠惩罚 <code>L_ent</code>/<code>L_ov</code>），别写成"物理损失"。</td>
+        </tr>
+        <tr>
+          <td class="c">R5</td>
+          <td><b>F_protein 来源不明</b></td>
+          <td>H&amp;E 不含直接蛋白信息。如果方案里有一个"蛋白特征"条件通路但来源说不清，审稿人会直接质疑。</td>
+          <td>要么明确承认"从形态学推断"（并给出上限分析），要么删掉这条通路。不要含糊。</td>
+        </tr>
+        <tr>
+          <td class="c">R6</td>
+          <td><b>配准误差主导</b></td>
+          <td>MIST/BCI 的 H&amp;E 与 IHC 是连续切片，10–50 px 错位。逐像素的 BL 重建损失会被错位主导，模型学到的可能只是"对齐误差"。</td>
+          <td>用错位感知损失（UNIStainNet 方案）；评测时明确<b>不</b>把 SSIM/PSNR 当主指标；必要时做人工错位注入实验量化退化。</td>
+        </tr>
+        <tr>
+          <td class="c">R7</td>
+          <td><b>显存与训练成本</b></td>
+          <td>浓度场是逐像素的，LDM 压缩率低（K=2 通道，H×W 全分辨率），比 RGB 隐空间更吃显存。HistDiST 的配置要 24 GB。</td>
+          <td>用 256×256 patch 起步；或对 C 做轻度下采样（但会损失浓度空间的分辨率优势，需权衡）；或直接用路线 B/C 起步。</td>
+        </tr>
+        <tr>
+          <td class="c">R8</td>
+          <td><b>SPFLOW 抢先发表</b></td>
+          <td>SPFLOW 已经在做"稠密 marker 场"了，如果它下一步加上 BL 渲染，你的贡献窗口会被压缩。</td>
+          <td>尽快做阶段 2 拿到初步结果；在论文里把 BL 渲染 + 浓度可辨识性作为核心差异点，而不只是"输出不是 RGB"。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>如果首选路线走不通，备选怎么降级</h3>
+  <ul>
+    <li><b>如果 HistDiST 的 VAE 替换做不通</b> → 退到路线 B（像素空间 DDPM），骨架用 I²SB（NVlabs，代码最干净），条件栈从 UNIStainNet 移植。</li>
+    <li><b>如果扩散训练不稳定</b> → 退到路线 C（浓度空间 GAN，改 UNIStainNet），先发一篇"浓度空间表示对虚拟染色的增益"的实证工作。</li>
+    <li><b>如果 BL 表示层本身不 work</b> → 转向 SPFLOW 式流匹配（它的 coarse→target 线性轨迹不需要严格的物理渲染，鲁棒性更好），或者把贡献重心从"浓度空间生成"转到"错位鲁棒的虚拟染色"。</li>
+  </ul>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <h2><span class="num">11</span>评测口径建议</h2>
+  <p class="lede">指标选错，方法再好也讲不出故事。</p>
+
+  <div class="box warn">
+    <div class="h">首要原则：错位数据下不要用 SSIM / PSNR 当主指标</div>
+    <p style="margin-bottom:0">MIU-Diff 论文明确写："更高的 PSNR 在无配对虚拟染色中并不总是代表更好的生成质量，因为结构不匹配使得像素对齐不可能。" 你的 H&amp;E/IHC 来自连续切片，逐像素指标天然被错位污染。<b>把 SSIM/PSNR 降为辅助指标。</b></p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:170px">指标</th><th>含义</th><th style="width:88px">推荐度</th><th style="width:130px">出处</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>DAB KL / DAB JSD</b></td>
+          <td>DAB 通道直方图的分布散度，<b>用 Beer–Lambert 色解卷积算出</b></td>
+          <td><span class="tag g">主指标</span></td>
+          <td>UNIStainNet</td>
+        </tr>
+        <tr>
+          <td><b>IOD / mIOD</b></td>
+          <td>积分光密度（Integrated Optical Density），临床相关的染色量指标，衡量阳性信号一致性</td>
+          <td><span class="tag g">主指标</span></td>
+          <td>MIU-Diff</td>
+        </tr>
+        <tr>
+          <td><b>DAB p90 Pearson-R</b></td>
+          <td>DAB 通道前 10% 像素的均值强度，逐图算相关性（即"染色强度"的相关性）</td>
+          <td><span class="tag g">主指标</span></td>
+          <td>UNIStainNet</td>
+        </tr>
+        <tr>
+          <td><b>MRA</b></td>
+          <td>分子检索准确率：用 GigaPath 嵌入做余弦相似度，检验生成的 IHC 嵌入是否能正确匹配其真值</td>
+          <td><span class="tag g">主指标</span></td>
+          <td>HistDiST</td>
+        </tr>
+        <tr>
+          <td>FID / KID</td>
+          <td>分布距离（Inception 特征）</td>
+          <td><span class="tag b">必备</span></td>
+          <td>通用</td>
+        </tr>
+        <tr>
+          <td>FID-UNI</td>
+          <td>在 UNI 特征空间算的 FID，比 Inception 更贴合病理语义</td>
+          <td><span class="tag b">建议</span></td>
+          <td>UNIStainNet</td>
+        </tr>
+        <tr>
+          <td>通道串扰（余弦相似度）</td>
+          <td>各染色通道之间的平均余弦相似度，越低越好</td>
+          <td><span class="tag b">建议</span></td>
+          <td>BL-AE</td>
+        </tr>
+        <tr>
+          <td>VIF / Hist</td>
+          <td>视觉信息保真度 / 直方图相关性（色彩匹配）</td>
+          <td><span class="tag n">可选</span></td>
+          <td>MIU-Diff</td>
+        </tr>
+        <tr>
+          <td>SSIM / PSNR / LPIPS</td>
+          <td>像素级相似度</td>
+          <td><span class="tag y">辅助</span></td>
+          <td>通用（错位下不可靠）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box good">
+    <div class="h">你的方法应该主打"染色量"指标，这是天然优势</div>
+    <p style="margin-bottom:0">因为你在浓度空间生成，<b>DAB KL / DAB JSD / IOD / 通道串扰 这几个指标是直接从你的输出算出来的，不需要额外的色解卷积步骤</b>。竞品（RGB 空间方法）要先做色解卷积才能算这些指标，多一层误差。这是你的结构性优势，论文里应该把这个作为卖点讲。</p>
+  </div>
+
+  <h3>基准数据集</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>数据集</th><th>内容</th><th>规模</th><th style="width:100px">推荐度</th></tr></thead>
+      <tbody>
+        <tr><td><b>MIST</b></td><td>HER2 / Ki67 / ER / PR 四种 IHC，与 H&amp;E 配对</td><td>每染色约 4k 训练对 + 1k 测试对（1024×1024）</td><td><span class="tag g">必用</span></td>
+        </tr>
+        <tr><td><b>BCI</b></td><td>H&amp;E ↔ HER2，含 HER2 分级标签（0/1+/2+/3+）</td><td>3,896 训练 / 977 测试</td><td><span class="tag g">必用</span></td>
+        </tr>
+        <tr><td>HEMIT</td><td>DAPI / panCK / CD3 多重免疫荧光</td><td>5,292 对（1024×1024）</td><td><span class="tag b">可选</span></td>
+        </tr>
+        <tr><td>Orion-CRC</td><td>18 个 IF marker</td><td>132k 训练 patch</td><td><span class="tag n">多染色时用</span></td>
+        </tr>
+        <tr><td>Ultivue Immuno8</td><td>10 marker CODEX（乳腺癌）</td><td>—</td><td><span class="tag n">多染色时用</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">注意：StainDiffuser 用的是自己的结肠数据集（CD3、CK8/18），<b>数字不可与 MIST/BCI 直接比较</b>。引用它的结果时要标注数据集差异。</p>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="s12">
+  <h2><span class="num">12</span>参考资料</h2>
+  <p class="lede">按主题分组，含代码链接。</p>
+
+  <h3>核心候选基座</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:150px">名称</th><th>链接</th></tr></thead>
+      <tbody>
+        <tr><td><b>HistDiST</b></td><td>论文 <a href="https://arxiv.org/abs/2505.06793">arxiv.org/abs/2505.06793</a> · 代码 <a href="https://github.com/ErikGro/HistDiST">github.com/ErikGro/HistDiST</a> · 权重（Google Drive，见 README）</td></tr>
+        <tr><td><b>Beer–Lambert Autoencoder</b></td><td>论文 <a href="https://arxiv.org/abs/2601.11336">arxiv.org/abs/2601.11336</a> · 代码 <a href="https://github.com/measty/StainQuant">github.com/measty/StainQuant</a></td></tr>
+        <tr><td><b>UNIStainNet</b></td><td>论文 <a href="https://arxiv.org/abs/2603.12716">arxiv.org/abs/2603.12716</a> · 代码 <a href="https://github.com/facevoid/UNIStainNet">github.com/facevoid/UNIStainNet</a> · 项目页 <a href="https://facevoid.github.io/UNIStainNet/">facevoid.github.io/UNIStainNet</a> · Demo <a href="https://huggingface.co/spaces/faceless-void/UNIStainNet">HF Space</a></td></tr>
+        <tr><td><b>SPFLOW</b></td><td>代码 <a href="https://github.com/HIT-JimmyXiao/SPFLOW">github.com/HIT-JimmyXiao/SPFLOW</a>（MIT）</td></tr>
+        <tr><td><b>StainDiffuser</b></td><td>论文 <a href="https://arxiv.org/abs/2403.11340">arxiv.org/abs/2403.11340</a></td></tr>
+        <tr><td><b>MIU-Diff</b></td><td>论文 <a href="https://arxiv.org/abs/2506.23184">arxiv.org/abs/2506.23184</a> · Springer <a href="https://link.springer.com/chapter/10.1007/978-3-032-06624-4_4">10.1007/978-3-032-06624-4_4</a></td></tr>
+        <tr><td><b>Marker-wise Diffusion</b></td><td>论文 <a href="https://arxiv.org/abs/2508.14681">arxiv.org/abs/2508.14681</a> · AAAI <a href="https://ojs.aaai.org/index.php/AAAI/article/view/37764">ojs.aaai.org/…/37764</a></td></tr>
+        <tr><td><b>I²SB</b></td><td>论文 <a href="https://arxiv.org/abs/2302.05872">arxiv.org/abs/2302.05872</a> · 代码 <a href="https://github.com/NVlabs/I2SB">github.com/NVlabs/I2SB</a></td></tr>
+        <tr><td><b>HistDiT</b></td><td>论文 <a href="https://arxiv.org/abs/2604.08305">arxiv.org/abs/2604.08305</a> · Springer <a href="https://link.springer.com/chapter/10.1007/978-3-032-31927-2_28">10.1007/978-3-032-31927-2_28</a></td></tr>
+        <tr><td><b>BBDM</b></td><td>论文 <a href="https://arxiv.org/abs/2205.07680">arxiv.org/abs/2205.07680</a> · 代码 <a href="https://github.com/xuekt98/BBDM">github.com/xuekt98/BBDM</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>相关支撑工作</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:190px">名称</th><th>链接 / 说明</th></tr></thead>
+      <tbody>
+        <tr><td>PST-Diff</td><td><a href="https://ieeexplore.ieee.org/abstract/document/10601703">IEEE Xplore 10601703</a></td></tr>
+        <tr><td>PGDIPS（物理引导零样本色解卷积）</td><td><a href="https://link.springer.com/chapter/10.1007/978-3-032-04981-0_43">Springer 10.1007/978-3-032-04981-0_43</a></td></tr>
+        <tr><td>扩散式跨染色特征变换（WSI）</td><td><a href="https://www.sciencedirect.com/science/article/pii/S1361841526002070">Medical Image Analysis 2026</a></td></tr>
+        <tr><td>扩散式垂体腺瘤虚拟多染色</td><td><a href="https://www.sciencedirect.com/science/article/pii/S0895611126000261">Computerized Medical Imaging and Graphics 2026</a></td></tr>
+        <tr><td>像素超分辨虚拟染色（扩散）</td><td><a href="https://www.nature.com/articles/s41467-025-60387-z">Nature Communications 2025</a> · 代码 <a href="https://github.com/Yijie-Zhang/Super-resolved-virtual-staining">github.com/Yijie-Zhang/…</a></td></tr>
+        <tr><td>Pathology FM 基准（20+ 模型）</td><td><a href="https://arxiv.org/abs/2505.20202">PathBench · arxiv.org/abs/2505.20202</a></td></tr>
+        <tr><td>MIST 数据集</td><td><a href="https://github.com/lifangda01/AdaptiveSupervisedPatchNCE">github.com/lifangda01/AdaptiveSupervisedPatchNCE</a> · Zenodo <a href="https://doi.org/10.5281/zenodo.4751737">10.5281/zenodo.4751737</a></td></tr>
+        <tr><td>BCI 数据集</td><td><a href="https://bupt-ai-cz.github.io/BCI/">bupt-ai-cz.github.io/BCI</a></td></tr>
+        <tr><td>UNI 基础模型权重</td><td><a href="https://huggingface.co/MahmoodLab/uni">huggingface.co/MahmoodLab/uni</a>（需申请访问）</td></tr>
+        <tr><td>Phikon（HistoSSLscaling）</td><td><a href="https://github.com/owkin/HistoSSLscaling/">github.com/owkin/HistoSSLscaling</a></td></tr>
+        <tr><td>Prov-GigaPath</td><td><a href="https://github.com/prov-gigapath/prov-gigapath">github.com/prov-gigapath/prov-gigapath</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="box info" style="margin-top:22px">
+    <div class="h">调研边界说明</div>
+    <p style="margin-bottom:0">本报告基于公开论文与代码库检索，检索截止 2026-10-03。三个候选（StainDiffuser、MIU-Diff、Marker-wise Diffusion）的官方代码在检索时未找到公开仓库，其"代码可得性"评分据此给出。SPFLOW 为单作者预印本，结果均为单种子点估计，引用时需注明证据等级。UNIStainNet 的部分第三方笔记标注为"CVPR 2025"，经核实其 arXiv 提交时间为 2026-03-13、正式发表为 ACM-BCB 2026，该标注有误。</p>
+  </div>
+</section>
+
+<div class="foot">
+  PSP-Diffusion 基座模型调研 · 2026-10-03<br>
+  覆盖 24 篇代表性工作 / 8 个候选基座 / 12 个调研维度
+</div>
+
+</div>
+</body>
+</html>

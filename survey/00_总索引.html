@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H&amp;E→IHC 扩散模型调研 · 总索引</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:17px;margin:30px 0 10px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:640px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff;transition:box-shadow .15s,border-color .15s}
+.card:hover{border-color:#c2d4f7;box-shadow:0 3px 14px rgba(26,86,219,.08)}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .title a{text-decoration:none;color:var(--text)}
+.card .title a:hover{color:var(--blue)}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:8px 18px 16px}
+.card .body p{font-size:13.5px;margin:6px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">H&amp;E→IHC · 调研总索引</div><div class="sub">GAN / 扩散 / 流匹配 + 虚拟染色<br>87 份文档 · 7 大分类</div>
+<a class="l1" href="#s0">0 · 这个文件夹是什么</a>
+<a class="l1" href="#s1">1 · 目录结构</a>
+<a class="l1" href="#s2">2 · 核心报告集（5 份）</a>
+<a class="l1" href="#s3">3 · 其他调研报告</a>
+<a class="l1" href="#s4">4 · 论文翻译</a>
+<a class="l1" href="#s5">5 · 论文精读博客</a>
+<a class="l2" href="#s5">Jeong 2023 · 染色分离空间扩散</a>
+<a class="l2" href="#s5">TT-SaD · OD 空间测试时适应</a>
+<a class="l2" href="#s5">Kang 2025 · 渐进式 H&amp;E→IHC</a>
+<a class="l2" href="#s5">桌面论文批量精读 12 篇</a>
+<a class="l1" href="#s6">6 · IHC 评价与分级</a>
+<a class="l1" href="#s7">7 · 伪影与失败模式</a>
+<a class="l2" href="#s7">黑团伪影 · 成因与诊断</a>
+<a class="l2" href="#s7">HistDiST 代码审查</a>
+<a class="l2" href="#s7">GAN 棋盘格伪影 · 底层成因</a>
+<a class="l1" href="#s8">8 · 方案可行性审查</a>
+<a class="l2" href="#s8">StainFuser 改造为 H&amp;E→IHC</a>
+<a class="l2" href="#s8">CUT 五条改动 · 代码级执行蓝图</a>
+<a class="l1" href="#s9">9 · 评价指标底层原理</a>
+<a class="l2" href="#s9">十条原理与指标设计配方</a>
+<a class="l1" href="#s10">10 · 研究脉络</a>
+<a class="l1" href="#s11">11 · 执行路线图</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Diffusion virtual staining · Research archive</div>
+<h1>H&amp;E→IHC 扩散模型调研 · 总索引</h1>
+<p class="desc">以 PSPStain 为 baseline、用扩散模型替换生成框架并引入解耦学习这条主线上的全部调研产出</p>
+<div class="meta"><span>87 份文档 / 132 个文件</span><span>时间跨度 2026-09-22 → 2026-10-16</span><span>来源：15 个 WorkBuddy 会话</span><span>归档日期 2026-10-03 · 更新 2026-10-16</span><span>★ 计数已于 2026-10-11 按文件系统两次重新核对（原标注 62/104 为陈旧值：差额 3 份来自 02_论文翻译 的 source.md 此前未计入；分类数由 5 更正为 6。第二次核对再增 1 份：<b>六轴机制改动调研</b>，70/109 → 71/110，排除 dotfiles 后 os.walk 实算；第三次核对补正 01_调研报告 分类数 31 → 32，使分类明细之和与总数一致；第四次核对新增 <b>桌面论文批量精读_11篇.html</b>（03_论文精读博客），71/110 → 72/111。第五次核对新增 <b>07_评价指标底层原理</b> 分类及其首篇 <b>虚拟染色评价指标的底层原理_十条原理与指标设计配方.html</b>，72/111 → 73/112，分类数 6 → 7；第六次核对把 <b>桌面论文批量精读_11篇.html</b> 替换为 <b>桌面论文批量精读_12篇.html</b>（追加 Star-Diff 一篇），因属同目录同名替换，<b>文件数与分类数均不变，仍为 73/112</b>；<b>第七次核对</b>新增 <b>PST-Diff 精读博客</b>（<code>03_论文精读博客/pst_diff_blog/</code>，1 份 md + 9 张从论文抽取的配图），<b>73/112 → 74/113</b>；<b>第八次核对</b>新增 <b>GAN问题与不足调研.html</b> 与 <b>GAN+频域+门控_虚拟染色方法调研.html</b>（01_调研报告），<b>74/113 → 76/115</b>；<b>第九次核对</b>新增 <b>频域门控治理GAN缺陷_先例核实与机制修正.html</b>（06_方案可行性审查），<b>76/115 → 78/117</b>；<b>第十次核对</b>新增 <b>CUT骨架_频域缝合清单_代码接口级.html</b>（01_调研报告，CUT 骨架 × 频域的可缝合工作清单），<b>79/124 → 80/125</b>；<b>第十一次核对</b>新增 <b>GAN频域_小众开源仓库清单_缝合素材库.html</b>（01_调研报告，GAN × 频域的小众开源仓库总清单），<b>80/125 → 81/126</b>；<b>第十二次核对</b>新增 <b>CUT架构五条改动方案可行性审查.html</b>（06_方案可行性审查，对用户提出的五条 CUT 改动逐条判定），<b>81/126 → 82/127</b>；<b>第十三次核对（2026-10-16）</b>新增两份：<b>通道分解与跨通道约束_可缝合模块检索.html</b>（01_调研报告，面向「2 通道生成」思路的通道轴可缝合模块清单）与 <b>CCPL_跨通道感知学习_精读_论文与代码级复核.html</b>（03_论文精读博客，含官方仓库逐行复核），<b>82/127 → 84/129</b>，分类数不变；<b>第十四次核对（2026-10-16）</b>新增 <b>CUT系谱系链与缝合四层贡献度_方案定位.html</b>（01_调研报告，四代谱系 G/D 逐字未变 + 三个「自己的损失」成色核查 + 缝合四层贡献度 + 自己方案的定位改写），<b>84/129 → 85/130</b>，分类数不变；<b>第十五次核对（2026-10-16）</b>新增 <b>CUT五条改动_代码级执行蓝图.html</b>（06_方案可行性审查，把五条改动的判定落成可改文件 / 接口 / 最小验证实验的代码级蓝图），<b>85/130 → 86/131</b>，分类数不变。；<b>第十六次核对（2026-10-17）</b>新增 <b>双通道前端_门控交互模块候选清单_代码接口级.html</b>（01_调研报告，思路 A 的 H/E 双流门控交互可缝合模块：TIF/CAFM 跨流交叉注意力 + MogaNet 近零初始化配方，拼出 MutualGatedInteraction），<b>86/131 → 87/132</b>，分类数不变。★ <b>计数口径</b>：索引的「份」= <b>报告数而非文件数</b>，分类明细之和必须等于总数；<code>os.walk</code> 实算与索引口径的差异说明见 <code>MEMORY.md</code> §5 的「2026-10-15 口径问题」记录，本次仍按既有口径只加增量，未静默改历史数字。</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>这个文件夹是什么</h2>
+<p>这里汇集了你从 9 月下旬起，围绕同一个研究问题做的全部调研。它们原先散落在 10 个不同的 WorkBuddy 会话目录里，现已按主题归位到此处。</p>
+<div class="box key"><div class="bt">一句话概括这条研究链路</div>
+<p style="margin-bottom:0">把 <strong>PSPStain</strong>（H&amp;E→IHC 虚拟染色，PALS/FOD + PCLS）的生成框架换成<strong>扩散模型</strong>并加入<strong>解耦学习</strong>。要做到这件事需要同时回答五个问题：<strong>解耦什么、怎么保证物理合规、多损失怎么共存、物理正演能不能借用现成工具、现在有什么能直接复现。</strong></p></div>
+<div class="grid2">
+<div class="mini"><div class="mt">你反复强调的优先级</div><p>可复现 &gt; 可解释 &gt; 改动小 &gt; 有公开代码 &gt; 有实验收益 &gt; 复杂度。</p><p>反对「为了创新而创新」和机械堆模块——这条原则贯穿全部报告。</p></div>
+<div class="mini"><div class="mt">贯穿全部报告的硬约束</div><p>① 不能丢掉 PSPStain 原有的两个 loss（PALS/FOD、PCLS）；</p><p>② 禁止用单一 PSNR 判断成败；</p><p>③ 非配对设定下 coupling 不可辨识，必须诚实标注。</p></div>
+</div>
+
+<h2 id="s1"><span class="num">1</span>目录结构</h2>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>H&amp;E2IHC_扩散模型调研/
+├── 00_总索引.html          ← 本文件
+├── 01_调研报告/            40 份（含 HE2IHC_Diffusion_Research/ 核心报告集）
+├── 02_论文翻译/            16 份（FGDM / AQuA / InverseAE / StainBridge / Misalignment / PSPStain / OT-StainNet）
+├── 03_论文精读博客/        9 份（DGR、PSPStain、Star-Diff、PST-Diff 四套精读博客；Jeong2023、TT-SaD、Kang2025 三份 OD 空间扩散精读 HTML；桌面论文批量精读 12 篇；CCPL 跨通道感知学习精读）
+├── 04_IHC评价与分级/       4 份
+├── 05_伪影与失败模式/      3 份（黑团伪影成因与诊断 · HistDiST 代码审查 · GAN 棋盘格伪影底层成因）+ assets_gan_artifacts/（5 图 + 实验脚本）
+├── 06_方案可行性审查/      14 份（StainFuser 改造实施任务书 v2 · StainFuser 改造审查 · PST-Diff 借鉴审查 · FeatStainDiff 全框架审查 · DAB-only 浓度扩散审查 · DAB-only 文献先例地图与模型选型 · V1 网络结构定稿审查 · M0 条件扩散归因审查 · E0 实验任务书 · E0.2 结论 · 阶段 1 施工任务书 · 频域门控治理 GAN 缺陷先例核实与机制修正 · CUT 架构五条改动方案可行性审查 · CUT 五条改动代码级执行蓝图）
+└── 07_评价指标底层原理/    1 份（虚拟染色评价指标的底层原理_十条原理与指标设计配方.html）</code></pre></div>
+
+<h2 id="s2"><span class="num">2</span>核心报告集（5 份）</h2>
+<p>这是整条主线上最完整的一组，自成一体，位于 <code>01_调研报告/HE2IHC_Diffusion_Research/</code>，有自己的索引页。建议从这里开始。</p>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="01_调研报告/HE2IHC_Diffusion_Research/index.html">HE2IHC_Diffusion_Research/index.html</a></div><div class="v">这 5 份报告的总索引 · 研究脉络图 + 阅读路线 + 结论速查表 + 合并执行路线图</div></div><div><span class="b high">建议起点</span></div></div>
+<div class="body"><p>把下面 5 份报告串成一条研究链路：解耦什么 → 物理规律怎么保证 → 多损失怎么共存 → 物理正演能否借用现成工具 → 现在该跑哪个代码。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Diffusion_Disentanglement_Report.html">R1 · 扩散模型解耦学习文献调研与可复现实验方案</a></div><div class="v">161 KB · 2026-09-30</div></div><div><span class="b purple">文献调研</span> <span class="b blue">方案设计</span></div></div>
+<div class="body"><p><strong>结论：</strong>最佳解耦轴是 <strong>structure/anatomy ↔ stain-expression</strong>（不是经典 content↔style）；架构用<strong>单一扩散主干 + 双 SPADE 条件调制</strong>；推理时用<strong>可学习 target-domain stain token</strong>。</p><p><strong>含：</strong>22 篇扩散+解耦论文 + 8 张深度卡片、16 篇病理论文、10 篇非医学可迁移工作、Type 1/2/3 分类、S/A/B/C 迁移性打分、3 套实验方案、M0–M6 消融树、Step 0–6 路线图。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Physical_Fidelity_and_Trustworthiness_Report.html">R2 · 物理合规性与生成可信性调研</a></div><div class="v">102 KB · 2026-10-01</div></div><div><span class="b purple">理论分析</span> <span class="b tealb">可信性</span></div></div>
+<div class="body"><p><strong>结论：</strong>非配对设定下 <code>p(IHC|H&amp;E)</code> 的 coupling <strong>在数学上不可辨识</strong>——这是理论事实，不是调参问题。只能做三件事：<strong>可约束</strong>（Beer–Lambert 可微前向）、<strong>可检测</strong>（AQuA 幻觉检测）、<strong>可量化</strong>（不确定性图）。</p><p><strong>含：</strong>三种不可知性、不可辨识性证明梗概、5 条逼近配对的路径、BeerLaNet / StainQuant、AQuA（无需真值检测幻觉，准确率 97.8–99.8%）、四层评价金字塔、模块 M1–M5、路线 A–G。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Diffusion_Loss_Combination_Guide.html">R3 · 噪声预测损失与其他损失能否共存</a></div><div class="v">105 KB · 2026-10-01</div></div><div><span class="b blue">原理讲解</span> <span class="b medium">训练实操</span></div></div>
+<div class="body"><p><strong>结论：</strong>能一起训练，但<strong>噪声预测损失是特殊的</strong>——它是唯一出现在采样公式里的项，辅助损失只能通过扰动 ε_θ 间接起作用。硬证据：Lantern/GradBlend 显示朴素梯度平衡会把 FPD 放大 2–100 倍；<strong>训练末段只跑去噪损失</strong>是性价比最高的单项修复（FPD 236.3 → 32.84）。</p><p><strong>含：</strong>ε/x₀/v 参数化对比、Min-SNR-γ、P2 加权、zero terminal SNR、六种范式 A–F、常见误解澄清、PCLS→双 SPADE 条件注入、训练循环伪代码、M0–M6 消融矩阵。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Multiplex2Brightfield_Toolkit_Review.html">R4 · 多重成像正演工具箱 · 深度调研与迁移评估</a></div><div class="v">86 KB · 2026-10-01</div></div><div><span class="b tealb">工具核实</span> <span class="b blue">迁移评估</span></div></div>
+<div class="body"><p><strong>结论：</strong>工具箱包名 <code>multiplex2brightfield</code>（BSD 3-Clause，只吃 OME-TIFF）。<strong>用法 A：把它的 Beer–Lambert 渲染器改造成可微输出头（零风险）</strong>；<strong>必须避免</strong>用合成配对训练模型。</p><p><strong>关键缺口：</strong>论文里<strong>没有任何公开数据集提供 HER2 / Ki67 / ER / PR 的乳腺癌真值</strong>——它只能提供物理渲染能力，给不了目标 marker 的监督信号。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Reproducible_Diffusion_Virtual_Staining_Recommendation.html">R5 · 可复现的扩散虚拟染色工作推荐</a></div><div class="v">35 KB · 2026-10-03</div></div><div><span class="b high">可复现优先</span></div></div>
+<div class="body"><p><strong>结论：</strong>没有找到同时满足「扩散 + H&amp;E→IHC + 经典显式 content/style 解耦 + 官方代码/checkpoint/数据/完整运行说明」的强候选。排序：<strong>Star-Diff → DiffVS → HistDiST → VSMT → StainDiffuser</strong>。建议先复现 Star-Diff 拿到「结构—随机性解耦」的扩散基线。</p><p><strong>含：</strong>A/B/C 三类解耦定义、候选总表、Star-Diff 深度卡片（含精确命令）、执行单。</p></div>
+</div>
+
+<h2 id="s3"><span class="num">3</span>其他调研报告</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:42%">文件</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><a href="01_调研报告/PSPStain_频域条件注入_文献综述报告.html"><strong>PSPStain_频域条件注入_文献综述报告.html</strong></a></td><td>最大的一份（222 KB）。围绕「把频域条件注入引入 PSPStain」的文献综述。</td></tr>
+<tr><td><a href="01_调研报告/频域在扩散模型中的应用_结构保持视角_调研报告.html"><strong>频域在扩散模型中的应用_结构保持视角_调研报告.html</strong></a></td><td><strong>★ 新增（81 KB）</strong>。与上一份<strong>互补</strong>：这份按「结构保持」这条主轴重组，并补上<strong>底层原理讲解</strong>（三种基 / 三条定理 / 扩散谱偏置的四环证据链）与<strong>负结果清单</strong>。核心贡献是一张「频域能插在扩散管线的<strong>六个位置</strong>」表——看任何一篇「频域+扩散」的工作，先定位它落在哪一格。判定：位置①②（换生成域、改噪声调度）<strong>否决</strong>；位置③⑥（FreeU 式特征调制、采样期修正）<strong>免训练可试</strong>；位置④⑤需重训。含对 AIRPNet/LFP 的核实纠正（<strong>它不是频域模块</strong>，LFP 内部只有 GAP+SE；「低频决定真实」是自媒体措辞非论文原话）。</td></tr>
+<tr><td><a href="01_调研报告/扩散模型虚拟染色_蛋白表达约束_约束位置地图.html"><strong>扩散模型虚拟染色_蛋白表达约束_约束位置地图.html</strong></a></td><td><strong>★ 新增（141 KB）</strong>。按<strong>「蛋白约束挂在 diffusion 的哪里」</strong>重组文献地图——五个位置：① 训练损失挂 ε/v/x̂₀ · ② latent/feature · ③ 条件输入 · ④ 最终 RGB · ⑤ 采样期 guidance。核心判定：<strong>「扩散 + 蛋白感知的训练损失」这个组合是空的</strong>——扩散侧最多做到「蛋白身份作条件」与「蛋白分级作评价」，真正的蛋白约束全在非扩散模型上。三处空白：ε 那一列全空 · H-score 训练损失无人做 · 扩散×浓度生成空间不存在。含 <strong>22 篇论文 11 列总表</strong>、<strong>x̂₀ 损失的梯度回传推导与冲突角诊断</strong>、<strong>错位鲁棒性 L1–L5 逐方法定级</strong>（引 HER2 NCMT 受控实验：平移 0→24 px 使 FID 38.8→46.68）、<strong>六方案 A–F 九维评价</strong>、四阶段实验建议。结论：<strong>第一优先级 = 在 x̂₀ 上挂 FOD 的分布级损失（全局均值 + 20-bin 直方图）</strong>。</td></tr>
+<tr><td><a href="01_调研报告/流匹配虚拟染色_蛋白表达约束_约束位置地图.html"><strong>流匹配虚拟染色_蛋白表达约束_约束位置地图.html</strong></a></td><td><strong>★ 新增（161 KB）</strong>。与上一份<strong>严格同构对照</strong>：只把生成框架从 diffusion 换成 <strong>flow matching</strong>（CFM / rectified flow / stochastic interpolants / Schrödinger bridge / JiT 式 x-prediction），<strong>问题、结构、30 节要求一字不变</strong>。核心判定：<strong>「流匹配 + 蛋白感知的训练损失」这个组合<em>同样</em>是空的</strong>——但流匹配有三处结构优势。<strong>① 最实质的一条：端点恢复不除法。</strong>线性/OT 插值下 <code>x̂₁ = x_t + (1−t)·v̂_t</code>，系数有界于 [0,1]，不像扩散的 <code>x̂₀ = (x_t − √(1−ᾱ)·ε̂)/√ᾱ</code> 在 t→T 处除以趋零量 ⇒ <strong>挂损失比扩散更便宜更稳</strong>；<strong>② 起点可选</strong>（SB 直接从 H&amp;E 出发，不经高斯噪声）；<strong>③ 采样确定性可被 SDE 化</strong>（arXiv 2410.02217，免重训换多样性）；<strong>④ guidance 理论已齐备</strong>（Feng et al. ICML 2025 给出流匹配首个通用 guidance 框架）。<strong>六项真正用于虚拟染色的工作</strong>：TDSB（IEEE JBHI 2026）· PASB（MedIA 108:103869）· SheafStain（NeurIPS 2026）· HUSE（ECCV 2026，<strong>摘要未说框架，以官方代码为据</strong>）· PRISM · 一个 BCI 上的 RFM 非正式项目（其结论<strong>恰好说出「纯流匹配保结构但不复现真实染色分布」</strong>）。含 <strong>23 篇 11 列总表</strong>、<strong>x̂₁ 公式推导与自校验</strong>、<strong>x/v 空间不一致的 1/(1−t) 放大陷阱</strong>、<strong>SB 可辨识性的诚实回答</strong>（把病态 coupling 变良定义，但<strong>不使实例级对应可辨识</strong>；附 RAFM 自陈与三篇 SB 工作均依赖额外监督的证据）、13 方法 L1–L5 定级、六方案 A–F 九维评价、五阶段实验建议、<strong>14 条未核实清单</strong>（含 TDSB 英文摘要只取得中文摘要页、UNIStainNet 的 venue 系库内核实而 arXiv 页面未标注两处新增边界）。<strong>★ §14 回流清单</strong>：流匹配侧的机制哪些能搬回扩散（A 档原样可搬 6 条 / B 档要改造 3 条 / C 档搬不了 4 条），并给出 <strong>UNIStainNet 的抗错位损失设计</strong>（top-10% 尾部统计量、配对损失降到 64/128/256 px、边缘损失挂在「生成图↔H&amp;E」轴、判别器必须无条件）——<strong>「10–50 px 错位下挂 DAB 表达损失能训起来」的第一个直接证据</strong>。另核到两条与你架构决策直接相关的事实：<strong>① 「可学习染色 embedding + 单模型服务四 marker（HER2/Ki67/ER/PR）」已有公开先例</strong>（正面支持「单主干 + marker token」，但<strong>只解决条件那一格，不解决蛋白损失那一格</strong>）；<strong>② 它的失败是系统性的且集中在非肿瘤组织</strong> ⇒ <strong>只报全图均值会把这类失败平均掉，须按组织类型分层报</strong>。（另修正一处：UNIStainNet 的 venue 原表误写 CVPR 2026，已按库内核实改为 <strong>ACM-BCB 2026</strong>。）<strong>★ §2.7 CFM-HES（MICCAI 2026）</strong>：浓度域 CFM + Beer–Lambert 重建，<strong>占住「流匹配 + 可微渲染器」两格</strong>（H&amp;E→HES、需配对）⇒ 空缺收窄为「渲染器 × 蛋白约束」；其消融显示<strong>映射接近确定时生成模型仅 +0.7 dB</strong>，反证 DAB 的「一对多」才真正需要生成模型。结论：<strong>第一优先级 = 在 x̂₁ 上挂 FOD 的分布级损失（全局均值 + 20-bin 直方图）</strong>。</td></tr>
+<tr><td><a href="01_调研报告/PSP-Diffusion_解耦扩散范式.html">PSP-Diffusion_解耦扩散范式.html</a></td><td>PSP-Diffusion 项目的解耦扩散范式设计。</td></tr>
+<tr><td><a href="01_调研报告/PSP-Diffusion_基座模型调研.html">PSP-Diffusion_基座模型调研.html</a></td><td>扩散基座模型选型调研。</td></tr>
+<tr><td><a href="01_调研报告/PSP-Diffusion_方案说明_变量注释版.html">PSP-Diffusion_方案说明_变量注释版.html</a></td><td>方案说明，逐变量注释。</td></tr>
+<tr><td><a href="01_调研报告/PSP-Diffusion_浓度空间扩散_思路澄清.md">PSP-Diffusion_浓度空间扩散_思路澄清.md</a></td><td>在浓度/光密度空间做扩散的思路澄清。</td></tr>
+<tr><td><a href="01_调研报告/PSP-Diffusion_符号与量_速查.md">PSP-Diffusion_符号与量_速查.md</a></td><td>符号与物理量速查表。</td></tr>
+<tr><td><a href="01_调研报告/protein-expression-representation-survey.html">protein-expression-representation-survey.html</a></td><td>蛋白表达表征方法综述（193 KB）。</td></tr>
+<tr><td><a href="01_调研报告/PSPStain团队_工作梳理.html">PSPStain团队_工作梳理.html</a></td><td>PSPStain 团队已有工作的梳理。</td></tr>
+<tr><td><a href="01_调研报告/StainPromptInversion_精讲.html">StainPromptInversion_精讲.html</a></td><td>StainPromptInversion 论文精讲。</td></tr>
+<tr><td><a href="01_调研报告/Diffusion主损失与辅助损失的梯度冲突_机制分析.html"><strong>Diffusion主损失与辅助损失的梯度冲突_机制分析.html</strong></a></td><td>（168 KB）回答「辅助损失与 diffusion 主损失是否冲突、由什么决定」。含<strong>一个自证恒等式</strong>（把 <code>g_aux</code> 精确拆成「永远与 <code>g_diff</code> 同向的对齐项」+「当且仅当目标不一致时出现的失配项」）、逐变量 Jacobian 表、临界 λ 公式、t 轴与 s 轴两个病灶、5 条可证伪预测与零训练诊断脚本。<strong>12 篇承重引用由我逐条核对一手来源</strong>（含 4 篇 2026 年新作）。★ <strong>已修正三处自己的错误</strong>（曾误荐 ConFIG、曾漏掉训练进程轴、库内扫描漏子目录），详见报告 §17。</td></tr>
+<tr><td><a href="01_调研报告/SGCD_Stain-Guided_CycleDiffusion_精读_代码级复核与可迁移性判定.html"><strong>SGCD_Stain-Guided_CycleDiffusion_精读_代码级复核与可迁移性判定.html</strong></a></td><td>NeurIPS 2025 <strong>Spotlight Poster</strong> 论文（DOI 10.52202/085713-1305）的代码级精读。原文 31 页通读 + <strong>官方实现 <code>main.py</code>/<code>vahadane.py</code> 逐行复核</strong>。<strong>核心发现</strong>：① 它的 stain-guided 引导在发布的代码里是<strong>死代码</strong>（函数体写死 <code>guide = False</code>，覆盖调用方的 <code>guide=True</code>）——与 HistDiST 的 <code>render_ihc</code> 零调用点是<strong>同一故障类</strong>；② 被关掉的那段「梯度」<strong>不是梯度</strong>（<code>l2_diff/‖l2_diff‖</code> + <code>.detach()</code>）；③ 论文超参与代码差 1–2 个数量级（论文 T=1000/k=600，代码 <code>config.T = 5</code>）。<strong>可迁移性判定</strong>：<code>I_ref = W_t @ H_s</code> 要求两域共享同一套染色 ⇒ 在 H&amp;E→IHC 上会把<strong>伊红密度当 DAB 密度</strong>渲染，对 HER2 膜染色是<strong>定向错误</strong>。<strong>★ 正面结论</strong>：它的 Vahadane 预处理<strong>独立互证了 E0.3b 的三条结论</strong>（逐图白点归一化 / 在组织像素上标定 M / 用 NMF）。含一个<strong>零训练的决定性实验</strong>（测退化参考图的相关性）。</td></tr>
+<tr><td><a href="01_调研报告/训练一个好VAE的公开资源地图_面向扩散潜空间.html"><strong>训练一个好VAE的公开资源地图_面向扩散潜空间.html</strong></a></td><td><strong>本目录体量较大的一份（70 KB）。</strong>回答「有没有训练好 VAE 的公开指南」。<strong>★ 核心认知：目标要分两层</strong>——<strong>A 重建保真</strong>（ft-ema/ft-mse · Stony Brook 病理版 · consistency decoder · diffusers decoder-only 脚本）与 <strong>B 潜空间适合扩散</strong>（<strong>VA-VAE</strong> CVPR 2025 / <strong>REPA-E</strong> ICCV 2025）。<strong>你搜到的 90% 是 A，而黑团问题在 B。</strong>含 <strong>SD/SDXL VAE 的逐字损失</strong>（<code>GeneralLPIPSWithDiscriminator</code>：<code>|x−x̂|+λ·LPIPS</code> 经 <code>exp(logvar)</code> NLL 化 + KL + 自适应 GAN 权重）与<strong>官方示例配置全部超参</strong>（lr 4.5e-6 · KL 1.0 · percep 0.25 · <code>disc_start</code> 20001）。<strong>★ 两条可直接搬的机制</strong>：<code>d_w = ‖∇nll‖/(‖∇g‖+ε)</code> 的<b>梯度范数平衡（只修幅度不修方向）</b> · <code>disc_start</code> 的<b>辅助项 warmup（s 轴第三个独立证据）</b>。含 H1/H2/H3 判据与按投入排序的行动表。</td></tr>
+<tr><td><a href="01_调研报告/浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html"><strong>浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</strong></a></td><td><strong>★ 新增（57 KB）</strong>。把「浓度 / OD 域」当成一个<strong>独立文献轴</strong>来清算：这个表示空间在文献里被谁用过、用在<b>生成</b>还是<b>分析</b>、渲染器是哪一个。产出 <strong>表示空间 × 任务 × 生成框架</strong> 三维定位总表 + 逐工作 11 列总表。<strong>核心判定</strong>：①「浓度域 + Beer–Lambert 渲染」这个<strong>机制已被占</strong>——<strong>CFM-HES</strong>（MICCAI 2026）做的就是染色分离 → 浓度域生成缺失通道 → BL 重建，差别只有「它用条件流匹配、不是扩散」；② <strong>「扩散在浓度 / OD 域生成」是空格</strong>（多轮独立检索确认，OD 在已有生成式工作里只作损失 / 引导 / 评价：PSPStain FOD · SheafStain DAB 损失 · PGVMS ImageJ OD · PGLStain OD 引导）；③ 最接近的先例给出<b>对你不利的读数</b>——CFM-HES 消融：确定性 U-Net 31.34/0.978 vs CFM 32.06/0.968，<strong>PSNR 只涨 0.72 dB 而 SSIM 更差</strong>；④ 三个可微 BL 渲染器<strong>代码级核实</strong>（StainQuant 自然对数 I₀=1 · PGDIPS log10 可学 I₀ · multiplex2brightfield 不可微），<strong>且都不是死代码</strong>；⑤ 唯一严谨的「线性空间扩散更好」证据（DCTdiff）针对<strong>正交</strong>变换，<strong>不能外推</strong>到 OD 的逐元素 log。<strong>结论：论文卖点应从「我在浓度域做扩散」改为「浓度域 vs RGB 域的受控消融 + 唯一仍空的蛋白表达级损失」。</strong></td></tr>
+<tr><td><a href="01_调研报告/扩散模型门控机制_文献地图与频域交汇.html"><strong>扩散模型门控机制_文献地图与频域交汇.html</strong></a></td><td><strong>★ 新增（65 KB · 14 节）</strong>。回答「扩散模型的频域与门控工作都是怎样的」。<strong>频域部分不重复</strong>库内既有两份报告，只做增量与交汇；<strong>增量主轴 = 门控作为独立机制轴</strong>。<strong>核心产出：门控挂在哪一格的「位置总表」</strong>——① 网络内部算子门控（DiT adaLN-Zero · LayerScale · ReZero · Sana Mix-FFN GLU · SD3/Flux <code>gate_msa</code>）· ② 条件注入与多条件路由（GLIGEN · ControlNet 零卷积 · T2I-Adapter · Composer · SPADE/FiLM）· ③ 专家路由（DiT-MoE · EC-DiT · ProMoE · FA-MoE · FeatStainDiff FMoE）· ④ 时间步 × 频带（AdaLN · TASR · CFG 调度 · SGN · AFFNet · FreeU · FreqFormer）。<strong>三条关键判定</strong>：① <strong>「门控存在」≠「门控被证明有用」</strong>——被单独消融证明有效的只有 <strong>零初始化残差门控</strong>一类（adaLN-Zero / LayerScale / ReZero），Sana / SD3 / Flux / DiG / PixArt 的门控<strong>架构里有但从未单独消融</strong>；② <strong>「零初始化」是安全默认但不是最优</strong>——TPAMI 2026 的 <code>adaLN-Gaussian</code>（小幅非零）一致优于严格零初始化（FID <strong>17.86 vs 20.02</strong>）；③ <strong>MoE 专家路由在扩散上是负结果</strong>（ProMoE, ICLR 2026 逐字「existing attempts to apply MoE to DiTs have yielded limited gains」，因视觉 token 空间冗余致专家同质化）。<strong>★ 空格确认</strong>：「按频带索引 + 以 t 为条件的可学习门控，放进扩散模型」<strong>无人做过</strong>（FreqFormer 2026-04 近似命中但<strong>无质量消融</strong>）。<strong>★ 门控会让结果变差有实证</strong>（CaiT depth 12：78.3 &lt; baseline 79.9；ResNet-56 三种门控全比 baseline 差）⇒ <strong>浅网络里门控是「稳定性保险」不是「性能模块」</strong>。含可执行路线 G0–G3 与止损、以及<strong>对库内「tanh 梯度 11×」的订正</strong>（算术自证正确但<strong>无文献、且强烈依赖参数化</strong>）。</td></tr>
+<tr><td><a href="01_调研报告/HE与IHC的H通道是否共享_染色化学_配准与计算三层拆解.html"><strong>HE与IHC的H通道是否共享_染色化学_配准与计算三层拆解.html</strong></a></td><td><strong>★ 新增（64 KB · 11 节）</strong>。回答一个被反复引用、却从没人拆开过的问题：<strong>H&amp;E 的苏木素与 IHC 的复染苏木素，是不是同一个「通道」？</strong><strong>核心方法</strong>：把「共享」拆成<strong>四层含义</strong>（同一试剂 / 同一基向量 / 同一信号 / 同一表示），逐层给一手证据——四层答案不同，混淆它们就会跨过原文没有跨的那一步。<strong>三层判定</strong>：① <strong>化学层 ✅</strong>（同一发色团 hematein–Al³⁺，静电结合 DNA 磷酸基团而非组蛋白，Kiernan 2018；但协议强度差约 10×——IHC 复染 30 秒 vs H&amp;E 5 分钟）② <strong>像素层 ❌</strong>（BCI / MIST 是相邻切片；HyReCo 中位配准残差 <strong>7.1–16.0 µm</strong>，与核直径 5–10 µm 同量级；同片脱色再染才降到 0.9–2.3 µm）③ <strong>表示层 ⚠️</strong>（全文献只有 <strong>DeReStainer</strong> 写 "share the Hematoxylin channel"，而它逐字是「<strong>we believe</strong>」+ 只做<strong>特征空间余弦对齐</strong>，并未像素拷贝；其余 7 篇代表作<strong>无一共享输入 H</strong>）。<strong>★ 一条容易被忽略的硬证据</strong>：Ruifrok 2001 只给了<strong>一个</strong> [H, E, DAB] 矩阵（并非 H&amp;E / IHC 两套），且原文承认 DAB 饱和区对「苏木素」IOD 的污染<strong>平均达 65%</strong>、Ki-67 阳性核内 H 与 DAB 共定位无法单波长分离 ⇒ <strong>IHC 解出的 C_H 在阳性区不可信，而这正是虚拟染色最关心的区域</strong>。含 <strong>6 个失效环节</strong>（协议差 · 批次差 · HIER 破坏核形态 · DAB 污染 · 配准残差 · 幻觉）与<strong>按数据范式分派的决策树 + 三条零训练动作</strong>。复用库内 <code>DAB-only浓度扩散</code> / <code>PSPStain频域</code> / <code>E0.2</code> / <code>M0</code> 的既有结论并注明出处，未重复推导。</td></tr>
+<tr><td><a href="01_调研报告/扩散虚拟染色_结构保持机制_Condition注入与约束引导的机制比较.html"><strong>扩散虚拟染色_结构保持机制_Condition注入与约束引导的机制比较.html</strong></a></td><td><strong>★ 新增（109 KB · 14 节）</strong>。回答「结构保持到底由 Condition Injection 还是 Constraint / Guidance 实现，两者谁更可靠」。<strong>核心方法</strong>：把「结构约束」拆成<strong>三类数学身份</strong>——① 条件注入（让模型参考，<strong>无保证</strong>）② 硬投影（限制可行域，<strong>代数保证</strong>）③ 软约束 / 梯度引导（推动采样，<strong>无保证</strong>），并指出文献里「constraint」这个词<strong>绝大多数指的是条件化而不是投影</strong>（ContourDiff / SegGuidedDiff 逐字证据）。<strong>★ 关键受控对照</strong>：HistDiST Table 2（逐字核实）显示<strong>加 cross-attention 让 PHV 0.511→0.436、FID 41.3→31.3，而 SSIM 几乎不动（0.228→0.227）</strong>；<strong>结构增益来自推理期 DDIM inversion（0.198→0.228）</strong> ⇒ <strong>条件注入管「分布真实性」，推理期锚定才管「结构」</strong>。<strong>★ 硬边界</strong>：经典 data consistency（DDNM）要求线性 A 与测量 y，<strong>H&amp;E→IHC 没有 y</strong>；且 DPS §C.1 逐字给出「每步硬投影会累积误差」的反例。<strong>★ 推荐首选</strong>：H 浓度锚定投影 <code>C_H ← α·C_H^input</code>（A = 选 H 通道，<strong>真投影、零重训、成本≈0</strong>），带时间调度 + DAB-gated 松弛。含<strong>机制位置总表（P1–P6）</strong>、<strong>9 行消融矩阵（E0–E9）</strong>、<strong>S0–S8 最小实验计划</strong>、按数据范式分层的约束对象表、以及<strong>7 条阴性结论 + 未核实清单</strong>。复用库内 <code>M0归因</code> / <code>约束位置地图</code> / <code>浓度域OD域</code> / <code>弱配准</code> / <code>DAB-only</code> 的既有结论并注明出处。</td></tr>
+<tr><td><a href="01_调研报告/MCCL论文获取报告_公开内容汇编与同源开放姊妹篇CCPL.html"><strong>MCCL论文获取报告_公开内容汇编与同源开放姊妹篇CCPL.html</strong></a></td><td><strong>★ 新增（72 KB · 9 节）</strong>。回答「<strong>Enhancing H&amp;E-to-IHC Virtual Staining via Multi-Channel Correlation Learning（ICIC 2025, DOI 10.1007/978-981-96-9863-9_32）能不能拿到</strong>」。<strong>结论：拿不到免费全文</strong>——Springer 付费章节（EUR 29.95）、<strong>无 arXiv 预印本</strong>、<strong>无任何机构库副本</strong>、作者<strong>未公开代码</strong>；四个独立源（Springer 页面自身 <code>access=No</code> / Semantic Scholar <code>CLOSED</code> / OpenAlex <code>any_repository_has_fulltext:false</code> / Unpaywall <code>n_oa_locations:0</code>）一致判定闭源。<strong>★ 但合法取回了 Springer 免费开放的部分</strong>：<strong>完整摘要</strong>（非截断 meta）+ <strong>完整 21 条参考文献</strong> + 作者单位 + 完整书目元数据。<strong>★ 最重要的发现</strong>：同团队（复旦，通讯作者曾新华 <code>zengxh@fudan.edu.cn</code>）有一篇<strong>机制几乎同源的开放姊妹篇 CCPL</strong>（<strong>arXiv:2506.07559</strong>，ICME 2025），<strong>全文免费 + 官方代码开源 + 含完整消融表</strong>；MCCL 的增量基本只是「多引入一个 E 通道」（CCPL 分解 H/D 双通道，MCCL 扩成 E/H/D 三通道）。<strong>★ 对既有报告的贡献</strong>：① <strong>把 H 通道报告里「MCCL 用 HED 空间置零 DAB/Eosin 保留 Hematoxylin」从推断升级为 VERIFIED</strong>（CCPL §III.A.1 逐字确认），并收紧结论——<strong>连这个家族真正从输入侧借的也是 E 通道，H 仍只用于算相关性、不做像素拷贝</strong>；② 用 <strong>CCPL 消融表（BCI）为「结构保持」报告补上一块非扩散路线的独立复现</strong>：<strong>Gigapath 特征蒸馏</strong>让 FID <strong>60.59→40.05</strong> 而 SSIM 略降（0.5045→0.4947）；<strong>核–膜跨通道相关性 NMCC</strong> 让 SSIM <strong>0.4947→0.5383</strong> 而 FID <strong>40.05→63.83</strong>（比不加还差）⇒ <strong>与 HistDiST「注入管分布、结构机制管结构且两者反向」同构，但这次是 GAN 路线</strong>；且<strong>病理医生人评（PCPA/SIA）与 FID 方向相反</strong>。<strong>★ 顺带核实出一处原文自相矛盾</strong>：CCPL 正文称「在 BCI 上 FID 最低」，但其 Table I 显示 PSPStain <strong>48.42</strong> &lt; CCPL <strong>57.81</strong>（该结论只在 MIST-HER2 上成立：46.15 &lt; 46.47）。含<strong>四条合规获取路径</strong>（读 CCPL / 向通讯作者索取 / 机构图书馆 / 单篇购买）与<strong>证据分级表 + 可复现检索记录</strong>。<strong>★ 附带文件</strong>：同目录下 <code>MCCL论文获取报告_附件_CCPL原文_arXiv2506.07559.pdf</code>（3.5 MB · 7 页，CCPL 原文，已合法获取）。</td></tr>
+<tr><td><a href="01_调研报告/潜空间训练下的通道与浓度问题_维度错配七层拆解与四条可行路线.html"><strong>潜空间训练下的通道与浓度问题_维度错配七层拆解与四条可行路线.html</strong></a></td><td><strong>★ 新增（80 KB · 11 节）</strong>。回答「<strong>想回归潜空间训练，但一直找不到处理『通道浓度』的合适工作，数据维度对不上</strong>」。<strong>核心结论：这不是一个问题，是七个被折叠成一个词的错配</strong>，且只有 <strong>3</strong> 层真与通道数有关（VAE 输入通道 · UNet 条件通道 · 潜通道数 d），三层都有官方文档支持的标准解法——<strong>diffusers <code>adapt_a_model</code> 逐字</strong>给出 <code>in_channels 4→9</code> 的做法，并警告「<strong>the input channel weights (<code>conv_in.weight</code>) are randomly initialized… otherwise the model returns noise</strong>」。<strong>★ 一手关键证据（SD3 原文 arXiv:2403.03206 逐字）</strong>：潜通道数 d <strong>是超参不是定律</strong>——"experiment with different values for d"、"increasing the number of latent channels d significantly boosts reconstruction performance"、Fig 10 表题明列「<strong>4 latent channels, 8 channels and 16 channels</strong>」，代价是 "needs more model capacity"；并给出 <strong>"reconstruction quality… provides an upper bound on the achievable image quality after latent diffusion training"</strong> 这条决定实验顺序的原则。<strong>★ 核心洞察</strong>：<strong>K=3 时浓度空间与 RGB 空间之间是固定可逆映射</strong>（逐元素 <code>exp</code> + 3×3 矩阵）⇒「在浓度空间生成」与「在 RGB 空间生成」<strong>是同一个问题</strong>，这就是那篇工作不存在的数学原因；K=2 时 M 为 3×2 秩亏 ⇒ 有损投影（你已实测的 <code>‖Render(Deconv(x))−x‖=0.023</code> 正是这个正交补残差）。<strong>★ 真正的差别是噪声几何</strong>：RGB 空间加性高斯 ⇒ OD 空间<strong>乘性</strong>；且 DCTdiff（ICML 2025）的「线性空间更好」用的是 <strong>DCT 正交变换</strong>，<strong>不能外推到 <code>log</code> 非线性</strong>。<strong>★ 通道扩展解决不了的三件事</strong>：语义（浓度图不是 RGB 图）· 统计（OD 重尾可 &gt;1，硬塞不微调 = <strong>黑团 H2 的成因</strong>）· 物理（<strong>Beer–Lambert 定义在全分辨率浓度上，不能在 1/8 潜空间上算</strong>，本文给出三条独立论证）。<strong>★ 文献四条路线</strong>：① RGB 潜空间 + 浓度作条件/损失（StainFuser / HistDiST / HistDiT，<strong>SD 先验全留</strong>）② 浓度原生 AE/VAE（BL-AE arXiv:2601.11336 逐字「encoder… predicts K nonnegative concentration channels; decoder is a differentiable BL forward model」· CFM-HES · MAISI）③ <strong>解码器-only 微调、潜空间逐字不变</strong>（Stony Brook <code>sd-vae-ft-ema-path</code>，"AE latent space is unchanged"）④ VAE+UNet 域适应（Chambon arXiv:2210.04133）。<strong>★ 首选方案 = 解码器重定向</strong>：<strong>冻结 SD 编码器保住 4 通道潜空间与 UNet 先验，把解码器输出目标从 RGB 换成 <code>[C_H, C_DAB, C_res]</code> 三通道浓度</strong>，渲染放在解码之后；<strong>只需训一个解码器</strong>，含完整配置（<code>z_scaling=0.18215</code> 必须沿用、<code>log</code> 底数不能混用、<code>C_res</code> 不可加非负约束）与两段伪代码。含<strong>零成本前置实验</strong>（VAE 重建上限分层测试 · 统计错配 30 分钟判据 · K=3 闭环可逆性 30 秒自检）与<strong>五条升级/止损判据</strong>、<strong>五条阴性结论</strong>、证据分级表（含 5 条 <span class="b medium">未核实</span>）。</td></tr>
+<tr><td><a href="01_调研报告/扩散模型噪声调度与时间步分配_概率视角统一框架与H&amp;E2IHC可执行方案.html"><strong>扩散模型噪声调度与时间步分配_概率视角统一框架与H&amp;E2IHC可执行方案.html</strong></a></td><td><strong>★ 新增（292 KB · 15 节）</strong>。回答「噪声调度 / 时间步分配这件事，文献已经解决了什么、还剩什么空间、怎么变成可实施可验证的改进」。<strong>核心统一框架</strong>：把被混用的「噪声调度」拆成 <strong>四条互不相干的路线</strong>（调度本身 / 时间步抽样概率 <code>p(t)</code> / 损失权重 <code>w(t)</code> / 推理轨迹），并用 <strong>ICCV 2025 Eq. 3–5</strong>（<code>p(λ)=p(t)·|dt/dλ|</code>）与 <strong>SD3 Eq. 18</strong>（<code>w_t^π = t/(1−t)·π(t)</code>）两个独立一手来源证明<strong>改调度 ⇔ 改 <code>p(t)</code></strong>。<strong>★ 直接受控证据</strong>：ICCV 2025 Table 9 —— <strong>同一个分布当调度用 FID 7.98、当损失权重用 8.88、余弦基线 10.85</strong> ⇒ <strong>改 <code>p(λ)</code> 优于改 <code>w(λ)</code></strong>；且 <code>b</code> 扫描显示<strong>集中度有最优值</strong>（<code>b=0.5</code>，FID 7.96 / −26.6%），ImageNet-512 需改 <code>b=0.75</code>。<strong>★ 「只加噪到 70%」被拆成三种含义</strong>（推理少加噪 / 训练截断高噪声 / 少步采样），并给出<strong>独立实算</strong>：<code>strength=0.7</code> <strong>不等于</strong>噪声方差 0.7（余弦下 <code>σ²=0.70</code> 对应 <code>t/T≈0.628</code>；<code>t/T=0.7</code> 给出 <code>σ²=0.798</code>、<code>SNR=0.253</code>）；同一个 <code>t/T=0.7</code> 在线性 β 下 <code>SNR=0.0069</code>、余弦下 <code>0.2529</code>（<strong>差 37 倍</strong>）。<strong>★ HistDiST 代码级发现</strong>：训练脚本第 636 行已采用 zero-SNR rescale + v-prediction + trailing（调度层<strong>已做对</strong>），但第 974 行是 <code>torch.randint</code> <strong>均匀采样</strong>、第 1009 行 <code>snr_gamma</code> 默认 <code>None</code> ⇒ <strong><code>p(t)</code> 与 <code>w(t)</code> 完全未动，这是唯一尚未被占据的入口</strong>；并标注论文说 <code>γ=5</code> 但代码默认 <code>None</code> 的<strong>原文—代码不一致</strong>。<strong>★ DDIM 反演</strong>：给出「改了调度后旧反演网格能否复用」的干净判据（改 <code>β</code> 不能、改 <code>p(t)</code>/<code>w(t)</code> 能，因为 <code>ᾱ_t</code> 不变），并用 HistDiST 受控数据说明<strong>反演保结构是有代价的</strong>（SSIM 0.198→0.228 但 <strong>FID 37.5→41.3</strong>）。<strong>★ 三级方案（明确 1→2→3）</strong>：方案 1 零成本分箱诊断（按 <code>λ</code> 分箱测 <code>ε̂</code>/<code>x̂₀</code> 误差 + 与配准质量的偏相关 + 「人为恶化配准」对照）；方案 2 单因素改进（约 5 行改成非均匀 <code>p(t)</code>，SD3 对数正态或 ICCV 2025 多项式）；方案 3 可靠性驱动的 <code>p(t)</code>（<strong>创新空间最大但证据基础最薄，明确不推荐先做</strong>）。含 <strong>21 行 8 列文献比较矩阵</strong>、<strong>证据分级表（A/B/C/D/N 五级）</strong>、<strong>RTX 4060 最小实验计划（基线冻结清单 + E0–E4 单因素消融 + 估算依据而非编造时长）</strong>、以及 <strong>11 条未核实清单</strong>。</td></tr>
+<tr><td><a href="01_调研报告/扩散染色与虚拟染色_方法级创新地图_从SAStainDiff出发的可移植技巧调研.html"><strong>扩散染色与虚拟染色_方法级创新地图_从SAStainDiff出发的可移植技巧调研.html</strong></a></td><td><strong>★ 新增（83 KB · 10 节）</strong>。回答「SAStainDiff 这类工作的创新到底在哪一层、哪些零件能搬进 H&amp;E→IHC 浓度扩散」。<strong>把 SAStainDiff 拆到代码级</strong>：x₀ = 规范染色原片、condition = 染色增强片（<code>gaussian_diffusion.py:994</code> 签名 + <code>unet.py:655</code> 的 6 通道拼接）。<strong>★ 修正一处常见误读</strong>：<code>--timestep_step 900</code> <strong>不是起点</strong>，经 <code>space_timesteps(900,"ddim5")</code> 后实际起点是 <strong>t=720（72%）</strong>（默认 1000 时是 t=800），即「只加噪到 72%」；初始状态由 <code>q_sample(输入, T−1)</code> 给出，<strong>保留 7.2% 输入信号</strong>（t=800 时仅 3.9%）。<strong>★ 四个零件与可移植性</strong>：A 染色增强自监督（<span class="b bad">前提不成立</span>——要求像素级完美对齐，你的连续切片做不到）· B 5 步 DDIM + 起点前移（<span class="b high">可直接用</span>，零训练）· C 输入派生初始噪声（<span class="b high">可直接用</span>，一行）· D any-size 滑窗采样（<span class="b medium">需改造</span>，浓度域拼接）。<strong>★ 谱系</strong>：增强的 <code>(R,N)</code> 合法性门控来自 DDCA（J Pathol Inform 2023，原文最优 <code>R=0.05·N=10</code>，SAStainDiff 放宽到 <code>0.1·5</code>）；<strong>Tellez 2019 逐字结论「任何形式的染色增强都应一直开着」「染色归一化不是达到高分类性能的必要条件」</strong>；<strong>StainDiffuser 步数消融 500→4000 使 FID 54.09→23.46</strong>（训练 T 越多越好，与 SAStainDiff 推理 5 步<strong>不矛盾</strong>，因为是两个旋钮）。含 <strong>10 篇 8 列比较矩阵</strong>、<strong>三条分歧</strong>（训练 T vs 推理步数 / 增强强度轻窄宽 / 归一化要不要做）、<strong>逐组件可移植性判定表</strong>、<strong>2×2 零成本验证实验（E0–E3 + 人工劣化配准对照）</strong>、<strong>11 条未核实清单</strong>。★ 关键空白：StainDiffuser 逐字承认「未评估配准精度敏感性」。</td></tr>
+<tr><td><a href="01_调研报告/扩散机制本体的改动_六轴谱系可移植性判定与最小验证实验.html"><strong>扩散机制本体的改动_六轴谱系可移植性判定与最小验证实验.html</strong></a></td><td><strong>★ 新增（151 KB · 14 节 · 29 表）</strong>。回答「<strong>把扩散模型自己的数学结构改掉</strong>」这一层——<strong>既不是条件注入、也不是约束引导</strong>，而是改生成机制本体。这是库内继「条件注入」「约束 / 引导」之后的<strong>第三层</strong>。判据是一条排除法，工具是<strong>四个「固定件」</strong>：标准 DDPM 把四件事写死——退化算子 <code>D</code>（加性高斯）· 终点先验 <code>N(0,I)</code> · 时间步集合 <code>1..T</code> 均匀 · 训练目标（ε-pred + 均匀加权）；<strong>这一族的全部工作 = 把其中某一个固定件变成可设计的对象</strong>。由此展开<strong>六条轴</strong>：A 前向退化算子 · <strong>B 初始状态与起点 ★</strong> · C 训练目标与参数化 · D 时间步与采样轨迹 · E 状态空间 · F 先验与桥。每轴给<strong>谱系表 + 证据分级（代码级 / 正文逐字 / 摘要级）+ 可移植性判定</strong>。<strong>★ 五条改变决策的结论</strong>：① 共同结构就是「四个固定件逐个打开」；② <strong>轴 B 性价比最高且已被同域验证</strong>（纯推理期旋钮、零训练；SAStainDiff 的 <code>--timestep_step 900</code> + <code>q_sample(输入, T−1)</code>，PartDiff 的 latent alignment）；③ <strong>本报告最重要发现——乘性噪声与你的 OD / 浓度域直接对应</strong>（ICLR 2026 Multiplicative Diffusion 用斜对称乘性噪声、严格保范数，给出 <strong>KL(隐‖数据) ≤ 标准扩散，重尾数据下标准扩散为 ∞ 而它有限</strong>；而 Beer–Lambert <code>I = I₀·exp(−M·C)</code> 与 <code>C = M⁻¹·OD</code> 都是乘性结构，主流加性高斯假设与你物理上要建模的噪声<strong>不同构</strong>）⇒ <strong>把「浓度域生成」从直觉升级为有理论支撑的设计选择</strong>；④ <strong>「多步一定更好」在病理域被反证</strong>（AAAI 2026 DiffVS 固定 <code>t=T</code>、置 <code>ε=0</code>、像素级 L1+L2 微调 ⇒ 迭代去噪退化为<strong>单步确定性映射</strong>；SSIM <strong>0.673（50 步 + 10× ensemble）→ 0.757（单步）→ 0.836（单步 + 微调）</strong>，推理 117 s → 0.13 s（<strong>900×</strong>））；⑤ <strong>冷扩散有隐藏的致命代价</strong>（换 <code>D</code> 的同时往往把「能从先验采样」也换掉——原文逐字承认模糊退化后「fully degraded images do not form a nice closed-form distribution that we can sample from」）⇒ 这正是 <strong>轴 A 与轴 F 强耦合</strong>的原因。<strong>★ 三条跨轴结论</strong>：<strong>轴 E 的取舍决定了轴 A 能不能用</strong>（潜空间加噪 = 潜码上的加性高斯，与 OD 乘性结构不兼容；浓度 / OD 加噪 = 乘性可行，但 Beer–Lambert 定义在全分辨率浓度上、不能在 1/8 潜空间算 ⇒ <strong>「解码器改向」是唯一两者都保的结构</strong>）· <strong>便宜的轴（B / C / D）不触及核心矛盾（弱配准下的表达保真），贵的轴（A / F / E）才触及</strong>。含<strong>六轴汇总矩阵</strong>、<strong>可移植性三档总判定 + 三条排除</strong>、<strong>三条最小验证实验（E1 起点 / 初始态 2×3 网格零训练 · E2 噪声几何「先测量再决定改不改 D」· E3 单步微调迁移验证；各带先验止损规则与两个强制对照）</strong>、<strong>15 条未核实清单</strong>、37 篇参考文献。<strong>★ 一并修正前一份报告的口径</strong>：<code>--timestep_step 900</code> 经 <code>space_timesteps</code> 后的真实起点是 <strong>t=720（72%）</strong>、<code>ᾱ=0.00523</code>、<strong>保留输入信号 7.23%</strong>（默认 <code>timestep_step=1000</code> 为 t=800 / 3.91%，差 <strong>1.85×</strong>）——根因是 <code>betas</code> 用 <code>diffusion_steps</code>(1000) 建、而 <code>use_timesteps</code> 用 <code>timestep_step</code>(900)，<strong>是两个不同的数</strong>。</td></tr>
+<tr><td><a href="01_调研报告/扩散模型发展谱系_DDPM到2026_三次分水岭与四条支线.html"><strong>扩散模型发展谱系_DDPM到2026_三次分水岭与四条支线.html</strong></a></td><td><strong>★ 新增（118 KB · 17 节）</strong>。回答「DDPM → DDIM 之后还有没有工作、截止现在到什么程度了」。<strong>核心组织轴：DDIM 之后这条线裂成了四条并行支线</strong>——A 训练无关求解器（改采样）· B 训练式少步生成（改训练）· C 流匹配 / 矫正流（改训练目标）· D 骨干与潜空间（改结构）。<strong>三次分水岭</strong>：DDIM（把采样变成解 ODE）→ SDE 统一（连续时间语言）→ 流匹配（换训练目标）。<strong>★ 最有价值的两节</strong>：① <strong>「谁泛化谁」逐条核实表</strong>——「flow matching 泛化 diffusion」是 FM 论文 Theorem 3 + §4.1 Example I + Appendix D 的<strong>推导</strong>（RF 用 Proposition 3.11），但<strong>「二者完全相同 / 可互换」这个强命题的直接出处是 ICLR 2025 Blogpost（Gao et al.），不是正式 full paper 的命名定理</strong>；② <strong>12 条常见误解纠正表</strong>——<strong>SD3 全文检索不到 reflow（它用 rectified flow 单轮训练 + logit-normal 采样）· UniPC 是 NeurIPS 2023 不是 CVPR · AMED-Solver 需训练 9k 参数 predictor 不是 training-free · DDIM 50 步 FID 是 4.67（4.16 是 100 步）· Improved DDPM 没做架构改造（那是 ADM）</strong>。<strong>★ 收敛判定</strong>：支线 A 的 10–20 NFE 区间在 2022 年底–2023 年中已被解决，<strong>2023 之后无决定性新训练无关高阶求解器</strong>；2024 后的增量在 &lt;5 步（多需训练）与迁移到 flow / 离散扩散 / 执行层。<strong>★ 2025–2026 前沿</strong>：无蒸馏单步生成（MeanFlow 1-NFE FID 3.43 → iMF 1.72 → pMF latent-free）、AR ↔ 扩散融合（LLaDA / VAR / Self-Forcing / A3）、理论进展（FORS 的 polylog 采样 = ICML 2026 杰出论文）。<strong>★ 对本课题的判定</strong>：① 零成本加速先换求解器（有 CFG 就用 DPM-Solver++(2M)）；② <strong>该领域 sampler 与步数选择长期缺乏系统论证、NFE 作为评估维度基本缺失——这本身是可写进论文的空白</strong>；③ <strong>H&amp;E→IHC 上 2026 的 SOTA 主要是 GAN</strong>，且有正面对比论文逐字写 "overall, GANs perform better than DMs"（HER2match，arXiv:2506.18484），<strong>必须引用并正面回应</strong>。含谱系总表（含「需重训」列）、三次分水岭机制拆解、四条支线收敛判定、11 条未核实清单、完整参考文献。复用库内《噪声调度》《六轴谱系》的既有结论并注明分工。</td></tr>
+<tr><td><a href="01_调研报告/GAN虚拟染色_方法路线与浓度域先例调研.html"><strong>GAN虚拟染色_方法路线与浓度域先例调研.html</strong></a></td><td><strong>★ 新增（55 KB）</strong>。系统回答 GAN 做 H&amp;E→IHC 的主流路线（Pix2Pix / CycleGAN / CUT / RegGAN / pathology-aware GAN）、GAN 独特问题（对抗不稳定、局部真实≠病理真实、cycle loophole、错位监督、模式崩溃）以及“浓度域思路在 GAN 中有没有”这一问题。<strong>核心结论：</strong>PSPStain / CCPL / ProgASP / PGVMS / UNIStainNet 已采用 RGB GAN + DAB/OD/FOD 监督；但“GAN 直接生成浓度图 + 可微 Beer–Lambert renderer”本轮未找到传统 image GAN 的已核实先例，最接近的是 CFM-HES（flow matching）和 StainQuant/BL-AE（autoencoder）。含 G0–G4 实验路线、GAN-vs-diffusion 证据边界、评价金字塔与失败判据。</td></tr>
+<tr><td><a href="01_调研报告/GAN问题与不足调研.html"><strong>GAN问题与不足调研.html</strong></a></td><td><strong>★ 新增（原理 + 失败模式总览）</strong>。从 minimax 博弈、D 的最优解和 JS 散度讲起，系统拆解梯度饱和、振荡/发散、WGAN/WGAN-GP 的边界、模式崩溃、棋盘格伪影、D 过拟合、条件/监督失配与评价指标失真；每个问题都给出成因、可观测症状、最小验证和改动位置。附 G0–G5 单因素实验矩阵、NaN/Inf 诊断清单与止损标准。</td></tr>
+<tr><td><a href="01_调研报告/GAN+频域+门控_虚拟染色方法调研.html"><strong>GAN+频域+门控_虚拟染色方法调研.html</strong></a></td><td><strong>★ 新增（方法地图 + 迁移路线）</strong>。围绕 GAN 转型后的核心改动，系统整理 GAN+频域（FFL、WaveGAN、FDIT、SSD-GAN、频域/DCT判别器）、GAN+门控（SE、CBAM、gated convolution、SAGAN、Gated-GAN、动态专家）以及频带门控交叉空格。核心结论：先做 DWT/频域 loss，再做 G 中层 residual gate，最后验证 fixed DWT + soft band gate；不要第一步同时引入频域 D 和多专家路由。附 H&amp;E→IHC 的表达量/位置/形态拆分、F0–R1 消融矩阵、反事实置零实验和止损标准。</td></tr>
+<tr><td><a href="01_调研报告/CUT骨架_频域缝合清单_代码接口级.html"><strong>CUT骨架_频域缝合清单_代码接口级.html</strong></a></td><td><strong>★ 新增（68 KB · 代码接口级）</strong>。回答「哪些工作已经长在 CUT 这套代码上、频域模块挂在哪个文件、能不能直接 fork」。<strong>与《GAN+频域+门控》的分工</strong>：那份讲机制好坏，这份讲代码落点。核心结论三条：① 在 CUT 系病理代码里被命名为 <code>frequency_loss</code> 的文件<b>不含傅里叶变换</b>，它是高斯金字塔 L1，源码逐字来自 CVPR 2021 的 LPTN（已核实 ASP 与 PPT 两处文件同源）；② 真正做 FFT/DFT 的频域损失是独立 pip 包（<code>focal-frequency-loss</code> / <code>fdl-pytorch</code>），挂进 <code>compute_G_loss</code> 只需 3 行；③ 给出四个缝合接口（loss / 生成器算子 / 判别器 / 数据层）与「已在 CUT 骨架上的 5 个可 fork 仓库」清单（ASP、PPT、FFPE++、AI-FFPE、精简 CUT）。<b>含一处硬发现</b>：PSPStain 的 launcher 参数块与 MICCAI 2023 的 ASP <code>mist_launcher.py</code> 逐项相同（含 <code>weight_norm='spectral'</code>、<code>lambda_gp=10.0</code>），说明这两项并非 PSPStain 自研；并澄清「FDL」缩写撞车（<code>lambda_gp</code> 的 gp = Gaussian Pyramid，不是 Frequency Distribution Loss）。附可执行缝合路线、5 条自查命令、四类必须同记的指标、8 条未核实清单。</td></tr>
+<tr><td><a href="01_调研报告/GAN频域_小众开源仓库清单_缝合素材库.html"><strong>GAN频域_小众开源仓库清单_缝合素材库.html</strong></a></td><td><strong>★ 新增（84 KB · 缝合素材库）</strong>。前提已确认「频域模块挂在 loss 或 conv 上，不关心骨架是 CUT / CycleGAN / pix2pix」，因此本份<b>不再限定 CUT</b>，改为按<b>缝合落点</b>把 GAN × 频域的开源仓库铺开，并优先标注<b>小众、星数低、还没被用烂</b>的一批。<strong>四个落点</strong>：A 频域损失（改 <code>compute_G_loss</code>）· B 频域判别器（改 <code>define_D</code>）· C 生成器内部算子（改 <code>networks.py</code>）· D 频域注意力与特征融合（插中间层）。<strong>真正小众且能缝的四个</strong>（星数与许可均经 GitHub API 逐条核实）：<b>FreGAN</b>（57★，NeurIPS 2022，用高频分量训练 GAN，<b>专治数据量不足</b>，同时提供高频损失与高频判别器两个可拆件）· <b>WaveFill</b>（61★，ICCV 2021，小波域分频生成 + 频带损失）· <b>DualFormer</b>（65★，ICCV 2023，唯一能找到的<b>频谱判别器</b>严肃开源实现）· <b>UFFC</b>（38★，ICCV 2023，修过 FFC 的频谱偏移与意外空间激活）。另收录 DCTNet（461★，CVPR 2020，DCT 系数作输入 + 动态通道选择）· FcaNet/MSCA（607★，用 DCT 多频率分量替代 GAP 做通道注意力）· GFNet（509★，FFT→可学习全局滤波→IFFT）· Wave-ViT WaveA（275★）· PlugNPlay-Modules 合集（<b>5,122★</b>）。<strong>★ 核心结论</strong>：病理域 + 频域 + GAN + 开源 <b>几乎为空</b>——唯一带病理域的频域工作（BMC 2025 混合空间-频域 GAN）无代码，唯一开源的医学频域 GAN（PiFS-CycleGAN，0★）不是病理。<strong>§12 为单仓库复核附录</strong>：<code>qf1518/MSCW</code>（0★）—— 实为<b>医学图像分割</b>网络（论文 JKSU-CIS 2025），<code>README.md</code> 仅 6 字节，且 <code>MSCAM.py</code> 因<b>缺 <code>MLA.py</code></b>（实为 EfficientViT 的 LiteMLA）<b>跑不起来</b>；但它搬运的两个模块可用：<b>WTConv</b>（ECCV 2024）与 <b>DySample</b>（ICCV 2023，可学习上采样）。<b>DySample 是本清单里唯一「直接对着已知故障」的模块</b>——它用「学出来的偏移 + grid_sample」替代转置卷积，从机制上绕开棋盘格的多相增益不平衡。附「只做三个的话选哪个」决策树、五条可执行命令、优先级总表、9 条未核实清单。<strong>§13 为「模块抽取源」清单与检索方法</strong>：★ 负面发现 —— 中文社区那份「全网最全即插即用模块」<b>是同一份文档被至少 10 个账号镜像</b>（<code>ai-dawang</code> 5,122★ · <code>AIFengheshu</code> 1,633★ · <code>BoyCO3</code> · <code>weidaoquan</code> · <code>Hurric0s</code> · <code>Thomas-403</code> · <code>CCC0090</code> · <code>KD-design229</code>），<b>继续找合集是重复劳动</b>；正确做法是从合集里的<b>模块名反查原始仓库</b>。给出<b>「模块名 → 原始仓库」对照表</b>（DynamicFilter→<code>okojoalg/dfformer</code> 73★ AAAI2024 · WTConv→ECCV2024 · FreqFusion→TPAMI2024 · DySample→ICCV2023 · UFFConv→ICCV2023 · WaveA→ECCV2022 · MSCA→ICCV2021）、把仓库分成<b>①原始出处 / ②合集索引 / ③论文代码包</b>三类并给出 ③ 类的三个固定坑与判据，新增基础设施库 <b><code>v0lta/PyTorch-Wavelet-Toolbox</code></b>（439★，JMLR，可微小波 + GPU，<b>昨天仍在更新</b>，做任何 DWT 缝合前先装）、索引清单 <code>pprp/awesome-attention-mechanism-in-cv</code>（1,277★）、同款低星包 <code>alexhe101/FourierISP</code>（13★，AAAI2024 频域解耦 style/structure），以及<b>三个可复用的检索方法</b>（模块名反查 / GitHub topic 页 / 中文即插即用文章反查）。<strong>§14 为本地 <code>plug-nplay-modules</code> 仓库的医学模块普查</strong>（对 136 个 <code>.py</code> 逐文件源码级扫描）：<b>直接回答「有没有专门适配医学图像的」= 没有</b>——它是通用算子池（README 明写「所有二维图像都可以用」）。但存在 <b>20 个「医学来源」模块</b>（出处论文是医学论文，代码本身仍是通用二维算子）：EMCAD/<code>EUCB</code>（CVPR2024 医学分割，<b>上采样块</b>）· CPCA · D-Net · DA-TransUNet · PMFSNet · DuAT · DS-TransUNet · SwinPA-Net · SUnet · SvANet/<code>assemFormer</code> · DCA · MEGANet（WACV2024 息肉）· DAU-Net（乳腺超声，<code>PCBAM</code>+<code>SWA</code>）· ASF-YOLO（细胞实例）· CF-Loss（视网膜血管）· LMFLoss · HiFuse · LSM-YOLO · CLEEGN（EEG）。<b>★ 关键结论：医学来源 ∩ 频域 = 空集</b>——20 个医学模块里含 FFT/DWT/DCT 的<b>为 0</b>，两池不相交，缝合必须跨池组合。<b>全库真频域模块仅 10 个</b>（二维：<code>DynamicFilter</code> AAAI2024 唯一真·二维 FFT · WTConv ×2 重复副本 · 小波下采样 · <code>HWAB</code> · <code>FMS</code> · <code>FACMA</code>；一维/非CV：FECAM · ATFNet · M2TR）。⚠ <b><code>频域/</code> 目录名不副实</b>：只有 3 个文件，其中 <code>FRFN</code>（CVPR2024）<b>不含任何频域算子</b>（是部分卷积前馈网络），全目录只有 1 个真·二维频域模块。</td></tr>
+<tr><td><a href="01_调研报告/CUT系谱系链与缝合四层贡献度_方案定位.html"><strong>CUT系谱系链与缝合四层贡献度_方案定位.html</strong></a></td><td><strong>★ 新增（27 KB · 方案定位）</strong>。起因是用户读完 CCPL 后的一句判断「他就在上面缝合了几个自己的损失，其余都没有」——本报告核实这句话，并推广成一条可用于自己方案定位的结论。<strong>★ §1 四代谱系</strong>：<b>CUT（ECCV2020）→ ASP（MICCAI2023）→ PSPStain（MICCAI2024）→ CCPL（ICME2025）</b>，<b>四代、五年，生成器一直是 <code>ResNet-6Blocks</code>、判别器一直是同一族 PatchGAN，一次都没改过</b>；每一代的「新增」栏全是损失项，外加一个只在训练期存在、不进推理的冻结辅助网（PSPStain 的 <code>netSeg</code>、CCPL 的 Gigapath tile encoder）⇒ <b>创新被完整限制在「优化目标」这一个维度，结构维度是常量</b>。<strong>★ §2 三个「自己的损失」成色核查</strong>：<b>DCP</b> = PSPStain <code>PALS.py</code> <b>逐字拷贝</b>（α=1.8 / thresh_FOD=0.15 / thresh_mask=0.68 / num_blocks=16 / num_bins=20 / ±0.4 门控带全部相同），唯一区别是多算一路 H ⇒ <b>逐字抄</b>；<b>FD</b> = 通用特征蒸馏（谱系 = Gram 矩阵匹配 Gatys2016 / Deep CORAL / SPKD）⇒ <b>借用</b>；<b>NMCC</b> = 唯一自提，但机制有先例 + 公式退化（R 由两个标量项相加 ⇒ 是标量 ⇒ <code>cos(R_g,R_r)</code> 梯度恒为 0）+ 发布代码 <code>no_grad</code> 零梯度 + <b>使 FID 恶化 59.4%</b> ⇒ <b>自提但失效</b>。⇒ <b>严格说：1 个逐字抄 + 1 个通用技术 + 1 个自提但既跑不动又伤指标</b>。另补「其余都没有」的边界：CCPL 还加了一个冻结病理大模型（不改架构、不进推理、且是借来的）与一套人评指标（协议不成立）。<strong>★ §3 缝合四层贡献度</strong>：① 纯搬运（MSCW · CCPL 的 DCP）② 搬运 + 新位置（PSPStain · CCPL）③ <b>有诊断的改动</b>（UFFC 先证明 FFC 频谱偏移 · DySample 先证明转置卷积棋盘格）④ 真新模块；★ 分布差异：越往应用 / 医学期刊走 ①② 比例越高，方法论顶会越低 ⇒ <b>投稿方向决定你能容忍哪一层</b>。<strong>★ §4 为什么这条链到 CCPL 就停了</strong>：损失只能改「优化目标」，改不了「表达能力上界」⇒ 四代共用同一 ResNet-6Blocks，换损失只是在同一函数空间里换搜索方向；证据 = CCPL 对 PSPStain 的 MIST FID 优势仅 <b>0.7%</b>、BCI 反而更差、且<b>只加 FD 的消融（40.05）比完整模型（57.81）好 44%</b> ⇒ <b>加损失的边际收益已为负</b>。<strong>★ §5 对自己方案的定位改写</strong>：你的小波下采样 + DySample 上采样是<b>这条链上第一次动架构</b>（且库内已核实「可学习上采样 CARAFE/FADE/SAPA/DySample 无一篇进入 GAN 生成器」⇒ 你是第一个）；新颖性陈述应从「我加了一个频域损失」（= 第五代加损失，且「MLPA 从 DAB 扩到 H+D」已被 CCPL 占位）改为「<b>前四代只叠加损失、生成器五年未变；我们首次改动重采样路径</b>」；前提是理由必须是被诊断出的故障（棋盘格 / 混叠，库内均已证明机制），不是「频域很热」；止损好处 = 即使指标不涨也能报一个「机制被证伪」的阴性结论。附 §6 六条证据边界（含「全链一致指 launcher 层而非 <code>base_options</code> 默认值」「CCPL 判别器只写了 PatchGAN 一个词 ⇒ D 的逐参数一致未核实」）。</td></tr>
+<tr><td><a href="01_调研报告/通道分解与跨通道约束_可缝合模块检索.html"><strong>通道分解与跨通道约束_可缝合模块检索.html</strong></a></td><td><strong>★ 新增（2026-10-16 · 82 KB · 通道轴专题）</strong>。面向你的<b>「用 2 个通道做生成」</b>思路，把「通道」相关机制<b>按挂在流水线的哪一格</b>切成五个位置（① 监督信号 · ② 损失层 · ③ 生成器内部 · ④ 输出空间 · ⑤ 特征层），逐格给可缝合清单（含<b>改动成本</b>与<b>可复现性</b>两列）。<b>先划清「通道」的四种含义</b>（RGB 色彩通道 / 染色成分 / 特征维度 / 输出分支）——不分开会串味。<b>三条核心结论</b>：① <b>「双通道监督」这个位置已被占满</b>——PSPStain 只约束 DAB 单通道，CCPL 把它扩成 H+D 双通道（ICME 2025），所以「从单通道扩到双通道」不再是新点；但<b>「生成</b>双通道<sup>*</sup><b>而非在损失里拆双通道」仍空着</b>（病理域无 encoder + 2-decoder，也无 OD/浓度图生成 + Beer–Lambert 渲染的生成先例）。② <b>「把两个通道之间的关系做成损失」是真空位</b>——Europe PMC 全文 + arXiv 元数据对 <code>"cross-channel consistency loss"</code> / <code>"cross-correlation consistency loss"</code> / <code>"relational consistency" AND "image translation"</code> / <code>"second-order consistency" AND "generative"</code> 四个查询<b>全部 0 命中</b>；最接近的机制都在别领域（Gram 矩阵 CVPR2016 · Deep CORAL ECCV2016W · SPKD ICCV2019 · RKD CVPR2019）。③ <b>「核—膜拓扑/包含关系约束」零先例</b>；替代品只有细胞语义 mask 一致性（MCS-Stain，需实例分割）与蛋白表达强度一致性（PSPStain，不需分割）。另含<b>一条与库内既有报告的交叉警告</b>：若输出设计成 <code>[C_H, C_DAB, C_H]</code>，channel attention 会出现 1 维不可辨识方向（呼应 StainFuser 改造审查 §3.1），所以「在浓度域用 SE/ECA」的前提是三通道线性无关。附 <b>10 条可缝合清单总表</b>、<b>对你方案的五格逐格映射</b>、<b>E0–E4 四阶段实验路线与止损条件</b>（含 R1–R5 六种关系度量的消融设计）、<b>10 条未核实清单</b>、以及两条必须警告的「查不到的线索」（Star-Diff / Kang2025 在公开文献里 0 命中）。</td></tr>
+<tr><td><a href="01_调研报告/双通道前端_门控交互模块候选清单_代码接口级.html"><strong>双通道前端_门控交互模块候选清单_代码接口级.html</strong></a></td><td><strong>★ 新增（2026-10-17 · 代码接口级）</strong>。回答「思路 A：H/E 双通道输入 → 前端双向门控交互，有没有现成模块可缝合」。结论：<b>没有完全一致的单模块</b>，但本地库已有三块现成砖——<b>TIF</b>（DS-TransUNet 真·两流交叉注意力，<code>TIF(dim_s,dim_l)(e,r)</code> 互相作为 cross-attn 上下文更新对方后求和融合）、<b>CAFM</b>（IEEE2023 双向交叉注意力融合，算互协方差 <code>cross=a1·a2ᵀ</code> 再双向重加权，机制最贴但需修 <code>squeeze(0)</code> 的 batch bug 与硬编码 128→64→128）、<b>MogaNet·ElementScale</b>（近零初始化残差门控配方，<code>nn.Parameter(init_value*ones)</code>，<code>init_value=1e-5</code>）；并列出网上同类（bidirectional-cross-attention / Cross-Attention Gate / Dual-Gated Fusion / DBCAF / CDDFuse）。给出把 TIF/CAFM 当跨流核心 + MogaNet 初始化配方拼出 <code>MutualGatedInteraction</code>（H/E 双向门控残差注入、近零起步）的伪代码与缝进 PSPStain 前端（替换 stem、保留 ResNet-6Blocks）的位置，以及思路 B（H/DAB 关系约束）轻量版。novelty 锚点：H/E 染色解耦输入 + 跨流门控交互协同设计，不要讲成「我加了个现成注意力」。</td></tr>
+</tbody></table></div>
+
+<h2 id="s4"><span class="num">4</span>论文翻译</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:34%">论文</th><th style="width:26%">文件</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><a href="02_论文翻译/FGDM_全文翻译_频域引导扩散模型.html"><strong>FGDM</strong> · 频域引导扩散模型</a></td><td>全文翻译（HTML）</td><td>你最初指的那份。</td></tr>
+<tr><td><a href="02_论文翻译/AQuA_论文中文翻译.html"><strong>AQuA</strong> · 幻觉检测</a></td><td>HTML + Markdown</td><td>Nature BME 2025，无需真值即可检测生成幻觉。</td></tr>
+<tr><td><a href="02_论文翻译/InverseAE_论文中文翻译.html"><strong>InverseAE</strong></a></td><td>HTML + Markdown</td><td>逆向自编码器相关工作。</td></tr>
+<tr><td><a href="02_论文翻译/p1_stainbridge/p1_stainbridge.zh.html"><strong>StainBridge</strong></a></td><td>zh.html + zh.pdf + source.md</td><td>arXiv 2609.17090。</td></tr>
+<tr><td><a href="02_论文翻译/p2_misalignment/p2_misalignment.zh.html"><strong>Misalignment-Resistant Virtual Staining</strong></a></td><td>zh.html + zh.pdf + source.md</td><td>Nature 系，抗错位虚拟染色。</td></tr>
+<tr><td><a href="02_论文翻译/p3_pspstain/p3_pspstain.zh.html"><strong>PSPStain</strong></a></td><td>zh.html + zh.pdf + source.md</td><td>arXiv 2407.03655，你的 baseline 全文翻译。</td></tr>
+<tr><td><a href="02_论文翻译/OT-StainNet_论文中文翻译.html"><strong>OT-StainNet</strong> · 最优传输语义匹配</a></td><td>HTML + Markdown</td><td>AAAI-25（DOI 10.1609/aaai.v39i3.32329）。SD-Turbo + LoRA + CycleGAN 框架，用 <strong>OTSM</strong>（Kantorovich 最优传输对齐病理语义）+ <strong>SCC</strong>（语义一致性约束）做弱配对监督。<strong>代码未开源</strong> ⇒ 附<strong>方法精讲</strong>（逐项还原数据流 / 张量形状 / 梯度路径）+ <strong>13 条缺口清单</strong>。</td></tr>
+</tbody></table></div>
+
+<h2 id="s5"><span class="num">5</span>论文精读博客</h2>
+<div class="grid2">
+<div class="mini"><div class="mt"><a href="03_论文精读博客/dgr_blog/DGR抗错位虚拟染色_论文精读博客.md">DGR 抗错位虚拟染色 · 精读博客</a></div><p>含 12 张从论文抽取的配图（<code>assets/</code>）。</p></div>
+<div class="mini"><div class="mt"><a href="03_论文精读博客/pspstain_blog/PSPStain病理语义保持虚拟染色_论文精读博客.md">PSPStain 病理语义保持虚拟染色 · 精读博客</a></div><p>含 4 张配图（<code>assets/</code>）。</p></div>
+<div class="mini"><div class="mt"><a href="03_论文精读博客/star_diff_blog/StarDiff复原扩散虚拟染色_论文精读博客.md">Star-Diff 复原扩散虚拟染色 · 精读博客</a></div><p>arXiv 2508.02528。含 5 张配图。逐式拆解双路径扩散 + SFS 指标，并附「对你自己研究的启示」（含与黑团伪影的关联线索）。<br>⚠ 本文基于 <b>arXiv 预印本</b>；正式发表版（<b>Computers in Biology and Medicine 198 (2025) 111264</b>）有 <b>5 处实质差异</b>（诊断指标改 AUROC、新增 IHC4BC 外部验证、结构幻觉检测、与 SRDiff 辨析、Table 1 增列），详见批量精读 ⑫。</p></div>
+<div class="mini"><div class="mt"><a href="03_论文精读博客/pst_diff_blog/PSTDiff病理结构约束扩散染色_论文精读博客.md">PST-Diff 病理/结构约束扩散染色 · 精读博客</a></div><p>IEEE TMI 43(10):3634–3647, 2024（DOI 10.1109/TMI.2024.3430825）。含 9 张从原文抽取的配图（<code>assets/</code>）。逐式拆解「双扩散模型 + DDIB 潜空间桥 + AAM/LT（病理一致性 PCC）+ CFG 条件频率引导（结构一致性 SCC）」。<br><b>关键澄清</b>：本文的 <b>CFG = conditional frequency guidance（条件频率引导）</b>，<b>不是</b> classifier-free guidance。附 4 张表格逐格核对（含 PST-Diff 在 PSNR/SSIM 上<b>并非最好</b>、553 M 参数 / 8910 GFLOPs 的复杂度代价、DDIB+PCC 的 VIF 负结果、跨数据集 Hist 崩塌），以及 3 处可核实的方法叙述瑕疵（CFG 阶段划分自相矛盾、SB 挂名无公式、引用编号系统性错位）。</p></div>
+</div>
+
+<h3>OD 空间扩散三篇精读（2026-10-11 新增）</h3>
+<p>对应你 related work 的叙事台阶：<b>Jeong（分离空间 + 扩散，归一化）→ TT-SaD（OD 空间，逆问题）→ Kang（OD 空间，H&amp;E→IHC）→ 你（浓度域 + 扩散生成 + 物理渲染 + 无配准先验引导 + 定量表达控制）</b>。三篇均逐条标注核实等级，并单列「未核实清单」。</p>
+<div class="grid2">
+<div class="mini"><div class="mt"><a href="03_论文精读博客/Jeong2023_染色分离空间score扩散归一化_精读.html">01 · Jeong 2023 · 染色分离空间 score 扩散归一化</a></div><p>Comput. Biol. Medicine 152:106335。<span class="b bad">全文未获取（Elsevier 付费墙）</span> <span class="b medium">摘要级精读</span>。含题录更正（<b>4 处作者名有误</b>）、mistransfer 成因与 SNMF 为何能修的机制拆解、以及拿到 PDF 后的 8 项核对清单。</p></div>
+<div class="mini"><div class="mt"><a href="03_论文精读博客/TTSaD_ECCV2024_OD空间测试时染色适应_精读.html">02 · TT-SaD · ECCV 2024 · OD 空间测试时染色适应</a></div><p>ECCV 2024, LNCS 15093:257–275。<span class="b high">全文已核实</span>。还原「转 OD 空间使逆问题线性化」+ DDNM 式 range–nullspace 一致性约束；清点消融缺项（<b>无 OD vs RGB 对照</b>）；指出 Hospital 3 上方法反而变差。</p></div>
+<div class="mini"><div class="mt"><a href="03_论文精读博客/Kang2025_渐进式HE2IHC_OD空间DAB浓度损失_精读.html">03 · Kang 2025 · 渐进式 H&amp;E→IHC · OD 空间 DAB 浓度损失</a></div><p>arXiv 2511.01698。<span class="b high">全文已核实</span> <span class="b bad">无消融</span>。含题录更正（<b>3 处作者名有误</b>）、阶段描述自相矛盾、Gradient MSE 在 ER 上反向、参考文献 [22] 引用错误、以及对 PSPStain 的无证据批评。</p></div>
+</div>
+
+<h3>桌面散落论文批量精读（12 篇，2026-10-11 新增 · 10-12 追加 1 篇）</h3>
+<p>把桌面上散落的 <b>11 篇论文</b>（另有 1 篇重复副本）做了一次批量精读，后又追加 1 篇 <b>Star-Diff</b>（来自 <code>Downloads/从现在开始发论文(1)/01_虚拟染色_核心★/</code>），共 <b>12 篇</b>。采用「<b>每一篇独立成文、再汇聚到一份文档</b>」的结构。每篇含：题录卡片 → 一句话解决的问题 → 问题与背景（前人路线分派）→ 方法详解（符号表 + 公式逐条拆解 + 数据流）→ 实验 → <b>消融实验</b>（原始数字逐字保留）→ <b>强相关参考文献</b> → 局限与证据边界。文末另有 §14 横向串联、§15 证据边界与未核实清单、§16 参考文献索引。</p>
+<p>覆盖五条主线：<b>染色物理（OD/Beer–Lambert）→ H&amp;E→IHC 虚拟染色主线 → 染色归一化/域适应 → 下游表示学习 → 通用扩散方法学</b>。其中 4 篇（Kang2025、TT-SaD、SGCD、Star-Diff）已在库内有更深的专项报告，本报告复用其已核实结论并给出链接；其余 8 篇为本次新做。</p>
+<div class="grid2">
+<div class="mini"><div class="mt"><a href="03_论文精读博客/桌面论文批量精读_12篇.html">桌面论文批量精读 · 12 篇（汇总）</a></div><p><span class="b high">已核实</span> <span class="b blue">12 篇独立成文</span> 含：① Beer–Lambert 自编码器（mIHC 无监督分离）、② CCPL 跨通道感知、③ 渐进式 H&amp;E→IHC、④ CFM-HES 条件流匹配、⑤ 自监督语义引导染色归一化、⑥ SGCD（<b>论文声称 vs 代码实测分栏</b>）、⑦ TTSaD、⑧ FeatStainDiff（特征域跨染色变换）、⑨ FDG 频域引导、⑩ P2 加权训练、⑪ SGDM 分割引导扩散、⑫ <b>Star-Diff 复原扩散</b>（确定性残差路径 + SFS 抗错位评价；<b>含与 arXiv 预印本的 5 处版本差异</b>）。附 §14 横向串联与 §15 未核实清单。</p></div>
+</div>
+
+<h3>CCPL 跨通道感知学习精读（2026-10-16 新增 · 论文 + 官方代码逐行复核）</h3>
+<p>对应你桌面上那份 <code>Cross-channel Perception Learning for H&amp;E-to-IHC  Virtual Staining .pdf</code>。库内此前已有两份文档碰过它（<b>MCCL 获取报告</b>讲获取路径、<b>批量精读 12 篇 §3</b> 讲论文内容），<b>本份的增量全部在代码层与数字自洽性层</b>——只读 PDF 拿不到的那些。</p>
+<div class="grid2">
+<div class="mini"><div class="mt"><a href="03_论文精读博客/CCPL_跨通道感知学习_精读_论文与代码级复核.html">CCPL 跨通道感知学习 · 精读（论文 + 代码级复核）</a></div><p>ICME 2025（venue 从官方 README 反推，arXiv 页面未标注）。arXiv:2506.07559v1。三个模块 <b>DCP / FD / NMCC</b> 全部是损失、没有一个改生成器。<br><b>★ 四条硬结论</b>：① <b>官方仓库跑不起来</b>——三个彼此独立的阻断（整个 <code>util/</code> 包缺失 → <code>train.py</code> 第 6 行 ImportError；<code>models/feature_loss.py</code> 是 0 字节；<code>NMCC_Loss.__init__</code> 写 <code>super(ChannelCorrelationLoss, self)</code> 而该类全仓任何 .py 都不存在 → <b>本机实测复现 NameError</b>）。② <b>两个旗舰损失都是梯度死路</b>——<code>FD.py</code> 与 <code>NMCC.py</code> 都把 Gigapath 调用包在 <code>with torch.no_grad():</code> 里，特征全 detached ⇒ 对生成图<b>零梯度</b>；论文靠消融证明有效的 FD（FID 60.59→40.05）与 NMCC 在发布版里推不动梯度。③ <b>论文 Eq.(3) 的 α=0.1 通道加权没实现</b>（代码是两路直接相加）；Eq.(4)(6)(7)(8)(9) 的 L2 项也全部缺失。④ <b>Table I 正文声称与表内数据冲突两处</b>——正文说「lowermost FID on BCI」但 PSPStain 48.42 &lt; CCPL 57.81（第三名）；正文说 PCC「ranks first on BCI」但 ASP 0.2609 &gt; CCPL 0.2441（第二名，两个数据集顺序写反）。<br><b>★ 消融表真相</b>：加 NMCC 让 FID <b>40.05 → 63.83（+59.4%）</b>，论文写成 "slightly decrease"；而且 <b>Model 2（只加 FD）的 FID 40.05 比完整模型 57.81 好 44%、比所有基线都好</b>。<b>★ 谱系</b>：<code>DCP.py</code> 与 PSPStain <code>PALS.py</code> 常数逐字一致（α=1.8 / thresh_FOD=0.15 / thresh_mask=0.68 / num_blocks=16 / num_bins=20 / ±0.4 门控带），唯一区别是 PSPStain 只算 D、CCPL 多算 H ⇒ <b>CCPL = PSPStain 的 MLPA 扩了一路</b>。另含仓库里<b>硬编码泄露的 HuggingFace token</b> 提示（已复现值不外泄）。<br><b>本轮结案两处库内旧标记</b>：Eq.(1) 条件项「存疑」已由代码确认为阈值作用在取幂之后；venue「未标注」已由 README 结案为 ICME 2025。<br><b>★ §12 追加（2026-10-16）· 第二轴：评价协议与对比公平性</b>（§5–§7 管「代码与论文是否一致 / 表内数字是否自洽」，§12 管「实验设计与对比是否公平」，两轴不重复）：① <b>基线数字不可信</b>——MIST-HER2 上配对方法 Pix2pix 报 <b>PSNR 12.47 / SSIM 0.0788</b>（RMSE≈47/255）、Pyramidpix2pix 报 <b>PCC 0.0042</b>，与「配对 L1 监督」在定义上矛盾，且论文对基线数字来源<b>零说明</b>；同表内 FID 从 251.75 跳到 50.13 而 PSNR 只动 1.67 dB，论文亦未讨论；<b>MIST-HER2 全部方法 PSNR 落在 12–15 dB（近噪声水平），论文一句未提</b>。② <b>收益归属被高估</b>——Table III 零模块基线 <b>PSNR 19.96 / SSIM 0.5045</b> 已高于 ASP（17.87）与 PSPStain（18.65）；对 ASP 的 +2.55 dB 里<b>只有 0.46 dB（18%）来自三个模块</b>，另 2.09 dB 来自基线配置本身。③ <b>人评协议不成立</b>——3 位病理医生、无 kappa/ICC/标准差、<b>「剔除评分分歧大的样本」是方向性偏置（系统性抬高一致性）</b>、未说明是否盲评、未说明评了多少张；SIA 列是唯一完美单调列。④ <b>无方差无种子</b>——全部单点数，而 MIST 上对 PSPStain 的 FID 优势仅 <b>46.15 vs 46.47 = 0.7%</b>；λd=λf=λc=1 未做敏感性分析（恰是 NMCC 伤 FID 时最该扫的）。⑤ <b>缺扩散对比</b>——2025-06 的论文，基线最新只到 PSPStain，<b>扩散类虚拟染色基线 0 篇</b>（StainDiff/VIMs/PST-Diff/Star-Diff 均未比）。⑥ <b>引文注水</b>——29 条里 <b>10 条（34%）</b>为同组自引（Weide Liu ×4、Yang Liu ×6），含图像美学、弱监督分割、双语 EEG、视频异常检测；最刺眼的是 <b>[17] 一篇「社交对话生成」论文被正文引作 "human evaluation results [17]" 的依据</b>。⇒ <b>定性：派生性工作 + 过度声称 + 对比不公平，不是数据造假</b>——表里数字是真的，问题是这些数字被用来支撑它们支撑不了的结论。</p></div>
+</div>
+
+<h2 id="s6"><span class="num">6</span>IHC 评价与分级</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:42%">文件</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><a href="04_IHC评价与分级/IHC蛋白表达分级与虚拟染色评价_系统调研报告.md">IHC蛋白表达分级与虚拟染色评价_系统调研报告.md</a></td><td>最完整的一份（95 KB）。IHC 分级标准 + 虚拟染色评价体系。</td></tr>
+<tr><td><a href="04_IHC评价与分级/IHC_scoring_literature_review.md">IHC_scoring_literature_review.md</a></td><td>IHC 评分文献综述（60 KB）。</td></tr>
+<tr><td><a href="04_IHC评价与分级/virtual_staining_evaluation_review.md">virtual_staining_evaluation_review.md</a></td><td>虚拟染色评价方法综述（47 KB）。</td></tr>
+<tr><td><a href="04_IHC评价与分级/弱配准下蛋白表达保真_评价与训练路线调研.html"><strong>弱配准下蛋白表达保真_评价与训练路线调研.html</strong></a></td><td>2026-10-06 新增。围绕弱配准/非配准 H&amp;E→IHC，比较分布、形态条件、排序/关系、拓扑和软对应路线；给出 24 篇文献矩阵、3 条候选路线与 MVP。结论：先做 fixed-M 的 distribution fidelity，再做 morphology-conditioned ranking；OT/GW 后置。</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">对应的论文原文不在此文件夹</div><p style="margin:0">这 3 份综述所依据的 14 篇 PDF 原文（<code>pals.pdf</code>、<code>ruifrok2001.pdf</code>、<code>vihcgan.pdf</code> 等）仍留在原会话目录 <code>2026-09-30-12-30-13/</code>，作为输入素材未纳入本次归档。需要的话可以一并搬过来。</p></div>
+
+<h2 id="s7"><span class="num">7</span>伪影与失败模式</h2>
+<p>与前面几节不同，这一节回答的是「<strong>出了故障怎么定位</strong>」，而不是「有哪些方法」。三份文档是<strong>互补</strong>关系：黑团报告从现象与文献侧给出成因分类与解法阶梯，代码审查报告从实现侧给出缺陷与因果链，GAN 棋盘格报告从<strong>数学与信号处理侧</strong>给出伪影的解析成因与可证伪的区分实验。三者不是递进关系，而是同一项目的三条并行工作流。</p>
+<div class="card">
+<div class="ch"><div><div class="title"><a href="05_伪影与失败模式/扩散模型黑团伪影_成因诊断与解决方案.html">扩散模型「黑团」伪影 · 成因分类、诊断流程与解决方案</a></div><div class="v">79 KB · 2026-10-03 初版 / 2026-10-04 更新</div></div><div><span class="b bad">故障排查</span> <span class="b blue">横向调研</span></div></div>
+<div class="body">
+<p><strong>问题：</strong>H&amp;E→IHC 生成结果上出现 2–3 处明显黑团。</p>
+<p><strong>核心判断：</strong>「2–3 个<strong>离散</strong>黑团」这个形态本身就排除了全局性成因——CFG 过强、噪声调度缺陷、采样步数不足都表现为<strong>全图</strong>退化，不会只留几个孤立黑团。因此成因按「是否具备定位性」重新排序。</p>
+<p><strong>2026-10-04 更新（已确诊收窄）：</strong>用户实测确认这是<strong>两个独立故障</strong>——训练侧 fp16 指数溢出（bf16 根治）、采样侧潜码落入 VAE 未见区域（clamp 只减半）。<strong>精度类已排除</strong>（fp32 下黑团照样有），<strong>潜空间流形覆盖不足已确认</strong>。新增 §7 四级解法阶梯，并找到可直接下载的 drop-in 病理 VAE（<code>StonyBrook-CVLab/sd-vae-ft-ema-path</code>，仅微调解码器 → <strong>扩散模型无需重训</strong>）。</p>
+<p><strong>含：</strong>8 类成因（通用 4 类 + 虚拟染色特有 4 类）、形态学分类表、<strong>12 步诊断决策树</strong>、解决方案总表（标注改动成本与可复现性）、项目具体建议。</p>
+<p><strong>横向来源：</strong>CompVis #384 蓝黑团块 · TopVAE 潜空间暗区 · sdxl-vae-fp16-fix · APG 过饱和 · zero terminal SNR · DiT 异常 token · Local Diffusion 结构幻觉 · HistoART 六类病理伪影 · AQuA · IHC/DAB 厂商排查文档。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="05_伪影与失败模式/HistDiST_DBDCE_代码审查_实现缺陷与崩溃归因.html">HistDiST + DB-DCE 代码审查 · 实现缺陷与 step 3500→4000 崩溃归因</a></div><div class="v">92 KB · 2026-10-04 · 17 处缺陷（P0×3 / P1×6 / P2×8）+ 浓度图策略对比 + 黑团三变体诊断</div></div><div><span class="b bad">代码审查</span> <span class="b purple">崩溃归因</span></div></div>
+<div class="body">
+<p><strong>审查对象：</strong><code>/Users/hua/Downloads/histdist_full/HistDiST/</code>——710 行训练主循环 + 6 个模块 + 全部日志与采样图。结论均标注文件与行号，可直接复核。</p>
+<p><strong>一句话结论：</strong>这不是「某个超参数没调好」，而是三条结构性缺陷叠在一起产生<strong>正反馈</strong>——辅助损失的梯度对 UNet 完全无门控、无裁剪，而它自身含两个 <strong>1/x 梯度放大器</strong>；同时辅助损失被一个比数据流形宽 <strong>4.26 倍</strong>的 clamp 训练。链条：生成图变暗 → 梯度爆炸 → 全局 clip 把主损失的学习率压掉 → 辅助损失接管更新方向 → 生成图更暗。</p>
+<p><strong>三条 P0：</strong>① <code>aux.backward()</code> 把梯度直接累加进 UNet 的 860M 参数，门控只保护 <code>dbdce+protein_adapter</code>，随后 <code>clip_grad_norm_(全体, 1.0)</code> 使主损失梯度被同比例压小；② 颜色解卷积的 <code>-log10(I/I0)</code> 与频带能量的 <code>log(sx)</code> 都是「clamp 限值不限梯度」，单元素梯度可达 10³–10⁶；③ 辅助损失用 <code>clamp(±6)</code>、主通路与采样器用数据箱，通道 2 上 ±6 比数据箱宽 4.26 倍 → <strong>辅助损失有明确梯度动机把潜码推出流形</strong>。</p>
+<p><strong>★ §9 浓度图策略对比（与 R2 的 M1 原方案不同）：</strong>代码走的是它自己标注的 <strong>scheme B（反演）</strong>——保留 RGB 潜码输出 → 解码 → 再用颜色解卷积「倒推」浓度 → 在浓度空间算损失；而 R2 定的 M1 是<strong>正演</strong>（U-Net 直接输出浓度图 → Beer-Lambert 渲染）。<strong>整条正演路径是死代码：<code>render_ihc</code> 全仓库无调用点。</strong>后果量化：① 真实 IHC 的物理不可行度仅 <strong>0.023</strong>，但随机噪声高达 <strong>0.636</strong>——图像崩坏时反演出的「浓度」是纯垃圾，损失却看不见；② <strong>1/x 梯度炸弹在正演下结构上不可能存在</strong>（<code>x&gt;0</code> 恒成立），所以 P0-② 不是独立 bug，而是策略选择的直接后果；③ 反演损失对一个 <strong>1 维零空间完全盲</strong>——方向 <code>n=(−0.658,+0.697,−0.285)</code>，沿它移动 RGB 变化 <strong>0.553</strong> 而 ΔC = <strong>1.1e−16</strong>，<code>l_prot</code> 与 <code>l_freq</code> 共享这个盲区。</p>
+<p><strong>最便宜的一个发现：</strong>全 run 9 个 <code>gate=off</code> 的翻译步里 <strong>5 个挤在 3500–4000 窗口</strong>（该窗口 11 个步，45% vs 全段 11.2%，i.i.d. 概率约 0.9%）。所以这些 off 几乎不是 dropout，而是<strong>「解码输出非有限 → aux 被静默跳过」</strong>——崩溃前夜解码器已在反复输出非有限值，但代码把 dropout 与非有限解码记成同一个 <code>off</code>，信号就此消失。</p>
+<p><strong>★ §4.4 黑团三变体诊断（决定「该往哪修」）：</strong>代码对<strong>同一条终潜码</strong>做了三种解码（① <code>clamp(±6)</code>、② 数据箱分位、③ stat-match）。<strong>step 500–3500 三变体互差不到 1.3×</strong>（0.357–0.505）⇒ 潜码健康时解码侧钳位口径几乎不改变结果；<strong>3500→4000 ① 与 ② 同时 ×11</strong>（0.403→4.367、0.357→4.026）⇒ <strong>崩坏不在解码侧而在潜码侧</strong>，换任何解码器都救不回来。③ 的 black% 降 28×（4.026→0.145）是<strong>假象</strong>——它的最小值同时从 −1.73 恶化到 −2.28，只是重标定 mean/std 把值挪离 −1 阈值，<strong>属于「把可检测的失败变成不可检测的失败」的同类陷阱</strong>。<strong>推论：换 VAE 的目标应限定为压掉崩坏前那 0.36–0.50% 的零星黑团，不能指望它救 4000/4500 的整张噪声。</strong></p>
+<p><strong>含：</strong>17 处缺陷（每条带行号、后果量化、修法）、崩溃窗口的定量证据（<code>l_diff</code> 3500–4000 真实跳变 <strong>+36%</strong>）、正反馈链图、<strong>4 条可证伪预测</strong>、14 条行动清单（标注改动成本与可复现性）、浓度图策略三选项（含「<code>log</code> 加 ε」把梯度炸弹从 43 万倍封到 434 倍的一行改法）、文档勘误（<strong>检查点其实没随包</strong>，导致实验 A/B/C/E 无法执行）。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="05_伪影与失败模式/GAN棋盘格伪影_底层成因_卷积信号处理与频域机制.html">GAN 棋盘格伪影 · 底层成因（卷积运算 → 信号处理 → 频域机制）</a></div><div class="v">13 节 · 2026-10-15 · 5 组受控实验（纯 NumPy 可复现）</div></div><div><span class="b purple">理论机制</span> <span class="b blue">信号处理</span></div></div>
+<div class="body">
+<p><strong>问题：</strong>棋盘格伪影<strong>为什么</strong>产生、产生在网络哪一环、背后的数学机制是什么，以及不同成因之间是否存在因果。回答对象是「具备深度学习基础但未系统学过信号处理」的研究者。</p>
+<p><strong>一句话结论：</strong>棋盘格不是「网络没学好」，而是<strong>转置卷积作为线性算子的多相（polyphase）增益不平衡</strong>的确定性后果 —— 在随机初始化、甚至固定权重下就会产生，不需要训练。但<strong>它只是 GAN 高频异常的一条成因，而且很可能不是最主要的那条</strong>。</p>
+<p><strong>★ 本报告独有的三件东西：</strong>① 一条可数值验证的<strong>解析律</strong> —— 奇数核调制指数 <code>m=(2cosπf−1)/(2cosπf+1)</code>，实测与理论误差 <strong>0.00000</strong>；偶数核是相位调制，DC 处为零但随频率增长（实测 f=0.25 时 0.414）—— 这就是「kernel size 能被 stride 整除」<strong>必要非充分</strong>的数学内容。② 五组受控实验，其中实验 D 给出「伪影压制率 <strong>与</strong> 真实细节保留率」的双指标判据（全频段低通 100% 压制时真实边缘只剩 10.1%；窄带陷波 100% 压制 + 97.5% 边缘保留）。③ 一张把<strong>结构伪影 / 混叠 / 频谱偏差 / 训练产物</strong>分开的因果图，逐箭头标注证据等级。</p>
+<p><strong>关键负面结论：</strong>文献核验<strong>没有找到任何一篇论文用 aliasing 解释棋盘格</strong>；StyleGAN3（aliasing 主论文）全文不含 "checkerboard"，Distill（棋盘格主论文）全文不含 "aliasing" —— 这是两条几乎不相交的因果链。另：Schwarz 等（NeurIPS 2021）明确「棋盘格不足以单独解释频谱偏差，因为生成器能补偿它」。</p>
+<p><strong>含：</strong>13 节（核心结论 → 基础知识 → 逐步数学推导 → 四概念区分 → 成因分类表 7 行 × 8 列 → 10 篇论文逐篇解析 → 5 组实验代码与实测结果 → 因果图 → 局限 → 研究启示 → 未核实清单 → 40 条参考文献）、三处题录更正（Schwarz 等作者名、Focal Frequency Loss 作者名、Aliasing 论文作者）、5 张实验图 + 可运行脚本。</p>
+</div>
+</div>
+
+<h2 id="s8"><span class="num">8</span>方案可行性审查</h2><p>这一节回答的是<strong>第三种问题</strong>：不是「有哪些方法」（第 2–5 节），也不是「做出来不对怎么办」（第 7 节），而是「<strong>我打算这么做，这套方案到底成不成立</strong>」。对象是用户自己提出的下一阶段研究方案。</p>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/StainFuser改造为H&amp;E2IHC_可行性与实验路线.html">StainFuser 改造为 H&amp;E→IHC 虚拟染色 · 方案可行性审查、表示设计与可执行实验路线</a></div><div class="v">115 KB · 2026-10-05 · 11 节 · 对 8 个模块逐条判定</div></div><div><span class="b high">方案审查</span> <span class="b purple">代码级</span></div></div>
+<div class="body">
+<p><strong>审查对象：</strong>「以 StainFuser 为 diffusion backbone，改造成 H&amp;E→IHC 生成框架；生成空间改为有染色语义的三通道 <code>Z_stain</code>；用可微 Beer–Lambert 渲染回 RGB；加 stain-aware channel attention；复用旧 Protein Branch」。<strong>所有关于 StainFuser 的结论均来自实际克隆官方仓库、逐行读代码、并用 diffusers 0.26.3 实例化模型实测</strong>，不依赖论文摘要。</p>
+<p><strong>一句话判定：</strong>方向成立，但当前形态有<strong>三处必须先改的结构性问题</strong>；而最大的风险不在用户列出的任何一个模块里，而在 <strong>StainFuser 的 condition 设计本身</strong>——它在 H&amp;E→IHC 上缺少可用的推理输入。</p>
+<p><strong>★ 五个最关键的发现：</strong></p>
+<p>① <strong>StainFuser 有两条 condition 通道，两条都携带颜色</strong>（代码级证实）：原图以<strong>原始 RGB 像素</strong>进入 ControlNet 卷积干（实测 <code>Conv2d(3,16,3,1)</code>）；目标图的 VAE latent 被拍平成 <strong>4096 个 token、每个只有 4 维</strong>，经 <code>Linear(4,1024)</code> 投成 cross-attention 的 K/V——<strong>仿射映射，目标图颜色几乎线性地写进了 attention 的 value</strong>。同一套 condition 设计在 stain normalization 里是<b>正确</b>的（目标颜色应该被复制），在 H&amp;E→IHC 里是<b>错误</b>的（目标图根本不存在）。</p>
+<p>② <strong>把输出改成 <code>[H, DAB, X]</code> 不是「加个输出头」，而是换掉解码器</strong>：StainFuser 的 latent 是 <strong>Stable Diffusion 2.1</strong> VAE 的 4 通道 latent（64×64），且 <code>train.py</code> 里 <code>vae.requires_grad_(False)</code>——VAE 全程冻结。要自带渲染器绕开它，这一步的改动量被低估了。</p>
+<p>③ <strong><code>[H, DAB, H]</code> 不是「值得商榷」，是数学上不成立</strong>，有两个独立证明：<strong>(a) 秩亏</strong>——<code>M = [s_H, s_DAB, s_H]</code> 第 1、3 列相同 → <code>rank(M)=2</code>，而用户自己实测的 <code>‖Render(Deconv(x))−x‖ = 0.023</code> 正是这个正交补残差的签名，<strong>与训练无关、不可修</strong>；<strong>(b) attention 不可辨识</strong>——<code>OD = s_H·C_H·(w₁+w₃) + s_DAB·C_DAB·w₂</code>，只有 <code>w₁+w₃</code> 可辨识，损失沿此方向是平的，<strong>比「冗余」更严重</strong>。</p>
+<p>④ <strong>RGB→Z→RGB 在数学上是恒等式</strong>（<code>M·M⁻¹·OD = OD</code>），所以「染色空间重建本身就很差」<strong>只归约到两个原因：M 秩亏、非负截断</strong>。<strong>另两个常被一起提到的（<code>I₀</code> 估计误差、uint8 量化）在往返中不产生任何误差</strong>——<code>I₀</code> 精确抵消（实测 <code>I₀=1.0</code> 与 <code>I₀=0.87</code> 往返 MAE 都是 <code>~7e-17</code>），uint8 量化是「给监督目标加噪声」而非重建误差。<strong>并给出可证伪预测：把 M 从 3×2 换成 3×3 后，0.023 应当显著下降；若截断才是主因，则应改用天然非负的参数化（softplus/exp）而不是 clamp。</strong></p>
+<p>⑤ <strong>StainFuser 全论文只有 8 次引用、0 次有影响力引用</strong>（Semantic Scholar 实测），HF 权重 20 downloads / 1 like，且<strong>本轮检索没有找到任何把它用于 H&amp;E→IHC 的工作</strong>。既是机会也是风险。</p>
+<p><strong>★ 报告还给出了三条可直接落地的设计结论：</strong></p>
+<p>· <strong>三通道唯一推荐方案：<code>Z = [C_H, C_DAB, C_res]</code></strong>，其中 <code>C_res</code> 沿 <code>normalize(s_H × s_DAB)</code> 的正交补方向。<code>C_H, C_DAB</code> 用 softplus 保非负，<strong><code>C_res</code> 必须保持有符号</strong>（对它加 <code>clamp(min=0)</code> 会重演 <code>physics.py</code> L79 那个「静默抹掉负分量并归零梯度」的错）。报告从 7 个候选中逐一筛选（H 重复 / residual / eosin / OD 总量 / structure / illumination / 第二色原），并给出 Top 3 方案的十项对照表。</p>
+<p>· <strong>channel attention 推荐插在 condition feature 上（主）与输出 <code>Z_pred</code> 上（次）</strong>，明确不推荐 UNet 中间层（要动冻结的预训练层、参数量最大、颜色泄漏风险最高）。并指出<strong>本轮没有找到「逐空间位置给不同染色分量不同权重」的工作</strong>，同时给出审稿人一定会问的那个质疑的应对方式（设计成低秩/共享形式，而非逐像素稠密 3×3 矩阵）。</p>
+<p>· <strong>复用旧 Protein Branch 是最划算的一项</strong>：StainFuser 的 <code>encoder_hidden_states</code> 槽位与 HistDiST 的 <code>ProteinAdapter → 256 个 cross-attn token</code> <strong>完全同构</strong>，经验可直接迁移；但必须补两件事——<strong>零初始化</strong>（StainFuser 的 <code>encoder_projector</code> 是随机初始化，会失去「step 0 与 baseline 数值一致」这个性质）与<strong>幅度监控</strong>（HistDiST 的教训是「纪律用在了死路上」：真在用的 <code>ProteinAdapter</code> 无界无监控，没人用的 <code>StructAdapter</code> 反而带着完整幅度控制）。</p>
+<p><strong>★ 可直接执行的实验路线：</strong>阶段 0 门禁（1–3 天，零训练，四个实验：三通道重建上限 / 你的 IHC 有没有伊红复染 / stain matrix 敏感性 / StainFuser 能否跑通）→ 阶段 1 最小改动 baseline（<strong>输出空间保持 RGB latent 不动</strong>，先把「能不能做这件事」跑通）→ 阶段 2 表示改造（<strong>分两步：先只换渲染器 → 再换生成空间</strong>）→ 阶段 3 消融。附失败判据与止损表（6 条症状 → 诊断 → 止损动作）。</p>
+<p><strong>★ 代码勘误与陷阱（构建前必读）：</strong><code>conditioning_embedding_in_channels=4</code> 是<strong>死参数</strong>（从未传给 <code>super().__init__()</code>，实测 <code>conv_in = Conv2d(3,16,3,1)</code>，喂 4 通道直接 <code>RuntimeError</code>）；<code>cross_attention_dim</code> 这个参数名的实际语义是「<strong>进来的条件 token 维度</strong>」而不是「网络 cross-attn 宽度」（报告记录了作者自己第一遍静态读代码时被它骗过一次，随后用实测纠正）；<strong>按 README 跑训练跑不起来</strong>（<code>conf/data/</code> 目录不存在、<code>param_dict</code> 硬编码在 <code>train.py</code>、<code>requirements.txt</code> 不含 torch/diffusers、<code>unet_path</code> 拼写错误 <code>contition</code>）。</p>
+<p><strong>★ 实测数据：</strong>VAE 83.65 M（冻结）/ UNet 865.92 M / ControlNet 364.23 M / <strong>总计 1313.80 M，可训练 878.49 M</strong>，fp32 非激活显存约 14.1 GB。架构层已在本机用 <code>diffusers==0.26.3</code> 实例化并前向验证通过（注意 <code>transformers</code> 必须降到 4.38 系，新版因 <code>cached_download</code> 被移除而 import 失败）。</p>
+<p><strong>含：</strong>§2 语义染色表示先例总表（StainQuant / CCPL / MCCL / PSPStain / PGVMS / UNIStainNet / HistDiST）与三条技术路线对比、§3 三通道论证与 Top 3 方案、§4 OD/stain matrix/Beer–Lambert 全链与「两侧用不同 M」的设计建议、§5 闭环可逆性的严格证明与六层评价指标、§6 channel attention 四个插入位置的九维对比、§7 Protein Branch 对接的代码级 diff、§9 HistDiST 迁移清单（可直接迁移 / 需修改 / 不要迁移三类，含「不要把三个 P0 一起搬过来」）、§10 风险清单与<strong>七条诚实标注的不确定</strong>。</p>
+<p><strong>★ 本轮找到的关键空白（报告认为这是方案里最值得坚持的一点）：</strong><strong>没有任何工作把「可微物理渲染器」放进扩散模型的生成空间里</strong>——StainQuant 有可微 BL 渲染器但是无监督自编码器（不是扩散）；HistDiT/HistDiST/StainDiffuser 是扩散但不换渲染器；CCPL/MCCL 的染色通道在监督侧而非生成侧。<strong>这个组合是空的，且它同时满足「可解释」与「可复现」两条优先级。</strong></p>
+</div>
+</div>
+
+<div class="box warn"><div class="bt">与第 2 节 R5 报告的关系</div><p style="margin:0">R5（可复现扩散虚拟染色工作推荐）里排序是 Star-Diff → DiffVS → HistDiST → VSMT → StainDiffuser，<strong>StainFuser 不在其评估范围内</strong>——R5 的筛选条件是「扩散 + H&amp;E→IHC + 显式解耦 + 官方代码」，而 StainFuser 是 stain normalization 任务。本报告是把 StainFuser 作为一个<strong>新候选</strong>引入并做可行性审查，两者是并列关系，不是替代关系。</p></div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/StainFuser改造_实施任务书_v2.md">StainFuser → H&amp;E→IHC 改造 · 实施任务书 v2</a></div><div class="v">Markdown · 2026-10-06 修订 · 16 节 · 新增「三张图的新语义」「泄漏判定」「尺度一致性」· 修正 v1 的条件短路判断</div></div><div><span class="b tealb">任务书</span> <span class="b medium">母文档</span></div></div>
+<div class="body">
+<p><strong>这份是什么：</strong>StainFuser 改造的<strong>母任务书</strong>——上面那份 E0 任务书、E0.2 结论、阶段 1 施工任务书<strong>都是从这里拆出去的</strong>。§4 是「阶段 0 门禁」（即 E0 四个实验），§5 是阶段 1，§6–§7 是阶段 2 与 Channel Attention 设计，§8 消融，§9 六层评价体系，§11 止损表，§14 已知局限。</p>
+<p><strong>§2 是铁律（不许违反）</strong>，§10 是禁止事项汇总，§13 是交付要求（每个数字都要能追溯到日志；报告里不许出现「效果不错」这种话）。</p>
+<p><strong>★ 本轮勘误（回源核实后）</strong>：① <strong>§5.3 已修正</strong>——原先写 <code>encoder_projector</code> 从 <code>Linear(4,1024)</code> 改成 <code>Linear(768,1024)</code>，<strong>默认应取 <code>dim=4</code></strong>（零文件改动、与 baseline 同容量、checkpoint 无尺寸问题）；<code>dim=768</code> 是可选方案，但<strong>必须同时改 <code>train.py</code> L60 和 <code>src/misc/model_utils.py</code> L40</strong> 两处。② <strong>§3 的「四个坑」需要区分作用域</strong>：<code>run_patch.py</code> 不经过 hydra、不读 <code>conf/</code> ⇒ 「<code>conf/data/</code> 缺失」和「<code>contition</code> 拼写错」<strong>只在训练时咬人</strong>；推理路径的阻塞项是 <code>requirements.txt</code> 缺 <code>diffusers</code>/<code>transformers</code>，以及<strong>数据加载只认 <code>.png</code></strong>。③ 新增两条实测事实：<code>conditioning_embedding_in_channels</code> 是<strong>死参数</strong>（实际 <code>controlnet_cond</code> 是 3 通道）；<code>utils.py</code> L809 的 <code>clamp(-1,1)</code> 就是<strong>黑团机制的同源实现</strong>。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/E0_染色空间闭环验证_实验任务书.md">E0 染色空间闭环验证 · 实验任务书（交给执行 agent）</a></div><div class="v">Markdown · 2026-10-05 · 8 节 · 4 个实验 · 4 个脚本全部实测通过</div></div><div><span class="b tealb">任务书</span> <span class="b medium">零训练</span></div></div>
+<div class="body">
+<p><strong>用途：</strong>上一份报告给出的实验路线里，<strong>阶段 0 门禁</strong>被抽出来写成一份可以直接交给执行 agent 的任务书。每一步都有<strong>输入 / 命令 / 输出 / 判据 / 失败怎么办</strong>，脚本可直接复制运行。</p>
+<p><strong>为什么先做这一步：</strong>在动手改架构之前，先花 1–3 天回答「染色空间这条路到底通不通」。<strong>全程零训练、纯 CPU</strong>（只有 E0.4 需要下载权重）。</p>
+<p><strong>四个实验：</strong></p>
+<p>· <strong>E0.1 三通道闭环重建上限（最高优先级）</strong>——同一批图跑四个变体（3×2 不 clamp / 3×2 clamp / <strong>3×3 正交基不 clamp</strong> / 3×3 只对 H·DAB clamp），看残差怎么变。<strong>判据：V3 应给出机器精度（~1e-16），V1 应明显更大 ⇒ 证明 0.023 完全由 M 秩亏造成、换 3×3 即可解决。</strong>报告附<strong>合成数据自检脚本</strong>，可先验证代码再碰真实数据。</p>
+<p>· <strong>E0.2 伊红复染检测</strong>——判定第三通道能不能被赋予「伊红」这个语义。<strong>★ 本节的判据已在真实数据上被推翻并全部重写</strong>：实测证明 3×3 解混下的 <code>C_E</code> <strong>恒等于正交补残差通道</strong>（<code>w2 ∥ s_H × s_DAB</code>，夹角 8.5e-7 度；<code>C_E / C_res = −1.5918</code> 纯常数）⇒ 旧判据（<code>E/H</code> + <code>coherence</code>）<strong>原理上无法检出「没有伊红」</strong>，且 <code>coherence</code> 在真实组织上永远成立 ⇒ <strong>假阳性生成器</strong>。新判据用 <code>R²(C_E ~ C_H, C_DAB)</code>（≥0.9 纯泄漏 / ≤0.5 有独立成分），已用四组已知真值的合成数据自检通过。详见 <code>E0.2_伊红复染判定_结论.md</code>。</p>
+<p>· <strong>E0.3 染色矩阵敏感性</strong>——四套 M（Ruifrok 固定 / Macenko 队列级 / Macenko 逐图 / 简化 NMF 队列级）→ <code>C_DAB</code> 分箱 → <strong>ICC(2,1)</strong> + <strong>Cohen's κ</strong> + Bland–Altman。<strong>若 ICC &lt; 0.8 则矩阵选择会实质改变 H-score</strong>，必须在论文里声明。<strong>★ 本节已补上 421 行可直接运行的脚本</strong>（md5 <code>8c7aa84a…</code>，已与嵌入块逐字节校验）：因为环境里<strong>没有 scipy / sklearn / skimage / matplotlib</strong>，Macenko、简化 NMF、ICC、κ、Bland–Altman、<strong>连画图</strong>全部手写，只依赖 numpy + PIL。自检实测 <code>ICC(X,X)=1.000000</code>、<code>ICC(独立)=0.0340</code>、<code>κ(a,a)=1.000000</code>、扰动单调性通过。<strong>★ 顺带抓到一个真实的静默失败</strong>：Macenko 返回的两个向量<strong>顺序是任意的</strong>，直接取「第 2 列」当 DAB 会<strong>一直在算 <code>C_H</code> 却不报错</strong>——自检实测最优排列是 <code>(1,0)</code>，证明这个坑是真的。端到端已在 6 张合成 patch 上跑通（<strong>明确标注：这只是冒烟测试，不是科学结论</strong>），最差一对 <code>M_A vs M_C</code> 的 <code>ICC(斑块)=0.0596</code>。</p>
+<p>· <strong>E0.4 StainFuser 能否跑通</strong>——<strong>★ 本节新增 383 行「预检脚本」（只用标准库，md5 <code>e8b5af08…</code>），逐条回源核实每个坑真实存在并给出行号。</strong>它纠正了原先一个说法：<strong>四个坑里只有两个在 E0.4（推理）咬人</strong>——因为 <code>run_patch.py</code> 走 <code>load_stainFuser(config_dir="src/configs")</code>，<strong>完全不经过 hydra、不读 <code>conf/</code></strong>，所以「<code>conf/data/</code> 缺失」和「<code>contition</code> 拼写错」只在训练时咬人。<strong>推理路径真正的阻塞项只有两个</strong>：<code>requirements.txt</code> 里<strong>根本没有</strong> <code>diffusers</code>/<code>transformers</code>；以及<strong>数据加载只认 <code>.png</code></strong>（<code>src/dataset.py</code> L45，病理数据常是 tif/svs ⇒ <code>IndexError</code>，且报错信息不提示扩展名问题）。<strong>还找到一条与黑团直接同源的证据</strong>：<code>src/misc/utils.py</code> L809 的 <code>inverse_transform</code> 用的就是 <code>clamp(-1,1)</code> 映射到 <code>[0,255]</code> ⇒ <strong>「解码 ≤ −1 被夹成纯黑」这个机制在 StainFuser 里原样存在</strong>。<strong>要求记录「改了几个文件、每个坑花了多久」——这个改动成本数字本身就是结论。</strong></p>
+<p><strong>★ 四个脚本已全部在本机实测通过</strong>（E0.1/E0.2 用合成 IHC 数据）：E0.1 输出 <code>V1 = 0.0739 / V3 = 4.9e-17</code>，比值 7.4×10¹⁰；E0.2 在「无伊红」与「有伊红」两种数据上都能正确分流；<strong>E0.3 端到端跑通并产出 <code>e03_results.json</code> + Bland–Altman 图；E0.4 预检在真实仓库上跑通并通过正例/反例自检</strong>。<strong>测试中发现并修正了一个隐蔽 bug</strong>：numpy 里 <code>(H,W,3)</code> 数组直接 <code>.reshape(3,-1)</code> 会把每个像素的 <code>(R,G,B)</code> 三元组错位切分，<strong>必须先 <code>transpose(2,0,1)</code></strong>——这个 bug 很阴险，因为往返看起来仍「自洽」，但矩阵乘法作用在了错误的元素分组上。任务书 §2.6 专门标注了这一点。</p>
+<p><strong>★ 本轮沉淀的一条纪律：检查器本身也要自检，而且必须有反例。</strong>E0.4 预检脚本写了「正例/反例必须给出相反结论」的自检——它当场抓出一个真 bug：成本汇总函数<strong>按检查项的 <code>severity</code> 过滤，而不是按本次的 <code>ok</code> 结果</strong>，于是<strong>一个全部修好的仓库仍会被报成「有 2 个阻塞项」</strong>。<code>severity</code> 是检查项的固有属性，<code>ok</code> 才是实测结果——<strong>两者必须同时判</strong>。如果只跑真实仓库，这个 bug 永远不会暴露（因为真实仓库确实有阻塞项，看起来「对」）。</p>
+<p><strong>任务书还含 8 条禁止事项</strong>（E0 全过之前不许改架构、不许开始训练、不许为了数字好看而调 clamp 阈值、不许用「预计」代替实测），以及两条记录纪律（<strong>必须记录被 clamp/截断的像素比例</strong>；报告分布而不只报均值）。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/E0.2_伊红复染判定_结论.md">E0.2 伊红复染判定 · 结论与判据修正</a></div><div class="v">Markdown · 2026-10-05 · 结论：没有伊红 · 同时修正任务书 §3 判据</div></div><div><span class="b high">实验结论</span> <span class="b medium">判据重写</span></div></div>
+<div class="body">
+<p><strong>结论：</strong>判定「<strong>没有伊红复染</strong>」成立，第三通道用 <code>C_res</code>。<strong>但成立的理由与自动判读给出的理由不同</strong>——自动判读的判据原理上无法检出「没有伊红」，这次是<strong>碰巧</strong>给出了正确答案。</p>
+<p><strong>★ 修正了一个原理性缺陷。</strong>任务书初版 §3 用「<code>E/H</code> + <code>coherence</code>」判读，代入实测数据（<code>E/H = 0.311</code>、<code>coherence = 0.282</code>）落进 else 分支 ⇒ 输出「<strong>有</strong>伊红」= <strong>假阳性</strong>。根因是一个代数事实：</p>
+<p><code>w2 = M⁻¹ 第 2 行</code> 满足 <code>w2·s_H = 0</code>、<code>w2·s_DAB = 0</code> ⇒ <strong><code>w2 ∥ (s_H × s_DAB)</code></strong> ⇒ <code>C_E</code> 就是正交补残差。<strong>实测：绝对没有伊红时 <code>|C_E| = 1.4e-16</code>（机器零），但只要叠加任何残差，它就 100% 落进 <code>C_E</code>。</strong>⇒ 任何「没有伊红但有残差（光照误差 / 向量不准）」的片子都会给出非零且有结构的 <code>C_E</code> ⇒ <code>coherence ≤ 1.2</code> 在真实组织上<strong>永远成立</strong>。</p>
+<p><strong>★ 第二个被自检推翻的替代判据：</strong>曾打算用 <code>corr(C_E, C_H) &lt; 0 ⇒ 有伊红</code>（伊红在胞质、苏木素在核，互斥）。自检结果<strong>方向正好相反</strong>——纯泄漏给 <code>−0.974 ~ −1.000</code>，真伊红给 <code>+0.022</code>。原因是残差轴正负号本身任意 ⇒ <strong><code>corr</code> 的符号没有意义</strong>。</p>
+<p><strong>新判据：</strong><code>R²(C_E ~ C_H, C_DAB)</code>——问「<code>C_E</code> 里有没有 <code>C_H</code>/<code>C_DAB</code> 都没有的空间结构」。自检（合成数据 + PNG 存盘 + uint8 往返）：真伊红 <code>R² = 0.0008</code>；向量误差 δ=0.03/0.10/0.20 分别 <code>0.9489 / 0.9958 / 0.9991</code> ⇒ <strong>干净可分</strong>。适用下限：<code>E_absmean ≲ 0.01</code> 时残差淹没在 uint8 量化底噪里，<code>R²</code> 不可信。</p>
+<p><strong>为什么「没有伊红」仍成立（三条，按强度）：</strong>① <strong>领域事实</strong>——ER 是核受体，IHC 标准流程只做苏木素复染；② <strong>同口径底噪对照（用户数据里本来就有，之前没被用上）</strong>——已知 H&amp;E 片上的 DAB 通道读数 <code>0.0858</code> = 「缺失染色」底噪，而 ER 片 E 通道 <code>0.0736</code> ⇒ 比值 <strong>0.86 &lt; 1</strong>，处在底噪量级甚至更低；③ 量级差（3.5× / 2.6×）。</p>
+<p><strong>对方案的三条影响：</strong>① <strong>命名必须改</strong>——<code>C_E</code> 与 <code>C_res</code> 是同一条轴，正确名字是「<strong>未解释残差</strong>」而不是染色，写进论文会被问「这是哪种染色」；② <strong>残差通道必须加向零收缩惩罚</strong>——渲染里 <code>s_res</code> 是一根<strong>非物理颜色方向</strong>，不约束则扩散模型会往里塞内容产生无法解释的色偏；③ 若 <code>R² ≥ 0.9</code> 则残差<strong>来自染色向量不准、因此可修</strong> ⇒ <strong>E0.3 的优先级提前</strong>。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/阶段1_最小改动baseline_施工任务书.md">阶段 1 · 最小改动 baseline 施工任务书</a></div><div class="v">Markdown · 2026-10-05 · 9 节 · 3 个 arm · 含零训练前置检查</div></div><div><span class="b tealb">任务书</span> <span class="b medium">门禁已开</span></div></div>
+<div class="body">
+<p><strong>回答的问题：</strong>E0 全过之后，<strong>能不能开始改造、改造到哪一步为止</strong>。</p>
+<p><strong>门禁边界：</strong>E0 全过 ⇒ <strong>只允许开始「阶段 1」</strong>，<strong>不允许</strong>直接进阶段 2。<strong>阶段 1 本身就是改造的第一步</strong>（换掉两个条件槽位），不是"改造前的准备"——它的唯一目的是把「StainFuser 能不能做 H&amp;E→IHC」和「染色空间改造有没有用」<strong>两个问题分开</strong>。跳过它直接换输出空间，出问题时分不清是哪边的责任。</p>
+<p><strong>★ 一个零训练的前置检查（第 0 步，别跳）：</strong>用<strong>预训练 checkpoint</strong> 跑三次推理，只改 <code>--target_path</code>——T1 给真实配对 IHC、T2 给无关 IHC、T3 给纯灰。<strong>T1 ≫ T2 ≈ T3 ⇒ 目标图 latent 泄漏主导了输出</strong>（阶段 1 换掉 <code>encoder_hidden_states</code> 就是必须的）；<strong>T1 ≈ T2 ≈ T3 ⇒ 泄漏影响很小</strong>。半小时可完成，<strong>不做它，阶段 1 的任何提升都无法归因</strong>。而且 T1/T2/T3 的差值本身就是「原方法在 H&amp;E→IHC 上不可用」的量化证据。</p>
+<p><strong>精确改动清单（就三件事）：</strong>① <code>encoder_hidden_states</code>：<code>recipe.py</code> L268/L342，<code>(B,4096,4)</code> 目标图 latent → 可学习染色 token，<strong>必须显式零初始化</strong>（<code>nn.Linear</code> 默认随机，零初始化才保证 step 0 与 baseline 数值一致）；<strong>★ token 维度默认取 <code>dim=4</code></strong>——原设计的 <code>encoder_hidden_states</code> 本来就是每位置 4 维，所以 <code>dim=4</code> 不是降级而是<strong>与 baseline 同容量</strong>，且 <code>encoder_hid_dim=4</code> 一个字都不用改（<strong>零文件改动</strong>）；若确实要更大容量则用 <code>dim=768</code>，但<strong>必须同时改 <code>train.py</code> L60 和 <code>src/misc/model_utils.py</code> L40</strong> 两处 <code>encoder_hid_dim</code>，漏一处会静默不生效；② <code>controlnet_cond</code>：<code>recipe.py</code> L269/L343，原始 RGB → 染色分解三通道，<strong>必须保持 3 通道</strong>（首层硬编码 <code>Conv2d(3,16,3,1)</code>；改通道数会破坏 checkpoint 加载；<strong>且 <code>conditioning_embedding_in_channels</code> 是死参数——已回源核实它没被传进 <code>super().__init__()</code>，写 <code>=4</code> 是假的，改了不生效</strong>）；③ 四处配套（<code>latent_dist.sample()</code>→<code>.mode()</code> L188/L562、latent 钳位 + <strong>记录被钳比例</strong> L251、可选条件 dropout L265–280、<strong>推理端 <code>utils.py</code> L809 的 <code>clamp(-1,1)</code> 也要记录比例</strong>）。</p>
+<p><strong>★ 日志第一天就要加：</strong><code>p_tok_rms</code>（零初始化 token 塌缩的唯一预警）、<code>p_tok_grad_norm</code>（确认梯度真的传到了 token）、<code>cond_rms</code>、<code>latent_clamp_frac</code>、<code>x0_pred_min/max</code>（黑团的早期信号）。<strong>纪律：凡「两个原因 → 同一个日志值」，都要拆成两个字段。</strong></p>
+<p><strong>判据：</strong>真正说明问题的是<strong>实例级</strong>的「H-score 与真实 IHC 的 Spearman &gt; 0.2」。只看"生成图是 IHC 样的"会骗人——模型可以学会整片涂棕。<strong>反例判据：</strong>「H&amp;E 变暗」⇒ token 塌缩；「整片均匀棕色」⇒ condition 只学到全局染色没有空间结构。<strong>三个 arm 必须做</strong>（A 原样=上限参照 / B 阶段 1 本体 / C 只换 cond 保留泄漏=消融），同超参同 seed，<strong>只改条件</strong>。</p>
+<p><strong>与阶段 2 的接口（4 个必须能回答的问题）：</strong>T1/T2/T3 差值 · Arm B 的 H-score 相关性 · <code>p_tok_rms</code> 是否稳定 · <strong>E0.1 的 V1/V3</strong>。<strong>最后一条才是阶段 2 的真正门禁</strong>——<strong>染色空间成立与否由 E0.1 决定，StainFuser 能不能用由阶段 1 决定，两件事不要混。</strong></p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/PST-Diff借鉴与StainFuser改造方案审查.html"><strong>PST-Diff 借鉴与 StainFuser 改造方案审查</strong></a></div><div class="v">约 32 KB · 2026-10-07 · PST-Diff 原文 14 页 + 当前模型状态逐项对账</div></div><div><span class="b high">直接先例</span> <span class="b purple">方案审查</span></div></div>
+<div class="body">
+<p><strong>一句话判定：</strong><strong>PST-Diff 值得借，但不要复制成「双扩散模型 + LT + Fourier CFG」</strong>。真正可迁移的是「源结构与目标表达在不同 timestep 使用不同强度」这一原则。当前模型建议先<strong>移除/门禁 target latent → 换成零初始化 HER2 marker token</strong>，保留 HHE ControlNet，在 <code>[C_H,C_H,C_E]</code> 输入前增加结构/表达 timestep gate；浓度域 <code>[C_H,C_DAB,C_res]</code> + Beer–Lambert 放到阶段 2。</p>
+<p><strong>三个模块判定：</strong>AAM = <strong>原则可搬，不加双 U-Net</strong>；LT = <strong>不能照搬 paired latent L2</strong>（你的 non-paired coupling 不可辨识）；CFG = <strong>最值得借</strong>，但「染色通道 ≠ Fourier 频率」，应迁移为 semantic/channel-time gate。含 T1/T2/T3 泄漏门禁、四臂 timestep 消融、表达/结构/伪影五层评价与止损条件。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/FeatStainDiff全框架与浓度扩散方案可行性审查.html"><strong>FeatStainDiff 全框架与浓度扩散方案可行性审查</strong></a></div><div class="v">约 42 KB · 2026-10-08 · 论文全文 16 页 + 官方仓库状态 + 浓度扩散模型选择</div></div><div><span class="b high">全框架审查</span> <span class="b purple">浓度扩散</span></div></div>
+<div class="body">
+<p><strong>一句话判定：</strong>FeatStainDiff 的「feature diffusion + CSB 语义桥 + FMoE 分布桥」在其目标——生成 IHC-like feature 服务 MIL/WSI 分类——上成立；但它不是 RGB 虚拟染色，也不是完全 non-paired 先例。对你的项目，最值得迁移的是<strong>语义桥/分布桥分工 + 条件随 timestep 调度</strong>，不应直接复制 paired InfoNCE、U-ViT 或 4-expert DCT/MHSA。</p>
+<p><strong>主线建议：</strong>既然浓度扩散闭环已验证基本可行，第一 backbone 选<strong>小型 conditional 2D U-Net + v-prediction</strong>；epsilon 作最小 baseline、flow matching 作第二阶段对照。输出 <code>Z=[C_H,C_DAB,C_res]</code>，经 fixed/calibrated stain matrix + Beer–Lambert 渲染回 RGB。含阶段 0–2 门禁、模型选择表、物理参数化、FOD/ranking/semantic loss 与止损条件。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/DAB-only浓度扩散架构全流程可行性审查.html"><strong>DAB-only 浓度扩散架构全流程可行性审查</strong></a></div><div class="v">约 50 KB · 2026-10-08 · H 通道复用 + E 形态条件 + A/B 先验 + Beer–Lambert</div></div><div><span class="b high">主线收敛</span> <span class="b tealb">DAB-only</span></div></div>
+<div class="body">
+<p><strong>一句话判定：</strong><strong>DAB-only 成立，但完整图必须拆成 v1/v2。</strong>第一版只做「经过 <code>T_H</code> 校准的 H + E spatial condition → DAB diffusion → Beer–Lambert」，主 backbone 选<strong>小型 conditional 2D U-Net + v-prediction</strong>；A 只能作软先验，B 必须先解决 IHC-H/HE-H 条件域偏移后再做 sampling guidance。</p>
+<p><strong>关键 P0：</strong>标准 conditional diffusion 仍需要病例/区域级对应的 DAB target；完全 random non-paired target 会让模型退化为 <code>p(C_DAB)</code>/cohort average。H 的块级相关（<code>Corr<sub>128</sub>=0.407</code>）支持结构锚，不支持 <code>C_H<sup>HE</sup>=C_H<sup>IHC</sup></code> 的 pixel hard copy。含 v1→v3 模块顺序、H/E/A/B 消融、score normalization 与止损表。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/DAB-only浓度扩散_文献先例地图与模型选型审查.html"><strong>DAB-only 浓度扩散 · 文献先例地图与模型选型审查</strong></a></div><div class="v">约 68 KB · 2026-10-08 · 7 格先例对账 + 5 条独立检索线 + 18 条参考文献</div></div><div><span class="b bad">先例已占</span> <span class="b purple">文献核实</span></div></div>
+<div class="body">
+<p><strong>一句话判定：技术路线成立，但「创新点」的落点必须改</strong>——架构的七个功能格中四格已被占、两格部分被占，只有「蛋白表达级训练损失」仍空。</p>
+<p><strong>★ 最重要的一条：B 模块 = MIU-Diff Stage 1</strong>（arXiv:2506.23184 · CMMCA 2025 · 同一数据集 BCI + MIST）。其受控消融显示 <strong>marginal 先验单独作用时 Hist 改善（0.558）但 PSNR（13.878 vs 14.368）与 IOD 偏差（−2.095 vs −1.146）都恶化</strong>——「全局染色更像、实例阳性信号更错」这条预判有了实验证据。另：浓度域生成（CFM-HES / StainQuant）、只生成缺失通道（DeReStainer「we believe」共享 H，只做特征级对齐）、非配对条件扩散均已有人做。</p>
+<p><strong>A 模块判为不成立</strong>：伪 IHC 造标签无先例 + 递归训练退化（Shumailov, <i>Nature</i> 631）+ 连续标量与临床 ordinal 标签形状不匹配。含两个新增盲区（H&amp;E 侧解混列数决定 C<sub>E</sub> 是否为伊红、3×2 矩阵的残差量级）、v-prediction 的受控证据、以及创新点重新定位建议。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/V1网络结构定稿审查.html"><strong>V1 网络结构定稿审查 —— SD1.5-style U-Net 的可行性、CFM-HES 全文核实与逐组件判定</strong></a></div><div class="v">约 72 KB · 2026-10-08 · 25 节 spec 逐组件对账 · 三处引用全部一手核实</div></div><div><span class="b bad">backbone 需换</span> <span class="b purple">一手核实</span></div></div>
+<div class="body">
+<p><strong>一句话判定：</strong><strong>表示与条件的设计是对的，backbone 的选型要换，两个必填项缺失</strong>——「扩散变量 = <code>C_DAB</code>、条件 = <code>C_H</code>/<code>C_E</code>/<code>f_morph</code>/<code>c_exp</code>、渲染固定」的骨架成立；但 SD1.5-style U-Net 在浓度（全分辨率）空间跑不动，且 <code>C_DAB</code> 的归一化与 A 的 protein map 监督两处未定义。</p>
+<p><strong>★ 三处必须在动代码前改掉：</strong>① <strong>SD1.5-style U-Net 在浓度全分辨率空间跑不动</strong>，且用户引的两个先例都不支持它——HistDiST 官方 README 逐字「24GB VRAM」且<strong>在 latent 空间（64×64）工作</strong>；CFM-HES 全文的 backbone 逐字是<strong>普通 U-Net（Ronneberger 2015）</strong>，不是 SD U-Net；② <strong><code>C_DAB</code> 的逐通道 robust 归一化没有定义</strong>，不补训练不会收敛；③ <strong>A 输出的 protein map 没有任何监督信号</strong>，会退化成常数图、多尺度注入等于白加参数。</p>
+<p><strong>★ 三条改变判断的新证据（均一手核实）：</strong>HistDiST README 逐字确认「24GB + latent 空间 + <code>--num_processes=3 --train_batch_size=16 --resolution=512</code>」⇒ 用户引它支持 SD U-Net，实际它同时证明了「SD U-Net 需要 24GB + latent」；CFM-HES 全文（MICCAI 开放获取 PDF，11 页）已取到，backbone = 普通 U-Net ⇒ <strong>最接近的浓度域先例选的正是上一份报告推荐的小 U-Net 路线</strong>；CFM-HES 逐字<strong>为选 FM 而放弃 diffusion</strong>（「1000 步 → 50 ODE 步」「more stable training and much faster inference」）⇒ 把它当最近先例就必须回答「为什么你选 diffusion」。</p>
+<p><strong>含：</strong>§3 SD U-Net 显存核查（320ch × 256² ≈ 84 MB/激活张量 vs base-64 的 17 MB，约 1/5）、§4 逐组件判定表（14 行，含改动成本列）、§5 spec 没写的六个缺口、§6 修正后组件表、§7 修正版开工顺序（含 <strong>PredS 式确定性 U-Net baseline</strong>）、§8 未核实清单与诚实标注。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/M0条件扩散归因审查_目标函数还是注入路径.html"><strong>M0 条件扩散归因审查 —— 目标函数还是注入路径</strong></a></div><div class="v">约 98 KB · 2026-10-08 · 四个假设排序 + T0–T5 判别实验设计 + §2.8 边界检查表</div></div><div><span class="b bad">核心故障归因</span> <span class="b purple">一手核实</span></div></div>
+<div class="body">
+<p><strong>一句话判定：</strong><strong>H-A（目标函数的退化解）排第一，但支撑它的证据换了一条；H-C（32 patch 仪器失效）是必须排除的前置混淆；H-B（单尺度 concat 注入）真实但次要；H-D（serial-section 无像素级对齐）本轮新增、已确认存在但不是主因。</strong>针对 M0 在合成任务 <code>r≈0.996</code> 却在真数据上「输出–真值 DAB 相关 ≈0、浓度 MAE 比常数基线还差 13%」这一故障。</p>
+<p><strong>★ 本轮最重要的一条纠正：</strong>文档里「条件信号本来就弱，学它不划算」这一支被库内数据否证——<code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code> §1.5 记录了你自己的基线在同一数据集（BCI）上拿到 <strong>DAB corr 0.439（R²≈0.19）</strong>、UNIStainNet 到 <strong>0.867（R²≈0.75）</strong>。<strong>条件值 19%–75%，不是 5%</strong>，M0 拿到 ≈0 是真实故障，不是「理性地忽略一个小信号」。H-A 的主证据因此换成文档里本来就有、但没被这样读的那个对照：<strong>同架构 / 同注入路径 / 同 32 patch，直接回归 train r=0.9964 vs 扩散 train r=0.0264</strong>——唯一剩下的变量就是训练目标。</p>
+<p><strong>★ 判别实验：</strong>文档原设计的 E1（<code>cond=none</code>）<strong>只有单侧判别力</strong>（H-A 与 H-B 都预测 <code>none≈he</code>）。本报告给出六个可直接跑的测试，其中两个真正有判别力：<strong>T0 目标函数受控对照</strong>（同步数/同种子/同数据驻留，分开 H-A 与 H-C，GPU ~20 min）与 <strong>T3 条件强度扫描 × 注入路径</strong>（可控 R² 的 β 扫描，分开 H-A 与 H-B，GPU ~40 min）；T1 上界测试与 T2 错位测试零训练纯 CPU。</p>
+<p><strong>含：</strong>§3 MMG/I-MMSE 恒等式给出的 loss 下降上界（<b>「条件改善上界 ≈ R²」为本报告推导，非原文陈述</b>）、§4 四篇逐字核实文献、§5 十条事实逐条对账（含一条被撤掉的论证）、§8 修复方案（H-A 五条最小改法含 Cocos/CFG；H-B 的多尺度零初始化门控残差 B1，回答「在哪注入/几层/什么算子/是否 zero-init」）、§9 §2.8 十条硬约束逐条判定（含 T5 直接违反 #6、CFG 与 classifier guidance 的边界需用户裁定）、§10 未核实清单。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html"><strong>频域 / 门控治理 GAN 缺陷 —— 先例核实与上一版结论修正</strong></a></div><div class="v">约 75 KB · 2026-10-13 · 15 节 · 逐条核实三条主张各自的先例密度</div></div><div><span class="b bad">结论修正</span> <span class="b purple">一手核实</span></div></div>
+<div class="body">
+<p><strong>缘起：</strong>用户质疑上一版把「GAN + 频域 + 门控」整体判为空白「很离谱」——GAN 有已知缺陷，频域/门控本该能针对性解决。经核实，<strong>这个质疑成立，上一版结论过窄</strong>（五个条件叠加的合取式几乎必然为空）。</p>
+<p><strong>三条主张的判定：</strong>① <strong>频域治 GAN 缺陷——成立且已有人做</strong>（Durall 2020 上卷积致频谱失真 → 频谱正则项并称改善训练稳定性；F-Drop&amp;Match 2021 频域死区；SSD-GAN 2021 判别器内嵌频域分类器；FFL 2021；WaveGAN-ECCV 2022）；② <strong>门控治 GAN 缺陷——方向成立但直接先例≈0</strong>（Gated-GAN 摘要提到 mode collapse 却把稳定性归功于自编码器重建，MEGAN/GiGAN 是路由与特征过滤）；③ <strong>「门控约束上采样防棋盘格」——此具体机制无先例</strong>，因为抗棋盘格谱系（Odena 2016 → Aitken 2017 → Kinoshita 2020 → StyleGAN2 双线性 → StyleGAN3 窗化 sinc → blur-pool）<b>全部是固定滤波或初始化</b>，而可学习上采样（CARAFE/FADE/SAPA/DySample）全部用于分割/检测/抠图，无一篇进入 GAN 生成器。</p>
+<p><strong>★ 方向性纠正（本报告最有价值的一句）：</strong>用户认为「从理论上肯定可靠」，但<strong>理论保证站在固定滤波那边</strong>——棋盘格是「核尺寸与步长不整除 → 重叠不均」的确定性后果，有解析解；抗混叠低通有 Nyquist 意义上的保证（StyleGAN3 摘要原话 "guarantee that unwanted information cannot leak"）；而可学习门控由网络预测、与输入相关，<b>不提供任何频域保证，甚至可能学出新的伪影</b>。</p>
+<p><strong>修正后的创新点：</strong>不是「用门控治棋盘格」，而是<strong>固定抗混叠重采样打底（有保证）+ 有界频带门控控制高频残差注入量（自适应）</strong>。附四象限图（机制成熟度 × 是否进入 GAN 生成器）、三个创新点分级（概念空档 / 组合空档 / 场景空档）、修正版 F0–R1 消融（含「固定频带门 vs 可学习频带门」关键分水岭与门控置换/冻结/频带消融三项反事实测试）。</p>
+<p><strong>含：</strong>§4 抗棋盘格先例地图（7 条，无一是门控）、§5 频域×GAN 按挂载位置分类表（10 条）、§6 F-Drop 作为固定频域门的机制分析、§7 门控×GAN 先例地图（6 条，稳定性归因全部不在门控）、§8 可学习上采样先例地图、§13 未核实清单（7 条）、§14 参考文献 30 条逐条标核实等级。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/CUT架构五条改动方案可行性审查.html">CUT 架构五条改动方案：逐条可行性审查</a></div><div class="v">59 KB · 2026-10-16 · 12 节 · 对用户自己提出的五条改动逐条判定</div></div><div><span class="b high">方案审查</span> <span class="b purple">逐字源码</span></div></div>
+<div class="body">
+<p><strong>审查对象：</strong>用户提出的五条 CUT 架构改动 —— ① 小波卷积（WTConv）替换下采样 ② 动态上采样（DySample）替换上采样 ③ 加门控改善对抗损失与 PatchNCE 的梯度冲突 ④ H 通道生成再反推 RGB ⑤ 再去模块仓库找可用的。</p>
+<p><strong>一句话判定：</strong>两条方向对但要拆档/改理由，<b>一条机制不匹配（第 3 条，全方案最大问题）</b>，一条<b>用户的顾虑其实是错的（好消息）</b>，一条收益递减。★ <b>五条里最强的不是用户以为的第 3 条，而是第 2 条。</b></p>
+<p><strong>逐条结论：</strong>① <b>方向对但有误读</b> —— MSCW 里的 WTConv <b>不是下采样算子</b>（<code>MaxPool2d(2)</code> 降分辨率，WTConv 在已降分辨率上做 stride=1 卷积）；用户实际混合了「WTConv 做降采样」「WTConv 加在下采样后」「去掉 CUT 抗混叠」三件不同的事，必须拆成 4 档消融。② <b>★ 填空格（最强）</b> —— 库里<b>已核实</b>「可学习上采样（CARAFE/FADE/SAPA/DySample）无一篇进入 GAN 生成器」⇒ 用户是第一个；但可学习上采样<b>无频域保证</b>，故定位应改为「固定抗混叠打底 + 可学习采样做残差补偿」，而非纯替换。③ <b>机制不匹配</b> —— <b>门控在「特征路径」上，梯度冲突在「参数空间」里</b>；已核实 CUT 是 <code>loss_G = loss_G_GAN + loss_NCE_both</code> 后<b>一次</b> backward，PatchNCE 与 GAN 的梯度<b>必然在 netG 上重叠</b>，门控无法把它们分开（唯一例外「不相交参数子集」因 netF 不参与 GAN 损失而不成立）；正确工具是 λ 调度（<b>可能已在代码里的 <code>asp_loss_mode</code></b>）/ <code>λ_crit</code> 上界 / PCGrad。④ <b>顾虑是错的</b> —— 逐字证实 CUT 的 <code>input_nc</code>/<code>output_nc</code> 完全独立（<code>define_G</code> 两者都传、<code>define_D</code> 用 output_nc、<code>define_F</code> 用 input_nc），<code>--input_nc 2 --output_nc 3</code> <b>直接能跑</b>，只需改数据加载器；<b>真障碍</b>是库里已查的「IHC 复染苏木素弱约 10×」「DAB 饱和区污染苏木素 IOD 平均 65%」⇒ 建议改成有监督的 3 通道 OD/浓度域 <code>[C_H,C_DAB,C_res]</code>。⑤ <b>收益递减</b> —— 合集被镜像 ≥10 次，改为按「落点」定向确认。</p>
+<p><strong>★ 附带更正了本会话此前的一处错误：</strong>FastCUT <b>不是</b>「加回 identity NCE」，而是 <code>nce_idt=False</code>（<b>去掉</b> identity NCE）+ <code>flip_equivariance=True</code> + <code>lambda_NCE=10.0</code> + 更长训练；<b>CUT 才是 <code>nce_idt=True</code></b>（两项 NCE 取平均）。⇒ PSPStain 用 FastCUT，<b>只有一项 NCE</b>。</p>
+<p><strong>含：</strong>§2 <code>cut_model.py</code> 逐字取证（三个网络定义 / 损失与 backward 结构 / 优化器划分 / <code>no_antialias</code> 与 <code>no_antialias_up</code> 是两个独立开关）· §3 错误更正 · §4–§8 逐条审查 · §5.5 <b>复用库内已核实结论</b>（可学习上采样未进 GAN 生成器）· §9 修正后的推荐方案 · §10 五条自查命令 + 梯度冲突测量代码 + E0–E5 实验顺序 · §11 未核实清单（7 条）。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title"><a href="06_方案可行性审查/CUT五条改动_代码级执行蓝图.html">CUT 五条改动：代码级执行蓝图</a></div><div class="v">约 28 KB · 2026-10-16 · 11 节 · 把五条判定落成可改文件 / 接口 / 最小验证实验</div></div><div><span class="b high">执行蓝图</span> <span class="b purple">代码级</span></div></div>
+<div class="body">
+<p><strong>定位：</strong>《五条改动方案可行性审查》的下游交付，把「能不能做」落成「怎么改、改哪、先验证什么」。配套而非重复审查的判定。</p>
+<p><strong>内容：</strong>① 代码库定位与确认清单（ResnetGenerator 的 2 级 stride‑2 下采样与 Upsample(nearest) 上采样落点、FastCUT 开关核实）② DySample 接入（替换上采样段、配套抗混叠打底）③ 小波下采样 4 档（V1 Haar LL / V2 DWT 融合 / V3 小波正则 / V4 BlurPool 打底，含自包含算子代码）④ E0 梯度冲突实测（backward_G 加钩子、cos / conflict / λ_crit 判据、3 seed）⑤ 冲突存在时的 λ 调度 / PCGrad（替代门控）⑥ 3 通道 OD 域 + 苏木素保护损失（修正「2 通道 H」的错方向）⑦ E0→E1→E2 实验路线 ⑧ M0–M6 消融树 ⑨ 风险 / 回滚 / 落地检查清单。</p>
+<p><strong>★ 一句话 novelty：</strong>CUT→ASP→PSPStain→CCPL 四代 G/D 架构五年未动、创新全在损失层；本工作是谱系链上<b>第一次修改重采样路径</b>——以「抗混叠固定的可学习上采样 + 小波下采样」替代 nearest‑upsample / stride‑conv，并受控量化其对结构保持与 PatchNCE 一致性的影响。</p>
+</div>
+</div>
+
+<h2 id="s9"><span class="num">9</span>评价指标底层原理</h2>
+<p>这一节回答的是<strong>第四种问题</strong>：不是「有哪些方法」（第 2–5 节）、不是「做出来不对怎么办」（第 7 节）、也不是「我的方案成不成立」（第 8 节），而是「<strong>评价指标凭什么成立，以及我要提一个新指标该从哪下手</strong>」。它与第 6 节（IHC 评价与分级）构成<strong>原理层 → 对象层</strong>的上下游关系：第 6 节回答「评什么」，本节回答「为什么这样评成立」。</p>
+<div class="card">
+<div class="ch"><div><div class="title"><a href="07_评价指标底层原理/虚拟染色评价指标的底层原理_十条原理与指标设计配方.html">虚拟染色评价指标的底层原理 · 十条原理与一份指标设计配方</a></div><div class="v">95 KB · 2026-10-12 · 10 节 · 10 条原理 + 4 类元层公理 + 8 个具体例子</div></div><div><span class="b purple">原理层</span> <span class="b blue">指标设计</span></div></div>
+<div class="body">
+<p><strong>问题：</strong>虚拟染色领域几乎每篇工作都自创一个评价指标并声称「在本指标下我们的模型更好」。要提出一个<u>站得住</u>的新指标，必须先把评价指标的底层原理讲清楚、讲全面。</p>
+<p><strong>统一视角：</strong>任何指标 = <strong>表示空间 × 比较算子 × 参照物</strong>（三轴）。「一个指标凭什么成立」，就是问这个组合的合法性来源。于是原理可穷尽。</p>
+<p><strong>十条原理：</strong>P1 信号保真 · P2 结构相似 · P3 学习表征/感知 · P4 分布匹配 · P5 任务相关 · P6 生物分子真值 · P7 物理光学 · P8 信息可识别性 · P9 自洽与不变性 · P10 不确定性与鲁棒性。每条按「核心命题 → 形式化 → 依据 → 在虚拟染色的具体化 → 失效条件 → 创新机会」展开。</p>
+<p><strong>元层（指标的指标）：</strong>度量公理（nonnegativity / identity / symmetry / triangle inequality；<strong>SSIM 已被证明不是 metric</strong>）、不变性与敏感性公理、元评价（SROCC/KROCC 与专家判断的相关性）、合成失真 vs 真实失真的鸿沟、统计显著性与非劣效性设计。</p>
+<p><strong>★ 核心结论：</strong>创新点几乎不可能出在「发明一个新算子」上，而在于<u>把某个已有算子搬到别人没搬过的空间、或换一个别人没换过的参照</u>。拥挤度地图显示 <strong>P1/P2/P4 已饱和，P3 被 PaPIS(2025)/HAPS(2026) 占位，而 P7 物理光学、P8 可识别性、P10 可靠性在虚拟染色里几乎没有被命名的独立指标</strong>——报告给出这三个切入点的具体做法。</p>
+<p><strong>承重引用（均一手核实）：</strong>Wang &amp; Bovik <em>MSE: Love It or Leave It?</em> (IEEE SPM 2009，范数四公理逐字)、Wang et al. <em>SSIM</em> (IEEE TIP 2004)、Brunet et al. <em>On the Mathematical Properties of the SSIM Index</em> (IEEE TIP 2012，证明 SSIM 不是 metric)、PaPIS (arXiv 2507.12624)、HAPS (arXiv 2605.20362)、V-info / Observer-Usable Information (IEEE TMI 2026)、AQuA (Nature BME 2025)、DGR (Nature Comms 2026，盲法读片 52.4%)。</p>
+<p><strong>含：</strong>三轴位置总表、十条原理逐条拆解、拥挤度地图、设计决策树、五个必须回答的问题、三个创新切入点、8 个已提出指标的例子（标注各建在哪条原理上）、未核实清单。</p>
+</div>
+</div>
+<h2 id="s10"><span class="num">10</span>研究脉络</h2>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>R1 扩散解耦调研  ← 起点：解耦什么、在哪解耦、怎么解耦
+        │ 暴露问题：没有配对真值 → 生成图的物理成图规律无法保证
+        ▼
+R2 物理合规性与可信性调研
+        │ 暴露问题：物理模块 = 额外损失 → 和噪声预测损失能不能共存？
+        ▼
+R3 损失组合讲解
+        │ 顺带发现：Beer–Lambert 正演可复用现成工具箱
+        ▼
+R4 多重成像正演工具箱评估
+        │ 回到落地：说了这么多，现在有什么能直接跑起来？
+        ▼
+R5 可复现扩散虚拟染色工作推荐</code></pre></div>
+<div class="box teal"><div class="bt">一条关键连接（R2 与 R4 的交汇）</div>
+<p style="margin-bottom:0">Beer–Lambert 定律里的指数项 <code>exp(−S·Dᵀ)</code> 等价于<strong>光密度（OD）</strong>，而 OD 正是 PSPStain 的 <strong>FOD（Focal Optical Density）</strong>所操作的同一种物理量。也就是说，R4 的正演工具箱和你 baseline 里的核心 loss，<strong>在物理量层面是同一个东西</strong>。这是本系列最有价值的一条发现。</p></div>
+<div class="box pur"><div class="bt">一条平行的支线：从「设计方法」转向「排查故障」</div>
+<p style="margin-bottom:0">R1–R5 回答的是「<strong>该怎么做</strong>」，第 7 节的两份文档回答的是「<strong>做出来不对怎么办</strong>」——黑团报告从现象与文献侧定位，代码审查报告从实现侧定位。两者不是递进关系，而是同一项目的两条并行工作流。建议把排查结论<strong>回流</strong>到主线：例如代码审查确认了「辅助损失正在把潜码推出流形」，那么 R2 里的「不确定性图（M3）」就从可选模块变成必做模块；又例如若确认是结构幻觉而非解码问题，则 §7.2 的 drop-in VAE 换不换都无济于事。</p></div>
+
+<h2 id="s11"><span class="num">11</span>执行路线图</h2>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>Step 0  复现 PSPStain baseline                      ← 唯一不可跳过的一步
+Step 1  复现 Star-Diff，拿到扩散基线              ← R5
+Step 2  把 PALS/FOD 与 PCLS 迁移进扩散训练        ← R3
+        · PCLS → 双 SPADE 条件注入（空间=结构，通道=染色）
+        · Min-SNR-γ 加权，v-prediction
+        · 末段切换为「只跑去噪损失」
+Step 3  加入物理输出头                            ← R2 + R4
+        · U-Net 输出浓度/OD 图，而非 RGB
+        · Beer–Lambert 可微前向转 RGB
+        · 与 PSPStain 的 FOD 目标天然对接
+Step 4  加可信性模块                              ← R2
+        · M3 不确定性图 · AQuA 幻觉检测（无需真值）
+Step 5  四层评价                                  ← R2
+        ① 图像相似 ② 语义一致 ③ 物理合规 ④ 临床效用
+        （禁止用单一 PSNR 下结论）</code></pre></div>
+<div class="box pur"><div class="bt">第三条并行支线：StainFuser 路线（第 8 节）</div>
+<p>上面这条路线图是「PSPStain → 扩散解耦」主线。第 8 节的 StainFuser 方案是用户新提出的<strong>另一条 backbone 选择</strong>，它与主线的交汇点在 <strong>Step 3（加入物理输出头）</strong>——两条路线都收敛到「U-Net 输出浓度/OD 图 → Beer–Lambert 可微前向 → RGB」，也都要复用 PSPStain 的 FOD。</p>
+<p style="margin-bottom:0"><strong>差别在于：</strong>主线要求先复现 PSPStain（Step 0，不可跳过）；StainFuser 路线自带官方代码与权重，<strong>但它的 condition 设计是为 stain normalization 服务的</strong>，必须先做第 8 节阶段 0 的门禁实验，才知道值不值得投入。如果只想先验证「染色空间生成」这个想法本身，<strong>第 8 节的 E0.1（纯 CPU、几十行、几十分钟）比 Step 0 更快给出答案</strong>——而且它的结论对两条路线都适用。</p></div>
+
+<hr>
+<p class="small">本索引由 WorkBuddy AI 生成 · 归档日期 2026-10-03 · 原始文件备份在 <code>/Users/hua/WorkBuddy AI/_迁移备份_20261003/</code></p>
+</main>
+</div></body>
+</html>

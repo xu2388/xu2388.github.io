@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PST-Diff：病理结构约束的扩散染色——论文深度解读</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"PST-Diff：病理结构约束的扩散染色——论文深度解读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "H&E→IHC"],"category":"研究","summary":"逐式解读 PST-Diff 如何把结构约束嵌入扩散采样：以条件频率引导（CFG）按频率分阶段注入 H&E 结构、用不对称注意力分离结构与外观、以潜空间距离项约束配对，并讨论该路线在错位数据与结构-染色权衡上的边界与可借鉴之处。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1 class="site-title">我的个人博客</h1>
+    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+  </div>
+</header>
+<article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
+<h1>PST-Diff：病理结构约束的扩散染色——论文深度解读</h1>
+<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<blockquote><strong>论文</strong>：<em>PST-Diff: Achieving High-Consistency Stain Transfer by Diffusion Models With Pathological and Structural Constraints</em> <strong>作者</strong>：Yufang He*, Zeyu Liu*, Mingxin Qi, Shengwei Ding, Peng Zhang, Fan Song, Chenbin Ma, Huijie Wu, Ruxin Cai, Youdan Feng, Haonan Zhang, Tianyi Zhang, Guanglei Zhang*（*共同一作；*通讯） <strong>单位</strong>：北京航空航天大学 生物与医学工程学院 / 北京生物医学工程高精尖创新中心；山西大学计算机与信息技术学院 <strong>发表</strong>：IEEE Transactions on Medical Imaging (TMI), Vol. 43, No. 10, pp. 3634–3647, Oct. 2024；2024-07-18 在线 <strong>DOI</strong>：10.1109/TMI.2024.3430825 ｜ <strong>PubMed</strong>：39024079 ｜ <strong>IEEE 编号</strong>：10601703 <strong>方法名</strong>：<strong>PST-Diff</strong>（<strong>P</strong>athological <strong>S</strong>tain <strong>T</strong>ransfer <strong>Diff</strong>usion Model） <strong>关键词</strong>：Virtual Staining, Stain Transfer, Diffusion Models, Schrödinger Bridge, HER2-IHC</blockquote>
+<hr />
+<h2>0. 一句话概括</h2>
+<blockquote>前人的 H&amp;E→IHC 要么是 GAN（训练不稳、模式坍塌），要么是<strong>单个</strong>扩散模型把两个染色域当成同一个潜空间直接对接（引入偏置）。PST-Diff 的做法是：<strong>为 H&amp;E 域和 IHC 域各训练一个独立的扩散模型</strong>，用 DDIB（对偶扩散隐桥）把两个模型的潜空间接起来，然后补上两个约束——<strong>AAM + LT（管&quot;病理一致性&quot;）</strong>和 <strong>CFG（管&quot;结构一致性&quot;）</strong>。  它最值得记住的两个动作：<strong>把&quot;直接对接两个潜空间&quot;改成&quot;用一个神经网络模块去接&quot;</strong>（LT），以及<strong>把&quot;结构信息&quot;按频率拆开、在不同去噪阶段分别注入</strong>（CFG）。</blockquote>
+<p>一句话记住这篇：<strong>它没有改扩散模型本身，它改的是&quot;两个染色域之间那座桥怎么搭&quot;。</strong></p>
+<hr />
+<h2>1. 命名澄清（这篇的名字坑最多）</h2>
+<p>PST-Diff 里缩写密度极高，而且<strong>有一个缩写和扩散领域的通用术语撞名</strong>，必须先澄清：</p>
+<table>
+<tr><th>缩写</th><th>全称</th><th>是什么</th><th>最容易混淆的对象</th></tr>
+<tr><td><strong>PST-Diff</strong></td><td><strong>P</strong>athological <strong>S</strong>tain <strong>T</strong>ransfer <strong>Diff</strong>usion Model</td><td>本文方法（论文正文第 169 行原文：&quot;the pathological stain transfer diffusion model (PST-Diff)&quot;）</td><td>名字里带 &quot;PST&quot;，但与遥感/其他领域的 PST 无关</td></tr>
+<tr><td><strong>AAM</strong></td><td><strong>A</strong>symmetric <strong>A</strong>ttention <strong>M</strong>echanism</td><td>源域用 local attention、目标域用 global attention</td><td>与&quot;注意力机制&quot;泛称不同，它的<strong>核心是&quot;不对称&quot;</strong></td></tr>
+<tr><td><strong>LT</strong></td><td><strong>L</strong>atent <strong>T</strong>ransfer</td><td>跨域潜空间映射网络 $F(\cdot)$</td><td>与 &quot;latent diffusion&quot;（潜空间扩散）无关；这里的 latent 是 DDIM 的隐表示</td></tr>
+<tr><td><strong>CFG</strong></td><td><strong>C</strong>onditional <strong>F</strong>requency <strong>G</strong>uidance</td><td><strong>条件频率引导</strong>（按频率注入源图信息）</td><td>⚠️ <strong>不是 classifier-free guidance！</strong> 扩散领域的 CFG 通常指无分类器引导，本文的 CFG 完全不是那个东西</td></tr>
+<tr><td><strong>PCC</strong></td><td><strong>P</strong>athological <strong>C</strong>onsistency <strong>C</strong>onstraint</td><td><strong>= AAM + LT</strong> 的合称</td><td>消融实验里用的就是这个词</td></tr>
+<tr><td><strong>SCC</strong></td><td><strong>S</strong>tructural <strong>C</strong>onsistency <strong>C</strong>onstraint</td><td><strong>= CFG 模块</strong></td><td>消融实验里用的就是这个词</td></tr>
+<tr><td><strong>SB</strong></td><td><strong>S</strong>chrödinger <strong>B</strong>ridge</td><td>熵正则化最优传输，用来连接数据分布与噪声分布</td><td>与 DDIB 是两个不同层次的东西（见 §5.3）</td></tr>
+<tr><td><strong>DDIB</strong></td><td><strong>D</strong>ual <strong>D</strong>iffusion <strong>I</strong>mplicit <strong>B</strong>ridges</td><td>把两个扩散模型的潜空间直接对接的既有方法</td><td>本文的<strong>基线</strong>（ablation 里的 DDIB 行）</td></tr>
+</table>
+<blockquote><strong>这条必须先记住</strong>：读这篇论文时，看到 &quot;CFG&quot; 一定要在心里翻译成&quot;<strong>条件频率引导</strong>&quot;。若按&quot;无分类器引导&quot;理解它的公式（式 15–23），会完全读不通——那些式子里根本没有类别条件，只有<strong>一个线性滤波器 $\phi$</strong>。</blockquote>
+<hr />
+<h2>2. 背景：为什么这件事值得做</h2>
+<ul><li><strong>H&amp;E 染色</strong>占全球组织染色约 <strong>80%</strong>（论文原文：&quot;account for about 80% of tissue stains worldwide&quot;），能看清细胞形态与组织架构，但<strong>看不见抗原（蛋白）表达</strong>——HER2、Ki-67 这些分子信息在 H&amp;E 上人眼看不出来。</li><li><strong>IHC（免疫组化）</strong>用抗体把目标蛋白显色出来，是 HER2 分级、靶向治疗决策的依据。但它<strong>贵、慢、耗组织</strong>，且论文点出一个常被忽略的现实：<strong>IHC 在低资源地区根本没有普及</strong>（&quot;it has not been widely used due to the lack of specialized equipment and pathologists, especially in low-resource settings&quot;）。</li><li>传统补救是&quot;二次处理&quot;：要么<strong>同片脱色再染</strong>，要么<strong>取邻近切片</strong>。论文列出三个明确缺点：</li></ul>
+<ol><li>IHC 染色<strong>要几天</strong>，严重拖延诊断时效；</li><li>脱色再染会<strong>破坏组织形态与结构</strong>；</li><li>用邻近切片则<strong>存在结构差异，丢失诊断信息</strong>。</li></ol>
+<ul><li>于是有了<strong>虚拟染色</strong>：<strong>直接从常规 H&amp;E 推断 IHC</strong>，零额外染色成本。</li></ul>
+<p><strong>可行性前提</strong>：作者引了两项间接证据——Liu 等从 H&amp;E 预测 Ki-67，与 IHC 量化结果相关系数 <strong>0.80</strong>；Farahmand 等用 H&amp;E 预测 HER2 状态，AUC 达 <strong>0.90</strong>。作者据此论证：&quot;H&amp;E 与 IHC 之间确实存在一个不清晰但神经网络可学的联系。&quot;</p>
+<hr />
+<h2>3. 前人工作，以及它们各自卡在哪</h2>
+<p>论文把相关工作分成三块（Generative Networks / Diffusion Models / Image-to-Image Stain Transfer），落到染色任务上其实是<strong>三条技术路线</strong>：</p>
+<table>
+<tr><th>路线</th><th>代表方法</th><th>怎么做</th><th>卡在哪</th></tr>
+<tr><td><strong>① 颜色映射派</strong></td><td>Reinhard（颜色统计迁移）、Macenko（颜色向量辨识 + 反卷积）</td><td>直接对齐颜色空间的均值/方差或染色向量</td><td>只能建立<strong>颜色层面的映射</strong>，无法建立染色域之间的准确连接；<strong>关键病理特征会被漏掉甚至错乱</strong></td></tr>
+<tr><td><strong>② 非配对 GAN 派</strong></td><td>CycleGAN、StainGAN、ROI-GAN（区域判别器）、PC-StainGAN（病理一致性约束 + 病理表征网络）</td><td>用两个生成器 + 循环一致性学双向映射，不需要配对数据</td><td>忽略不同域之间的<strong>空间相关性</strong>，降低结构细节的可信度；PC-StainGAN 的约束<strong>需要额外的 mask 标注</strong>，限制推广；GAN 本身<strong>判别器过早收敛、模式坍塌、超参敏感</strong></td></tr>
+<tr><td><strong>③ 配对 GAN 派</strong></td><td>Pix2Pix GAN、RegGAN、Unit、SynDiff</td><td>用配对数据做强监督</td><td>依赖<strong>严格像素级监督</strong>——但 H&amp;E 与 IHC 是连续切片，<strong>像素级根本对不准</strong></td></tr>
+</table>
+<h3>作者的判断：两条挑战</h3>
+<p>论文把问题收敛成两个挑战（原文第 163–167 行）：</p>
+<ol><li><strong>&quot;无法构造严格像素对齐的数据&quot;</strong> 是染色迁移任务的<strong>第一挑战</strong>；</li><li><strong>&quot;如何在迁移过程中同时维持微观病理一致性与结构一致性&quot;</strong> 是<strong>第二挑战</strong>。</li></ol>
+<hr />
+<h2>4. 本文要解决什么</h2>
+<blockquote>用<strong>两个独立训练的扩散模型 + 潜空间桥接</strong>绕开&quot;像素级配对&quot;这个前提；再用 <strong>AAM+LT（病理一致性）</strong>与 <strong>CFG（结构一致性）</strong>两个约束，把&quot;两个域之间该怎么接&quot;这件事做对。</blockquote>
+<hr />
+<h2>5. 方法（重点，公式逐个拆）</h2>
+<h3>5.1 先看一张图：整体在做什么</h3>
+<p><img src="assets/014-PST-Diff结构约束精读/fig1.jpg" alt="图 1：PST-Diff 方法总览。用两个凸空间分别代表 HE 域与 IHC 域数据。源域数据先经正向 ODE 映射到潜空间；再由神经网络（LT 模块）在病理一致性约束下变换该隐样本；最后在条件频率引导（CFG）模块作用下，沿反向 ODE 得到目标域数据" loading="lazy" /></p>
+<p><em>图注中文翻译：紫色是 HE 侧、绿色是 IHC 侧。上方粗红线打叉的 &quot;Direct Transfer&quot; 是<strong>被否定</strong>的做法——直接把 HE 域当成 IHC 域。取而代之的是下方两条路：一条经潜空间（Source2Latent → LT Module → Latent2Target），另一条是中间的 &quot;Cond Freq Guidance&quot; 框，画出了高/低频滤波器随频率变化的曲线（High Pass 橙、Low Pass 蓝），表示按频率选择性注入源图信息。</em></p>
+<p><strong>这张图的信息量集中在&quot;上方那个红叉&quot;。</strong> 作者的意思是：</p>
+<blockquote>前人（DDIB 类方法）的做法是<strong>把 HE 域的潜空间和 IHC 域的潜空间直接等同起来</strong>（图中 $A \to \mathcal{N}_a \sim \mathcal{N}_b \to \hat{B}$）。但这两个潜空间是<strong>两个独立训练的模型各自学出来的</strong>，坐标系并不一致，直接对接必然引入偏置。</blockquote>
+<p>PST-Diff 的修补有两个层次：</p>
+<ul><li><strong>LT 模块</strong>：在两个潜空间之间<strong>插一个神经网络</strong>，学一个显式的映射 $F$，而不是假设它们相等；</li><li><strong>AAM</strong>：让两个模型在&quot;编码到潜空间&quot;和&quot;从潜空间生成&quot;这两个阶段用<strong>不同优先级的注意力</strong>，从源头让两个潜空间各自更干净。</li></ul>
+<h3>5.2 符号表</h3>
+<table>
+<tr><th>符号</th><th>含义</th></tr>
+<tr><td>$x_0$</td><td>原始图像</td></tr>
+<tr><td>$x_t$</td><td>加噪 $t$ 步后的图像</td></tr>
+<tr><td>$T$</td><td>扩散步数（本文用 <strong>1000</strong>）</td></tr>
+<tr><td>$\alpha_t$</td><td>噪声调度参数</td></tr>
+<tr><td>$\varepsilon_\theta(\cdot)$</td><td>神经网络预测的噪声</td></tr>
+<tr><td>$\sigma_t^2$</td><td>DDIM 反向过程的方差（式 6）</td></tr>
+<tr><td>$\eta$</td><td>DDIM 的随机性开关（DDIM 中 $\eta=0$）</td></tr>
+<tr><td>$v_\theta$</td><td>PF ODE 的速度场，$v_\theta = dx/dt$</td></tr>
+<tr><td>$x_A^{(s)}, x_A^{(l)}, x_A^{(t)}$</td><td>源域 A（HE）的：原始图 / 潜表示 / 重建图</td></tr>
+<tr><td>$x_B^{(s)}, x_B^{(l)}, x_B^{(t)}$</td><td>目标域 B（IHC）的对应三者</td></tr>
+<tr><td>$v_\theta^{(s)}, v_\theta^{(t)}$</td><td>源模型、目标模型的速度场</td></tr>
+<tr><td>$F(\cdot)$</td><td><strong>LT 模块</strong>（潜空间映射网络）</td></tr>
+<tr><td>$\phi$</td><td><strong>CFG 里的线性滤波器</strong>（取高频或低频）</td></tr>
+<tr><td>$c$</td><td>条件（即&quot;滤波后与参考图一致&quot;这个约束）</td></tr>
+<tr><td>$y$</td><td>参考图（CFG 里指源图的对应频率分量）</td></tr>
+<tr><td>$c_1, c_2, c_3$</td><td>SSIM 类公式里防止除零的常数</td></tr>
+</table>
+<h3>5.3 底座：DDIM + PF ODE + Schrödinger Bridge</h3>
+<p><strong>先复述 DDIM 的前向过程（式 1–2）：</strong></p>
+<p>$$q_\sigma(x_{1:T}\mid x_0)=q_\sigma(x_T\mid x_0)\prod_{t=2}^{T}q_\sigma(x_{t-1}\mid x_t,x_0) \tag{1}$$</p>
+<p>$$q_\sigma(x_t\mid x_0)=\mathcal{N}\!\left(\sqrt{\alpha_t}\,x_0,\ (1-\alpha_t)I\right) \tag{2}$$</p>
+<ul><li><strong>说人话</strong>：这就是标准扩散的前向加噪，$t=T$ 时 $x_0$ 变成标准正态分布。</li></ul>
+<p><strong>反向过程（式 3–8）</strong>：通过重参数化，$x_t$ 与 $x_0$ 的关系是</p>
+<p>$$x_t=\sqrt{\alpha_t}\,x_0+\sqrt{1-\alpha_t}\,\varepsilon_\theta(x_t) \tag{3}$$</p>
+<p>$$x_0=\frac{1}{\sqrt{\alpha_t}}\left(x_t-\sqrt{1-\alpha_t}\,\varepsilon_\theta(x_t)\right) \tag{4}$$</p>
+<p>反向一步的分布是</p>
+<p>$$q_\sigma(x_{t-1}\mid x_t,x_0)=\mathcal{N}\!\left(x_{t-1};\ \sqrt{\alpha_{t-1}}x_0+\sqrt{1-\alpha_{t-1}-\sigma_t^2}\,\frac{x_t-\sqrt{\alpha_t}x_0}{\sqrt{1-\alpha_t}},\ \sigma_t^2 I\right) \tag{5}$$</p>
+<p>$$\sigma_t^2=\eta\cdot\frac{\sqrt{(1-\alpha_{t-1})(1-\alpha_t)}}{1-\alpha_t}\sqrt{1-\frac{\alpha_t}{\alpha_{t-1}}} \tag{6}$$</p>
+<p>$$x_{t-1}=\sqrt{\alpha_{t-1}}x_0+\sqrt{1-\alpha_{t-1}-\sigma_t^2}\,\frac{x_t-\sqrt{\alpha_t}x_0}{\sqrt{1-\alpha_t}}+\sigma_t\varepsilon \tag{7}$$</p>
+<p>代入 $x_0$ 的表达式，得到 $x_{t-1}$ 与 $x_t$ 的直接关系（式 8）：</p>
+<p>$$x_{t-1}=\sqrt{\alpha_{t-1}}\,\frac{x_t-\sqrt{1-\alpha_t}\,\varepsilon_\theta(x_t)}{\sqrt{\alpha_t}}+\sqrt{1-\alpha_{t-1}-\sigma_t^2}\,\varepsilon_\theta(x_t)+\sigma_t\varepsilon \tag{8}$$</p>
+<p><strong>这里是全文的一个理论支点。</strong> 当 $\eta=0$ 时 $\sigma_t^2=0$，即 <strong>DDIM 的相邻步之间没有随机噪声</strong>。于是：</p>
+<blockquote>给定潜表示（$T$ 步的高斯噪声），DDIM 从 $x_T$ 到 $x_0$ 的推导是<strong>唯一且平稳</strong>的——预测的 $\hat{x}_0$ 不随实验次数变化。</blockquote>
+<p>论文据此声明（原文第 495–497 行）：<strong>&quot;这为染色迁移任务中维持 HE 染色域与 IHC 染色域之间的唯一映射提供了理论基础。&quot;</strong> 这句话是 LT 模块能够成立的前提——如果反向过程是随机的，那么&quot;$z_{HE}$ 应该映射到哪个 $z_{IHC}$&quot;就没有唯一答案，LT 的监督也就没有意义。</p>
+<p><strong>概率流 ODE（式 9–10）：</strong></p>
+<p>$$\frac{dx}{dt}=\left[f(x,t)-\tfrac{1}{2}g(t)^2\nabla_x\log p_t(x)\right] \tag{9}$$</p>
+<p>$$\mathrm{ODE}(x(t_0);v_\theta,t_0,t_1)=x(t_0)+\int_{t_0}^{t_1}v_\theta(t,x(t))\,dt \tag{10}$$</p>
+<ul><li><strong>说人话</strong>：任何扩散过程都能写成一条<strong>确定性 ODE</strong>，且这条 ODE 与扩散过程在演化全程携带<strong>相同的边缘密度</strong>。这就是&quot;概率流（PF）ODE&quot;。</li></ul>
+<p><strong>两个染色域的桥接（式 11–12）：</strong></p>
+<p>$$x_A^{(l)}=\mathrm{ODE}\!\left(x_A^{(s)};v_\theta^{(s)},0,1\right),\quad x_A^{(t)}=\mathrm{ODE}\!\left(x_A^{(l)};v_\theta^{(s)},1,0\right) \tag{11}$$</p>
+<p>$$x_B^{(l)}=\mathrm{ODE}\!\left(x_B^{(s)};v_\theta^{(t)},0,1\right),\quad x_B^{(t)}=\mathrm{ODE}\!\left(x_B^{(l)};v_\theta^{(t)},1,0\right) \tag{12}$$</p>
+<ul><li><strong>说人话</strong>：源域用<strong>源模型</strong> $v_\theta^{(s)}$ 编码到潜空间再解回来；目标域用<strong>目标模型</strong> $v_\theta^{(t)}$ 做同样的事。两个模型各自是自洽的。</li><li>论文强调（原文第 569–571 行）：<strong>&quot;引入 ODE 使我们的染色迁移方法具有循环一致性，即 HE 图到 IHC 图的迁移是可逆的。&quot;</strong></li></ul>
+<p><strong>Schrödinger Bridge 的角色</strong>：作者把 SB 引入 DDIM，用来<strong>连接数据分布与噪声分布</strong>，从而获得&quot;从数据到噪声&quot;的<strong>最优传输路径</strong>，避免严重的信息损失。论文的表述是（原文第 576–581 行）：把 SBP 结合进 DDIM，&quot;通过这种方式，得到信息从数据传递到噪声的最优传输路径，避免了严重的信息损失。&quot;</p>
+<blockquote><strong>我的判断</strong>：这里 SB 的作用被讲得比较模糊。论文没有给出 SB 的具体形式化（没有 SB 的前向/反向 SDE 公式），只是声明&quot;用了它&quot;。&quot;避免严重信息损失&quot;这个说法，需要读者自己理解成&quot;SB 的熵正则化最优传输比普通 SDE 更保信息&quot;。这是这篇论文方法叙述上偏弱的一环——<strong>它没有把 SB 真正落进公式</strong>，后面所有公式（13–23）都不含 SB 项。</blockquote>
+<h3>5.4 病理一致性约束（PCC）：LT 模块 + AAM</h3>
+<h4>5.4.1 先说问题：为什么不能&quot;直接对接&quot;</h4>
+<p>论文的论证链条是这样的（原文第 583–614 行）：</p>
+<ol><li>前人已证明 <strong>&quot;优化 DDIM 等价于优化 Monge 最优传输&quot;</strong>；</li><li>PF ODE 能把原图信息有效嵌入潜空间，也能从潜空间准确还原；</li><li>取一对配对的病理图 $a_1\in A$、$b_1\in B$，它们的隐表示之差是：</li></ol>
+<p>$$L_{dist}=\left\|x_{a_1}^{(l)}-x_{b_1}^{(l)}\right\|_2^2 \tag{13}$$</p>
+<ol><li><strong>只有当 $L_{dist}\approx 0$ 时</strong>，两个潜空间才能直接桥接（$x_A^{(l)}$ 与 $x_B^{(l)}$ 打通，进而由 $x_B^{(t)}$ 预测 $\hat{b}_1$）；</li><li><strong>但一般情况下 $L_{dist}\neq 0$</strong>——&quot;忽略潜空间中隐表示的差异，必然会给生成图像引入偏置&quot;。</li></ol>
+<blockquote><strong>这里是全文最关键的一次&quot;发现问题&quot;。</strong> 前人（DDIB）公式里<strong>默认了 $L_{dist}=0$</strong>，也就是默认&quot;HE 的潜空间和 IHC 的潜空间是同一个坐标系&quot;。PST-Diff 指出这个默认不成立，并把它显式地写成了一个需要被最小化的量。</blockquote>
+<h4>5.4.2 LT 模块：把&quot;假设相等&quot;改成&quot;学一个映射&quot;</h4>
+<p>$$F\!\left(x_A^{(l)}\right)=x_{B&#x27;}^{(l)}:\quad \min\left(L_{dist}=\left\|x_{B&#x27;}^{(l)}-x_B^{(l)}\right\|_2^2\right) \tag{14}$$</p>
+<ul><li>$x_{B&#x27;}^{(l)}$ 是经神经网络 $F$ 处理后的<strong>新隐表示</strong>，它<strong>替代 $x_A^{(l)}$</strong> 参与目标模型 $v_\theta^{(t)}$ 的反向过程，最终得到 $x_B^{(t)}$。</li><li><strong>说人话</strong>：不再假设 $z_{HE}=z_{IHC}$，而是<strong>训一个网络 $F$ 把 $z_{HE}$ 搬到 $z_{IHC}$ 的位置上</strong>，用配对 latent 的 L2 距离当监督。</li><li><strong>论文自称的收益</strong>：&quot;LT 模块的引入强化了染色迁移任务的<strong>病理配对约束</strong>，能有效提升迁移图像的准确度。&quot;</li></ul>
+<blockquote><strong>⚠️ 一个必须记住的边界（论文自己没说透）</strong>：论文在讨论部分声称 PST-Diff <strong>&quot;does not need to use strictly structured-paired datasets&quot;</strong>（不需要严格结构化配对数据集）。但原文第 913–914 行明确写：<strong>&quot;LT 模块用 patch-wise paired HE and IHC images 在潜空间训练&quot;</strong>。所以更准确的说法是：<strong>它不要求像素级精确配准（pixel-perfect registration），但它仍然使用了 patch 级配对 latent 监督</strong>。$L_{dist}$ 在<strong>没有实例对应关系</strong>时是<strong>不可辨识的</strong>——这一点在弱配准/非配对设定下是硬约束，不能含糊过去。</blockquote>
+<h4>5.4.3 AAM：两个方向用不同的注意力</h4>
+<p>AAM 的动机非常朴素：<strong>&quot;源→潜&quot;和&quot;潜→目标&quot;这两步，需要的注意力范围根本不一样。</strong></p>
+<table>
+<tr><th>阶段</th><th>用什么注意力</th><th>为什么</th><th>论文原文的举例</th></tr>
+<tr><td><strong>源域 → 潜空间</strong>（HE 编码）</td><td><strong>priority local attention</strong>（多头切分 token 得到 Q/K/V）</td><td>要在<strong>像素级</strong>获得更准确的 $x_A^{(l)}$；引导模型关注<strong>局部病理特征</strong>，而不是源域的全局特征</td><td>&quot;不要被 HE 图那种<strong>紫蓝色主色调</strong>带跑&quot;</td></tr>
+<tr><td><strong>潜空间 → 目标域</strong>（IHC 生成）</td><td><strong>priority global attention</strong>（从所有 token 算 Q/K/V）</td><td>要生成符合目标染色域特征的图，需要看<strong>全局颜色特征</strong></td><td>&quot;需要抓出 HER2 图那种<strong>浅黄色主色调</strong>&quot;</td></tr>
+</table>
+<ul><li><strong>说人话</strong>：HE 侧怕丢局部结构（核、腺体），所以用局部注意力把它&quot;钉住&quot;；IHC 侧怕颜色不对，所以用全局注意力去&quot;抓整体色调&quot;。</li><li>论文自称这是&quot;balance the precision of source-to-latent embedding with the diversity for latent-to-target generation&quot;（在源→潜的精度与潜→目标的多样性之间取得平衡）。</li></ul>
+<p><img src="assets/014-PST-Diff结构约束精读/fig2.jpg" alt="图 2：模型架构。(a) 扩散模型与潜空间迁移模型共享虚线框内的主干网络结构；扩散模型额外输入时间步嵌入，且 HE 与 IHC 扩散模型分别集成不同注意力优先级的 AAM。(b) U-Net 编码器含六层，每层由两个 down block 和一个下采样组成；解码器镜像编码器设计，每层含三个带残差连接的 up block 和一个上采样；中间块连接编码器与解码器" loading="lazy" /></p>
+<p><em>图注中文翻译：(a) 左侧三个训练流程——HE Training（紫框，&quot;Using Local Attention Priority in AAM&quot;）、IHC Training（绿框，&quot;Using Global Attention Priority in AAM&quot;）、LT Module Training（灰框，输入 Latent HE 输出 Latent IHC）。这直接对应 AAM 的&quot;不对称&quot;设计。(b) 是具体的 U-Net 结构：从 256×256×3 输入，经六层下采样到 8×8×1024，再上采样回 256×256×3；橙色标注的是 up block（×3）、黄色是 middle block。</em></p>
+<blockquote><strong>顺带一个对复现有用的细节</strong>：Fig. 2 显示 <strong>HE 与 IHC 两个扩散模型是&quot;共享主干结构、但 AAM 不同&quot;</strong>——也就是它们不是两个完全不同的网络，而是同一套 U-Net 骨架、在注意力优先级上做区分。LT 模块则复用了同一套主干但<strong>去掉了时间步嵌入</strong>（因为它不需要&quot;时间步&quot;这个概念，它只是在潜空间做一次映射）。</blockquote>
+<blockquote><strong>我的判断</strong>：AAM 是这篇里<strong>论证最弱</strong>的一块。它的理由（&quot;HE 是紫色、IHC 是浅黄，所以一个要 local 一个要 global&quot;）是<strong>直觉性的</strong>，论文没有给出任何消融来分离 AAM 的单独贡献——Table III 里 <strong>PCC 是 AAM+LT 的合体</strong>，没有&quot;AAM only / LT only&quot;的对照。所以<strong>AAM 到底有没有用、有多大用，这篇论文本身没有回答</strong>。</blockquote>
+<h3>5.5 结构一致性约束（SCC）：CFG 模块（核心贡献）</h3>
+<h4>5.5.1 发现问题的时刻：不同频率的信号，恢复顺序不同</h4>
+<p>作者对反向过程中的去噪图像做傅里叶变换，分别画出<strong>最高频</strong>与<strong>最低频</strong>分量的幅度随步数的变化（Fig. 3）：</p>
+<p><img src="assets/014-PST-Diff结构约束精读/fig3.jpg" alt="图 3：反向过程（步数 1000→0）中信号幅度随扩散步的变化。(a) 高频信号：幅度在 t=400 之后才开始上升，即高频信号在 t&lt;400 之后才开始恢复；(b) 低频信号：从反向去噪一开始就恢复，并平稳持续到去噪结束" loading="lazy" /></p>
+<p><em>图注中文翻译：绿线是信号（Signal）幅度，橙线是噪声（Noise）幅度。横轴是扩散步数（注意：反向过程是从右往左走，t 从 1000 减到 0）。(a) 高频：信号幅度在 t&lt;400 区间才从 0 快速爬升到 1.0；(b) 低频：信号幅度从一开始就在缓慢下降（即从噪声中被恢复出来）。</em></p>
+<p><strong>这张图是 CFG 模块的全部依据。</strong> 作者从中读出两件事：</p>
+<blockquote>高频信号（边缘、细节）在反向过程的<strong>后半段</strong>才恢复；低频信号（整体色调、结构轮廓）在<strong>前半段</strong>就开始恢复。</blockquote>
+<p>于是自然的设计就是：<strong>在正确的时间，注入正确频率的参考信息。</strong></p>
+<h4>5.5.2 做法：用&quot;滤波后一致&quot;当条件</h4>
+<p>论文把&quot;注入&quot;形式化为一个<strong>条件</strong>：设 $\phi$ 是一个线性滤波操作，条件 $c$ 要求——</p>
+<p>$$\phi(x_0&#x27;)=\phi(y)$$</p>
+<ul><li><strong>说人话</strong>：生成图 $x_0&#x27;$ 被滤波器 $\phi$ 筛出来的那部分信息，要等于参考图 $y$ 被同一个 $\phi$ 筛出来的信息。</li><li>$\phi$ 取<strong>低通</strong>时，这个条件约束的是&quot;整体色调/轮廓要和源图一致&quot;；$\phi$ 取<strong>高通</strong>时，约束的是&quot;边缘要和源图一致&quot;。</li></ul>
+<p>带条件的生成写成：</p>
+<p>$$p_\theta(x_0\mid c)=\int p_\theta(x_{0:T}\mid c)\,dx_{1:T} \tag{15}$$</p>
+<p>$$p_\theta(x_{0:T}\mid c)=p(x_T)\prod_{t=1}^{T}p_\theta(x_{t-1}\mid x_t,c) \tag{16}$$</p>
+<p><strong>推导的核心一步</strong>：把 $y$ 的反向过程（式 17）展开成&quot;预测的 $y_0$ + 随机噪声 + 指向 $y_t$ 的方向&quot;三块：</p>
+<p>$$y_{t-1}=\underbrace{\sqrt{\alpha_{t-1}}\left(\frac{y_t-\sqrt{1-\alpha_t}\,\varepsilon_\theta(y_t)}{\sqrt{\alpha_t}}\right)}_{\text{predicted }y_0}+\underbrace{\sigma_t\varepsilon_t}_{\text{random noise}}+\underbrace{\sqrt{1-\alpha_{t-1}-\sigma_t^2}\,\varepsilon_\theta(y_t)}_{\text{direction pointing to }y_t} \tag{17}$$</p>
+<p>条件 $\phi(x_0&#x27;)=\phi(y)$ 可改写成（式 19）：</p>
+<p>$$\phi\!\left(\frac{x_t-\sqrt{1-\alpha_t}\,\varepsilon_\theta(x_t)}{\sqrt{\alpha_t}}\right)=\phi\!\left(\frac{y_t-\sqrt{1-\alpha_t}\,\varepsilon_\theta(y_t)}{\sqrt{\alpha_t}}\right) \tag{19}$$</p>
+<p>因为 $\phi$ 是线性滤波器，式 (18) 等价于（式 20）：</p>
+<p>$$p_\theta\!\left(x_{t-1}\mid x_t,\ \phi(x_t)=\phi(y_t),\ \phi(\varepsilon_\theta(x_t))=\phi(\varepsilon_\theta(y_t))\right) \tag{20}$$</p>
+<p>设网络预测的图为 $x_{t-1}&#x27;=p_\theta(x_{t-1}&#x27;\mid x_t)$（式 21）。<strong>最后一步是全文最漂亮的一行</strong>——推导得到：</p>
+<p>$$\boxed{x_{t-1}=\phi(y_{t-1})+(I-\phi)\,x_{t-1}&#x27;} \tag{22→23}$$</p>
+<ul><li><strong>说人话</strong>：<strong>&quot;用参考图 $y$ 在 $\phi$ 频带内的内容，替换掉生成图在同一个频带内的内容；生成图在其余频带的内容原样保留。&quot;</strong></li><li>$I-\phi$ 是补滤波器（$\phi$ 取低通时 $I-\phi$ 就是高通）。</li><li><strong>为什么这是核心贡献</strong>：扩散模型多步采样会<strong>累积误差</strong>（论文原文：&quot;the cumulative error in the multistep restoration process&quot;）。CFG 相当于在<strong>每一步</strong>都拿源图的对应频率分量去&quot;校一次准&quot;，而且<strong>只在正确的阶段校正确的频带</strong>。</li></ul>
+<h4>5.5.3 CFG 的调度（论文里有个小不一致）</h4>
+<table>
+<tr><th>阶段</th><th>用什么频率</th><th>论文原文</th></tr>
+<tr><td>反向过程<strong>早期</strong></td><td><strong>低频</strong>（线性滤波器平滑后的信息）</td><td>&quot;in the early stage... we use the low-frequency information smoothed by the linear filter as a condition&quot;</td></tr>
+<tr><td>反向过程<strong>后期</strong></td><td><strong>高频</strong>（边缘）</td><td>&quot;For the later stage... we use the high-frequency information such as edges to guide the denoising process&quot;</td></tr>
+</table>
+<blockquote><strong>⚠️ 注意一处内部不一致</strong>：正文 §III-C 说的是&quot;高频信号在 <strong>t=400</strong> 之后才开始上升&quot;，而消融那节（§IV-D-2）写的是&quot;<strong>早期（从 700 到 400）</strong>用低频、<strong>后期（从 400 到 0）</strong>用高频&quot;。<strong>分界点 400 是一致的，但&quot;早期&quot;的起点一处说是过程开始、一处说是 700。</strong> 这不影响方法的主干，但复现时要留意这个歧义——建议以代码为准（见 §11）。</blockquote>
+<p><strong>CFG 前后的幅度对比（Fig. 7）</strong>：</p>
+<p><img src="assets/014-PST-Diff结构约束精读/fig7.jpg" alt="图 7：应用 CFG 模块前后，反向过程中信号幅度随扩散步的变化。(a) 高频信号；(b) 低频信号。蓝线为 Before，红线为 After" loading="lazy" /></p>
+<p><em>图注中文翻译：红线（After）在两条曲线上整体高于蓝线（Before），说明 CFG 的注入确实<strong>抬升了信号的幅度</strong>——即&quot;把源图的信息补了回来&quot;。注意低频那一幅（b）的差距更明显，从过程一开始红线就显著高于蓝线。</em></p>
+<hr />
+<h2>6. 实验</h2>
+<h3>6.1 实验设置</h3>
+<table>
+<tr><th>项目</th><th>内容</th></tr>
+<tr><td>数据集 1（主）</td><td><strong>BCI</strong>（Breast Cancer Immunohistochemical image generation challenge）：同一肿瘤样本的<strong>连续切片</strong>，一张 HE、一张 HER2-IHC；由首都医科大学提供 600+ 张乳腺癌病理切片，用 Hamamatsu NanoZoomer S60 扫描，<strong>筛掉了无法完成对齐的 WSI 对</strong></td></tr>
+<tr><td>BCI 规模</td><td><strong>3,896 对</strong>训练 / <strong>120 对</strong>测试</td></tr>
+<tr><td>数据集 2（泛化）</td><td><strong>ACROBAT</strong>（Automatic Registration of Breast Cancer Tissue 2022）：瑞典 Södersjukhuset 2012–2018 女性乳腺癌病例的子集；三台 Hamamatsu 扫描仪（1× NanoZoomer S360 + 2× NanoZoomer XR）</td></tr>
+<tr><td>ACROBAT 规模</td><td><strong>100 位患者 / 200 张 WSI</strong>；每位患者一张 HE + 一张常规诊断 IHC（含 <strong>ER、PGR、HER2、KI67</strong>）</td></tr>
+<tr><td>图像切分</td><td>1024×1024 原图 → 无重叠切成 <strong>256×256</strong> patch</td></tr>
+<tr><td>训练</td><td>基于 [43]（Dhariwal &amp; Nichol, ADM）的<strong>预训练模型</strong>继续训 <strong>200,000 步</strong>，batch size <strong>8</strong>，学习率 <strong>1e-4 → 0</strong> 线性衰减</td></tr>
+<tr><td>LT 模块</td><td>用 <strong>patch-wise paired HE/IHC latent</strong> 训练；架构与扩散模型相同，<strong>去掉时间步嵌入</strong></td></tr>
+<tr><td>数据增强</td><td>随机旋转、翻转</td></tr>
+<tr><td>硬件</td><td>Intel i7-12700K, 64 GB RAM, <strong>NVIDIA RTX 3090 Ti</strong>；PyTorch 1.12.1, CUDA 12.1, Python 3.9</td></tr>
+<tr><td>对比方法</td><td>SynDiff, Pix2pix GAN, CUT, StainGAN, RegGAN, Unit</td></tr>
+</table>
+<h3>6.2 六个评价指标（这篇的一个方法论看点）</h3>
+<p>作者先<strong>主动承认</strong> PSNR/SSIM 在这个任务上不适用（原文第 1031–1044 行）：</p>
+<blockquote>&quot;染色原理与目标对象不同，导致同一组织切片的两张染色图之间<strong>不存在完美的像素级对应</strong>；数据集准备过程中 HE 与 IHC 的<strong>错配</strong>不可避免地引入结构差异。由于这两点，我们<strong>只把 SSIM 和 PSNR 作为参考，而不作为关键评价依据</strong>。&quot;</blockquote>
+<p>然后提出用 <strong>4 个指标</strong>替代：</p>
+<table>
+<tr><th>指标</th><th>全称</th><th>测什么</th><th>对谁</th></tr>
+<tr><td><strong>SS</strong></td><td>Source-structural Similarity</td><td>结构相似度</td><td>生成图 $y&#x27;$ vs <strong>源图 $x$（HE）</strong></td></tr>
+<tr><td><strong>LC</strong></td><td>Luminance &amp; Contrast</td><td>亮度 + 对比度相似度</td><td>生成图 $y&#x27;$ vs <strong>真值 $y$（IHC）</strong></td></tr>
+<tr><td><strong>VIF</strong></td><td>Visual Information Fidelity</td><td>视觉信息保真度（与 HVS 相关性更好）</td><td>信息论视角</td></tr>
+<tr><td><strong>Hist</strong></td><td>Histogram correlation</td><td>直方图相关性（颜色分布）</td><td>像素分布层面的全局相似</td></tr>
+</table>
+<p><strong>SS 与 LC 的公式（把 SSIM 拆成两半）</strong>：</p>
+<p>$$SS(y&#x27;,x)=\frac{\sigma_{y&#x27;x}+c_3}{\sigma_{y&#x27;}\sigma_x+c_3} \tag{24}$$</p>
+<p>$$LC(y,y&#x27;)=\frac{2\mu_y\mu_{y&#x27;}+c_1}{\mu_y^2+\mu_{y&#x27;}^2+c_1}\times\frac{2\sigma_{yy&#x27;}+c_2}{\sigma_y^2+\sigma_{y&#x27;}^2+c_2} \tag{25}$$</p>
+<ul><li><strong>SS 只保留 SSIM 的结构项</strong>（协方差归一化），并且是<strong>对源图 HE 算的</strong>——所以它测的是&quot;<strong>结构有没有从 H&amp;E 保下来</strong>&quot;；</li><li><strong>LC 保留 SSIM 的亮度项 × 对比度项</strong>，并且是<strong>对真值 IHC 算的</strong>——所以它测的是&quot;<strong>颜色/病理外观像不像目标</strong>&quot;。</li><li><strong>说人话</strong>：这是把&quot;SSIM 这一个指标&quot;<strong>按&quot;该跟谁比&quot;拆开</strong>。结构该跟源图比（因为结构来自 H&amp;E），颜色该跟真值比（因为颜色是 IHC 才有的）。这是一个<strong>合理且可复用</strong>的小设计——比笼统报一个 SSIM 有信息量得多。</li></ul>
+<blockquote><strong>我的判断</strong>：SS/LC 的拆分是这篇论文<strong>最容易被低估的贡献</strong>。它其实回答了一个真实问题：<strong>在错位数据上，&quot;结构&quot;和&quot;外观&quot;应该用不同的参照物来评价。</strong> 这与本课题在做的评价指标方向直接相关。</blockquote>
+<h3>6.3 SOTA 横向对比（Table I，BCI 数据集）</h3>
+<table>
+<tr><th>方法</th><th>PSNR ↑</th><th>SSIM ↑</th><th><strong>SS</strong> ↑</th><th><strong>LC</strong> ↑</th><th><strong>VIF</strong> ↑</th><th><strong>Hist</strong> ↑</th></tr>
+<tr><td>SynDiff</td><td>14.28±2.52</td><td>0.32±0.14</td><td>0.70±0.03</td><td>0.76±0.10</td><td>0.73±0.03</td><td>0.49±0.11</td></tr>
+<tr><td>Pix2pix GAN</td><td>12.62±3.24</td><td>0.21±0.09</td><td>0.25±0.12</td><td>0.64±0.10</td><td>0.75±0.03</td><td>0.59±0.32</td></tr>
+<tr><td>CUT</td><td>15.32±4.12</td><td>0.35±0.14</td><td>0.88±0.03</td><td>0.73±0.12</td><td>0.76±0.07</td><td>0.61±0.20</td></tr>
+<tr><td>StainGAN</td><td>16.24±5.21</td><td><strong>0.39±0.15</strong></td><td>0.92±0.05</td><td>0.76±0.08</td><td>0.78±0.08</td><td>0.61±0.08</td></tr>
+<tr><td>RegGAN</td><td><strong>18.22±5.51</strong></td><td>0.37±0.18</td><td>0.65±0.10</td><td>0.77±0.10</td><td>0.78±0.06</td><td>0.68±0.39</td></tr>
+<tr><td>Unit</td><td>15.75±4.19</td><td>0.33±0.18</td><td>0.89±0.03</td><td>0.74±0.07</td><td>0.79±0.08</td><td>0.64±0.35</td></tr>
+<tr><td><strong>PST-Diff（本文）</strong></td><td>16.75±4.20</td><td>0.38±0.11</td><td><strong>0.93±0.08</strong></td><td><strong>0.80±0.06</strong></td><td><strong>0.84±0.08</strong></td><td><strong>0.68±0.25</strong></td></tr>
+</table>
+<p><strong>结果解读（几个必须点出的点）：</strong></p>
+<ol><li><strong>PST-Diff 在 PSNR 和 SSIM 上都不是最好的。</strong> PSNR 最高是 <strong>RegGAN（18.22）</strong>，SSIM 最高是 <strong>StainGAN（0.39）</strong>，PST-Diff 分别只有 16.75 和 0.38。<strong>这正是作者&quot;PSNR/SSIM 不适用&quot;这一论断的最强证据</strong>——如果一个方法在它自己主张要取代的指标上输了，那它必须解释为什么那些指标不该被用。作者的解释就是&quot;错位&quot;。</li></ol>
+<ol><li><strong>PST-Diff 在四个新指标上全部第一。</strong> SS 0.93（第二名 StainGAN 0.92，差距很小）、LC 0.80（第二名 RegGAN 0.77）、VIF 0.84（第二名 Unit 0.79）、Hist 0.68（与 RegGAN 并列，但<strong>标准差小得多</strong>：±0.25 vs ±0.39）。</li></ol>
+<ol><li><strong>一个诚实的观察：SS 上 PST-Diff 只领先 StainGAN 0.01，而 StainGAN 是个 28M 参数的 GAN</strong>（见 Table II）。这说明<strong>结构保持这件事，GAN 也能做得不差</strong>；PST-Diff 的优势主要体现在 LC/VIF（颜色与感知）上。</li></ol>
+<ol><li><strong>方差问题。</strong> PST-Diff 的 PSNR 是 16.75±4.20——<strong>标准差 4.2 dB</strong>。StainGAN（±5.21）和 RegGAN（±5.51）更大，但扩散模型整体的不稳定性在这张表里是可见的。（这一点与 Star-Diff 精读里引用同一批数字时的观察一致。）</li></ol>
+<p><strong>定性对比（Fig. 4）</strong>——这是全文最重要的一张图：</p>
+<p><img src="assets/014-PST-Diff结构约束精读/fig4.jpg" alt="图 4：BCI 数据集上不同病变等级（0, 1+, 2+, 3+）的虚拟 IHC（HER2）图像。上半部分是原始生成图的对比，下半部分是把图像拼接后展示大尺寸图像的生成结果。九类图像依次为：(a) 源 HE 图、(b) 目标 IHC 图，以及由 (c) SynDiff、(d) Pix2pix GAN、(e) CUT、(f) StainGAN、(g) RegGAN、(h) Unit、(i) PST-Diff 生成的 IHC 图" loading="lazy" /></p>
+<p><em>图注中文翻译：上半部分是 256×256 的图块对比，下半部分是 1024×1024 的拼接结果。注意下半部分 (c)–(h) 各列都有<strong>明显的拼接方块伪影</strong>（相邻 patch 颜色/亮度不连续），而 (i) PST-Diff 列几乎没有——这正是论文强调的&quot;large-sized image transfer without splicing artifacts&quot;。</em></p>
+<p><strong>作者对各基线的定性判断（照实转述）</strong>：</p>
+<ul><li><strong>SynDiff</strong>：训练困难，合成图<strong>色调单一</strong>，结构勉强保住但<strong>丢失病理特征</strong>；</li><li><strong>Pix2pix GAN</strong>：几乎<strong>完全丢失</strong>原图结构信息；</li><li><strong>CUT / StainGAN</strong>：<strong>无法准确捕捉</strong>不同 HE 图中固有的病理信息；</li><li><strong>RegGAN / Unit</strong>：重建病理特征能力较强，但在<strong>生成强阳性图</strong>上仍有不足；</li><li><strong>PST-Diff</strong>：根据 HE 的病理信息，在细胞膜上生成<strong>不同程度棕色染色</strong>。</li></ul>
+<h3>6.4 模型复杂度与下游任务准确率（Table II）</h3>
+<table>
+<tr><th>方法</th><th>FLOPs (G)</th><th>参数量 (M)</th><th><strong>染色估计准确率</strong> ↑</th></tr>
+<tr><td>SynDiff</td><td>302</td><td>160</td><td>0.22</td></tr>
+<tr><td>Pix2pix GAN</td><td>1822</td><td>14</td><td>0.35</td></tr>
+<tr><td>CUT</td><td>257</td><td>15</td><td>0.36</td></tr>
+<tr><td>StainGAN</td><td>227</td><td>28</td><td>0.62</td></tr>
+<tr><td>RegGAN</td><td>455</td><td>30</td><td>0.63</td></tr>
+<tr><td>Unit</td><td>47</td><td>39</td><td>0.65</td></tr>
+<tr><td><strong>PST-Diff</strong></td><td><strong>8910</strong></td><td><strong>553</strong></td><td><strong>0.72</strong></td></tr>
+</table>
+<ul><li><strong>染色估计的做法</strong>：用 ImageJ 的 <strong>IHC Profiler</strong> 插件，把每张图分到四类（high positive / positive / low positive / negative），然后算生成图与目标图<strong>分类一致的比例</strong>。</li><li><strong>代价极其高昂</strong>：PST-Diff 的 <strong>8910 GFLOPs 是 Pix2pix GAN（1822）的 4.9 倍</strong>，<strong>553 M 参数是 Pix2pix GAN（14 M）的 39.5 倍</strong>。论文自己也承认：&quot;PST-Diff 参数量最大、FLOPs 最高，说明其<strong>逐步训练过程增加了模型复杂度，给训练带来困难</strong>。&quot;</li><li><strong>换来的收益</strong>：准确率 0.72，比第二名 Unit（0.65）高 7 个百分点。</li></ul>
+<blockquote><strong>我的判断</strong>：这是这篇论文最应该被追问的地方。<strong>用 40 倍参数量换 7 个百分点</strong>，而且这个&quot;准确率&quot;是一个<strong>四分类</strong>指标（把 0/1+/2+/3+ 压成 high/positive/low/negative），粒度并不细。论文没有报告推理时间、也没有报告与病理医生的对照。对临床落地来说，这个性价比是存疑的。</blockquote>
+<h3>6.5 消融实验（Table III）</h3>
+<table>
+<tr><th>方法</th><th>SS ↑</th><th>LC ↑</th><th>VIF ↑</th><th>Hist ↑</th></tr>
+<tr><td>DDIB（基线）</td><td>0.26±0.08</td><td>0.66±0.07</td><td>0.81±0.12</td><td>0.60±0.17</td></tr>
+<tr><td>DDIB + <strong>PCC</strong>（AAM+LT）</td><td>0.38±0.04</td><td><strong>0.76</strong>±0.05</td><td>0.78±0.05</td><td>0.66±0.18</td></tr>
+<tr><td>DDIB + <strong>SCC</strong>（CFG）</td><td><strong>0.92</strong>±0.03</td><td>0.73±0.02</td><td>0.83±0.10</td><td>0.65±0.20</td></tr>
+<tr><td><strong>PST-Diff（两者都有）</strong></td><td><strong>0.93</strong>±0.08</td><td><strong>0.80</strong>±0.06</td><td><strong>0.84</strong>±0.08</td><td><strong>0.68</strong>±0.25</td></tr>
+</table>
+<p><strong>论文给出的总结</strong>：PCC 使 LC <strong>+0.10</strong>；SCC 使 SS <strong>+0.66</strong>。</p>
+<p><strong>这张表的正确读法（论文没明说的部分）：</strong></p>
+<ul><li><strong>PCC 和 SCC 是&quot;分工&quot;的</strong>：PCC 主要抬 <strong>LC</strong>（0.66→0.76，颜色/病理一致性），SCC 主要抬 <strong>SS</strong>（0.26→0.92，结构保持）。这符合它们的设计意图。</li><li><strong>但 SCC 的贡献远大于 PCC</strong>：SS 从 0.26 直接跳到 0.92（+0.66），而 PCC 只把 SS 抬到 0.38。<strong>换句话说，这篇论文的核心贡献其实是 CFG，不是 AAM/LT。</strong></li><li><strong>一个被论文忽略的负结果</strong>：<strong>DDIB+PCC 的 VIF（0.78）低于 DDIB（0.81）</strong>。也就是说，加上病理一致性约束后，视觉信息保真度<strong>反而下降了</strong>。论文没有讨论这个现象。（一个可能的解释：LT 把隐表示往&quot;目标域分布&quot;上搬，牺牲了一部分信息保真度换取颜色一致性。但这只是猜测，论文未说明。）</li></ul>
+<p><strong>消融的定性图（Fig. 6）</strong>：</p>
+<p><img src="assets/014-PST-Diff结构约束精读/fig6.jpg" alt="图 6：BCI 数据集上消融实验的虚拟 HER2 染色图像（不同病变等级 0, 1+, 2+, 3+）。从左到右依次为：(a) 源 HE 图、(b) 目标 HER2 图，以及由 (c) DDIB、(d) DDIB+PCC、(e) DDIB+SCC、(f) PST-Diff 生成的 HER2 图" loading="lazy" /></p>
+<p><em>图注中文翻译：看 (c) DDIB 列——它在 Class 0 和 1+ 上<strong>大面积错误地染成棕色</strong>（假阳性），因为 DDIB 缺少约束。看 (d) DDIB+PCC 列——Class 0/1+/2+ 的颜色错误被<strong>纠正</strong>了（不再乱染），这正是 PCC 的功劳。看 (e) DDIB+SCC 列——Class 2+/3+ 的<strong>结构一致性明显提升</strong>，这是 CFG 的功劳。(f) 是两者叠加。</em></p>
+<h3>6.6 泛化实验（Table IV + Fig. 8/9）</h3>
+<p><strong>跨数据集泛化</strong>：把<strong>在 BCI 上训练的模型直接用到 ACROBAT</strong>（HER2 任务），以及<strong>在无任何针对性调参的情况下训一个 ER 扩散模型</strong>：</p>
+<table>
+<tr><th>数据</th><th>SS ↑</th><th>LC ↑</th><th>VIF ↑</th><th>Hist ↑</th></tr>
+<tr><td>HER2（ACROBAT）</td><td>0.92±0.02</td><td>0.78±0.07</td><td>0.75±0.01</td><td><strong>0.41</strong>±0.22</td></tr>
+<tr><td>ER（ACROBAT）</td><td>0.88±0.02</td><td>0.71±0.03</td><td>0.77±0.02</td><td>0.61±0.32</td></tr>
+</table>
+<ul><li><strong>结构（SS）泛化得很好</strong>：0.92 / 0.88，与 BCI 上的 0.93 接近。</li><li><strong>但颜色分布（Hist）在跨数据集时崩了</strong>：HER2 只有 <strong>0.41</strong>（BCI 上是 0.68）。这说明<strong>颜色分布是最不具泛化性的部分</strong>——不同扫描仪、不同实验室的染色习惯差异，直接打在直方图上。论文对此<strong>没有讨论</strong>，只是笼统地说&quot;展示出很强的泛化能力&quot;。</li></ul>
+<p><img src="assets/014-PST-Diff结构约束精读/fig8.jpg" alt="图 8：ACROBAT 数据集上泛化验证实验的虚拟 HER2 染色结果。从左到右：(a) 源 HE 图、(b) 目标 HER2 图、(c) 由在 BCI 数据集上训练的 PST-Diff 生成的 HER2 图" loading="lazy" /></p>
+<p><em>图注中文翻译：注意第一行左图——HE 里有明显<strong>深染的纤维组织</strong>，而目标 HER2（中）里<strong>没有</strong>染色；PST-Diff 生成的图（右）<strong>正确地没有染色</strong>。第二行右侧——HE 中有强病理属性的<strong>局灶区域</strong>，PST-Diff 正确地给其<strong>细胞膜染上了色</strong>。这是作者用来论证&quot;学到了染色原理而非颜色映射&quot;的证据。</em></p>
+<p><strong>双向迁移</strong>：因为两个域各自训练了扩散模型，PST-Diff 原则上支持 <strong>IHC→HE</strong> 的反向迁移（Fig. 5）：</p>
+<p><img src="assets/014-PST-Diff结构约束精读/fig5.jpg" alt="图 5：BCI 数据集上用 PST-Diff 生成的不同病变等级（0, 1+, 2+, 3+）的虚拟 HE 染色图像。三行分别为 (a) 源 IHC 图、(b) 目标 HE 图、(c) PST-Diff 生成图" loading="lazy" /></p>
+<p><em>图注中文翻译：注意源图（第一行）是 IHC——HER2 的 0/1+/2+/3+ 差异极其明显；而对应的 HE 目标（第二行）差异<strong>远没有 IHC 那么大</strong>。作者借此说明：IHC→HE 是一个&quot;信息变少&quot;的方向，但 PST-Diff 仍能生成结构相似、且符合 HE 染色特征的图。</em></p>
+<p><strong>ER 染色泛化（Fig. 9）</strong>：</p>
+<p><img src="assets/014-PST-Diff结构约束精读/fig9.jpg" alt="图 9：ACROBAT 数据集上泛化验证实验的虚拟 ER 染色结果" loading="lazy" /></p>
+<p><em>图注中文翻译：用同一套方法、不做任何针对性调参，直接训一个 ER 扩散模型，也能生成保留细胞结构、染色风格与目标一致的结果。右半部分（核着色）尤其能看出 PST-Diff 学到了 ER 的<strong>核定位</strong>特征。</em></p>
+<hr />
+<h2>7. 讨论与局限</h2>
+<h3>7.1 作者主张的临床价值</h3>
+<ul><li><strong>打破数据隐私壁垒</strong>：不同数据集的 HE 图都能用同一个模型生成准确 HER2 图，<strong>忽略数据集之间的差异</strong>——这为&quot;因隐私原则无法共享数据的医疗机构&quot;提供了应用基础；</li><li><strong>多染色目标可迁移</strong>：实验显示能成功生成不同目标染色域的图像；</li><li><strong>无拼接伪影</strong>：比其它方法更稳定地生成大尺寸图（WSI 潜力）；</li><li><strong>贴近真实临床流程</strong>：<strong>&quot;fully trained 后只需待迁移的源染色域图像&quot;</strong>，不需要配对输入。</li></ul>
+<h3>7.2 作者自己承认的三条局限（照实写）</h3>
+<ol><li><strong>没有纳入病理学家的评价</strong>。原文：&quot;The evaluation results of pathologists were not included in the metrics in this work.&quot; 作者给的理由是&quot;病理学家介入能提供更专业的评价，但<strong>主观性强、缺乏统一标准</strong>，需要进一步探索&quot;。——<strong>注意：这条被作者写成了&quot;困难&quot;而不是&quot;缺陷&quot;</strong>，措辞上有点回避。</li><li><strong>对源图缺陷的修复能力有限</strong>。作者对源图做了人工修改来测鲁棒性，PST-Diff 能保持结构/病理一致性，但<strong>图像修复本身的效果有限</strong>。</li><li><strong>仍存在生成图与真实目标不匹配的案例</strong>。作者认为加入更多配对病理染色数据、或引入多模态模型可能有帮助。</li></ol>
+<h3>7.3 我读下来觉得还应该补充的几点</h3>
+<blockquote>以下是我的判断，不是论文原文。</blockquote>
+<ul><li><strong>§7.2 第 1 条是这篇最大的软肋，而且作者的措辞在回避它。</strong> 一篇声称&quot;achieving high-consistency&quot;、&quot;clinical reliability and applicability&quot;的论文，<strong>没有任何一位病理学家参与评价</strong>。它的所有指标（SS/LC/VIF/Hist）和唯一的语义指标（ImageJ IHC Profiler 的 0.72）<strong>全部是自动化的</strong>。而 IHC Profiler 本身是一个基于颜色阈值的启发式插件，<strong>它不是临床金标准</strong>。这意味着&quot;病理一致性&quot;这个核心主张，<strong>从头到尾没有被人验证过</strong>。同年（2024）的 Star-Diff 至少做了分类器代理，2026 年的 DGR 做了盲法读片——<strong>PST-Diff 在这一环是缺的</strong>。</li></ul>
+<ul><li><strong>Table I 的&quot;本文最优&quot;结论依赖指标选择，而指标是作者自己挑的。</strong> 四个新指标（SS/LC/VIF/Hist）中，SS 和 LC 是作者<strong>自己从 SSIM 拆出来的</strong>。虽然拆分有道理，但<strong>没有任何外部验证</strong>（比如与病理医生评分的秩相关）。这正对应本课题的那个问题：<strong>自创指标的合法性需要独立证据，不能只靠&quot;在该指标下本文最优&quot;。</strong></li></ul>
+<ul><li><strong>论文的引用编号有系统性问题（可核实）。</strong> 参考文献 [36] 是 Saxena &amp; Cao 的 <strong>GAN 综述</strong>（ACM CSUR 2021），但正文把它用在三个完全不同且都不是它的地方：(a) 式 (10) 的 PF ODE 记号、&quot;according to [36]&quot;；(b) &quot;ODE 使方法具有循环一致性、可逆 [36]&quot;；(c) &quot;优化 DDIM 等价于优化 Monge 最优传输 [36]&quot;。同样，式 (24)(25) 的 SSIM 公式标的是 &quot;[46]&quot;，而 [46] 是 Unit（无监督图像翻译网络）。<strong>并且参考文献表里根本没有 SSIM 原始论文（Wang et al. 2004）。</strong> 这大概率是投稿/排版过程中的编号错位，但它确实影响可复现性——<strong>读者顺着编号找不到真正的出处</strong>。</li></ul>
+<ul><li><strong>SB（Schrödinger Bridge）被&quot;挂名&quot;了。</strong> 论文在 Related Works 和 Method 里都强调用了 SB，但<strong>所有公式（13–23）里都不含 SB 项</strong>，也没有给出 SB 的前向/反向 SDE 或训练目标。看不出 SB 在实现层面到底改变了什么。<strong>&quot;用了 SB&quot;目前只是一个叙事声明，不是可复现的机制。</strong></li></ul>
+<ul><li><strong>&quot;不需要严格配对&quot;这个说法需要打折。</strong> 见 §5.4.2：LT 明确用了 patch-wise paired latent 训练。对做弱配准/非配对的人来说，<strong>这是必须先确认的边界</strong>，否则会误以为它直接适用于完全非配对场景。</li></ul>
+<ul><li><strong>复杂度与收益的性价比没有被讨论。</strong> 553 M 参数 / 8910 GFLOPs，换 0.72 的四分类准确率。论文只在 Table II 里陈述了这个事实，<strong>没有做任何效率-精度权衡分析</strong>，也没有报推理时间。对&quot;术中冰冻切片&quot;这类时效敏感场景（论文自己在 Star-Diff 里被强调的场景），这个数字很关键。</li></ul>
+<hr />
+<h2>8. 这篇论文对本课题的启示</h2>
+<blockquote>结合本课题「H&amp;E→IHC 虚拟染色 + 在已有工作上做改进」这条线，以及调研档案中已有的《PST-Diff 借鉴与 StainFuser 改造方案审查》，以下列出几个直接相关的点。</blockquote>
+<p><strong>① 它和 Star-Diff 是&quot;同题不同解&quot;，而且正好互补。</strong></p>
+<table>
+<tr><th></th><th><strong>PST-Diff</strong>（TMI 2024）</th><th><strong>Star-Diff</strong>（arXiv 2025-08）</th></tr>
+<tr><td>生成空间</td><td><strong>潜空间</strong>（DDIM 隐表示）</td><td><strong>像素空间</strong>（残差复原）</td></tr>
+<tr><td>核心动作</td><td>在<strong>两个潜空间之间架桥</strong>（LT）</td><td>在<strong>H&amp;E 与 IHC 之间加一条确定性路径</strong></td></tr>
+<tr><td>结构保持靠什么</td><td><strong>CFG</strong>（按频率注入源图信息）</td><td><strong>复原路径</strong>（$I_{res}=I_{IHC}-I_{HE}$）</td></tr>
+<tr><td>病理一致性靠什么</td><td><strong>AAM+LT</strong></td><td>噪声路径 + SFS 评价</td></tr>
+<tr><td>评价</td><td>6 个指标（SS/LC/VIF/Hist 为主）</td><td>SFS（分类器代理）</td></tr>
+<tr><td>病理医生</td><td><strong>无</strong></td><td>无（但用 AI 代理）</td></tr>
+</table>
+<p><strong>PST-Diff 的&quot;按频率分阶段注入结构&quot;和 Star-Diff 的&quot;确定性复原路径&quot;，在思想上是在解同一件事</strong>——都是&quot;别让结构信息在多步去噪里丢掉&quot;。两条路可以对比着看，甚至可以考虑<strong>把 CFG 的调度原则搬到像素空间</strong>。</p>
+<p><strong>② CFG 是这篇里最可迁移、最便宜的一块。</strong></p>
+<p>式 (22→23) 的那一行 $x_{t-1}=\phi(y_{t-1})+(I-\phi)x_{t-1}&#x27;$ 是<strong>纯采样期的操作，不需要重新训练模型</strong>。这意味着：<strong>可以在任何一个已有扩散 baseline 上，加一个几十行的采样回调，就能测试&quot;分阶段频率注入&quot;是否有效。</strong> 这是零训练成本的改进，非常适合作为第一篇的&quot;轻量增量&quot;。调研档案中的那份借鉴审查报告也正是这么判断的——&quot;最值得借的是 CFG 的调度原则&quot;。</p>
+<p><strong>③ 但要小心两个坑（调研档案中的审查报告已经点过，这里再强调）：</strong></p>
+<ul><li><strong>&quot;通道语义 ≠ Fourier 频率&quot;。</strong> PST-Diff 的 CFG 做的是<strong>空间频率投影</strong>（对整张图做 FFT 取高/低频）。若在浓度域做工作（$C_H$ / $C_{DAB}$），那些是<strong>染色语义分解</strong>，不是频率。<strong>可以借&quot;分阶段调度&quot;这个原则，但不能借&quot;高频/低频&quot;这个名词</strong>——否则论文里的审稿人会直接指出概念混用。</li><li><strong>LT 的 $L_{dist}$ 在没有实例对应时不可辨识。</strong> 这是 PST-Diff 能成立的前提（它有 patch-wise paired latent）。真实连续切片残差在 7–16 µm 量级（见调研档案中 H 通道报告的结论），<strong>patch 级对应关系本身就不可靠</strong>。所以 LT 这个模块<strong>不能照搬</strong>。</li></ul>
+<p><strong>④ SS/LC 的拆分，值得直接借鉴到本课题的评价体系里。</strong></p>
+<p>这是这篇论文里最被低估的一手贡献：<strong>把&quot;结构&quot;和&quot;外观&quot;分开，各自对不同的参照物评价</strong>（结构对源图 H&amp;E、颜色对真值 IHC）。它精准地回应了&quot;H&amp;E 与 IHC 本就错位&quot;这个现实。做新指标时，<strong>&quot;对谁比&quot;这个维度</strong>是比&quot;用什么算子比&quot;更容易做出新意、也更容易论证的方向——而且它天然满足&quot;非循环论证&quot;（因为参照物不同）。</p>
+<p><strong>⑤ 关于&quot;想发一篇工作&quot;这件事，PST-Diff 提供了一个反面样本。</strong></p>
+<p>它的<strong>方法叙述很丰满</strong>（三个模块、9 张图、4 张表），但<strong>验证链条是断的</strong>——没有病理医生、没有外部指标验证、没有效率分析、SB 只是挂名。这恰恰说明：<strong>在虚拟染色这个方向，&quot;提出一个模块 + 报一堆自动指标&quot;已经不足以支撑一篇有说服力的工作</strong>。若增量只是在它之上再加一个模块、再多报一个指标，大概率会被同一批审稿人用同样的理由质疑。</p>
+<p><strong>反过来，这也提示了空间在哪</strong>：<strong>把&quot;验证&quot;做扎实</strong>（真实残差下的退化曲线、分子层面的真值一致性、专家读片），比&quot;再加一个模块&quot;更有区分度。这与既有调研的结论一致——<strong>落在&quot;弱配准下的蛋白表达级监督与评价&quot;这一格，比继续在&quot;生成模块&quot;上加东西更有出路。</strong></p>
+<hr />
+<h2>9. 附：公式速查表</h2>
+<table>
+<tr><th>式号</th><th>公式</th><th>作用</th></tr>
+<tr><td>(1)(2)</td><td>$q_\sigma(x_t\mid x_0)=\mathcal{N}(\sqrt{\alpha_t}x_0,(1-\alpha_t)I)$</td><td>标准前向加噪</td></tr>
+<tr><td>(3)(4)</td><td>$x_t=\sqrt{\alpha_t}x_0+\sqrt{1-\alpha_t}\varepsilon_\theta(x_t)$；$x_0=\frac{1}{\sqrt{\alpha_t}}(x_t-\sqrt{1-\alpha_t}\varepsilon_\theta(x_t))$</td><td>加噪 / 反推 $x_0$</td></tr>
+<tr><td>(5)(6)(7)(8)</td><td>DDIM 反向一步的分布与递推</td><td>标准 DDIM 反向</td></tr>
+<tr><td>(9)(10)</td><td>$\frac{dx}{dt}=f(x,t)-\frac{1}{2}g(t)^2\nabla_x\log p_t(x)$</td><td><strong>概率流（PF）ODE</strong></td></tr>
+<tr><td>(11)(12)</td><td>源域/目标域各自的双向 ODE 映射</td><td>把两个域各自编码/解码</td></tr>
+<tr><td>(13)</td><td>$L_{dist}=\|x_{a_1}^{(l)}-x_{b_1}^{(l)}\|_2^2$</td><td><strong>潜表示差异（问题的来源）</strong></td></tr>
+<tr><td>(14)</td><td>$F(x_A^{(l)})=x_{B&#x27;}^{(l)}:\min\|x_{B&#x27;}^{(l)}-x_B^{(l)}\|_2^2$</td><td><strong>LT 模块：学一个潜空间映射</strong></td></tr>
+<tr><td>(15)(16)</td><td>$p_\theta(x_0\mid c)=\int p_\theta(x_{0:T}\mid c)dx_{1:T}$</td><td>条件生成</td></tr>
+<tr><td>(17)</td><td>$y_{t-1}=\underbrace{\ldots}_{\text{pred }y_0}+\underbrace{\sigma_t\varepsilon_t}_{\text{noise}}+\underbrace{\ldots}_{\text{dir. to }y_t}$</td><td>把反向步拆成三块</td></tr>
+<tr><td>(18)(19)(20)</td><td>$\phi(x_0&#x27;)=\phi(y)$ 及其等价形式</td><td><strong>CFG 的条件定义</strong></td></tr>
+<tr><td>(21)(22)</td><td>$\phi(x_{t-1}&#x27;)=\phi(y_{t-1})$</td><td>滤波器下的一致性</td></tr>
+<tr><td>(23)</td><td>$\boxed{x_{t-1}=\phi(y_{t-1})+(I-\phi)x_{t-1}&#x27;}$</td><td><strong>CFG 的最终操作（核心一行）</strong></td></tr>
+<tr><td>(24)</td><td>$SS(y&#x27;,x)=\frac{\sigma_{y&#x27;x}+c_3}{\sigma_{y&#x27;}\sigma_x+c_3}$</td><td><strong>结构相似（对源图 HE）</strong></td></tr>
+<tr><td>(25)</td><td>$LC(y,y&#x27;)=\frac{2\mu_y\mu_{y&#x27;}+c_1}{\mu_y^2+\mu_{y&#x27;}^2+c_1}\times\frac{2\sigma_{yy&#x27;}+c_2}{\sigma_y^2+\sigma_{y&#x27;}^2+c_2}$</td><td><strong>亮度对比度（对真值 IHC）</strong></td></tr>
+</table>
+<p><strong>最关键的两个公式：式 (14) 和式 (23)。</strong> 前者是&quot;病理一致性&quot;的全部（学一个潜空间映射），后者是&quot;结构一致性&quot;的全部（按频率替换）。其余都是标准扩散或指标定义。</p>
+<h2>10. 附：超参数与设置速查</h2>
+<table>
+<tr><th>项目</th><th>值</th></tr>
+<tr><td>扩散步数 $T$</td><td><strong>1000</strong>（Fig. 3 / Fig. 7 的横轴）</td></tr>
+<tr><td>DDIM 随机性 $\eta$</td><td><strong>0</strong>（确定性，全文的理论前提）</td></tr>
+<tr><td>频率分界点</td><td><strong>t = 400</strong>（高频在 t&lt;400 才恢复）；早期区间正文说&quot;过程开始→400&quot;，消融那节说&quot;700→400&quot;（<strong>存在不一致，复现需查代码</strong>）</td></tr>
+<tr><td>图像尺寸</td><td>1024×1024 原图 → 无重叠切 <strong>256×256</strong> patch</td></tr>
+<tr><td>训练步数</td><td><strong>200,000</strong>（基于 ADM 预训练模型继续训）</td></tr>
+<tr><td>Batch size</td><td><strong>8</strong></td></tr>
+<tr><td>学习率</td><td><strong>1e-4 → 0</strong>（线性衰减）</td></tr>
+<tr><td>数据增强</td><td>随机旋转、翻转</td></tr>
+<tr><td>硬件</td><td>i7-12700K / 64 GB / RTX 3090 Ti</td></tr>
+<tr><td>框架</td><td>PyTorch 1.12.1, CUDA 12.1, Python 3.9</td></tr>
+<tr><td>BCI</td><td>3,896 训练 / 120 测试</td></tr>
+<tr><td>ACROBAT</td><td>100 患者 / 200 WSI</td></tr>
+<tr><td>下游准确率工具</td><td>ImageJ <strong>IHC Profiler</strong> 插件（四分类）</td></tr>
+<tr><td>模型规模</td><td><strong>553 M 参数 / 8910 GFLOPs</strong></td></tr>
+</table>
+<blockquote><strong>复现提醒</strong>：三个最大的不确定点是 (a) <strong>CFG 的早期/后期分界</strong>（正文与消融自相矛盾）；(b) <strong>SB 的具体实现</strong>（全文无公式）；(c) <strong>AAM 的 local/global attention 具体怎么改 U-Net</strong>（Fig. 2 只说&quot;HE 和 IHC 扩散模型集成不同优先级的 AAM&quot;，没给改法）。<strong>建议优先找官方/第三方代码</strong>（见下节）。</blockquote>
+<hr />
+<h2>11. 资源</h2>
+<ul><li><strong>论文（IEEE Xplore）</strong>：https://ieeexplore.ieee.org/document/10601703 ｜ DOI: 10.1109/TMI.2024.3430825</li><li><strong>本地 PDF</strong>：<code>~/Downloads/从现在开始发论文(1)/01_虚拟染色_核心★/PST-Diff_Achieving_High-Consistency_Stain_Transfer_by_Diffusion_Models_With_Pathological_and_Structural_Constraints.pdf</code>（14 页全文，本精读即基于此）</li><li><strong>PubMed</strong>：https://pubmed.ncbi.nlm.nih.gov/39024079/</li><li><strong>数据集</strong>：</li><li><strong>BCI</strong>（Breast Cancer Immunohistochemical）：https://bupt-ai-cz.github.io/BCI/</li><li><strong>ACROBAT</strong>（multi-stain breast cancer WSI）：Weitz et al., Sci. Data 10:562, 2023</li><li><strong>代码</strong>：<strong>论文未给出官方仓库地址。</strong> 作者公开主页上未找到 PST-Diff 的训练代码或 checkpoint。作者<strong>后续</strong>的 <strong>StainExpert</strong> 有公开代码（multi-expert + text/visual guidance + SD-Turbo + 参数高效训练），但<strong>它不是 PST-Diff 的复现代码</strong>，不能当作 PST-Diff 的实现补足。（这一判断与调研档案中《PST-Diff 借鉴与 StainFuser 改造方案审查》的核实结论一致。）</li><li><strong>关键前作（本方法的直接依赖）</strong>：</li><li><strong>DDIB</strong>（Dual Diffusion Implicit Bridges, Su et al. 2022, arXiv:2203.08382）—— 本文的<strong>基线</strong>，也是被&quot;打叉&quot;的那个做法</li><li><strong>DDIM</strong>（Song et al. 2020, arXiv:2010.02502）—— 确定性采样，$\eta=0$ 的理论来源</li><li><strong>ILVR</strong>（Choi et al. ICCV 2021）—— <strong>CFG 的直接灵感来源</strong>（原文：&quot;inspired by [39]&quot;）</li><li><strong>ADM</strong>（Dhariwal &amp; Nichol, NeurIPS 2021）—— 本文的预训练模型来源</li><li><strong>I²SB / DSBM</strong>（Schrödinger Bridge 系）—— SB 引入扩散的思路来源</li><li><strong>同任务对照工作</strong>：</li><li><strong>Star-Diff</strong>（arXiv:2508.02528）—— 像素空间复原路线，见本系列 <code>star_diff_blog/</code></li><li><strong>DGR</strong>（arXiv:2509.14119, Nat. Commun. 2026）—— 抗错位路线，见本系列 <code>dgr_blog/</code></li><li><strong>PSPStain</strong>（MICCAI 2024）—— 本课题的 baseline，非配对 + 病理语义约束，见本系列 <code>pspstain_blog/</code></li></ul>
+<hr />
+<p><em>本文是基于论文原文（IEEE TMI 2024，14 页全文）的深度解读。第 7.3、8 节为我的判断，已明确标注。表格数字均从 PDF 位图表格逐格核对（表格在原文中以图片形式嵌入，文本层不可抽取）。原始论文版权归 IEEE 及原作者所有。</em></p>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

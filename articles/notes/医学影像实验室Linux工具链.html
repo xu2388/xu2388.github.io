@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet","date":"2026-10-24","tags":["研究","虚拟染色/科研"],"category":"研究","summary":"面向实验室共享 GPU 服务器的上机操作路线，按「账号与环境准备 → DICOM 转 NIfTI → 预处理与配准 → GPU 侧依赖 → 排队与训练 → 容器化」的顺序，整理 dcm2niix 与 find 批量转换写法、FSL 的 bet/flirt/fast 分工、CUDA 与 cuDNN、PyTorch 安装通道的版本对应、Slurm 的 sbatch 关键参数、nnUNet 规划预处理与训练的命令顺序，以及 Docker/Singularity 镜像片段，并保留权限、软件源、pip 受限等真实卡点。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet</h1>
+<div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 豆包对话 · 医学影像实验室 Linux 学习路线</div>
+<h1>医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet</h1>
+<h2>一、概述：这条路线要解决什么</h2>
+<p>本文整理的是一条<strong>上机工具链路线</strong>，而不是一条算法结论。它回答的问题很具体：当实验室只有一台共享的 GPU 服务器、数据以 DICOM 形式堆放、训练框架要求特定的 CUDA 版本、训练任务需要排队才能拿到卡时，一名刚接触 Linux 的研究生应当按什么顺序把这些环节逐个打通。</p>
+<p>材料来自一段以「医学影像实验室 Linux 学习路线」为题的长对话（162 条消息）。该对话的前半部分给出了一份按工具链展开的路线，涉及 dcm2niix、FSL、ITK、CUDA/cuDNN、Slurm、nnUNet、Docker 与 Singularity；中段退化为对单条基础命令的零散追问；尾部约六分之一已转向 HTTP 状态码、后端框架与容器编排等另一主题域，与本文无关，另有专篇整理，此处不取。</p>
+<p>需要与本文区分的是《服务器、训练与实验 · 长对话整理》一篇：那篇记录的是训练过程中的诊断结论与假设修正，属于「跑起来之后发生了什么」；本篇只覆盖「如何跑起来」，即数据转换、环境配置、任务排队与训练启动的操作流程。</p>
+<p><strong>关于脱敏</strong>：原料属于实验室共享服务器场景，涉及他人主机、账号与目录。本文一律写作「实验室共享服务器」「远程实例」「项目目录」；<code>/data/dicom</code>、<code>/data/nifti</code>、<code>/output</code> 等路径保留为<strong>教学示例</strong>，不代表任何真实挂载点；原料中出现的内网地址、邮箱、个人用户名与任何凭据形态均不进入本文。所有命令与参数均照原料记录，原料未给出的参数本文不补，并注明「以实验室实际安装为准」。</p>
+<h2>二、环境与账号准备</h2>
+<p>共享服务器上的第一个障碍通常不是算法，而是「有没有一个能登录的账号、能不能改系统配置、装了包会不会弄坏别人的环境」。原料对此给出的是一条标准流程：先由管理员建普通账号并赋予必要的 sudo 组，再由使用者在自己的目录里工作。</p>
+<pre><code>useradd -m labuser &amp;&amp; passwd labuser
+usermod -aG sudo labuser</code></pre>
+<p><code>-m</code> 会同时创建该用户的家目录。原料反复强调的一点是：普通用户对 <code>/etc</code> 下的文件默认只有读权限，改配置必须显式加 <code>sudo</code>，而日常的数据与脚本应当留在自己的目录中，不要在家目录里滥用 <code>sudo</code>。</p>
+<p>远程接入与长任务保活是第二件事。文件传输用 <code>scp</code>，长时间运行的任务用 <code>tmux</code> 或 <code>screen</code> 托管，以免 SSH 会话中断把训练一起带走。</p>
+<pre><code>scp user@remote_ip:/path/to/source_file /local_path/</code></pre>
+<p>其中的 <code>remote_ip</code> 在原料里是具体的内网地址，此处按示例写法保留。</p>
+<p>数据落地之后要解决「软件从哪装、装坏怎么办」。原料给出的包管理分两条：系统级用 <code>apt</code>（Ubuntu）或 <code>yum</code>（CentOS），Python 级用虚拟环境。系统级安装的第一个真实卡点是包名与软件源：</p>
+<pre><code>sudo apt update
+sudo apt install mlocate</code></pre>
+<p>原料记录了一次 <code>Unable to locate package</code> 的排查，原因被归纳为三类：包名拼写错误（实际敲成了 <code>mloacte</code>）、当前软件源中确实没有该包、软件包索引未更新。更麻烦的是 Ubuntu 24.04 之后源文件位置发生了变化，配置的编辑对象迁移到了 <code>/etc/apt/sources.list.d/ubuntu.sources</code>，采用 DEB822 的多行格式，继续改 <code>sources.list</code> 不生效。换源前先备份：</p>
+<pre><code>sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak</code></pre>
+<p>Python 侧环境有两条路。原料第一条是 conda，这也是实验室最常用的做法：</p>
+<pre><code>wget https://repo.anaconda.com/archive/Anaconda3-2023.03-Linux-x86_64.sh &amp;&amp; bash Anaconda3-2023.03-Linux-x86_64.sh
+conda create -n med-env python=3.9
+conda activate med-env</code></pre>
+<p>第二条是系统自带的 venv。原料记录了在 Ubuntu 24.04 上直接 <code>pip install</code> 被拒的现象：系统 Python 被标记为「外部管理」，禁止 pip 向系统级环境写包，正确反应是改用虚拟环境，而不是去绕过该限制。</p>
+<pre><code>sudo apt install python3-venv
+python3 -m venv myenv
+source myenv/bin/activate
+pip install SimpleITK
+deactivate</code></pre>
+<table>
+<tr><th>目的</th><th>原料给出的命令</th></tr>
+<tr><td>创建普通账号并设密码</td><td><code>useradd -m labuser</code> 之后执行 <code>passwd labuser</code></td></tr>
+<tr><td>加入管理员组</td><td><code>usermod -aG sudo labuser</code></td></tr>
+<tr><td>放行远程登录与网页服务端口</td><td><code>ufw allow 22/tcp</code>；<code>ufw allow 8000/tcp</code></td></tr>
+<tr><td>与远程实例互传文件</td><td><code>scp user@remote_ip:/path/to/source_file /local_path/</code></td></tr>
+<tr><td>长任务保持会话</td><td><code>tmux</code> 或 <code>screen</code></td></tr>
+<tr><td>增量备份影像数据目录</td><td><code>rsync -avz /data /backup</code></td></tr>
+<tr><td>定时执行备份</td><td><code>crontab -e</code> 中写入 <code>0 2 * * *</code> 的 rsync 任务</td></tr>
+<tr><td>用 conda 隔离实验环境</td><td><code>conda create -n med-env python=3.9</code></td></tr>
+<tr><td>用 venv 隔离实验环境</td><td><code>python3 -m venv myenv</code> 后 <code>source myenv/bin/activate</code></td></tr>
+<tr><td>查看磁盘与目录占用</td><td><code>df -h</code>；<code>du -sh ~/project</code></td></tr>
+</table>
+<h2>三、数据转换：DICOM 到 NIfTI</h2>
+<p>影像数据进入分析流程的第一步是格式转换。DICOM 是设备与 PACS 系统的存档格式，逐序列分文件、头部携带扫描参数；NIfTI（<code>.nii</code> 与压缩形式 <code>.nii.gz</code>）则是神经影像与深度学习管线常用的单文件体积格式，便于配准、分割与批量读取。原料选择的转换工具是 <code>dcm2niix</code>，安装方式直接取发布包：</p>
+<pre><code>wget https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20230415/dcm2niix_lnx.zip &amp;&amp; unzip dcm2niix_lnx.zip</code></pre>
+<p>单个输入目录的转换写法为：</p>
+<pre><code>./dcm2niix -o /output -f %s_%p -z y /input/dicom</code></pre>
+<p>其中 <code>-o</code> 指定输出目录，末位是输入的 DICOM 目录；<code>-f</code> 与 <code>-z</code> 在原料中只出现了命令形式而未逐项注释，本文按原始记录保留，具体语义以该版本工具的帮助输出为准。</p>
+<p>真正需要拆开讲清楚的是批量写法。原料给出的核心命令是：</p>
+<pre><code>find /data/dicom -name &quot;*.dcm&quot; -exec dcm2niix -o /data/nifti {} \;</code></pre>
+<p>这条命令的每个片段含义如下（<code>-exec</code>、<code>{}</code>、<code>\;</code> 三者的解释直接来自原料对 <code>find</code> 的说明）。</p>
+<table>
+<tr><th>片段</th><th>作用</th></tr>
+<tr><td><code>/data/dicom</code></td><td>搜索的起始路径，省略时默认为当前目录</td></tr>
+<tr><td><code>-name &quot;*.dcm&quot;</code></td><td>按文件名匹配，支持通配符</td></tr>
+<tr><td><code>-exec</code></td><td>对每一个命中的文件执行其后的命令</td></tr>
+<tr><td><code>dcm2niix -o /data/nifti</code></td><td>被执行的命令本体，<code>/data/nifti</code> 为输出目录</td></tr>
+<tr><td><code>{}</code></td><td>代表当前找到的那个文件，由 <code>find</code> 逐个替换</td></tr>
+<tr><td><code>\;</code></td><td>标记被执行命令的结束，反斜杠用于转义</td></tr>
+</table>
+<p>原料为这三个片段另给了一个更直观的例子，可与转换命令对照理解：</p>
+<pre><code>find /tmp -name &quot;*.tmp&quot; -exec rm {} \;</code></pre>
+<p>除 <code>-exec</code> 之外，原料还给出了 <code>find</code> 的常用条件：<code>-type</code> 按类型（<code>f</code> 普通文件、<code>d</code> 目录、<code>l</code> 符号链接）、<code>-size</code> 按大小（<code>+100M</code>、<code>-1k</code>）、<code>-mtime</code> 与 <code>-mmin</code> 按修改时间、<code>-perm</code> 按权限、<code>-user</code> 与 <code>-group</code> 按属主属组、<code>-print</code> 打印结果。这套条件在影像数据整理时最直接可用，例如清点某个目录下近 7 天内改动过的文件。</p>
+<p><code>find</code> 也可以与 <code>xargs</code> 组合，这是原料中出现的第二种批量风格：</p>
+<pre><code>find /data -name &quot;*.dcm&quot; | xargs -I {} dcm2nii {} -o /output
+find /path/to/dicom -name &quot;*.dcm&quot; | xargs -n 1 dcm2nii</code></pre>
+<p>需要特别指出的一处<strong>不严谨</strong>：这两条用的是 <code>dcm2nii</code>，而前面安装与单目录转换用的是 <code>dcm2niix</code>。原料中两种写法混用，<code>dcm2nii</code> 是较早的独立程序名。上机时应先用 <code>which</code> 确认本机实际存在的是哪一个，不要照抄字符串。这也解释了当时为什么会在这类命令上卡住——命令格式正确，可执行文件名却是另一个。</p>
+<p>转换之后要做的是核对，而不是直接训练。原料给出的元数据查看方式是 dcmtk 工具包：</p>
+<pre><code>dcmdump input.dcm</code></pre>
+<p>Python 侧读取则依赖三个库，原料的安装命令如下：</p>
+<pre><code>pip install pydicom
+pip install SimpleITK
+pip install nibabel</code></pre>
+<h2>四、预处理与配准：FSL 三件套与其他工具</h2>
+<p>预处理部分原料给出的命令非常克制：只给了工具名、一句话用途，以及一条完整的 ANTs 配准命令行。对 FSL 三件套，它没有列出任何参数。</p>
+<pre><code>sudo apt-get install fsl</code></pre>
+<table>
+<tr><th>环节</th><th>工具</th><th>原料给出的信息</th><th>参数情况</th></tr>
+<tr><td>头骨去除</td><td><code>bet</code></td><td>用途为「去脑壳」，即剥除颅骨等非脑组织</td><td>原料未记录具体参数</td></tr>
+<tr><td>线性配准</td><td><code>flirt</code></td><td>用途为线性（刚体/仿射）配准</td><td>原料未记录具体参数</td></tr>
+<tr><td>组织分割</td><td><code>fast</code></td><td>用途为脑组织分割</td><td>原料未记录具体参数</td></tr>
+<tr><td>元数据查看</td><td><code>dcmdump</code></td><td>仅一条示例命令</td><td>同上</td></tr>
+<tr><td>高精度配准</td><td><code>antsRegistration</code></td><td>给出完整命令行</td><td>见下</td></tr>
+<tr><td>纹理特征提取</td><td>PyRadiomics</td><td>给出 Python 调用片段</td><td>属库接口而非命令行</td></tr>
+</table>
+<p>本文不打算为 <code>bet</code>、<code>flirt</code>、<code>fast</code> 补一张参数表——原料确实没有，凭记忆填写正是笔误与版本错配的来源。合理的做法是按工具的官方文档与本机安装版本核对：FSL 的文档地址为 https://fsl.fmrib.ox.ac.uk/fsl/fslwiki 。</p>
+<p>原料中唯一完整给出的配准命令属于 ANTs，它明确写出了维度、固定图像、移动图像与输出前缀四项，可视为「一条配准命令至少要说明哪些信息」的参照：</p>
+<pre><code>antsRegistration --dimensionality 3 \
+                 --fixed-image fixed.nii \
+                 --moving-image moving.nii \
+                 --output transform_prefix</code></pre>
+<p>对三维体积数据，这条命令的形式本身就说明了配准任务的四个输入：空间维度、作为参照的固定图像、需要被形变对齐的移动图像、以及变换结果的输出前缀。原料另外提到 ITK 与 SimpleITK 作为分割与配准算法的底层库，3D Slicer 用于可视化与分割标注，MRIcroGL 用于体数据浏览与 ROI 查看，但这些工具在具体流程中的调用细节未展开。</p>
+<p>从操作顺序看，这一阶段的产出是「干净、对齐、可切块」的体数据，它必须等第三节的格式转换完成之后才能开始，也必须等下一节的 GPU 环境就绪之后才可能与训练衔接。</p>
+<h2>五、CUDA 与 PyTorch：GPU 侧环境</h2>
+<p>共享服务器上的第二个真实卡点是「驱动、CUDA、cuDNN、框架版本必须成套」。原料给的路径是从驱动向上搭：</p>
+<pre><code>ubuntu-drivers autoinstall
+nvidia-smi
+nvcc --version</code></pre>
+<p><code>nvidia-smi</code> 看驱动与卡的实时状态，<code>nvcc --version</code> 看工具包版本，这两个检查命令是原料明确写出的验证手段。CUDA 本身用 runfile 安装：</p>
+<pre><code>wget https://developer.download.nvidia.com/compute/cuda/11.7.1/local_installers/cuda_11.7.1_516.94.01_linux.run &amp;&amp; sudo sh cuda_11.7.1_516.94.01_linux.run</code></pre>
+<p>cuDNN 以归档包形式解压后，把头文件与库文件复制到 CUDA 目录并放开读权限：</p>
+<pre><code>sudo cp cudnn-*-archive/include/cudnn*.h /usr/local/cuda/include/ &amp;&amp; sudo cp -P cudnn-*-archive/lib/libcudnn* /usr/local/cuda/lib64/ &amp;&amp; sudo chmod a+r /usr/local/cuda/include/cudnn*.h /usr/local/cuda/lib64/libcudnn*</code></pre>
+<p>框架安装侧，原料给出的通道是 pip 加索引地址：</p>
+<pre><code>pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install tensorflow-gpu==2.12</code></pre>
+<p>安装后的验证片段原料写得很清楚：</p>
+<pre><code>import torch
+print(torch.__version__)
+print(torch.cuda.is_available())  # 输出 True 表示 GPU 可用</code></pre>
+<p>关于版本对应，需要坦率说明一点：<strong>原料没有给出一张 CUDA 与 PyTorch 的兼容矩阵</strong>，它只是在若干命令字符串里露出了版本信息。本文只把这些零散信息整理成对照，它不构成通用兼容表；换一块卡或换一台机器时，正确做法是先查实验室服务器上实际装了什么，再选对应的安装通道。</p>
+<table>
+<tr><th>原料中出现的片段</th><th>可直接读出的版本信息</th></tr>
+<tr><td><code>cuda_11.7.1_516.94.01_linux.run</code></td><td>CUDA 11.7.1 的安装包与驱动 516.94.01 绑定在同一 runfile 中</td></tr>
+<tr><td><code>--index-url .../whl/cu117</code></td><td>走 CUDA 11.7 通道的 PyTorch 轮子</td></tr>
+<tr><td><code>--index-url .../whl/cu118</code></td><td>原料注明用于 CUDA 11.8</td></tr>
+<tr><td><code>cudnn-linux-x86_64-8.9.0.131_cuda11-archive.tar.xz</code></td><td>cuDNN 8.9.0.131 面向 CUDA 11 系列</td></tr>
+<tr><td><code>FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04</code></td><td>CUDA 11.7.1 与 cuDNN 8 共存于 Ubuntu 20.04 运行时镜像</td></tr>
+<tr><td><code>pip install tensorflow-gpu==2.12</code></td><td>原料给出的 TensorFlow GPU 版本示例</td></tr>
+</table>
+<p>因此上机时的检查动作比背表更重要：驱动状态看 <code>nvidia-smi</code>，工具包看 <code>nvcc --version</code>，框架侧看 <code>torch.cuda.is_available()</code>，Python 与 pip 自身版本看 <code>python3 --version</code> 与 <code>pip3 --version</code>。原料在这一点上的表述是「需确保 CUDA 与 cuDNN 的版本与软件包版本兼容，参考官方文档」，本文照此保留结论，不代为编造对应关系。</p>
+<p>显存与多卡部分，原料给出的两条优化写法属于 TensorFlow：</p>
+<pre><code>tf.config.experimental.set_memory_growth(tf.config.list_physical_devices(&#x27;GPU&#x27;)[0], True)
+
+strategy = tf.distribute.MirroredStrategy()
+with strategy.scope():
+    model = tf.keras.Sequential(...)</code></pre>
+<p>以及一条显存泄漏排查工具名 <code>nvidia-memcheck</code>。这些只作为原料记录保留，本文不推断它们在当前版本下是否仍然适用。</p>
+<h2>六、排队与训练：Slurm 与 nnUNet</h2>
+<p>实验室共享 GPU 的第三个真实卡点是排队：卡是别人的任务正在占着，直接在前台跑训练既拿不到资源，也会因为会话超时被杀掉。原料给出的调度系统是 Slurm，安装与提交命令如下。</p>
+<pre><code>sudo apt-get install slurm-wlm
+sbatch --gres=gpu:1 --time=0-1:0:0 --output=log.txt run.sh</code></pre>
+<p>作业脚本内部以 <code>#SBATCH</code> 声明资源，原料给的示例只有两行，最后一行是实际执行的训练命令：</p>
+<pre><code>#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:1
+python train_model.py</code></pre>
+<table>
+<tr><th>参数或片段</th><th>含义</th></tr>
+<tr><td><code>sbatch</code></td><td>以批处理模式提交作业，而非在当前终端前台运行</td></tr>
+<tr><td><code>--gres=gpu:1</code></td><td>申请 1 块 GPU</td></tr>
+<tr><td><code>--time=0-1:0:0</code></td><td>时限参数，原料未注释其格式约定，以集群文档为准</td></tr>
+<tr><td><code>--output=log.txt</code></td><td>作业输出写入该文件，可事后用 <code>tail -f log.txt</code> 实时跟踪</td></tr>
+<tr><td><code>run.sh</code></td><td>被提交执行的脚本</td></tr>
+<tr><td><code>#SBATCH --nodes=1</code></td><td>脚本内声明使用 1 个节点</td></tr>
+<tr><td><code>#SBATCH --gres=gpu:1</code></td><td>脚本内声明 GPU 资源</td></tr>
+</table>
+<p>必须诚实记录一处缺口：<strong>原料只整理了提交侧命令，没有记录队列查看与作业管理的命令</strong>。也就是说，「看谁在跑、看自己排到第几、撤销一个排错的作业」这三件在共享集群上每天都要做的事，当时是空白的，只能向集群管理员索取本集群的命令表。这一缺失在实操中的代价很直接——提交之后无法判断作业是在排队还是在运行，只能靠 <code>tail -f</code> 反复查看输出文件是否开始增长，以及 <code>nvidia-smi</code> 与 <code>htop</code> 观察卡与 CPU 是否真的被占用。原料另外提到 PBS 作为同类调度系统，未给出命令。</p>
+<p>nnUNet 部分原料给出的是一条完整的最短流程，也正好体现了「先规划预处理、再训练」的顺序：</p>
+<pre><code>git clone https://github.com/MIC-DKFZ/nnUNet.git
+cd nnUNet
+pip install -e .
+nnUNet_plan_and_preprocess -t 200 --verify_dataset_integrity
+nnUNet_train 2D nnUNetTrainerV2 200 0</code></pre>
+<p>从命令形式可以读出三点约定。其一，任务以数字编号标识（原料用的是 <code>200</code>），规划预处理用 <code>-t 200</code> 指定，训练时该编号必须再次出现并保持一致，否则训练找不到对应的预处理产物。其二，<code>--verify_dataset_integrity</code> 出现在规划阶段，说明数据一致性检查是在重活之前做的。其三，训练命令的参数顺序依次是维度配置、训练器类名、任务编号，末位还有一个 <code>0</code>；原料没有解释这四个位置的语义，本文不补写，按原始记录保留，实际使用前应查该版本自带的帮助。</p>
+<p>推理与部署在训练之后。原料给出的部署侧优化片段是 TensorFlow 的 TensorRT 转换：</p>
+<pre><code>import tensorflow as tf
+from tensorflow.python.compiler.tensorrt import trt_convert as trt
+converter = trt.TrtGraphConverterV2(input_saved_model_dir=&quot;saved_model&quot;)
+converter.convert()
+converter.save(&quot;trt_saved_model&quot;)</code></pre>
+<p>原料同时在流程里明确写了「使用 <code>dcm2niix</code> 转换 DICOM 到 NIfTI」作为预处理第一步，也就是说，本文第三、四、五、六节串起来正是它给的一条完整链路：格式转换、体积预处理、GPU 环境、排队训练、最后推理部署。</p>
+<h2>七、容器化：Docker、Neurodocker 与 Singularity</h2>
+<p>环境搭一次已经够麻烦，共享服务器上更麻烦的问题是「别人的机器上装不出同一套环境」。原料给出的答案是容器化，并把 Singularity 放在集群管理一节，与 Docker 并列——这在共享集群上是常见安排，普通用户往往没有 Docker 守护进程的使用权限。</p>
+<p>Docker 的两个基本动作与 GPU 参数：</p>
+<pre><code>docker build -t med-env .
+docker run -it --gpus all -v /data:/data med-env</code></pre>
+<p><code>-v /data:/data</code> 把宿主机的数据目录挂进容器，<code>--gpus all</code> 透出全部 GPU，这里的 <code>/data</code> 同样是示例路径。原料给出的第一个 Dockerfile 片段是完整的，从 CUDA 运行时镜像一路装到 3D Slicer：</p>
+<pre><code>FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
+RUN apt-get update &amp;&amp; apt-get install -y software-properties-common
+RUN add-apt-repository universe &amp;&amp; add-apt-repository multiverse
+RUN apt-get install -y 3dslicer
+CMD [&quot;3dslicer&quot;]</code></pre>
+<p>第二个片段是推理部署方向的，原料只给了这三行，本文照此保留而不补全其余部分（例如依赖安装步骤原料并未写出）：</p>
+<pre><code>FROM tensorflow/tensorflow:latest-gpu
+COPY . /app
+CMD [&quot;python&quot;, &quot;/app/predict.py&quot;]</code></pre>
+<p>当需要的是整套影像工具而非单个软件时，原料给了 Neurodocker 的生成方式，一条命令把 FSL、FreeSurfer 与 ANTs 写进 Dockerfile：</p>
+<pre><code>neurodocker generate docker \
+  --base-image ubuntu:20.04 \
+  --pkg-manager apt \
+  --install fsl freesurfer ants \
+  --user=neuro \
+  --minimize &gt; Dockerfile</code></pre>
+<p>集群侧的运行命令用 <code>--nv</code> 透出 NVIDIA 设备：</p>
+<pre><code>singularity run --nv /path/to/container.sif</code></pre>
+<table>
+<tr><th>目标</th><th>原料给出的做法</th></tr>
+<tr><td>构建本地镜像</td><td><code>docker build -t med-env .</code></td></tr>
+<tr><td>带 GPU 与数据挂载运行</td><td><code>docker run -it --gpus all -v /data:/data med-env</code></td></tr>
+<tr><td>以 CUDA 运行时为基础</td><td><code>FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04</code></td></tr>
+<tr><td>以框架镜像做推理容器</td><td><code>FROM tensorflow/tensorflow:latest-gpu</code></td></tr>
+<tr><td>生成含多种影像工具的环境定义</td><td><code>neurodocker generate docker</code> 及 <code>--install fsl freesurfer ants</code></td></tr>
+<tr><td>集群中运行容器</td><td><code>singularity run --nv /path/to/container.sif</code></td></tr>
+</table>
+<h2>八、常见误区与真实卡点</h2>
+<p>这一节把原料里确实踩到、且与本文主题相关的坑集中列出，其中第一条是原料自身给错的解释，本文予以更正。</p>
+<p><strong>其一，<code>chown -R -p</code> 并不成立。</strong> 原料在讲解「<code>-p</code> 在不同命令中的作用」时，把 <code>-p</code> 说成是 <code>chown</code> 的一个「忽略错误继续处理」的选项，并写出 <code>chown -R -p user:group project</code>。这个解释是<strong>错误的</strong>：<code>-p</code> 不是 <code>chown</code> 的选项，照抄这条命令不会得到所谓的容错行为。正确用法是——需要递归修改属主与属组时写作：</p>
+<pre><code>chown -R user:group project</code></pre>
+<p>其中 <code>-R</code> 表示递归，<code>user:group</code> 一次同时指定所有者与所属组（原料在权限章节给出的正是这个格式）。而「逐级创建目录」属于另一件事，用 <code>mkdir -p</code>；「复制时保留属性」也是另一件事，用 <code>cp -p</code>；解包时保留权限则用 <code>tar</code> 的 <code>-p</code>。这几处混淆的根源是把一个字母当成了通用开关。</p>
+<table>
+<tr><th>命令</th><th><code>-p</code> 的真实含义</th><th>原料示例</th></tr>
+<tr><td><code>mkdir</code></td><td>递归创建缺失的父目录</td><td><code>mkdir -p parent/child/grandchild</code></td></tr>
+<tr><td><code>rmdir</code></td><td>逐级删除空的父目录</td><td><code>rmdir -p parent/child/grandchild</code></td></tr>
+<tr><td><code>tar</code></td><td>打包与解包时保留权限与属性</td><td><code>tar -czvfp config.tar.gz /etc</code></td></tr>
+<tr><td><code>cp</code></td><td>保留文件属性</td><td>与 <code>-r</code> 组合可用于目录复制</td></tr>
+<tr><td><code>chown</code></td><td><strong>无此选项</strong>，原料的错误解释</td><td>递归改属主属组应写作 <code>chown -R user:group project</code></td></tr>
+</table>
+<p><strong>其二，系统 Python 不许直接 pip。</strong> Ubuntu 24.04 把系统环境标记为外部管理，<code>pip install</code> 会被拒。当时的正确反应是回到虚拟环境，而不是改写系统配置。</p>
+<p><strong>其三，改错源文件。</strong> 24.04 起软件源在 <code>/etc/apt/sources.list.d/ubuntu.sources</code>，格式为多行键值形式，继续编辑 <code>sources.list</code> 不生效；<code>Unable to locate package</code> 要先分辨包名拼写、源内容与索引未更新三种原因，其中原料实际遇到的正是拼写错误。</p>
+<p><strong>其四，路径写错被误认为命令写错。</strong> 原料记录了一次 <code>cd /test/year</code> 报 <code>No such file or directory</code>：目录实际建在家目录下（<code>~/test</code>），加了一个开头的斜杠就变成从根目录找起。绝对路径从 <code>/</code> 开始，相对路径相对于当前目录，这一条在敲转换命令时同样成立。</p>
+<p><strong>其五，重定向与追加。</strong> <code>&gt;</code> 会清空原内容再写，<code>&gt;&gt;</code> 才是追加；<code>echo</code> 的文本必须紧跟命令本身并用引号包裹，重定向符号写在末尾。原料中因把文本写在 <code>&gt;&gt;</code> 之后而被判成路径，进而报权限错误。</p>
+<p><strong>其六，编辑器与目录。</strong> <code>vim</code> 不能直接打开目录；<code>:wq</code> 打不出来往往是因为仍处在插入模式，需先按 <code>Esc</code>。这类问题与影像流程无关，但确实会卡住改配置的那十几分钟。</p>
+<p><strong>其七，工具名混用。</strong> <code>dcm2niix</code> 与 <code>dcm2nii</code> 在原料中同时出现，上机前用 <code>which</code> 确认本机存在的是哪一个。</p>
+<p><strong>其八，排队可见性缺失。</strong> 如第六节所述，原料只有提交命令而没有队列查询与撤销命令，共享集群上这一项必须向管理员索取，否则无法判断任务是卡在队列还是已在运行。</p>
+<h2>九、总结要点：命令速查</h2>
+<p>下表按「要做的事」组织，全部命令来自原料原文，示例路径不含真实信息。</p>
+<table>
+<tr><th>我要做 X</th><th>用哪条命令</th></tr>
+<tr><td>建账号并授权</td><td><code>useradd -m labuser &amp;&amp; passwd labuser</code>；<code>usermod -aG sudo labuser</code></td></tr>
+<tr><td>换源前先备份</td><td><code>sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak</code></td></tr>
+<tr><td>更新包索引并安装</td><td><code>sudo apt update</code>；<code>sudo apt install mlocate</code></td></tr>
+<tr><td>建 conda 实验环境</td><td><code>conda create -n med-env python=3.9</code>；<code>conda activate med-env</code></td></tr>
+<tr><td>建 venv 环境并进入</td><td><code>python3 -m venv myenv</code>；<code>source myenv/bin/activate</code></td></tr>
+<tr><td>批量把 DICOM 转成 NIfTI</td><td><code>find /data/dicom -name &quot;*.dcm&quot; -exec dcm2niix -o /data/nifti {} \;</code></td></tr>
+<tr><td>转换单个 DICOM 目录</td><td><code>./dcm2niix -o /output -f %s_%p -z y /input/dicom</code></td></tr>
+<tr><td>查看 DICOM 元数据</td><td><code>dcmdump input.dcm</code></td></tr>
+<tr><td>安装 FSL 做预处理</td><td><code>sudo apt-get install fsl</code>（<code>bet</code>、<code>flirt</code>、<code>fast</code> 参数查官方文档）</td></tr>
+<tr><td>三维配准</td><td><code>antsRegistration --dimensionality 3 --fixed-image fixed.nii --moving-image moving.nii --output transform_prefix</code></td></tr>
+<tr><td>装驱动并验证</td><td><code>ubuntu-drivers autoinstall</code>；<code>nvidia-smi</code></td></tr>
+<tr><td>验证 CUDA 工具包</td><td><code>nvcc --version</code></td></tr>
+<tr><td>装对应 CUDA 通道的 PyTorch</td><td><code>pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117</code></td></tr>
+<tr><td>提交一块 GPU 的作业</td><td><code>sbatch --gres=gpu:1 --time=0-1:0:0 --output=log.txt run.sh</code></td></tr>
+<tr><td>跟踪作业输出</td><td><code>tail -f log.txt</code></td></tr>
+<tr><td>规划并预处理任务 200</td><td><code>nnUNet_plan_and_preprocess -t 200 --verify_dataset_integrity</code></td></tr>
+<tr><td>启动 2D 训练</td><td><code>nnUNet_train 2D nnUNetTrainerV2 200 0</code></td></tr>
+<tr><td>构建镜像</td><td><code>docker build -t med-env .</code></td></tr>
+<tr><td>带 GPU 运行容器</td><td><code>docker run -it --gpus all -v /data:/data med-env</code></td></tr>
+<tr><td>集群中运行容器</td><td><code>singularity run --nv /path/to/container.sif</code></td></tr>
+<tr><td>递归改属主属组</td><td><code>chown -R user:group project</code>（没有 <code>-p</code>）</td></tr>
+<tr><td>逐级创建目录</td><td><code>mkdir -p parent/child/grandchild</code></td></tr>
+<tr><td>增量备份数据</td><td><code>rsync -avz /data /backup</code></td></tr>
+</table>
+<p>最后强调两点。其一，这条路线的<strong>顺序是硬约束</strong>：格式转换与完整性检查没做完就装框架，或者框架版本没对上就提交训练作业，返工成本远高于按序推进。其二，原料中的命令多是「最小可用形式」，凡本文标注为原料未记录之处——FSL 的参数、<code>--time</code> 的格式约定、nnUNet 训练命令末位参数、队列管理命令——都应以实验室实际安装的版本与集群文档为准，而不是照抄任何一份笔记，包括这一份。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 医学影像实验室 Linux 学习路线</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

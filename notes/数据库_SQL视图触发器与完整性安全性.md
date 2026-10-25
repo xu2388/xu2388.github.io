@@ -1,0 +1,427 @@
+---
+title: 数据库 · SQL 查询、视图、触发器与完整性安全性
+subject: 数据库/MySQL
+category: 课程笔记
+source: 课程复习阶段的问答记录 · SQL 查询与连接、嵌套子查询、视图与索引、完整性与安全性专题
+summary: 围绕从查询到安全保护的链条梳理结论：SELECT 子句按 FROM、WHERE、GROUP BY、HAVING、ORDER BY 次序执行，故「不计不及格」只能写在 WHERE、「门数不小于四」只能写在 HAVING；自然连接会匹配并合并全部同名列，两个同名列同时相等才保留，因而李四一行被排除；NOT IN 在子查询含空值时整体返回空集，NOT EXISTS 免疫；「每门课至多 60 人选修」可用断言配 ALL 表达，但 MySQL 不支持断言，须改用 BEFORE 触发器加 SIGNAL 拦截；收回用 REVOKE 加 CASCADE。
+---
+
+## 一、概述
+
+本篇把 SQL 查询层的写法与对象层、约束层的机制串成一条线：查询加工次序、多表拼合、子查询两种风格、视图与索引，最后落到完整性与安全性。原料依附于课程问答与实验场景，本文只抽取知识点与可复用语句，题号、批改记录、账户与主机信息一律删除或泛化；表名、字段名与约束名均取自原料，原料的拼写与语法错误按语义修正并在第十节汇总。
+
+## 二、SELECT 子句的书写顺序与执行顺序
+
+书写时结果列在最前，执行时它却几乎在最后。原料把执行次序总结为口诀：**WHERE 筛行、GROUP BY 分组、HAVING 筛组、ORDER BY 排序**。
+
+| 子句 | 书写位置 | 执行位置 | 作用对象 | 能否用聚集函数 |
+|---|---|---|---|---|
+| FROM | 第二 | 最先 | 基本表、视图、连接结果 | 不适用 |
+| WHERE | 第三 | 分组之前 | 单条原始元组 | 不能 |
+| GROUP BY | 第四 | 分组之时 | 元组集合 | 不适用 |
+| HAVING | 第五 | 分组之后 | 分组结果 | 能 |
+| ORDER BY | 第六 | 排序阶段 | 投影前的候选结果 | 能 |
+
+原料的算例：检索选修四门及以上课程学生的总成绩，不统计不及格课程，按总成绩降序排列。设选课表为 `SC(Sno, Cno, Grade)`，及格线取 60：
+
+```sql
+SELECT
+    Sno AS 学号,
+    SUM(Grade) AS 总成绩
+FROM SC
+WHERE Grade >= 60          -- 剔除不及格的行
+GROUP BY Sno
+HAVING COUNT(*) >= 4       -- 筛掉不足四门者
+ORDER BY 总成绩 DESC;
+```
+
+原料记录的错误写法是把 `Grade >= 60` 放进 `HAVING` 且不写 `WHERE`：分组之后已无单条记录的 `Grade` 可判断，且不及格的行仍参与门数统计与求和。结论是**行级条件属于 WHERE，聚合后条件属于 HAVING**。由此派生：聚集函数不能出现在 WHERE 中，需与聚合值比较时只能改写成子查询，如「人数高于全校平均人数的班级」写成 `WHERE student_count > (SELECT AVG(student_count) FROM class)`。
+
+`LIMIT` 限制结果行数，原料在「取年龄最大的前三名学生」一例中使用；原料此处写作 `LIMIT`，但这是 MySQL 与 PostgreSQL 的方言，SQL 标准对应 `FETCH FIRST n ROWS ONLY`。
+
+## 三、多表连接与外连接语义
+
+### 3.1 三种内连接的关系
+
+原料把连接体系收成一条包含链：一般连接即 θ 连接，条件可取任意比较运算符且保留全部列；等值连接是取等号的特例，需手动指定字段并保留重复列；自然连接又是等值连接的特例，自动匹配全部同名同类型列并合并重复列。三者都在笛卡尔积的子集中筛选；自然连接在同名列较多时风险极高，显式等值连接才是主流写法。
+
+### 3.2 自然连接为什么丢行
+
+原料设计一组带两个同名列的表来暴露风险：员工表 `emp` 含 `dept_id` 与 `create_time`，四行为张三(10, 2024-01-01)、李四(20, 2024-01-02)、王五(10, 2024-01-01)、赵六(30, 2024-01-03)；部门表 `dept` 为 10 技术部(2024-01-01)、20 产品部(2024-01-05)、50 市场部(2024-01-01)。
+
+```sql
+SELECT * FROM emp JOIN dept ON emp.dept_id = dept.dept_id;  -- 等值连接
+SELECT * FROM emp NATURAL JOIN dept;                        -- 自然连接
+```
+
+等值连接得三行（张三、李四、王五）且两个同名列重复出现；自然连接只剩张三与王五——李四的部门号 20 确实存在，但两侧 `create_time` 一为 2024-01-02、一为 2024-01-05，同名列并非同时相等，整行被排除。赵六的部门号 30 无对应部门，两种写法都查不到。结论：**自然连接把全部同名列纳入匹配条件，而业务表常带创建时间这类同名列，实际项目应显式写等值连接**。
+
+### 3.3 外连接：不匹配的行补空值
+
+内连接的问题在「不对称」的行上：原料的关系算例中 R 表含 `b4` 而 S 表没有、S 表含 `b5` 而 R 表没有，两行在所有内连接结果中消失。外连接保留这类行，缺失一侧的列填空值，按保留范围分左外、右外与全外。
+
+原料用同一组员工表对照：内连接只剩张三、李四、王五行，赵六（部门号 30）、孙七（部门号为空）以及市场部、行政部全部丢失；左外连接保留赵六与孙七，右外连接保留两个没有员工的部门。故查所有员工含无部门者用左外连接，查所有部门含空部门用右外连接；两表顺序互换后左外与右外语义相同，故左外可替代右外，MySQL 没有全外连接语法，需以左外、并集、右外拼接。
+
+统计「选课人数大于 2 的课程」时，原料刻意用左外连接让无人选修的课程也进入分组：
+
+```sql
+SELECT Course.Cno, Cname, COUNT(SC.Sno) AS 学生人数
+FROM Course LEFT JOIN SC ON Course.Cno = SC.Cno
+GROUP BY Course.Cno, Cname
+HAVING COUNT(SC.Sno) > 2;
+```
+
+用 `COUNT(SC.Sno)` 而非 `COUNT(*)` 是有意的：左外连接补出的空值行会被 `COUNT(*)` 算成 1，`COUNT(SC.Sno)` 跳过空值，计数才正确。
+
+## 四、嵌套子查询：IN 与 EXISTS
+
+### 4.1 相关子查询与非相关子查询
+
+原料区分得很清楚：子查询条件依赖父查询的叫相关子查询，不依赖的叫非相关子查询、可由里向外一次性算完。典型的相关子查询是「成绩不低于本人平均分的成绩单」，内层均值随外层学号变化，无法先算完：
+
+```sql
+SELECT Sno, Cno
+FROM SC x
+WHERE Grade >= (SELECT AVG(Grade) FROM SC y WHERE y.Sno = x.Sno);
+```
+
+非相关子查询只作为常量集合参与比较，原料一例是「与刘晨同系且年龄不大于刘晨的学生」；`ALL` 谓词把子查询结果当作整体比较：
+
+```sql
+SELECT Sname, Sage
+FROM Student
+WHERE Sage < ALL (SELECT Sage FROM Student WHERE Sdept = 'CS')
+  AND Sdept <> 'CS';
+```
+
+### 4.2 IN 与 EXISTS 的执行方向相反
+
+原料把差别概括为驱动方向：`IN` 先执行子查询得到结果集，再拿外层值去匹配，属于子查询驱动主查询；`EXISTS` 先取外层一行带进子查询做存在性判断，找到匹配即停，属于主查询驱动子查询，且只看「有没有」不看「是什么」。
+
+```sql
+SELECT Sname
+FROM Student
+WHERE EXISTS (SELECT * FROM SC WHERE Sno = Student.Sno AND Cno = '1');
+```
+
+### 4.3 NOT IN 与 NOT EXISTS：等价的前提与不等价的例外
+
+原料记录的一段纠偏值得保留：最初给出的两段语句只在内层写 `a = 1`、与外层无关联条件，此时 `NOT EXISTS` 根本不比较姓名，退化成全有或全无的判断——只要 `E` 中存在一行 `a = 1` 就恒假、查询一行都不返回。正确的对照必须显式关联：
+
+```sql
+SELECT name
+FROM s
+WHERE name NOT IN (SELECT name FROM E WHERE a = 1);
+
+SELECT name
+FROM s
+WHERE NOT EXISTS (
+    SELECT 1 FROM E
+    WHERE a = 1 AND E.name = s.name   -- 关键：与外层关联
+);
+```
+
+关联写对之后，差别集中在空值。SQL 遵循三值逻辑，任何值与空值比较的结果是 UNKNOWN，把 `NOT IN` 展开成合取式可看清失败机制：
+
+$$Sno \notin \{x_1, x_2, \dots, x_n, \mathrm{NULL}\} \iff \bigwedge_{i=1}^{n}(Sno \ne x_i)\ \wedge\ (Sno \ne \mathrm{NULL})$$
+
+末项恒为 UNKNOWN，合取式不可能为真，外层一行都选不出。原料的表述是「IN 遇到 NULL 会直接返回空结果」，本文补一句限定：**只有当子查询结果含空值且外层值不命中任何非空元素时结果才整体为空；若外层值恰好命中某个非空元素，`IN` 仍返回真**。`NOT EXISTS` 一侧空值与任何学号都不相等，判断不受干扰，因而免疫。原料给出的性能结论可写成一张选择表。
+
+| 数据规模情形 | 原料推荐 | 理由 |
+|---|---|---|
+| 子查询结果集小、外层大 | IN | 小集合装配一次，匹配开销低 |
+| 子查询结果集极大、外层小 | EXISTS | 不必物化大集合，逐行存在性检查 |
+| 内表大且连接列有索引 | EXISTS | 半连接优化，找到一条即停 |
+| 需判定不存在某类记录 | NOT EXISTS | 语义贴合业务，不怕脏空值 |
+
+以「查询没有选修 1 号课程的学生学号与姓名」为例，原料给出 `NOT IN`、`NOT EXISTS` 与左外连接加空值判断三种写法，第三种为：
+
+```sql
+SELECT s.Sno, s.Sname
+FROM Student s
+LEFT JOIN SC sc ON s.Sno = sc.Sno AND sc.Cno = '1'
+WHERE sc.Sno IS NULL;
+```
+
+原料的结论是：数据干净时三种写法结果一致，生产中应优先 `NOT EXISTS`；严格说两者在无空值且正确关联的前提下语义等价，差别集中在空值鲁棒性与执行计划上。
+
+## 五、视图
+
+### 5.1 定义与三个作用
+
+视图是从基本表或其他视图导出的虚表，数据库只存放定义、不存放数据，定义进入数据字典，基本表数据变化会直接影响视图。原料归纳的作用有三条：为机密数据提供安全保护、提供逻辑独立性、简化操作并隐藏复杂查询逻辑。原料建过的四个视图正好覆盖四种典型形态：
+
+```sql
+CREATE VIEW IS_Student AS
+SELECT Sno, Sname, Sage FROM Student WHERE Sdept = 'IS';
+
+CREATE VIEW Student_VIEW(学号, 姓名, 性别, 年龄, 系, 班级) AS
+SELECT Sno, Sname, Ssex, Sage, Sdept, Sclass FROM Student;
+
+CREATE VIEW S_G(Sno, Gavg) AS
+SELECT Sno, AVG(Grade) FROM SC GROUP BY Sno;
+
+CREATE VIEW XK_VIEW AS
+SELECT Student.*, Course.*, Grade
+FROM Student, SC, Course
+WHERE Student.Sno = SC.Sno AND SC.Cno = Course.Cno;
+```
+
+依次是带选择条件的行列子集视图、视名列重命名、含聚集与分组的视图、多表连接视图。原料用 `S_G` 把「成绩不低于本人平均分」的相关子查询改写成视图连接：
+
+```sql
+SELECT SC.Sno, Cno, Grade
+FROM SC, S_G
+WHERE SC.Sno = S_G.Sno AND Grade >= S_G.Gavg;
+```
+
+查看已有视图用 `SHOW FULL TABLES WHERE Table_type = 'VIEW'`，删除用 `DROP VIEW`；原料提示 `DROP` 连结构、索引、约束一起消失，`DELETE` 只删数据行。
+
+### 5.2 可更新视图的条件
+
+原料的结论是：含聚集函数、`GROUP BY` 等成分的视图不可更新。据此 `IS_Student` 与 `Student_VIEW` 属行列子集视图可更新，`S_G` 与 `XK_VIEW` 不可更新。
+
+原料此处写作向 `IS_Student(Sno, Sname, Grade)` 插入一条记录，并称「插入会自动转换为对 Student 和 SC 两表的插入」。但该句有两处问题：连接视图一般不可更新，无法拆成两个基表的插入；所列 `Grade` 列与 `IS_Student` 的实际定义（`Sno, Sname, Sage` 且仅出自 `Student`）不一致，属两个算例混用。本文只保留可执行的部分：
+
+```sql
+INSERT INTO IS_Student (Sno, Sname, Sage) VALUES ('20100031', '张立', 19);
+```
+
+视图定义中的 `WHERE Sdept = 'IS'` 只约束查询、不约束经视图写入的数据，插入不满足条件的行后该行即从视图消失。原料给出的封堵手段是 `WITH CHECK OPTION`：加上后经视图的插入与更新必须满足视图定义条件，否则拒绝执行。
+
+## 六、索引
+
+索引的目的是加快查询速度，由数据库管理系统自动维护。原料的一条原理性结论值得单列：**DBMS 自动在主码上建立索引，目的是提高实体完整性检查的效率，避免全表扫描**——索引不只服务查询，也服务约束检查。原料建的索引覆盖普通、唯一与组合三种：
+
+```sql
+CREATE INDEX iCname ON Course(Cname);
+CREATE UNIQUE INDEX iSname ON Student(Sname);
+CREATE INDEX iSnoCno ON SC(Sno, Cno DESC);
+CREATE UNIQUE INDEX iCno ON Course(Cno);
+```
+
+原料此处写作 `CREATE CLUSTERED INDEX iSnoCno ON SC(Sno, Cno DESC)`，因 MySQL 报语法错误而被注释掉，实验小结据此写作「MySQL 不支持聚集索引」。此说需限定：MySQL 不支持的是这一显式语法，InnoDB 的主键在物理上就是聚簇索引，数据行按主键顺序存放、叶子节点即完整行。原料另一段对话正好补上对照：
+
+| 索引类型 | 物理形态 | 一张表可有几个 | 查询代价 |
+|---|---|---|---|
+| 聚簇索引 | 数据行按索引键物理排序，叶子存整行 | 唯一 | 定位即得整行，不需回表 |
+| 非聚簇索引（辅助索引） | 独立目录结构，叶子存索引键值 | 可以有多个 | 先取主键值，再回表取整行 |
+
+索引何时失效，原料未系统展开，可依据的只有两点：查询条件对索引列施加函数时无法沿索引下推；原料列出的「优化器失灵」四种情形——超过五个表的复杂连接、嵌套子查询尤其是相关子查询、统计信息不准确、使用了不支持的函数或操作，此时需手动改写 SQL。B+ 树的树高与分裂合并机制在原料中只作为内模式变更的例子出现（顺序存储结构改为 B+ 树索引存储结构），未展开，本文不虚构，仅保留一条结论：索引结构属内模式，改变它不影响模式与外模式，因而提供物理独立性。
+
+## 七、完整性三要素与对应的 SQL 子句
+
+数据库完整性指数据的正确性与相容性：正确性指数据符合现实世界语义，相容性指同一对象在不同关系表中的数据符合逻辑。原料反复对照它与安全性的分工：安全性防非法用户与非法操作，完整性防错误数据，权限再高的合法用户写入违规数据同样被拦下。
+
+| 约束类型 | 约束对象 | 定义子句 | 违约处理 |
+|---|---|---|---|
+| 实体完整性 | 主码 | PRIMARY KEY | 拒绝执行 |
+| 参照完整性 | 外码 | FOREIGN KEY 加 REFERENCES | 拒绝、级联、置空 |
+| 用户定义完整性 | 普通属性与元组 | NOT NULL、UNIQUE、CHECK、DEFAULT | 拒绝执行 |
+
+完整性控制机制须具备定义约束、完整性检查、违约处理三种功能，检查时机按原料表述为「在插入、修改、删除语句执行后或事务提交时」。实体完整性由 `PRIMARY KEY` 定义，检查分两步：主码值是否唯一、主码属性是否为空，有一个为空即拒绝；单属性主码可在列级或表级定义，多属性主码只能在表级定义。参照完整性要求外码要么全为空、要么等于被参照表中某元组的主码值，违约情形共四种：参照表插入或修改外码无效，被参照表删除元组或修改主码造成悬空引用。
+
+原料给出的带命名约束的建表示例如下，`CONSTRAINT` 子句的作用是让约束可后续单独修改与删除：
+
+```sql
+CREATE TABLE Student (
+    Sno CHAR(9)   CONSTRAINT PK_Student_Sno PRIMARY KEY,
+    Sname CHAR(20) CONSTRAINT NN_Student_Sname NOT NULL,
+    Ssex CHAR(2)  CONSTRAINT CK_Student_Ssex CHECK (Ssex IN ('男', '女')),
+    Sage SMALLINT CONSTRAINT CK_Student_Sage CHECK (Sage BETWEEN 14 AND 50),
+    Sdept CHAR(20)
+);
+
+CREATE TABLE SC (
+    Sno CHAR(9) NOT NULL,
+    Cno CHAR(4) NOT NULL,
+    Grade SMALLINT,
+    TERM DATE,
+    PRIMARY KEY (Sno, Cno),
+    FOREIGN KEY (Sno) REFERENCES Student(Sno)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Cno) REFERENCES Course(Cno)
+        ON DELETE NO ACTION ON UPDATE CASCADE
+);
+```
+
+默认策略是拒绝（`NO ACTION`），级联与置空必须写明；原料另给出 `Student.Sdept` 引用 `Dept` 时 `ON DELETE` 的三种方案：
+
+```sql
+ALTER TABLE Student ADD FOREIGN KEY (Sdept) REFERENCES Dept(Deptno) ON DELETE NO ACTION;
+ALTER TABLE Student ADD FOREIGN KEY (Sdept) REFERENCES Dept(Deptno) ON DELETE CASCADE;
+ALTER TABLE Student ADD FOREIGN KEY (Sdept) REFERENCES Dept(Deptno) ON DELETE SET NULL;
+```
+
+用户定义完整性分属性上约束与元组上约束：属性级只能限制单个属性，元组级可限制不同属性之间的取值相互约束，原料的例子是「性别为男时姓名不能以 Ms. 打头」；删除已命名约束用 `ALTER TABLE 表名 DROP CONSTRAINT 约束名`。
+
+原料实验小结写明 MySQL 5.x 的 `CHECK` 约束仅作语法解析、并不生效，因此年龄范围、成绩范围这类用户定义完整性只能改用触发器实现；同一记录指出 `INTERSECT` 与 `EXCEPT` 在 MySQL 中不支持，需以子查询替代。
+
+## 八、断言与触发器的分工：以选课人数上限为算例
+
+### 8.1 约束、断言、触发器的三级分工
+
+`CHECK` 只能约束单个元组内的属性取值，`FOREIGN KEY` 只能约束引用关系，约束一旦涉及多个表或聚集操作就需要更高一级的机制。原料的划分是：**断言可指定更具一般性的约束，覆盖涉及多个表或聚集操作的完整性约束；触发器不仅能检查约束，还能执行插入、更新、删除等动作**。原料的原始断言写作 `CREATE ARRSETIONS ASSE CHECK（60>=ALL（SELECT count(*) FROM SC GROUP by cno)）`，另一处写作 `AAERTION`，但按 SQL 标准应为 `CREATE ASSERTION 断言名 CHECK` 加条件，全角括号须改为半角。修正后的标准 SQL 为：
+
+```sql
+CREATE ASSERTION limit_each_course_max_60_students
+CHECK (
+    60 >= ALL (
+        SELECT COUNT(*)
+        FROM SC
+        GROUP BY cno
+    )
+);
+```
+
+### 8.2 分步推演
+
+约束语义为「每门课程最多 60 名学生选修」，原料的三步思路是：按 `cno` 分组、每组用 `COUNT(*)` 统计人数、再用 `ALL` 要求 60 不小于子查询返回的每一个数。第二步的输出，原料给的数据为 101 组 45 人、102 组 58 人、103 组 60 人、104 组 32 人，均未越界，断言成立。
+
+断言成立当且仅当 $60 \ge \max\{c_1, c_2, \dots, c_k\}$，其中 $c_i$ 是第 $i$ 门课程的选课计数；只要有一门课超过 60，该次操作即被拒绝。细化到「每个学期每门课」时，分组键随之扩展：
+
+```sql
+CREATE ASSERTION ASSE_SC_CNUM
+CHECK (60 >= ALL (SELECT COUNT(*) FROM SC GROUP BY Cno, TERM));
+```
+
+### 8.3 断言的支持范围与触发器替代
+
+`CREATE ASSERTION` 是 SQL 标准的全局约束语法，但原料的兼容性提示很关键：MySQL、MariaDB、SQLite 均不支持，只有 PostgreSQL、Oracle 等提供完整或部分支持。原料据此给出 MySQL 可用的触发器版本，覆盖插入与改课两种使人数上升的场景。两者动作体几乎相同、仅提示语不同，但 UPDATE 版必须多一层判断：只有 $NEW.cno\neq OLD.cno$（真的换课）才需要查人数。原料的原稿把这段判断写在 `BEFORE UPDATE` 的全部路径上，实测会误伤——某课已选满 60 人时，即便只是改成绩（cno 不变），`COUNT(*) WHERE cno = NEW.cno` 也会把这行自身算成 60 而触发拦截。本文按「换课才检查」补上外层条件：
+
+```sql
+DELIMITER //
+CREATE TRIGGER trg_sc_course_enroll_limit_insert
+BEFORE INSERT ON SC
+FOR EACH ROW
+BEGIN
+    DECLARE current_enroll INT;
+    SELECT COUNT(*) INTO current_enroll FROM SC WHERE cno = NEW.cno;
+    IF current_enroll >= 60 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = '该课程选修人数已达上限60人，无法选修';
+    END IF;
+END //
+
+CREATE TRIGGER trg_sc_course_enroll_limit_update
+BEFORE UPDATE ON SC
+FOR EACH ROW
+BEGIN
+    DECLARE current_enroll INT;
+    IF NEW.cno <> OLD.cno THEN
+        SELECT COUNT(*) INTO current_enroll FROM SC WHERE cno = NEW.cno;
+        IF current_enroll >= 60 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = '目标课程选修人数已达上限60人，无法修改';
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+```
+
+原料给出的标准 SQL 风格触发器展示了另一套语法成分，作用是把降幅超过 20 分的改动作记入审计表：
+
+```sql
+CREATE TRIGGER SC_Grade_Down
+AFTER UPDATE OF Grade ON SC
+REFERENCING
+    OLD ROW AS OldTuple,
+    NEW ROW AS NewTuple
+FOR EACH ROW
+WHEN (OldTuple.Grade - NewTuple.Grade > 20)
+INSERT INTO SC_D(Sno, Cno, OldGrade, NewGrade)
+VALUES (OldTuple.Sno, OldTuple.Cno, OldTuple.Grade, NewTuple.Grade);
+```
+
+原料此处写作 `AFTER UPDATE OF Grade`，这正是该语法与 MySQL 的差别：MySQL 的触发事件只写 `UPDATE`，不支持列名限定，触发条件也要从 WHEN 子句移入动作体。另一条算例要求「教授的工资低于 4000 元时自动改为 4000 元」，原料写 `BEFORE INSERT OR UPDATE ON Teacher` 加 `REFERENCING NEW AS newTuple`，动作体里作 `newTuple.Sal := 4000`；此为标准 SQL 的赋值形式，MySQL 中应写 `SET NEW.Sal = 4000` 且不用 REFERENCING 子句。该算例同时说明必须选 BEFORE 时机：只有触发事件之前的行级触发器才允许修改即将写入的元组，写成 AFTER 时赋值不再影响该行。
+
+原料记录的另外两个 MySQL 触发器属「数据联动」类算例：`AFTER INSERT ON SC` 时把课程学分累加进 `Student.Stotal`，`AFTER DELETE ON class` 时用 `OLD.class_id` 同步删除该班学生，以补出级联删除的语义。`NEW` 代表即将写入的记录、`OLD` 代表被删掉的记录，而语句级触发器不能使用这两个引用变量。
+
+```sql
+CREATE TRIGGER tri_add_total_credit
+AFTER INSERT ON SC
+FOR EACH ROW
+BEGIN
+    UPDATE Student
+    SET Stotal = Stotal + (SELECT Ccredit FROM Course WHERE Cno = NEW.Cno)
+    WHERE Sno = NEW.Sno;
+END //
+
+CREATE TRIGGER tri_del_class
+AFTER DELETE ON class
+FOR EACH ROW
+BEGIN
+    DELETE FROM student WHERE student.class_id = OLD.class_id;
+END //
+```
+
+### 8.4 断言与触发器的分工
+
+| 维度 | 断言 | 触发器 |
+|---|---|---|
+| 定义语句 | CREATE ASSERTION，只给约束条件 | CREATE TRIGGER，含事件、条件、动作三部分 |
+| 功能范围 | 只做约束检查，可涉及多表与聚集操作 | 既能检查，也能执行插入、更新、删除等动作 |
+| 触发方式 | 涉及关系的任何操作自动触发检查 | 由指定事件触发，可指定时机与频率 |
+| 定义对象 | 关系（约束层面） | 只能定义在基本表上，不能定义在视图上 |
+| 代价 | 复杂断言增加系统检测与维护开销 | 开销取决于动作体复杂度 |
+| MySQL 支持 | 不支持 | 支持，需以 DELIMITER 界定动作体 |
+
+原料还给出两条规则：激活顺序为先执行该表上的 BEFORE 触发器、再执行激活触发器的 SQL 语句、最后执行该表上的 AFTER 触发器；动作体执行失败时激活触发器的事件终止执行，目标表及相关对象不发生变化。实验记录中另有一处语法修正：`ALTER TABLE SC ADD CONSTRAINT IF NOT EXISTS PRIMARY KEY (Sno, Cno)` 报 1064 语法错误，但问题不只是版本不支持 `IF NOT EXISTS`，该句本身缺少约束名；可执行写法是 `ADD PRIMARY KEY (Sno, Cno)`。
+
+## 九、安全性：GRANT、REVOKE 与权限级别
+
+### 9.1 保护体系与评估级别
+
+数据库安全性指保护数据库以防止不合法使用所造成的数据泄露、更改或破坏。原料把防护手段排成一条由外向内的链：身份鉴别、存取控制、视图机制，配套手段为审计、加密与推理控制；身份鉴别列了静态口令、动态口令、生物特征、智能卡与入侵检测五种。TCSEC 标准（又称紫皮书）延伸到数据库系统的解释为 TDI，级别由低到高为 D、C1、C2、B1、B2、B3、A1，其中 C1 为自主安全保护、C2 为受控的存取保护、B1 为标记安全保护；审计是 C2 及以上的必备功能，以日志记录用户对数据库的所有操作，语句为 `AUDIT` 与 `NOAUDIT`。
+
+两类存取控制的分工是：自主存取控制 DAC 对应 C2，用户可自主授予与收回、数据不带安全性标记；强制存取控制 MAC 对应 B1，由系统按密级规则强制控制，主体标许可证级别、客体标密级且标记与数据不可分离。许可证级别与密级由高到低为绝密、机密、可信、公开。推理控制避免用户借可访问的数据推知更高密级的数据；加密分存储与传输两类。
+
+### 9.2 GRANT 与 REVOKE 的语法要点
+
+自主存取控制靠 `GRANT` 与 `REVOKE` 实现，原料的一组对照涵盖授权、转授、收回与级联收回：
+
+```sql
+GRANT SELECT ON TABLE Student TO U1;
+GRANT INSERT, UPDATE ON TABLE Student TO U2 WITH GRANT OPTION;
+REVOKE SELECT ON TABLE Student FROM U1;
+REVOKE UPDATE ON TABLE Student FROM U2 CASCADE;
+```
+
+`WITH GRANT OPTION` 表示被授权者可把权限再授予其他用户；`REVOKE` 加 `CASCADE` 表示级联收回，已转授的部分一并收回，不加时只收回本级权限。原料另给出 `CREATE SCHEMA "S-T" AUTHORIZATION WANG;`，其中用户标识来自教材式示例，不对应真实账户。
+
+权限粒度是本节的核心结论，原料的列级授权与角色语句如下，原文以具体姓名作角色成员，本文改为符号名：
+
+```sql
+CREATE ROLE R1;
+GRANT SELECT, UPDATE(Grade) ON TABLE SC TO R1;
+GRANT R1 TO U3, U4;
+GRANT DELETE ON TABLE SC TO R1;
+REVOKE R1 FROM U3;
+```
+
+`UPDATE(Grade)` 把权限限定到单个属性，是列级粒度的直接体现；原料把粒度总结为数据库级、表级、列级三档，加上视图提供的行级与列级间接控制。角色是被命名的一组权限，授予用户即可批量派发，修改角色权限只需追加一条 `GRANT`。视图的安全用法由此而来：对无法用 `GRANT` 表达的行级限制，先按用户权限建立视图（如仅含某系学生的视图），再授予该用户视图权限并禁止其访问原表。
+
+### 9.3 实现层面的差异
+
+原料实验记录给出三条 MySQL 特有的事实：用户由「用户名加主机」共同标识，主机配置不正确会导致登录被拒；授权需显式指定数据库与表；第三条在文档里要分清三种情形：用 `GRANT`/`REVOKE` 语句改权限时，MySQL 即时写入权限表并生效，**不需要** `FLUSH PRIVILEGES`；只有绕过授权语句、直接 `INSERT`/`UPDATE`/`DELETE` `mysql.user`、`mysql.db` 这类系统表时，内存中的授权表不会自动重载，此时必须 `FLUSH PRIVILEGES`。原料实验看到的「撤销后仍能访问」更可能来自第三种情形——全局级与库级权限在**建立连接时**被缓存进该会话，会话期间再 `REVOKE` 对这条已打开的连接不起作用，重新连接后才体现。把三种情形混作「缓存未刷新」，就会得出与文档相悖的结论。实验示例账户只持一张表的查询权限，另一账户持增删改查权限，再追加第三张表权限、最后撤销部分以验证生效；实例地址、账户与口令一律不写入。
+
+## 十、勘误汇总
+
+| 序号 | 原料写法 | 本文处理与理由 |
+|---|---|---|
+| 1 | CREATE ARRSETIONS、AAERTION，全角括号 | 改为 CREATE ASSERTION 半角括号，断言名后接 CHECK 子句 |
+| 2 | NOT EXISTS 与外层无关联条件 | 补关联条件；原写法退化为全有或全无的判断 |
+| 3 | IN 遇 NULL 直接返回空结果 | 限定为含空值且外层值不命中任何非空元素时整体为空 |
+| 4 | 连接视图可直接插入并拆到两个基表 | 改为单基表行列子集视图插入；连接视图一般不可更新 |
+| 5 | MySQL 不支持聚集索引 | 改为不支持 CREATE CLUSTERED INDEX 语法，InnoDB 主键即聚簇 |
+| 6 | 触发器中 newTuple.Sal 赋值 | 保留标准写法，另注 MySQL 写 SET NEW 列并去掉 REFERENCING |
+| 7 | AFTER UPDATE OF Grade 加 WHEN 子句 | 标注 MySQL 事件不支持列名限定，条件移入动作体 |
+| 8 | ADD CONSTRAINT IF NOT EXISTS PRIMARY KEY | 缺约束名且版本不支持，改为 ADD PRIMARY KEY |
+| 9 | 权限撤销「不生效」，归因于未刷新缓存 | 更正归因：`GRANT`/`REVOKE` 即时生效，`FLUSH PRIVILEGES` 只在直接改系统表时才需要；同一连接里的残留权限源于建连时缓存的全局/库级权限，重连即消失 |
+| 10 | LIMIT 当作 SQL 标准写法 | 标注为方言，标准写法为 FETCH FIRST 行数量 ROWS ONLY |
+
+## 十一、要点回顾
+
+执行顺序决定子句归属：行级条件进 WHERE，聚合条件进 HAVING，聚集函数不能出现在 WHERE 中。连接一律显式写等值条件，自然连接会在多个同名列时收紧匹配。外连接保留不匹配行，左外可替代右外，MySQL 需以左外并右外实现全外。EXISTS 的驱动方向与 IN 相反，正确关联且无空值时二者等价，存在空值时只有 NOT EXISTS 可靠。视图存定义不存数据，行列子集视图可更新，聚集与多表视图不可更新，需要写入约束时加 WITH CHECK OPTION。索引既服务查询也服务完整性检查，MySQL 靠主键聚簇、二级索引需回表。三类完整性约束分别由 PRIMARY KEY、FOREIGN KEY 与 CHECK 承担，MySQL 5.x 的 CHECK 不生效。跨表跨聚集的约束在标准里归断言，在 MySQL 里只能由 BEFORE 触发器代劳。DAC 灵活、MAC 强制，安全性靠身份鉴别、存取控制、视图、审计与加密分层设防。`GRANT` 与 `REVOKE` 支持库、表、列三级粒度，转授由 `WITH GRANT OPTION` 决定，收回时的 `CASCADE` 决定转授链是否一并截断。
+
+原料以问答与实验形式给出这些内容，顺序零散且有若干笔误，本文按知识逻辑重排并逐条标注；未展开的 B+ 树内部机制与索引失效完整条件，本文未作虚构补充。

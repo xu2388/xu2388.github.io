@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfcfd">
+<meta name="format-detection" content="telephone=no">
+<title>CUT 骨架 × 频域：可缝合工作清单（代码接口级）</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:14px 0}.cite{font-size:12.5px;color:var(--muted);border-left:3px solid var(--strong);padding-left:12px}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){html{scroll-padding-top:12px}body{font-size:16px;line-height:1.75;overflow-x:hidden}.wrap{display:block;width:100%;max-width:none}nav.toc{display:block;position:sticky;top:0;z-index:10;width:100%;height:auto;max-height:52px;overflow-x:auto;overflow-y:hidden;padding:9px 12px;border-right:0;border-bottom:1px solid var(--border);background:rgba(251,252,253,.96);-webkit-overflow-scrolling:touch;white-space:nowrap}nav.toc .brand{display:inline-block;margin:0 14px 0 0;font-size:12px}nav.toc .sub{display:none}nav.toc a{display:inline-block;margin:0 4px 0 0;padding:5px 9px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:12px;white-space:nowrap}nav.toc a.l1{margin-top:0;font-weight:700;color:var(--text)}nav.toc a.l2{padding-left:9px;font-size:12px;color:var(--muted)}main{width:100%;max-width:none;padding:22px 14px 72px}header.doc{padding-bottom:18px;margin-bottom:26px}header.doc .kicker{font-size:11px;letter-spacing:.08em}header.doc h1{font-size:25px;line-height:1.38;margin:8px 0 12px;overflow-wrap:anywhere}header.doc .desc{font-size:15px;line-height:1.7}.meta{gap:6px;margin-top:14px}.meta span{font-size:11.5px;padding:4px 8px;line-height:1.45}h2{font-size:21px;line-height:1.4;margin:40px 0 14px;padding-bottom:7px}h3{font-size:17px;line-height:1.5;margin:26px 0 9px}h4{font-size:15px}p{margin:8px 0}ul,ol{margin-left:20px}.box{padding:13px 14px;margin:14px 0;border-radius:9px}.box .bt{font-size:13px}.card{margin:14px 0}.card .ch{padding:10px 13px}.card .body{padding:7px 13px 13px}.grid2{grid-template-columns:1fr;gap:12px}.mini{padding:11px 12px}.scroll{margin:13px 0;border-radius:8px;-webkit-overflow-scrolling:touch}.scroll:after{content:"左右滑动查看表格";display:block;padding:5px 10px;color:var(--muted);font-size:11px;background:var(--softer);border-top:1px solid var(--border)}table{min-width:700px;font-size:13px}thead th{padding:9px 9px;font-size:12px}td{padding:8px 9px}.flow{margin:13px 0;padding:11px 12px;overflow:hidden}.flow pre,pre{margin:10px 0;padding:11px 12px;font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}.formula{margin:11px 0;padding:11px 12px;font-size:12px;line-height:1.65;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.b{font-size:10.5px;padding:2px 6px}.cite{font-size:12px}a{overflow-wrap:anywhere}}@media(max-width:380px){main{padding-left:11px;padding-right:11px}header.doc h1{font-size:22px}h2{font-size:19px}.meta span{font-size:11px}nav.toc{padding-left:9px;padding-right:9px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">CUT × frequency</div>
+<div class="sub">可缝合工作清单 · 代码接口级<br>截至 2026-10-15 · 逐字源码取证</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 与既有报告的分工</a>
+<a class="l1" href="#s2">2 · 「CUT 骨架」怎么识别</a>
+<a class="l2" href="#s21">2.1 识别特征（文件树级）</a>
+<a class="l2" href="#s22">2.2 四个缝合接口</a>
+<a class="l1" href="#s3">3 · 接口① loss 层（最小改动）</a>
+<a class="l2" href="#s31">3.1 Focal Frequency Loss（真·频域）</a>
+<a class="l2" href="#s32">3.2 FDL 频率分布损失（真·频域）</a>
+<a class="l2" href="#s33">3.3 高斯金字塔 L1 —— 被误称的那个</a>
+<a class="l2" href="#s34">3.4 FocalNCE / PatchAlignment</a>
+<a class="l1" href="#s4">4 · 接口② 生成器内部频域算子</a>
+<a class="l1" href="#s5">5 · 接口③ 判别器</a>
+<a class="l1" href="#s6">6 · 已在 CUT 骨架上的完整工作</a>
+<a class="l1" href="#s7">7 · 需移植的频域/多尺度框架</a>
+<a class="l1" href="#s8">8 · 一处硬发现：PSPStain 与 ASP 同源</a>
+<a class="l1" href="#s9">9 · 可执行缝合路线</a>
+<a class="l1" href="#s10">10 · 未核实清单与证据边界</a>
+<a class="l1" href="#s11">11 · 参考文献与代码</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Research report · CUT skeleton × frequency</div>
+<h1>CUT 骨架 × 频域：可缝合工作清单（代码接口级）</h1>
+<p class="desc">你上一轮确认了 PSPStain 是「CUT 骨架 + 附加损失 + 辅助分割网」。这一轮的问题因此变成一个纯工程问题：<b>还有哪些工作已经长在 CUT 这套代码上、频域模块挂在哪个文件、能不能直接 drop-in？</b>本文不重复回答「哪个机制更好」（那已由库内 <i>GAN+频域+门控</i> 报告回答），而是按 <b>代码接口</b> 组织可缝合清单，并对关键仓库做逐字源码取证。</p>
+<div class="meta"><span>骨架约束：CUT / FastCUT（taesungp 系）</span><span>目标：H&amp;E→IHC 虚拟染色（PSPStain）</span><span>取证等级：逐字源码 / 官方 README</span><span>报告日期：2026-10-15</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="box key"><div class="bt">总判定：CUT 骨架 + 频域确实有货，但「频域」在这条代码线上分三种完全不同的东西</div><p>检索结果指向一个反直觉的事实：<b>在 CUT 系的病理代码里，被命名为 <code>frequency_loss</code> 的那个文件，里面根本没有傅里叶变换。</b>它是一个高斯金字塔 L1 重建损失，源码逐字来自 CVPR 2021 的 LPTN。真正做 FFT/DCT 的频域损失（FFL、FDL）反而都是<b>独立的 pip 包</b>，需要自己挂上去。</p></div>
+<div class="box good"><div class="bt">对你的三条可执行结论</div><ol><li><b>要「真频域 loss」→ 装 pip 包，挂 3 行。</b><code>focal-frequency-loss</code> 或 <code>fdl-pytorch</code>，加在 <code>compute_G_loss</code> 里，不动任何网络结构。这是改动最小、可复现性最高的一条路。</li><li><b>要「已经长在 CUT 上的频域工作」→ 直接 fork PPT。</b><code>coffeeNtv/PPT</code>（MICCAI 2024）是 CUT 骨架 + H&amp;E→IHC + 金字塔频域损失 + FocalNCE + VGG 内容损失，代码里连 <code>models/frequency_loss.py</code> 都给你写好了。它是本清单里<b>唯一一个同时满足「CUT 骨架」「病理域」「频域损失」「代码开源」</b>的仓库。</li><li><b>不要照抄 PSPStain 的 <code>weight_norm='spectral'</code> 与 <code>lambda_gp=10</code> 当成自己的设计。</b>本轮逐字取证发现这两项连同整个 launcher 参数块，<b>与 MICCAI 2023 的 ASP 仓库 <code>mist_launcher.py</code> 逐项相同</b>。这不是频域，是别人的超参默认值（详见 §8）。</li></ol></div>
+<div class="box stop"><div class="bt">三条必须避开的误读</div><ol><li><b>「PPT 用了 frequency loss」这句话，按论文措辞成立、按算子类型不成立。</b>它的 <code>loss_freq</code> 是高斯金字塔多尺度 L1，不含 FFT/DCT/小波。若你要在论文里写「已有工作用频域损失做 H&amp;E→IHC」，会被审稿人一眼看穿（附录给了逐字源码）。</li><li><b>「FDL」是一个缩写撞车点。</b>PSPStain/ASP 的 GP loss 来自 LPTN（拉普拉斯/高斯金字塔），与 CVPR 2024 的 FDL（Frequency Distribution Loss）<b>是两个东西</b>；仓库里还有个 <code>util/fdlutil.py</code>，用途未核实（很可能是 Fréchet Distance Library 的 util，不是 Frequency Distribution Loss）。</li><li><b>FFC（Fast Fourier Convolution）是图像修复的算子，不是图像翻译的先例。</b>它是可插拔的，但把它塞进 CUT 的 ResnetGenerator 属于「结构改造」，改动成本远高于加一个 loss，且没有 H&amp;E→IHC 的先例。</li></ol></div>
+<div class="scroll"><table><thead><tr><th>你想做的事</th><th>最省事的落点</th><th>具体仓库</th><th>改动成本</th><th>可复现性</th><th>病理域先例</th></tr></thead><tbody>
+<tr><td>先验证「频域约束有没有用」</td><td>加一个 loss 项</td><td>EndlessSora/focal-frequency-loss（FFL）</td><td><span class="b high">极低</span></td><td><span class="b high">高</span></td><td><span class="b medium">无直接先例</span></td></tr>
+<tr><td>弱配准/错位下的分布级约束</td><td>加一个 loss 项</td><td>eezkni/FDL（幅度+相位）</td><td><span class="b high">极低</span></td><td><span class="b high">高</span></td><td><span class="b medium">无直接先例</span></td></tr>
+<tr><td>直接拿一个 CUT 骨架的病理频域工程</td><td>整仓库 fork</td><td>coffeeNtv/PPT</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td><td><span class="b high">H&amp;E→IHC，MICCAI 2024</span></td></tr>
+<tr><td>拿一个 CUT 骨架的病理域工程（无频域）</td><td>整仓库 fork</td><td>lifangda01/AdaptiveSupervisedPatchNCE</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td><td><span class="b high">H&amp;E→IHC，MICCAI 2023</span></td></tr>
+<tr><td>换生成器内部算子（真正改结构）</td><td>改 networks.py</td><td>advimman/lama（FFC）、BGU-CS-VIL/WTConv</td><td><span class="b bad">高</span></td><td><span class="b medium">中</span></td><td><span class="b medium">无</span></td></tr>
+<tr><td>让判别器看频谱</td><td>改 define_D</td><td>需自行拼装（SSD-GAN 思路）</td><td><span class="b bad">中–高</span></td><td><span class="b medium">中</span></td><td><span class="b medium">无</span></td></tr>
+</tbody></table></div>
+
+<h2 id="s1"><span class="num">1</span>与既有报告的分工</h2>
+<p>你库内已有 6 份报告与「频域」或「GAN」直接相关，主题高度重叠。本文<b>不重写它们</b>，只补一个它们都没覆盖的轴：<b>代码接口级的可缝合性</b>。</p>
+<div class="scroll"><table><thead><tr><th>既有文件</th><th>它已经回答的问题</th><th>本文新增的内容</th></tr></thead><tbody>
+<tr><td><code>01_调研报告/GAN+频域+门控_虚拟染色方法调研.html</code></td><td>频域 loss / 频域特征 / 频域判别器 / 门控四类机制<b>哪个更适合解决哪个 GAN 故障</b>；给了 F0–R1 消融矩阵。已收录 FFL、WaveGAN、FDIT、SSD-GAN、SE/CBAM/gated conv。</td><td><b>同一批方法，按「挂在 CUT 的哪个文件」重新组织。</b>该报告回答「机制好不好」，本文回答「代码放哪里、能不能直接 fork」。本文不复述它的机制论证。</td></tr>
+<tr><td><code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code>（222 KB）</td><td>频域 condition 在<b>扩散</b>框架里的注入方案、FFT vs DCT vs DWT 选择、4×64×64 / 32px 尺度下的实现方案。</td><td>本文处理的是<b>GAN/CUT 侧</b>，且落点是 loss 与网络算子，不是 condition 注入。两者是同一课题的两条框架分支。</td></tr>
+<tr><td><code>06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html</code></td><td>频域×GAN、门控×GAN 的先例地图；指出 F-Drop 是固定频带死区而非真门控；给出四象限成熟度判定。</td><td>本文不涉及门控。只补「CUT 骨架专属仓库」这一层，并做逐字源码取证。</td></tr>
+<tr><td><code>05_伪影与失败模式/GAN棋盘格伪影_底层成因_卷积信号处理与频域机制.html</code></td><td>棋盘格伪影的信号处理成因、混叠与频谱偏差、实测。</td><td>本文把它当作「为什么值得加频域 loss」的背景，不重复推导。</td></tr>
+<tr><td><code>01_调研报告/GAN虚拟染色_方法路线与浓度域先例调研.html</code></td><td>Pix2Pix/CycleGAN/CUT/RegGAN 路线与 DAB/OD/FOD 表达监督。</td><td>本文把 CUT 单独拎出来，做<b>代码同源性</b>判定（谁 fork 了谁）。</td></tr>
+<tr><td><code>02_论文翻译/p3_pspstain/p3_pspstain.zh.html</code></td><td>PSPStain 论文全文中文。</td><td>本文提供 PSPStain 代码侧的<b>上游溯源</b>（§8），可与该翻译对读。</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">本文与 <i>GAN+频域+门控</i> 的唯一重叠</div><p>FFL 与 FDIT 在两份报告里都会出现。分工是：那份讲「FFL 的机制定位与风险」，本文讲「FFL 是一个 pip 包，挂进 CUT 只需 3 行，且它不在 CUT 骨架里」。<b>引用时请按需取用，不要当成两份独立证据。</b></p></div>
+
+<h2 id="s2"><span class="num">2</span>「CUT 骨架」怎么识别</h2>
+<p>你说「PSPStain 是围绕 CUT 图像翻译模型改动的」，这个判断在代码层面有一个非常明确的指纹。识别它不需要看论文，只看文件树和函数签名。</p>
+<h3 id="s21">2.1 识别特征（文件树级）</h3>
+<p>CUT（<code>taesungp/contrastive-unpaired-translation</code>）的目录结构在 PyTorch 图像翻译圈里是独有的，凡是从它 fork 的仓库都会保留以下全部特征：</p>
+<pre><code>├── models/
+│   ├── cut_model.py          ← 核心：训练循环 + PatchNCE
+│   ├── networks.py           ← define_G / define_F / define_D
+│   └── patchnce.py           ← PatchNCELoss（InfoNCE 变体）
+├── data/
+│   ├── unaligned_dataset.py  ← CUT 默认
+│   ├── aligned_dataset.py    ← 配对改造版（病理域常用）
+│   └── single_dataset.py     ← 单图翻译
+├── options/
+│   ├── base_options.py       ← input_nc / output_nc 默认 3 / 3
+│   └── train_options.py
+├── experiments/
+│   └── *_launcher.py         ← 用 Options() 字典覆盖默认超参（CUT 特色）
+├── util/
+│   ├── util.py  image_pool.py  visualizer.py
+└── train.py  test.py</code></pre>
+<div class="box teal"><div class="bt">三个硬指纹（任一缺失就不是 CUT 骨架）</div><ol><li><code>models/networks.py</code> 里同时存在 <code>define_G</code>、<code>define_F</code>、<code>define_D</code> 三个工厂函数；</li><li><code>netF</code> 用的是 <code>PatchSampleF</code> + <code>mlp_sample</code>，调用形式是 <code>netF(feat_k, num_patches, sample_ids)</code>——<b>先算 sample_ids 再复用</b>，这是 CUT 独有的采样契约；</li><li>有 <code>experiments/*_launcher.py</code>，用 <code>Options(...)</code> 字典而不是命令行覆盖超参。</li></ol></div>
+<p>本文后面判断「某仓库是不是 CUT 骨架」，用的就是这三条。其中第 2 条最关键：<b>只要 <code>calculate_NCE_loss</code> 里出现 <code>sample_ids</code> 的两段式调用，就基本可以确认是 CUT 血统。</b></p>
+<h3 id="s22">2.2 四个缝合接口</h3>
+<p>频域的东西要进 CUT，只有四个落点。按改动成本从低到高排列：</p>
+<div class="scroll"><table><thead><tr><th>#</th><th>接口</th><th>改哪个文件</th><th>典型改动量</th><th>风险</th><th>本文对应章节</th></tr></thead><tbody>
+<tr><td>A</td><td><b>loss 层</b></td><td><code>models/cut_model.py</code> 的 <code>compute_G_loss</code> / <code>compute_D_loss</code></td><td>+3~15 行</td><td><span class="b high">最低</span></td><td>§3</td></tr>
+<tr><td>B</td><td><b>生成器内部算子</b></td><td><code>models/networks.py</code> 的 <code>ResnetGenerator</code> / <code>ResnetBlock</code></td><td>+1 个类，替换若干 conv</td><td><span class="b medium">中</span></td><td>§4</td></tr>
+<tr><td>C</td><td><b>判别器</b></td><td><code>models/networks.py</code> 的 <code>define_D</code> / <code>NLayerDiscriminator</code></td><td>新增分支</td><td><span class="b bad">中–高</span></td><td>§5</td></tr>
+<tr><td>D</td><td><b>数据/条件层</b></td><td><code>data/aligned_dataset.py</code>、<code>options/base_options.py</code></td><td>改通道数或加输入图</td><td><span class="b bad">中–高</span></td><td>§7 提及</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">一句话选路</div><p>如果你的目的是「让论文有一个频域增量」，<b>走 A</b>；如果目的是「改进生成质量」，<b>先走 A，A 无效再考虑 B</b>；C 和 D 只在前两者都验证过之后再动，否则归因会失败——这正是 <i>GAN+频域+门控</i> 报告 §8 的止损逻辑，本文完全同意，不再重复。</p></div>
+<h2 id="s3"><span class="num">3</span>接口① loss 层：改动最小，优先走这条</h2>
+<p>这是唯一一个「不动网络结构、不动物理语义、只加一项损失」的落点。挂载位置固定：<code>models/cut_model.py</code> 的 <code>compute_G_loss()</code>，返回 <code>loss_G</code> 之前加一项。</p>
+
+<h3 id="s31">3.1 Focal Frequency Loss（FFL）—— 真正做 FFT 的那个</h3>
+<div class="card"><div class="ch"><div><div class="title">Focal Frequency Loss for Image Reconstruction and Synthesis</div><div class="v">Jiang, Dai, Wu, Loy · ICCV 2021 · arXiv:2012.12821</div></div><div><span class="b high">官方实现</span> <span class="b blue">pip 包</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/EndlessSora/focal-frequency-loss">github.com/EndlessSora/focal-frequency-loss</a>（MIT）</p>
+<p><b>机制：</b>把 real / fake 变到频域，计算频率分量差异，并<b>自适应提高「难合成频率」的权重</b>、降低已合成好的频率权重。论文明确把它定位为 complementary to existing spatial losses，并在 VAE、pix2pix、SPADE、StyleGAN2 上验证。</p>
+<p><b>安装与调用（官方 README 逐字）：</b></p>
+<pre><code>pip install focal-frequency-loss</code></pre>
+<pre><code>from focal_frequency_loss import FocalFrequencyLoss as FFL
+ffl = FFL(loss_weight=1.0, alpha=1.0)   # nn.Module
+# fake, real: (N, C, H, W)
+loss = ffl(fake, real)</code></pre>
+<p><b>可用超参：</b><code>loss_weight</code>、<code>alpha</code>（越大越聚焦）、<code>patch_factor</code>（切成 patch 算，默认 1）、<code>ave_spectrum</code>、<code>log_matrix</code>、<code>batch_matrix</code>。README 明确说<b>主要调的就两个：loss_weight 与 alpha</b>。</p>
+<p><b>挂进 CUT 的位置：</b></p>
+<pre><code># models/cut_model.py → compute_G_loss()
+self.loss_G = self.loss_GAN + self.loss_NCE + self.loss_NCE_Y
+# ↓ 新增
+self.loss_ffl = self.criterionFFL(fake_B, real_B)
+self.loss_G = self.loss_G + opt.lambda_ffl * self.loss_ffl</code></pre>
+<p><b>关键限制（必须写进你的实验设计）：</b>FFL 在<b>全 RGB 全局频谱</b>上工作。对 H&amp;E→IHC，全图 RGB 频谱是「图像外观统计」，<b>不是蛋白表达量</b>。scanner 噪声、JPEG 压缩纹理、tile 边界都会进频谱。建议至少做两版对照：全 RGB vs 只在 H 通道/结构图上算。</p>
+<p><b>证据等级：</b><span class="b high">官方 README 与 API 已逐字核实</span> <span class="b medium">H&amp;E→IHC 无直接先例</span></p>
+</div></div>
+
+<h3 id="s32">3.2 FDL（Frequency Distribution Loss）—— 专门为「错位」设计的</h3>
+<div class="card"><div class="ch"><div><div class="title">Misalignment-Robust Frequency Distribution Loss for Image Transformation</div><div class="v">Ni, Wu, Wang, Yang, Wang, Ma · CVPR 2024 · arXiv:2402.18192</div></div><div><span class="b high">官方实现</span> <span class="b blue">pip 包</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/eezkni/FDL">github.com/eezkni/FDL</a>（MIT）</p>
+<p><b>机制（官方 README 逐字）：</b>用 DFT 把图像特征变换到频域，<b>对幅度（amplitude）与相位（phase）分别处理</b>，构成分布距离损失。论文的卖点是<b>对像素级错位鲁棒</b>——它解决的是「配对数据配不准」这个具体痛点，并顺带验证了 style transfer（完全错位数据）场景。</p>
+<p><b>安装与调用（官方 README 逐字）：</b></p>
+<pre><code>pip install fdl-pytorch</code></pre>
+<pre><code>from FDL_pytorch import FDL_loss
+fdl_loss = FDL_loss()
+# X, Y: (N, C, H, W)
+loss_value = fdl_loss(X, Y)
+loss_value.backward()</code></pre>
+<p><b>为什么这条对你的课题特别相关：</b>你的 H&amp;E 与 IHC 是<b>连续切片</b>，天然存在组织形变与错位。你已经有一个 <code>PatchAlignmentLoss</code>（见 §3.4）在处理实例级错位；FDL 处理的是<b>分布级</b>错位。两者是互补的，不是替代关系。</p>
+<p><b>挂进 CUT 的位置：</b>同 §3.1，加在 <code>compute_G_loss</code> 里，<code>real_B</code> 对 <code>fake_B</code>。改动量与 FFL 相同。</p>
+<p><b>证据等级：</b><span class="b high">官方 README 与 API 已逐字核实</span> <span class="b medium">论文主战场是增强/超分，style transfer 是次要验证</span> <span class="b medium">H&amp;E→IHC 无直接先例</span></p>
+</div></div>
+
+<h3 id="s33">3.3 高斯金字塔 L1 —— 被叫做 <code>frequency_loss</code> 的那个（重要澄清）</h3>
+<div class="box stop"><div class="bt">本轮最重要的一个事实纠正</div><p>PSPStain 系代码里的「频域损失」，实际是<b>高斯金字塔多尺度 L1 重建损失</b>，<b>不含任何 FFT / DCT / 小波算子</b>。它在 ASP 与 PPT 两个仓库里的文件名都叫 <code>gauss_pyramid.py</code> / <code>frequency_loss.py</code>，类名统一是 <code>Gauss_Pyramid_Conv</code>，两处文件顶部都写着同一句注释：</p><pre><code>#reference: https://github.com/csjliang/LPTN   （PPT 版）
+Code borrowed from: https://github.com/csjliang/LPTN   （ASP 版）</code></pre></div>
+<p><b>上游来源已核实：</b><a href="https://github.com/csjliang/LPTN">csjliang/LPTN</a>（437★，Apache-2.0）= <i>High-Resolution Photorealistic Image Translation in Real-Time: A Laplacian Pyramid Translation Network</i>，<b>CVPR 2021</b>。</p>
+<p><b>算子本体（逐字源码）：</b></p>
+<pre><code>class Gauss_Pyramid_Conv(nn.Module):
+    def __init__(self, num_high=3):
+        self.kernel = self.gauss_kernel()   # 5×5 高斯核 / 256
+
+    def gauss_kernel(self, device=..., channels=3):
+        kernel = torch.tensor([[1., 4., 6., 4., 1],
+                               [4., 16., 24., 16., 4.],
+                               [6., 24., 36., 24., 6.],
+                               [4., 16., 24., 16., 4.],
+                               [1., 4., 6., 4., 1.]])
+        kernel /= 256.
+        kernel = kernel.repeat(channels, 1, 1, 1)
+        return kernel
+
+    def downsample(self, x):
+        return x[:, :, ::2, ::2]            # 隔点下采样
+
+    def conv_gauss(self, img, kernel):
+        img = F.pad(img, (2,2,2,2), mode='reflect')
+        return F.conv2d(img, kernel, groups=img.shape[1])
+
+    def forward(self, img):                  # 返回 [L0, L1, ..., L_num_high]
+        current = img; pyr = []
+        for _ in range(self.num_high):
+            filtered = self.conv_gauss(current, self.kernel)
+            pyr.append(filtered)
+            current = self.downsample(filtered)
+        pyr.append(current)
+        return pyr</code></pre>
+<p><b>三点必须注意：</b></p>
+<ul><li>它返回的是<b>逐级高斯模糊后的图</b>，不是 Laplacian 带通分解。虽然上游论文叫「Laplacian Pyramid Translation Network」，但这个损失函数用的是高斯金字塔逐级 L1，<b>不是</b>带通残差。</li><li>损失形式极简：<code>loss = mean(Σ w_k · L1(P(fake)_k, P(real)_k))</code>。PPT 用 <code>num_high=5</code>、<code>gp_weights=[1.0]*6</code>（等权）；ASP 用 <code>gp_weights='[0.015625,0.03125,0.0625,0.125,0.25,1.0]'</code>（几何递增，越粗的尺度权重越大）。<b>两者权重策略完全不同，这是可以直接做的消融。</b></li><li>它本质是<b>多尺度重建损失</b>，不是频域约束。写论文时若要引用它作为「频域先例」，会站不住。</li></ul>
+<p><b>证据等级：</b><span class="b high">两个仓库的源码 + 上游仓库元信息均已逐字核实</span></p>
+
+<h3 id="s34">3.4 FocalNCE 与 PatchAlignmentLoss：CUT PatchNCE 的两个直接替代品</h3>
+<p>这两个不属频域，但它们是「CUT 骨架 + 病理域」这条线上最容易被忽略、却最直接可用的两个 loss 模块。<b>它们已经在 PPT 里和金字塔损失共存</b>，说明兼容性已经被原作者验证过。</p>
+<div class="grid2">
+<div class="mini"><div class="mt">FocalNCE（<code>models/focalnce.py</code>）</div><p>在 CUT 的 PatchNCE 上叠加 Focal 机制，缓解正负样本类别不平衡。PPT 的 <code>compute_G_loss</code> 里实例化为 <code>self.criterionNCE = FocalNCELoss(opt)</code>，<b>直接替换掉 CUT 原生的 <code>PatchNCELoss</code></b>，接口不变。</p></div>
+<div class="mini"><div class="mt">PatchAlignmentLoss（<code>models/patch_alignment_loss.py</code>）</div><p>处理配对数据中 patch 级错位。PPT 中调用为 <code>self.criterionMisalignment(self.real_B, self.fake_B)</code>。对你的连续切片错位问题是直接对症的。</p></div>
+</div>
+<div class="box teal"><div class="bt">PPT 的完整 G 损失（逐字源码，<code>models/ppt.py</code>）</div><pre><code>self.loss_G = (self.loss_G_GAN
+               + self.loss_freq            # 高斯金字塔 L1
+               + self.loss_contrast        # = loss_NCE + loss_NCE_Y + loss_NCE_Y_hat
+               + self.loss_patch_alignment # 错位
+               + self.loss_content)        # VGG 感知</code></pre><p>注意 <code>loss_contrast</code> 是<b>三项</b> PatchNCE 之和（A→fakeB、B→idtB、idtB→B），比原生 CUT 的两项多一项。这是可以直接借鉴的结构。</p></div>
+
+<h2 id="s4"><span class="num">4</span>接口② 生成器内部：可插拔的频域算子</h2>
+<p>这一层的改动是「替换 <code>ResnetGenerator</code> 里的卷积」，改动成本明显高于加 loss，且<b>三个候选都没有 H&amp;E→IHC 先例</b>。列出是为了让你知道「如果要动结构，有哪三个现成的算子」，而不是推荐你先做这一步。</p>
+<div class="scroll"><table><thead><tr><th>算子</th><th>仓库</th><th>会议</th><th>它替换什么</th><th>机制一句话</th><th>改动成本</th></tr></thead><tbody>
+<tr><td><b>FFC</b><br>Fast Fourier Convolution</td><td><a href="https://github.com/advimman/lama">advimman/lama</a><br><span class="small">10.3k★ · Apache-2.0</span></td><td>WACV 2022</td><td>普通 conv</td><td>通道一分为二：一路做局部卷积，一路进 FFT 做全局频谱乘，再合并。核心文件 <code>saicinpainting/training/modules/ffc.py</code>。</td><td><span class="b medium">中</span></td></tr>
+<tr><td><b>UFFC</b><br>Unbiased FFC</td><td><a href="https://github.com/1911cty/Unbiased-Fast-Fourier-Convolution">1911cty/Unbiased-Fast-Fourier-Convolution</a><br><span class="small">38★ · 无 license 文件</span></td><td>ICCV 2023</td><td>FFC</td><td>指出 FFC 在修复任务里有<b>频谱偏移</b>与<b>意外的空间激活</b>两个缺陷并修正。属于「FFC 的补丁」。</td><td><span class="b medium">中</span></td></tr>
+<tr><td><b>WTConv</b><br>Wavelet Convolution</td><td><a href="https://github.com/BGU-CS-VIL/WTConv">BGU-CS-VIL/WTConv</a></td><td>ECCV 2024</td><td>depthwise conv</td><td>用级联小波分解替代深度卷积，<b>以极少参数显著扩大有效感受野</b>。README 标注 2026-02 新增了 <code>fast_wtconv</code> 高性能版本。</td><td><span class="b medium">中</span></td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">为什么不建议把 FFC 当成你的第一版</div><p>CUT 的 <code>ResnetGenerator</code> 是 7×7 反射卷积 → 2 次下采样 → 6 个残差块 → 2 次上采样 → Tanh 的固定结构。把残差块里的 conv 换成 FFC，会同时改变<b>参数量、感受野、归一化统计和梯度尺度</b>。一旦结果变化，你无法区分是「频域有效」还是「只是变大了」——这正是 <i>GAN+频域+门控</i> 报告 §4.3 的反对理由，本文采信该判断。<b>先把 loss 做完，再考虑算子。</b></p></div>
+
+<h2 id="s5"><span class="num">5</span>接口③ 判别器：本轮没有找到可直接缝合的仓库</h2>
+<div class="box stop"><div class="bt">阴性结论（如实报告）</div><p>本轮检索<b>没有找到任何一个「基于 CUT 骨架、且实现了频域判别器」的开源仓库</b>。CUT 的 <code>define_D</code> 只提供 <code>basic / n_layers / pixel / patch</code> 四种空间域判别器，没有频谱分支。</p></div>
+<p>库内 <i>GAN+频域+门控</i> 报告已经给出这条路线的机制先例（SSD-GAN 的 spatial + spectral 双分支），并明确指出风险：<b>H&amp;E→IHC 中 scanner、切片批次、压缩、tile 边界都会产生频谱差异，频域 D 可能学到 domain/site signature 而非 DAB 真实性。</b>本文不重复论证，只补一句工程事实：</p>
+<p>如果你确实要做，落点是 <code>models/networks.py</code> 的 <code>define_D</code>：新增一个 <code>NLayerDiscriminator</code> 的兄弟类，在它的倒数第二层接一个 <code>torch.fft.rfft2</code> + 可学习 1×1 卷积，输出一个标量 logit，再与空间域 logit 加权相加。<b>这段代码需要你自己写，没有现成实现可抄。</b>改动量约 40–60 行，且必须记录 spatial / spectral 两条分支各自的 logit 与梯度范数，否则崩溃时无法归因。</p>
+<h2 id="s6"><span class="num">6</span>已在 CUT 骨架上的完整工作：可以直接 fork</h2>
+<p>下面 5 个仓库全部通过 §2.1 的三条硬指纹检验（或官方明确声明 built upon CUT）。这是本文最实用的一节——<b>它们不是「可以参考」，而是「可以 git clone 然后改」</b>。</p>
+
+<div class="card"><div class="ch"><div><div class="title">① Adaptive Supervised PatchNCE（ASP）—— 你现在的代码大概率来自这里</div><div class="v">Li, Hu, Chen, Kak · MICCAI 2023 · arXiv:2303.06193 · H&amp;E→IHC 多染色</div></div><div><span class="b high">CUT 骨架</span> <span class="b purple">病理域</span> <span class="b blue">含金字塔损失</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/lifangda01/AdaptiveSupervisedPatchNCE">github.com/lifangda01/AdaptiveSupervisedPatchNCE</a></p>
+<p><b>血统声明（README 逐字）：</b>「This repo is built upon <a href="https://github.com/taesungp/contrastive-unpaired-translation">Contrastive Unpaired Translation (CUT)</a>.」</p>
+<p><b>文件树级证据（本轮 API 逐字核对）：</b>同时存在 <code>models/cut_model.py</code> 与 <code>models/cpt_model.py</code>、<code>models/patchnce.py</code>、<code>models/networks.py</code>（61 KB）、<code>options/base_options.py</code>、<code>experiments/mist_launcher.py</code>——完整的 CUT 骨架。</p>
+<p><b>它的增量（相对于 CUT）：</b></p>
+<ul><li><code>models/asp_loss.py</code> —— <code>AdaptiveSupervisedPatchNCELoss</code>：在 PatchNCE 上叠加<b>权重调度</b>。调度器 <code>sigmoid / linear / lambda / zero</code> × 查表函数 <code>top / linear / bell / uniform</code>，逐字源码已读，机制是「随 epoch 从监督权重平滑过渡到无监督权重」，用来缓解错位 groundtruth 的噪声监督。</li><li><code>models/gauss_pyramid.py</code> —— 高斯金字塔损失（来自 LPTN，见 §3.3）。</li><li><code>experiments/mist_launcher.py</code> —— 超参默认值。<b>这就是 §8 要讲的那个文件。</b></li><li>发布 <b>MIST 数据集</b>：HER2 / Ki67 / ER / PR 四种染色的 1024×1024 对齐 H&amp;E-IHC patch（HER2 4642 train / 1000 test，共 64 WSIs，20X）。可直接用于你的评测。</li></ul>
+<p><b>对你的价值：</b>它是 PSPStain 的<b>直接上游</b>。如果你要加频域损失，在这个仓库上加最不容易出兼容问题，因为超参默认值你已经一致了。</p>
+</div></div>
+
+<div class="card"><div class="ch"><div><div class="title">② PPT（Patch alignment-based Paired Translation）—— 本清单里最值得 fork 的一个</div><div class="v">Zhang, Hui, Tse, Hill, Lau, Li · MICCAI 2024 · LNCS 15004, pp.178–188 · H&amp;E→IHC</div></div><div><span class="b high">CUT 骨架</span> <span class="b purple">病理域</span> <span class="b blue">含频域损失文件</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/coffeeNtv/PPT">github.com/coffeeNtv/PPT</a></p>
+<p><b>血统声明（README 逐字）：</b>「Our code uses libraries from <a href="https://github.com/NVIDIA/pix2pixHD">Pix2pixHD</a>, <a href="https://github.com/taesungp/contrastive-unpaired-translation">CUT</a> and <a href="https://github.com/lifangda01/AdaptiveSupervisedPatchNCE">ASP</a>.」——<b>它是 CUT + ASP 的合流。</b></p>
+<p><b>为什么说它是唯一「四条件全满足」的仓库：</b></p>
+<div class="scroll"><table><thead><tr><th>条件</th><th>PPT 是否满足</th><th>证据</th></tr></thead><tbody>
+<tr><td>CUT 骨架</td><td><span class="b high">是</span></td><td><code>define_G/define_F/define_D</code> 三工厂 + <code>netF(feat_k, num_patches, sample_ids)</code> 两段式采样契约（<code>models/ppt.py</code> 逐字）</td></tr>
+<tr><td>病理域（H&amp;E→IHC）</td><td><span class="b high">是</span></td><td>数据集目录约定为 <code>trainA/trainB/testA/testB</code>，README 明确 A=H&amp;E、B=IHC</td></tr>
+<tr><td>频域损失</td><td><span class="b high">是</span></td><td>存在 <code>models/frequency_loss.py</code>，且在 <code>ppt.py</code> 中被实例化并计入 <code>loss_G</code>（<b>不是死代码</b>）</td></tr>
+<tr><td>代码开源</td><td><span class="b high">是</span></td><td>含 train/test/evaluation 全链路 + HuggingFace 数据集 <code>wzhang472/HIT</code></td></tr>
+</tbody></table></div>
+<p><b>逐字源码（<code>models/ppt.py</code> 的损失装配段）：</b></p>
+<pre><code>from .focalnce import FocalNCELoss
+from .frequency_loss import Gauss_Pyramid_Conv
+from .patch_alignment_loss import PatchAlignmentLoss
+from .content_loss import VGGLoss
+...
+self.criterionNCE = FocalNCELoss(opt)
+self.criterionVGG = VGGLoss(self.gpu_ids)
+self.P = Gauss_Pyramid_Conv(num_high=5)
+self.gp_weights = [1.0] * 6
+self.criterionMisalignment = PatchAlignmentLoss()
+...
+p_fake_B = self.P(self.fake_B);  p_real_B = self.P(self.real_B)
+loss_pyramid = [self.criterionL1(pf, pr) for pf, pr in zip(p_fake_B, p_real_B)]
+loss_pyramid = [l * w for l, w in zip(loss_pyramid, self.gp_weights)]
+self.loss_freq = torch.mean(torch.stack(loss_pyramid))
+...
+self.loss_G = (self.loss_G_GAN + self.loss_freq + self.loss_contrast
+               + self.loss_patch_alignment + self.loss_content)</code></pre>
+<p><b>它和 CUT 原版的差异（逐字核对）：</b>生成器/判别器工厂签名不变，但 <code>define_G</code> 多传了 <code>opt.model_type</code>；<code>base_options.py</code> 里 <code>input_nc=3 / output_nc=3 / ngf=64 / num_D=2 / n_layers_D=3 / norm=instance / model_type='resnet'</code>，<code>loadSize=fineSize=1024</code>。<b><code>num_D=2</code> 说明它用了两个判别器</b>，这一点与 CUT 默认不同。</p>
+<div class="box warn"><div class="bt">Fork 它之前必须知道的两件事</div><ol><li><b>它的 <code>frequency_loss.py</code> 是高斯金字塔，不是 FFT。</b>不要照抄文件名去写论文（见 §3.3）。</li><li><b>它的 README 没有写明 FocalNCE 的具体来源。</b>npj Digital Medicine 的 H&amp;E→IHC 综述把 FocalNCE 描述为「在 PatchNCE 上应用 Focal loss 缓解类别不平衡」，但本轮<b>没有</b>逐行读 <code>focalnce.py</code> 确认实现细节，标记为未核实。</li></ol></div>
+</div></div>
+
+<div class="grid2">
+<div class="mini"><div class="mt">③ FFPE++（DeepMIALab/FFPEPlus）</div><p><b>仓库：</b><a href="https://github.com/DeepMIALab/FFPEPlus">github.com/DeepMIALab/FFPEPlus</a><br><b>血统（README 逐字）：</b>「Our code is developed based on <a href="https://github.com/taesungp/contrastive-unpaired-translation">CUT</a>.」训练命令带 <code>--CUT_mode CUT</code>，目录含 <code>experiments/</code>、<code>data/</code>、<code>util/</code>，符合骨架指纹。<br><b>任务：</b>FFPE 伪影校正 + 冰冻→FFPE 翻译。<b>无频域成分</b>，是「纯 CUT 骨架 + 病理域」的干净基线。</p></div>
+<div class="mini"><div class="mt">④ AI-FFPE（DeepMIALab/AI-FFPE）</div><p><b>仓库：</b><a href="https://github.com/DeepMIALab/AI-FFPE">github.com/DeepMIALab/AI-FFPE</a><br><b>血统（README 逐字）：</b>「Our code is developed based on <a href="https://github.com/taesungp/contrastive-unpaired-translation">CUT</a>.」训练命令 <code>--CUT_mode CUT</code>。<br><b>论文：</b>Nature Biomedical Engineering 2022, doi:10.1038/s41551-022-00952-9。<br><b>它的增量：</b>Spatial Attention Block + self-regularization loss，且 README 给了「去掉 attention」「去掉 self-regularization」的消融图。<b>这是 CUT 骨架上做注意力/正则消融的现成范式</b>，可直接照搬消融设计。</p></div>
+</div>
+<div class="box teal"><div class="bt">⑤ 轻量 CUT 复现（便于改造）</div><p><a href="https://github.com/Kaminyou/CUT">github.com/Kaminyou/CUT</a> —— 一个精简版 CUT 实现，代码量远小于官方仓库。<b>如果你只想快速试一个频域 loss 而不想动 PSPStain 主干</b>，在这种精简实现上做原型比在 61 KB 的 <code>networks.py</code> 里改更快。<span class="b medium">本轮未逐字核实（仅见搜索摘要，约 17★），使用前请自行确认接口完整性</span></p></div>
+
+<h2 id="s7"><span class="num">7</span>需要移植的频域/多尺度框架（不是 CUT 骨架）</h2>
+<p>这些工作有价值，但<b>不能直接 fork 到 CUT 上</b>——它们各有自己的骨架。列出是为了让你在写「相关工作」和借鉴机制时有准确归属，避免误引。</p>
+<div class="scroll"><table><thead><tr><th>工作</th><th>仓库</th><th>它真实的骨架</th><th>可借鉴的是什么</th><th>不能照搬的原因</th></tr></thead><tbody>
+<tr><td><b>FDIT</b><br>Frequency Domain Image Translation<br><span class="small">Cai et al. · ICCV 2021 · arXiv:2011.13611</span></td><td><a href="https://github.com/mu-cai/frequency-domain-image-translation">mu-cai/frequency-domain-image-translation</a></td><td><b>Swapping Autoencoder + StarGAN v2 + Image2StyleGAN</b>（README 逐字声明「Code is modified from ...」）——<b>不是 CUT</b></td><td>把图像显式分解为低频/高频、并把高频视为更接近 identity 的思路；仓库里的 <code>utils_freq/</code> 是可直接复用的频域工具集</td><td>它的高频=identity 假设来自普通风格迁移；H&amp;E→IHC 里目标染色的膜边界、DAB 沉积与 H&amp;E 结构不是同一个频谱对象</td></tr>
+<tr><td><b>LPTN</b><br>Laplacian Pyramid Translation Network<br><span class="small">CVPR 2021 · 437★</span></td><td><a href="https://github.com/csjliang/LPTN">csjliang/LPTN</a></td><td>自己的金字塔翻译网络</td><td><b>高斯金字塔损失函数的原始出处</b>——ASP 与 PPT 都是从这里抄的（§3.3）</td><td>它做的是 HDR / 高质量实时翻译，与病理无关</td></tr>
+<tr><td><b>FDA</b><br>Fourier Domain Adaptation<br><span class="small">CVPR 2020</span></td><td><a href="https://github.com/YanchaoYang/FDA">YanchaoYang/FDA</a></td><td>语义分割 UDA（无 GAN）</td><td>「交换低频频谱幅度」做风格迁移，<b>不需要深度网络、不需要对抗训练</b>——可当作数据预处理/条件生成的廉价手段</td><td>它不训练生成器，与你的 GAN 框架不在同一层</td></tr>
+<tr><td><b>PiFS-CycleGAN</b><br>物理先验 + 频域增强<br><span class="small">CT→EUS 合成 · 2026</span></td><td><a href="https://github.com/Nikwelhe/PiFS-CycleGAN">Nikwelhe/PiFS-CycleGAN</a><br><span class="small">0★ · MIT · 小众</span></td><td>CycleGAN</td><td>「频域增强 + 物理一致性」的医学翻译组合思路，可看它怎么把频域项和物理约束拼在一起</td><td>CycleGAN 骨架；CT/EUS 与病理的成像机制完全不同</td></tr>
+<tr><td><b>混合空间-频域 GAN</b><br>StyleGAN + SFM<br><span class="small">BMC Bioinformatics 2025</span></td><td><span class="b bad">未找到代码仓库</span></td><td>StyleGAN2</td><td>三个模块设计可参考：<b>SFM</b>（FFT + 可学习滤波，强调周期性纹理如细胞膜）、<b>VWMA</b>（变窗混合注意力）、<b>Cross-Attention Fusion</b>（让空间与频域互相引导而非简单拼接）。任务就是病理图像合成，PCAM 200 数据集</td><td>StyleGAN 是无条件生成骨架，与你的条件翻译框架不同</td></tr>
+<tr><td><b>CSSP2P-GAN</b><br><span class="small">DGM4MICCAI 2025</span></td><td><a href="https://github.com/Jose-Miguel-Teixeira/CSSP2P-GAN">Jose-Miguel-Teixeira/CSSP2P-GAN</a><br><span class="small">Apache-2.0</span></td><td>条件 GAN（非 CUT）</td><td>H&amp;E→HER2-IHC 虚拟染色 + 病理学家盲评 + 对「SSIM/PSNR 不足为凭」的论证。数据集 HER2match 在 Zenodo 公开</td><td>它明确反对复杂模型，主打「对抗损失本身才是关键」，路线与你的方向相反，但<b>它的评价论证值得读</b></td></tr>
+<tr><td><b>VirtualMultiplexer</b></td><td><a href="https://github.com/AI4SCR/VirtualMultiplexer">AI4SCR/VirtualMultiplexer</a></td><td>非配对 H&amp;E→多重 IHC 工具箱</td><td>EMPaCT 数据集上的多重 IHC 非配对翻译基线</td><td>不是 CUT 骨架，且目标是多标记而非单标记</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">M2PL-GAN / ODA-GAN：本轮未找到代码</div><p>检索中命中两篇高度相关的病理域工作——<b>M2PL-GAN</b>（Multi-View Multi-Level Pathology Semantic Perception, IEEE TMI 2026）与 <b>ODA-GAN</b>（Orthogonal Decoupling Alignment GAN, CVPR 2025，正交解耦染色相关/无关特征）。<b>两者都没有找到公开代码仓库。</b>它们的机制（多视图多层级语义感知、正交 MLP 解耦）与频域正交，但值得关注后续开源。</p></div>
+
+<h2 id="s8"><span class="num">8</span>一处硬发现：PSPStain 的 launcher 与 ASP 逐字同源</h2>
+<div class="box key"><div class="bt">本轮最有价值的单点发现</div><p>你上一轮的判断是「PSPStain 在 CUT 基础上加了谱归一化和 GP 损失」。<b>本轮逐字取证后可以把它说得更准：这两个「改动」不是 PSPStain 自己的设计，而是 MICCAI 2023 的 ASP 仓库 launcher 里就有的默认值。</b>换句话说，PSPStain 的配置是从 ASP 直接继承的，而不是从 CUT 演化出来的。</p></div>
+<p><b>证据：</b>下面左侧是 ASP 的 <code>experiments/mist_launcher.py</code>（<b>本轮 API 抓取，逐字</b>）：</p>
+<pre><code>Options(
+    dataroot="datasets/MIST/HER2/TrainValAB",
+    model='cpt',
+    CUT_mode="FastCUT",
+    n_epochs=30, n_epochs_decay=10,
+    netD='n_layers',
+    ndf=32,
+    netG='resnet_6blocks',
+    n_layers_D=5,
+    normG='instance',
+    normD='instance',
+    weight_norm='spectral',              # ← 谱归一化在这里
+    lambda_GAN=1.0,
+    lambda_NCE=10.0,
+    nce_layers='0,4,8,12,16',
+    nce_T=0.07,
+    num_patches=256,
+    # FDL:
+    lambda_gp=10.0,                      # ← GP 损失权重在这里
+    gp_weights='[0.015625,0.03125,0.0625,0.125,0.25,1.0]',
+    lambda_asp=10.0,
+    asp_loss_mode='lambda_linear',
+    dataset_mode='aligned',
+    direction='AtoB',
+    batch_size=1,
+    load_size=1024, crop_size=512,
+    preprocess='crop',
+)</code></pre>
+<p><b>注意源码里的注释 <code># FDL:</code>。</b>ASP 作者自己在 <code>lambda_gp</code> 上方写了这个注释——<b>这正是「FDL」这个缩写被误传的源头。</b>但紧随其后的 <code>gp_weights</code> 是高斯金字塔权重，<code>lambda_gp</code> 的 gp 是 <b>Gaussian Pyramid</b> 的缩写，不是 Frequency Distribution Loss。仓库里另有一个 <code>util/fdlutil.py</code>（16 KB，与 <code>util/fid.py</code> 10.6 KB、<code>util/kid_score.py</code> 16.2 KB 并列），<b>极可能是 Fréchet Distance Library 的指标工具，与频域无关</b>（该文件本轮抓取失败，标记为未核实，见 §10）。</p>
+<div class="scroll"><table><thead><tr><th>参数</th><th>ASP <code>mist_launcher.py</code><br><span class="small">（本轮逐字核实）</span></th><th>PSPStain launcher<br><span class="small">（来自上一轮会话读取，本轮未复核）</span></th><th>判定</th></tr></thead><tbody>
+<tr><td><code>CUT_mode</code></td><td>FastCUT</td><td>FastCUT</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>netD</code></td><td>n_layers</td><td>n_layers</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>ndf</code></td><td>32</td><td>32</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>netG</code></td><td>resnet_6blocks</td><td>resnet_6blocks</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>n_layers_D</code></td><td>5</td><td>5</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>normG / normD</code></td><td>instance / instance</td><td>instance / instance</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>weight_norm</code></td><td><b>spectral</b></td><td><b>spectral</b></td><td><span class="b high">相同</span> ← 非 PSPStain 原创</td></tr>
+<tr><td><code>lambda_gp</code></td><td><b>10.0</b></td><td><b>10.0</b></td><td><span class="b high">相同</span> ← 非 PSPStain 原创</td></tr>
+<tr><td><code>nce_layers / nce_T / num_patches</code></td><td>0,4,8,12,16 / 0.07 / 256</td><td>同</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>dataset_mode</code></td><td>aligned</td><td>aligned</td><td><span class="b high">相同</span></td></tr>
+<tr><td><code>lambda_NCE</code></td><td>10.0</td><td><b>1.0</b></td><td><span class="b medium">被改过</span></td></tr>
+<tr><td><code>batch_size</code></td><td>1</td><td><b>4</b></td><td><span class="b medium">被改过</span></td></tr>
+<tr><td><code>unet_seg</code></td><td>—（ASP 用 asp_loss）</td><td><b>BCI_unet_seg</b></td><td><span class="b purple">PSPStain 新增</span></td></tr>
+<tr><td><code>model</code></td><td>cpt</td><td>PSPStain</td><td><span class="b purple">新增模型类</span></td></tr>
+</tbody></table></div>
+<div class="box good"><div class="bt">这条发现对你的实际意义</div><ol><li><b>论文里不要写「我们在 CUT 基础上引入谱归一化」</b>——审稿人若追代码，会指向 ASP（MICCAI 2023）。如果要保留 spectral norm，应显式引用 ASP 并说明继承关系。</li><li><b>你现在做频域消融时的基线超参，其实是 ASP 在 MIST/HER2 上调出来的。</b>这些值在你的数据上未必最优，尤其是 <code>lambda_NCE</code> 已被 PSPStain 从 10.0 改成 1.0，说明原作者也认为默认值需要调。</li><li><b><code>gp_weights</code> 是一个现成的免费消融点。</b>ASP 用几何递增 <code>[0.0156…1.0]</code>（偏重粗尺度），PPT 用等权 <code>[1.0]*6</code>。你的代码目前用的是哪个？这是一个「同一骨架、两种设定、结果是否不同」的零成本对照实验。</li></ol></div>
+
+<h2 id="s9"><span class="num">9</span>可执行缝合路线</h2>
+<div class="flow"><pre><code>起点：现有 PSPStain（CUT 骨架 + 已有 GP 金字塔损失 + MLPA/CTPC）
+
+▼ 第 0 步（30 分钟）：确认你现在的 GP 权重是哪一版
+   ├─ grep -n "gp_weights" 你的仓库
+   ├─ 若 = [1.0]*6        → PPT 版（等权）
+   └─ 若 = [0.015625,...] → ASP 版（几何递增）
+   → 记录为 F0 基线的既定配置，不要中途改
+
+▼ 第 1 步：加「真频域」loss（接口 A，唯一推荐的第一步）
+   ├─ pip install focal-frequency-loss    （FFL，ICCV 2021）
+   └─ 或 pip install fdl-pytorch          （FDL，CVPR 2024，抗错位）
+   → 在 compute_G_loss 里加一项，lambda 从 0.05 起
+   → 单因素：只加这一项，其余全部冻结
+
+▼ 判定 1：3 个 seed，结构指标 + 伪影指标
+   ├─ 有稳定改善 → 进第 2 步
+   └─ 无改善     → 停。不要继续堆模块（见 GAN+频域+门控 §8 止损）
+
+▼ 第 2 步：换一个「已在 CUT 骨架上验证过」的 loss 做交叉验证
+   ├─ 从 coffeeNtv/PPT 抄 FocalNCE 替换 PatchNCELoss
+   └─ 或抄 PatchAlignmentLoss（对连续切片错位对症）
+   → 这一步同时验证「PPT 的组件能不能在你的骨架里跑通」
+
+▼ 判定 2：频域 loss 与 PPT 组件的增益是否可叠加
+   ├─ 可叠加 → 你有了一个「CUT 骨架 + 频域 + 错位鲁棒」的组合，可写
+   └─ 不可叠加（互相抵消）→ 说明两者在优化同一个方向，选更简单的一个
+
+▼ 第 3 步（可选，高风险）：动生成器算子
+   └─ 只在第 1–2 步都有稳定增益后才做
+      FFC（advimman/lama）或 WTConv（BGU-CS-VIL/WTConv）
+      ⚠ 会同时改变参数量/感受野/梯度尺度，归因困难
+
+▼ 始终不做（除非有明确理由）
+   ├─ 频域判别器（无现成 CUT 实现，需自写 40–60 行）
+   └─ 频带门控 / 多专家路由（见 GAN+频域+门控 §4.3 的反对理由）</code></pre></div>
+<h3>9.1 五条可直接执行的命令</h3>
+<pre><code># 1. 确认你的骨架是不是 CUT 血统（应输出三处）
+grep -rn "def define_G\|def define_F\|def define_D" models/networks.py
+
+# 2. 确认 PatchNCE 是 CUT 的 sample_ids 两段式契约
+grep -n "sample_ids" models/*.py
+
+# 3. 确认你的 GP 权重版本（§8 的消融点）
+grep -rn "gp_weights\|Gauss_Pyramid" models/ experiments/ options/
+
+# 4. 确认谱归一化确实来自 ASP 而非自研
+grep -rn "weight_norm\|spectral_norm" models/networks.py options/base_options.py
+
+# 5. 把 PPT 的频域/对比损失文件取下来做对照（只读，不覆盖）
+curl -sL https://raw.githubusercontent.com/coffeeNtv/PPT/master/models/frequency_loss.py \
+  -o /tmp/ppt_frequency_loss.py && diff /tmp/ppt_frequency_loss.py 你的 gauss_pyramid.py</code></pre>
+<h3>9.2 一份必须同时记录的四类指标</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">分布级</div><p>FID / KID、precision / recall、病理特征距离。<b>单独用 FID 会掩盖表达量退化。</b></p></div>
+<div class="mini"><div class="mt">表达级</div><p>DAB / OD / FOD mean、p90 / IOD、阳性面积、细胞级 precision / recall、HER2/H-score 一致性。</p></div>
+<div class="mini"><div class="mt">结构级</div><p>细胞核 / 膜边界、membrane continuity、下游分割或分类精度。</p></div>
+<div class="mini"><div class="mt">频域级</div><p>log radial power-spectrum distance、金字塔各级 L1、周期峰能量、自相关。<b>频域指标要单独算，不能混进 FID 当成功证据。</b></p></div>
+</div>
+
+<h2 id="s10"><span class="num">10</span>未核实清单与证据边界</h2>
+<div class="box stop"><div class="bt">明确未核实的事项（不要当作事实引用）</div><ol>
+<li><b>PPT <code>models/networks.py</code> 内部是否藏有频域算子</b> —— 该文件 29 KB，本轮三次抓取均失败（raw 与 CDN 均被沙箱阻断），<b>未逐行核对</b>。已核实的间接证据是：仓库文件树中<b>没有任何</b> fft/dct/wavelet 专用模块，且被命名为 <code>frequency_loss.py</code> 的文件内容是高斯金字塔。<b>高置信度推断：PPT 全仓库无 FFT/DCT 算子。</b>可证伪的检验：本地 clone 后 <code>grep -rn -i "fft\|dct\|pywt\|wavelet" models/</code>。</li>
+<li><b>PSPStain 自身的 launcher 内容</b> —— 本轮<b>未重新读取</b>你的代码。§8 右侧一列来自上一轮会话的读取结果。请用 §9.1 的命令自查确认。</li>
+<li><b><code>util/fdlutil.py</code> 的真实用途</b> —— 抓取失败。仅凭文件名、大小（16 KB）与同级文件（<code>fid.py</code>、<code>kid_score.py</code>）推断为 FID 指标工具，<b>未核实</b>。这直接影响「FDL 缩写撞车」这一结论的表述强度。</li>
+<li><b>PPT <code>models/focalnce.py</code> 的实现细节</b> —— 未逐行读取。其「Focal + PatchNCE」的描述来自 npj Digital Medicine 综述的二手表述。</li>
+<li><b>Kaminyou/CUT</b> 的接口完整性与星数 —— 仅见搜索摘要（约 17★），未通过 API 核实。</li>
+<li><b>M2PL-GAN（TMI 2026）与 ODA-GAN（CVPR 2025）</b> —— 确认存在这两篇工作，但<b>未找到代码仓库</b>，其机制描述来自搜索摘要与二手博客。</li>
+<li><b>BMC Bioinformatics 2025 混合空间-频域 GAN</b> —— 确认论文存在（StyleGAN + SFM + VWMA），<b>未找到官方代码</b>，机制描述来自二手解读。</li>
+<li><b>FDIT 的具体指标数字</b> —— 本轮只核实了它的骨架来源（Swapping AE + StarGANv2 + Image2StyleGAN）与代码结构，未核实其论文中的 FID 数字。</li>
+</ol></div>
+<p class="cite"><b>证据标记：</b><span class="b high">[VERIFIED]</span> 本轮实际抓取到官方 README / API / 逐字源码；<span class="b medium">[SEARCH-ONLY]</span> 仅见于搜索结果或二手来源，未读一手；<span class="b low">[INFERENCE]</span> 基于已核实证据的工程推断，需实测；<span class="b bad">[UNVERIFIED]</span> 抓取受阻，不应作为强事实引用。</p>
+<h3>10.1 本文明确没有做的事</h3>
+<ul><li><b>没有跑任何实验。</b>本文所有「推荐」都是基于「仓库存在 + 接口可缝合」的工程判断，<b>不是基于受控实验结果</b>。任何「频域 loss 在你的数据上有用」的结论都必须你自己实测。</li><li><b>没有重复论证机制优劣。</b>「频域适合解决什么、门控适合解决什么、什么时候止损」请直接引用库内 <i>GAN+频域+门控_虚拟染色方法调研</i>，本文与该报告结论一致，不另立证据。</li><li><b>没有核实论文指标数字。</b>本文只回答「代码在哪、挂在哪、能不能跑」，不回答「它比基线好多少」。</li></ul>
+
+<h2 id="s11"><span class="num">11</span>参考文献与代码</h2>
+<h3>11.1 CUT 骨架系（可直接 fork）</h3>
+<div class="scroll"><table><thead><tr><th>工作</th><th>代码</th><th>血统 / 骨架</th><th>核实等级</th></tr></thead><tbody>
+<tr><td>Contrastive Unpaired Translation（CUT）<br><span class="small">Park, Efros, Zhang, Zhu · ECCV 2020 · arXiv:2007.15651</span></td><td><a href="https://github.com/taesungp/contrastive-unpaired-translation">taesungp/contrastive-unpaired-translation</a></td><td>骨架本身</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td>ASP / CPT<br><span class="small">MICCAI 2023 · arXiv:2303.06193</span></td><td><a href="https://github.com/lifangda01/AdaptiveSupervisedPatchNCE">lifangda01/AdaptiveSupervisedPatchNCE</a></td><td>built upon CUT（README 逐字）</td><td><span class="b high">[VERIFIED] 文件树 + launcher + asp_loss 源码</span></td></tr>
+<tr><td>PPT<br><span class="small">MICCAI 2024 · LNCS 15004 pp.178–188</span></td><td><a href="https://github.com/coffeeNtv/PPT">coffeeNtv/PPT</a></td><td>CUT + pix2pixHD + ASP（README 逐字）</td><td><span class="b high">[VERIFIED] 文件树 + ppt.py + base_options 源码</span></td></tr>
+<tr><td>FFPE++<br><span class="small">DeepMIALab</span></td><td><a href="https://github.com/DeepMIALab/FFPEPlus">DeepMIALab/FFPEPlus</a></td><td>developed based on CUT（README 逐字）</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td>AI-FFPE<br><span class="small">Nature Biomed Eng 2022 · doi:10.1038/s41551-022-00952-9</span></td><td><a href="https://github.com/DeepMIALab/AI-FFPE">DeepMIALab/AI-FFPE</a></td><td>developed based on CUT（README 逐字）</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td>精简 CUT 复现</td><td><a href="https://github.com/Kaminyou/CUT">Kaminyou/CUT</a></td><td>CUT 复现</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+</tbody></table></div>
+<h3>11.2 频域 / 多尺度 loss 与算子</h3>
+<div class="scroll"><table><thead><tr><th>工作</th><th>代码 / 安装</th><th>类型</th><th>核实等级</th></tr></thead><tbody>
+<tr><td>Focal Frequency Loss<br><span class="small">ICCV 2021 · arXiv:2012.12821</span></td><td><a href="https://github.com/EndlessSora/focal-frequency-loss">EndlessSora/focal-frequency-loss</a><br><code>pip install focal-frequency-loss</code></td><td><b>真·频域 loss（FFT）</b></td><td><span class="b high">[VERIFIED] README + API 逐字</span></td></tr>
+<tr><td>FDL 频率分布损失<br><span class="small">CVPR 2024 · arXiv:2402.18192</span></td><td><a href="https://github.com/eezkni/FDL">eezkni/FDL</a><br><code>pip install fdl-pytorch</code></td><td><b>真·频域 loss（DFT，幅度+相位）</b></td><td><span class="b high">[VERIFIED] README + API 逐字</span></td></tr>
+<tr><td>LPTN 高斯金字塔损失<br><span class="small">CVPR 2021 · 437★</span></td><td><a href="https://github.com/csjliang/LPTN">csjliang/LPTN</a></td><td><b>多尺度重建 loss（非频域）</b></td><td><span class="b high">[VERIFIED] 上游元信息 + 两份下游源码</span></td></tr>
+<tr><td>FFC 快速傅里叶卷积<br><span class="small">WACV 2022</span></td><td><a href="https://github.com/advimman/lama">advimman/lama</a>（<code>modules/ffc.py</code>）</td><td>生成器算子</td><td><span class="b high">[VERIFIED] 仓库元信息 + 官方描述</span></td></tr>
+<tr><td>UFFC<br><span class="small">ICCV 2023</span></td><td><a href="https://github.com/1911cty/Unbiased-Fast-Fourier-Convolution">1911cty/Unbiased-Fast-Fourier-Convolution</a></td><td>生成器算子</td><td><span class="b high">[VERIFIED] 仓库元信息</span></td></tr>
+<tr><td>WTConv<br><span class="small">ECCV 2024</span></td><td><a href="https://github.com/BGU-CS-VIL/WTConv">BGU-CS-VIL/WTConv</a></td><td>生成器算子（小波）</td><td><span class="b high">[VERIFIED] 仓库元信息 + README</span></td></tr>
+</tbody></table></div>
+<h3>11.3 非 CUT 骨架的频域翻译框架</h3>
+<div class="scroll"><table><thead><tr><th>工作</th><th>代码</th><th>真实骨架</th><th>核实等级</th></tr></thead><tbody>
+<tr><td>FDIT<br><span class="small">ICCV 2021 · arXiv:2011.13611</span></td><td><a href="https://github.com/mu-cai/frequency-domain-image-translation">mu-cai/frequency-domain-image-translation</a></td><td>Swapping Autoencoder + StarGANv2 + Image2StyleGAN</td><td><span class="b high">[VERIFIED] README 逐字</span></td></tr>
+<tr><td>FDA<br><span class="small">CVPR 2020</span></td><td><a href="https://github.com/YanchaoYang/FDA">YanchaoYang/FDA</a></td><td>语义分割 UDA，无 GAN</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td>PiFS-CycleGAN</td><td><a href="https://github.com/Nikwelhe/PiFS-CycleGAN">Nikwelhe/PiFS-CycleGAN</a></td><td>CycleGAN</td><td><span class="b high">[VERIFIED] 仓库元信息</span></td></tr>
+<tr><td>CSSP2P-GAN<br><span class="small">DGM4MICCAI 2025</span></td><td><a href="https://github.com/Jose-Miguel-Teixeira/CSSP2P-GAN">Jose-Miguel-Teixeira/CSSP2P-GAN</a></td><td>条件 GAN</td><td><span class="b medium">[SEARCH-ONLY] 仓库存在，未读源码</span></td></tr>
+<tr><td>VirtualMultiplexer</td><td><a href="https://github.com/AI4SCR/VirtualMultiplexer">AI4SCR/VirtualMultiplexer</a></td><td>非配对 H&amp;E→多重 IHC</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td>混合空间-频域 GAN<br><span class="small">BMC Bioinformatics 2025</span></td><td><span class="b bad">未找到代码</span></td><td>StyleGAN2</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td>M2PL-GAN<br><span class="small">IEEE TMI 2026</span></td><td><span class="b bad">未找到代码</span></td><td>—</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td>ODA-GAN<br><span class="small">CVPR 2025</span></td><td><span class="b bad">未找到代码</span></td><td>—</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+</tbody></table></div>
+<h3>11.4 库内相关报告（本文的分工对象）</h3>
+<ul>
+<li><code>01_调研报告/GAN+频域+门控_虚拟染色方法调研.html</code> —— 机制地图与消融矩阵，本文的机制论证一律引用它。</li>
+<li><code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code> —— 扩散侧的频域条件注入方案。</li>
+<li><code>06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html</code> —— 频域×GAN / 门控×GAN 先例地图。</li>
+<li><code>05_伪影与失败模式/GAN棋盘格伪影_底层成因_卷积信号处理与频域机制.html</code> —— 为什么值得加频域 loss。</li>
+<li><code>01_调研报告/GAN虚拟染色_方法路线与浓度域先例调研.html</code> —— GAN 虚拟染色路线与表达监督。</li>
+<li><code>02_论文翻译/p3_pspstain/p3_pspstain.zh.html</code> —— PSPStain 论文全文，可与本文 §8 的上游溯源对读。</li>
+</ul>
+<hr>
+<p class="cite">本报告所有「逐字源码」引文均来自本轮通过 GitHub API / raw 抓取的一手文件。抓取受阻的项目已全部列入 §10 未核实清单。<b>报告日期：2026-10-15。</b></p>
+</main></div></body></html>

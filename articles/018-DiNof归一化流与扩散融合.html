@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍","date":"2026-10-25","tags":["论文精读", "归一化流", "扩散模型", "流匹配", "生成模型"],"category":"研究","summary":"DiNof 把 SDE 型扩散与 Glow 类可逆归一化流串联成两段式生成过程：前向前半程随机加噪、后半程由归一化流确定性映射到高斯分布，采样因而只需约 600 步并在 CIFAR-10 上把 FID 从同架构纯扩散的 4.29 压到 2.01，同时保留精确似然的可算性。本文精读其分段机制、联合训练与 Tm 消融，把流/混合生成与纯扩散并列为两条路线，并评估其对虚拟染色少步采样与密度可算诉求的迁移价值。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1 class="site-title">我的个人博客</h1>
+    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+  </div>
+</header>
+<article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
+<h1>DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍</h1>
+<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<blockquote><strong>论文</strong>：<em>Diffusion Models with Deterministic Normalizing Flow Priors</em> <strong>作者</strong>：Mohsen Zand, Ali Etemad, Michael Greenspan <strong>发表</strong>：<strong>TMLR 2024</strong>；arXiv:2309.01274（v1 提交于 2023-09-03，v2 修订于 2025-03-23） <strong>代码</strong>：https://github.com/MohsenZand/DiNof <strong>方法名</strong>：<strong>DiNof</strong>（<strong>Di</strong>ffusion with <strong>N</strong>ormalizing flow <strong>p</strong>ri<strong>o</strong>r<strong>f</strong>rame<strong>w</strong>ork，带归一化流先验的扩散模型）</blockquote>
+<blockquote><strong>核实声明</strong>：本文写作时已逐项对照 arXiv:2309.01274v2 正文，核实了论文标题、作者、发表刊物、代码仓库，以及全部结构常数（$L=3$、$K=16$、隐藏通道 256、$\gamma=0.16/0.17$、$T_m=0.6$）与 FID/IS 数值（2.01、4.29、13.43、2.10、7.11、7.22、7.23、46.60 等）。原始对话中出现、但在论文里找不到对应出处的数字（例如「去噪步数可减至 50-200」「提速 5-20 倍」「纯归一化流 FID 大于 10」）一律不采用；涉及笔者自行推演的内容均以「笔者推测」显式标注。</blockquote>
+<hr />
+<h2>〇、一句话概括</h2>
+<blockquote>DiNof 不做「全程混合」，而是做「分段分工」：扩散的随机 SDE 只负责前半程加噪，后半程交给一个 Glow 归一化流把中间状态 $x(T_m)$ 确定性地「搬运」到标准高斯——于是采样起点从「无结构的纯噪声」换成了「数据依赖的先验」，扩散去噪的步数随之缩短，而变量替换公式让精确似然仍然是可算的。</blockquote>
+<p>这是一次用结构约束换两种范式的交集优势的尝试。它值得精读的原因在于：<strong>少步采样</strong>与<strong>似然可算</strong>恰好是浓度域虚拟染色这类定量生成任务同时需要、而在纯扩散里难以兼得的两个性质。</p>
+<hr />
+<h2>一、背景：扩散的两块短板与流的天花板</h2>
+<p>生成模型要在三件事之间做选择：<strong>样本质量、采样速度、密度可算性</strong>。当前两大范式的成绩单是互补的。</p>
+<p><strong>扩散模型的痛点。</strong> 扩散（以 SDE 视角表述，见式 (3)）通过一条长随机轨迹把数据分布连续变形为高斯分布，反向逐帧去噪。这一机制带来高质量与稳定训练，但代价有两条：其一，反向轨迹必须沿数百乃至上千个噪声尺度逐步积分，单张 CIFAR-10 图像的采样常以十秒计；其二，前向是固定的随机加噪、不含可学参数，模型的边缘密度 $p_t(x)$ 只能由分数网络逼近，<strong>精确似然原则上不可算</strong>，只能通过变分下界近似评估。已有加速手段（DDIM、渐进蒸馏等）能压步数，但都不把似然「找回来」——这正说明两个痛点在纯扩散框架内部是耦合的。</p>
+<p><strong>归一化流的天花板。</strong> 归一化流（Normalizing Flow, NF）用一串可微可逆的双射把复杂数据分布直接「流」成已知简单分布，靠变量替换公式获得<strong>精确密度</strong>，且采样是确定性的逆映射，一步到位。但可逆性与「Jacobian 行列式易计算」两条硬约束逼着每一层变换都取特殊的稀疏结构（耦合层、三角矩阵），表达能力被结构性压缩，早期工作（Glow 等）在 FID 上长期追不上扩散。</p>
+<p><strong>已有的拼接尝试。</strong> DiffFlow（Zhang &amp; Chen, 2021）把随机性注入流的每一步，得到「随机化的可逆模型」；INDM（Kim et al., 2022）用流模型给扩散的隐空间加噪；LSGM（Vahdat et al., 2021）把扩散搬到隐空间。它们的共同困境是：<strong>混合得不彻底时，两边的缺点也一起继承</strong>——DiNof 报告的 DiffFlow 在 CIFAR-10 上 FID 13.43，比其扩散基线差得多，就是这一点的实证注脚。</p>
+<p><strong>笔者的真实动机。</strong> 本文关注的不是通用图像生成，而是虚拟染色：H&amp;E→IHC 生成任务既要「转得快」（全切片翻译对单图延迟敏感），又要「算得出」（生成结果需要可与真实染色比分布、比密度，而不只是看着像）。前者指向少步采样，后者指向似然可算——DiNof 恰好是把这两个诉求同时摆上台面的代表作。</p>
+<hr />
+<h2>二、两条路线的原理与拼接可行性</h2>
+<h3>2.1 归一化流：可逆映射与变量替换公式</h3>
+<p>设 $f:\mathbb{R}^D\to\mathbb{R}^D$ 是一串简单可逆变换的复合 $f = f_M \circ \cdots \circ f_1$，把数据 $x$ 映到潜变量 $z = f(x)$。由概率密度在双射下的守恒（<strong>变量替换公式</strong>）：</p>
+<p>$$ p_X(x) = p_Z\bigl(f(x)\bigr)\cdot \left|\det \mathbf{J}_f(x)\right| $$</p>
+<p>其中 $\mathbf{J}_f$ 为 Jacobian 矩阵。取对数、并按 Glow 的分层写法（$h_0 = x, h_M = z$）：</p>
+<p>$$ \log p_\theta(x) = \log p_\theta(z) + \sum_{i=1}^{M} \log \left|\det\left(\frac{\partial h_i}{\partial h_{i-1}}\right)\right| $$</p>
+<p>这一行是归一化流全部「福利」的来源：<strong>似然是精确值</strong>（右边两项都可显式计算），且逆映射 $x = f^{-1}(z)$ 给出一确定性采样。代价是每一层 $f_i$ 必须同时满足三件事——双射、可微、行列式闭式可得。Glow 的答案是两类层的交替堆叠：</p>
+<p><strong>仿射耦合层</strong>。把输入按通道分成两半，一半原样保留、一半被另一半参数化的缩放与平移改写：</p>
+<p>$$ y_1 = x_1,\qquad y_2 = x_2 \odot \exp\bigl(s(x_1)\bigr) + t(x_1) $$</p>
+<p>逆变换就是 $x_2 = \bigl(y_2 - t(y_1)\bigr) \odot \exp\bigl(-s(y_1)\bigr)$，Jacobian 为分块三角阵，对数行列式退化为 $\sum_i s(\cdot)$ 的逐元素和——这正是「结构约束换可算性」的标准姿势。</p>
+<p><strong>$1\times1$ 可逆卷积</strong>。用一个可逆矩阵 $W$ 沿通道维做逐空间位置的线性混合，打散耦合层「只改一半通道」的偏置；行列式为 $(\det W)^{H\times W}$，$W$ 以 LU 分解参数化以保证恒可逆。</p>
+<p>两类层各重复 $K$ 步、在 $L$ 个尺度上堆叠，就得到一个密度可算、采样确定的流网络。</p>
+<h3>2.2 扩散：SDE 视角下的连续加噪</h3>
+<p>Score-SDE 框架把离散马尔可夫加噪写成连续时间随机微分方程：</p>
+<p>$$ dx = f(x,t)\,dt + g(t)\,dw,\qquad x(0)\sim p_{\mathrm{data}} \tag{3} $$</p>
+<p>常用两种实例：<strong>VESDE</strong>（方差爆炸）取漂移 $f(t)=0$、扩散系数 $g(t)=\sqrt{d[\sigma^2(t)]/dt}$；<strong>VPSDE</strong>（方差保持）取 $f(x,t)=-\tfrac{1}{2}\beta(t)x$、$g(t)=\sqrt{\beta(t)}$。训练目标是分数匹配——学一个网络 $s_\theta(x,t)$ 逼近各时刻边缘密度的梯度 $\nabla_x \log p_t(x)$：</p>
+<p>$$ \theta^* = \arg\min_\theta \mathbb{E}_t\Bigl\{\lambda(t)\,\mathbb{E}_{x(0)}\mathbb{E}_{x(t)\mid x(0)}\bigl\|\, s_\theta(x(t),t) - \nabla_{x(t)} \log p_{0t}(x(t)\mid x(0)) \,\bigr\|_2^2\Bigr\} \tag{4} $$</p>
+<p>关键在转移核 $p_{0t}(x(t)\mid x(0))$ 是高斯、其分数有闭式，绕开了不可算的 $p_t(x)$ 本身。采样则沿反向时间 SDE 走：</p>
+<p>$$ dx = \bigl[\,f(x,t) - g^2(t)\,\nabla_x \log p_t(x)\,\bigr] dt + g(t)\,d\bar{w} \tag{5} $$</p>
+<p>其中 $d\bar w$ 是反向 Wiener 过程。<strong>似然不可算的根源就在 (5)</strong>：反向轨迹是随机的，$p_t$ 只被网络逼近，密度没有闭式出口。</p>
+<h3>2.3 二者为什么能拼</h3>
+<p>拼接的可行性来自一个观察：SDE 与 NF 描述的是同一类对象——<strong>分布族 $\{p_t\}$ 沿时间轴的搬运</strong>。区别只在搬运方式：SDE 用小步随机漂移的极限，NF 用大步确定性双射。既然扩散在任意中间时刻 $T_m$ 都有一个明确的边缘分布 $p_{T_m}$（前向高斯转移核保证），那么完全可以<strong>不从 $p_0$、而从 $p_{T_m}$ 起</strong>训练一个归一化流，让它学 $p_{T_m} \to \mathcal{N}(0,I)$ 的双射；反向时先用流的逆变换从 $\mathcal{N}(0,I)$ 生成一个服从 $p_{T_m}$ 的样本，再接上扩散的随机去噪。两段的黏合剂不是解析性质，而是<strong>联合训练</strong>：流见过的输入分布必须是扩散实际输出的 $x(T_m)$，二者在同一条数据通路上互相适配。这就是 DiNof 的方法论内核。</p>
+<hr />
+<h2>三、DiNof 的方法设计</h2>
+<h3>3.1 两段式前向：线性随机 + 非线性确定</h3>
+<p>DiNof 把前向过程在阈值 $T_m$ 处切开：</p>
+<p>$$ x(0)\ \xrightarrow[\;t\in[0,\,T_m)\;]{\text{线性 SDE（随机）}}\ x(T_m)\ \xrightarrow[\;t\in[T_m,\,T]\;]{\text{Glow 可逆映射（确定）}}\ z \sim \mathcal{N}(0,I) \tag{6} $$</p>
+<p><strong>第一段</strong>沿用 Score-SDE 的标准配置（VESDE / VPSDE / sub-VPSDE），离散为 $N=1000$ 个噪声尺度，作用是渐进破坏表层结构、保留底层语义，把数据搬运到一个「有结构的部分噪声分布」。第二段不再加噪，改由一个 Glow 流把 $x(T_m)$ <strong>一步确定性</strong>地映到标准高斯。这里的「一步」指对外呈现为单次前向的复合映射——内部仍是 $L\times K$ 层耦合与卷积，但没有扩散式的中间随机步骤。</p>
+<p>密度侧由变量替换公式直接给出（$h$ 为流的中间量，$h_0=x(T_m),\ h_M=z$）：</p>
+<p>$$ \log p_\theta\bigl(x(T_m)\bigr) = \log p_\theta(z) + \log \left|\det\!\left(\frac{\partial z}{\partial x}\right)\right| \tag{7} $$</p>
+<p>于是整个模型的边缘密度 = 流段的精确密度 × 扩散段的转移关系，<strong>似然从「不可算」变成「部分可算」</strong>（见 §4.3 的诚实说明）。</p>
+<h3>3.2 结构常数：每个数字管什么</h3>
+<table>
+<tr><th>常数</th><th>取值</th><th>含义与出处</th></tr>
+<tr><td>$L$</td><td>3</td><td>Glow 多尺度层级数，决定流在网络深度方向上「搬运分布」的容量</td></tr>
+<tr><td>$K$</td><td>16</td><td>每层级的流变换步数（耦合层加 $1\times1$ 可逆卷积的重复次数）</td></tr>
+<tr><td>隐藏通道</td><td>256</td><td>Glow 层内神经网络的宽度</td></tr>
+<tr><td>$T_m$</td><td>0.6（默认）</td><td>SDE 到 ODE 的切换时刻（归一化到 $[0,1]$），即流承担前向过程的后 40%</td></tr>
+<tr><td>$N$</td><td>1000</td><td>离散噪声尺度数；连续时间设定下 $T=1$，离散 DDPM 式设定 $T=1000$</td></tr>
+<tr><td>$\gamma$</td><td>0.16 / 0.17</td><td>Corrector 的朗之万信噪比（CIFAR-10 / CelebA-HQ-256）</td></tr>
+</table>
+<p>（取值均已对照论文正文核实；$\gamma$ 一项在对话原料中与论文一致。）</p>
+<h3>3.3 反向采样：先确定、后随机</h3>
+<p>采样路径是 (6) 的镜像：<strong>第一步</strong>从 $\mathcal{N}(0,I)$ 抽 $z$，过 Glow 逆变换得 $x(T_m)$——这一步替代了纯扩散「从纯高斯噪声起步」的做法，起点变成<strong>数据依赖的先验</strong>；<strong>第二步</strong>从 $x(T_m)$ 出发沿反向 SDE (5) 去噪到 $x(0)$，去噪预算只有 $T_m \times 1000$ 步（默认 600 步，而基线要 1000 步）。</p>
+<p>求解器沿用 Score-SDE 的 Predictor-Corrector 框架：预测器用 Euler-Maruyama 类数值积分推进一步，校正器在每个噪声尺度做一步退火朗之万采样，把样本拉回该时刻的边际分布：</p>
+<p>$$ x_i = x_{i-1} + \frac{\gamma}{2}\,\nabla_x \log p(x) + \sqrt{\gamma}\, w_i,\qquad w_i \sim \mathcal{N}(0, I) \tag{8} $$</p>
+<p>每尺度仅 1 步 Corrector（$\gamma$ 按上表），实测 CIFAR-10 上较原始 SDE 采样<strong>快约 1.7 倍</strong>；论文给出的时间标本为 DDPM++ 变体 24 秒/张（FID 2.51）。</p>
+<h3>3.4 联合训练：两个网络、两条损失</h3>
+<p>扩散段（Score Network，架构随 SDE 绑定：VESDE 用 NCSN++，VPSDE/sub-VPSDE 用 DDPM++）训练式 (4) 的分数匹配损失；流段（Glow）训练式 (7) 负对数似然对应的 NLL 损失：</p>
+<p>$$ \mathcal{L}_{\mathrm{flow}} = -\,\mathbb{E}_{x(T_m)\sim p_{T_m}}\Bigl[\log p_\theta(z) + \log \left|\det\!\left(\tfrac{\partial z}{\partial x}\right)\right|\Bigr] \tag{9} $$</p>
+<p>两项合并为端到端目标，数据在同一批次内走通「SDE 加噪 → 流映射」全链路，使两段的接缝分布（$p_{T_m}$）自动对齐。训练配置（均核实自论文实验节）：扩散网络训练至约 100 万次迭代；CIFAR-10 批大小 128，CelebA-HQ-256 训练批大小 8（采样批大小 64）；每 5 万迭代存一个 checkpoint，按 FID 选模；$T_m$ 的粗搜阶段用 50 万迭代、批大小 32 的低成本配置。</p>
+<p>一个容易误读的点值得澄清：<strong>「流一步完成」发生在推理，不发生在训练。</strong> 训练时流要完整地走内部 $L\times K$ 层、NLL 要逐样本迭代优化；推理时这份完整映射被打包成一次前向调用。效率红利来自「用学好的确定性映射替代 400 步随机加噪及其反向」，而非某种运行时捷径。</p>
+<h3>3.5 为什么流只放在后半段</h3>
+<p>原料对话中反复追问过「为何不一开始就用流」。论文没有专节回答，但设计逻辑与消融证据是一致的：</p>
+<ul><li><strong>任务难度分工</strong>。流的输入是 $x(T_m)$——一个已接近高斯、但仍携带数据底层结构的分布。让流做「最后一公里」的短途搬运，双射学习负担小；若让流直接映原始图像分布（$T_m\to 0$），高维强结构的目标分布超出 Glow 在给定容量下的建模能力。</li><li><strong>证据在消融里</strong>。$T_m=0.1$（流过早接管、扩散只剩 100 步铺垫）时 FID 崩到 46.60；$T_m\ge 0.5$ 后 FID 才回到 4 以内。这不是「风格偏好」，而是可判定的失效。</li><li><strong>与 DiffFlow 的对照</strong>。全程混合随机与可逆的 DiffFlow 在 CIFAR-10 上 FID 13.43——混合位置不对，两种范式的缺陷同样会叠加。分段，是让每个范式只在它占优的时间区间里上岗。</li></ul>
+<hr />
+<h2>四、实验与判据：数字要从哪里读</h2>
+<h3>4.1 主对比：FID 要连着「基线是谁」一起读</h3>
+<p>CIFAR-10 无条件生成（数值均对照论文表格核实）：</p>
+<table>
+<tr><th>方法</th><th>路线</th><th>CIFAR-10 FID ↓</th><th>IS ↑</th><th>备注</th></tr>
+<tr><td>NCSN++（连续 Score-SDE 基线）</td><td>纯扩散</td><td>4.29</td><td>—</td><td>DiNof 所用同架构基线</td></tr>
+<tr><td>DiffFlow（Zhang &amp; Chen 2021）</td><td>全程混合</td><td>13.43</td><td>—</td><td>随机化流模型</td></tr>
+<tr><td>LSGM（Vahdat et al. 2021）</td><td>潜空间扩散</td><td>2.10</td><td>—</td><td>未用流先验，但需预训练 VAE</td></tr>
+<tr><td><strong>DiNof（Zand et al., TMLR 2024）</strong></td><td><strong>分段混合</strong></td><td><strong>2.01</strong></td><td><strong>9.96</strong></td><td>$T_m=0.6$，600 步</td></tr>
+</table>
+<p>CelebA-HQ-256：DiNof FID <strong>7.11</strong>，同架构基线 7.23，LSGM 7.22。</p>
+<p>三条判读纪律：</p>
+<ol><li><strong>4.29 不是「扩散的最好成绩」</strong>。它是 DiNof 对照实验里未加流先验的同架构连续 NCSN++ 基线。2.01 对 4.29 的正确解读是「<strong>在同一套骨干与采样器下</strong>，NF 先验带来约一半的 FID 改善并省下 40% 步数」，而不是「DiNof 赢了所有扩散模型」——同表里 LSGM 的 2.10 与 DiNof 的差距只有 0.09。混合路线的真正差异点在<strong>似然可算性与不依赖预训练 VAE</strong>，这两点 FID 表看不出来。</li><li><strong>13.43 的价值是反面教材</strong>。它把「融合必然更好」的直觉证伪：融合的位置（全程混合 vs 分段接管）决定成败。</li><li><strong>7.11 vs 7.22 属微弱优势</strong>。CelebA-HQ-256 上 DiNof 只比基线与 LSGM 好不到 0.15，且默认 $T_m=0.6$ 未经重调直接复用——说明增益的稳健区间宽，但也说明分辨率上去之后，流先验的边际收益在收窄。</li></ol>
+<h3>4.2 $T_m$ 消融：一条先崩、再优、再钝化的曲线</h3>
+<p>CIFAR-10，$T_m$ 与采样步数同步变化（$T_m=1.0$ 即完全退回纯扩散）：</p>
+<table>
+<tr><th>$T_m$</th><th>采样步数</th><th>IS ↑</th><th>FID ↓</th></tr>
+<tr><td>0.1</td><td>100</td><td>5.29</td><td>46.60</td></tr>
+<tr><td>0.5</td><td>500</td><td><strong>9.41</strong></td><td>3.94</td></tr>
+<tr><td>0.6</td><td>600</td><td>9.23</td><td><strong>3.16</strong></td></tr>
+<tr><td>1.0</td><td>1000</td><td>8.87</td><td>4.18</td></tr>
+</table>
+<p>三个信息量很大的读数：其一，$T_m=0.1$ 的 46.60 与其余档相差一个数量级，确认「流接管过早即崩溃」是<strong>相变</strong>而非缓坡；其二，最优 $T_m$ 并不把质量推到极致——$T_m=1.0$ 行（4.18）≈ 无流基线（4.29），说明 $T_m=0.6$ 的收益 = 流先验的增益 − 省掉 400 步的代价，两者在该点取得最佳折中；其三，IS 峰在 0.5、FID 峰在 0.6，两个指标的最优点错开，提示<strong>混合模型的超参选择对判据敏感</strong>，换任务时必须重扫而非照搬。</p>
+<h3>4.3 似然这一栏，要诚实</h3>
+<p>DiNof 的卖点是「比扩散快、比流好、且似然可算」。前两项有 FID 与步数支撑；<strong>第三项在本次核实的正文与原料对话中均未出现可引用的 bits/dim 定量表格</strong>。笔者在此明确区分：精确似然是该架构的<strong>性质承诺</strong>（流段密度由变量替换公式闭式可算，扩散段贡献可算的转移核），但「与纯扩散变分下界、与流模型的对数似然相比数值如何」，本次未核实，不做评价。引用本文时应避免把它当作已验证的实验结论。</p>
+<hr />
+<h2>五、对病理图像生成意味着什么（本节全部为笔者推演）</h2>
+<blockquote>论文本身与病理毫无关系；以下内容是笔者把自己的浓度域扩散路线摆到 DiNof 的坐标上做的推演，不构成论文结论，也未做实验。</blockquote>
+<p><strong>先对齐诉求。</strong> 虚拟染色（含 H&amp;E→IHC）对生成模型的三项定量要求：单图延迟要低（全切片有成千上万个图块）；输出分布要与真实染色的表达分布可比（下游要做定量分析）；样本要可复现、可回溯。纯扩散满足后两项的一半、不满足第一项；DiNof 证明了「少步 + 可算」在同一模型里<strong>原则上可以兼得</strong>。</p>
+<p><strong>可迁移性评估。</strong> 笔者推测，把式 (6) 的分段结构移植到 DAB 浓度场扩散是技术上成立的：浓度场是低通道（往往单通道）、强空间自相关的量，$p_{T_m}$ 的结构比自然图像更规整，Glow 的「最后一公里」负担只会更轻而非更重；条件侧（干净的 H/E 浓度）完全不进流段，与 DiNof「流只处理噪声侧状态」的设定天然兼容。</p>
+<p><strong>但有三处必须打问号。</strong> 其一，<strong>收益规模存疑</strong>：DiNof 的省步比例由 $T_m$ 封顶（最多省 40-50%），而扩散加速另有蒸馏、DPM-Solver 等成熟路线——混合路线的独特价值只剩「似然可算」一项，这项在病理任务里到底值多少（用于分布打分？用于异常检出？），笔者目前没有答案。其二，<strong>数据规模错配</strong>：Glow 是为 ImageNetsized 数据设计的，配对切片通常只有数千图块，流段过拟合风险高于扩散段，届时 $T_m$ 最优区会整体右移（流管得越少越稳）。其三，<strong>消融成本</strong>：$T_m$ 是一条需要扫描的超参轴，DiNof 用低成本粗搜（50 万迭代、批 32）解决，这在笔者单卡预算下意味着至少一组额外的消融队列。</p>
+<p><strong>最小可行实验设计（如果要做）。</strong> 冻结扩散段权重、只对流段做 $T_m\in\{0.3,0.6,0.9\}$ 的网格，判据用三件套：采样墙钟时间、浓度域 FID、流段 NLL 的train/test 差（后者专测过拟合）。任何一维不优于纯扩散基线，路线即降级为「备选」。</p>
+<hr />
+<h2>六、局限与下一步</h2>
+<p><strong>论文层面的局限（从正文可直读）。</strong> 一、实验止步于 32/256 分辨率的<strong>无条件</strong>生成，未见类条件与下游任务；二、模型同时养两套网络，参数量与显存代价论文未给对照表；三、加速是「边际式」的（1.7 倍），对步数需求极端（1-4 步）的场景不构成竞争力；四、如 §4.3 所述，似然优势停留在架构承诺，定量比较缺席。</p>
+<p><strong>原料层面的杂质（已清除，列此备查）。</strong> 原始对话中有一段模型拒答的轮次（无信息量，弃）；两段以网页代码形式成稿的轮次（含大量样式标签与「大于 10」「500 步」等未经核实的对比数字，标签一律不带入本文，数字弃用）；对话式的主动提议尾巴（如表示「可以代为整理对比表」的客套句）全部删除。另一份原料尾部把 BiFlow（一种更近期的双向流工作）与 DiNof 关联讨论，其论文信息<strong>本文未及核实</strong>，涉及该模型的对比与数字一概不采用，留给专篇处理。</p>
+<p><strong>下一步。</strong> 两条线：其一，把「流/混合生成」放进与纯扩散并列的路线表里持续跟踪——流匹配（Flow Matching, Lipman et al., 2023，arXiv:2210.02747）以回归场训练替代分数匹配，少步与可算性上有同源优势，值得与 DiNof 对照精读；其二，在笔者的浓度域基线上跑 §5 的最小可行实验，用数据而非直觉回答「可算似然对染色定量是否值钱」。</p>
+<hr />
+<h2>参考文献</h2>
+<ol><li>Zand M, Etemad A, Greenspan M. Diffusion Models with Deterministic Normalizing Flow Priors. <em>TMLR</em>, 2024. arXiv:2309.01274. https://arxiv.org/abs/2309.01274 （代码：https://github.com/MohsenZand/DiNof）</li><li>Zhang Q, Chen Y. Diffusion Normalizing Flow. <em>NeurIPS</em>, 2021. arXiv:2110.07579. https://arxiv.org/abs/2110.07579</li><li>Kingma D P, Dhariwal P. Glow: Generative Flow with Invertible 1x1 Convolutions. <em>NeurIPS</em>, 2018. arXiv:1807.03039. https://arxiv.org/abs/1807.03039</li><li>Song Y, Sohl-Dickstein J, Kingma D P, Kumar A, Ermon S, Poole B. Score-Based Generative Modeling through Stochastic Differential Equations. <em>ICLR</em>, 2021. arXiv:2011.13456. https://arxiv.org/abs/2011.13456</li><li>Vahdat A, Kreis K, Kautz J. Score-Based Generative Modeling in Latent Space. <em>NeurIPS</em>, 2021.（arXiv 编号本次未核实，故仅列刊物与标题）</li><li>Kim D, Na B, Kwon S J, Lee D, Kang W, Moon I-C. Maximum Likelihood Training of Implicit Nonlinear Diffusion Model. 2022.（编号与刊物以 DiNof 引文为准，本次未单独核实）</li><li>Ho J, Jain A, Abbeel P. Denoising Diffusion Probabilistic Models. <em>NeurIPS</em>, 2020.</li><li>Lipman Y, Chen R T Q, Ben-Hamu H, Nickel M, Le M. Flow Matching for Generative Modeling. <em>ICLR</em>, 2023. arXiv:2210.02747. https://arxiv.org/abs/2210.02747</li></ol>
+<p>（参考文献 1-4、7、8 的标题与作者均已对照 arXiv 页面核实；5、6 两条仅核实于 DiNof 论文引文列表，属二手来源，已作显著标注。）</p>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散虚拟染色中的结构保持机制 · Condition Injection 与 Constraint / Guidance 的机制比较</title>
+
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+.box .scroll,.card .body .scroll{border:none;border-radius:0;margin:10px 0 0}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Structure preservation · mechanism</div><div class="sub">Condition Injection vs<br>Constraint / Guidance</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l2" href="#s0-1">五个问题的直接回答</a>
+<a class="l2" href="#s0-2">一句话总判定</a>
+<a class="l1" href="#s1">1 · 本报告在库内的分工</a>
+<a class="l1" href="#s2">2 · 检索方法与核实等级</a>
+<a class="l1" href="#s3">3 · 先把三件事分开：术语陷阱</a>
+<a class="l2" href="#s3-1">3.1 三种机制的本质差异</a>
+<a class="l2" href="#s3-2">3.2 文献里「constraint」多半不是投影</a>
+<a class="l1" href="#s4">4 · 机制位置总表（全文骨架）</a>
+<a class="l1" href="#s5">5 · 研究问题一 · Condition Injection</a>
+<a class="l2" href="#s5-1">5.1 七种注入形式与确切做法</a>
+<a class="l2" href="#s5-2">5.2 ★ 唯一的同论文受控对照：HistDiST</a>
+<a class="l2" href="#s5-3">5.3 条件可以被忽略</a>
+<a class="l2" href="#s5-4">5.4 成本</a>
+<a class="l2" href="#s5-5">5.5 有效范围与失败情形</a>
+<a class="l1" href="#s6">6 · 研究问题二 · Constraint / Guidance</a>
+<a class="l2" href="#s6-1">6.1 真投影：DDNM 与它的边界</a>
+<a class="l2" href="#s6-2">6.2 梯度引导：DPS 为何不做投影</a>
+<a class="l2" href="#s6-3">6.3 采样期「约束」的两条实现路径</a>
+<a class="l2" href="#s6-4">6.4 过强引导的实证负面效应</a>
+<a class="l1" href="#s7">7 · 研究问题三 · 数据条件适配</a>
+<a class="l1" href="#s8">8 · 研究问题四 · 浓度空间是否更优</a>
+<a class="l2" href="#s8-1">8.1 逐条回答六个问题</a>
+<a class="l2" href="#s8-2">8.2 ★ 一个对你不利的读数</a>
+<a class="l1" href="#s9">9 · 研究问题五 · 归因与消融</a>
+<a class="l2" href="#s9-1">9.1 方法贡献归因：实验矩阵</a>
+<a class="l2" href="#s9-2">9.2 网络内部特征归因</a>
+<a class="l1" href="#s10">10 · 最终推荐方案</a>
+<a class="l2" href="#s10-1">10.1 三个候选</a>
+<a class="l2" href="#s10-2">10.2 首选方案（含伪代码）</a>
+<a class="l1" href="#s11">11 · 最小实验计划</a>
+<a class="l1" href="#s12">12 · 证据边界与未核实清单</a>
+<a class="l1" href="#s13">13 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Virtual staining · structure preservation · mechanism comparison</div>
+<h1>扩散虚拟染色中的结构保持机制：Condition Injection 与 Constraint / Guidance 谁更可靠？</h1>
+<p class="desc">把「结构保持」拆成「让模型参考 / 限制可行域 / 推动采样」三件不同的事，逐件给一手证据、给适用边界、给可跑的实验。H&amp;E→IHC 方向 · 2026-10-11</p>
+<div class="meta"><span>调研日期 2026-10-11</span><span>五路并行检索 + 承重引用逐条一手复核</span><span>含消融实验矩阵 + 最小实验计划</span><span>复用库内既有结论并注明出处</span><span>未核实项单列，不当作事实引用</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<h3 id="s0-1">五个问题的直接回答</h3>
+
+<div class="box key"><div class="bt">总判定：「哪一种更可靠」不是机制类别的属性，而是三个前提的函数</div>
+<p style="margin-bottom:0">文献里没有一条证据支持「条件注入整体上不如约束引导」，也没有一条支持反过来。<strong>真正决定可靠性的是三件事：① 约束作用的对象能不能被外部锚定（有没有真值 / 有没有可用的结构先验）；② 该机制与数据缺陷（连续切片错位）是否匹配；③ 它是否被受控消融证明有效——而不是「加了模块」就被当作有效。</strong>下面五个问题逐条回答，每条都给出它成立的条件和反例。</p></div>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:20%">问题</th><th style="width:26%">直接回答</th><th>依据与边界（全部一手核实）</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>Q1 哪种更可靠地保持结构？</strong></td>
+<td><span class="b medium">都不是无条件可靠</span>；但在<strong>有可靠结构先验</strong>时，采样期约束的可控性更强</td>
+<td>唯一的<strong>同论文受控对照</strong>（HistDiST Table 2，ER 任务）：加 cross-attention（一种条件注入）把 PHV 0.511→<strong>0.436</strong>、FID 41.3→<strong>31.3</strong>（分子保真、分布真实性大幅改善），但 <strong>SSIM 几乎不动：0.228→0.227</strong>；而<strong>推理期的 DDIM inversion 才是 SSIM 的最大来源（0.198→0.228）</strong>。⇒ 条件注入的收益不在「结构保持」上，结构收益来自它<em>触发的推理期机制</em>。</td>
+</tr>
+<tr>
+<td><strong>Q2 可靠性由什么决定？</strong></td>
+<td>四个因素：<strong>约束对象能否被锚定 / 与错位是否匹配 / 是否有受控消融 / 是否与主损失方向冲突</strong></td>
+<td>① 经典 data consistency 需要<strong>前向算子 A 与测量 y</strong>（DDNM ICLR 2023：<code>x ≡ A†Ax + (I−A†A)x</code>，要求 <code>Ax̂ ≡ y</code>）——H&amp;E→IHC <strong>没有 y</strong>，所以必须改用结构先验定义可行集；② 错位会被条件注入<strong>吸收进权重</strong>（HER2 NCMT：平移 0→24px，FID 38.8→<strong>46.68</strong>）；③ 库内 Lantern 受控实验：辅助损失与去噪损失<strong>冲突角 92°–128°</strong>。</td>
+</tr>
+<tr>
+<td><strong>Q3 哪种更适合存在局部错位的连续切片？</strong></td>
+<td><span class="b high">采样期约束（作用在结构先验上）</span>更适合</td>
+<td>关键不在机制类别，而在<strong>约束对象</strong>：条件注入学的是「从错位配对里学一个平均映射」，错位被当 label noise 吃进权重；而采样期约束可以只在推理时、<strong>用输入 H&amp;E 自身的结构</strong>（核掩膜 / 轮廓 / 互信息）施加，不依赖配对 GT。★ 反例：若约束也定义在<strong>像素对应</strong>上（对 GT 的 MSE），它同样对错位敏感——所以「换成约束」不自动解决错位。</td>
+</tr>
+<tr>
+<td><strong>Q4 哪种对 DAB 生成干扰更小？</strong></td>
+<td><span class="b high">条件注入</span>干扰更小（更「软」）；代价是保证也更弱</td>
+<td>条件注入只是给网络一个先验，网络<strong>可以部分忽略</strong>（ControlNet 的 sudden convergence：前 ~10K 步基本忽略条件；50% prompt dropout）。而强采样期约束<strong>直接改变采样轨迹</strong>：过饱和 / 伪影（APG ICLR 2025）、压制纹理（Minimal Impact ControlNet：silent control signals「suppress the generation of textures」）、多样性下降（CFG）。⇒ 「干扰小」的另一面就是「可能根本不生效」。</td>
+</tr>
+<tr>
+<td><strong>Q5 哪种更适合有限 GPU？</strong></td>
+<td><span class="b high">训练无关、不需要额外网络的推理期方法</span>成本最低</td>
+<td>排序（实测数字）：<strong>DDIM inversion / H 通道投影</strong>（≈免费，只是多几步采样）＜ <strong>梯度 guidance</strong>（每步一次反传，显存吃紧）＜ <strong>ControlNet</strong>（训练 +23% 显存、+34% 时间/迭代，A100 40GB 实测）。推理期对照：4× SR / 100 DDIM 步下 DDNM <strong>11.9 s / 5728 MB</strong> vs DPS <strong>36.5 s / 8112 MB</strong>。CFG 每步<strong>两次前向</strong>。</td>
+</tr>
+</tbody>
+</table></div>
+
+<h3 id="s0-2">一句话总判定</h3>
+
+<div class="box good"><div class="bt">最可靠的结构保持，不是「选条件注入还是选约束」，而是「把约束挂在正确的对象上」</div>
+<p><strong>三条可迁移的结论：</strong></p>
+<ol style="margin-bottom:0">
+<li><strong>条件注入负责「分布真实性」，推理期锚定负责「结构保持」。</strong>HistDiST 的同一张表把这两件事分得很干净：cross-attn 让 FID/PHV 变好、SSIM 不变；DDIM inversion 让 SSIM 变好。把它们混成一个「结构保持模块」是这一题最常见的误读。</li>
+<li><strong>经典硬投影在你的任务里不可直接使用</strong>（没有测量 y），但它的<strong>数学形式可以移植</strong>：只要你能写出一个已知的线性算子 A（例如「选出 H 通道」），<code>x̂₀ ← A†y + (I−A†A)x̂₀</code> 就是一个<strong>真投影</strong>，而且成本只是一次索引操作。这是本报告推荐的首选机制。</li>
+<li><strong>没有蛋白表达标签，结构保持好 ≠ DAB 真实。</strong>这是 fundamental limitation，必须写进论文的 limitations，不能用结构指标替代表达指标。</li>
+</ol></div>
+
+<h2 id="s1"><span class="num">1</span>本报告在库内的分工</h2>
+
+<p>资料库已有 58 份文档，其中多份与本题高度相邻。为避免重复推导，也避免结论互相矛盾，逐份说明关系：</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:34%">库内既有报告</th><th style="width:26%">它回答什么</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><code>01_调研报告/扩散模型虚拟染色_蛋白表达约束_约束位置地图.html</code><br><span class="small">（146 KB · 2026-10-06）</span></td><td><strong>蛋白表达</strong>约束挂在扩散的哪一格；对配准的依赖</td><td><strong>主轴正交</strong>。它按「约束挂在哪一格」组织、对象是<em>蛋白表达</em>；本报告按「机制类别」组织、对象是<em>结构形态</em>。它的 §5 位置总表被本报告 §4 复用并扩展。</td></tr>
+<tr><td><code>01_调研报告/流匹配虚拟染色_蛋白表达约束_约束位置地图.html</code><br><span class="small">（166 KB · 2026-10-08）</span></td><td>同上，但换成 flow matching / Schrödinger Bridge 框架</td><td><strong>同构姊妹篇</strong>。本报告不重复它的「逐格映射表」工作；本报告是 diffusion 框架下的结构保持专题。</td></tr>
+<tr><td><code>06_方案可行性审查/M0条件扩散归因审查_目标函数还是注入路径.html</code><br><span class="small">（97 KB · 2026-10-08）</span></td><td>把「条件被读取但不被利用」归因到<strong>目标函数</strong>还是<strong>注入路径</strong></td><td><strong>直接前置</strong>。它给出 T0/T1/T2/T3 四个判别实验与 M0 的实测数字（train r：回归 0.9964 / 扩散 0.0264 ⇒ loss collapse）。本报告 §9 的矩阵<strong>建立在它之上</strong>，不重新设计 T1–T3。</td></tr>
+<tr><td><code>01_调研报告/Diffusion主损失与辅助损失的梯度冲突_机制分析.html</code><br><span class="small">（168 KB）</span></td><td>两个 loss 为什么冲突；Jacobian 表；λ_crit</td><td><strong>下游依赖</strong>。本报告 §6/§9 凡涉及「约束与主损失方向冲突」处，引用它的结论（Lantern 冲突角 92°–128°），不重新推导。</td></tr>
+<tr><td><code>01_调研报告/浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</code><br><span class="small">（81 KB · 2026-10-09）</span></td><td>浓度域 / OD 域生成与可微 BL 渲染的先例与可行性</td><td><strong>被本报告 §8 复用</strong>。§8 只做「约束挂在不同空间」的对照，不重复它的文献地图。</td></tr>
+<tr><td><code>06_方案可行性审查/DAB-only浓度扩散_文献先例地图与模型选型审查.html</code><br><span class="small">（103 KB · 2026-10-08）</span></td><td>用户架构的七格先例对账；MIU-Diff 受控消融</td><td><strong>被本报告 §8/§10 复用</strong>。本报告的首选方案是它的「H 通道复用」一格的机制化与可证伪化。</td></tr>
+<tr><td><code>04_IHC评价与分级/弱配准下蛋白表达保真_评价与训练路线调研.html</code><br><span class="small">（45 KB · 2026-10-06）</span></td><td>弱配准下的 L0–L5 保真层级与评价路线</td><td><strong>被本报告 §7/§11 复用</strong>。本报告的评价口径直接采用它的 L0–L5 分层。</td></tr>
+<tr><td><code>01_调研报告/扩散模型门控机制_文献地图与频域交汇.html</code><br><span class="small">（90 KB · 2026-10-09）</span></td><td>门控在扩散里的四个位置；失效模式</td><td><strong>弱相关</strong>。本报告不涉及门控；仅在 §10 首选方案的「门控式松弛」处引用它「零初始化是安全默认」的结论。</td></tr>
+<tr><td><code>01_调研报告/频域在扩散模型中的应用_结构保持视角_调研报告.html</code><br><span class="small">（81 KB · 2026-10-06）</span></td><td>频域插在扩散的六个位置；「低频=结构」的三条定理与反证</td><td><strong>弱相关</strong>。本报告不重复频域论证；仅在 §4 位置总表里把它作为「条件的一种特征形式」列一行。</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn"><div class="bt">本报告的三条增量（相对上述既有报告）</div>
+<ol style="margin-bottom:0">
+<li><strong>把「Condition Injection / Hard Projection / Soft Constraint / Gradient Guidance」四者的数学身份分开</strong>，并指出文献里「constraint」这个词绝大多数指的是<em>条件化</em>而不是<em>投影</em>（ContourDiff / SegGuidedDiff 逐字证据）。</li>
+<li><strong>给出 H&amp;E→IHC 可用的「真投影」构造</strong>：A = 选 H 通道的线性算子，A† = 同算子，因此 <code>x̂₀ ← [C_H^input, Ĉ_DAB]</code> 是严格投影（DDNM 形式），成本≈0。这是既有报告里没有的机制级结论。</li>
+<li><strong>把 HistDiST Table 2 读成「条件注入 vs 推理期锚定」的分离实验</strong>——这是全文献里唯一能干净分开这两者贡献的受控对照，此前库内未使用。</li>
+</ol></div>
+
+<h2 id="s2"><span class="num">2</span>检索方法与核实等级</h2>
+
+<p>本轮开五路并行检索子 agent，按<strong>问题的轴</strong>切分（不是按关键词）：① 条件注入机制的实证与消融；② 扩散采样期的硬约束 / 投影 / 数据一致性；③ Guidance 类方法与成本；④ 浓度空间与结构—染色分离；⑤ 归因方法 + 弱配对 / 无配对虚拟染色。随后<strong>由我自己逐条复核承重引用</strong>。</p>
+
+<div class="box stop"><div class="bt">★ 复核抓到的三处子 agent 错误（说明为什么必须自己复核）</div>
+<ul style="margin-bottom:0">
+<li><strong>HistDiST 消融表的起点值报错</strong>：子 agent 报 <code>SD+IC SSIM 0.116</code>，抓原文后实为 <strong>0.154</strong>。整张表的读数方向不受影响，但任何一个数字抄错都会毁掉「受控对照」的可信度。</li>
+<li><strong>两个 arXiv ID 互换</strong>：子 agent 把 DPS 写成 2209.14687、DDNM 写成 2204.11824。核实后：<strong>DPS = arXiv:2209.14687</strong>（Chung et al., ICLR 2023 spotlight），<strong>DDNM = arXiv:2212.00490</strong>（Wang et al., ICLR 2023 Oral）。2204.11824 是一篇无关的 <em>Semi-Parametric Neural Image Synthesis</em>。</li>
+<li><strong>Star-Diff 的 ID 报错</strong>：子 agent 给 2404.15622，抓下来是一篇神经架构搜索（NAS）论文。Star-Diff 正解见库内既有资料：<strong>arXiv:2508.02528</strong>（Computers in Biology and Medicine 2025）。</li>
+</ul></div>
+
+<p>核实等级约定：<span class="b high">V</span> = 我抓取并读到一手页面（正文 / 表格 / 代码）；<span class="b medium">U</span> = 仅见于摘要或二手来源，未读到正文，<strong>不要当作事实引用</strong>；<span class="b low">N</span> = 本轮定向检索的阴性结果（「没找到」本身是结论）。</p>
+
+<h2 id="s3"><span class="num">3</span>先把三件事分开：术语陷阱</h2>
+
+<h3 id="s3-1">3.1 三种机制的本质差异</h3>
+
+<p>用户的问题里把「Condition Injection」和「Constraint / Guidance」当作两个可比的选项。它们在文献里确实是两大类，但<strong>再往下必须拆成三类，否则会把数学上完全不同的东西放在一张表里比</strong>：</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:14%">机制</th><th style="width:22%">一句话本质</th><th style="width:22%">梯度回传路径</th><th style="width:20%">数学保证</th><th>典型代价</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>① Condition Injection</strong><br><span class="small">条件注入</span></td>
+<td><strong>让模型参考</strong>：把条件送进网络，剩下交给学出来的映射</td>
+<td>条件通过前向路径影响输出；<strong>无独立回传</strong>（它自己不是损失项）</td>
+<td><span class="b bad">无</span>。网络可以忽略、削弱、曲解条件（有实证）</td>
+<td>训练期：+参数量 / +显存；推理期：≈0（除 CFG 翻倍）</td>
+</tr>
+<tr>
+<td><strong>② Hard Projection</strong><br><span class="small">硬投影</span></td>
+<td><strong>限制可行域</strong>：把中间变量投影回约束集合</td>
+<td>不涉及梯度，是<strong>算子作用</strong>（一次代数运算）</td>
+<td><span class="b high">有</span>，但<strong>仅在 A 线性且 y 已知时成立</strong>；投影后必须仍在数据流形上（否则累积误差）</td>
+<td>一次矩阵/索引运算，≈0（若 A† 廉价）</td>
+</tr>
+<tr>
+<td><strong>③ Soft Constraint / Guidance</strong><br><span class="small">软约束 / 引导</span></td>
+<td><strong>推动采样</strong>：用可微能量/损失的梯度改变采样方向</td>
+<td>对 <code>x̂₀</code>（或 <code>x_t</code>）求梯度，叠加到反向更新上</td>
+<td><span class="b bad">无</span>。是<em>方向性偏置</em>，不是约束；强度过大会过饱和 / 出伪影</td>
+<td>每步一次反传；UG 还要 m 步内循环 + k 次递归</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box key"><div class="bt">三者的分工，用一句话记住</div>
+<p style="margin-bottom:0"><strong>① 是「让模型参考输入信息」；② 是「限制模型输出的可行范围」；③ 是「在采样过程中推动模型向某个目标移动」。</strong>它们<em>可以互补，但不可互相替代</em>：② 的保证来自代数，③ 的保证来自梯度方向，① 根本没有保证。把 ② 和 ③ 都叫「约束」、然后跟 ① 比「谁更可靠」，等于在比三种不同量纲的东西。</p></div>
+
+<h3 id="s3-2">3.2 ★ 文献里「constraint」这个词，多半不是投影</h3>
+
+<p>这是本轮最重要的一个术语发现，直接决定了「Constraint 类方法」的可用性评估。</p>
+
+<div class="card">
+<div class="ch"><div><div class="title">ContourDiff —「constraint at every sampling step」其实是条件化</div><div class="v">Unpaired Medical Image Translation with Structural Consistency · MELBA vol. 3 · DOI 10.59275/j.melba.2025-79a2 · arXiv:2403.10786</div></div><span class="b high">V</span></div>
+<div class="body">
+<p>摘要逐字：「<em>By applying the contour as a constraint at every diffusion sampling step, we ensure the preservation of anatomical content.</em>」——措辞上完全是「采样期约束」。</p>
+<p>但读正文会发现机制是：「<em>we use the Canny edge detection filter to extract the contour representation c of each training image x₀, and <strong>concatenate it with the network input at every denoising step</strong></em>」。</p>
+<p style="margin-bottom:0">⇒ <strong>它是「每一步都把 contour 拼进网络输入」，即条件化，不是把中间变量投影到某个集合上。</strong>它的「constraint」是<em>在时间轴上密集施加的条件</em>，不是数学投影。这一条必须写清楚，否则会误以为医学图像生成里已有「采样期硬约束」的先例可用。任务域为 CT→MRI，非病理。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">SegGuidedDiff —「following a mask at each sampling step」同样是条件化</div><div class="v">MICCAI 2024 · arXiv:2402.05210</div></div><span class="b high">V</span></div>
+<div class="body">
+<p>摘要逐字：「<em>a diffusion model-based method that supports anatomically-controllable medical image generation, by <strong>following a multi-class anatomical segmentation mask at each sampling step</strong></em>」。附带一个<strong>受控消融</strong>：「<em>a random mask ablation training algorithm</em>」——这是它值得学习的地方（用随机掩膜消融来测条件的作用）。</p>
+<p style="margin-bottom:0">但机制仍是<strong>条件化</strong>（mask 作为条件输入每步参与）。任务域为 breast MRI / CT。</p>
+</div>
+</div>
+
+<div class="box stop"><div class="bt">★ 阴性结论：虚拟染色领域没有真正的采样期投影 / 硬约束</div>
+<p style="margin-bottom:0">本轮定向检索（关键词：virtual staining + data consistency / projection / hard constraint / range-null space）<strong>未找到任何一篇</strong> H&amp;E→IHC 虚拟染色论文使用真正的数学投影。检索到的全部是 conditioning / guidance / energy：MIU-Diff（energy guidance）、StainDiffuser（双扩散多任务）、UNIStainNet（SPADE 条件，且是 GAN）、pituitary multi-stain（classifier-guided）。<strong>最接近「无配对 + 采样期结构约束」的先例是 ContourDiff，而它属条件化。</strong>这意味着：如果你要做采样期硬投影，你面对的是一个<strong>真空格</strong>——既是机会，也意味着所有验证成本要自己承担。</p></div>
+<h2 id="s4"><span class="num">4</span>机制位置总表（全文骨架）</h2>
+
+<p>按<strong>「机制挂在流水线的哪一格」</strong>组织，而不是按方法名。同一篇论文在不同格上，梯度回传路径、数值稳定性、对错位的鲁棒性<strong>完全不同</strong>——给一张位置总表比给 20 个方法名有用得多。</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:9%">位置</th><th style="width:17%">机制挂在哪</th><th style="width:15%">作用对象</th><th style="width:19%">代表工作（全部一手核实）</th><th style="width:12%">数学保证</th><th>对连续切片错位的鲁棒性</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>P1</strong></td><td><strong>训练期：目标函数</strong></td><td>去噪损失 + 辅助损失</td><td>HER2 Score-Aware NCMT（GAN，序数 MSE）；Lantern（多损失组合）</td><td><span class="b bad">无</span></td><td><span class="b bad">差</span>——错位直接变成 label noise（FID 38.8→46.68）</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td><td><strong>网络输入：条件注入</strong></td><td>U-Net 输入 / 各层特征 / cross-attn K,V</td><td>HistDiST（通道拼接 + Phikon cross-attn）· DiffVS（通道拼接 + adaLN）· StainFuser（ControlNet 零卷积 + cross-attn）· StainDiffuser（4 层特征调制）</td><td><span class="b bad">无</span></td><td><span class="b medium">中</span>——学到的是「平均映射」，错位被吸收进权重</td>
+</tr>
+<tr>
+<td><strong>P3</strong></td><td><strong>推理期：初始噪声锚定</strong></td><td><code>x_T</code>（反演得到的起点）</td><td>HistDiST 的 DDIM inversion ★（同论文中 SSIM 最大来源）</td><td><span class="b medium">半</span>——反演的近似误差可控但非零</td><td><span class="b high">好</span>——只用输入 H&amp;E 自身，不需要配对 GT</td>
+</tr>
+<tr>
+<td><strong>P4</strong></td><td><strong>推理期：中间变量硬投影</strong></td><td><code>x̂₀</code>（预测干净图 / 浓度图）</td><td>DDNM（IR 域）· ReSample（latent 域）· PPR（显式约束函数）<br><span class="small">虚拟染色域：<strong>无先例</strong></span></td><td><span class="b high">有</span>（A 线性 + y 已知时）</td><td><span class="b high">好</span>——只要 A 定义在输入自身结构上</td>
+</tr>
+<tr>
+<td><strong>P5</strong></td><td><strong>推理期：能量 / 梯度引导</strong></td><td>反向更新的梯度项</td><td>MIU-Diff（虚拟染色唯一采样期 guidance）· DPS · Universal Guidance · SegGuidedDiff（条件化形式）</td><td><span class="b bad">无</span></td><td><span class="b high">好</span>——能量可只用输入 H&amp;E 的结构定义</td>
+</tr>
+<tr>
+<td><strong>P6</strong></td><td><strong>输出后处理</strong></td><td>生成结果</td><td>DGR 的配准后级联（Nature Commun 2026）· 各类 stain normalization</td><td><span class="b bad">无</span></td><td><span class="b high">好</span>——把错位留给配准模块</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box key"><div class="bt">读这张表的方法</div>
+<p style="margin-bottom:0"><strong>P2 与 P3/P4/P5 的分界线是「训练期 vs 推理期」；P3/P4/P5 之间的分界线是「锚定起点 / 代数投影 / 梯度推动」。</strong>用户问的「Condition Injection vs Constraint / Guidance」，本质是 <strong>P2 vs (P3+P4+P5)</strong>。而 HistDiST 的证据恰好显示：<strong>P2 的收益主要落在「分布真实性」上，P3 的收益才落在「结构」上</strong>——所以正确的提法不是二选一，而是「P2 管像不像 IHC，P3/P4/P5 管结构歪不歪」。</p></div>
+
+<h2 id="s5"><span class="num">5</span>研究问题一 · Condition Injection 到底能在多大程度上保持结构？</h2>
+
+<h3 id="s5-1">5.1 七种注入形式与其确切做法</h3>
+
+<p>先回答用户列出的每一种机制「条件从哪进、进到哪层、是原始图还是特征」。全部来自一手抓取。</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:13%">形式</th><th style="width:20%">代表工作</th><th style="width:28%">确切做法（逐字或近逐字）</th><th style="width:13%">进到哪层</th><th>条件形式</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>输入通道拼接</strong></td>
+<td>HistDiST<br><span class="small">arXiv:2505.06793</span></td>
+<td>「<em>we modify the U-Net by applying additional input channels that allow <strong>VAE-encoded H&amp;E latents to be concatenated with the latent noise vector at the U-Net input</strong></em>」<span class="b high">V</span></td>
+<td>仅 U-Net <strong>输入层</strong>（单尺度）</td>
+<td>VAE 编码的 H&amp;E latent</td>
+</tr>
+<tr>
+<td><strong>输入通道拼接</strong></td>
+<td>DiffVS<br><span class="small">arXiv:2508.14681</span></td>
+<td><code>v̂ = v̂_θ([x, z_{m,t}], t, c_m)</code>：H&amp;E latent <code>x</code> 与 noisy marker latent <code>z_{m,t}</code> 在通道维拼接；marker 的 one-hot 经位置编码后 <strong>element-wise 加到时间嵌入</strong>上<span class="b high">V</span></td>
+<td>U-Net 输入层 + 时间嵌入</td>
+<td>H&amp;E latent + marker one-hot</td>
+</tr>
+<tr>
+<td><strong>输入通道拼接</strong></td>
+<td>StainFuser<br><span class="small">arXiv:2403.09302</span></td>
+<td>Conditioner 接收「<em>the concatenated source image with the noise vector</em>」<span class="b high">V</span></td>
+<td>U-Net 输入层</td>
+<td>源染色图（注意：是 stain normalization 任务，不是 H&amp;E→IHC）</td>
+</tr>
+<tr>
+<td><strong>多层特征调制</strong></td>
+<td>StainDiffuser<br><span class="small">arXiv:2403.11340</span></td>
+<td>H&amp;E encoder 产出 F1–F4，生成注意力矩阵 A1–A4，「<em>modulate corresponding diffusion features</em>」，共 <strong>4 层</strong><span class="b high">V</span></td>
+<td>U-Net 4 个层级</td>
+<td>多尺度 H&amp;E 特征</td>
+</tr>
+<tr>
+<td><strong>Cross-Attention</strong></td>
+<td>HistDiST</td>
+<td>Phikon 形态 embedding「<em>injected into the <strong>cross-attention layers</strong> of the U-Net</em>」<span class="b high">V</span></td>
+<td>U-Net cross-attn 层</td>
+<td>病理基础模型（Phikon）特征</td>
+</tr>
+<tr>
+<td><strong>Cross-Attention</strong></td>
+<td>StainFuser</td>
+<td>目标染色 <code>p^t</code> 经 AE 编码 + 线性投影后作 <strong>K/V</strong> 注入 cross-attention<span class="b high">V</span></td>
+<td>U-Net cross-attn 层</td>
+<td>目标染色编码</td>
+</tr>
+<tr>
+<td><strong>ControlNet 零卷积旁支</strong></td>
+<td>StainFuser</td>
+<td>源图 <code>p^s</code> 经 <strong>trainable copy + 两个 zero convolution</strong> 注入（ControlNet 式）<span class="b high">V</span></td>
+<td>编码器各层（零卷积汇入）</td>
+<td>源染色图</td>
+</tr>
+<tr>
+<td><strong>SPADE / FiLM</strong></td>
+<td>UNIStainNet<br><span class="small">venue 存疑</span></td>
+<td>SPADE（零初始化）+ FiLM 注入 UNI 空间调制<span class="b medium">U</span></td>
+<td>逐层</td>
+<td>UNI 基础模型特征 + edge map</td>
+</tr>
+<tr>
+<td><strong>掩膜 / 边缘 / 核条件</strong></td>
+<td>DiffStain<br><span class="small">MICCAI 2025</span></td>
+<td>NSC 无监督分割 mask 引导去噪<span class="b high">V</span></td>
+<td>去噪过程</td>
+<td>细胞核分割 mask</td>
+</tr>
+<tr>
+<td><strong>掩膜条件（训练期辅助）</strong></td>
+<td>StainDiffuser</td>
+<td>coarse segmentation <strong>仅训练期</strong>作辅助任务，<strong>推理不用</strong><span class="b high">V</span></td>
+<td>辅助头</td>
+<td>分割标签</td>
+</tr>
+<tr>
+<td><strong>掩膜 / 域知识</strong></td>
+<td>TDKstain<br><span class="small">MICCAI 2024</span></td>
+<td>用 DAB mask 与 nuclei map 作 domain knowledge<span class="b medium">U</span></td>
+<td>未读到正文</td>
+<td>DAB mask + nuclei map</td>
+</tr>
+<tr>
+<td><strong>Adapter / LoRA</strong></td>
+<td colspan="4"><span class="b bad">虚拟染色域未找到代表作</span>（<strong>阴性结果</strong>）。LoRA 在虚拟染色里的应用见于 OT-StainNet 的生成器（SD-Turbo + LoRA），但那是<strong>微调手段</strong>，不是结构条件注入。</td>
+</tr>
+</tbody>
+</table></div>
+
+<h3 id="s5-2">5.2 ★ 唯一的同论文受控对照：HistDiST 的消融表</h3>
+
+<p>这是全文献里<strong>唯一能干净地把「条件注入」与「推理期机制」的贡献分开</strong>的受控对照。同一篇论文、同一数据集（MIST ER）、同一套架构，逐个加组件。<strong>我逐字抓取了 Table 2 左表</strong>：</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:30%">配置（Training Strategy）</th><th class="c">SSIM ↑</th><th class="c">PHV_avg ↓</th><th class="c">FID ↓</th><th>相对上一行变化</th></tr></thead>
+<tbody>
+<tr><td>SD + IC<br><span class="small">Stable Diffusion + 输入通道拼接（InstructPix2Pix 式）</span></td><td class="c">0.154</td><td class="c">0.559</td><td class="c">61.3</td><td>基线</td></tr>
+<tr><td>SD + IC + <strong>v-pred</strong><br><span class="small">改用 v-prediction + 重标定噪声调度</span></td><td class="c">0.198</td><td class="c">0.501</td><td class="c">37.5</td><td>SSIM <strong>+0.044</strong> · FID <strong>−23.8</strong></td></tr>
+<tr><td>SD + IC + v-pred + <strong>Inv</strong><br><span class="small">+ DDIM inversion（推理期锚定）</span></td><td class="c"><strong>0.228</strong></td><td class="c">0.511</td><td class="c">41.3</td><td>SSIM <strong>+0.030</strong>（全表最大结构增益）· FID 反而 +3.8</td></tr>
+<tr><td>SD + IC + v-pred + Inv + <strong>xAtt</strong><br><span class="small">+ cross-attention 注入 Phikon 特征（条件注入）</span></td><td class="c"><strong>0.227</strong></td><td class="c"><strong>0.436</strong></td><td class="c"><strong>31.3</strong></td><td>SSIM <strong>−0.001（几乎不动）</strong> · PHV <strong>−0.075</strong> · FID <strong>−10.0</strong></td></tr>
+</tbody>
+</table></div>
+
+<div class="box good"><div class="bt">★ 这张表能推出的唯一干净结论</div>
+<ul style="margin-bottom:0">
+<li><strong>条件注入（xAtt）改善的是「分子保真 + 分布真实性」，不是「结构」</strong>：PHV 0.511→0.436、FID 41.3→31.3 都是大幅改善，而 SSIM 0.228→0.227 是<strong>零变化</strong>。</li>
+<li><strong>结构增益来自推理期的 DDIM inversion</strong>：SSIM 0.198→0.228，是全表最大的结构提升。</li>
+<li><strong>而且两者代价相反</strong>：加 Inv 让 FID 从 37.5 升到 41.3（分布真实性变差），加 xAtt 才把它压回 31.3。⇒ <strong>「结构」与「分布真实性」在这篇论文里是<em>此消彼长</em>的两个目标</strong>，条件注入恰好补的是推理期锚定牺牲掉的那一项。</li>
+</ul></div>
+
+<div class="box warn"><div class="bt">这张表不能推出的结论（不要过度解读）</div>
+<p style="margin-bottom:0">① 它是<strong>单篇论文、单数据集（MIST ER）、单种条件注入形式</strong>的对照，不能推广为「所有条件注入都无助于结构」——StainDiffuser 的 4 层特征调制、UNIStainNet 的 SPADE 都<strong>没有做注入层级消融</strong>，所以它们对结构的作用<strong>未被测量</strong>（不是「无效」，是「未测」）。② SSIM 本身不是好的结构指标（见 §9.2），0.227 vs 0.228 的差异在噪声量级内，真正的读法是「<em>加 xAtt 没有带来可测量的结构变化</em>」，而不是「加 xAtt 让结构变差了 0.001」。</p></div>
+
+<h3 id="s5-3">5.3 条件可以被忽略、被削弱、被曲解——三类一手证据</h3>
+
+<div class="grid2">
+<div class="mini"><div class="mt">① 训练早期条件被忽略</div><p><strong>ControlNet（arXiv:2302.05543）</strong>逐字：模型「<em>does not gradually learn the control conditions but <strong>abruptly</strong> succeeds in following the input conditioning image; usually in <strong>less than 10K optimization steps</strong></em>」，论文称之「<strong>sudden convergence phenomenon</strong>」，并在图中标出 6133 步。</p><p>⇒ <strong>「模型能接收条件」≠「模型在用条件」。</strong>收敛前它是一个条件无关的生成器。</p><span class="b high">V</span></div>
+<div class="mini"><div class="mt">② 条件被主动削弱（dropout）</div><p><strong>ControlNet</strong> 逐字：「<em>we randomly replace <strong>50%</strong> text prompts with empty strings</em>」——为了让条件分支学会<em>自己</em>读输入条件。CFG（arXiv:2207.12598）也以 <code>p_uncond=0.5</code> 训练，并在采样时<strong>显式在条件/无条件两支之间插值</strong>。</p><p>⇒ 条件的影响是<strong>可调的连续量</strong>，不是布尔开关。</p><span class="b high">V</span></div>
+</div>
+<div class="grid2" style="margin-top:16px">
+<div class="mini"><div class="mt">③ 结构可被显式「关闭」</div><p><strong>Star-Diff（arXiv:2508.02528）</strong>：结构引导可被关掉，关掉后退化为标准 DDPM。<strong>HistDiST</strong> 的 η 调度同理：η=0 结构对齐最优但 FID 高；η 提到 0.3 则「<em>introduces noticeable structural deviations</em>」。</p><p>⇒ 结构保持与分布真实性之间存在<strong>可调的权衡轴</strong>，条件注入只是这条轴上的一个旋钮。</p><span class="b high">V</span></div>
+<div class="mini"><div class="mt">④ ★ 你自己的基线就是反例</div><p>库内 <code>M0条件扩散归因审查</code> 记录：同一架构、同一注入路径、同一批 32 patch 上，<strong>直接 MSE 回归 train r = 0.9964，换成 v-prediction 扩散后 train r = 0.0264</strong>（arXiv:2505.11123 对同一机制命名为 <em>loss collapse</em>）。</p><p>⇒ 条件注入失效<strong>不一定</strong>是路径问题，也可能是目标函数的退化解。这正是 M0 报告的 H-A vs H-B 归因问题。</p><span class="b high">V</span></div>
+</div>
+
+<h3 id="s5-4">5.4 条件注入的成本（实测数字）</h3>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">机制</th><th style="width:24%">训练成本</th><th style="width:24%">推理成本</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td><strong>ControlNet 旁支</strong></td><td><strong>+23% GPU 显存</strong>、<strong>+34% 每迭代时间</strong>（单卡 A100 PCIE 40GB）</td><td>论文<strong>未给</strong>推理时延与参数量</td><td>ControlNet 原文<span class="b high">V</span></td></tr>
+<tr><td><strong>T2I-Adapter</strong></td><td>参数 ~77 M，存储 ~300 M</td><td>未给</td><td>arXiv:2302.08453<span class="b high">V</span></td></tr>
+<tr><td><strong>CFG（条件/无条件两支）</strong></td><td>—</td><td><strong>每步两次前向</strong>（条件 + 无条件）</td><td>CFG 原文逐字<span class="b high">V</span></td></tr>
+<tr><td><strong>Classifier Guidance</strong></td><td>需额外分类器，且必须<strong>在带噪图上训练</strong></td><td>每步额外 1 次分类器前向 + 反向</td><td>Dhariwal &amp; Nichol 2021<span class="b high">V</span></td></tr>
+<tr><td><strong>虚拟染色域 cross-attn / ControlNet 增量</strong></td><td colspan="2"><span class="b bad">各文均未说明</span>（StainFuser / StainDiffuser / HistDiST / PSPStain 的消融都不含架构成本项）——<strong>阴性结果</strong></td><td>—</td></tr>
+</tbody>
+</table></div>
+
+<div class="box teal"><div class="bt">对 RTX 4060（8 GB）的直接含义</div>
+<p style="margin-bottom:0">条件注入的<strong>训练</strong>成本（+23% 显存）在你的显存预算里是真实的，但可控；<strong>推理</strong>成本几乎只在 CFG 上（翻倍前向）。⇒ 如果只是想在推理阶段验证结构保持，<strong>不要选需要新训练的 ControlNet 路线</strong>；先做推理期方法（§10 首选方案）。</p></div>
+
+<h3 id="s5-5">5.5 小结：条件注入的有效范围与失败情形</h3>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:26%">问题</th><th>答案</th></tr></thead>
+<tbody>
+<tr><td>条件信息从哪里进入？</td><td>四种主流：① U-Net 输入层通道拼接；② 时间嵌入加性（adaLN 式）；③ cross-attention 的 K/V；④ ControlNet 零卷积旁支。多层特征调制（StainDiffuser 4 层）是少数派。</td></tr>
+<tr><td>条件是原始图、浓度图还是特征？</td><td>主流是<strong>编码后的特征</strong>（VAE latent / Phikon / UNI embedding），不是原始像素。<strong>浓度图作条件在虚拟染色域未见先例</strong>（见 §8）。</td></tr>
+<tr><td>模型能否忽略/削弱/曲解条件？</td><td><strong>能，且有实证</strong>：sudden convergence（前 10K 步忽略）、50% dropout、loss collapse（你自己的 M0）。</td></tr>
+<tr><td>有无严格的结构保持数学保证？</td><td><span class="b bad">没有</span>。条件注入不构成任何约束集合上的投影。</td></tr>
+<tr><td>什么时候能有效保持细胞核 / 轮廓 / 布局？</td><td>当结构信息<strong>与目标染色强相关且配对可靠</strong>时（如形态→染色风格）；以及当它<strong>触发了推理期机制</strong>时（HistDiST 的 Inv 需要条件化配合）。</td></tr>
+<tr><td>什么时候仍会漂移 / 丢细节？</td><td>① 错位数据（label noise 被吸收）；② 条件与目标冲突（silent control signal 压制纹理）；③ 目标函数退化（loss collapse）；④ 注入过强（overpowering）。</td></tr>
+<tr><td>会不会「复制输入」/ 削弱目标染色？</td><td><strong>未找到</strong>「虚拟染色模型直接复制输入」的一手原文（阴性）。找到的是相反方向的失败：<strong>幻觉</strong>——编造不存在的结构（AQuA，Nature BME 2025：会「<em>replacement of some tissue components with imaginary ones</em>」，编造肿瘤细胞 / 核分裂像 / 淋巴细胞）。⇒ <strong>条件的失效模式是「虚构」，不是「复制」。</strong></td></tr>
+<tr><td>增加注入层级 / 通道数能改善结构吗？</td><td><span class="b bad">没有任何虚拟染色论文做过「注入层级数 vs 结构保持」的梯度消融</span>（StainFuser / StainDiffuser / PSPStain 均「未说明」；HistDiST 只做了单层 vs 单层+cross-attn）。<strong>这是空白，不是结论。</strong></td></tr>
+<tr><td>训练/推理/显存/兼容性影响？</td><td>见 §5.4。额外一条：ControlNet 式旁支需要<strong>锁定主干 + 复制编码器</strong>，与「复用现有预训练权重」的诉求兼容；Adapter 式改动最小但在虚拟染色域无先例。</td></tr>
+</tbody>
+</table></div>
+<h2 id="s6"><span class="num">6</span>研究问题二 · Constraint / Guidance 如何直接限制扩散模型的生成结果？</h2>
+
+<h3 id="s6-1">6.1 真投影：DDNM 与它的适用边界</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">DDNM — 唯一能给出「严格数据一致性」的机制</div><div class="v">Zero-Shot Image Restoration Using Denoising Diffusion Null-Space Model · ICLR 2023 <strong>Oral</strong> · arXiv:2212.00490 · 官方实现 github.com/wyhuai/DDNM</div></div><span class="b high">V</span></div>
+<div class="body">
+<p>核心是<strong>值域—零空间分解</strong>（论文 §2.2 逐字）：</p>
+<pre><code>x ≡ A†A x + (I − A†A) x</code></pre>
+<p>论文逐字解释这两个算子的身份：「<em><strong>A†A</strong> can be seen as the operator that <strong>projects</strong> samples x to the <strong>range-space</strong> of A … (I − A†A) can be seen as the operator that <strong>projects</strong> samples x to the <strong>null-space</strong> of A</em>」。</p>
+<p>要同时满足的两个约束（论文逐字）：</p>
+<pre><code>Consistency:  A x̂ ≡ y      （硬一致性，靠 A†y 解析给出）
+Realness:     x̂ ∼ q(x)     （真实性，交给扩散模型生成零空间分量）</code></pre>
+<p>DDNM 的做法：<strong>值域分量 A†y 解析给定（严格保证一致性），只让扩散模型去生成零空间分量 (I−A†A)x̄</strong>。DDNM+ 版逐字声称「<em>assures <strong>strict</strong> data consistency</em>」。约束对象是 <code>x̂₀</code>。</p>
+<p style="margin-bottom:0"><strong>边界（关键）：</strong>摘要只声明「<em>arbitrary <strong>linear</strong> IR problems</em>」——<strong>对非线性退化未说明 / 不适用</strong>。而且它<strong>必须同时拥有前向算子 A 与测量 y</strong>。</p>
+</div>
+</div>
+
+<div class="box stop"><div class="bt">★ 对 H&amp;E→IHC 的致命边界：你没有 y</div>
+<p style="margin-bottom:0">DDNM 的一致性约束 <code>Ax̂ ≡ y</code> 需要<strong>测量值 y</strong>（低质图的像素 / 欠采样 k 空间）。虚拟染色的「退化算子」是什么？<strong>H&amp;E 不是 IHC 的退化观测</strong>——两者是两种不同染色对同一组织块的<em>平行观测</em>，不存在 <code>y = Ax</code> 的物理关系。<strong>⇒ 经典 data consistency / 投影在 H&amp;E→IHC 上无法直接定义。</strong>这是本轮最硬的一条边界，也是 §10 首选方案要绕开的地方。</p></div>
+
+<div class="box key"><div class="bt">但它留下了一个可以移植的数学骨架</div>
+<p>如果你能写出一个<strong>已知的线性算子 A</strong>，投影形式 <code>x̂₀ ← A†y + (I − A†A)x̂₀</code> 就仍然可用——哪怕这里的 <code>y</code> 不是「测量」，而是<strong>你自己构造的锚定信号</strong>。在你的浓度空间任务里，一个天然的候选是：</p>
+<pre><code>A  = 选择 H 通道的算子（把 [C_H, C_DAB] 映到 C_H）
+A† = 同算子的伴随（把 C_H 放回 H 位置、DAB 位置填 0）
+y  = 从输入 H&amp;E 解出的 C_H^input
+
+⇒ x̂₀_proj = A†·C_H^input + (I − A†A)·x̂₀
+           = [C_H^input , Ĉ_DAB]        ← 严格投影，成本 = 一次索引赋值</code></pre>
+<p style="margin-bottom:0">这是一个<strong>真投影</strong>（A 线性、A† 已知、投影后满足 <code>Ax̂₀ = C_H^input</code> 恒等），而不是近似修正。见 §10.2。</p></div>
+
+<h3 id="s6-2">6.2 梯度引导：DPS 为什么<em>故意不做</em>投影</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">DPS — 摘要逐字承认它不做投影</div><div class="v">Diffusion Posterior Sampling for General Noisy Inverse Problems · ICLR 2023 spotlight · arXiv:2209.14687</div></div><span class="b high">V</span></div>
+<div class="body">
+<p>摘要逐字：「<em>the resulting posterior sampling scheme is a blended version of diffusion sampling with the manifold constrained gradient <strong>without a strict measurement consistency projection step</strong></em>」。</p>
+<p>算法核心（论文 Algorithm 1 逐字）：先由 Tweedie 公式得后验均值 <code>x̂₀</code>，再在 <code>x̂₀</code> 处对似然取梯度并更新 <code>x_{i−1}</code>：</p>
+<pre><code>x_{i−1} ← x'_{i−1} − ζ_i ∇_{x_i} ‖ y − A(x̂₀) ‖²_Λ</code></pre>
+<p style="margin-bottom:0">⇒ <strong>它不是投影，是「在数据流形上取切线方向的后验梯度」。</strong>对比 MCG（arXiv:2206.00941）才额外做 measurement-subspace projection。</p>
+</div>
+</div>
+
+<div class="box stop"><div class="bt">★★ DPS 给出的反例：每一步都硬投影，反而会累积误差</div>
+<p>DPS §C.1 标题即「<strong>Noise amplification by projection</strong>」。正文逐字：「<em>when taking projections on the measurement subspace <strong>after every gradient step</strong> as in Chung et al. (2022a), the sample may <strong>fall off the manifold, accumulate error, and arrive at the wrong solution</strong>, … due to the <strong>overly imposing</strong> the data consistency that <strong>works only for noiseless measurement</strong>.</em>」</p>
+<p style="margin-bottom:0">⇒ <strong>「硬投影 = 更强保证」是一个直觉陷阱。</strong>投影只有在 <code>y</code> 无噪声、且投影后的点仍在数据流形上时才安全。有噪声时，每步投影会把样本推离流形并累积误差。<strong>这一条直接决定了 §10 首选方案必须带时间调度，而不是每步都投。</strong></p></div>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:16%">方法</th><th style="width:22%">是投影吗？</th><th style="width:24%">约束对象</th><th>需要什么前提</th></tr></thead>
+<tbody>
+<tr><td><strong>DDNM</strong>（2212.00490）</td><td><span class="b high">是</span>（λ=1 时硬投影到 <code>{x: Ax=y}</code>）</td><td><code>x̂₀</code></td><td>线性 A + 已知 y</td></tr>
+<tr><td><strong>DPS</strong>（2209.14687）</td><td><span class="b bad">否</span>（后验梯度，非投影）</td><td><code>x_t</code>（用 <code>x̂₀</code> 算梯度）</td><td>可微 A + 似然模型</td></tr>
+<tr><td><strong>ΠGDM</strong>（ICLR 2023）</td><td><span class="b bad">否</span>（直接从测量模型估 conditional score）</td><td>score</td><td>测量模型</td></tr>
+<tr><td><strong>ReSample</strong>（2307.08123）</td><td><span class="b high">是</span>（hard data consistency + resampling）</td><td><strong>latent</strong>（中间表示）</td><td>线性 A + 已知 y</td></tr>
+<tr><td><strong>PPR</strong>（Predict-Project-Renoise）</td><td><span class="b high">是</span>（投影到<strong>显式约束函数</strong>定义的可行集）</td><td>去噪器输出 + 重加噪</td><td>可写出的约束函数（<strong>不需要测量 y</strong>）★</td></tr>
+<tr><td><strong>Universal Guidance</strong>（2302.07121）</td><td><span class="b bad">否</span>（forward guidance 在 <code>ẑ₀</code> 上反传 + backward guidance 做 m 步梯度下降）</td><td>预测干净图 <code>ẑ₀</code></td><td>引导函数与损失<strong>必须可微</strong>（不可微子模块当 oracle 输入）</td></tr>
+</tbody>
+</table></div>
+
+<h3 id="s6-3">6.3 采样期「约束」的两条实现路径——以及它们对配准的依赖完全不同</h3>
+
+<div class="grid2">
+<div class="mini"><div class="mt">路径 A：代数投影（P4）</div>
+<p><strong>做法</strong>：写出 A 与 A†，把 <code>x̂₀</code> 的某分量替换为锚定值。</p>
+<p><strong>可微性</strong>：不需要可微。</p>
+<p><strong>配准依赖</strong>：<span class="b high">取决于 A 定义在什么上</span>。若 A = 选 H 通道 → 只需输入 H&amp;E 自身，<strong>不需要配对 GT</strong>。</p>
+<p><strong>成本</strong>：一次索引 / 矩阵运算，≈0。</p>
+<p><strong>风险</strong>：投影后必须仍在流形上（DPS §C.1）。</p></div>
+<div class="mini"><div class="mt">路径 B：梯度引导（P5）</div>
+<p><strong>做法</strong>：定义可微能量 <code>E(x̂₀)</code>，把 <code>∇E</code> 加到反向更新上。</p>
+<p><strong>可微性</strong>：<strong>必须可微</strong>（UG/LGD 原文明确）。</p>
+<p><strong>配准依赖</strong>：可用<strong>无配对</strong>能量（EGSDE 用特征相似度；MIU-Diff 用互信息），<strong>不需要配对 GT</strong>。</p>
+<p><strong>成本</strong>：每步一次反传（显存）；UG 还要 m 步内循环 + k 次 self-recurrence，<strong>线性于 k</strong>。</p>
+<p><strong>风险</strong>：引导网络不准 → adversarial gradient；过强 → 过饱和 / 伪影。</p></div>
+</div>
+
+<div class="box warn"><div class="bt">★ 一个反直觉的结论：无配对时，能量比投影更容易定义</div>
+<p style="margin-bottom:0">经典投影要求 <code>y</code> 已知（你没有）；而<strong>能量引导可以在无配对下定义</strong>——EGSDE 用「特征相似度」、MIU-Diff 用「互信息」。检索中唯一明确讨论「用显式约束函数代替测量算子」的是 <strong>PPR</strong>（Predict-Project-Renoise），它把可行集定义成「只含满足约束函数的样本」，<strong>不需要测量 y</strong>。⇒ <strong>在错位数据上，「软约束 / 能量引导」的门槛反而比「硬投影」低。</strong>这是与 §0 的「采样期约束更适合错位」互为补充的一条机制级理由。</p></div>
+
+<h3 id="s6-4">6.4 过强引导的实证负面效应（三条独立证据）</h3>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">证据</th><th style="width:30%">逐字 / 近逐字</th><th>含义</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>CFG scale 过大</strong><br><span class="small">APG, ICLR 2025, arXiv:2410.02416</span><span class="b high">V</span></td>
+<td>高 CFG scale「<em>causes <strong>oversaturation and unrealistic artifacts</strong></em>」</td>
+<td>注意：<strong>CFG 原论文全文没有「over-saturation」字样</strong>（检索 NO MATCH）——这条结论来自后续工作，引用时不要挂在 Ho &amp; Salimans 名下。</td>
+</tr>
+<tr>
+<td><strong>控制过强压制原始特征</strong><br><span class="small">Minimal Impact ControlNet, arXiv:2506.01672</span><span class="b high">V</span></td>
+<td>「<em>these <strong>silent control signals can suppress the generation of textures</strong> in areas where other control signals aim to generate details, resulting in suboptimal outcomes</em>」；并把系数 λ 限制在 <strong>[0, 20]</strong>「<em>to mitigate the risk of <strong>overpowering control signals that could suppress the original features</strong></em>」</td>
+<td><strong>「边缘型条件」在无边界区域产生低频谱「静默控制信号」，会反过来压制纹理生成。</strong>这直接对应你的场景：核掩膜在无核区域是「静默」的，若用它做强控制，可能压制该处的 DAB。</td>
+</tr>
+<tr>
+<td><strong>引导网络不准 → 反而更差</strong><br><span class="small">arXiv:2403.12404 (NeurIPS 2024)</span><span class="b high">V</span></td>
+<td>training-free guidance「<em>more susceptible to <strong>adversarial gradients</strong></em>」；另有一处消融显示<strong>不对齐的引导特征比 baseline 更差</strong>（FID 74.50 vs 46.23）</td>
+<td>⇒ <strong>「加了引导」不等于「变好」。</strong>引导器本身的准确度是前置条件，不是可选项。</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box stop"><div class="bt">★★ 阴性结论（对报告结论方向很关键）</div>
+<ul style="margin-bottom:0">
+<li><strong>未找到</strong>任何论文报告「强 guidance 导致<em>复制输入结构</em>」的原文（阴性）。</li>
+<li><strong>未找到</strong>任何论文专门讨论「guidance <em>抑制 DAB / 目标染色</em>生成」——这在虚拟染色里是真空。<strong>你必须自己做这个实验</strong>（§11 的 E5）。</li>
+<li><strong>未找到</strong>专门讨论「无测量算子时如何定义可行集」的通用论文（PPR 最接近）。</li>
+</ul></div>
+
+<h2 id="s7"><span class="num">7</span>研究问题三 · 哪些方法能适应虚拟染色的数据特性？</h2>
+
+<p>按用户给的三种数据条件分别讨论。核心判据是<strong>「约束对象挂在哪个层级」</strong>，而不是「用了哪种机制」。评价口径直接采用库内 <code>弱配准下蛋白表达保真</code> 报告的 <strong>L0–L5 分层</strong>。</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:19%">约束对象</th><th class="c" style="width:13%">严格配对 + 配准</th><th class="c" style="width:15%">连续切片（局部错位）</th><th class="c" style="width:11%">完全无配对</th><th>机制说明</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>L0 像素（RGB / 浓度逐像素）</strong></td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b bad">危险</span></td><td class="c"><span class="b bad">不可用</span></td><td>对 GT 的 MSE / L1。错位时<strong>系统性污染标签</strong>：HER2 NCMT 受控实验（H&amp;E 裁剪平移 0→24 px）：<strong>FID 38.8→46.68、KID 5.6→9.3</strong>；作者原话「<em>spatial mismatch acts as <strong>label noise</strong></em>」<span class="b high">V</span></td>
+</tr>
+<tr>
+<td><strong>L1 表达分布</strong>（DAB-IOD / 分位数 / 阳性比例）</td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b medium">部分</span></td><td>对错位<strong>低敏感</strong>：分布统计不需要像素对应。库内已列为「必须有」的评价层。<span class="b high">V</span></td>
+</tr>
+<tr>
+<td><strong>L2 形态条件下的表达</strong>（相似形态区域表达一致）</td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b medium">部分</span></td><td>用 morphology embedding 定义可比较区域，<strong>不要求 node-by-node</strong>。库内列为「高价值」。风险：过度假设「相似形态 = 相似蛋白」。</td>
+</tr>
+<tr>
+<td><strong>L3 关系 / 排序</strong>（A 比 B 高、阳性等级序）</td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b bad">需弱标签</span></td><td>需要可靠的 ROI 顺序；<strong>不需要像素对应</strong>，是对错位最友好的形态（库内判定）。</td>
+</tr>
+<tr>
+<td><strong>L4 空间组织</strong>（连通域 / 聚集 / 图结构）</td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b medium">部分</span></td><td class="c"><span class="b bad">难</span></td><td>不要求 node-by-node，但需要区域对应；库内建议<strong>先评价、慎作 loss</strong>。</td>
+</tr>
+<tr>
+<td><strong>结构先验</strong>（核掩膜 / 轮廓 / 互信息）</td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b high">可用</span></td><td><strong>★ 本报告的核心结论</strong>：这类约束<strong>从输入 H&amp;E 自身提取</strong>，完全不依赖 IHC 的像素位置。ContourDiff（CT→MRI）与 SegGuidedDiff（MRI/CT）都用它；MIU-Diff 的互信息项同理。</td>
+</tr>
+<tr>
+<td><strong>GT 图像的逐像素位置与外观</strong></td><td class="c"><span class="b high">可用</span></td><td class="c"><span class="b bad">不可用</span></td><td class="c"><span class="b bad">不可用</span></td><td><strong>这是「目标 B」，与「目标 A（相对输入 H&amp;E 的形态保持）」不是同一个目标</strong>。存在错位时，<strong>不能把目标 B 当作目标 A 的评价标准</strong>。</td></tr>
+</tbody>
+</table></div>
+
+<div class="box key"><div class="bt">★ 把两个目标分开（用户 §五 的核心要求）</div>
+<div class="scroll"><table>
+<thead><tr><th style="width:14%">目标</th><th style="width:34%">定义</th><th>在错位数据上</th></tr></thead>
+<tbody>
+<tr><td><strong>目标 A</strong></td><td>生成结果相对于<strong>输入 H&amp;E</strong> 的组织形态保持</td><td><span class="b high">可评价、可约束</span>——只需输入 H&amp;E 自身（核掩膜 / 轮廓 / 结构相似度）。</td></tr>
+<tr><td><strong>目标 B</strong></td><td>与<strong>真实连续切片 IHC</strong> 的逐像素位置和局部外观一致</td><td><span class="b bad">不可达</span>——错位使逐像素对应不可靠（HyReCo 中位残差 7.1–16.0 µm，与核直径 5–10 µm 同量级）。</td></tr>
+</tbody>
+</table></div>
+<p style="margin-bottom:0">⇒ <strong>对连续切片，评价结构保持只能用目标 A 的口径</strong>（核分割 Dice / IoU、结构相似度、形态特征一致性），不能用目标 B 的 PSNR/SSIM-on-GT 当主结论。</p></div>
+
+<div class="box stop"><div class="bt">★ Fundamental limitation（必须写进论文）</div>
+<p style="margin-bottom:0"><strong>如果没有可靠的蛋白表达标签或有效的跨切片对应信息，就不能仅靠结构约束恢复每个细胞真实的蛋白表达强度。</strong>结构保持良好 ≠ DAB 真实。理由是物理的：① 苏木素（H）浓度反映的是核的<em>存在与形态</em>，不是蛋白丰度；② DAB 与 H 在阳性核内共定位，单波长下不可分（Ruifrok 2001 原文承认 DAB 饱和区对「苏木素」IOD 污染<strong>平均 65%</strong>）；③ 连续切片上同一细胞的两个观测本来就不是同一个物理对象。⇒ <strong>任何「结构约束 → 表达正确」的推理链都缺一个环节，而这个环节只能由外部表达标签补上。</strong></p></div>
+
+<h2 id="s8"><span class="num">8</span>研究问题四 · 在浓度空间保持结构是否更有优势？</h2>
+
+<p>用户考虑的空间有五层。逐个判定「在这个空间施加约束」的利弊。本节复用库内 <code>浓度域OD域虚拟染色</code> 报告的文献地图，只做<strong>约束视角</strong>的增量分析。</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:15%">空间</th><th style="width:23%">在这个空间施加约束的优点</th><th style="width:24%">缺点 / 风险</th><th style="width:13%">可微性</th><th>文献先例</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>RGB 图像空间</strong></td><td>直观、指标现成（SSIM/PSNR）</td><td>约束「像不像输入」会把<strong>染色差异也一起约束住</strong>——而染色差异正是你要生成的东西。<span class="b bad">结构性错误</span></td><td class="c">可微</td><td>绝大多数工作</td></tr>
+<tr>
+<td><strong>OD 光密度空间</strong></td><td>物理量、与染色浓度线性相关（<code>OD = WC</code>）；PSPStain 的 FOD 就在这一层</td><td>OD 是逐像素非线性（log）变换，<strong>不是正交变换</strong>，不能直接套「线性空间扩散更好」的结论</td><td class="c">可微</td><td>PSPStain（FOD）· CCPL（双通道 FOD）<span class="b high">V</span></td></tr>
+<tr>
+<td><strong>H/E 浓度空间</strong></td><td>H 与 E 物理分离，可以只约束 H</td><td>E 通道在 IHC 里可能不存在（很多 IHC 只做 H 复染）⇒ 两边通道数不匹配</td><td class="c">可微</td><td>Vahadane 2016（OD 空间 sparse NMF，structure-preserving）<span class="b high">V</span></td></tr>
+<tr>
+<td><strong>H/DAB 浓度空间</strong></td><td><span class="b high">★ 结构与染色天然分离</span>：H ≈ 结构，DAB ≈ 表达。可以<strong>只固定 H、只生成 DAB</strong></td><td>需要可靠的 stain matrix W；DAB 遮挡 H（Ruifrok 65%）；H 浓度 ≠ 核形态（见下）</td><td class="c">可微</td><td>CCPL（H/DAB 双通道）· MCCL（H 由「保留 Hematoxylin、置零 DAB/Eosin」生成）· CFM-HES（浓度域 + BL 渲染）<span class="b high">V</span></td></tr>
+<tr>
+<td><strong>形态 / 核结构特征空间</strong></td><td>对错位最友好（特征级，不需要像素对应）</td><td>可解释性弱；特征里可能混入染色信息（EGSDE 的双能量正是为此设计）</td><td class="c">可微</td><td>OT-StainNet（弱配对语义对应）· MIU-Diff（互信息）· HistDiST（Phikon 特征）<span class="b high">V</span></td></tr>
+</tbody>
+</table></div>
+
+<h3 id="s8-1">8.1 逐条回答用户的六个问题</h3>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:32%">问题</th><th>回答</th></tr></thead>
+<tbody>
+<tr><td><strong>① 浓度空间限制 H 是否比 RGB 空间更自然？</strong></td><td><span class="b high">是，但理由不是「更物理」，而是「解耦更干净」</span>。RGB 里 H 与 DAB 的贡献混在同一个三通道值里，无法单独约束；H/DAB 浓度空间里二者是<strong>可分离的坐标</strong>，约束 H 不会误伤 DAB。<strong>这是表示层的优势，与「物理更准」无关。</strong></td></tr>
+<tr><td><strong>② 固定 / 校准 H、只生成 DAB 有哪些结构优势？</strong></td><td>① 结构保持从「学出来的」变成「构造保证的」——H 分量不是生成结果，是<strong>复制</strong>，所以核位置与形态<strong>零漂移</strong>；② 模型容量全部用于 DAB 表达建模，不需要同时学结构；③ 推理时无额外成本。<strong>先例</strong>：CCPL / MCCL 的 H 通道生成、CFM-HES 的「只生成缺失通道」、库内 DAB-only 报告的架构。<span class="b high">V</span></td></tr>
+<tr><td><strong>③ 是否真的比条件注入更可靠？什么情况下不一定？</strong></td><td><strong>在「结构保持」这个目标上更可靠（有构造保证），但在「表达保真」上没有任何优势，甚至可能更差</strong>——因为固定的 H 会限制阳性核区域的 DAB 生成自由度（H 与 DAB 在阳性核内共定位）。<strong>不一定更可靠的情形</strong>：① W 估计不准（H 分量本身就错）；② H 与 DAB 严重重叠的区域（阳性核）；③ 若「固定 H」实现为条件注入（而不是投影），那它退化成普通条件，没有保证。</td></tr>
+<tr><td><strong>④ 浓度分解误差 / 染色矩阵估计错误会怎样？</strong></td><td>逐字诚实回答：<strong>本轮未找到量化「stain matrix 估计误差 → 虚拟染色下游退化」的一手论文</strong>（<span class="b low">N</span>）。最接近的是 <em>Refining Stain Vector Accuracy in H&amp;E Images: A Monte Carlo Approach to Color Deconvolution</em>（Optica Biophotonics Congress 2025），它<strong>只做 stain vector 选择精度</strong>，未接下游。<strong>但机制上可推断</strong>：若 <code>OD = WC</code> 中 W 有误差 ε，则解出的 <code>Ĉ</code> 有系统偏差，而「投影 H 分量」会把<strong>这个偏差原样复制到输出</strong>——即<strong>投影会放大 W 误差的影响</strong>（条件注入至少让网络有机会修正）。⇒ 使用投影前必须做 W 校准（见 §11 的 E0）。</td></tr>
+<tr><td><strong>⑤ H 浓度与细胞核形态不等价，如何避免误用？</strong></td><td><strong>本轮未找到直接论证该命题的论文</strong>（<span class="b low">N</span>）。弱证据：<em>国际染色变异性研究</em>（J Pathol Inform 2025）称 H&amp;E 强度与专家评分相关性很弱。<strong>机制上的三条不等价来源</strong>：① 核内染色不均（染色质纹理 ≠ 核轮廓）；② DAB 遮挡（阳性核的 H 被覆盖，Ruifrok 65%）；③ 非特异背景染色。<strong>规避方式</strong>：把 H 浓度当「结构先验」而不是「形态真值」——用它做投影/引导，但<strong>不要</strong>用它去算核分割 Dice 之类的形态指标（那要用独立的分割模型）。</td></tr>
+<tr><td><strong>⑥ 有没有研究支持「结构保持与染色成分生成分离建模」？</strong></td><td><span class="b high">有，但都在 GAN / 解混一侧</span>：Vahadane 2016（OD 空间稀疏分离 stain matrix 与浓度）、HistAuGAN（MICCAI 2021，解耦 content 与 stain style）、CCPL / MCCL（H/DAB 双通道生成）。<strong>在扩散侧，「浓度域生成」被 CFM-HES（flow matching）占了一格；「扩散 + 结构/染色分离生成」在能核实的文献里仍空。</strong><span class="b high">V</span></td></tr>
+</tbody>
+</table></div>
+
+<h3 id="s8-2">8.2 ★ 一个对你不利的读数，必须先看</h3>
+
+<div class="box warn"><div class="bt">CFM-HES 的相邻消融：把生成模型放进浓度域，收益很小且分指标混合</div>
+<p>CFM-HES（MICCAI 2026）在它自己的 Table 1 里比较了「确定性 U-Net（共享同一套染色分离 + 浓度域 + Beer–Lambert 管线）」与「CFM（Ours）」：</p>
+<div class="scroll"><table style="margin:10px 0">
+<thead><tr><th>配置</th><th class="c">PSNR ↑</th><th class="c">SSIM ↑</th><th class="c">LPIPS ↓</th><th class="c">PieAPP ↓</th></tr></thead>
+<tbody>
+<tr><td>确定性 U-Net（同管线）</td><td class="c">31.34</td><td class="c"><strong>0.978</strong></td><td class="c">0.047</td><td class="c">1.06</td></tr>
+<tr><td>CFM（Ours）</td><td class="c"><strong>32.06</strong></td><td class="c">0.968</td><td class="c"><strong>0.030</strong></td><td class="c"><strong>0.66</strong></td></tr>
+</tbody>
+</table></div>
+<p style="margin-bottom:0">读法：<strong>PSNR 只涨 0.72 dB，而 SSIM 反而更差（0.968 vs 0.978）</strong>。这不否定浓度域方向，但它意味着：<strong>你不能假设「换成浓度域」会自动带来结构提升</strong>，必须自己做受控消融，并准备好「它可能并不更好」的结论。<span class="b high">V</span>（该数字来自库内 <code>浓度域OD域虚拟染色</code> 报告 §0 的一手核实）</p></div>
+
+<div class="box good"><div class="bt">★ 空格在这里：浓度域 vs RGB 域的受控消融，没有任何人做过</div>
+<p style="margin-bottom:0">库内既有报告已核实：<strong>「浓度域扩散 vs RGB 域扩散」这个消融在能核实的文献里没有任何人做过</strong>——而这恰好是唯一能回答「浓度空间到底有没有用」的实验。<strong>本报告把它列为 §11 的 E3，并明确它同时服务于「结构保持」与「浓度空间是否更优」两个问题。</strong></p></div>
+<h2 id="s9"><span class="num">9</span>研究问题五 · 如何对结构保持机制进行归因？</h2>
+
+<p>用户要求区分两个层次：<strong>方法组件归因</strong>（哪个模块贡献了性能）与<strong>网络内部特征归因</strong>（哪些输入区域/特征在起作用）。两者解决的问题不同，用错工具会得到互相矛盾的解释。</p>
+
+<h3 id="s9-1">9.1 方法贡献归因：实验矩阵</h3>
+
+<p>设计原则：<strong>每一行只引入一个变量</strong>，且<strong>不允许用一个表现较差的注入基线代表所有条件注入</strong>（用户 §七 的明确要求）。矩阵建立在库内 <code>M0条件扩散归因审查</code> 的 T1–T3 之上，不重复它。</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:8%">编号</th><th style="width:26%">配置</th><th style="width:12%">唯一变量</th><th>它能回答什么问题 / 不能回答什么</th></tr></thead>
+<tbody>
+<tr><td><strong>E0</strong></td><td>零训练前置：stain matrix W 标定 + 缩放系数 α 标定 + RGB→C→RGB 闭环残差</td><td>—</td><td><strong>回答</strong>：浓度空间的数值地基是否可靠。<strong>不能回答</strong>：任何结构问题。<span class="b high">零训练 · CPU · ~30 min</span></td></tr>
+<tr><td><strong>E1</strong></td><td><strong>Baseline</strong>：2 通道浓度扩散，无任何结构机制，无条件注入</td><td>—</td><td>所有对比的锚点。<strong>不能单独下任何结构结论</strong>——必须配合 E2/E3。</td></tr>
+<tr><td><strong>E2</strong></td><td>E1 + <strong>条件注入</strong>（H&amp;E latent 通道拼接，InstructPix2Pix 式）</td><td>条件注入有/无</td><td><strong>E2 − E1 = 条件注入的净贡献</strong>（对结构、对表达、对分布各看一遍）。⚠️ 与 E3 共享「引入 H&amp;E 信息」这一变化，<strong>不可</strong>用它单独判定「注入 vs 投影」。</td></tr>
+<tr><td><strong>E3</strong></td><td>E1 + <strong>采样期 H 锚定投影</strong>（<code>C_H ← α·C_H^input</code>，每步执行，无调度）</td><td>投影有/无</td><td><strong>E3 − E1 = 投影的净贡献</strong>。若 E3 的结构指标显著优于 E2 而表达指标不差 → 支持「投影优于注入」。</td></tr>
+<tr><td><strong>E4</strong></td><td>E1 + <strong>采样期梯度引导</strong>（可微结构能量：核掩膜 Dice 或结构相似度）</td><td>引导有/无</td><td><strong>E4 − E1 = 软引导的净贡献</strong>；<strong>E4 vs E3 = 软约束 vs 硬投影</strong>（同一条结构信息，两种施加方式）。</td></tr>
+<tr><td><strong>E5</strong></td><td>E2 + E3（<strong>条件注入 + 投影</strong>）</td><td>交互项</td><td><strong>回答</strong>：两者是否互补。<strong>判据</strong>：若 E5 ≈ max(E2,E3) ⇒ 冗余；若 E5 &gt; 两者 ⇒ 互补；若 E5 &lt; 两者 ⇒ <strong>冲突</strong>（此时查梯度冲突角）。</td></tr>
+<tr><td><strong>E6</strong></td><td>E3 + <strong>时间调度</strong>（仅 <code>t &lt; t_c</code> 时投影）</td><td>调度有/无</td><td><strong>回答</strong>：DPS §C.1 的「早投影累积误差」在你的任务上是否成立。扫 <code>t_c</code> 若干档。</td></tr>
+<tr><td><strong>E7</strong></td><td>E3 + <strong>DAB-gated 松弛</strong>（阳性区按软掩膜降低投影强度）</td><td>松弛有/无</td><td><strong>回答</strong>：硬固定 H 是否抑制阳性核的 DAB 生成。<strong>这是全矩阵里唯一直接测「约束 ↔ DAB 自由度」权衡的一行。</strong></td></tr>
+<tr><td><strong>E8</strong></td><td><strong>浓度域 vs RGB 域</strong>受控对照（同架构、同数据、同约束，只换生成空间）</td><td>生成空间</td><td><strong>回答</strong>：§8 的问题。★ 文献空白，是本报告可 claim 的一个新点。</td></tr>
+<tr><td><strong>E9</strong></td><td><strong>注入强度扫描</strong>：注入层数（1 层 / 多层 / +cross-attn）× 注入权重</td><td>注入强度</td><td><strong>回答</strong>：「增加注入层级是否改善结构」——<strong>文献里没有任何虚拟染色论文做过</strong>（§5.5）。⚠️ 需配合 E9b（换一种注入形式，如 adapter）以免「一个差基线代表所有注入」。</td></tr>
+</tbody>
+</table></div>
+
+<div class="box key"><div class="bt">矩阵的判别力边界（哪些结论<em>不能</em>从这些对比推出）</div>
+<ul style="margin-bottom:0">
+<li><strong>E2 vs E3 不能直接比较「注入 vs 投影」</strong>——它们引入的信息量不同（E2 引入完整 H&amp;E latent，E3 只引入 H 分量）。要干净比较，需再加一行 <strong>E2'</strong>：只把 H 分量作为条件注入（信息量与 E3 对齐，只有施加方式不同）。<strong>这一行是「注入 vs 投影」的唯一公平对照</strong>，建议加上。</li>
+<li><strong>E1–E7 全部在同一数据集上做</strong>，所以它们<strong>不能</strong>回答「在严格配对数据上是否结论不同」——那需要第二套数据（若你能拿到同片脱色再染的配对）。</li>
+<li><strong>结构指标变好不等于机制生效</strong>：约束可能只是让输出更平滑 / 颜色更浅 / 多样性下降。⇒ 必须同时报「多样性」与「DAB 强度分布」，见 §9.2 与 §11。</li>
+</ul></div>
+
+<h3 id="s9-2">9.2 网络内部特征归因（与组件归因分开）</h3>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">工具</th><th style="width:30%">它回答什么</th><th style="width:16%">证据等级</th><th>在虚拟染色里的现状</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>DAAM</strong>（cross-attention 归因）<br><span class="small">What the DAAM, ACL 2023, arXiv:2210.04885</span></td>
+<td>上采样并聚合去噪子网的 <strong>cross-attention word–pixel 分数</strong>，得到像素级 attribution map；用名词语义分割验证其正确性</td>
+<td><span class="b high">V</span>（通用生成模型，非病理）</td>
+<td>可迁移到「条件（结构特征）在哪块区域生效」。<strong>虚拟染色域未找到使用者。</strong></td>
+</tr>
+<tr>
+<td><strong>条件扰动 / 随机掩膜消融</strong><br><span class="small">SegGuidedDiff 的 random mask ablation training</span></td>
+<td>训练时随机丢弃部分条件区域，测「哪部分条件真正影响哪部分输出」</td>
+<td><span class="b high">V</span>（医学影像，非病理）</td>
+<td><strong>最便宜、最可落地的一类</strong>：改动量小、有现成范式。</td>
+</tr>
+<tr>
+<td><strong>幻觉检测：AQuA</strong><br><span class="small">Nature Biomedical Engineering 2025 · DOI 10.1038/s41551-025-01421-9 · arXiv:2404.18458</span></td>
+<td><strong>不需要真实化学染色 GT</strong>，自主判定虚拟染色图可接受/不可接受；报告准确率 <strong>99.8%</strong>，与病理医生人工评估一致率 98.5%</td>
+<td><span class="b high">V</span></td>
+<td>可直接用。注意：AQuA 的原始验证含 AF→H&amp;E，迁移到 H&amp;E→IHC 需自行验证。</td>
+</tr>
+<tr>
+<td><strong>幻觉预警：NHP</strong><br><span class="small">arXiv:2411.15060</span></td>
+<td>用生成器 latent space 做 post-hoc 预警；<strong>反直觉结论</strong>：幻觉更少的模型不一定更容易被检测</td>
+<td><span class="b high">V</span></td>
+<td>提示「幻觉少 ≠ 可检测」，评估体系要独立于模型。</td>
+</tr>
+<tr>
+<td><strong>细胞级评价：PaPIS</strong><br><span class="small">arXiv:2507.12624</span></td>
+<td>基于<strong>细胞形态分割</strong>训练的深度特征 + Retinex 分解的 FR-IQA；可作训练 loss</td>
+<td><span class="b high">V</span></td>
+<td>作者明确指出 SSIM 系为自然图像设计、不捕捉病理特征。</td>
+</tr>
+<tr>
+<td><strong>★ 归因方法的一个元警告</strong><br><span class="small">The Attribution Contract, arXiv:2605.23080</span></td>
+<td>生成模型里 attribution 分数「<strong>无固定含义</strong>」，必须<strong>先显式声明</strong>解释的是哪个输出、什么被固定、哪些特征可被归因，否则会犯 <em>self-attribution fallacy</em></td>
+<td><span class="b high">V</span>（对象是生成式语言模型）</td>
+<td><strong>直接适用于消融设计</strong>：在报告任何归因结论前，先写清楚「固定了什么、变化了什么」。</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box stop"><div class="bt">★ 一个必须提前防住的混淆：结构改善可能来自「更平滑 / 更浅 / 更少多样性」</div>
+<p style="margin-bottom:0">约束天然倾向于把输出推向「平均解」。若只看结构指标，会把<strong>「生成多样性塌缩」误读成「结构保持变好」</strong>。⇒ 每一行消融都必须<strong>同时</strong>报三组量：① 结构指标；② <strong>输出多样性</strong>（同一输入多次采样的方差 / 不同 patch 的表达分布宽度）；③ <strong>DAB 强度分布</strong>（若 DAB 整体变弱，结构指标变好是假的）。这是本轮检索<strong>未找到</strong>有论文做过的一件事（<span class="b low">N</span>），但对你的归因是必需的。</p></div>
+
+<h2 id="s10"><span class="num">10</span>最终推荐方案</h2>
+
+<h3 id="s10-1">10.1 三个候选（按优先级）</h3>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:6%">序</th><th style="width:20%">方案</th><th style="width:15%">机制类别</th><th style="width:12%">是否重训</th><th style="width:12%">成本</th><th>为什么排这个位置</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td><td><strong>H 浓度锚定投影</strong>（<code>C_H ← α·C_H^input</code> 投影到 <code>x̂₀</code>，带时间调度 + DAB-gated 松弛）</td><td>Hard Projection（P4）</td><td><span class="b high">否</span>（推理期）</td><td><span class="b high">≈0</span>（一次索引运算）</td><td>唯一有<strong>构造性保证</strong>的结构保持；可用输入 H&amp;E 自身定义，对错位友好；成本在 4060 上可忽略；可直接做受控消融。</td>
+</tr>
+<tr>
+<td><strong>2</strong></td><td><strong>DDIM inversion 锚定</strong>（HistDiST 的推理期机制）</td><td>起点锚定（P3）</td><td><span class="b medium">通常需要</span>（需条件化配合）</td><td><span class="b medium">低</span>（多几步采样）</td><td>全文献里<strong>唯一有同论文受控证据</strong>的结构增益来源（SSIM 0.198→0.228）。缺点是它同时抬高 FID（37.5→41.3），需条件注入补偿。</td>
+</tr>
+<tr>
+<td><strong>3</strong></td><td><strong>核掩膜条件注入</strong>（每步把从输入 H&amp;E 提取的核 mask 作为条件，SegGuidedDiff / ContourDiff 式）</td><td>Condition Injection（P2）</td><td><span class="b bad">是</span></td><td><span class="b medium">中</span>（+23% 显存若走 ControlNet）</td><td>对错位友好（mask 来自输入自身），且有现成范式与受控消融方法。缺点：无数学保证，且「静默控制信号」风险（Minimal Impact ControlNet 的警告）。</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="box stop"><div class="bt">明确不推荐（本轮有证据反对）</div>
+<ul style="margin-bottom:0">
+<li><strong>每步都做硬投影而不加调度</strong>——DPS §C.1 逐字给出反例：每步投影会「fall off the manifold, accumulate error, and arrive at the wrong solution」。</li>
+<li><strong>把「加更多条件注入层级」当作结构改进手段</strong>——没有任何虚拟染色论文做过这个消融；而 Minimal Impact ControlNet 显示过强/过多的控制信号会<strong>压制</strong>原始特征。</li>
+<li><strong>用对 GT 的像素 MSE 作为结构约束</strong>——错位下是系统性 label noise（FID 38.8→46.68）。</li>
+<li><strong>在扩散 backbone 上堆 MoE 专家路由</strong>——库内门控报告已核实 ProMoE（ICLR 2026）的负结果。</li>
+</ul></div>
+
+<h3 id="s10-2">10.2 首选方案：H 浓度锚定投影（完整规格）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">核心机制</div></div><span class="b blue">Hard Projection · 推理期 · 零重训</span></div>
+<div class="body">
+<p>在浓度空间，模型预测 <code>x̂₀ = [Ĉ_H, Ĉ_DAB]</code>。我们<strong>不生成 H</strong>，而是把 <code>x̂₀</code> 的 H 分量投影到「输入 H&amp;E 的 H 浓度 × 标定增益 α」这条<strong>仿射约束集</strong>上：</p>
+<pre><code>A  = 选择 H 通道的线性算子        A† = 同算子的伴随
+y  = α · C_H^input               （α 由数据标定，见 E0）
+
+x̂₀_proj = A† y + (I − A†A) x̂₀
+         = [ α·C_H^input ,  Ĉ_DAB ]        ← 严格投影：A x̂₀_proj ≡ y 恒成立</code></pre>
+<p style="margin-bottom:0"><strong>为什么 α 是必需的（而不是直接拷贝 C_H）：</strong>库内 <code>H通道是否共享</code> 报告已一手核实——IHC 的苏木素复染协议强度比 H&amp;E 弱约 <strong>10×</strong>（常 30 秒 vs 5 分钟）。<strong>直接拷贝 H&amp;E 的 H 浓度会得到过深的核</strong>。α 是一个标量增益，一次性从数据回归得到（<code>C_H^IHC ≈ α · C_H^H&amp;E</code>），此后固定。</p>
+</div>
+</div>
+
+<h4>伪代码（推理期，可直接插入现有采样循环）</h4>
+<pre><code>def sample_step(model, x_t, t, C_H_input, alpha, t_c, tau, rho):
+    x0_hat  = model.predict_x0(x_t, t)          # [C_H_hat, C_DAB_hat]，2 通道浓度图
+    C_H_hat, C_DAB_hat = x0_hat[0], x0_hat[1]
+
+    # ① 时间调度：只在 x0_hat 已经可靠的后期投影（DPS §C.1 的教训）
+    lam = 1.0 if t &lt; t_c else 0.0
+
+    # ② DAB-gated 松弛：阳性核区域降低投影强度，给 DAB 留自由度
+    m   = sigmoid(K * (C_DAB_hat - tau))        # DAB 阳性软掩膜；rho=0 即关闭松弛
+    beta = lam * (1.0 - rho * m)
+
+    # ③ 投影（beta=1 时是严格投影）
+    C_H_new = (1.0 - beta) * C_H_hat + beta * (alpha * C_H_input)
+
+    x0_proj = stack([C_H_new, C_DAB_hat])
+    x_{t-1} = ddim_update(x_t, x0_proj, t)      # 用修正后的 x0 继续 DDIM 更新
+    return x_{t-1}</code></pre>
+
+<div class="grid2">
+<div class="mini"><div class="mt">改动在哪一环</div><p><strong>只改采样循环</strong>，不碰网络结构、不碰训练目标、不碰数据管线。</p><p>若当前模型是 DAB-only（只生成 Ĉ_DAB），则 <code>C_H</code> 本来就固定 ⇒ <strong>投影退化为恒等，方案变成「α 校准」</strong>——此时本方案的价值转为「用 α 校准代替直接拷贝」，以及 §11 的 E3 vs E2' 对照。</p></div>
+<div class="mini"><div class="mt">需要新增什么</div><p>① 一个 <code>α</code> 标定脚本（E0）；② 采样循环里的 5 行代码；③ 一个 <code>t_c</code> 与 <code>rho</code> 的扫描脚本。</p><p><strong>不需要</strong>新网络、不需要 ControlNet、不需要额外预训练权重。</p></div>
+</div>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">维度</th><th>评估</th></tr></thead>
+<tbody>
+<tr><td><strong>是否需要重训</strong></td><td><span class="b high">否</span>（纯推理期）。若要做 E8（浓度 vs RGB）或 E2'（公平对照）则需要训练，但那是对照臂。</td></tr>
+<tr><td><strong>预期成本</strong></td><td>每步 +1 次索引运算 + 1 次 sigmoid。<strong>相对基线的时延增量 &lt; 1%</strong>（对照：DDNM 与 DPS 的差距是 11.9 s vs 36.5 s，差 3×）。显存增量 ≈ 0。</td></tr>
+<tr><td><strong>最小实验配置</strong></td><td>单张 RTX 4060 8 GB；现有 M0 浓度扩散基线；BCI 或 MIST 的一个子集；<code>t_c ∈ {0.3T, 0.5T, 0.7T}</code>，<code>rho ∈ {0, 0.5, 1.0}</code>，共 9 组。</td></tr>
+<tr><td><strong>最容易出现的失败</strong></td><td>① <strong>α 标定错</strong> ⇒ 核过深 / 过浅，投影把误差原样复制；② <strong>W 估计不准</strong> ⇒ C_H^input 本身有系统偏差，投影放大它；③ <strong>阳性核区域出现「H 环」伪影</strong>——硬固定 H 而 DAB 又必须在同一位置沉积，两者在 OD 空间叠加后可能超出合理范围（这正是 E7 要测的）；④ <strong>早投影导致累积误差</strong>（E6 要测）。</td></tr>
+<tr><td><strong>如何判断真的改善了结构保持</strong></td><td>必须<strong>同时</strong>满足：① 结构指标（核分割 Dice/IoU）显著提升；② DAB 强度分布<strong>没有整体变弱</strong>；③ 输出多样性<strong>没有塌缩</strong>；④ 在平移扫描下（0→24 px）结构指标<strong>衰减更慢</strong>。四条缺一条就不能声称「结构保持提升」——否则可能只是「输出变平滑了」。</td></tr>
+</tbody>
+</table></div>
+
+<div class="box pur"><div class="bt">为什么这个方案在论文上站得住（以及站不住的地方）</div>
+<p><strong>站得住</strong>：① 它是<strong>真投影</strong>（A 线性、A† 已知、<code>Ax̂₀ ≡ y</code> 恒成立），有可写的数学性质；② 「虚拟染色域没有真正的采样期投影」是本轮核实的<strong>空白</strong>（§3.2 阴性结论）；③ 它把库内 <code>DAB-only浓度扩散</code> 报告里「H 通道复用」那一格从<strong>工程选择</strong>升级为<strong>可证伪的机制主张</strong>。</p>
+<p style="margin-bottom:0"><strong>站不住的地方（必须写进 limitations）</strong>：① 它<strong>只保证 H 分量不漂移</strong>，不保证 DAB 正确——结构保持 ≠ 表达真实（§7 的 fundamental limitation）；② 「H 浓度 = 结构」是近似（§8 问题⑤）；③ 若 α 与 W 都不准，投影会<strong>放大</strong>而非修正误差。</p></div>
+
+<h2 id="s11"><span class="num">11</span>最小实验计划</h2>
+
+<p>原则：<strong>先建可靠 baseline，再单独测注入、单独测约束，最后才组合。</strong>每一步都有明确假设、对照、指标与成功标准。全部可在单张 4060 上分阶段完成。</p>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:6%">步</th><th style="width:20%">做什么</th><th style="width:20%">假设</th><th style="width:22%">对照与指标</th><th>成功标准 / 止损</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>S0</strong></td><td><strong>建立 baseline</strong>（E1）：2 通道浓度扩散，无条件注入</td><td>「扩散路线本身能 work」</td><td>对照：库内 M0 基线 + 自家 PSPStain GAN 基线（DAB 相关 R² ≈ 0.439）</td><td><strong>成功</strong>：DAB 相关 R² 稳定超过常数基线（≥ 0.09，库内 M0 报告的验收线）。<strong>止损</strong>：若 train r 仍 ≈ 0.03 ⇒ <strong>先修 loss collapse，不要加任何结构模块</strong>（否则归因不出来）。</td></tr>
+<tr>
+<td><strong>S1</strong></td><td><strong>E0 前置</strong>：W 标定 + α 标定 + RGB→C→RGB 闭环残差</td><td>浓度空间数值地基可靠</td><td>闭环重建误差应 ≈ 机器精度（库内已验证过）；α 从配对子集回归</td><td><strong>成功</strong>：闭环误差 &lt; 1e-4；α 的回归 R² &gt; 0.5。<strong>止损</strong>：若 α 回归 R² &lt; 0.3 ⇒ <strong>H 通道不可靠，放弃投影方案</strong>。</td></tr>
+<tr>
+<td><strong>S2</strong></td><td><strong>单独测条件注入</strong>（E2）+ <strong>公平对照</strong>（E2'：只注入 H 分量）</td><td>条件注入对结构的净贡献 ≈ 0（HistDiST 的读数）</td><td>对照 E1；指标：核 Dice/IoU、结构相似度、FID、DAB-IOD 分布</td><td><strong>成功判据</strong>：E2 或 E2' 的结构指标比 E1 有<strong>可测量</strong>提升。若两者都无提升 ⇒ <strong>条件注入在你的设置里不保持结构</strong>（与 HistDiST 一致），把资源转向 S3。</td></tr>
+<tr>
+<td><strong>S3</strong></td><td><strong>单独测投影</strong>（E3，无调度）</td><td>投影能提升结构保持（有构造保证）</td><td>对照 E1 与 E2'；<strong>额外报多样性 + DAB 强度分布</strong></td><td><strong>成功</strong>：结构指标显著优于 E1，且 DAB 分布未变弱、多样性未塌缩。<strong>止损</strong>：若结构变好但 DAB 变弱 ⇒ <strong>投影抑制了表达</strong>，直接跳到 S4 加松弛。</td></tr>
+<tr>
+<td><strong>S4</strong></td><td><strong>测调度与松弛</strong>（E6 扫 t_c；E7 扫 rho）</td><td>早投影有害（DPS §C.1）；硬固定 H 抑制阳性区 DAB</td><td>对照 E3；指标：结构 + DAB 阳性区强度 + 阳性核检出率</td><td><strong>成功</strong>：存在一组 (t_c, rho) 使<strong>结构不降而 DAB 阳性区强度回升</strong>。<strong>止损</strong>：若所有组合都无法兼顾 ⇒ 报告「H 锚定与 DAB 生成存在结构性权衡」，这本身是结论。</td></tr>
+<tr>
+<td><strong>S5</strong></td><td><strong>测组合</strong>（E5）与<strong>软约束对照</strong>（E4）</td><td>投影与注入互补；硬投影优于软引导</td><td>E5 vs max(E2,E3)；E4 vs E3（同信息、不同施加方式）</td><td><strong>成功</strong>：E3 或 E5 优于 E4。若 E4 ≈ E3 ⇒ <strong>「软硬之争」在你的任务上不成立</strong>，选成本更低的。</td></tr>
+<tr>
+<td><strong>S6</strong></td><td><strong>错位鲁棒性</strong>：平移扫描 0 / 2 / 5 / 10 / 24 px，看指标衰减曲线</td><td>投影的衰减应<strong>慢于</strong>条件注入</td><td>指标衰减斜率（参照：Star-Diff 5 px 平移 SSIM 掉 47.9%、SFS 仅降 ≤2.1%）</td><td><strong>成功</strong>：投影臂的衰减斜率显著小于注入臂。这是<strong>本报告 Q3 的直接检验</strong>。</td></tr>
+<tr>
+<td><strong>S7</strong></td><td><strong>浓度 vs RGB 受控对照</strong>（E8）</td><td>浓度域在结构保持上有优势（未经验证）</td><td>同架构同数据，只换生成空间</td><td><strong>成功</strong>：浓度域结构指标更优且 DAB 分布合理。<strong>否则如实报告「浓度域收益不显著」</strong>（CFM-HES 的相邻读数就是混合的）。</td></tr>
+<tr>
+<td><strong>S8</strong></td><td><strong>归因</strong>（E9 注入强度扫描 + DAAM 式归因 + AQuA 幻觉检测）</td><td>能定位「结构改善来自哪个机制」</td><td>注入层数 × 权重；条件扰动；区域遮挡</td><td><strong>成功</strong>：能给出「移除某条件后哪些结构发生变化」的证据。<strong>注意</strong>：先写清楚 attribution contract（固定了什么、变化了什么）。</td></tr>
+</tbody>
+</table></div>
+
+<div class="box key"><div class="bt">评价口径（每一行消融都要跑满这五类）</div>
+<div class="scroll"><table style="margin:10px 0 0">
+<thead><tr><th style="width:20%">维度</th><th style="width:36%">具体指标</th><th>注意</th></tr></thead>
+<tbody>
+<tr><td><strong>结构保持</strong></td><td>核分割 Dice / IoU（用<strong>独立</strong>分割模型，不要用 H 浓度当形态真值）；形态特征一致性；结构相似度</td><td><strong>不要只用 PSNR/SSIM</strong>——PaPIS 作者明确指出 SSIM 为自然图像设计、不捕捉病理特征</td></tr>
+<tr><td><strong>染色与浓度合理性</strong></td><td>DAB-IOD 分布、H 浓度分布、stain matrix 重建误差、RGB 重建（辅助）</td><td>库内 <code>弱配准</code> 报告列为「必须有」的 L1 层</td></tr>
+<tr><td><strong>DAB 表达生成能力</strong></td><td>SFS（Star-Diff 的语义保真分）· HER2 / marker 分类一致性 · 分级一致率</td><td>这是<strong>唯一能测「约束是否抑制 DAB」</strong>的一类</td></tr>
+<tr><td><strong>错位鲁棒性</strong></td><td>平移扫描下的指标衰减斜率</td><td>参照 Star-Diff：SSIM 掉 47.9% vs SFS 仅 ≤2.1% ⇒ <strong>像素指标对错位极敏感，语义指标不敏感</strong></td></tr>
+<tr><td><strong>成本</strong></td><td>采样耗时、峰值显存</td><td>对照数字：DDNM 11.9 s / 5728 MB vs DPS 36.5 s / 8112 MB（4× SR，100 DDIM 步）</td></tr>
+</tbody>
+</table></div></div>
+
+<h2 id="s12"><span class="num">12</span>证据边界与未核实清单</h2>
+
+<div class="box stop"><div class="bt">★ 不要当作事实引用的条目（本轮未读到一手正文）</div>
+<ul>
+<li><span class="b medium">U</span> <strong>UNIStainNet</strong>：venue 在二手来源里出现 <em>CVPR 2025</em> / <em>ACM-BCB 2026</em> 两种写法，本轮未定案。库内既有报告曾专门对账过此条（正解倾向 ACM-BCB 2026）。<strong>引用前必须查 DOI 落地页。</strong></li>
+<li><span class="b medium">U</span> <strong>TDKstain</strong>（MICCAI 2024）：DAB mask + nuclei map 作 domain knowledge，仅读到论文页/摘要，未读正文。</li>
+<li><span class="b medium">U</span> <strong>StainFuser 的 venue</strong>：arXiv 摘要页不含 ECCV 2024 字样。<strong>且要注意它的原始任务是 stain style transfer（染色风格迁移），不是 H&amp;E→IHC</strong>——库内另有 <code>StainFuser改造为H&amp;E2IHC</code> 报告，说明它是被<em>改造</em>使用的。引用时不要说「StainFuser 做了 H&amp;E→IHC」。</li>
+<li><span class="b medium">U</span> <strong>2026 年新预印本</strong>：PPR（Predict-Project-Renoise）· Spin · Beer-Lambert Autoencoder（arXiv:2601.11336）· HistDiT（ICPR 2026）· 仅读到摘要级，机制细节未核实。<strong>其中 Beer-Lambert Autoencoder 是最值得后续核实的</strong>（可微 BL 正演 + 可学习 stain matrix）。</li>
+<li><span class="b medium">U</span> Minimal Impact ControlNet 的 λ∈[0,20] 是<strong>它自己实验条件下的取值</strong>，不可直接搬到你的场景。</li>
+</ul></div>
+
+<div class="box warn"><div class="bt">★ 本轮定向检索的阴性结果（「没找到」本身是结论）</div>
+<ul style="margin-bottom:0">
+<li><span class="b low">N</span> <strong>虚拟染色领域没有真正的采样期投影 / 硬约束</strong>（全部是 conditioning / guidance / energy）。</li>
+<li><span class="b low">N</span> <strong>没有任何虚拟染色论文做过「注入层级数 vs 结构保持」的梯度消融</strong>（StainFuser / StainDiffuser / PSPStain 均「未说明」）。</li>
+<li><span class="b low">N</span> <strong>未找到</strong>「强 guidance 导致复制输入」的原文；<strong>未找到</strong>「guidance 抑制目标染色生成」的专门讨论。</li>
+<li><span class="b low">N</span> <strong>未找到</strong>量化「stain matrix 估计误差 → 虚拟染色下游退化」的一手论文。</li>
+<li><span class="b low">N</span> <strong>未找到</strong>直接论证「H 浓度 ≠ 细胞核形态」的论文（只有弱相关证据：H&amp;E 强度与专家评分相关性很弱）。</li>
+<li><span class="b low">N</span> <strong>未找到</strong>专门讨论「无测量算子时如何定义可行集」的通用论文（PPR 最接近）。</li>
+<li><span class="b low">N</span> <strong>未找到</strong>虚拟染色领域的「条件注入 vs 约束」贡献分离研究——<strong>这是本报告选题成立的理由</strong>。</li>
+</ul></div>
+
+<div class="box teal"><div class="bt">证据边界（哪些结论只在别的任务域验证过）</div>
+<ul style="margin-bottom:0">
+<li><strong>DDNM / DPS / ReSample / ΠGDM / PPR</strong>：全部在 <strong>MRI / CT / 自然图像复原</strong>上验证，<strong>不是病理</strong>。它们的数学性质可迁移，但「在你的任务上有效」未被验证。</li>
+<li><strong>ContourDiff</strong>：CT→MRI。<strong>SegGuidedDiff</strong>：breast MRI / CT。</li>
+<li><strong>ControlNet / Minimal Impact ControlNet / Universal Guidance / CFG / APG</strong>：自然图像。</li>
+<li><strong>AQuA 的幻觉结论</strong>：原始验证含 AF→H&amp;E，非 H&amp;E→IHC。</li>
+<li><strong>HistDiST 的消融</strong>：MIST ER / HER2，乳腺。这是<strong>最接近你任务域</strong>的一条，但仍需你自己在 BCI/MIST 上复现。</li>
+</ul></div>
+
+<h2 id="s13"><span class="num">13</span>参考文献</h2>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:34%">文献</th><th style="width:18%">出处 / ID</th><th style="width:10%" class="c">核实</th><th>本报告用途</th></tr></thead>
+<tbody>
+<tr><td>HistDiST: Histopathological Diffusion-based Stain Transfer</td><td>arXiv:2505.06793</td><td class="c"><span class="b high">V</span></td><td>§5.2 唯一的同论文受控对照（Table 2 逐字）</td></tr>
+<tr><td>DiffVS / Virtual Multiplex Staining</td><td>AAAI 2026 · arXiv:2508.14681</td><td class="c"><span class="b high">V</span></td><td>§5.1 通道拼接 + adaLN 注入</td></tr>
+<tr><td>StainDiffuser: MultiTask Dual Diffusion Model</td><td>arXiv:2403.11340</td><td class="c"><span class="b high">V</span></td><td>§5.1 4 层特征调制；§9.2 细胞级辅助任务</td></tr>
+<tr><td>StainFuser</td><td>arXiv:2403.09302</td><td class="c"><span class="b medium">U</span></td><td>§5.1 ControlNet 零卷积 + cross-attn（注意任务域）</td></tr>
+<tr><td>ControlNet: Adding Conditional Control to T2I Diffusion</td><td>arXiv:2302.05543</td><td class="c"><span class="b high">V</span></td><td>§5.3 sudden convergence / 50% dropout；§5.4 +23% 显存 +34% 时间</td></tr>
+<tr><td>Minimal Impact ControlNet</td><td>arXiv:2506.01672</td><td class="c"><span class="b high">V</span></td><td>§6.4 silent control signals 压制纹理</td></tr>
+<tr><td>Classifier-Free Diffusion Guidance</td><td>arXiv:2207.12598</td><td class="c"><span class="b high">V</span></td><td>§5.3 / §5.4 每步两次前向；原文无 over-saturation 字样</td></tr>
+<tr><td>Diffusion Models Beat GANs（Classifier Guidance）</td><td>NeurIPS 2021 · arXiv:2105.05233</td><td class="c"><span class="b high">V</span></td><td>§5.4 需带噪图训练的分类器</td></tr>
+<tr><td>DDNM: Denoising Diffusion Null-Space Model</td><td>ICLR 2023 Oral · arXiv:2212.00490</td><td class="c"><span class="b high">V</span></td><td>§6.1 真投影与范围—零空间分解（逐字）</td></tr>
+<tr><td>DPS: Diffusion Posterior Sampling</td><td>ICLR 2023 spotlight · arXiv:2209.14687</td><td class="c"><span class="b high">V</span></td><td>§6.2 非投影 + §C.1 投影累积误差</td></tr>
+<tr><td>ΠGDM: Pseudoinverse-Guided Diffusion Models</td><td>ICLR 2023 · OpenReview 9_gsMA8MRKQ</td><td class="c"><span class="b high">V</span></td><td>§6.1 是 score 非投影</td></tr>
+<tr><td>ReSample: Hard Data Consistency</td><td>arXiv:2307.08123</td><td class="c"><span class="b high">V</span></td><td>§6.1 latent 域硬一致性</td></tr>
+<tr><td>Universal Guidance for Diffusion Models</td><td>CVPR 2023 · arXiv:2302.07121</td><td class="c"><span class="b high">V</span></td><td>§6.1 可微性要求与 backward guidance 成本</td></tr>
+<tr><td>Understanding and Improving Training-free Loss-based Guidance</td><td>NeurIPS 2024 · arXiv:2403.12404</td><td class="c"><span class="b high">V</span></td><td>§6.4 adversarial gradient；不对齐引导更差</td></tr>
+<tr><td>Adaptive Projected Guidance (APG)</td><td>ICLR 2025 · arXiv:2410.02416</td><td class="c"><span class="b high">V</span></td><td>§6.4 高 CFG scale 过饱和</td></tr>
+<tr><td>ContourDiff: Unpaired Medical Image Translation with Structural Consistency</td><td>MELBA vol.3 · DOI 10.59275/j.melba.2025-79a2 · arXiv:2403.10786</td><td class="c"><span class="b high">V</span></td><td>§3.2 「constraint」实为条件化</td></tr>
+<tr><td>SegGuidedDiff</td><td>MICCAI 2024 · arXiv:2402.05210</td><td class="c"><span class="b high">V</span></td><td>§3.2 / §9.2 随机掩膜消融范式</td></tr>
+<tr><td>MIU-Diff: Score-based Diffusion for Unpaired Virtual Histology Staining</td><td>CMMCA 2025 · DOI 10.1007/978-3-032-06624-4_4 · arXiv:2506.23184</td><td class="c"><span class="b high">V</span></td><td>§6.3 虚拟染色唯一采样期 guidance；库内已核其弱配对与能量形式</td></tr>
+<tr><td>A robust and scalable framework for hallucination detection in virtual tissue staining（AQuA）</td><td>Nature BME 2025 · DOI 10.1038/s41551-025-01421-9 · arXiv:2404.18458</td><td class="c"><span class="b high">V</span></td><td>§5.5 条件的失效模式是虚构；§9.2 幻觉检测</td></tr>
+<tr><td>Hallucination Detection in Virtually-Stained Histology: A Latent Space Baseline（NHP）</td><td>arXiv:2411.15060</td><td class="c"><span class="b high">V</span></td><td>§9.2 幻觉少 ≠ 可检测</td></tr>
+<tr><td>Pathology-Guided Virtual Staining Metric（PaPIS）</td><td>arXiv:2507.12624</td><td class="c"><span class="b high">V</span></td><td>§9.2 / §11 SSIM 不捕捉病理特征</td></tr>
+<tr><td>What the DAAM: Interpreting Stable Diffusion Using Cross Attention</td><td>ACL 2023 · arXiv:2210.04885</td><td class="c"><span class="b high">V</span></td><td>§9.2 cross-attention 归因</td></tr>
+<tr><td>The Attribution Contract for Generative Language Models</td><td>arXiv:2605.23080</td><td class="c"><span class="b high">V</span></td><td>§9.2 归因前先声明契约</td></tr>
+<tr><td>Star-Diff: Restoration Diffusion for Diagnostic-Consistent Virtual IHC</td><td>Comput Biol Med 2025 · arXiv:2508.02528</td><td class="c"><span class="b high">V</span></td><td>§5.3 结构引导可关闭；§11 平移衰减数字（库内已核）</td></tr>
+<tr><td>Generative AI for misalignment-resistant virtual staining（DGR）</td><td>Nature Commun 2026 · DOI 10.1038/s41467-026-71038-2 · arXiv:2509.14119</td><td class="c"><span class="b high">V</span></td><td>§7 生成/配准解耦；错配 PSNR +23.8%</td></tr>
+<tr><td>CFM-HES（浓度域 + Beer–Lambert 渲染）</td><td>MICCAI 2026</td><td class="c"><span class="b high">V</span></td><td>§8.2 浓度域收益混合（经库内报告一手核实）</td></tr>
+<tr><td>Vahadane et al., Structure-Preserving Color Normalization and Sparse Stain Separation</td><td>IEEE TMI 2016</td><td class="c"><span class="b high">V</span></td><td>§8 结构与染色分离先例</td></tr>
+<tr><td>Ruifrok &amp; Johnston, Quantification of histochemical staining by color deconvolution</td><td>Anal Quant Cytol Histol 2001</td><td class="c"><span class="b high">V</span></td><td>§7 DAB 污染 H 的 65% 数字（经库内报告一手核实）</td></tr>
+<tr><td>库内既有报告（分工见 §1）</td><td>本资料库</td><td class="c"><span class="b high">V</span></td><td>复用其已核实结论，逐处注明出处</td></tr>
+</tbody>
+</table></div>
+
+<hr>
+<p class="small">本报告全部承重引用由我逐条一手抓取复核（arXiv HTML / PDF / 官方 README / DOI 落地页）。核实等级逐条标注：<strong>V</strong> = 读到一手页面，<strong>U</strong> = 仅摘要或二手，<strong>N</strong> = 定向检索的阴性结果。凡标 U 的条目<strong>不要当作事实引用</strong>。子 agent 报回的数值中至少三处经复核为错（HistDiST 起点值、DPS/DDNM 的 arXiv ID、Star-Diff 的 arXiv ID），已在 §2 列明。</p>
+
+</main>
+</div>
+</body>
+</html>

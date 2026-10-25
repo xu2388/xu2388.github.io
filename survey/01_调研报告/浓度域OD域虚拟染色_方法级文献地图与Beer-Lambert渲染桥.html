@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>浓度域 / OD 域虚拟染色 —— 方法级文献地图与 Beer–Lambert 渲染桥</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}.flow{margin:16px 0}.flow>pre{border-left-color:var(--teal);background:#f4fafb}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">浓度域虚拟染色</div>
+<div class="sub">方法级文献地图 · Beer–Lambert 渲染桥 · 可行性判定</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 本报告在库内的分工</a>
+<a class="l1" href="#s2">2 · 检索方法与核实等级</a>
+<a class="l1" href="#s3">3 · 物理动机：浓度域为什么值得做</a>
+<a class="l1" href="#s4">4 · 方法级文献地图</a>
+<a class="l2" href="#s41">4.1 定位总表</a>
+<a class="l2" href="#s42">4.2 浓度域生成：CFM-HES</a>
+<a class="l2" href="#s43">4.3 可微 BL 渲染器三件套</a>
+<a class="l2" href="#s44">4.4 浓度域分析（解混）</a>
+<a class="l2" href="#s45">4.5 RGB / latent 域对照集</a>
+<a class="l2" href="#s46">4.6 OD 只作损失 / 引导 / 评价</a>
+<a class="l2" href="#s47">4.7 相邻可迁移机制</a>
+<a class="l1" href="#s5">5 · 逐工作总表（11 列）</a>
+<a class="l1" href="#s6">6 · Beer–Lambert 渲染桥：公式与参数</a>
+<a class="l1" href="#s7">7 · 可行性判定（逐模块）</a>
+<a class="l1" href="#s8">8 · 推荐的可行思路</a>
+<a class="l1" href="#s9">9 · 可执行实验路线与止损</a>
+<a class="l1" href="#s10">10 · 未核实清单与诚实标注</a>
+<a class="l1" href="#s11">11 · 参考文献</a>
+</nav>
+<main>
+
+<header class="doc">
+<div class="kicker">调研报告 · 方法级文献地图</div>
+<h1>浓度域 / OD 域虚拟染色 —— 方法级文献地图与 Beer–Lambert 渲染桥</h1>
+<p class="desc">对象：用户提出的思路——「不在 RGB 域做扩散，而在染色浓度域（Beer–Lambert 光学密度空间）做扩散，再用可微 Beer–Lambert 前向模型渲染回 RGB」。本报告回答三件事：<b>① 这个方向谁已经做过、做到了哪一步；② 可行程度如何；③ 一条可执行的最小思路。</b>全部承重引用均经一手核实，核实等级逐条标注。</p>
+<div class="meta">
+<span>方法级文献地图</span><span>浓度域 / OD 域</span><span>Beer–Lambert 渲染桥</span><span>可行性判定</span><span>2026-10-09</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key">
+<div class="bt">总判定：你的直觉在物理上成立、在文献上「半空」——但空的位置和你以为的不一样</div>
+<p>「在浓度域生成、用 Beer–Lambert 渲染回 RGB」这个<b>机制</b>已经被占了：<b>CFM-HES（MICCAI 2026）</b>做的就是染色分离 → 在浓度域生成缺失通道 → Beer–Lambert 重建，而且同样只生成缺失通道。差别只有一条：<b>它用的是条件流匹配（CFM），不是扩散</b>。</p>
+<p>所以「浓度域 + BL 渲染」本身<b>不再是新意</b>；你真正剩下的空位只有两个：<b>① 把生成框架换成 diffusion</b>（但这只是实现选择，撑不起一篇论文）；<b>② 做「浓度域扩散 vs RGB 域扩散」的受控消融</b>——<b>这个消融在能核实的文献里没有任何人做过</b>，而这恰好是唯一能回答「浓度域到底有没有用」的实验。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 本轮最重要的单条发现：最接近你的先例，给出了一个对你不利的读数</div>
+<p><b>CFM-HES</b> 在它自己的消融（Table 1）里比较了「确定性 U-Net（共享同一套染色分离 + 浓度域 + Beer–Lambert 管线）」与「CFM（Ours）」：<br>
+确定性 = <b>31.34 PSNR / 0.978 SSIM</b> / 0.047 LPIPS / 1.06 PieAPP；CFM = <b>32.06 PSNR / 0.968 SSIM</b> / 0.030 LPIPS / 0.66 PieAPP。</p>
+<p>读法：<b>把生成模型放进浓度域，PSNR 只涨 0.72 dB，而 SSIM 反而更差（0.968 vs 0.978）</b>。也就是说——<b>「在浓度域做这件事的收益本身就很小、而且分指标是混合的」</b>。这不否定你的方向，但它意味着：<b>你不能假设「换成浓度域」会自动带来提升</b>，必须自己用消融证明它，并准备好「它可能并不更好」的结论。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">第二重要：你要引 CFM-HES 当「最近先例」，就必须回答它自己提出的那个问题</div>
+<p>CFM-HES 逐字论证了为什么选 FM 而不选 diffusion：「FM learns a constant-velocity field along the straight-line path, leading to more stable training and much faster inference compared to diffusion models... DDPM requires about 1000 time steps, FM produces a high-quality generation in 50 ODE steps」。</p>
+<p>⇒ 你把它当最近先例，<b>就必须在论文里正面回答「为什么你选 diffusion 而不是 FM」</b>。否则审稿人会直接拿这句话反问你。库内已有可用答案（流匹配的硬收益是「端点恢复不除法」，见 §8），但那是一个<b>中性</b>的技术理由，不是「diffusion 更好」。</p>
+</div>
+
+<h3>逐模块判定表</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>模块</th><th class="c">判定</th><th>一句话依据</th><th class="c">改动成本</th><th class="c">可复现性</th></tr></thead>
+<tbody>
+<tr><td><b>浓度域表示</b>（RGB→C）</td><td class="c"><span class="b high">成立</span></td><td>Ruifrok 2001 / Macenko 2009 / Vahadane 2016 / StainQuant 全套现成；2 列超定解唯一</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>可微 BL 渲染</b>（C→RGB）</td><td class="c"><span class="b high">成立</span></td><td>StainQuant 的 BL 解码器是两行代码且确在训练循环里；PGDIPS 是第二条独立实现</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>闭环恒等式</b>（RGB→C→RGB）</td><td class="c"><span class="b high">成立</span></td><td>M 满秩 + 不做非负截断 ⇒ 误差恒等于机器精度；库内已多次验证</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>浓度域做「扩散」生成</b></td><td class="c"><span class="b medium">成立但要收窄</span></td><td>空格是真的，但「浓度域生成」已被 CFM-HES（flow matching）占；剩下的是「换成 diffusion」这一步</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>「浓度域比 RGB 域更好」</b></td><td class="c"><span class="b bad">未经验证</span></td><td>没有任何文献做过这个消融；CFM-HES 的相邻消融显示收益小且 SSIM 反向</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>「扩散在非线性 log 空间好训」</b></td><td class="c"><span class="b bad">无证据</span></td><td>唯一严谨的「线性空间扩散更好」证据是针对<b>正交</b>变换（DCTdiff）；OD 的 log 是逐元素非线性，不能直接套</td><td class="c"><span class="b low">低（文档）</span></td><td class="c"><span class="b medium">中</span></td></tr>
+<tr><td><b>H 通道复用</b>（H&E 的 H 直接进输出）</td><td class="c"><span class="b medium">有条件成立</span></td><td>「只生成缺失通道」有 DeReStainer / CFM-HES 先例；但「像素级拷贝输入通道」无先例</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b medium">中</span></td></tr>
+<tr><td><b>2 通道 vs 3 通道</b></td><td class="c"><span class="b medium">成立但要收窄</span></td><td>3×2 的 M 秩为 2 ⇒ 真实 IHC 的残差 r ⊥ span(M) 无法表达；必须固定用 2 列</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>蛋白表达级训练损失</b></td><td class="c"><span class="b high">仍空（你的真落点）</span></td><td>库内两份「约束位置地图」已核实：扩散侧「生成框架 × 蛋白表达级训练损失」在能核实的文献里仍是空的</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">一句话路线图</div>
+<p><b>保留</b>浓度域表示 + 可微 BL 渲染 + 只生成 DAB（这是正确且低风险的工程骨架）；<b>把论文卖点从「我在浓度域做扩散」改成「我做了浓度域 vs RGB 域的受控消融，并给出了它什么时候有用的边界」</b>；<b>补上</b>唯一仍空的那一格——在 <code>x̂</code>（或 <code>v̂</code>）上挂 FOD 分布级的蛋白表达损失；<b>用 v-prediction</b>（有最硬的受控证据）；<b>先做 Stage 0 零训练门禁</b>（闭环恒等式 + 残差量级 + 矩阵列序），再动任何代码。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>本报告在库内的分工</h2>
+
+<p>资料库已有 45 份文档，其中与本题最贴近的五份，分工如下——<b>本报告不重复它们已核实的推导，只复用结论并注明出处</b>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>既有文档</th><th>它回答的问题</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><b>DAB-only 浓度扩散 · 文献先例地图与模型选型审查</b>（06 类）</td><td>「你这套 7 格架构里，每一格文献上谁占了」</td><td><b>互补</b>。它的组织轴是<b>你的架构格</b>；本报告的组织轴是<b>「浓度 / OD 这个表示空间本身」</b>。它已核实的关键先例（CFM-HES、StainQuant、MIU-Diff、DeReStainer）本报告全部复用，并把 CFM-HES 挖到<b>方法级 + 消融数字</b>。</td></tr>
+<tr><td><b>PSP-Diffusion 基座模型调研</b>（01 类，§04）</td><td>「浓度空间生成是不是空白」</td><td><b>前作</b>。它给出「扩散 + 浓度域 = 空白，最接近的是 SPFLOW（流匹配）」这个判断；本报告把它<b>升级为逐工作的机制级对账</b>，并补上当时未核实的 CFM-HES 全文细节。</td></tr>
+<tr><td><b>扩散模型虚拟染色 · 蛋白表达约束 · 约束位置地图</b>（01 类）</td><td>「蛋白约束挂在扩散流水线哪一格」</td><td><b>正交</b>。本报告 §8 的「蛋白损失落点」直接引用它的结论（第一优先级 = x̂ 上挂 FOD 分布损失），不重复推导。</td></tr>
+<tr><td><b>流匹配虚拟染色 · 蛋白表达约束 · 约束位置地图</b>（01 类，§2.7）</td><td>流匹配侧的浓度域先例</td><td><b>姊妹篇</b>。它已把 CFM-HES 记录为「浓度域 CFM + Beer–Lambert 重建，占住流匹配 + 可微渲染器两格」。本报告把它从「流匹配侧的一条」提升为<b>浓度域这个轴上的核心先例</b>。</td></tr>
+<tr><td><b>StainFuser 改造为 H&amp;E→IHC 可行性与实验路线</b>（06 类，§4）</td><td>OD / 染色矩阵 / Beer–Lambert 的闭环与秩</td><td><b>下游施工书</b>。本报告 §6 的公式与参数选择与它口径一致；它已核实的「3×2 秩为 2」「M_HE ≠ M_IHC」两条本报告直接引用。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pur">
+<div class="bt">本报告的三个增量（相对库内既有报告）</div>
+<ol>
+<li><b>把「浓度 / OD 域」当成一个独立的文献轴来清算</b>——不只清算「你的架构」，而是清算「这个表示空间在文献里被谁用过、用在生成还是分析、渲染器是哪一个」。产出一张 <b>表示空间 × 任务 × 生成框架</b> 的三维定位总表。</li>
+<li><b>把三个可微 Beer–Lambert 渲染器挖到代码级</b>——StainQuant（可训练、自然对数、I₀=1）、PGDIPS（可训练、log10、可学背景 I₀）、multiplex2brightfield（物理但不可微、NumPy）。<b>并核实了它们的渲染器都不是死代码</b>。</li>
+<li><b>把「log 空间扩散是否好训」这个风险显式化</b>——本轮找到的唯一严谨证据（DCTdiff）是针对<b>正交</b>变换的，<b>不能</b>外推到 OD 的逐元素 log。这是你的主要未知，也是必须自己做的消融。</li>
+</ol>
+</div>
+
+<h2 id="s2"><span class="num">2</span>检索方法与核实等级</h2>
+
+<p>本轮按「问题的轴」切分检索，而不是按关键词——每个轴对应一条独立的论证线，避免结果重叠。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>轴</th><th>它要回答的问题</th><th>本轮结果</th></tr></thead>
+<tbody>
+<tr><td>① 浓度 / OD 域生成</td><td>「在浓度域<b>生成</b> + 渲染回 RGB」有没有人做过？是 diffusion 还是别的？</td><td><b>已占（但用的是流匹配）</b>：CFM-HES（MICCAI 2026）。<b>扩散版本：未找到</b></td></tr>
+<tr><td>② 可微 Beer–Lambert 渲染器</td><td>有哪些现成的、可训练的物理渲染器？公式 / I₀ / log 底数 / M 是否可学？</td><td><b>三件套已核实</b>：StainQuant、PGDIPS、multiplex2brightfield</td></tr>
+<tr><td>③ 浓度域分析（解混）</td><td>RGB→浓度的「分析方向」有什么？残差 r ⊥ span(M) 有没有人讨论？</td><td><b>成熟</b>：Ruifrok / Macenko / Vahadane / HistomicsTK / PGDIPS / Abousamra</td></tr>
+<tr><td>④ RGB / latent 域对照 + 空格确认</td><td>主流虚拟染色在哪个空间生成？「diffusion in OD」到底空不空？</td><td><b>全部是 RGB 或 SD-VAE latent</b>；OD 只作损失 / 引导 / 评价。<b>空格确认</b></td></tr>
+<tr><td>⑤ 相邻可迁移</td><td>「在物理参数空间生成 + 可微前向算子渲染」这个范式，别的领域怎么做？</td><td><b>有成熟模板</b>：score-based 逆问题（Song ICLR 2022）、physics-informed diffusion、高光谱解混 + 扩散</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box">
+<div class="bt">核实等级约定（本报告全文遵守）</div>
+<p><b>[VERIFIED]</b> = 我（或子检索）抓取并读到了一手页面（arXiv 摘要页 / HTML 全文 / PDF 正文 / 官方仓库源码）。<br>
+<b>[UNVERIFIED]</b> = 只见于搜索摘要或二手来源，<b>不要当作事实引用</b>。<br>
+<b>「未说明」</b> = 原文没有写。一律写「未说明」，<b>不补默认值</b>、不因为同组前作是 X 就推断为 X。</p>
+<p class="small">本轮共 5 条独立检索线（并行只读子检索）。其中决定报告结论方向的承重引用，我逐条自己复核了 arXiv 摘要页 / OpenReview 页面（见 §10）。</p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>物理动机：浓度域为什么值得做</h2>
+
+<p>先把你自己那句直觉背后的物理写清楚——因为「浓度域到底好在哪」决定了后面所有实验该怎么设计。</p>
+
+<h3>3.1 Beer–Lambert 链条：从 RGB 到浓度，再回到 RGB</h3>
+
+<p>明场显微镜下，光穿过染色组织后被吸收。Beer–Lambert（朗伯–比尔）定律给出透射率与染色剂浓度的关系。经典病理图像处理（Ruifrok &amp; Johnston 2001）把它写成光学密度（optical density, OD）形式：</p>
+
+<div class="formula">I = I₀ · exp( − M · C ) &nbsp;&nbsp;⟺&nbsp;&nbsp; OD = −ln(I / I₀) = M · C &nbsp;&nbsp;⟺&nbsp;&nbsp; C = M⁻¹ · OD</div>
+
+<p>其中 <code>I</code> 是观测到的 RGB 像素（透射率），<code>I₀</code> 是入射光（白点/背景光强），<code>M</code> 是 3×K 的<b>染色矩阵</b>（每一列是一个染色剂的 OD 色向量），<code>C</code> 是 K 个染色的<b>浓度图</b>。</p>
+
+<div class="box key">
+<div class="bt">为什么「浓度域」在物理上比 RGB 域更适合建模</div>
+<ul>
+<li><b>线性性</b>：在 OD 空间，多种染色的叠加是<b>线性相加</b>（<code>OD = M·C</code>，矩阵乘法）。而在 RGB 空间，叠加是<b>乘性 + 指数</b>的（<code>I = I₀·exp(−MC)</code>）。⇒ 一个「线性」的表示空间通常更容易被网络学、也更容易做可解释的分解。</li>
+<li><b>表示紧凑</b>：H&amp;E 只需 2 个通道（H、E），IHC 只需 2 个通道（H、DAB）。而 RGB 是 3 通道、其中大量自由度是「同一浓度的不同色相编码」——冗余。</li>
+<li><b>可分离</b>：解混后，<b>染色强度</b>（浓度）与<b>结构</b>（浓度图的空间分布）被显式拆开。这正是你想要的「解耦」的物理版本。</li>
+<li><b>可与定量 IHC 工具链对接</b>：H-score、IOD（integrated optical density）本来就定义在 OD 空间——这是库内已核实的结论（<code>Wen et al., Modern Pathology 37(2):100398, 2024</code>）。在浓度域生成，天然与下游定量指标同域。</li>
+</ul>
+</div>
+
+<h3>3.2 你的两条通道直觉，物理上怎么落地</h3>
+
+<p>你说「HE 存在 H、E 两个通道，含有两种表达的信息；IHC 存在 H、DAB 的通道」。这在 Beer–Lambert 框架里是精确成立的——<b>但有一个必须现在就确认的前提：解混矩阵用几列</b>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>图像</th><th>真实染色</th><th>推荐矩阵</th><th>求解性质</th><th>后果</th></tr></thead>
+<tbody>
+<tr><td>H&amp;E</td><td>H + E（2 种）</td><td>2 列 <code>[s_H, s_E]</code>，3×2</td><td><b>超定</b>（3 方程 2 未知），最小二乘解唯一</td><td><code>C_H</code>、<code>C_E</code> 都是真实浓度 ✅</td></tr>
+<tr><td>IHC</td><td>H + DAB（2 种，<b>无伊红复染</b>）</td><td>2 列 <code>[s_H, s_DAB]</code>，3×2</td><td>超定，最小二乘解唯一</td><td><code>C_H</code>、<code>C_DAB</code> 都是真实浓度 ✅</td></tr>
+<tr><td>H&amp;E 或 IHC</td><td>仍是 2 种</td><td>3 列（凑满 3×3 方阵）</td><td>恰定，但第 3 列是人为补的</td><td><b>第 3 通道退化为「正交补残差」，无物理意义</b> ❌</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">P0 · 这一条不确认，后面全部建立在流沙上</div>
+<p>库内 <code>E0.2 伊红复染判定</code> 已用你自己的实测数据证明：在 <b>3×3</b> 解混 <code>C = pinv(M)·OD</code> 中，<b>第 2 通道恒等于正交补残差通道，与伊红无关</b>——实测 <code>w₂ ∥ (s_H × s_DAB)</code>，夹角 8.5e-7 度；<code>C_E / C_res = −1.5918</code> 是纯常数。</p>
+<p>⇒ <b>H&amp;E 侧与 IHC 侧都必须固定用 2 列</b>。若 H&amp;E 侧用了 3 列，那么送进「形态条件」的 <code>C_E^HE</code> 就不再是伊红，而是一条任意的残差轴——「E 承载胞质/基质」这个论断在数学上直接不成立。</p>
+<p class="small">工程上的形式化：HistomicsTK 的 <code>complement_stain_matrix</code> 就是把 2 染色矩阵的第 3 列填成「前两列的归一化叉积」来凑成可逆方阵——这正是「第 3 列 = 正交补残差」在代码里的样子。</p>
+</div>
+
+<h3>3.3 一句诚实的话：物理上更好 ≠ 扩散上更好</h3>
+
+<div class="box warn">
+<div class="bt">把「物理可行」与「对扩散有利」分开</div>
+<p>浓度域的线性性是<b>物理事实</b>。但扩散模型要求的是「训练目标近似高斯、噪声调度与数据的尺度匹配」。OD 的 <code>−log</code> 是一个<b>逐元素非线性变换</b>：它压缩亮值、拉伸暗值，会改变数据的边缘分布，并与噪声调度相互作用。</p>
+<p>本轮找到的唯一严谨的「线性空间更适合扩散」证据是 <b>DCTdiff（ICML 2025）</b>——但它做的是 <b>DCT（正交变换）</b>空间的扩散。正交变换<b>保持</b>高斯噪声调度不变；而 OD 的 log <b>不是</b>正交变换。⇒ <b>不能把 DCTdiff 的结论外推到 OD。</b></p>
+<p>⇒ <b>「扩散在浓度域是否更好训」在文献里既没有正面证据、也没有反面证据。这是你的主要未知，也是你必须自己做的那个消融。</b></p>
+</div>
+
+<h2 id="s4"><span class="num">4</span>方法级文献地图</h2>
+
+<p>组织轴：<b>不按方法名，而按「机制挂在流水线的哪一格」</b>。同一篇论文在「生成空间是浓度」与「生成空间是 RGB、只是损失在 OD」两种情况下，梯度路径、数值稳定性、可解释性全都不同。先给一张定位总表，再逐格展开。</p>
+
+<h3 id="s41">4.1 定位总表：表示空间 × 任务 × 生成框架</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>表示空间（生成）</th><th>任务</th><th>生成框架</th><th>渲染回 RGB</th><th>配对</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr><td><b>CFM-HES</b> (MICCAI 2026)</td><td><b>浓度域</b>（stain concentration）</td><td>H&amp;E → HES（只生成 saffron）</td><td><b>条件流匹配</b></td><td><b>Beer–Lambert</b> ✅</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>StainQuant / BL-AE</b> (arXiv 2601.11336)</td><td><b>浓度域</b>（K 个非负浓度图）</td><td>mIHC 解混（分析）</td><td>自编码器（非生成）</td><td><b>可微 Beer–Lambert</b> ✅</td><td>无需配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>PGDIPS</b> (MICCAI 2025)</td><td><b>浓度域</b>（OD 域）</td><td>零样本染色解混</td><td>深度图像先验（非生成）</td><td><b>可微 Beer–Lambert</b> ✅</td><td>单图自监督</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>multiplex2brightfield</b> (Front. Bioinf. 2026)</td><td>多重通道强度（非 OD）</td><td>IMC/CODEX → 虚拟明场</td><td>物理正演（非学习）</td><td><b>吸收模型</b>（不可微）</td><td>无需配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>SPFLOW</b> (2026 预印本)</td><td>稠密 marker 强度场（非物理浓度）</td><td>H&amp;E → CODEX/mIHC</td><td>marker 条件流匹配</td><td>无（直接输出场）</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>StainDiffuser</b> (arXiv 2403.11340)</td><td>RGB（未说明）</td><td>H&amp;E → IHC</td><td>双扩散</td><td>无</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>HistDiST</b> (arXiv 2505.06793)</td><td>SD-VAE latent</td><td>H&amp;E → IHC</td><td>潜扩散</td><td>无</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>MIU-Diff</b> (arXiv 2506.23184)</td><td>未说明（RGB 强度）</td><td>H&amp;E → IHC</td><td>score-based 扩散</td><td>无</td><td>弱配对（连续切片）</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>UNIStainNet</b> (ACM-BCB 2026)</td><td>RGB</td><td>H&amp;E → 4 marker</td><td>GAN（SPADE-UNet）</td><td>无</td><td>弱配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>DiffVS / marker-wise</b> (AAAI 2026)</td><td>SD-VAE latent</td><td>H&amp;E → 18 marker</td><td>潜扩散</td><td>无</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>Star-Diff</b> (arXiv 2508.02528)</td><td>未说明</td><td>H&amp;E → HER2</td><td>复原扩散</td><td>无</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>SheafStain</b> (NeurIPS 2026)</td><td>RGB</td><td>H&amp;E → IHC</td><td>Schrödinger bridge</td><td>无（<b>OD 只作损失</b>）</td><td>弱配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>PGLStain</b> (ICLR 2027 投稿)</td><td>RGB（<b>OD 只作引导</b>）</td><td>H&amp;E → IHC</td><td>弱配对对齐 + OT/GW</td><td>无</td><td>弱配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>PSPStain</b> (MICCAI 2024)</td><td>RGB</td><td>H&amp;E → IHC</td><td>GAN</td><td>无（<b>OD 只作损失 FOD</b>）</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>PGVMS</b> (IEEE TMI 2026)</td><td>RGB</td><td>H&amp;E → 多重 IHC</td><td>GAN（CUT）</td><td>无（<b>OD 只作评价</b>）</td><td>弱配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>HistDiT</b> (ICPR 2026)</td><td>SD-VAE latent</td><td>H&amp;E → HER2</td><td>DiT</td><td>无</td><td>配对</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">读表结论（三句话）</div>
+<ol>
+<li><b>「在浓度域生成」只有 CFM-HES 一篇，而且是流匹配。</b> 其余所有生成式虚拟染色都在 RGB 或 SD-VAE latent 空间。</li>
+<li><b>「OD / Beer–Lambert」在生成式工作里，绝大多数只出现在损失、引导或评价里</b>（SheafStain 的 DAB 强度损失、PGLStain 的 OD 引导、PSPStain 的 FOD 损失、PGVMS 的 ImageJ OD 评价）——<b>不是生成空间</b>。</li>
+<li><b>「扩散 + 浓度域」这一格：空格确认。</b> 多轮独立检索（8 组英文 query + 中文综述核对）均未命中。</li>
+</ol>
+</div>
+
+<h3 id="s42">4.2 浓度域生成：最近先例 CFM-HES</h3>
+
+<div class="card">
+<div class="ch">
+<div><div class="title">CFM-HES — Making HE Histopathological Images More Colorful by Conditional Flow Matching</div>
+<div class="v">Ben Omrane, Martin, Kaaniche, Laurent-Bellue, Miled Souid, Guettier, Pesquet · MICCAI 2026（LNCS 16891）· 代码 github.com/MedSalimBenOmrane/CFM-HES</div></div>
+<span class="b high">VERIFIED</span>
+</div>
+<div class="body">
+<p><b>三步管线</b>（逐字）：「stain separation, conditional flow matching, and stain reconstruction」。<b>浓度域的理由</b>（逐字）：「we adopt a concentration-based representation derived from color deconvolution, in which the image formation process becomes <b>approximately linear with respect to stain concentrations</b>」——这句话就是你的直觉的文献版本。</p>
+<p><b>只生成缺失通道</b>（逐字）：「our main goal is to estimate the missing saffron concentration map」。<b>Beer–Lambert 参数</b>：<code>I = I₀·exp(−HW)</code>，<b>I₀ = 255、自然对数</b>。backbone 是<b>普通小 U-Net</b>（不是 SD U-Net）。<b>配对工作</b>：25 对 HE/HES WSI，30,000 张 256×256 配对 patch。</p>
+<p><b>为什么选 FM 不选 diffusion</b>（逐字）：「FM learns a constant-velocity field along the straight-line path, leading to <b>more stable training and much faster inference</b> compared to diffusion models... DDPM requires about 1000 time steps, FM produces a high-quality generation in 50 ODE steps」。</p>
+<div class="box warn" style="margin:12px 0">
+<div class="bt">消融读数（Table 1，直接转录）——这是对你不利的读数，必须正视</div>
+<p>PredS（确定性 U-Net，<b>共享同一套染色分离 + 浓度域 + Beer–Lambert 管线</b>）= <b>31.34 PSNR / 0.978 SSIM</b> / 0.047 LPIPS / 1.06 PieAPP；<br>CFM (Ours) = <b>32.06 PSNR / 0.968 SSIM</b> / 0.030 LPIPS / 0.66 PieAPP。</p>
+<p>⇒ CFM 在 PSNR（+0.72 dB）、LPIPS、PieAPP 上更好，<b>但 SSIM 反而更差</b>。完整读法是：<b>「在浓度域做这件事的收益小、且分指标混合」</b>。另外审稿人弱点也点出「无法判断收益来自 CFM 还是染色分离模型」。</p>
+</div>
+<p><b>对你最有用的一条</b>：saffron 与伊红强相关 ⇒ 一个「能从 H&amp;E 推出来的通道」，生成模型几乎无收益。而 <b>DAB 在 H&amp;E 里没有对应物</b>，H&amp;E→DAB 才是真正的 one-to-many。<b>这条对比是论证「为什么 H&amp;E→IHC 比 H&amp;E→HES 更需要生成模型」的最强论据</b>——你的任务恰好是后者，这是你的结构性优势。</p>
+</div>
+</div>
+
+<h3 id="s43">4.3 可微 Beer–Lambert 渲染器三件套（含代码级核实）</h3>
+
+<p>这是「C→RGB」那一格。<b>好消息：它已经成熟到几乎不用自己做。</b>三个渲染器的公式、log 底数、I₀、M 是否可学，逐条核实如下。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>渲染器</th><th>前向公式</th><th>log 底数 / I₀</th><th>M 固定 / 可学</th><th>可微</th><th>许可证</th><th class="c">渲染器是否死代码</th></tr></thead>
+<tbody>
+<tr><td><b>StainQuant / BL-AE</b><br>arXiv:2601.11336</td><td><code>ô = S·c</code>；<code>x̂ = exp(−ô)</code>，其中 <code>o = −log(x+ε)</code></td><td><b>自然对数</b>（<code>torch.log</code>）/ <b>I₀ = 1</b>（RGB 归一到 [0,1]）</td><td><b>可学</b>（<code>nn.Parameter</code>，L2 归一化，用色素色相初始化）</td><td><b>是</b></td><td>仓库<b>无 LICENSE 文件</b>（未说明）</td><td class="c"><span class="b high">在用</span>（<code>full_model.py</code> 调用 <code>decoder(C)</code>）</td></tr>
+<tr><td><b>PGDIPS</b><br>MICCAI 2025</td><td><code>OD = Σ_k SCF_k·(M_k·C_k) − log10(I₀)</code>；<code>I = 10^(−OD)</code></td><td><b>log10</b> / <b>I₀ 可学</b>（背景光强项 <code>BG</code>）+ 逐染色谱修正 SCF</td><td><b>可学</b>（<code>fixed_color=False</code> 默认），早期迭代锚定</td><td><b>是</b></td><td><b>BSD-3-Clause + Commons Clause</b>（非商用）</td><td class="c"><span class="b high">在用</span>（<code>pgdips.py</code> 每轮更新）</td></tr>
+<tr><td><b>multiplex2brightfield</b><br>Front. Bioinf. 2026</td><td><code>transmission *= exp(−component_color·intensity)</code></td><td><b>自然对数</b>（<code>np.exp</code>）/ <b>I₀ = background_color</b>（白，可配）</td><td><b>固定</b>（用户/LLM 指定预设，不可学）</td><td><b>否</b>（NumPy，无 autograd）</td><td><b>BSD-3-Clause</b></td><td class="c"><span class="b high">在用</span>（<code>converter.py:643</code>）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">结论：渲染器不是你的难点，但有两个必须记住的坑</div>
+<ol>
+<li><b>可以直接搬 StainQuant 的两行</b>：<code>od = (C.unsqueeze(2)*B).sum(1); rgb = torch.exp(-od)</code>。它<b>确实在训练循环里</b>（不是死代码），且可学习染色矩阵有物理初始化。<b>库内已有代码级复核</b>（<code>MEMORY_StainQuant.md</code>）：可搬正演两行、可学习基 + 颜色锚定、低秩门控模板；<b>不要</b>搬它的训练配方（demo 残留）与全局 SE 注意力。</li>
+<li><b>★ 两套 log 底数不能混用</b>：StainQuant 用<b>自然对数、I₀=1</b>；PGDIPS 与所有经典方法用 <b>log10、I₀≈255</b>。混用会<b>静默地把浓度整体缩放 ln(10) ≈ 2.303 倍</b>——一个不报错的数值错误。选一套，写进文档，全链统一。</li>
+</ol>
+</div>
+
+<h3 id="s44">4.4 浓度域分析（解混）：RGB → 浓度的成熟工具箱</h3>
+
+<p>这是「RGB→C」那一格，也是你的编码器与染色矩阵机制的来源。<b>全部成熟，直接复用。</b></p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>方法</th><th>公式 / 空间</th><th>M 怎么来</th><th>通道数</th><th>关键结论</th></tr></thead>
+<tbody>
+<tr><td><b>Ruifrok &amp; Johnston 2001</b><br>Anal Quant Cytol Histol 23(4):291</td><td><code>OD = −log10(I/I₀) = A·c</code>，I₀ 由空场图给出</td><td><b>固定</b>，从单染色片测得并正交归一</td><td>最多 3 染色（3×3 恰定）</td><td>标准 H/E/DAB 向量：H [0.65,0.70,0.29]、E [0.07,0.99,0.11]、DAB [0.27,0.57,0.78]。<b>这是整个领域的公分母</b></td></tr>
+<tr><td><b>Macenko 2009</b><br>IEEE ISBI, pp.1105</td><td><code>OD = −log10(I)</code>，I∈[0,1]</td><td><b>逐图估计</b>：SVD 平面拟合 + 稳健极值（α=1%）</td><td>2（H&amp;E）</td><td><b>★ Fig.5 明确把第 3 通道描述为「正交于两染色向量张成平面的分量，含色素与噪声」</b>——这是「残差 r ⊥ span(M)」最强的分析侧先例</td></tr>
+<tr><td><b>Vahadane 2016</b><br>IEEE TMI 35(8):1962</td><td>OD 空间；log 底数 / I₀ <b>未说明</b>（摘要）</td><td><b>逐图估计</b>：稀疏 NMF（SNMF）</td><td>2（H&amp;E）</td><td>浓度图「稀疏且非负」的先验——<b>染色浓度不能为负</b>。这正是你要给浓度图加的非负约束的来源</td></tr>
+<tr><td><b>HistomicsTK</b><br><code>complement_stain_matrix</code></td><td>—</td><td><b>第 3 列 = 前两列的归一化叉积</b></td><td>2→3（凑方阵）</td><td>把「第 3 列 = 正交补残差」在代码里形式化。<b>这就是为什么 2 染色图不该用 3 列</b></td></tr>
+<tr><td><b>StainQuant</b><br>arXiv:2601.11336</td><td>U-Net 编码器 → K 个非负浓度；可微 BL 解码</td><td><b>可学</b>（色素色相初始化）</td><td>K=5（<b>欠定</b>）</td><td>逐字：经典解混「becomes <b>under-determined and unstable</b> for multiplex IHC with K&gt;3」。<b>反过来：K≤3 是恰定/超定，更简单</b></td></tr>
+<tr><td><b>PGDIPS</b><br>MICCAI 2025</td><td>自适应 BL + 谱修正，自监督 DIP</td><td>可学（默认）</td><td>2（H&amp;E、DAB）</td><td>零样本、单图优化，不需要训练数据。<b>已知失败：染色颜色相近、或染色分布严重不均衡</b></td></tr>
+<tr><td><b>Abousamra 2024</b><br>MIDL, PMLR 227:74</td><td>反演正则（inversion regulation）</td><td>由逐染色颜色样本给出</td><td>7-plex IHC（<b>欠定</b>）</td><td>逐字：问题「is <b>underdetermined</b> and can have multiple solutions」→ 反演正则「eliminates most undesirable solutions」</td></tr>
+<tr><td><b>Sadraoui et al.</b><br>ICIP 2024 / ISBI 2026</td><td>展开（unrolled）投影梯度算法</td><td>算法展开成网络</td><td>未说明</td><td>把凸优化解混「展开」成可微网络——<b>直接就是你要的编码器形式</b>。细节因 PDF 不可取而未核实</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pur">
+<div class="bt">对你的两条直接结论</div>
+<ul>
+<li><b>你的 K=2（H + DAB）是超定问题</b>，比 StainQuant（K=5）与 Abousamra（K=7）的欠定问题<b>简单得多</b>。最小二乘解唯一，浓度可辨识。<b>这是你的任务相对 mIHC 解混的一个结构性优势，值得写进论文。</b></li>
+<li><b>残差 r ⊥ span(M) 在真实 IHC 上确实非零</b>（库内 <code>E0.2</code> 已确认 IHC 片没有伊红复染，第 3 通道是「未解释残差」）。Macenko 的 Fig.5 说明「这个通道接近空 ⇒ 染色向量选得好」——<b>它就是天然的 QC 指标</b>。你的 Stage 0 应当直接量 <code>‖r‖/‖Y‖</code>。</li>
+</ul>
+</div>
+
+<h3 id="s45">4.5 RGB / latent 域对照集：主流虚拟染色在哪个空间</h3>
+
+<p>把主流工作逐个定位到「生成空间」，用来回答「到底空不空」。<b>结论：全部是 RGB 或 SD-VAE latent；OD 一次都没作为生成空间出现过。</b></p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">RGB 像素空间</div>
+<p><b>StainDiffuser</b>（双扩散，空间未说明但输出 RGB）· <b>UNIStainNet</b>（SPADE-UNet + 冻结 UNI，RGB）· <b>SheafStain</b>（Schrödinger bridge，RGB）· <b>PSPStain</b>（GAN，RGB）· <b>PGVMS</b>（CUT GAN，RGB）· <b>PGLStain</b>（RGB，OD 只作引导）</p>
+<p class="small">共同点：<b>OD / Beer–Lambert 零次出现在生成空间</b>。</p>
+</div>
+<div class="mini">
+<div class="mt">SD-VAE latent 空间</div>
+<p><b>HistDiST</b>（潜扩散，Phikon + VAE 拼接条件）· <b>DiffVS / marker-wise</b>（Marigold 式潜扩散，SD U-Net）· <b>HistDiT</b>（DiT + UNI）· <b>VIMs</b>（LDM + LoRA，文本条件）· <b>PST-Diff</b>（隐表示迁移）</p>
+<p class="small">共同点：<b>潜空间是「自然图像域」的 VAE 潜空间</b>，与 OD 之间<b>没有可微的物理映射</b>。</p>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">空格确认（多轮独立检索的阴性结论）</div>
+<p>对以下 query 均<b>未命中</b>「扩散在浓度/OD 域做虚拟染色」：<code>optical density diffusion histopathology</code> · <code>diffusion model stain concentration</code> · <code>Beer-Lambert diffusion virtual staining</code> · <code>concentration domain diffusion staining</code> · <code>absorbance space diffusion histopathology</code> · <code>diffusion probabilistic model optical density domain</code> 等（共 8 组英文 + 中文综述核对）。</p>
+<p>唯一带「OD」标题的投稿是 <b>PGLStain</b>（ICLR 2027 投稿，见 §4.6）——读原文后确认：<b>它把 OD 用作「引导信号」，不是生成空间</b>。⇒ <b>空格确认成立。</b></p>
+</div>
+
+<h3 id="s46">4.6 OD 只作损失 / 引导 / 评价的工作（重要区分）</h3>
+
+<p>这一节存在的意义：<b>把「用了 OD」和「在 OD 域生成」严格分开</b>。审稿人最容易在这里抓人——你如果说「没人用过 OD」，会被这四篇直接反驳；但你说「没人<b>在 OD 域生成</b>」，就成立。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>OD / Beer–Lambert 出现在哪</th><th>它<b>不是</b>什么</th></tr></thead>
+<tbody>
+<tr><td><b>PSPStain</b>（MICCAI 2024，你的 baseline）</td><td>PALS 策略里的 <b>Focal Optical Density (FOD) map</b>——用作<b>监督信号 / 损失</b></td><td>不是生成空间（它是 GAN，输出 RGB）</td></tr>
+<tr><td><b>SheafStain</b>（NeurIPS 2026）</td><td><b>DAB 强度 / 边缘损失</b>（从 UNIStainNet 借来）+ 报告 DAB-r / KL / JSD</td><td>不是生成空间（Schrödinger bridge，输出 RGB）</td></tr>
+<tr><td><b>PGVMS</b>（IEEE TMI 2026）</td><td>README 逐字：「We use the Image-J to <b>calculate the optical density value</b>」——<b>仅用于评价</b></td><td>不是生成空间（CUT GAN，输出 RGB）</td></tr>
+<tr><td><b>PGLStain</b>（ICLR 2027 投稿）</td><td>TL;DR 逐字：OD「calibrating local correspondences」；摘要逐字：用 OD 兼容性「<b>not merely as an intensity-matching target, but as a signal for conditioning feature relations and allocating local supervision</b>」——<b>用作弱配对对齐的引导</b></td><td>不是生成空间（输出 RGB；任务是弱配对 H&amp;E→IHC + 最优传输对齐）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">PGLStain 的一个额外价值（与你的数据边界直接相关）</div>
+<p>它是本轮新核实的、<b>最新的弱配对 H&amp;E→IHC 工作</b>（2026-09 投稿），核心机制是「用 OD 兼容性 + 非平衡 Gromov–Wasserstein 传输」在<b>不对齐的连续切片</b>上做监督分配。它解决的是「空间共位 ≠ 染色状态兼容」这个问题——<b>与库内 <code>UNIStainNet</code> 的抗错位损失思路是同一个问题的两种解法</b>。如果要在弱配对下加蛋白/OD 约束，它是除 UNIStainNet 之外的第二个可对照先例。</p>
+</div>
+
+<h3 id="s47">4.7 相邻可迁移机制：「在物理参数空间生成 + 可微前向算子渲染」</h3>
+
+<p>你的范式——「生成物理参数（浓度），用可微前向算子（Beer–Lambert）渲染成观测（RGB）」——在其他领域是成熟方法论。<b>下面三条是最强的可引用模板</b>，因为它们提供的是「怎么做」，不是「做过什么」。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>模板</th><th>机制</th><th>为什么可迁移到 H&amp;E→IHC</th><th class="c">核实</th></tr></thead>
+<tbody>
+<tr><td><b>Song, Shen, Xing, Ermon</b><br>ICLR 2022, arXiv:2111.08005</td><td>在图像上训<b>无条件 score 模型</b>；推理时通过<b>固定的物理前向算子</b>（MRI/CT）条件化采样。训练与算子解耦</td><td><b>最干净的模板</b>。把前向算子换成 <b>Beer–Lambert（C→OD→RGB）</b>，就是「在浓度场上学先验，用 BL 一致性条件化」</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>Physics-Informed Diffusion Models</b><br>ICLR 2025, arXiv:2403.14404</td><td>加一项「第一性原理残差损失」，让生成样本满足控制方程；物理进<b>训练</b>不进采样</td><td>可把「BL 重建误差」当作辅助训练损失——<b>直接对应你的『物理约束挂在损失上』</b></td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>高光谱解混 + 扩散</b><br>CVPRw 2025, arXiv:2506.13484</td><td>盲解混得端元 + <b>丰度图</b>；扩散<b>生成丰度图</b>；再按线性混合模型合成观测</td><td><b>非医学领域最接近的「在线性混合系数空间生成、再合成物理观测」实例</b>。丰度≈浓度，端元≈染色向量</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+<tr><td><b>DCTdiff</b><br>ICML 2025, arXiv:2412.15032</td><td>在 <b>DCT（正交线性变换）</b>空间端到端扩散，无 VAE，质量与效率更好</td><td><b>「线性空间扩散更好」的最强证据——但它是正交变换。</b>OD 的 log 是非线性，<b>不能直接外推</b>（见 §3.3）</td><td class="c"><span class="b high">VERIFIED</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">一个必须点破的差异：正交 vs 非线性</div>
+<p>DCTdiff 的成功有一个 DCT 特有的前提：<b>正交变换保持高斯白噪声的分布</b>（旋转高斯仍是同方差高斯），所以噪声调度可以原样搬。而 OD 的 <code>−log</code> 是<b>逐元素非线性</b>——它会把「干净区域接近白」压缩成一堆接近 0 的值，把「深染区域」拉伸开，<b>同时改变噪声的分布形状</b>。⇒ 在浓度域做扩散，<b>噪声调度（β_t / ᾱ_t）需要重新标定</b>，不能沿用 RGB 域那一套。这是工程上的一个具体动作，不是一个抽象风险。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>逐工作总表（11 列）</h2>
+
+<p>把 §4 的工作压成一张可检索的总表。<b>「与你的关系」列是本表的核心</b>——它决定你是「可引用」「可复用」「要绕开」还是「要正面回答」。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>年 / venue</th><th>任务</th><th>生成空间</th><th>生成框架</th><th>渲染 / 前向</th><th>配对</th><th>backbone</th><th>关键损失 / 机制</th><th>性能数字</th><th>与你的关系</th></tr></thead>
+<tbody>
+<tr>
+<td><b>CFM-HES</b></td><td>MICCAI 2026</td><td>H&amp;E→HES（只生成 saffron）</td><td><b>浓度域</b></td><td>条件流匹配</td><td><b>Beer–Lambert</b>（I₀=255, ln）</td><td>配对（25 对 WSI）</td><td>小 U-Net</td><td>stain separation → CFM → reconstruction</td><td>PredS 31.34/0.978 vs CFM 32.06/0.968</td><td><b>要正面回答</b>（最近先例；必须解释为何选 diffusion）</td>
+</tr>
+<tr>
+<td><b>StainQuant / BL-AE</b></td><td>arXiv 2601.11336</td><td>mIHC 解混（分析）</td><td><b>浓度域</b></td><td>自编码器</td><td><b>可微 BL</b>（I₀=1, ln）</td><td>无需配对</td><td>小 U-Net</td><td>L_rec + 熵 + 色锚定 + 重叠 + mask</td><td>定性「减少串扰」</td><td><b>可直接复用</b>（渲染器 + 编码器整块搬）</td>
+</tr>
+<tr>
+<td><b>PGDIPS</b></td><td>MICCAI 2025</td><td>零样本染色解混</td><td><b>浓度域</b></td><td>深度图像先验</td><td><b>可微 BL</b>（log10, 可学 I₀）</td><td>单图自监督</td><td>DIP 网络</td><td>BL 重建 + 谱修正</td><td>跨多种染色泛化</td><td><b>可复用</b>（第二套渲染器实现 + 可学背景 I₀ 的思路）</td>
+</tr>
+<tr>
+<td><b>multiplex2brightfield</b></td><td>Front. Bioinf. 2026</td><td>IMC/CODEX→虚拟明场</td><td>多重通道强度</td><td>物理正演</td><td><b>吸收模型</b>（不可微）</td><td>无需配对</td><td>—</td><td>物理正演 + AI 增强上采样</td><td>—</td><td><b>可引用</b>（「物理渲染多染色→明场」的先例；渲染器本身不可微）</td>
+</tr>
+<tr>
+<td><b>SPFLOW</b></td><td>2026 预印本</td><td>H&amp;E→CODEX/mIHC</td><td>稠密 marker 强度场</td><td>marker 条件流匹配</td><td>无</td><td>配对</td><td>H0-mini + 图推理</td><td>线性轨迹 + 12 步 Heun</td><td>Ultivue Pearson 0.66 / MIST 0.52</td><td><b>可借鉴</b>（marker 条件 + 不输出 RGB 的思路）</td>
+</tr>
+<tr>
+<td><b>MIU-Diff</b></td><td>arXiv 2506.23184（CMMCA 2025）</td><td>H&amp;E→IHC（弱配对）</td><td>未说明（RGB 强度）</td><td>score-based 扩散</td><td>无</td><td>弱配对（连续切片）</td><td>未说明</td><td>M = λ_t·U + (1−λ_t)·I</td><td>MIST HER2: full 14.368/0.611；U-guided 13.878/0.600</td><td><b>要绕开</b>（marginal 先验单独用会伤 PSNR/IOD；同数据集）</td>
+</tr>
+<tr>
+<td><b>UNIStainNet</b></td><td>ACM-BCB 2026</td><td>H&amp;E→4 marker</td><td>RGB</td><td>GAN</td><td>无</td><td>弱配对（10–50 px 错位）</td><td>SPADE-UNet + UNI</td><td>感知 + DAB 强度 + 无条件判别器</td><td>MIST 四染色最佳分布指标</td><td><b>可复用</b>（抗错位损失套件 + 稠密 token 条件）</td>
+</tr>
+<tr>
+<td><b>SheafStain</b></td><td>NeurIPS 2026</td><td>H&amp;E→IHC</td><td>RGB</td><td>Schrödinger bridge</td><td>无（<b>OD 作损失</b>）</td><td>弱配对</td><td>UNSB</td><td>DAB 提取 + DAB 强度/边缘损失</td><td>FID/KID/LPIPS/PSNR/SSIM/DAB-r/KL/JSD</td><td><b>可引用</b>（「OD 作损失不作生成空间」的对照）</td>
+</tr>
+<tr>
+<td><b>PGLStain</b></td><td>ICLR 2027 投稿</td><td>H&amp;E→IHC（弱配对）</td><td>RGB（<b>OD 作引导</b>）</td><td>弱配对对齐 + OT/GW</td><td>无</td><td>弱配对</td><td>未说明</td><td>PECC（OD 校准图）+ MRSA（非平衡 GW）</td><td>「competitive perceptual quality」</td><td><b>可引用</b>（弱配对下用 OD 分配监督的最新先例）</td>
+</tr>
+<tr>
+<td><b>PSPStain</b></td><td>MICCAI 2024</td><td>H&amp;E→IHC</td><td>RGB</td><td>GAN</td><td>无（<b>OD 作损失 FOD</b>）</td><td>配对</td><td>未说明</td><td>PALS（FOD）+ PCLS</td><td>—</td><td><b>你的 baseline</b>（两个原损失不能丢）</td>
+</tr>
+<tr>
+<td><b>HistDiST</b></td><td>arXiv 2505.06793</td><td>H&amp;E→Ki67</td><td>SD-VAE latent</td><td>潜扩散</td><td>无</td><td>配对</td><td>SD U-Net</td><td>v-pred + zero-terminal-SNR + η-cosine 反演</td><td>MRA 比 MDCL +28%</td><td><b>可复用</b>（工程骨架；但潜空间不可做 BL）</td>
+</tr>
+<tr>
+<td><b>DiffVS / marker-wise</b></td><td>AAAI 2026</td><td>H&amp;E→18 marker</td><td>SD-VAE latent</td><td>潜扩散</td><td>无</td><td>配对</td><td>SD U-Net</td><td>marker 条件拼接</td><td>文本条件在 18 marker 崩塌（SSIM 0.288 vs 0.662）</td><td><b>可引用</b>（marker 身份条件的对照）</td>
+</tr>
+<tr>
+<td><b>Song et al.（score 逆问题）</b></td><td>ICLR 2022</td><td>MRI/CT 重建</td><td>图像 + 物理算子</td><td>score-based</td><td><b>固定前向算子</b>（条件化采样）</td><td>—</td><td>—</td><td>训练算子无关；采样期条件化</td><td>—</td><td><b>方法论模板</b>（「物理算子替换成 BL」）</td>
+</tr>
+<tr>
+<td><b>高光谱解混 + 扩散</b></td><td>CVPRw 2025</td><td>丰度图合成</td><td>线性混合系数</td><td>扩散</td><td>线性混合模型</td><td>—</td><td>—</td><td>盲解混端元 + 扩散生成丰度</td><td>—</td><td><b>方法论模板</b>（非医学最接近的「系数空间生成」）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s6"><span class="num">6</span>Beer–Lambert 渲染桥：完整公式与参数</h2>
+
+<h3>6.1 全链公式（从 H&amp;E 到 IHC，再回到 RGB）</h3>
+
+<div class="flow">
+<pre><code>输入：H&amp;E RGB 图 X_HE ∈ [0,1]^{H×W×3}
+  │
+  ├─(1) 白点归一化：I0 估计（逐图组织像素的分位数，不用全图 max）
+  │
+  ├─(2) OD：        OD_HE = −ln( X_HE / I0 )            # 自然对数，全链统一
+  │
+  ├─(3) 解混（2 列）：C_HE = pinv(M_HE) · OD_HE          # M_HE = [s_H, s_E]，3×2，超定
+  │        ⇒ C_H^HE, C_E^HE 两个真实浓度图（K=2）
+  │
+  ├─(4) 条件：      条件 = concat( C_H^HE, C_E^HE )      # 空间对齐 ⇒ 拼接注入
+  │
+  ├─(5) 扩散生成：  û_DAB = 网络学到的（或 v-prediction 恢复的）DAB 浓度
+  │      目标变量：  u_DAB = ln(1 + C_DAB)                # 无约束实值，逆变换显式
+  │
+  ├─(6) 组装浓度：  C_IHC = [ T_H(C_H^HE), exp(û_DAB) − 1 ]   # T_H = 低容量校准（affine/monotone）
+  │
+  ├─(7) 正演渲染：  OD_IHC = M_IHC · C_IHC               # M_IHC = [s_H, s_DAB]，3×2
+  │      输出：      Î_IHC = I0 · exp( −OD_IHC )          # ← 可微，梯度可回传到 û_DAB
+  │
+  └─(8) 损失：      主扩散损失 + FOD 分布损失（挂在 x̂ 上）+ BL 重建损失</code></pre>
+</div>
+
+<div class="box key">
+<div class="bt">闭环恒等式（Stage 0 的零训练门禁）</div>
+<p>只要 <b>① M 满秩（2 列，3×2）</b> 且 <b>② 不做非负截断</b>，则</p>
+<div class="formula">OD = M·C &nbsp;⇒&nbsp; C = M⁻¹OD &nbsp;⇒&nbsp; OD′ = M·C = OD &nbsp;⇒&nbsp; I′ = I₀·exp(−OD) = I &nbsp;∎</div>
+<p>⇒ <b>往返误差恒等于机器精度</b>。所以「重建变差」不是方法极限，只可能来自<b>两个</b>来源：<b>① M 降秩（用 3 列或退化矩阵）</b>、<b>② 对浓度做了非负截断</b>（如 <code>clamp(min=0)</code> / ReLU）。<b>注意：I₀ 精确抵消，不造成往返误差</b>（<code>I′ = I₀·(I/I₀) = I</code>）；uint8 量化也<b>不</b>造成往返误差（uint8 进、uint8 出）。</p>
+<p class="small">这是库内已多次验证的结论，本报告直接复用，不重复推导。</p>
+</div>
+
+<h3>6.2 参数选择：固定 vs 数据驱动，两侧可能要用不同的</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>参数</th><th>H&amp;E 侧（监督 target 侧）</th><th>IHC 侧（渲染侧）</th><th>为什么两侧可能不同</th></tr></thead>
+<tbody>
+<tr><td><b>染色矩阵 M</b></td><td>建议<b>固定队列级 M_HE</b>（2 列 H/E）</td><td>可<b>可学 M_IHC</b>（2 列 H/DAB）+ 色一致性锚定</td><td>库内已定：监督 target 侧固定 M，否则浓度带每图自由度 ⇒ H-score 不可比；渲染侧可学但必须锚定</td></tr>
+<tr><td><b>M_HE 与 M_IHC 的关系</b></td><td colspan="2">两者<b>不是同一个矩阵</b>：H&amp;E 的苏木素与 IHC 的苏木素是不同浓度、可能不同配方</td><td>Macenko 2009 一手材料确认染色向量「can also vary significantly for the same stain depending on such factors as the manufacturer」⇒ 跨矩阵搬运浓度必须有 <code>T_H</code> 校准</td></tr>
+<tr><td><b>白点 I₀</b></td><td>逐图估计（组织像素分位数）</td><td>可固定为归一化后的 1.0，或可学（PGDIPS 式背景项）</td><td>逐图归一化是库内 <code>E0.3b</code> 已确认的正确做法</td></tr>
+<tr><td><b>log 底数</b></td><td colspan="2"><b>全链必须统一</b>：要么全自然对数（StainQuant 系），要么全 log10（Ruifrok/PGDIPS 系）</td><td>混用会静默缩放 ln(10)≈2.303 倍</td></tr>
+<tr><td><b>非负约束</b></td><td colspan="2"><b>只对真实浓度加</b>（用 <code>ln(1+C)</code> 或 softplus，<b>不用</b> <code>clamp(min=0)</code>/ReLU）</td><td>残差通道/正交补通道<b>必须保持有符号</b>；对它加 clamp 会静默抹掉负分量并归零梯度</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>6.3 量化影响：「够不够用」的判断 + 必须加的约束</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">够用的一面</div>
+<p>K=2 是<b>超定</b>问题，最小二乘解唯一，浓度可辨识。可微 BL 渲染器有两条独立实现（StainQuant / PGDIPS），且都不是死代码。闭环恒等式保证表示层无损。<b>表示与渲染这两格，你不需要发明任何东西。</b></p>
+</div>
+<div class="mini">
+<div class="mt">不够用的一面</div>
+<p>真实 IHC 的残差 <code>r ⊥ span(M)</code> 非零（无伊红复染），3×2 的 M 秩为 2 ⇒ 残差<b>无法被表达</b>，差异在 DAB 深染区（OD 高）被指数放大。这不是理论边角——<code>E0.2</code> 已用你的数据确认 r 确实非零。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">必须加的两个约束（否则渲染结果有系统性偏差）</div>
+<ol>
+<li><b>量残差</b>：Stage 0 在真实 IHC 上直接量 <code>‖r‖ / ‖Y‖</code>（<code>r = OD_IHC − M_IHC·C_IHC</code>）。<b>小 ⇒ K=2 够用；大 ⇒ 需要第三列</b>，但那一列必须是 <code>C_res</code>（未解释残差，<b>非染色</b>），保持<b>有符号</b>并加<b>向零收缩</b>惩罚，<b>不能</b>当染色通道。</li>
+<li><b>T_H 校准</b>：H&amp;E 侧的 <code>C_H^HE</code> 与 IHC 侧渲染用的 <code>C_H^IHC</code> 不在同一物理尺度。跨矩阵搬运必须配一个<b>低容量</b>（全局 affine 或单调）校准 <code>T_H</code>，<b>不要让网络自由改 H</b>。</li>
+</ol>
+</div>
+
+<h2 id="s7"><span class="num">7</span>可行性判定（逐模块）</h2>
+
+<p>判定用语：<b>成立 / 有条件成立 / 不成立 / 成立但要收窄</b>。「不成立」给两条独立论证；「有条件成立」写明条件与怎么测。</p>
+
+<div class="card">
+<div class="ch"><div><div class="title">① 浓度域表示（RGB → C）</div></div><span class="b high">成立</span></div>
+<div class="body"><p>有 40 年积累的现成工具箱（Ruifrok / Macenko / Vahadane / StainQuant / PGDIPS）。你的 K=2 是超定，比 mIHC 解混简单。<b>唯一动作</b>：确认矩阵列数与列序（H&amp;E 侧固定 2 列）。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">② 可微 Beer–Lambert 渲染（C → RGB）</div></div><span class="b high">成立</span></div>
+<div class="body"><p>StainQuant 的两行代码可直接搬；PGDIPS 是第二条独立实现。<b>唯一动作</b>：全链统一 log 底数与 I₀。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">③ 浓度域做「扩散」生成</div></div><span class="b medium">成立但要收窄</span></div>
+<div class="body">
+<p><b>成立的部分</b>：技术路线可行，零件齐全（编码器 + 渲染器 + 扩散骨架）。</p>
+<p><b>要收窄的部分</b>：「浓度域 + BL 渲染」这个机制已被 CFM-HES 占。你的可主张性只剩：<b>① 换成 diffusion</b>（实现选择，撑不起 novelty）；<b>② 做浓度域 vs RGB 的受控消融</b>（<b>这才是真正空的</b>）。</p>
+<p><b>怎么测</b>：同一个 backbone、同一套数据、同一套条件，只改生成空间（RGB / OD / log-浓度），用<b>实例级</b>指标（下游 HER2 分级 DICE、H-score 一致性）比较，而不是 PSNR。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">④ 「浓度域比 RGB 域更好」这个论断</div></div><span class="b bad">未经验证</span></div>
+<div class="body">
+<p>文献里<b>没有任何人做过这个消融</b>——这既是你的空位，也是你的风险。</p>
+<p><b>不利的旁证</b>：CFM-HES 的相邻消融显示，在浓度域放生成模型只带来 +0.72 dB PSNR，且 SSIM 反而变差。<b>⇒ 你不能假设「换浓度域会更好」，必须把它当作一个待验证的假设。</b></p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">⑤ 「扩散在非线性 log 空间好训」</div></div><span class="b bad">无证据</span></div>
+<div class="body">
+<p>唯一严谨的「线性空间扩散更好」证据（DCTdiff）针对的是<b>正交</b>变换，不能外推到 OD 的逐元素 log。<b>也没有反面证据。</b>⇒ 这是一个<b>高置信度的未知</b>，需要你自己的消融 + 重新标定的噪声调度。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">⑥ H 通道复用（H&amp;E 的 H 直接进输出）</div></div><span class="b medium">有条件成立</span></div>
+<div class="body">
+<p><b>条件</b>：「只生成缺失通道」有先例（DeReStainer / CFM-HES），但两者都<b>不做像素级拷贝</b>——DeReStainer 只在特征空间用余弦损失对齐 H，然后<b>重建整张图</b>。<b>「把输入通道原样拼进输出」未找到任何先例。</b></p>
+<p><b>怎么测</b>：做三个只改条件内容的 arm——H-reuse（拷贝）/ H-gen（也生成 H）/ H-zero-shuffle（置零或打乱）。<b>成本极低，是「H 复用是否成立」的唯一证据来源。</b></p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">⑦ 2 通道 vs 3 通道</div></div><span class="b medium">成立但要收窄</span></div>
+<div class="body"><p>3×2 的 M 秩为 2 ⇒ 真实 IHC 的残差 r 无法表达。<b>收窄为</b>：固定用 2 列；若残差大，加一列但那是 <code>C_res</code>（有符号 + 向零收缩），不是染色通道。</p></div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">⑧ 蛋白表达级训练损失</div></div><span class="b high">仍空（你的真落点）</span></div>
+<div class="body"><p>库内两份「约束位置地图」已核实：扩散侧「生成框架 × 蛋白表达级训练损失」在能核实的文献里仍是空的，H-score 作为训练损失无人做。<b>这是你唯一能确定主张的空格</b>——而且它与「浓度域」天然相容（H-score / IOD 本就定义在 OD 空间）。</p></div>
+</div>
+
+<h2 id="s8"><span class="num">8</span>推荐的可行思路</h2>
+
+<p>下面这条思路的取舍原则遵循你的优先级：<b>可复现 &gt; 可解释 &gt; 改动小 &gt; 有公开代码 &gt; 有实验收益 &gt; 复杂度</b>。凡是没有受控实验 / 消融数据 / 我本人实测支撑的，一律写「未找到证据」，<b>不写成「推荐」</b>。</p>
+
+<h3>8.1 收敛版架构（v1，最小可跑）</h3>
+
+<div class="flow">
+<pre><code>                ┌─────────────────── 监督侧（固定 M_HE）───────────────────┐
+H&amp;E RGB ──► 白点归一 ──► OD ──► C_HE = pinv(M_HE)·OD ──► [C_H^HE, C_E^HE]
+                                                              │（拼接条件）
+                                                              ▼
+                                          ┌───────────────────────────────┐
+                                          │  条件 2D U-Net（from scratch） │
+                                          │  v-prediction + 拼接注入       │
+                                          └───────────────┬───────────────┘
+                                                          │ û_DAB = ln(1+C_DAB)
+                                                          ▼
+                        C_IHC = [ T_H(C_H^HE),  exp(û_DAB)−1 ]
+                                                          │
+                                          OD_IHC = M_IHC · C_IHC        （M_IHC 可学 + 色锚定）
+                                                          │
+                                          Î_IHC = I0 · exp(−OD_IHC)     ← 可微渲染，梯度回传
+                                                          │
+                                    损失 = 主扩散损失 + FOD 分布损失（挂 x̂）+ BL 重建损失</code></pre>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th>组件</th><th>推荐选择</th><th>证据来源</th><th class="c">改动成本</th><th class="c">可复现性</th></tr></thead>
+<tbody>
+<tr><td><b>表示空间</b></td><td>浓度域，2 列 <code>[s_H, s_DAB]</code>，输出变量 <code>u = ln(1+C)</code></td><td>Ruifrok/StainQuant；库内闭环恒等式</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>生成框架</b></td><td>条件扩散（对照 FM 的理由见下）</td><td>你要做的消融本身</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>backbone</b></td><td><b>from-scratch 小型 2D U-Net</b>（不要 SD U-Net）</td><td>所有写明 backbone 的虚拟染色扩散工作都是 2D U-Net；库内已核：SD1.5-style U-Net 在浓度分辨率上跑不动</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>参数化</b></td><td><b>v-prediction</b></td><td>最硬的受控证据（Salimans &amp; Ho ICLR 2022 + Lin WACV 2024 + HistDiST 领域内确认）；且挂辅助损失时额外因子 <code>−σ_t</code> 有界（vs x̂₀ 的 SNR^(−1/2) 发散）</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>条件注入</b></td><td><b>拼接</b>（空间对齐的条件适合 concat/sum，不适合 cross-attention）</td><td>HistDiST/DiffVS 用拼接；GLIGEN 消融显示 cross-attn 空间精度更差</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>渲染器</b></td><td>StainQuant 式可微 BL（两行代码）</td><td>代码级核实：确在训练循环里</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td><b>蛋白损失</b></td><td><b>FOD 分布损失</b>（全局均值 + 20-bin 直方图），挂在 <code>x̂</code> 上</td><td>库内两份约束位置地图定为第一优先级；形式取自 PSPStain 的 L_MLPA 前两项；L3 分布级 ⇒ 抗错位</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box pur">
+<div class="bt">为什么用 diffusion 而不是 FM：一个诚实的理由，不是「更好」</div>
+<p>CFM-HES 会反问你这个问题。可用的答案有两类：</p>
+<ul>
+<li><b>中性技术理由（推荐写这个）</b>：库内已核实的流匹配硬收益是「端点恢复不除法」（<code>x̂₁ = x_t + (1−t)v_t</code> 系数有界 vs 扩散的 <code>x̂₀ = (x_t − √(1−ᾱ)ε̂)/√ᾱ</code> 在 t→T 除以趋零量）。⇒ 这实际上是<b>流匹配占优</b>的理由。<b>不要假装 diffusion 更好。</b></li>
+<li><b>诚实的定位理由</b>：本工作的目的是<b>回答「在浓度域生成是否有效」这个问题</b>，而这个问题与生成框架无关。选 diffusion 是因为它是领域内最主流、消融最充分的框架，<b>便于与已有的 RGB 域扩散工作做同构对照</b>。FM 可以作为消融的一行。</li>
+</ul>
+</div>
+
+<h3>8.2 核心卖点：浓度域 vs RGB 域的受控消融</h3>
+
+<div class="box key">
+<div class="bt">这是你唯一能真正主张的空位</div>
+<p>文献里<b>没有任何人做过「同一套 backbone、同一套数据、只改生成空间」的对照</b>。做这个消融，你就从「又一篇浓度域工作」变成「回答了浓度域到底有没有用的人」。</p>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Arm</th><th>生成空间</th><th>渲染</th><th>它回答什么</th></tr></thead>
+<tbody>
+<tr><td><b>A</b></td><td>RGB（3 通道）</td><td>直接输出</td><td>基线：主流做法</td></tr>
+<tr><td><b>B</b></td><td>浓度域（2 通道，<code>C_DAB</code>）</td><td>可微 BL</td><td>浓度域是否更好？</td></tr>
+<tr><td><b>C</b></td><td>log-浓度域（<code>u = ln(1+C)</code>）</td><td>可微 BL</td><td>线性化是否额外有帮助？（区分「浓度域」与「log 空间」两个效应）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">评价纪律（不能只看 PSNR）</div>
+<p>抄参考片 / 分布偏移的图在 PSNR / SSIM / FID 上可能全都更好看——<b>指标方向与泄漏方向可能一致</b>。必须用<b>实例级</b>判据：下游 HER2 分级 DICE、H-score 病例级一致性、DAB 阳性区域的召回。<b>分布级与实例级分开报。</b></p>
+</div>
+
+<h2 id="s9"><span class="num">9</span>可执行实验路线与止损</h2>
+
+<div class="flow">
+<pre><code>Stage 0  零训练门禁（半天，纯 CPU/单卡）
+  │  ① 闭环恒等式：RGB→OD→C→BL→RGB，MAE 应 &lt; 1e-5（只受秩亏/截断影响）
+  │  ② 残差量级：真实 IHC 上量 ‖r‖/‖Y‖，判断 K=2 够不够
+  │  ③ 矩阵列序：确认 H&amp;E 侧与 IHC 侧的列数与列序（必须 2 列）
+  │  ── 任一不过 ⇒ 停下来修，不要进 Stage 1 ──
+  ▼
+Stage 1  浓度域表示 + 渲染器接通（自监督，只需 IHC 图，不需配对）
+  │  训一个 StainQuant 式 BL 自编码器：RGB→C→RGB，验证重建
+  │  判据：重建 PSNR 与真值 IHC 对比合理；C 图有物理结构（非噪声）
+  ▼
+Stage 2  Arm A / B / C 三臂对照（同一 backbone、同一数据）
+  │  主指标：实例级（下游分级 DICE / H-score 一致性）
+  │  副指标：分布级（FID / KID）+ 像素级（PSNR/SSIM，仅参考）
+  ▼
+Stage 3  加蛋白损失（FOD 分布损失，挂 x̂）
+  │  消融：有 / 无 FOD；λ 从小到大扫
+  ▼
+Stage 4  消融与稳健性（H-reuse vs H-gen；t 门控；噪声调度重标定）</code></pre>
+</div>
+
+<h3>9.1 失败判据与止损表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>观察</th><th>结论</th><th>行动</th></tr></thead>
+<tbody>
+<tr><td>Stage 0 闭环 MAE &gt; 1e-3</td><td>矩阵降秩或做了截断</td><td>先修表示层，不要往下走</td></tr>
+<tr><td>残差 <code>‖r‖/‖Y‖</code> 很大（如 &gt; 20%）</td><td>K=2 不够表达真实 IHC</td><td>加 <code>C_res</code> 通道（有符号 + 向零收缩），<b>不要</b>当染色通道</td></tr>
+<tr><td>Arm B/C 在实例级指标上 <b>不优于</b> Arm A</td><td><b>浓度域对本任务无收益</b></td><td><b>这是一个有效的科学结论</b>，照样可发表（阴性结果 + 机制解释）。<b>不要</b>为了「让浓度域赢」而调参</td></tr>
+<tr><td>浓度域训练不稳定 / loss 爆</td><td>log 空间的噪声调度不匹配</td><td>重标定 β_t / ᾱ_t（不要沿用 RGB 域那套）；检查是否对残差通道误加了 clamp</td></tr>
+<tr><td>加了 FOD 后 pixel 指标变差但实例级变好</td><td>正常——分布约束在换「更像」为「更对」</td><td>接受；报告时区分两类指标</td></tr>
+<tr><td>H-gen（也生成 H）在 pixel 指标上明显更好</td><td>「H 复用」需要靠别的理由辩护（可解释性 / 成本 / 对 H&amp;E 伪影的忠实性）</td><td>明确选一边并写进论文</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">今天就能做的三件事（零训练）</div>
+<ol>
+<li><b>量闭环 MAE</b>：几十行纯 CPU 代码，验证 <code>RGB→OD→C→BL→RGB</code> 的往返误差是否在机器精度量级。若不在，先定位是秩亏还是截断。</li>
+<li><b>量残差</b>：在真实 IHC 上算 <code>r = OD_IHC − M_IHC·C_IHC</code>，报 <code>‖r‖/‖Y‖</code>。这一个数字决定你 v1 用 2 列还是 3 列。</li>
+<li><b>确认矩阵列序</b>：读你现有代码里 H&amp;E 侧与 IHC 侧的解混矩阵，确认都是 2 列、列序一致。<b>这一条不确认，后面全部作废。</b></li>
+</ol>
+</div>
+
+<h2 id="s10"><span class="num">10</span>未核实清单与诚实标注</h2>
+
+<div class="box warn">
+<div class="bt">明确未核实 / 无法核实的事项（不要当作事实引用）</div>
+<ul>
+<li><b>CFM-HES 的 DOI</b>：MICCAI 2026 页面标注「not yet available」，本报告依据官方开放获取页（<code>papers.miccai.org/miccai-2026/0607-Paper5285.html</code>）。其配对/backbone 细节由库内 2026-10-08 的 PDF 全文核实转录。</li>
+<li><b>CFM-HES 的 backbone</b>：库内已核实为「普通 U-Net（Ronneberger 2015）」，<b>不是 SD U-Net</b>。本轮二次抓取其开放获取页返回空内容，未能二次复核，标记为「库内核实、本轮未二次复核」。</li>
+<li><b>Sadraoui et al.（ICIP 2024 / ISBI 2026）</b>：HAL 返回 0 字节，<b>模型细节（OD 公式 / 染色数 / 非负约束）未核实</b>，仅据作者主页确认为「算法展开」方向。</li>
+<li><b>BCD-net（DSP 2024）、Vahadane 的确切 log 底数 / I₀</b>：付费墙 / 摘要未写，标记「未说明」。</li>
+<li><b>SPFLOW</b>：单作者预印本，作者自标「全部结果为单种子点估计」。证据强度弱。</li>
+<li><b>PGLStain</b>：ICLR 2027 <b>投稿</b>（未录用），2026-09-17 提交。引用时须标注为「投稿中」。</li>
+<li><b>「扩散在浓度域是否更好训」</b>：<b>本轮没有找到任何正面或反面证据</b>——无法区分「没人做过」与「做过但没发表」。这是本报告最大的未知。</li>
+<li><b>语义检索的覆盖边界</b>：本轮 Semantic Scholar API 返回 429（限流），未能做独立的引用量 / 影响力量化。⇒ 「空格确认」基于 WebSearch 与 arXiv / OpenReview 页面，<b>不是全量文献计量学结论</b>。</li>
+</ul>
+</div>
+
+<div class="box">
+<div class="bt">哪些是「理论事实」，哪些是「高置信度假设」</div>
+<ul>
+<li><b>理论事实</b>：Beer–Lambert 闭环恒等式（M 满秩 + 不截断 ⇒ 误差为机器精度）；3×2 的 M 秩为 2 ⇒ 残差不可表达；log 是非线性变换、不保持高斯噪声分布。</li>
+<li><b>高置信度假设（可证伪）</b>：① 「浓度域扩散会带来实例级收益」——<b>可证伪的预测</b>：Arm B/C 在 H-score 一致性上优于 Arm A；若否，假设被否。② 「K=2 够用」——可证伪：残差 <code>‖r‖/‖Y‖</code> 若 &gt; 20% 则不成立。</li>
+<li><b>我没有在真实数据上跑过</b>：本报告的可行性判定基于文献与库内已核实的实测结论，<b>浓度域扩散的实际训练行为我未实测</b>。</li>
+</ul>
+</div>
+
+<h2 id="s11"><span class="num">11</span>参考文献</h2>
+
+<ol>
+<li>Ben Omrane M. et al. <i>Making HE Histopathological Images More Colorful by Conditional Flow Matching</i>. MICCAI 2026, LNCS 16891. 开放获取：papers.miccai.org/miccai-2026/0607-Paper5285.html · 代码 github.com/MedSalimBenOmrane/CFM-HES <span class="b high">VERIFIED</span></li>
+<li>Eastwood M., McKee T., Hu Z., Tejpar S., Minhas F. <i>Beer-Lambert Autoencoder for Unsupervised Stain Representation Learning and Deconvolution in Multi-immunohistochemical Brightfield Histology Images</i>. arXiv:2601.11336. DOI 10.48550/arXiv.2601.11336 · 代码 github.com/measty/StainQuant <span class="b high">VERIFIED</span></li>
+<li>Chen J., Liu L.Y., Han W., Cheung A., Tsui H., Martel A.L. <i>Physics-guided deep image prior network for general zero-shot stain deconvolution</i>. MICCAI 2025, LNCS 15966:453–463. DOI 10.1007/978-3-032-04981-0_43 · 代码 github.com/GJiananChen/PGDIPS <span class="b high">VERIFIED</span></li>
+<li>Whitmarsh T., Al Sa'd M., González Solares E. et al. <i>A toolkit for generating virtual brightfield images of histological and immunohistochemical stains from multiplexed data</i>. Frontiers in Bioinformatics 6, 2026. DOI 10.3389/fbinf.2026.1765143 · 代码 github.com/TristanWhitmarsh/multiplex2brightfield <span class="b high">VERIFIED</span></li>
+<li>Ruifrok A.C., Johnston D.A. <i>Quantification of histochemical staining by color deconvolution</i>. Anal Quant Cytol Histol 23(4):291–299, 2001. <span class="b high">VERIFIED</span></li>
+<li>Macenko M., Niethammer M., Marron J.S. et al. <i>A Method for Normalizing Histology Slides for Quantitative Analysis</i>. IEEE ISBI 2009, pp. 1105–1108. <span class="b high">VERIFIED</span></li>
+<li>Vahadane A., Peng T., Sethi A. et al. <i>Structure-Preserving Color Normalization and Sparse Stain Separation for Histological Images</i>. IEEE TMI 35(8):1962–1971, 2016. DOI 10.1109/TMI.2016.2529665 <span class="b high">VERIFIED</span></li>
+<li>Abousamra S. et al. <i>Unsupervised Stain Decomposition via Inversion Regulation for Multiplex Immunohistochemistry Images</i>. MIDL 2024, PMLR 227:74–94. <span class="b high">VERIFIED</span></li>
+<li>Liu A., Wang X., Cai J., Li C. <i>Score-based Diffusion Model for Unpaired Virtual Histology Staining</i>. arXiv:2506.23184, CMMCA 2025. DOI 10.1007/978-3-032-06624-4_4 <span class="b high">VERIFIED</span></li>
+<li>Saurav J.R., Pham T.L.H., Mukherjee P., Yi P., Orr B.A., Luber J.M. <i>UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</i>. ACM-BCB 2026. DOI 10.1145/3807503.3819452 · arXiv:2603.12716 <span class="b high">VERIFIED</span></li>
+<li>Chen H.-L., Lu C.-S., Chung P.-C. <i>Stain-Guided CycleDiffusion for Unsupervised Domain Adaptation of Histopathology Image Classification</i>. NeurIPS 2025 (Spotlight). <span class="b high">VERIFIED</span></li>
+<li><i>Beyond Spatial Correspondence: Optical-Density-Guided Marginal and Relational Learning for Weakly-Paired H&amp;E-to-IHC Virtual Staining</i>（PGLStain）. ICLR 2027 Conference Submission #32050（投稿中，2026-09-17）. openreview.net/forum?id=O8hDBz5nN0 <span class="b high">VERIFIED</span></li>
+<li>Song Y., Shen L., Xing L., Ermon S. <i>Solving Inverse Problems in Medical Imaging with Score-Based Generative Models</i>. ICLR 2022. arXiv:2111.08005 <span class="b high">VERIFIED</span></li>
+<li>Bastek J.-H., Sun W., Kochmann D.M. <i>Physics-Informed Diffusion Models</i>. ICLR 2025. arXiv:2403.14404 <span class="b high">VERIFIED</span></li>
+<li>Pastorino et al. <i>Deep Diffusion Models and Unsupervised Hyperspectral Unmixing for Realistic Abundance Map Synthesis</i>. CVPRw 2025. arXiv:2506.13484 <span class="b high">VERIFIED</span></li>
+<li>Ning et al. <i>DCTdiff: Intriguing Properties of Image Generative Modeling in the DCT Space</i>. ICML 2025. arXiv:2412.15032 <span class="b high">VERIFIED</span></li>
+<li>Xiao J. <i>SPFLOW: marker-conditioned flow matching for dense spatial proteomics prediction from H&amp;E histology</i>. 2026 预印本. github.com/HIT-JimmyXiao/SPFLOW <span class="b high">VERIFIED</span></li>
+<li>Chen F., Zhang R., Zheng B., Sun Y., He J., Qin W. <i>Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining</i>（PSPStain）. MICCAI 2024. arXiv:2407.03655 <span class="b high">VERIFIED</span></li>
+<li>Großkopf E. et al. <i>HistDiST: Histopathological Diffusion-based Stain Transfer</i>. DAGM GCPR 2025. arXiv:2505.06793 <span class="b high">VERIFIED</span></li>
+<li>Kataria T., Knudsen B., Elhabian S.Y. <i>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</i>. arXiv:2403.11340 <span class="b high">VERIFIED</span></li>
+</ol>
+
+<div class="foot">
+<p>本报告由 WorkBuddy AI 于 2026-10-09 生成，归档于 <code>H&amp;E2IHC_扩散模型调研 / 01_调研报告</code>。<br>
+核实等级：[VERIFIED] = 抓取并读到一手页面；[UNVERIFIED] = 仅见搜索摘要；「未说明」= 原文未写。<br>
+结论可证伪、引用可追溯；凡标「未找到证据」处，不得改写为「推荐」。</p>
+</div>
+
+
+</main>
+</div>
+</body>
+</html>

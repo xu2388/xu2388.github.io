@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfcfd">
+<meta name="format-detection" content="telephone=no">
+<title>GAN × 频域：小众开源仓库清单（缝合素材库）</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:14px 0}.cite{font-size:12.5px;color:var(--muted);border-left:3px solid var(--strong);padding-left:12px}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){html{scroll-padding-top:12px}body{font-size:16px;line-height:1.75;overflow-x:hidden}.wrap{display:block;width:100%;max-width:none}nav.toc{display:block;position:sticky;top:0;z-index:10;width:100%;height:auto;max-height:52px;overflow-x:auto;overflow-y:hidden;padding:9px 12px;border-right:0;border-bottom:1px solid var(--border);background:rgba(251,252,253,.96);-webkit-overflow-scrolling:touch;white-space:nowrap}nav.toc .brand{display:inline-block;margin:0 14px 0 0;font-size:12px}nav.toc .sub{display:none}nav.toc a{display:inline-block;margin:0 4px 0 0;padding:5px 9px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:12px;white-space:nowrap}nav.toc a.l1{margin-top:0;font-weight:700;color:var(--text)}nav.toc a.l2{padding-left:9px;font-size:12px;color:var(--muted)}main{width:100%;max-width:none;padding:22px 14px 72px}header.doc{padding-bottom:18px;margin-bottom:26px}header.doc .kicker{font-size:11px;letter-spacing:.08em}header.doc h1{font-size:25px;line-height:1.38;margin:8px 0 12px;overflow-wrap:anywhere}header.doc .desc{font-size:15px;line-height:1.7}.meta{gap:6px;margin-top:14px}.meta span{font-size:11.5px;padding:4px 8px;line-height:1.45}h2{font-size:21px;line-height:1.4;margin:40px 0 14px;padding-bottom:7px}h3{font-size:17px;line-height:1.5;margin:26px 0 9px}h4{font-size:15px}p{margin:8px 0}ul,ol{margin-left:20px}.box{padding:13px 14px;margin:14px 0;border-radius:9px}.box .bt{font-size:13px}.card{margin:14px 0}.card .ch{padding:10px 13px}.card .body{padding:7px 13px 13px}.grid2{grid-template-columns:1fr;gap:12px}.mini{padding:11px 12px}.scroll{margin:13px 0;border-radius:8px;-webkit-overflow-scrolling:touch}.scroll:after{content:"左右滑动查看表格";display:block;padding:5px 10px;color:var(--muted);font-size:11px;background:var(--softer);border-top:1px solid var(--border)}table{min-width:700px;font-size:13px}thead th{padding:9px 9px;font-size:12px}td{padding:8px 9px}.flow{margin:13px 0;padding:11px 12px;overflow:hidden}.flow pre,pre{margin:10px 0;padding:11px 12px;font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}.formula{margin:11px 0;padding:11px 12px;font-size:12px;line-height:1.65;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.b{font-size:10.5px;padding:2px 6px}.cite{font-size:12px}a{overflow-wrap:anywhere}}@media(max-width:380px){main{padding-left:11px;padding-right:11px}header.doc h1{font-size:22px}h2{font-size:19px}.meta span{font-size:11px}nav.toc{padding-left:9px;padding-right:9px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">GAN × frequency · repos</div>
+<div class="sub">小众开源仓库清单 · 缝合素材<br>截至 2026-10-15 · 仓库元信息逐条核实</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 与既有报告的分工</a>
+<a class="l1" href="#s2">2 · 缝合的四个落点</a>
+<a class="l1" href="#s3">3 · 落点 A：频域损失</a>
+<a class="l1" href="#s4">4 · 落点 B：频域判别器</a>
+<a class="l1" href="#s5">5 · 落点 C：生成器内部频域算子</a>
+<a class="l1" href="#s6">6 · 落点 D：频域注意力与特征融合</a>
+<a class="l1" href="#s7">7 · 即插即用模块合集</a>
+<a class="l1" href="#s8">8 · 病理/医学域的频域 GAN</a>
+<a class="l1" href="#s9">9 · 只做三个的话选哪个</a>
+<a class="l1" href="#s10">10 · 未核实清单与证据边界</a>
+<a class="l1" href="#s11">11 · 参考与链接总表</a>
+<a class="l1" href="#s12">12 · 附录：单仓库复核 qf1518/MSCW</a>
+<a class="l1" href="#s13">13 · 「模块抽取源」仓库清单与检索方法</a>
+<a class="l1" href="#s14">14 · 本地 plug-nplay-modules 仓库医学模块普查</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Research report · GAN × frequency · open-source repos</div>
+<h1>GAN × 频域：小众开源仓库清单（缝合素材库）</h1>
+<p class="desc">前提已经确认：<b>频域模块挂在 loss 层或生成器的 conv 上，它不关心骨架是 CUT、CycleGAN 还是 pix2pix。</b>所以这一份不再限定 CUT，改为按「<b>缝合落点</b>」把 GAN × 频域的开源仓库铺开，并优先标注<b>小众、星数低、还没被用烂</b>的那一批——因为那些才是能缝进论文里的东西。</p>
+<div class="meta"><span>任务：为 H&amp;E→IHC（PSPStain）找可缝合的频域模块</span><span>筛选偏好：小众 &gt; 热门</span><span>核实：GitHub API 逐条取元信息</span><span>报告日期：2026-10-15</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="box key"><div class="bt">总判定：真正小众且能缝的，集中在这四个</div><ol>
+<li><b>FreGAN</b>（NeurIPS 2022，<b>57★</b>）—— 用<b>高频分量</b>训练 GAN，专治<b>数据量不足</b>。它同时给了「高频损失」和「高频判别器」两个可拆件。你只有几十张配对片，这条最对症。<br><code>github.com/kobeshegu/FreGAN_NeurIPS2022</code></li>
+<li><b>WaveFill</b>（ICCV 2021，<b>61★</b>）—— 小波域分频生成 + 频带一致性约束。它的「把不同频带分开监督」是你可以直接搬的 loss 结构。<br><code>github.com/yingchen001/WaveFill</code></li>
+<li><b>DualFormer</b>（ICCV 2023，<b>65★</b>）—— 系统研究<b>频谱判别器到底有没有用</b>。这是你唯一能找到的「频谱 D」严肃开源实现。<br><code>github.com/Luciennnnnnn/DualFormer</code></li>
+<li><b>UFFC</b>（ICCV 2023，<b>38★</b>）—— 修正了 FFC 的两个已知缺陷（频谱偏移、意外空间激活）。如果你要动生成器结构，用它而不是原版 FFC。<br><code>github.com/1911cty/Unbiased-Fast-Fourier-Convolution</code></li>
+</ol></div>
+<div class="box warn"><div class="bt">一条必须先说清的边界</div><p>上面四个<b>都不是病理域</b>，也<b>都不是图像翻译任务</b>（FreGAN 是无条件生成，WaveFill 是修复，DualFormer 是超分/复原，UFFC 是修复）。它们提供的是<b>算子与损失</b>，不是「已验证的 H&amp;E→IHC 方案」。缝合之后必须做单因素复现——这一条与库内 <i>GAN+频域+门控</i> 报告的止损逻辑一致。</p></div>
+
+<h2 id="s1"><span class="num">1</span>与既有报告的分工</h2>
+<div class="scroll"><table><thead><tr><th>既有文件</th><th>它回答的问题</th><th>本文新增</th></tr></thead><tbody>
+<tr><td><code>01_调研报告/CUT骨架_频域缝合清单_代码接口级.html</code></td><td><b>CUT 骨架内</b>有哪些可 fork 的仓库；四个缝合接口；PSPStain 与 ASP 的同源关系。</td><td>本文把范围从「CUT 骨架」放宽到<b>任意 GAN × 频域</b>，并补齐 <b>FreGAN / WaveFill / DualFormer / DCTNet / FcaNet / GFNet / Wave-ViT</b> 这一批。</td></tr>
+<tr><td><code>01_调研报告/GAN+频域+门控_虚拟染色方法调研.html</code></td><td>频域 loss / 频域特征 / 频域判别器<b>各自适合解决哪个 GAN 故障</b>；F0–R1 消融矩阵。</td><td>本文只补<b>仓库地址、星数、许可、缝合改动量</b>，<b>不重复机制论证</b>。</td></tr>
+<tr><td><code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code></td><td>扩散侧的频域 condition 注入。</td><td>本文是 GAN 侧的素材库，两条框架分支。</td></tr>
+<tr><td><code>06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html</code></td><td>频域×门控先例；F-Drop 是固定死区不是真门控。</td><td>本文不涉及门控。</td></tr>
+</tbody></table></div>
+<div class="box teal"><div class="bt">引用时请注意</div><p>FFL 与 FDL 在两份报告里都出现。本文把它们列为<b>「基线」而非「素材」</b>——它们星数高、被引多，缝进论文没有增量。真正的增量在小众那一栏。</p></div>
+
+<h2 id="s2"><span class="num">2</span>缝合的四个落点</h2>
+<p>不管骨架是什么，频域的东西只能进四个地方。改动成本从低到高：</p>
+<div class="scroll"><table><thead><tr><th>#</th><th>落点</th><th>改哪里</th><th>典型改动量</th><th>可拆件（本文对应章节）</th></tr></thead><tbody>
+<tr><td><b>A</b></td><td>频域损失</td><td><code>compute_G_loss</code> / <code>compute_D_loss</code></td><td>+3~30 行</td><td>FFL · FDL · <b>FreGAN 高频损失</b> · <b>WaveFill 频带损失</b> → §3</td></tr>
+<tr><td><b>B</b></td><td>频域判别器</td><td><code>define_D</code></td><td>新增一个 D 分支</td><td><b>DualFormer 频谱 D</b> · <b>FreGAN 高频 D</b> → §4</td></tr>
+<tr><td><b>C</b></td><td>生成器内部算子</td><td><code>networks.py</code> 的 conv</td><td>+1 个类，替换若干 conv</td><td>FFC · <b>UFFC</b> · WTConv · <b>DCTNet</b> → §5</td></tr>
+<tr><td><b>D</b></td><td>频域注意力 / 特征融合</td><td>中间层插入</td><td>+1 个 block</td><td><b>FcaNet/MSCA</b> · <b>GFNet</b> · <b>Wave-ViT WaveA</b> → §6</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">优先级判据（与库内既有结论一致）</div><p><b>A 落点唯一推荐作为第一步。</b>B/C/D 都会同时改变参数量、感受野或梯度尺度，一旦结果变化就无法归因。这一点 <i>GAN+频域+门控</i> §4.3 已经论证过，本文采信，不另立证据。</p></div>
+<h2 id="s3"><span class="num">3</span>落点 A：频域损失（挂 <code>compute_G_loss</code>）</h2>
+
+<h3>3.1 两个「基线」——星数高、被引多，缝进去没有增量</h3>
+<div class="scroll"><table><thead><tr><th>仓库</th><th>会议</th><th>算子</th><th>定位</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/EndlessSora/focal-frequency-loss">EndlessSora/focal-frequency-loss</a><br><code>pip install focal-frequency-loss</code></td><td>ICCV 2021</td><td>FFT，自适应频率加权</td><td>基线。用作<b>对照</b>，不作为创新点</td></tr>
+<tr><td><a href="https://github.com/eezkni/FDL">eezkni/FDL</a><br><code>pip install fdl-pytorch</code></td><td>CVPR 2024</td><td>DFT，幅度 + 相位分别处理</td><td>基线。抗错位是它的卖点，对你的连续切片有用</td></tr>
+</tbody></table></div>
+<p class="cite">两者的 API、安装方式、挂载位置已在 <code>CUT骨架_频域缝合清单_代码接口级.html</code> §3.1–3.2 逐字记录，此处不重复。</p>
+
+<h3>3.2 FreGAN 的高频损失 —— 本清单里对你最对症的一个</h3>
+<div class="card"><div class="ch"><div><div class="title">FreGAN: Exploiting Frequency Components for Training GANs under Limited Data</div><div class="v">Yang, Wang, Chi, Zhang · NeurIPS 2022 · arXiv:2210.05461</div></div><div><span class="b high">57★</span> <span class="b purple">小众</span> <span class="b tealb">有限数据</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/kobeshegu/FreGAN_NeurIPS2022">github.com/kobeshegu/FreGAN_NeurIPS2022</a>（Python，无 LICENSE 文件）</p>
+<p><b>为什么它比 FFL 更值得缝：</b>FFL 是「通用的频域损失」，而 FreGAN 的出发点是<b>训练数据不足</b>。你的配对片数量通常是几十到几千张量级，这正是它的目标场景。</p>
+<p><b>从论文正文可确认的两个可拆件（本轮读到原文片段，非二手转述）：</b></p>
+<ul>
+<li><b>高频分量作为监督信号</b>：正文提到「把三个高频分量相加，可近似得到图像的全部细节信息」，并把高频分量引入训练。</li>
+<li><b>高频判别器（high-frequency discriminator）</b>：正文 3.2 节明确写了「to raise the frequency awareness of D, we devise high-frequency discriminator」——<b>这是为了提高判别器对高频的敏感度</b>，正好对应库内 <i>GAN+频域+门控</i> 报告里「判别器看不到高频」这个故障。</li>
+</ul>
+<div class="box warn"><div class="bt">诚实标注</div><p>本轮<b>没有</b>逐行读它的损失实现代码，也<b>没有</b>读完整篇论文。上面两条来自原文片段的直接引述；<b>损失的具体形式（用 L1 还是 L2、在几个尺度上算、权重如何设）未核实</b>。缝合前请自行打开 <code>loss.py</code> / <code>train.py</code> 确认。</p></div>
+<p><b>缝合建议：</b>它天然提供两个独立可拆件，正好可以做成<b>单因素两档消融</b>——只加高频损失、只加高频判别器、两者都加。这是零成本的消融设计。</p>
+</div></div>
+
+<h3>3.3 WaveFill 的频带损失 —— 「把频带分开监督」的现成结构</h3>
+<div class="card"><div class="ch"><div><div class="title">WaveFill: A Wavelet-based Generation Network for Image Inpainting</div><div class="v">Yu, Zhan, Lu, Pan · ICCV 2021</div></div><div><span class="b high">61★</span> <span class="b purple">小众</span> <span class="b tealb">小波域</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/yingchen001/WaveFill">github.com/yingchen001/WaveFill</a>（Python，无 LICENSE 文件；<b>依赖 <code>pytorch_wavelets</code></b>，需先装 <code>fbcotter/pytorch_wavelets</code>）</p>
+<p><b>它的核心思路（对本课题的映射）：</b>不把图像当一个整体去生成，而是<b>分解成小波子带、在频带上分别做生成与监督</b>。这正好是你库里那份扩散侧报告反复强调的「把结构（低频/轮廓）与细节（高频/纹理）分开处理」——只是它在 GAN 里、用 DWT 实现。</p>
+<p><b>可拆件：</b>它的<b>频带一致性 / 频带分离损失</b>是独立的 loss 项，可以只拿损失、不拿它的生成器结构。这是本清单里「最纯粹的损失素材」。</p>
+<div class="box warn"><div class="bt">诚实标注</div><p>本轮只核实了仓库存在、星数、会议、依赖（<code>pytorch_wavelets</code>）。<b>它的损失具体分几项、各项权重、是否含跨频带抑制项——未核实</b>。另外它的小波基与层数是针对 256×256 修复任务选的，搬到 1024×1024 病理片需要重新确认尺度。</p></div>
+</div></div>
+
+<h2 id="s4"><span class="num">4</span>落点 B：频域判别器（改 <code>define_D</code>）</h2>
+<p>库内 <i>GAN+频域+门控</i> 报告已把这条路的机制讲清楚（让 D 同时从空间域和频谱域判断真伪，补上 downsampling 造成的高频盲区），并给出了风险（频域 D 可能学到 scanner / site 的频谱签名而非病理真实性）。这里只补<b>开源实现</b>。</p>
+<div class="card"><div class="ch"><div><div class="title">DualFormer —— 唯一能找到的「频谱判别器」严肃开源实现</div><div class="v">Luo, Zhu, Xu, Liu · ICCV 2023 · arXiv:2307.12027 · <i>On the Effectiveness of Spectral Discriminators for Perceptual Quality Improvement</i></div></div><div><span class="b high">65★</span> <span class="b purple">小众</span> <span class="b blue">双域 D</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/Luciennnnnnn/DualFormer">github.com/Luciennnnnnn/DualFormer</a>（Python，无 LICENSE 文件，最后推送 2023-09）</p>
+<p><b>它解决的问题正好是你的顾虑：</b>论文标题里的「Effectiveness」说明它做的不是「提出频谱 D」，而是<b>检验频谱 D 到底什么时候有效、为什么很多实现无效</b>。这比直接抄一个 D 更有价值——它会告诉你哪些做法是白费的。</p>
+<p><b>缝合落点：</b>把它的频谱分支嫁接到 CUT 的 <code>NLayerDiscriminator</code> 上，与空间域 logit 加权相加。<b>务必分别记录 spatial / spectral 两条分支的 logit 与梯度范数</b>，否则崩溃时无法归因（库内报告已给这条止损要求）。</p>
+<div class="box warn"><div class="bt">诚实标注</div><p>本轮核实了仓库元信息与论文标题/会议；<b>没有</b>读论文正文确认它的频谱分支具体建在「图像频谱」还是「特征频谱」上，也<b>没有</b>读它的代码。<b>不要凭标题推断实现细节。</b></p></div>
+</div></div>
+<div class="scroll"><table><thead><tr><th>其他频域 D 来源</th><th>仓库</th><th>状态</th></tr></thead><tbody>
+<tr><td><b>FreGAN 的高频判别器</b><br><span class="small">NeurIPS 2022 · 57★</span></td><td><a href="https://github.com/kobeshegu/FreGAN_NeurIPS2022">kobeshegu/FreGAN_NeurIPS2022</a></td><td><span class="b high">有代码</span> 与它的高频损失同仓库，见 §3.2</td></tr>
+<tr><td><b>SSD-GAN</b><br><span class="small">Chen, Li, Jin · AAAI 2021 · arXiv:2012.05535</span></td><td><span class="b bad">未找到官方仓库</span></td><td><span class="b medium">仅论文</span> 机制描述见库内 <i>GAN+频域+门控</i> §3.3</td></tr>
+<tr><td><b>SS-UIE</b><br><span class="small">空间-频谱双域自适应</span></td><td><a href="https://github.com/LintaoPeng/SS-UIE">LintaoPeng/SS-UIE</a></td><td><span class="b medium">仓库存在未核实星数</span> 任务是水下图像增强，仅作双域设计参考</td></tr>
+</tbody></table></div>
+
+<h2 id="s5"><span class="num">5</span>落点 C：生成器内部频域算子（改 <code>networks.py</code>）</h2>
+<div class="scroll"><table><thead><tr><th>算子</th><th>仓库</th><th>会议</th><th>替换什么</th><th>机制</th><th>星数</th><th>小众度</th></tr></thead><tbody>
+<tr><td><b>FFC</b><br>Fast Fourier Convolution</td><td><a href="https://github.com/advimman/lama">advimman/lama</a><br><span class="small">Apache-2.0</span></td><td>WACV 2022</td><td>普通 conv</td><td>通道一分为二：一路局部卷积，一路进 FFT 做全局频谱乘</td><td>10.3k</td><td><span class="b bad">烂大街</span></td></tr>
+<tr><td><b>UFFC</b><br>Unbiased FFC</td><td><a href="https://github.com/1911cty/Unbiased-Fast-Fourier-Convolution">1911cty/Unbiased-Fast-Fourier-Convolution</a></td><td>ICCV 2023</td><td>FFC</td><td>指出 FFC 在修复任务里有<b>频谱偏移</b>与<b>意外的空间激活</b>两个缺陷并修正</td><td><b>38</b></td><td><span class="b purple">★小众</span></td></tr>
+<tr><td><b>WTConv</b><br>Wavelet Convolution</td><td><a href="https://github.com/BGU-CS-VIL/WTConv">BGU-CS-VIL/WTConv</a></td><td>ECCV 2024</td><td>depthwise conv</td><td>级联小波分解替代深度卷积，<b>极少参数显著扩大有效感受野</b>。2026-02 新增 <code>fast_wtconv</code></td><td><span class="b medium">未核实</span></td><td><span class="b purple">★小众</span></td></tr>
+<tr><td><b>DCTNet</b><br>Learning in the Frequency Domain</td><td><a href="https://github.com/kaix-nv/DCTNet">kaix-nv/DCTNet</a></td><td>CVPR 2020</td><td>输入层</td><td>用 <b>DCT 系数当输入</b>替代 RGB，并做<b>动态通道选择</b>（不同图选不同频率通道）</td><td>461</td><td><span class="b medium">中等</span></td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">这一层怎么选</div><p>如果只是想「换掉一个 conv 试试频域」，选 <b>UFFC</b>（38★，作者已经替你修过 FFC 的坑，而且论文标题就是「重新思考 FFC」，属于<b>有明确诊断结论</b>的算子）。<br>如果想改的是<b>输入表示</b>而不是内部算子，<b>DCTNet 的动态通道选择</b>思路值得看——它回答的是「哪些频率分量该留」，这和你在 DWT 上做频带加权是同一个问题。</p></div>
+<div class="box stop"><div class="bt">但这一层的成本提醒</div><p>把残差块里的 conv 换成 FFC/UFFC/WTConv，会同时改变<b>参数量、感受野、归一化统计和梯度尺度</b>。一旦结果变化，你无法区分是「频域有效」还是「只是变大了」。<b>先把 §3 的 loss 做完，再考虑这一层。</b></p></div>
+<h2 id="s6"><span class="num">6</span>落点 D：频域注意力与特征融合（插中间层）</h2>
+<p>这一类不是「频域生成」，而是<b>把注意力/特征融合搬到频域做</b>。它比 C 层温和（不改卷积本体），但仍会改变中间特征分布，属于「第二优先级」。</p>
+<div class="scroll"><table><thead><tr><th>模块</th><th>仓库</th><th>会议</th><th>机制一句话</th><th>星数</th><th>可缝合度</th></tr></thead><tbody>
+<tr><td><b>MSCA</b>（FcaNet 的多光谱通道注意力）</td><td><a href="https://github.com/cfzd/FcaNet">cfzd/FcaNet</a><br><span class="small">MIT</span></td><td>ICCV 2021</td><td>用 <b>DCT 多频率分量</b>替代 GAP 做通道注意力——因为 GAP 本质只是 DCT 的最低频分量，丢掉的信息比想象多</td><td>607</td><td><span class="b high">高</span> 直接替换 SE 块</td></tr>
+<tr><td><b>Global Filter</b>（GFNet）</td><td><a href="https://github.com/raoyongming/GFNet">raoyongming/GFNet</a><br><span class="small">MIT</span></td><td>NeurIPS 2021<br>T-PAMI</td><td>把自注意力换成「<b>2D FFT → 频域逐元素乘可学习全局滤波器 → 2D IFFT</b>」，token mixing 全程在频域完成，复杂度从 O(N²) 降到 O(N log N)</td><td>509</td><td><span class="b high">高</span> 单模块，含 Jupyter 示例</td></tr>
+<tr><td><b>WaveA</b>（Wave-ViT 的小波自注意力）</td><td><a href="https://github.com/YehLi/ImageNetModel">YehLi/ImageNetModel</a><br><span class="small">Apache-2.0</span></td><td>ECCV 2022</td><td>用<b>小波变换</b>替代 ViT 里的下采样，在保留高频细节的前提下压缩 token 数</td><td>275</td><td><span class="b medium">中</span> 整个 ImageNetModel 代码库，需挑出 WaveA</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">为什么这一层放第二位</div><p>MSCA / GFNet 都是<b>为分类任务设计</b>的（ImageNet），不是生成任务。它们在分类上的增益来自「更强的特征表达」，而生成任务里你关心的是「输出的频谱对不对」。<b>两者不自动等价。</b>如果要用，建议只当作「比 SE 更强的通道注意力对照」——库内 <i>GAN+频域+门控</i> §4.2 已经把 SE 定位为「低成本基线而非最终创新」，MSCA 同理。</p></div>
+
+<h2 id="s7"><span class="num">7</span>即插即用模块合集：直接抄 <code>.py</code> 的地方</h2>
+<div class="card"><div class="ch"><div><div class="title">Plug-play-modules —— 中文社区维护的即插即用模块库</div><div class="v">收录 CVPR / AAAI / ICLR / TNNLS / arXiv 各年度的可插拔模块源码</div></div><div><span class="b high">1,633★</span> <span class="b blue">Python</span> <span class="b tealb">含频域分类</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/AIFengheshu/Plug-play-modules">github.com/AIFengheshu/Plug-play-modules</a>（最后推送 2025-05）</p>
+<p><b>它为什么适合「缝合」：</b>这个仓库的形态就是<b>一个模块一个 <code>.py</code> 文件</b>，每个文件顶部标注论文标题与 arXiv 链接。它按「注意力 / 快速傅里叶变体 / 卷积变体 / 特征融合 / 下采样」分类，其中<b>频域与小波模块自成一类</b>。你要找的是「能直接 drop 进 <code>networks.py</code> 的类」，这里的文件形态正好匹配。</p>
+<p><b>已知收录的相关模块（来自仓库说明与检索命中）：</b></p>
+<ul>
+<li><b>WTConv</b>（ECCV 2024，小波卷积）—— <code>arxiv.org/pdf/2407.05848</code></li>
+<li><b>FreqFusion</b>（T-PAMI 2024，频率感知特征融合）—— <code>arxiv.org/pdf/2408.12879</code></li>
+<li><b>PWD</b>（TGRS 2025，小波下采样，替换传统卷积下采样；输入分解为 LL/LH/HL/HH 四个频域分量后重组为 4C）</li>
+<li><b>MRFFI</b>（CVPR 2025，多尺度分解 + 小波变换 + 三分支并行）</li>
+</ul>
+<div class="box stop"><div class="bt">使用前提（必须遵守）</div><p>这类合集仓库<b>只提供代码，不提供论文的受控实验</b>。里面的模块大多只在<b>分类 / 分割</b>任务上验证过，没有一个是图像翻译或病理域。<b>把它们当「算子候选池」，不要当「有效证据」。</b>引用时必须回到原始论文，不能引用这个合集。</p></div>
+<p class="cite">同类仓库另有 <a href="https://github.com/ai-dawang/PlugNPlay-Modules"><code>ai-dawang/PlugNPlay-Modules</code></a>（<b>5,122★</b>，无 LICENSE，最后推送 2025-08 —— <b>星数是本节的 3 倍，建议以它为主索引</b>，详见 §12.6）· <code>BoyCO3/Plug-play-modules</code> · <code>weidaoquan/Plug-play-modules</code>（后两者为同一批模块的不同镜像，<b>本轮未逐一核实星数与更新状态</b>）。</p>
+</div></div>
+
+<h2 id="s8"><span class="num">8</span>病理 / 医学域的频域 GAN（最相关，但素材最少）</h2>
+<div class="scroll"><table><thead><tr><th>工作</th><th>仓库</th><th>域</th><th>频域成分</th><th>状态</th></tr></thead><tbody>
+<tr><td><b>PiFS-CycleGAN</b><br><span class="small">Physics-Informed and Frequency-Enhanced CT to EUS Synthesis with High Structural Fidelity</span></td><td><a href="https://github.com/Nikwelhe/PiFS-CycleGAN">Nikwelhe/PiFS-CycleGAN</a><br><span class="small">MIT</span></td><td>医学（CT→超声内镜）</td><td>「频域增强 + 物理一致性」的组合</td><td><span class="b high">有代码</span> <span class="b medium">0★，2026-01 建仓，极小众</span></td></tr>
+<tr><td><b>混合空间-频域 GAN</b><br><span class="small">BMC Bioinformatics 2025</span></td><td><span class="b bad">未找到代码</span></td><td><b>病理</b>（PCAM 200 合成）</td><td>StyleGAN 骨干 + <b>SFM</b>（FFT + 可学习滤波，强调细胞膜等周期性纹理）+ <b>VWMA</b>（变窗混合注意力）+ <b>Cross-Attention Fusion</b></td><td><span class="b medium">仅论文</span> 机制描述来自二手解读</td></tr>
+<tr><td><b>CSSP2P-GAN</b><br><span class="small">DGM4MICCAI 2025</span></td><td><a href="https://github.com/Jose-Miguel-Teixeira/CSSP2P-GAN">Jose-Miguel-Teixeira/CSSP2P-GAN</a><br><span class="small">Apache-2.0</span></td><td>病理（H&amp;E→HER2-IHC）</td><td><b>无频域</b></td><td><span class="b high">有代码</span> 但它的价值在<b>评价论证</b>（论证 SSIM/PSNR 不足为凭）</td></tr>
+<tr><td><b>SS-UIE</b></td><td><a href="https://github.com/LintaoPeng/SS-UIE">LintaoPeng/SS-UIE</a></td><td>水下图像增强</td><td>空间-频谱双域自适应（MCSS + SWSA，线性复杂度）</td><td><span class="b medium">非医学</span> 仅作双域架构参考</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">这一栏的真实结论</div><p><b>病理域 + 频域 + GAN + 开源 = 几乎没有。</b>唯一带病理域的频域工作（BMC 2025 混合空间-频域 GAN）<b>没有开源</b>；唯一开源的医学频域 GAN（PiFS-CycleGAN）<b>不是病理、且只有 0 星</b>。<br>这与上一份报告（CUT 骨架内同样为空）指向同一个事实：<b>这个空格是真的。</b></p></div>
+
+<h2 id="s9"><span class="num">9</span>只做三个的话选哪个</h2>
+<div class="flow"><pre><code>你的第一步永远是：验证「频域约束有没有用」，不动结构
+│
+├─ 只加一个 loss（改动 3 行，可复现性最高）
+│   ├─ 想快速拿到对照基线 ................ EndlessSora/focal-frequency-loss（FFL）
+│   └─ 数据量小 / 错位严重 ................ eezkni/FDL（幅度+相位，抗错位）
+│
+├─ 想有一个「自己的」增量（推荐从这三个里挑）
+│   ├─ ① FreGAN 高频损失（57★，NeurIPS 2022，专治数据不足）
+│   │      → 与 FFL 做对照，看是不是「有限数据专用」的那一项在起作用
+│   ├─ ② WaveFill 频带损失（61★，ICCV 2021，小波域）
+│   │      → 与 DWT 频带加权结合，天然适配你库里既有的 DWT 方案
+│   └─ ③ DualFormer 频谱判别器（65★，ICCV 2023，双域 D）
+│           → 只在 loss 验证有效后再做；必须分开记两条分支的梯度
+│
+└─ 动生成器结构（最后才做）
+    └─ UFFC（38★，ICCV 2023）—— 不要用原版 FFC，用修过坑的这个</code></pre></div>
+<h3>9.1 五条可直接执行的命令</h3>
+<pre><code># 1. 装两个基线 loss，先跑通
+pip install focal-frequency-loss fdl-pytorch
+
+# 2. 取 FreGAN 与 WaveFill 的源码，只看损失部分（不覆盖你的仓库）
+git clone --depth 1 https://github.com/kobeshegu/FreGAN_NeurIPS2022 /tmp/fregan
+git clone --depth 1 https://github.com/yingchen001/WaveFill /tmp/wavefill
+grep -rn "def .*loss\|class .*Loss\|fft\|rfft\|dwt" /tmp/fregan /tmp/wavefill --include=*.py
+
+# 3. 取 DualFormer 的判别器实现
+git clone --depth 1 https://github.com/Luciennnnnnn/DualFormer /tmp/dualformer
+grep -rn "class .*Discriminator\|spectral\|rfft2" /tmp/dualformer --include=*.py
+
+# 4. 确认你的基线里 gp_weights 是哪一版（上一份报告的免费消融点）
+grep -rn "gp_weights\|Gauss_Pyramid" models/ experiments/ options/
+
+# 5. 确认频域 loss 挂在哪（CUT 骨架）
+grep -n "def compute_G_loss" -A 30 models/cut_model.py</code></pre>
+<h3>9.2 一张优先级总表</h3>
+<div class="scroll"><table><thead><tr><th>候选</th><th>落点</th><th>改动成本</th><th>可复现性</th><th>小众度</th><th>病理先例</th><th>建议顺序</th></tr></thead><tbody>
+<tr><td>FFL / FDL</td><td>A loss</td><td><span class="b high">极低</span></td><td><span class="b high">高</span></td><td><span class="b bad">低（基线）</span></td><td><span class="b bad">无</span></td><td>第 0 步（对照）</td></tr>
+<tr><td><b>FreGAN 高频损失</b></td><td>A loss</td><td><span class="b high">低</span></td><td><span class="b high">高</span></td><td><span class="b purple">高</span></td><td><span class="b bad">无</span></td><td><b>第 1 步</b></td></tr>
+<tr><td><b>WaveFill 频带损失</b></td><td>A loss</td><td><span class="b high">低</span></td><td><span class="b high">高</span></td><td><span class="b purple">高</span></td><td><span class="b bad">无</span></td><td><b>第 2 步</b></td></tr>
+<tr><td><b>DualFormer 频谱 D</b></td><td>B 判别器</td><td><span class="b bad">中–高</span></td><td><span class="b medium">中</span></td><td><span class="b purple">高</span></td><td><span class="b bad">无</span></td><td>第 3 步</td></tr>
+<tr><td><b>UFFC</b></td><td>C 生成器</td><td><span class="b bad">高</span></td><td><span class="b medium">中</span></td><td><span class="b purple">高</span></td><td><span class="b bad">无</span></td><td>第 4 步</td></tr>
+<tr><td>MSCA / GFNet</td><td>D 中间层</td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td><td><span class="b bad">无</span></td><td>备选（当 SE 对照）</td></tr>
+<tr><td>WTConv / DCTNet</td><td>C 生成器/输入</td><td><span class="b medium">中–高</span></td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td><td><span class="b bad">无</span></td><td>备选</td></tr>
+</tbody></table></div>
+
+<h2 id="s10"><span class="num">10</span>未核实清单与证据边界</h2>
+<div class="box stop"><div class="bt">明确未核实的事项（不要当作事实引用）</div><ol>
+<li><b>FreGAN 的损失实现</b> —— 只读到原文片段（高频分量 + 高频判别器两处直接引述），<b>未读完整论文、未读代码</b>。损失形式、尺度数、权重均未核实。</li>
+<li><b>WaveFill 的损失结构</b> —— 只核实仓库存在、61★、ICCV 2021、依赖 <code>pytorch_wavelets</code>。<b>损失分几项、权重、是否含跨频带抑制项——未核实。</b></li>
+<li><b>DualFormer 的频谱分支建在哪</b> —— 未读论文正文与代码。<b>不要凭标题推断</b>它是对图像频谱还是特征频谱做判别。</li>
+<li><b>WTConv 星数</b> —— 本轮未通过 API 核实（仅见检索摘要）。</li>
+<li><b>SS-UIE 星数与代码可用性</b> —— 仓库存在，未核实。</li>
+<li><b>BoyCO3 / weidaoquan 两个 Plug-play-modules 镜像</b> —— 未核实星数、更新状态、内容是否与 AIFengheshu 版一致。</li>
+<li><b>BMC Bioinformatics 2025 混合空间-频域 GAN</b> —— 论文存在，<b>未找到代码</b>，SFM / VWMA / Cross-Attention Fusion 的描述来自二手解读，未读原文。</li>
+<li><b>M2PL-GAN（TMI 2026）与 ODA-GAN（CVPR 2025）</b> —— 确认论文存在，<b>均未找到代码仓库</b>。</li>
+<li><b>EndlessSora / eezkni / BGU-CS-VIL 的星数</b> —— 本轮未重新核实（前两者已在前一份报告中记录 API 与用法）。</li>
+</ol></div>
+<p class="cite"><b>证据标记：</b><span class="b high">[VERIFIED]</span> 本轮通过 GitHub API 取到 full_name / stars / license / pushed_at；<span class="b medium">[SEARCH-ONLY]</span> 仅见检索摘要，未读一手；<span class="b low">[INFERENCE]</span> 基于已核实证据的工程推断，需实测；<span class="b bad">[UNVERIFIED]</span> 抓取受阻或未做，不应作为强事实引用。</p>
+<h3>10.1 本文明确没有做的事</h3>
+<ul>
+<li><b>没有跑任何实验。</b>所有「推荐」都是基于「仓库存在 + 接口可缝合 + 星数低」的判断，<b>不是受控实验结果</b>。</li>
+<li><b>没有核实论文指标数字。</b>本文只回答「代码在哪、星多少、挂哪里、改动多大」，不回答「它比基线好多少」。</li>
+<li><b>没有重复机制论证。</b>「频域适合解决什么故障、什么时候止损」请引用库内 <i>GAN+频域+门控_虚拟染色方法调研</i>，本文与其结论一致。</li>
+<li><b>没有验证任何模块在图像翻译任务上可用。</b>本清单里绝大多数模块的原始任务是<b>分类、修复、超分</b>，不是翻译。</li>
+</ul>
+
+<h2 id="s11"><span class="num">11</span>参考与链接总表</h2>
+<div class="scroll"><table><thead><tr><th>仓库</th><th>星数</th><th>会议 / 年份</th><th>落点</th><th>许可</th><th>核实等级</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/kobeshegu/FreGAN_NeurIPS2022">kobeshegu/FreGAN_NeurIPS2022</a></td><td><b>57</b></td><td>NeurIPS 2022</td><td>A + B</td><td>无 LICENSE</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/yingchen001/WaveFill">yingchen001/WaveFill</a></td><td><b>61</b></td><td>ICCV 2021</td><td>A</td><td>无 LICENSE</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/Luciennnnnnn/DualFormer">Luciennnnnnn/DualFormer</a></td><td><b>65</b></td><td>ICCV 2023</td><td>B</td><td>无 LICENSE</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/1911cty/Unbiased-Fast-Fourier-Convolution">1911cty/Unbiased-Fast-Fourier-Convolution</a></td><td><b>38</b></td><td>ICCV 2023</td><td>C</td><td>无 LICENSE</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/kaix-nv/DCTNet">kaix-nv/DCTNet</a></td><td>461</td><td>CVPR 2020</td><td>C / 输入</td><td>无 LICENSE</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/cfzd/FcaNet">cfzd/FcaNet</a></td><td>607</td><td>ICCV 2021</td><td>D</td><td>MIT</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/raoyongming/GFNet">raoyongming/GFNet</a></td><td>509</td><td>NeurIPS 2021 / T-PAMI</td><td>D</td><td>MIT</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/YehLi/ImageNetModel">YehLi/ImageNetModel</a>（Wave-ViT）</td><td>275</td><td>ECCV 2022</td><td>D</td><td>Apache-2.0</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/AIFengheshu/Plug-play-modules">AIFengheshu/Plug-play-modules</a></td><td>1,633</td><td>合集</td><td>全部</td><td>无 LICENSE</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/Nikwelhe/PiFS-CycleGAN">Nikwelhe/PiFS-CycleGAN</a></td><td><b>0</b></td><td>2026</td><td>框架</td><td>MIT</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/EndlessSora/focal-frequency-loss">EndlessSora/focal-frequency-loss</a></td><td><span class="b medium">未核实</span></td><td>ICCV 2021</td><td>A（基线）</td><td>MIT</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td><a href="https://github.com/eezkni/FDL">eezkni/FDL</a></td><td><span class="b medium">未核实</span></td><td>CVPR 2024</td><td>A（基线）</td><td>MIT</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td><a href="https://github.com/BGU-CS-VIL/WTConv">BGU-CS-VIL/WTConv</a></td><td><span class="b medium">未核实</span></td><td>ECCV 2024</td><td>C</td><td><span class="b medium">未核实</span></td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td><a href="https://github.com/advimman/lama">advimman/lama</a>（FFC）</td><td>10.3k</td><td>WACV 2022</td><td>C</td><td>Apache-2.0</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/LintaoPeng/SS-UIE">LintaoPeng/SS-UIE</a></td><td><span class="b medium">未核实</span></td><td>—</td><td>B / 架构</td><td><span class="b medium">未核实</span></td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td><a href="https://github.com/Jose-Miguel-Teixeira/CSSP2P-GAN">Jose-Miguel-Teixeira/CSSP2P-GAN</a></td><td><span class="b medium">未核实</span></td><td>DGM4MICCAI 2025</td><td>病理（无频域）</td><td>Apache-2.0</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+</tbody></table></div>
+<h3>11.1 无代码 / 未找到代码的相关工作</h3>
+<ul>
+<li><b>SSD-GAN</b>（AAAI 2021，arXiv:2012.05535）—— spatial + spectral 双判别器，机制描述见库内 <i>GAN+频域+门控</i> §3.3。</li>
+<li><b>混合空间-频域 GAN</b>（BMC Bioinformatics 2025）—— 病理域，StyleGAN + SFM + VWMA。</li>
+<li><b>M2PL-GAN</b>（IEEE TMI 2026）—— 多视图多层级病理语义感知。</li>
+<li><b>ODA-GAN</b>（CVPR 2025）—— 正交解耦染色相关/无关特征，与频域正交。</li>
+</ul>
+<h3>11.2 库内相关报告</h3>
+<ul>
+<li><code>01_调研报告/CUT骨架_频域缝合清单_代码接口级.html</code> —— 前作，CUT 骨架内的可 fork 仓库与四个缝合接口。</li>
+<li><code>01_调研报告/GAN+频域+门控_虚拟染色方法调研.html</code> —— 机制地图与 F0–R1 消融矩阵（本文的机制论证一律引用它）。</li>
+<li><code>01_调研报告/PSPStain_频域条件注入_文献综述报告.html</code> —— 扩散侧的频域 condition 注入。</li>
+<li><code>06_方案可行性审查/频域门控治理GAN缺陷_先例核实与机制修正.html</code> —— 频域×GAN 先例地图与机制修正。</li>
+<li><code>05_伪影与失败模式/GAN棋盘格伪影_底层成因_卷积信号处理与频域机制.html</code> —— 为什么值得加频域约束。</li>
+</ul>
+<h2 id="s12"><span class="num">12</span>附录：单仓库复核 —— <code>qf1518/MSCW</code></h2>
+<p class="cite">用户提供的仓库，理由：「0 星，我感觉不错」。本节是<b>逐文件源码级复核</b>，结论与理由都写清楚。</p>
+
+<h3>12.1 仓库事实（GitHub API 逐字）</h3>
+<div class="scroll"><table><thead><tr><th>项</th><th>值</th><th>判读</th></tr></thead><tbody>
+<tr><td>仓库</td><td><a href="https://github.com/qf1518/MSCW">qf1518/MSCW</a></td><td>—</td></tr>
+<tr><td>星 / fork / watcher</td><td><b>0 / 0 / 1</b></td><td>上传即弃</td></tr>
+<tr><td>许可</td><td>MIT</td><td>可自由使用</td></tr>
+<tr><td>创建 / 最后推送</td><td><b>2025-04-25 / 2025-04-25</b></td><td>同一天，3 次 commit，之后一年未动</td></tr>
+<tr><td><code>README.md</code></td><td><b>6 字节</b></td><td><b>等于没有文档</b>：无论文链接、无训练说明、无权重</td></tr>
+<tr><td>描述 / topics</td><td>均为空</td><td>—</td></tr>
+<tr><td>代码量</td><td>约 25 个 <code>.py</code>，合计 ~140 KB</td><td>含一个 <code>model/</code> 子目录的 U-Net 家族</td></tr>
+</tbody></table></div>
+<p><b>它对应的论文是真的（已核实）：</b>Fan Qin, Yongjie Liang, Chaofeng Yang, <i>Medical image segmentation network based on multi-scale cross-attention and wavelet transform</i>, <b>Journal of King Saud University – Computer and Information Sciences, 2025</b>。仓库名 <code>qf1518</code> = 作者 Qin Fan 的缩写倒写。</p>
+
+<h3>12.2 为什么它不能 fork：它是分割，而且跑不起来</h3>
+<div class="box stop"><div class="bt">三条硬伤（源码级）</div><ol>
+<li><b>任务不匹配。</b><code>MSCWNet.forward()</code> 返回 <code>logits</code>（形状 <code>[n_classes, H, W]</code>），是<b>语义分割</b>网络。你的任务是 H&amp;E→IHC <b>图像生成</b>。整个仓库不能 fork。</li>
+<li><b>★ 缺文件，import 直接失败。</b><code>MSCAM.py</code> 第 4 行 <code>from MLA import MLA</code>，但整个文件树里<b>没有 <code>MLA.py</code></b>。而这个 <code>MLA</code> 实际是 <b>EfficientViT 的 <code>LiteMLA</code></b>（多尺度线性注意力，ICCV 2023，<a href="https://github.com/mit-han-lab/efficientvit">mit-han-lab/efficientvit</a>）—— 作者改名后<b>忘了上传</b>。⇒ <code>MSCAM</code> 整条路（含 <code>CCSABlockWithLiteMLA</code>）断掉。</li>
+<li><b>另有两处死代码。</b><code>losses.py</code> 的 <code>LovaszHingeLoss</code> 依赖未 vendored 的 <code>LovaszSoftmax</code> 包；<code>dependencies.py</code> 引用了不存在的 <code>training/</code> 包（<code>from training.metric import *</code> 等）。</li>
+</ol></div>
+<p><b>0 星的成因因此很清楚：</b>这不是「小众佳作被埋没」，而是<b>单日批量上传、代码不完整、无文档的代码包</b>。这类仓库的正确用法是<b>当模块抽取源</b>，不是当基线。</p>
+
+<h3>12.3 但它确实有三个可拆件（这是它全部的价值）</h3>
+<div class="scroll"><table><thead><tr><th>文件</th><th>大小</th><th>它其实是什么（原始出处）</th><th>能缝吗</th></tr></thead><tbody>
+<tr><td><code>WTConv.py</code></td><td>6.5 KB</td><td><b>ECCV 2024</b> WTConv，<a href="https://github.com/BGU-CS-VIL/WTConv">BGU-CS-VIL/WTConv</a>（本文 §5 已列）</td><td><span class="b high">✅ 完全自包含</span> 只依赖 <code>pywt</code> + torch，含自定义 autograd Function</td></tr>
+<tr><td><code>DySample.py</code></td><td>3.9 KB</td><td><b>ICCV 2023</b> DySample，<a href="https://github.com/tiny-smart/dysample">tiny-smart/dysample</a>（arXiv:2308.15085）</td><td><span class="b high">✅ 完全自包含</span> 只依赖 torch，见 §12.4</td></tr>
+<tr><td><code>MSCWNet.py</code> 的 Down / Up 设计</td><td>4.0 KB</td><td>作者自己的组合</td><td><span class="b medium">⚠ 只能当范例</span> 见 §12.5</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">★ 引用归属警告（必须遵守）</div><p>作者自己在 <code>DySample.py</code> 顶部写了：<code># 全网最全100➕即插即用模块GitHub地址：https://github.com/ai-dawang/PlugNPlay-Modules</code>。<br>这说明 <b>DySample 与 WTConv 都是从即插即用模块库搬来的，不是这个仓库的原创</b>。所以：</p><ul>
+<li>引用要指向<b>原论文 / 原仓库</b>（DySample → ICCV 2023 <code>tiny-smart/dysample</code>；WTConv → ECCV 2024 <code>BGU-CS-VIL/WTConv</code>）。</li>
+<li><b>不能引用 <code>qf1518/MSCW</code></b> —— 它只是搬运。引用它会同时踩两个坑：归属错误 + 代码不完整。</li>
+<li>论文本身（JKSU-CIS 2025）可以引，但引的是它的「多尺度交叉注意力 + 小波变换分割网络」，与你的生成任务无关。</li>
+</ul></div>
+
+<h3>12.4 ★ 最有价值的发现：DySample 正好对着你已知的故障</h3>
+<div class="box key"><div class="bt">为什么这个模块比它所在的仓库重要</div>
+<p>你的 <code>ResnetGenerator</code> 用 <b>转置卷积 / <code>nn.Upsample</code></b> 做上采样。而库内 <i>05_伪影与失败模式/GAN棋盘格伪影_底层成因_卷积信号处理与频域机制</i> 已经证明：<b>棋盘格不是学习现象</b>，而是转置卷积的<b>多相增益不平衡</b>——固定权重就会出现，周期 = stride。</p>
+<p>DySample 把上采样<b>重写成「学出来的偏移 + <code>grid_sample</code> 双线性采样」</b>：</p>
+<pre><code>offset = self.offset(x) * 0.25 + self.init_pos      # 学习采样偏移
+coords = 2 * (coords + offset) / normalizer - 1     # 归一化坐标
+F.grid_sample(x, coords, mode='bilinear', align_corners=False, padding_mode="border")</code></pre>
+<p><b>它根本不经过转置卷积</b> ⇒ 从机制上绕开了多相增益不平衡。这是本清单里<b>唯一一个「直接对着你已知故障」的模块</b>，而且只有 3.9 KB、零额外依赖。</p></div>
+<div class="box teal"><div class="bt">缝合建议（比频域 loss 更早可以试）</div><p>它不属于「频域」，所以<b>不能和频域 loss 混在同一个消融里</b>（否则归因失败）。但它是<b>独立的一条线</b>：如果你的生成结果有棋盘格，把 <code>Up</code> 里的转置卷积换成 DySample 是一个单因素、改动小、机制明确的对照实验。<br>注意：它的默认 <code>scale=2</code>、<code>groups=4</code>、<code>style='lp'</code>，接到你的上采样块时需要确认通道数能被 <code>groups</code> 整除。</p></div>
+
+<h3>12.5 顺带可借的：它的 Down / Up 设计</h3>
+<pre><code># Down：池化后接小波卷积，而不是直接卷积
+class Down(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        self.maxpool_conv = nn.Sequential(
+            nn.MaxPool2d(2),
+            WTConv(in_channels, in_channels),   # ← 小波卷积
+            DoubleConv(in_channels, out_channels))
+
+# Up：可学习上采样 + 1×1 卷积，而不是转置卷积
+class Up(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        self.up = nn.Sequential(
+            DySample(in_channels // 2),         # ← 可学习上采样
+            nn.Conv2d(in_channels // 2, in_channels // 2, kernel_size=1))</code></pre>
+<p><b>可借的是什么：</b>「<b>用频域算子替换下采样、用可学习采样替换上采样</b>」这个组合范式本身。<b>不可借的是什么：</b>它的整体架构（编码器-解码器 + skip + <code>n_classes</code> 输出）是分割专用的，搬到生成任务上没有任何意义。</p>
+
+<h3>12.6 顺带发现：一个更大的即插即用模块库</h3>
+<div class="card"><div class="ch"><div><div class="title">PlugNPlay-Modules（ai-dawang）</div><div class="v">即插即用模块合集 · 比本文 §7 那份大三倍</div></div><div><span class="b high">5,122★</span> <span class="b blue">Python</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/ai-dawang/PlugNPlay-Modules">github.com/ai-dawang/PlugNPlay-Modules</a>（无 LICENSE 文件，最后推送 2025-08，364 fork）</p>
+<p><b>与 §7 那份的关系：</b>本文 §7 列的 <code>AIFengheshu/Plug-play-modules</code> 是 1,633★，这一份是 <b>5,122★</b>。两者都是「一个模块一个 <code>.py</code>」的形态，内容高度重叠（DySample / WTConv 两份都有）。<b>建议以这一份为主索引</b>，因为它更新更活跃。</p>
+<p><b>同样的前提仍然成立：</b>只提供代码，不提供受控实验。当算子候选池用，引用回到原论文。</p>
+</div></div>
+
+<h3>12.7 复核结论</h3>
+<div class="box good"><div class="bt">一句话</div><p><b>仓库本身不能用（分割 + 缺文件 + 无文档），但它搬运的两个模块能用，其中一个（DySample）正好补在你已知的棋盘格故障上。</b></p></div>
+<div class="scroll"><table><thead><tr><th>动作</th><th>建议</th></tr></thead><tbody>
+<tr><td>fork 整个仓库</td><td><span class="b bad">不要</span> 任务不匹配，且 <code>MSCAM</code> 因缺 <code>MLA.py</code> 跑不起来</td></tr>
+<tr><td>抽 <code>WTConv.py</code></td><td><span class="b high">可以</span> 但直接从 ECCV 2024 原仓库取更干净（本文 §5 已列）</td></tr>
+<tr><td>抽 <code>DySample.py</code></td><td><span class="b purple">★ 推荐</span> 从 ICCV 2023 原仓库 <code>tiny-smart/dysample</code> 取；作为棋盘格问题的独立对照实验</td></tr>
+<tr><td>抽 <code>MSCAM.py</code></td><td><span class="b medium">暂不</span> 缺 <code>MLA.py</code>；若要用，<code>MLA</code> 需从 EfficientViT 补，等于重写一遍</td></tr>
+<tr><td>引用</td><td>指向原论文，<b>不要引 <code>qf1518/MSCW</code></b></td></tr>
+</tbody></table></div>
+
+<h2 id="s13"><span class="num">13</span>「模块抽取源」仓库清单与检索方法</h2>
+<p class="cite">承接 §12 的 <code>qf1518/MSCW</code> 复核。用户要求：「搜一搜<b>这样的</b> GitHub」——即<b>低星、无文档、但塞着可直接抄走的单文件模块</b>的仓库。</p>
+
+<h3>13.1 先给结论：模块合集不用再找了</h3>
+<div class="box stop"><div class="bt">本轮最重要的一个负面发现</div><p>中文社区那份「2025 年全网最全即插即用模块」<b>本质上是同一份文档，被不同账号镜像了至少 10 次</b>。README 正文逐字相同（连模块编号、arXiv 链接、措辞都一致），只是换了 owner 名：</p>
+<p><code>ai-dawang/PlugNPlay-Modules</code>（<b>5,122★</b>）· <code>AIFengheshu/Plug-play-modules</code>（<b>1,633★</b>）· <code>BoyCO3/Plug-play-modules</code> · <code>weidaoquan/Plug-play-modules</code> · <code>Hurric0s/Plug-play-modules</code> · <code>Thomas-403/Plug-play-modules</code> · <code>CCC0090/OpenCV-PLUG-mudules</code> · <code>KD-design229/AI-</code></p>
+<p>⇒ <b>继续找合集 = 重复劳动。</b>真正该做的是<b>从合集里的模块名反查原始仓库</b>（见 §13.3），因为<b>合集本身不是引用对象，只是索引</b>。</p></div>
+
+<h3>13.2 「这样的 GitHub」其实是三类，先分清</h3>
+<div class="scroll"><table><thead><tr><th>类型</th><th>特征</th><th>正确用法</th><th>代表</th></tr></thead><tbody>
+<tr><td><b>① 模块原始出处</b></td><td>论文官方仓库；模块与论文一一对应；通常几百星</td><td><b>引用指向这里</b>；代码从这里取最干净</td><td><code>BGU-CS-VIL/WTConv</code> · <code>okojoalg/dfformer</code></td></tr>
+<tr><td><b>② 合集 / 索引</b></td><td>一个模块一个 <code>.py</code>；README 是模块目录；无实验</td><td><b>当索引用</b>，不当引用对象；用它的模块名去反查 ①</td><td><code>ai-dawang/PlugNPlay-Modules</code></td></tr>
+<tr><td><b>③ 论文代码包（像 MSCW 那样）</b></td><td>低星、无文档、代码可能不完整；模块是<b>搬来的</b></td><td><b>当模块抽取源</b>；引用必须回到 ①</td><td><code>qf1518/MSCW</code>（0★）· <code>alexhe101/FourierISP</code>（13★）</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">③ 类仓库的三个固定坑（MSCW 全中）</div><ol>
+<li><b>缺文件</b>——import 一个没上传的本地模块（MSCW 的 <code>MLA.py</code>）。</li>
+<li><b>死代码</b>——引用不存在的包（<code>training/</code>、<code>LovaszSoftmax</code>）。</li>
+<li><b>搬运未标注</b>——模块是从合集抄的，作者自己在文件头写了来源（MSCW 的 <code>DySample.py</code> 就写了）。</li>
+</ol><p><b>⇒ 拿到 ③ 类仓库的第一件事：读每个 <code>.py</code> 的 import 段 + 文件头注释。</b>前者查缺文件，后者查真实出处。</p></div>
+
+<h3 id="s13t">13.3 ★ 模块名 → 原始仓库对照表（本清单最实用的一件东西）</h3>
+<p>合集和论文代码包里出现的<b>文件名，就是论文标题的缩写</b>。拿到文件名就能反查原始仓库：</p>
+<div class="scroll"><table><thead><tr><th>合集里的文件名</th><th>论文</th><th>会议</th><th>原始仓库</th><th>星数</th></tr></thead><tbody>
+<tr><td><code>DynamicFilter.py</code> / DF</td><td>FFT-based Dynamic Token Mixer for Vision<br><span class="small">用 FFT 动态滤波替代 MHSA，复杂度从二次降到近线性</span></td><td><b>AAAI 2024</b></td><td><a href="https://github.com/okojoalg/dfformer">okojoalg/dfformer</a><br><span class="small">MIT</span></td><td><b>73</b> <span class="b purple">★小众</span></td></tr>
+<tr><td><code>WTConv.py</code></td><td>Wavelet Convolutions for Large Receptive Fields</td><td>ECCV 2024</td><td><a href="https://github.com/BGU-CS-VIL/WTConv">BGU-CS-VIL/WTConv</a></td><td><span class="b medium">未核实</span></td></tr>
+<tr><td><code>FreqFusion.py</code></td><td>Frequency-aware Feature Fusion for Dense Image Prediction</td><td>TPAMI 2024</td><td><a href="https://github.com/ying-fu/FreqFusion">ying-fu/FreqFusion</a><br><span class="small">另有 <code>Linwei-Chen/FreqFusion</code> 版本</span></td><td><span class="b medium">未核实</span></td></tr>
+<tr><td><code>DySample.py</code></td><td>Learning to Upsample by Learning to Sample</td><td>ICCV 2023</td><td><a href="https://github.com/tiny-smart/dysample">tiny-smart/dysample</a></td><td><span class="b medium">未核实</span></td></tr>
+<tr><td><code>UFFConv</code></td><td>Rethinking Fast Fourier Convolution in Image Inpainting</td><td>ICCV 2023</td><td><a href="https://github.com/1911cty/Unbiased-Fast-Fourier-Convolution">1911cty/Unbiased-Fast-Fourier-Convolution</a></td><td><b>38</b> <span class="b purple">★小众</span></td></tr>
+<tr><td><code>WaveA</code> / WaveletAttention</td><td>Wave-ViT: Unifying Wavelet and Transformers</td><td>ECCV 2022</td><td><a href="https://github.com/YehLi/ImageNetModel">YehLi/ImageNetModel</a><br><span class="small">Apache-2.0</span></td><td>275</td></tr>
+<tr><td><code>MSCA</code></td><td>FcaNet: Frequency Channel Attention Networks</td><td>ICCV 2021</td><td><a href="https://github.com/cfzd/FcaNet">cfzd/FcaNet</a><br><span class="small">MIT</span></td><td>607</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">★ 本轮新增的两个频域模块（此前未收录）</div><ol>
+<li><b>DynamicFilter（DF）</b>，AAAI 2024 —— 用 <b>FFT 动态滤波</b>替代多头自注意力，token mixing 全程在频域完成，复杂度从二次降到近线性。原始仓库 <a href="https://github.com/okojoalg/dfformer">okojoalg/dfformer</a>（<b>73★</b>，MIT，2024-02 最后推送）。<b>这是 §6 那批「频域注意力」里星数最低、最没被用烂的一个。</b></li>
+<li><b>FreqFusion</b>，TPAMI 2024 —— <b>频率感知的特征融合</b>，针对密集预测里「类内不一致 + 边界偏移」两个问题，在频域做自适应融合。适合插在 §2 的落点 D。</li>
+</ol></div>
+
+<h3>13.4 基础设施：做小波必须有的工具库</h3>
+<div class="card"><div class="ch"><div><div class="title">PyTorch-Wavelet-Toolbox</div><div class="v">JMLR · 可微快速小波变换 + GPU 支持</div></div><div><span class="b high">439★</span> <span class="b tealb">活跃维护</span></div></div><div class="body">
+<p><b>仓库：</b><a href="https://github.com/v0lta/PyTorch-Wavelet-Toolbox">v0lta/PyTorch-Wavelet-Toolbox</a>（<b>EUPL-1.2</b>，最后推送 <b>2026-10-14</b>）</p>
+<p><b>它不是模块，是基础设施。</b>提供可微的 <code>wavedec2</code> / <code>waverec2</code>（2D 快速小波变换与逆变换）、<code>wavedec3</code>/<code>waverec3</code>（3D）、GPU 支持、以及一批预定义小波基。</p>
+<p><b>为什么你需要它：</b>§5 的 WTConv 和 §3.3 的 WaveFill 都依赖小波变换，而 <code>pytorch_wavelets</code>（WaveFill 用的那个）维护状态一般。<b>这个库是 JMLR 论文、EUPL 许可、昨天还在更新</b>，是目前最可靠的可微小波实现。如果你要做任何 DWT 相关的缝合（频带损失、小波卷积、频带门控），先装它。</p>
+<p><b>许可注意：</b>EUPL-1.2 是欧洲公共许可，与 MIT/Apache 不同，商用前请确认。</p>
+</div></div>
+
+<h3>13.5 同款 ③ 类仓库（低星论文代码包）的更多样本</h3>
+<div class="scroll"><table><thead><tr><th>仓库</th><th>星</th><th>论文</th><th>可拆件</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/alexhe101/FourierISP">alexhe101/FourierISP</a><br><span class="small">无 LICENSE</span></td><td><b>13</b> <span class="b purple">★极小众</span></td><td>Enhancing RAW-to-sRGB with Decoupled Style Structure in <b>Fourier Domain</b>（AAAI 2024，arXiv:2401.02161）</td><td>频域里<b>解耦 style 与 structure</b> 的做法——与你的「染色表达 ↔ 组织结构解耦」是同一个抽象问题</td></tr>
+<tr><td><a href="https://github.com/qf1518/MSCW">qf1518/MSCW</a><br><span class="small">MIT</span></td><td><b>0</b></td><td>多尺度交叉注意力 + 小波变换分割网络（JKSU-CIS 2025）</td><td>WTConv + DySample（<b>均为搬运</b>，见 §12）</td></tr>
+<tr><td><a href="https://github.com/Nikwelhe/PiFS-CycleGAN">Nikwelhe/PiFS-CycleGAN</a><br><span class="small">MIT</span></td><td><b>0</b></td><td>Physics-Informed and Frequency-Enhanced CT to EUS Synthesis</td><td>「频域增强 + 物理一致性」的组合方式</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">③ 类仓库的判据（省时间用）</div><p>看三个信号，中两个以上就是 ③ 类：<b>① 星数 &lt; 100</b>；<b>② README 少于 200 字或干脆空</b>；<b>③ 文件树里有独立命名的模块文件</b>（<code>XXXConv.py</code> / <code>XXXAttention.py</code> / <code>blocks.py</code> / <code>modules.py</code>）。<br>③ 类仓库<b>不要 fork</b>，只做「打开文件 → 读 import → 读文件头注释 → 抽类」这一步。</p></div>
+
+<h3>13.6 自己找更多的三个可复用方法</h3>
+<div class="flow"><pre><code>方法 1：从「模块名」反查原始仓库（命中率最高）
+   合集 / 论文代码包里的文件名 = 论文缩写
+   → 拿文件名 + "github" 去搜 → 找到原始仓库 → 引用指向它
+   例：看到 DynamicFilter.py → 搜 "FFT-based Dynamic Token Mixer github" → okojoalg/dfformer
+
+方法 2：GitHub topic 页（找同类仓库的入口）
+   github.com/topics/wavelet              ← 小波（含 PyTorch-Wavelet-Toolbox）
+   github.com/topics/plugandplay          ← 即插即用（11 个仓库，含 awesome 清单）
+   github.com/topics/fourier              ← 傅里叶
+   github.com/topics/frequency-domain     ← 频域
+   github.com/topics/fourier-methods      ← 傅里叶方法
+   ⚠ topic 页按 star 排序，会把「合集」排在前面 —— 用方法 1 把合集过滤掉
+
+方法 3：中文「即插即用」文章 → 反查
+   CSDN / 知乎上每篇「【即插即用模块】XXX篇」文章都同时给出：
+     模块名 + 论文标题 + arXiv 链接 + 原始 GitHub 地址
+   → 这是最省事的索引。已知作者：CSDN「qq_36584673」「wei582636312」
+   ⚠ 二手来源，arXiv 编号与仓库地址需自己核一遍
+
+索引类仓库（1,277★，MIT，topics 含 plugandplay）：
+   github.com/pprp/awesome-attention-mechanism-in-cv
+   「Awesome List of Attention Modules and Plug&Play Modules in Computer Vision」</code></pre></div>
+
+<h3>13.7 本轮新增链接总表</h3>
+<div class="scroll"><table><thead><tr><th>仓库</th><th>星</th><th>类型</th><th>许可</th><th>核实等级</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/okojoalg/dfformer">okojoalg/dfformer</a></td><td><b>73</b></td><td>① 模块原始出处（FFT 动态滤波，AAAI 2024）</td><td>MIT</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/v0lta/PyTorch-Wavelet-Toolbox">v0lta/PyTorch-Wavelet-Toolbox</a></td><td>439</td><td>基础设施（可微小波，JMLR）</td><td>EUPL-1.2</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/pprp/awesome-attention-mechanism-in-cv">pprp/awesome-attention-mechanism-in-cv</a></td><td>1,277</td><td>② 索引清单</td><td>MIT</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/alexhe101/FourierISP">alexhe101/FourierISP</a></td><td><b>13</b></td><td>③ 论文代码包（频域解耦，AAAI 2024）</td><td>无 LICENSE</td><td><span class="b high">[VERIFIED]</span></td></tr>
+<tr><td><a href="https://github.com/ying-fu/FreqFusion">ying-fu/FreqFusion</a></td><td><span class="b medium">未核实</span></td><td>① 模块原始出处（频域特征融合，TPAMI 2024）</td><td><span class="b medium">未核实</span></td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+<tr><td>合集镜像 <code>BoyCO3</code> / <code>weidaoquan</code> / <code>Hurric0s</code> / <code>Thomas-403</code> / <code>CCC0090</code> / <code>KD-design229</code></td><td><span class="b medium">未核实</span></td><td>② 合集（<b>同一份文档的镜像</b>）</td><td>—</td><td><span class="b medium">[SEARCH-ONLY]</span></td></tr>
+</tbody></table></div>
+<div class="box stop"><div class="bt">本节未核实（勿当事实引用）</div><ul>
+<li><b>FreqFusion 的星数与许可</b> —— GitHub API 两次返回空，未取到。仓库确实存在（搜索命中，标题与描述一致）。</li>
+<li><b>六个合集镜像的星数与更新状态</b> —— 只核实了 README 正文逐字相同，未取元信息。</li>
+<li><b>DynamicFilter 的模块代码</b> —— 只核实仓库元信息（73★、MIT、AAAI 2024），<b>未读代码</b>。DF 的具体实现（怎么生成动态权重、怎么在频域做 mixing）未核实。</li>
+<li><b>FreqFusion / FourierISP 的模块代码</b> —— 未读。</li>
+<li><b>CSDN / 知乎文章作者的准确性</b> —— 二手来源，未逐篇核对 arXiv 编号与仓库地址的一致性。</li>
+</ul></div>
+
+<h3>12.8 逐行比对结果：<code>WTConv.py</code> 与官方实现的差异</h3>
+<p class="cite">本节为后续补充核实。把 MSCW 的 <code>WTConv.py</code> 与官方 <code>BGU-CS-VIL/WTConv</code> 的 <code>wtconv/wtconv2d.py</code> 逐行对照。</p>
+<div class="scroll"><table><thead><tr><th>比对项</th><th>官方 <code>wtconv/wtconv2d.py</code></th><th>MSCW 的 <code>WTConv.py</code></th><th>判定</th></tr></thead><tbody>
+<tr><td>类名</td><td><code>WTConv2d</code></td><td><code>WTConv</code></td><td><span class="b medium">改名</span></td></tr>
+<tr><td>构造函数签名</td><td><code>(in_channels, out_channels, kernel_size=5, stride=1, bias=True, wt_levels=1, wt_type='db1')</code></td><td><b>完全相同</b>（参数顺序与默认值逐字一致）</td><td><span class="b high">逐字一致</span></td></tr>
+<tr><td><code>_ScaleModule</code></td><td><code>__init__(dims, init_scale=1.0, init_bias=0)</code> + <code>forward</code> 返回 <code>torch.mul(self.weight, x)</code></td><td><b>逐字相同</b></td><td><span class="b high">逐字一致</span></td></tr>
+<tr><td><code>forward()</code> 主干</td><td>循环 + <code>x_ll_in_levels</code> / <code>x_h_in_levels</code> / <code>shapes_in_levels</code> + <code>curr_x_tag</code> + 逆变换回填</td><td><b>逐行相同，变量名也相同</b></td><td><span class="b high">逐行一致</span></td></tr>
+<tr><td>小波变换调用</td><td>拆在 <code>wtconv/util/wavelet.py</code>，调用 <code>wavelet.create_2d_wavelet_filter()</code> / <code>wavelet_2d_transform()</code> / <code>inverse_2d_wavelet_transform()</code></td><td><b>内联到同一文件</b>：<code>create_wavelet_filter</code> / <code>wavelet_transform</code> / <code>inverse_wavelet_transform</code> + 两个 <code>*_init()</code> 工厂</td><td><span class="b medium">合并了两个文件</span></td></tr>
+<tr><td>stride 分支</td><td><code>nn.AvgPool2d(kernel_size=1, stride=stride)</code></td><td>自定义 <code>F.conv2d(x, self.stride_filter, stride=...)</code>，<code>stride_filter = torch.ones(in_channels,1,1,1)</code></td><td><span class="b medium">重写（功能近似）</span></td></tr>
+<tr><td>文件头出处注释</td><td>—（本身是原始出处）</td><td><b>无任何出处注释</b></td><td><span class="b bad">未标注</span></td></tr>
+<tr><td>许可</td><td><b>MIT</b></td><td>仓库根部也是 <b>MIT</b></td><td><span class="b high">法律上兼容</span></td></tr>
+</tbody></table></div>
+<div class="box stop"><div class="bt">判定</div><p><b>MSCW 的 <code>WTConv.py</code> 是官方 ECCV 2024 实现的拷贝</b>——类体、<code>forward()</code> 主干、变量名、<code>_ScaleModule</code>、构造函数签名全部逐字/逐行一致。作者的改动只有两处：<b>类名从 <code>WTConv2d</code> 改成 <code>WTConv</code></b>，<b>把 <code>util/wavelet.py</code> 内联进来</b>，外加把 stride 分支从 <code>AvgPool2d</code> 重写成带 <code>ones</code> 核的 <code>conv2d</code>。</p>
+<p><b>法律上没问题</b>（官方 MIT，MSCW 也是 MIT，MIT 允许拷贝），<b>但学术规范上有瑕疵</b>：文件级没有标注出处。对比之下，同一个仓库的 <code>DySample.py</code> 反而老老实实写了论文标题 + arXiv 地址 + 即插即用库地址——<b>同一个作者，两个文件的标注习惯不一致。</b></p>
+<p><b>⇒ 对你的纪律含义：</b>官方 WTConv 是 <b>MIT</b>，你可以放心用；但引用必须写 <code>Finder et al., Wavelet Convolutions for Large Receptive Fields, ECCV 2024</code>，<b>并且保留 MIT 许可声明</b>。不要学 MSCW 那种「只改类名、不写出处」的做法。</p></div>
+
+<h2 id="s14"><span class="num">14</span>本地 <code>plug-nplay-modules</code> 仓库医学模块普查</h2>
+<p class="cite">本节针对用户本地副本 <code>/Users/hua/Desktop/pspstain /plug-nplay-modules/</code>（<b>注意目录名 <code>pspstain</code> 后有一个空格</b>）。问题：<b>「这个仓库里有没有专门适配医学图像的」</b>。方法：对全部 <b>136 个 <code>.py</code></b> 逐个读文件头注释与源码，用正则判定是否含真实频域算子。</p>
+
+<h3>14.1 结论：没有「专门适配医学图像」的模块</h3>
+<div class="box stop"><div class="bt">直接回答</div><p><b>没有。</b>这个仓库<b>不是医学专用库</b>——它就是 §13.1 里那份被镜像十几次的「全网最全即插即用模块」合集的本地副本（README 1,756 B，署名公众号「ai缝合大王」）。</p>
+<p>README 原文已明确划定适用范围：</p>
+<pre><code>目前主要更新二维图像模块，所有二维图像都可以用，图像分类、分割、
+目标检测、超分辨率重建、图像去雾、暗光增强等所有图像任务都可以用</code></pre>
+<p>⇒ <b>「所有二维图像都可以用」= 它是通用算子池，不是医学库。</b>没有任何一个模块是为病理 / 医学图像<b>专门设计</b>的。</p></div>
+
+<h3>14.2 但有一批「医学来源」模块（20 个）</h3>
+<p>区别很重要：<b>医学来源 ≠ 医学专用</b>。有 <b>20 个模块的出处论文是医学 / 临床论文</b>，但这些模块的<b>代码本身仍是通用二维算子</b>（通道注意力、特征融合、上采样块），换成自然图像一样跑。</p>
+<div class="scroll"><table><thead><tr><th>文件</th><th>出处论文（医学）</th><th>arXiv</th><th>模块实际是什么</th></tr></thead><tbody>
+<tr><td><code>采样/EUCB.py</code></td><td>EMCAD: Efficient Multi-scale Convolutional Attention Decoding for <b>Medical Image Segmentation</b>（<b>CVPR 2024</b>）</td><td>2405.06880</td><td>上采样块 = <code>Upsample</code> + 深度可分离卷积 + channel shuffle + 1×1 卷积</td></tr>
+<tr><td><code>CPCA2d.py</code></td><td>Channel prior convolutional attention for <b>medical image segmentation</b></td><td>2306.05196</td><td>通道先验卷积注意力（avg+max 双池化 + 1×1）</td></tr>
+<tr><td><code>DFF2d.py</code></td><td>D-Net: Dynamic Large Kernel with Dynamic Feature Fusion for <b>Volumetric Medical Image Segmentation</b></td><td>2403.10674</td><td>动态大核 + 动态特征融合（2D 版）</td></tr>
+<tr><td><code>DA_Block.py</code></td><td>DA-TransUNet: Spatial and Channel Dual Attention with Transformer U-Net for <b>Medical Image Segmentation</b></td><td>2310.12570</td><td>空间 + 通道双注意力块</td></tr>
+<tr><td><code>GlobalPMFSBlock.py</code></td><td>PMFSNet: Polarized Multi-scale Feature Self-attention Network for Lightweight <b>Medical Image Segmentation</b></td><td>2401.07579</td><td>极化多尺度特征自注意力块</td></tr>
+<tr><td><code>GLSA.py</code></td><td>DuAT: Dual-Aggregation Transformer Network for <b>Medical Image Segmentation</b>（PRCV）</td><td>2212.11677</td><td>全局-局部自注意力</td></tr>
+<tr><td><code>TIF.py</code></td><td>DS-TransUNet: Dual Swin Transformer U-Net for <b>Medical Image Segmentation</b></td><td>2106.06716</td><td>Transformer 交互融合块</td></tr>
+<tr><td><code>LPA.py</code></td><td>SwinPA-Net: Swin Transformer Multiscale Feature Pyramid Aggregation for <b>Medical Image Segmentation</b></td><td>—</td><td>局部位置注意力</td></tr>
+<tr><td><code>EFF2d.py</code></td><td>SUnet: A <b>multi-organ segmentation</b> network based on multiple attention</td><td>—</td><td>多注意力融合块</td></tr>
+<tr><td><code>卷积/(arXiv 2024)assemFormer医学图像.py</code></td><td>SvANet: A Scale-variant Attention-based Network for Small <b>Medical Object Segmentation</b></td><td>2407.07720</td><td>CNN+ViT 组装块（<b>代码实际改写自 MobileViTv3</b>，见文件内注释）</td></tr>
+<tr><td><code>注意力/2023 DCA双重交叉注意力.py</code></td><td>Dual Cross-Attention for <b>Medical Image Segmentation</b>（EAAI）</td><td>2303.17696</td><td>双交叉注意力</td></tr>
+<tr><td><code>注意力/（WACV 2024）EGA边缘引导注意力.py</code></td><td>MEGANet: Multi-Scale Edge-Guided Attention Network for Weak Boundary <b>Polyp Segmentation</b>（<b>WACV 2024</b>）</td><td>2309.03329</td><td>边缘引导注意力（<b>息肉内镜</b>）</td></tr>
+<tr><td><code>PCBAM.py</code></td><td>DAU-Net: Dual attention-aided U-Net for segmenting <b>tumor in breast ultrasound</b>（PLOS ONE）</td><td>—</td><td>金字塔卷积块注意力</td></tr>
+<tr><td><code>SWA.py</code></td><td><b>同上（DAU-Net 姊妹模块）</b></td><td>—</td><td>空间窗口注意力</td></tr>
+<tr><td><code>CPAM.py</code></td><td>ASF-YOLO: Attentional Scale Sequence Fusion for <b>Cell Instance Segmentation</b>（IMAVIS）</td><td>2312.06458</td><td>通道先验注意力（<b>细胞实例</b>）</td></tr>
+<tr><td><code>(Elsevier 2024)CF_loss.py</code></td><td>CF-Loss: Clinically-relevant feature optimised loss for <b>retinal</b> multi-class vessel segmentation</td><td>—</td><td><b>损失函数</b>（视网膜血管分割，临床特征加权）</td></tr>
+<tr><td><code>LMFLoss.py</code></td><td>LMFLOSS: A Hybrid Loss for <b>Imbalanced Medical Image Classification</b></td><td>—</td><td><b>损失函数</b>（医学类别不平衡）</td></tr>
+<tr><td><code>HFF.py</code></td><td>HiFuse: Hierarchical multi-scale feature fusion for <b>medical image classification</b></td><td>—</td><td>分层多尺度特征融合</td></tr>
+<tr><td><code>LAE.py</code></td><td>LSM-YOLO: A Compact and Effective ROI Detector for <b>Medical Detection</b></td><td>2408.14087</td><td>轻量注意力编码</td></tr>
+<tr><td><code>cleegn.py</code></td><td>CLEEGN: A CNN for Plug-and-Play Automatic <b>EEG</b> Reconstruction</td><td>2210.05988</td><td><b>一维</b>脑电重建网络（非图像）</td></tr>
+</tbody></table></div>
+<p class="cite"><b>计数</b>：20 个文件 / 19 篇论文（<code>PCBAM.py</code> 与 <code>SWA.py</code> 同出 DAU-Net）。<b>无一篇是病理（histopathology）</b>——最接近的是细胞实例分割（<code>CPAM.py</code>）与视网膜血管（<code>CF_loss.py</code>）。</p>
+
+<h3 id="s14t">14.3 ★ 关键：医学来源 ∩ 频域 = 空集</h3>
+<div class="box stop"><div class="bt">对你方案最要紧的一条</div><p>对上表 <b>20 个医学来源模块</b>逐个 grep <code>fft|rfft|dwt|pywt|wavelet|小波|fourier|dct</code>，<b>命中数为 0 —— 20 个全部为 0</b>。</p>
+<p>⇒ <b>这个仓库里，「医学来源」和「频域算子」是两个完全不相交的集合。</b>你要的「医学 + 频域」组合件，<b>这里一个都没有</b>。这与 §8 的结论（病理域 × 频域 × GAN × 开源 ≈ 空）是同一件事在两个不同仓库上的重演。</p>
+<p><b>⇒ 含义</b>：你不可能「从这份合集里挑一个医学频域模块直接缝」。<b>可缝的只有两条路</b>：① 挑一个<b>通用频域模块</b>（下表 10 个里选）缝进你的 CUT 骨架；② 挑一个<b>医学来源的通用模块</b>（上表 20 个里选）当作结构件。<b>两条路的模块来自两个不相交的池子，不能互相替代。</b></p></div>
+
+<h3>14.4 全库真频域模块只有 10 个（且「频域」目录名不副实）</h3>
+<p>对全部 136 个 <code>.py</code> 做频域算子扫描，<b>真正含 FFT / DWT / DCT 的只有 10 个</b>：</p>
+<div class="scroll"><table><thead><tr><th>文件</th><th>算子</th><th>出处</th><th>能否用</th></tr></thead><tbody>
+<tr><td><code>频域/(AAAI 2024)DynamicFilter(频域_CV2维图像).py</code></td><td><code>torch.fft.rfft2</code> / <code>irfft2</code></td><td>FFT-based Dynamic Token Mixer for Vision，<b>AAAI 2024</b></td><td><span class="b good">✓ 唯一真·二维图像频域模块</span></td></tr>
+<tr><td><code>卷积/（ECCV 2024）WTConv.py</code></td><td><code>pywt</code> 小波变换 / 逆变换</td><td>Wavelet Convolutions for Large Receptive Fields，ECCV 2024</td><td><span class="b good">✓</span> 带完整出处标注</td></tr>
+<tr><td><code>卷积/(ECCV2024) 小波卷积.py</code></td><td>同上</td><td><b>(无标注)</b></td><td><span class="b medium">⚠ 与上一行是<b>同一模块的重复副本</b>（去空白后仍有差异，非逐字相同）</span></td></tr>
+<tr><td><code>采样/(PR2023) 小波下采样.py</code></td><td><code>pytorch_wavelets.DWTForward</code></td><td>(无标注)，PR 2023 小波下采样</td><td><span class="b good">✓ 直接对应你方案第 1 条</span></td></tr>
+<tr><td><code>HWAB.py</code></td><td><code>dwt_init</code>（手写 DWT）</td><td>Half Wavelet Attention on M-Net+（低光增强）</td><td><span class="b good">✓ 小波注意力，自包含</span></td></tr>
+<tr><td><code>FMS.py</code></td><td><code>pytorch_wavelets.DWTForward</code></td><td>SFFNet: Wavelet-Based Spatial and Frequency Domain Fusion（<b>遥感</b>分割）</td><td><span class="b good">✓ 空-频融合，思路可迁移</span></td></tr>
+<tr><td><code>目标检测/FACMA.py</code></td><td><code>get_dct_weights</code>（DCT 基）</td><td>FCMNet: Frequency-aware cross-modality attention（RGB-D）</td><td><span class="b good">✓ DCT 通道注意力</span></td></tr>
+<tr><td><code>FECAttention.py</code></td><td><code>torch.fft.fft</code> / <code>ifft</code></td><td>FECAM（<b>时间序列</b>预测）</td><td><span class="b medium">△ 一维，需改造</span></td></tr>
+<tr><td><code>频域/(arxiv 2024)F_Block(频域_时间序列).py</code></td><td><code>rfft</code> / <code>irfft</code></td><td>ATFNet（<b>时间序列</b>）</td><td><span class="b medium">△ 一维，需改造</span></td></tr>
+<tr><td><code>特征融合/(ICMR 2022)CMF_Block(多模态融合).py</code></td><td><code>torch.fft</code></td><td>M2TR（深度伪造检测）</td><td><span class="b medium">△ 多模态融合场景</span></td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">两个必须知道的事实</div>
+<ol>
+<li><b><code>频域/</code> 目录名不副实。</b>它只有 <b>3 个文件</b>，且其中 <code>(CVPR 2024)FRFN.py</code> <b>不含任何频域算子</b>——它是「Adapt or Perish」（CVPR 2024）里的<b>部分卷积前馈网络</b>（<code>partial_conv3</code> + <code>dwconv</code>），跟频域无关。另两个一个是二维 FFT、一个是<b>时间序列</b> FFT。<b>⇒ 整个「频域」目录里，只有 1 个是真·二维图像频域模块。</b></li>
+<li><b>WTConv 在这份仓库里有两份</b>（<code>卷积/（ECCV 2024）WTConv.py</code> 与 <code>卷积/(ECCV2024) 小波卷积.py</code>），其中只有前者带出处标注。<b>取用请认准带标注的那份，引用指向 <code>BGU-CS-VIL/WTConv</code>。</b></li>
+</ol></div>
+
+<h3>14.5 对你的含义</h3>
+<div class="box key"><div class="bt">三句话</div>
+<ol>
+<li><b>你问的「专门适配医学图像」——没有。</b>这份仓库是通用算子池，「医学」只出现在出处论文的标题里，不出现在模块的设计里。</li>
+<li><b>但「医学来源」的模块有 20 个，可以当结构件用。</b>其中与你方案直接相关的两个：<code>采样/EUCB.py</code>（EMCAD，CVPR 2024，<b>上采样块</b>——你方案第 2 条要找的正是上采样替换件，这是本仓库里唯一一个医学来源的上采样模块）与 <code>采样/(PR2023) 小波下采样.py</code>（<b>小波下采样</b>——直接对应你方案第 1 条）。</li>
+<li><b>★ 频域那一路，只能从通用池子里选。</b>医学池子里没有频域算子（14.3 已验证为 0），所以「医学 + 频域」的缝合<b>必须跨池组合</b>：从 14.4 的 10 个里挑频域件，从 14.2 的 20 个里挑医学件，<b>两者不会自动兼容，接口要你自己写</b>。</li>
+</ol>
+<p><b>优先级建议</b>：<code>DynamicFilter</code>（唯一二维 FFT 模块）&gt; <code>WTConv</code>（带标注那份）&gt; <code>小波下采样</code> &gt; <code>FMS</code>（空-频融合）&gt; <code>HWAB</code>。⚠ 全部为<b>通用域</b>模块，缝进病理任务<b>没有先例可引</b>——这既是空白，也意味着你必须自己做受控验证（与 §9 的决策树一致）。</p></div>
+
+<hr>
+<p class="cite">本报告所有仓库元信息（full_name / stars / license / pushed_at）均来自本轮 GitHub API 直接抓取。抓取受阻或未做的项目已全部列入 §10 未核实清单。<b>§14 为本地副本的源码级普查，结论来自对 136 个 <code>.py</code> 的逐文件扫描，非二手转述。报告日期：2026-10-15 · §14 追加于 2026-10-16。</b></p>
+</main></div></body></html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>数据库原理 · 关系运算、SQL 查询与权限管理</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"数据库原理 · 关系运算、SQL 查询与权限管理","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"以关系模型的形式化定义为主线，梳理关系、元组、属性、域与候选码、主码、外码的术语层级及三类完整性约束；给出选择、投影、连接、除法的运算对照与五种基本运算的完备性，用象集完整推演 R÷S 得 {201,202} 的算例；归纳「书写时先连接再选择投影最保险、执行层应先选择后投影」的顺序结论，并整理 SQL 侧的等值连接写法、WHERE 与 HAVING 的分工、DELETE、DROP、TRUNCATE 的五项区别与库到行的授权粒度。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>数据库原理 · 关系运算、SQL 查询与权限管理</h1>
+<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 豆包对话 · 数据库基础题目解答</div>
+<h2>一、概述</h2>
+<p>本笔记聚焦原理层面，与前一篇《数据库与 MySQL · 复习与实操笔记》互补：后者记录环境搭建与实验操作，本文处理关系模型的术语体系、关系代数的运算规则、SQL 查询的原理性结论与权限管理。内容源自课程复习阶段的一组问答，按知识逻辑重排，并保留了当时判断错误、事后被纠正的推理。原始对话依附于具体练习场景，本文只抽取其中的知识点，不保留练习题目与批改记录，人物与账户一律泛化。</p>
+<p>组织方式上有一条主轴：关系代数与 SQL 是同一件事的形式层与实现层——θ 连接对应 <code>FROM 多表 + WHERE 等值条件</code>，选择对应 <code>WHERE</code>，投影对应 <code>SELECT</code> 的列清单，除法对应「对全部……都满足」的查询。</p>
+<h2>二、关系模型的核心术语</h2>
+<h3>2.1 术语速查</h3>
+<p>关系模型用一张满足若干条件的二维表表示实体及其联系，下列术语是后续全部讨论的坐标系。</p>
+<table>
+<tr><th>术语</th><th>标准表述</th><th>关键要点</th></tr>
+<tr><td>关系</td><td>一张满足条件的二维表，数学上是<strong>元组的集合</strong></td><td>该定义决定了所有运算以集合论为基础</td></tr>
+<tr><td>元组</td><td>表中的一行，即一条记录</td><td>集合语义天然去重，元组互不相同</td></tr>
+<tr><td>属性</td><td>表中的一列</td><td>列名即属性名，属性与域相对应</td></tr>
+<tr><td>域</td><td>属性的取值范围</td><td>如性别的域为「男、女」，成绩的域为 0 到 100</td></tr>
+<tr><td>目</td><td>关系中属性的个数</td><td>并、交、差要求两关系<strong>同目且对应属性来自相同域</strong></td></tr>
+<tr><td>码（候选码）</td><td>能唯一标识一条元组的一个或一组属性，去掉任一属性便不再唯一</td><td>唯一性加最小无冗余；一张表可有多个</td></tr>
+<tr><td>主码</td><td>从若干候选码中<strong>人为选定</strong>的一个</td><td>一张表只能有一个主码</td></tr>
+<tr><td>主属性</td><td>包含在<strong>任何一个</strong>候选码中的属性</td><td>与选定谁作主码无关</td></tr>
+<tr><td>非主属性</td><td>不出现在任何候选码中的属性</td><td>范式要求主要围绕它展开</td></tr>
+<tr><td>外码</td><td>本表中引用另一张表主码的属性</td><td>参照完整性约束的对象</td></tr>
+</table>
+<p>最后四行是笔者初期最容易压扁的一组概念。当时把「主码」与「主属性」当成同一件事，实际区别在于：<strong>主码是一个属性集合，主属性是构成该集合的单个属性</strong>。设关系 $R(A,B,C,D)$ 的候选码为 $AB$，则主码是 $AB$ 这个整体，$A$、$B$ 是主属性，$C$、$D$ 是非主属性。</p>
+<p>另一层结论涉及「码」的默认所指。教材定义范式时写作「非主属性完全函数依赖于码」，经反复追问后确认：<strong>这里的码指候选码，不是主码</strong>，因为范式是关系模式固有的性质，不随人为选定哪个候选码作主码而改变。于是范式判定看全部候选码——非主属性只要对任意一个候选码存在部分函数依赖，就直接判定不满足 2NF，无须纠结依赖哪一个。把它写成「消除非主属性对主码的部分依赖」严格来讲不成立，这是笔者当时的一处判断错误。</p>
+<h3>2.2 三类完整性约束</h3>
+<p>数据模型的三要素是<strong>数据结构、数据操作、数据的完整性约束条件</strong>，第三要素在关系模型中具体化为三类约束。</p>
+<table>
+<tr><th>约束类型</th><th>约束对象</th><th>规则</th><th>被拦截的典型情形</th></tr>
+<tr><td>实体完整性</td><td>主码</td><td>主码属性既不取空值，也不重复</td><td>学号为空，或两行学号相同</td></tr>
+<tr><td>参照完整性</td><td>外码</td><td>要么为空，要么等于被参照关系中<strong>已存在</strong>的主码值</td><td>选课表插入学生表中不存在的学号</td></tr>
+<tr><td>用户定义完整性</td><td>普通字段</td><td>具体业务规则的取值范围与格式限制</td><td>成绩写成 102，性别写成空串</td></tr>
+</table>
+<p>三类约束的防范对象是<strong>不合语义、不正确的数据</strong>，须与安全性的防范对象分开：安全性防<strong>非法用户与非法操作</strong>，关心「谁能操作、能操作什么」；完整性关心「数据本身对不对」，权限再高的人输入违规数据同样被阻止。违约处理有三种：拒绝执行（默认）、级联操作、置为空值。</p>
+<p>参照完整性还有一条常被忽略的性质：<strong>参照表与被参照表可以是同一张表</strong>，即自参照，课程中的先修课关系即是——先修课号指向本表尚未插入的主码，插入随即失败，故数据装入顺序本身受参照完整性支配。范式层面按「每升一级消除什么」串一条线即可：2NF 消除非主属性对候选码的部分依赖，3NF 再消除传递依赖，BCNF 进一步要求所有决定因素都含候选码；高范式必满足所有低范式。</p>
+<h2>三、关系运算</h2>
+<h3>3.1 运算体系与五种基本运算</h3>
+<p>关系代数用对关系的运算表达查询，所有运算的输入与输出都是关系，因此<strong>关系代数运算是以集合运算为基础的</strong>。运算分两类：直接继承自集合论的传统集合运算（并、交、差、笛卡尔积），以及为数据库查询设计的专门关系运算（选择、投影、连接、除）。</p>
+<p>其中被称为基本运算的只有五个：<strong>并、差、笛卡尔积、选择、投影</strong>，判据是「不能被其他运算推导出来」。笔者当时把「交」列进了基本运算，实际它是可导出的非基本运算：</p>
+<p>$$R \cap S = R - (R - S)$$</p>
+<p>先取只在 $R$ 而不在 $S$ 的元组，再以 $R$ 减去它，剩下的恰是共有部分。连接与除同理由基本运算组合而成，「连接是关系代数的基本运算」的说法并不成立。</p>
+<table>
+<tr><th>运算</th><th>记法</th><th>作用方向</th><th>是否基本运算</th><th>结果的目与元组数</th></tr>
+<tr><td>并</td><td>$R \cup S$</td><td>纵向合并元组</td><td>是</td><td>目不变，元组自动去重</td></tr>
+<tr><td>差</td><td>$R - S$</td><td>纵向筛选元组</td><td>是</td><td>目不变</td></tr>
+<tr><td>笛卡尔积</td><td>$R \times S$</td><td>行与列同时扩展</td><td>是</td><td>目为两目之和，元组数为两方之积</td></tr>
+<tr><td>选择</td><td>$\sigma_{F}(R)$</td><td>水平筛选行</td><td>是</td><td>目不变，元组数减少</td></tr>
+<tr><td>投影</td><td>$\pi_{A}(R)$</td><td>垂直筛选列</td><td>是</td><td>列数减少，元组可能因去重而减少</td></tr>
+<tr><td>交</td><td>$R \cap S$</td><td>纵向筛选元组</td><td>否，由差导出</td><td>目不变</td></tr>
+<tr><td>θ 连接</td><td>$R \bowtie_{\theta} S$</td><td>行列扩展后筛选</td><td>否，由笛卡尔积与选择导出</td><td>目为两目之和</td></tr>
+<tr><td>自然连接</td><td>$R \bowtie S$</td><td>同名属性等值后去重复列</td><td>否</td><td>目小于两目之和</td></tr>
+<tr><td>除</td><td>$R \div S$</td><td>按「全部」语义筛选</td><td>否，判据见 3.3</td><td>目为 $m$</td></tr>
+</table>
+<h3>3.2 选择、投影、连接的顺序</h3>
+<p>连接操作的构成式是代数部分最核心的一条：</p>
+<p>$$R \bowtie_{\theta} S = \sigma_{\theta}(R \times S)$$</p>
+<p>即先做笛卡尔积得到所有可能的元组组合，再做选择筛出满足 $\theta$ 的元组。等值连接的 $\theta$ 是相等比较；自然连接在此基础上多做一步投影，去掉重复的同名属性列。</p>
+<p>运算顺序有两个彼此对立却都正确的结论，是笔者当时最易混乱之处，最终按「书写」与「执行」两个层面统一：</p>
+<ul><li><strong>书写层面</strong>：先连接、再选择与投影最保险——逻辑清晰、可读性好，且不会因漏写连接条件而丢失公共属性。</li><li><strong>优化层面</strong>：首要一条是<strong>尽可能早地执行选择运算</strong>，其后依次为投影与选择同时进行、把投影与其前后的双目运算结合、把选择与其前面的笛卡尔积结合成连接、找出公共子表达式避免重复计算。所有策略的共同目标是尽早、尽可能多地减小中间结果规模（元组数与列数）。</li></ul>
+<p>两者的分歧由查询优化器调和：所写语句是逻辑查询计划，优化器将其转换为物理查询计划，实际执行顺序未必与书写顺序一致；而优化器在超过五个表的连接、相关子查询、统计信息失真等情形下会失效，此时才需按上述策略手动改写。以课程反复使用的统一设定看代价：$Student$ 一万条、$SC$ 十万条、$Course$ 一百条——查询计算机系学生成绩时，先连接后选择需处理十万条中间结果，先选择后连接只需一万条；把选择与笛卡尔积结合成自然连接，中间结果则从十亿条降到十万条。</p>
+<p>第三条策略（投影与双目运算结合）是笔者当时即指出破绽的一条：原写法为 $\pi_{Sname}(Student) \bowtie \pi_{Sno,Cno}(SC) \bowtie \pi_{Cno,Cname}(Course)$，但第一个投影结果只剩姓名一列，与 $SC$ 之间没有任何公共属性，自然连接在定义上根本无法进行。正确写法须保留连接所需的公共属性：</p>
+<p>$$\pi_{Sname,Cname}\big(\pi_{Sno,Sname}(Student) \bowtie \pi_{Sno,Cno}(SC) \bowtie \pi_{Cno,Cname}(Course)\big)$$</p>
+<p>由此得一条投影铁律：<strong>投影时须同时保留「最终结果需要的属性」与「后续连接需要的公共属性」</strong>。修正后的列数代价仍明显优于不投影：</p>
+<table>
+<tr><th>阶段</th><th>优化前（先连接后投影）</th><th>优化后（先投影后连接）</th></tr>
+<tr><td>$Student$ 参与连接的列数</td><td>4 列</td><td>2 列</td></tr>
+<tr><td>$SC$ 参与连接的列数</td><td>3 列</td><td>2 列</td></tr>
+<tr><td>$Course$ 参与连接的列数</td><td>3 列</td><td>2 列</td></tr>
+<tr><td>第一次连接后列数</td><td>7 列</td><td>4 列</td></tr>
+<tr><td>第二次连接后列数</td><td>10 列</td><td>6 列</td></tr>
+<tr><td>最终投影列数</td><td>2 列</td><td>2 列</td></tr>
+</table>
+<p>中间结果列数减少四成，且不损害连接的正确性。</p>
+<h3>3.3 象集与除法</h3>
+<p>除法的定义完全建立在象集之上，没有象集就无法表述除法。给定关系 $R(X,Z)$，$X$ 与 $Z$ 为属性组，对 $X$ 的某个具体取值 $x$，$x$ 在 $R$ 中的<strong>象集</strong>定义为：</p>
+<p>$$Z_x = \{ t[Z] \mid t \in R \ \text{且}\ t[X] = x \}$$</p>
+<p>通俗地说：当属性组 $X$ 取定值 $x$ 时，关系中所有满足条件的元组在 $Z$ 上投影结果的集合，就是 $x$ 的象集，可理解为「某个属性取值所配套的属性值集合」。</p>
+<p>设 $R$ 是 $m+n$ 元关系，属性组为 $X \cup Y$；$S$ 是 $n$ 元关系，属性组为 $Y$。则 $R \div S$ 是属性组为 $X$ 的 $m$ 元关系，入选的元组 $x$ 必须满足：</p>
+<p>$$Y_x \supseteq \pi_Y(S)$$</p>
+<p>即 $x$ 在 $R$ 中的象集<strong>包含</strong> $S$ 在 $Y$ 上的投影集合。除法的语义因此是「对 $S$ 中全部元素都满足」，用于回答「选修了所有这些课程的学生」这类全称查询。</p>
+<p>完整算例如下。设 $R$ 为学生选课表，2 目、6 个元组：</p>
+<table>
+<tr><th>学号（$X$）</th><th>课程号（$Z$）</th></tr>
+<tr><td>201</td><td>C1</td></tr>
+<tr><td>201</td><td>C2</td></tr>
+<tr><td>201</td><td>C3</td></tr>
+<tr><td>202</td><td>C1</td></tr>
+<tr><td>202</td><td>C2</td></tr>
+<tr><td>203</td><td>C1</td></tr>
+</table>
+<p>第一步按学号逐个求象集：</p>
+<ul><li>$Z_{201} = \{C1, C2, C3\}$</li><li>$Z_{202} = \{C1, C2\}$</li><li>$Z_{203} = \{C1\}$</li></ul>
+<p>第二步确定除数在 $Y$ 上的投影。取 $S = \{C1, C2\}$，它本身已是属性组 $Y$ 上的 1 目关系，投影后仍为 $\{C1, C2\}$，判定条件随之化为「象集是否同时含 C1 与 C2」。第三步逐项比较：</p>
+<ul><li>$201$ 的象集 $\{C1,C2,C3\}$ 包含 $S$，入选；</li><li>$202$ 的象集 $\{C1,C2\}$ 包含 $S$，入选；</li><li>$203$ 的象集 $\{C1\}$ 不包含 $S$，落选。</li></ul>
+<p>故</p>
+<p>$$R \div S = \{201, 202\}$$</p>
+<p>结果是一个 1 目、2 个元组的关系。这一算例也暴露除法最常见的错法：把条件写成「象集与 $S$ 有交集」，那样 $203$ 会被误判入选。正确判据是<strong>包含</strong>而非相交；$Z_{202}$ 与 $S$ 相等同样满足包含关系，等号情形是合法结果。</p>
+<h2>四、SQL 侧的对应实现</h2>
+<h3>4.1 多表等值连接</h3>
+<p>代数中的 θ 连接落到 SQL 一侧，课程采用的写法是把参与连接的关系全部列在 <code>FROM</code> 中，把等值条件写在 <code>WHERE</code> 中：</p>
+<pre><code>SELECT Sname, Cname
+FROM Student, SC, Course
+WHERE Student.Sno = SC.Sno
+  AND SC.Cno = Course.Cno;</code></pre>
+<p>三层对应关系需逐条点明：<code>FROM Student, SC, Course</code> 在语义上就是笛卡尔积，其目为各表目数之和；<code>WHERE</code> 中两个等值条件承担选择运算，筛掉无效组合；<code>SELECT</code> 后的列清单即投影。写成关系代数即：</p>
+<p>$$\pi_{Sname,Cname}\big(\sigma_{Student.Sno = SC.Sno \ \land\ SC.Cno = Course.Cno}(Student \times SC \times Course)\big)$$</p>
+<p>缺少任一等值条件，结果集会退化为（部分）笛卡尔积——这正是当时判断不周之处：连接条件不完整，表达式本身不成立。另需说明，原始对话只给出这一等值连接写法，未出现显式 <code>JOIN ... ON ...</code> 形式，本文不另行补写。</p>
+<h3>4.2 分组统计中 WHERE 与 HAVING 的分工</h3>
+<p>一个覆盖聚集、分组、过滤与排序的查询：检索选修四门课程及以上学生的总成绩，不统计不及格课程，按总成绩降序排列。设选课表为 $SC(Sno, Cno, Grade)$：</p>
+<pre><code>SELECT Sno AS 学号, SUM(Grade) AS 总成绩
+FROM SC
+WHERE Grade &gt;= 60
+GROUP BY Sno
+HAVING COUNT(*) &gt;= 4
+ORDER BY 总成绩 DESC;</code></pre>
+<p>执行链条固定为：先用 <code>WHERE</code> 剔除不及格的行，再按学号分组，组内同时算及格门数与总分，然后由 <code>HAVING</code> 筛出门数不少于四的分组，最后降序排序。</p>
+<p>笔者当时把 <code>Grade &gt;= 60</code> 写进 <code>HAVING</code> 而未写 <code>WHERE</code>，错在两处：语法层面，分组之后已无单条记录的 <code>Grade</code> 可供逐行判断；逻辑层面，不及格课程仍会被计入门数与总分，直接违背题意。区分标准只有一句：<strong><code>WHERE</code> 过滤原始行，不能使用聚集函数；<code>HAVING</code> 过滤分组结果，可以使用聚集函数</strong>。当时的速记是「WHERE 筛行、GROUP BY 分组、HAVING 筛组、ORDER BY 排序」。</p>
+<h3>4.3 命令类别与 DELETE、DROP、TRUNCATE</h3>
+<p>按功能划分：<code>CREATE</code>、<code>ALTER</code>、<code>DROP</code> 属数据定义，操作对象是结构与对象本身；<code>SELECT</code>、<code>INSERT</code>、<code>UPDATE</code>、<code>DELETE</code> 属数据操纵，操作对象是数据；<code>GRANT</code>、<code>REVOKE</code> 属数据控制。判断依据看<strong>动作落在哪一层</strong>——修改表结构用 <code>ALTER</code>，修改表内数据用 <code>UPDATE</code>，二者同含「改」字却分属两类。</p>
+<p><code>DELETE</code> 与 <code>DROP</code> 的混淆在此类内容里最常见，核心结论是：<strong>DELETE 删数据行，不删表结构；DROP 删整个表，结构与数据一并消失</strong>。按五项展开：</p>
+<table>
+<tr><th>比较项</th><th>DELETE</th><th>DROP</th></tr>
+<tr><td>删除对象</td><td>表中的数据行</td><td>表结构、全部数据，连同索引与约束</td></tr>
+<tr><td>表是否保留</td><td>表仍保留，可继续插入</td><td>表被彻底删除，不复存在</td></tr>
+<tr><td>能否恢复</td><td>事务中可回滚恢复</td><td>一般极难恢复，破坏性大</td></tr>
+<tr><td>自增列</td><td>删完数据后自增值继续递增，不重置</td><td>删表重建后自增从头开始</td></tr>
+<tr><td>权限级别</td><td>普通用户即可操作</td><td>通常只授予数据库管理员</td></tr>
+</table>
+<p>本文沿用复习时自记的一句口诀：<strong>DELETE 删行不删表，DROP 删表全干掉</strong>。第三个易混项 <code>TRUNCATE</code> 清空全部数据而保留表结构，比 <code>DELETE</code> 更快，不能带 <code>WHERE</code>，且会重置自增值——性质介于两者之间。</p>
+<p>两条具体规则常被写错。其一，删除某一列（属性）不能用 <code>DELETE</code>，须走结构层语句：</p>
+<pre><code>ALTER TABLE Student DROP COLUMN Sage;</code></pre>
+<p>其二，删除行时不写星号：<code>SELECT</code> 后的星号表示取全部列，而 <code>DELETE</code> 本身即意味着删除一整行，写成 <code>DELETE * FROM R</code> 属语法错误。单条记录删除的标准写法为：</p>
+<pre><code>DELETE FROM R
+WHERE Sno = &#x27;10&#x27;;</code></pre>
+<p><code>WHERE</code> 条件必须写全，省略即等价于清空整张表；字符型主码的值要加引号。</p>
+<h3>4.4 授权与权限粒度</h3>
+<p>授权的基本形态是 <code>GRANT 权限 ON 对象 TO 用户</code>，回收为 <code>REVOKE 权限 ON 对象 FROM 用户</code>。以泛化的两个业务用户 $U_1$、$U_2$ 为例：</p>
+<pre><code>GRANT SELECT ON TABLE Student TO U1;
+
+GRANT INSERT, UPDATE ON TABLE Student TO U2 WITH GRANT OPTION;
+
+REVOKE UPDATE ON TABLE Student FROM U2 CASCADE;</code></pre>
+<p><code>WITH GRANT OPTION</code> 允许被授权用户把所受权限再转授他人；回收时 <code>CASCADE</code> 连同其转授出去的权限一并收回，<code>RESTRICT</code> 则要求不存在转授权限才允许回收。列级授权通过属性名列表实现（下例的 <code>Club</code>、<code>ClubAdvisor</code> 取自课程练习场景）：</p>
+<pre><code>GRANT SELECT, UPDATE(ClubAdvisor) ON Club TO U2;</code></pre>
+<p>安全性控制的一条基本规律是：<strong>授权的数据对象粒度越小，授权子系统越灵活</strong>。粒度指可授予权限的最小数据单位，从大到小依次为库、表、列、行。</p>
+<table>
+<tr><th>授权粒度</th><th>数据对象</th><th>灵活性</th><th>可达到的控制效果</th></tr>
+<tr><td>最大</td><td>整个数据库</td><td>最低</td><td>授予对整个库的查询权限</td></tr>
+<tr><td>较大</td><td>表</td><td>低</td><td>授予对某一张表的查询权限</td></tr>
+<tr><td>较小</td><td>列（属性）</td><td>中</td><td>只允许查询某些列，隐藏敏感列</td></tr>
+<tr><td>最小</td><td>行（元组）</td><td>最高</td><td>只允许查询自己所带班级的成绩</td></tr>
+</table>
+<p>粒度越小控制越精细，但需维护更多授权信息，<strong>系统开销随之增大</strong>，二者是权衡关系。</p>
+<p>存取控制分两级。<strong>自主存取控制</strong>允许用户把自身权限自主授予、转授他人，灵活而安全级别一般，是普通业务系统的常规做法，典型语句正是 <code>GRANT</code> 与 <code>REVOKE</code>。<strong>强制存取控制</strong>由系统强制为主体（用户）与客体（数据）划分绝密、机密、秘密、公开四级，用户无权自行授权或转授，灵活性低而安全性高；其读写规则是读仅允许高密级访问低密级（不许上读），写仅允许低密级写入高密级（不许下写），概括为「下读上写」。高安全系统先过自主、再过强制，形成两道防线。除存取控制外，安全性手段还有用户身份鉴别、视图机制、审计与数据加密，其中视图机制的作用即只给用户展示其有权访问的数据。具体到某一数据库产品的账户标识与授权实操，见前一篇实操笔记，此处不重复。</p>
+<h3>4.5 视图、索引、触发器的原理性结论</h3>
+<p>这三类对象在对话中只出现了几条结论性判断，本文只保留有出处的部分。</p>
+<p><strong>视图</strong>的三条作用：隐藏敏感数据以保障安全、简化复杂查询、提供逻辑独立性方便数据库重构。视图与表、索引、约束、断言、触发器同属模式的成员——模式是容纳这些对象的容器，<strong>模式不等于表</strong>，层级为数据库含模式、模式含表。</p>
+<p><strong>索引</strong>以聚簇（聚集）索引的结论最关键：数据行在物理上完全按索引顺序存放，叶子节点即完整一行，命中便可取到整行；物理顺序只有一种，故<strong>一张表只能有一个聚簇索引</strong>，主键在常用存储引擎中默认即为聚簇索引，非聚簇索引的叶子只存定位信息、须据此再查一次。索引结构与存放方式的改动属内模式（物理模式）层面的修改，只需调整模式与内模式之间的映像，上层逻辑与应用程序不受影响，这正是物理独立性的落点。</p>
+<p><strong>触发器</strong>只对 <code>INSERT</code>、<code>UPDATE</code>、<code>DELETE</code> 这类数据修改动作生效，<code>SELECT</code> 不会激活它。它承担比约束更复杂的完整性维护，例如以手写删除逻辑配合被删行的旧值模拟级联删除；就级联删除而言，触发器写法与外键加 <code>ON DELETE CASCADE</code> 的声明式写法二选一，已声明外键规则时再写触发器属多余。范围更广的约束交给断言：断言是库级全局约束，<code>CHECK</code> 中可写子查询，而列级与表级的 <code>CHECK</code> 不能嵌套子查询，「某表行数不得超过上限」一类规则只能落在断言层。</p>
+<h2>五、常见误区</h2>
+<ol><li><strong>把「交」或「连接」当基本运算</strong>。基本运算只有并、差、笛卡尔积、选择、投影五个：交由差导出，连接由笛卡尔积与选择组合，自然连接还多一步去重列的投影。</li><li><strong>除法按「相交」判定</strong>。象集与除数投影的关系是包含而非相交，否则部分匹配的元素会被误入选。</li><li><strong>投影时丢掉连接属性</strong>。为减少列数而投掉公共属性，后续自然连接在定义上不成立。</li><li><strong>把书写顺序当成执行顺序</strong>。先连接再选择投影便于书写且不易出错，优化策略却要求尽早选择；差别在逻辑计划与物理计划两个层面。</li><li><strong>行级条件写进 HAVING</strong>。<code>Grade &gt;= 60</code> 须逐行判断，只能放 <code>WHERE</code>；放进 <code>HAVING</code> 既易报错，又让不及格记录进入统计。</li><li><strong>DELETE 与 DROP 混用、误写星号或省略条件</strong>。删除列要走 <code>ALTER TABLE ... DROP COLUMN</code>；<code>DELETE</code> 后直接跟 <code>FROM</code>，且不可省略 <code>WHERE</code>。</li><li><strong>认为主码就是主属性，或用主码判定范式</strong>。主码是属性集合，主属性是其中单个属性；范式判定以全部候选码为准。</li><li><strong>混淆安全性与完整性的防范对象</strong>，或把强制存取控制的读写方向记反，或以为 <code>SELECT</code> 会激活触发器。前者防非法用户与非法操作、后者防不合语义的数据；密级规则是下读上写；触发器只响应数据修改。</li></ol>
+<h2>六、总结要点</h2>
+<ol><li>关系模型以「关系是元组的集合」为出发点，术语围绕元组、属性、域、目与四组「码」展开；码默认指候选码，主码只是人为选定的代表，范式判定只认候选码。</li><li>完整性由实体（主码非空且唯一）、参照（外码取空或等于已存在主码值）、用户定义（业务规则）三类保证，违约处理为拒绝执行、级联、置空；参照表与被参照表可为同一张表。</li><li>关系代数以集合运算为基础，五种基本运算构成完备集；并、交、差要求同目且对应属性同域；优化的首要策略是尽早做选择。</li><li>连接构成式为 $R \bowtie_{\theta} S = \sigma_{\theta}(R \times S)$；除法判据是象集包含，$\{C1,C2,C3\}$、$\{C1,C2\}$、$\{C1\}$ 对 $S = \{C1,C2\}$ 的包含判定给出 $R \div S = \{201,202\}$，结果为 1 目 2 个元组。</li><li>SQL 侧与代数一一对应：等值连接把关系并列于 <code>FROM</code>、条件写全于 <code>WHERE</code>；<code>WHERE</code> 过滤行、<code>HAVING</code> 过滤分组，聚集条件只能进 <code>HAVING</code>。</li><li><code>DELETE</code>、<code>DROP</code>、<code>TRUNCATE</code> 按五项（删除对象、表是否保留、能否恢复、自增列、权限级别）区分，口诀「DELETE 删行不删表，DROP 删表全干掉」；<code>TRUNCATE</code> 更快、重置自增且不可带条件。</li><li>权限粒度由库、表、列、行逐级变细，越小越灵活而开销越大；<code>WITH GRANT OPTION</code> 决定能否转授，<code>CASCADE</code> 与 <code>RESTRICT</code> 决定回收方式；自主存取控制灵活，强制存取控制按密级下读上写，叠加为两级防线。</li><li>原理性结论：视图承担安全、简化查询与逻辑独立性；聚簇索引一表仅一个且命中即得整行；触发器只响应数据修改，与声明式外键级联二选一，跨表全局约束须落到断言。</li></ol>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 数据库基础题目解答</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

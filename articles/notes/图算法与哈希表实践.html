@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>最短路、传递闭包、哈希表与栈队列 · 算法与数据结构（二）</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"最短路、传递闭包、哈希表与栈队列 · 算法与数据结构（二）","date":"2026-10-24","tags":["课程笔记","数据结构与算法"],"category":"课程笔记","summary":"以原料算例为线索，逐步跑通 Dijkstra 的每轮选点与松弛、Floyd 的三重循环与矩阵快照、Warshall 的布尔矩阵迭代，并给出链地址法与公共溢出区两种散列表实现、装填因子与平均查找长度公式，最后落到循环队列判满判空的三种方案与括号匹配、中缀转后缀求值的完整代码。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>最短路、传递闭包、哈希表与栈队列 · 算法与数据结构（二）</h1>
+<div class="meta">课程笔记 · 数据结构与算法 · 整理自豆包对话 豆包对话 · Dijkstra 算法求解最短路径 / 编写哈希表代码 / 栈与队列学习及实践</div>
+<h1>最短路、传递闭包、哈希表与栈队列 · 算法与数据结构（二）</h1>
+<h2>一、概述</h2>
+<p>本篇是算法与数据结构主题的第二篇笔记，内容限于三块：<strong>图的最短路与传递闭包算法</strong>（Dijkstra、Floyd、Warshall）、<strong>哈希表（散列表）的冲突处理与代码实现</strong>、<strong>栈与队列的应用实践</strong>。</p>
+<p>与此前已发布笔记的分工如下：堆与 <code>priority_queue</code>、AVL 平衡因子、二分查找的区间写法、0-1 背包的状态设计已在《算法与数据结构》中整理，本篇不再重复，只在需要处引用其结论；欧拉图与哈密顿图的判定、握手定理、图的度数与连通性等纯图论概念属于《离散数学》的范围，本篇只讨论<strong>算法与实现</strong>，图的输入一律直接给出邻接矩阵。原料中散见的拓扑序列唯一性判定、二叉排序树查找序列合法性、Prim 与 Kruskal 最小生成树等问答，因归属其他专题，本篇不予收录。</p>
+<p>三块内容的共同特点是：<strong>过程可以逐步手算，结论可以用代码复现</strong>。本篇对手算表格采取严格态度——每一步都以脚本重跑原料算例校验，凡原料与算法不符处按验算结果书写并标注。</p>
+<h2>二、核心概念与记号</h2>
+<p><strong>带权图的矩阵存储</strong>。三种算法都以 $n\times n$ 矩阵为输入。最短路算法中 <code>graph[i][j]</code> 存放边权，无直接边记为无穷大（Python 版用 <code>sys.maxsize</code>，C 版用 <code>INT_MAX</code>，理论推导用 $\infty$）；传递闭包中矩阵元素退化为布尔值 $0/1$，$1$ 表示存在从 $i$ 到 $j$ 的直接边。</p>
+<p><strong>松弛（relaxation）</strong>。若经过顶点 $u$ 到达 $v$ 更短，即 $\mathrm{dist}[u]+w(u,v)&lt;\mathrm{dist}[v]$，则更新距离并记录前驱 $\mathrm{path}[v]=u$。Dijkstra 的全部工作就是&quot;选点—松弛&quot;的重复。</p>
+<p><strong>中间顶点</strong>。Floyd 与 Warshall 的递推建立在同一约定上：$d^{(k)}[i][j]$ 表示从 $i$ 到 $j$、<strong>路径上所有内部顶点只允许取自 $\{1,2,\dots,k\}$</strong> 时的最优值（或可达性）。$k$ 每增大一步，就多放开一个允许借道的顶点，这正是原料中&quot;是否存在路径 $i\to k\to j$&quot;那句话的形式化表达。</p>
+<p><strong>三个递推式的对照</strong>。</p>
+<p>$$ \mathrm{dist}[v]\leftarrow\min\bigl(\mathrm{dist}[v],\ \mathrm{dist}[u]+w(u,v)\bigr) $$</p>
+<p>$$ d^{(k)}[i][j]=\min\bigl(d^{(k-1)}[i][j],\ d^{(k-1)}[i][k]+d^{(k-1)}[k][j]\bigr) $$</p>
+<p>$$ W^{(k)}[i][j]=W^{(k-1)}[i][j]\ \lor\ \bigl(W^{(k-1)}[i][k]\ \land\ W^{(k-1)}[k][j]\bigr) $$</p>
+<p>把 $+$ 换成&quot;且&quot;（$\land$）、把 $\min$ 换成&quot;或&quot;（$\lor$），Floyd 就退化为 Warshall。二者是同一个动态规划在不同代数结构（$(\min,+)$ 半环与布尔半环）上的实例。</p>
+<table>
+<tr><th>维度</th><th>Dijkstra</th><th>Floyd</th><th>Warshall</th></tr>
+<tr><td>求解目标</td><td>单源到各点的最短路长度与路径</td><td>任意两顶点间最短路径长度</td><td>任意两顶点间是否可达（传递闭包）</td></tr>
+<tr><td>输入要求</td><td>带权图，边权非负</td><td>带权邻接矩阵，允许负权边，<strong>不允许负权回路</strong></td><td>布尔邻接矩阵</td></tr>
+<tr><td>时间复杂度</td><td>$O(n^2)$（邻接矩阵版），优先队列版 $O((n+e)\log n)$</td><td>$O(n^3)$</td><td>$O(n^3)$</td></tr>
+<tr><td>空间复杂度</td><td>$O(n)$（外加矩阵）</td><td>$O(n^2)$</td><td>$O(n^2)$，可原地覆盖</td></tr>
+<tr><td>能否处理负权</td><td>不能处理负权边</td><td>能处理负权边，不能处理负权回路</td><td>无权重概念</td></tr>
+<tr><td>手算可行性</td><td>逐轮维护 <code>dist</code>/<code>path</code> 数组，6 顶点可手算</td><td>逐 $k$ 更新整张矩阵，3 至 4 顶点可手算</td><td>只需逐元素做&quot;或/且&quot;，最适合手算</td></tr>
+</table>
+<h2>三、Dijkstra：逐轮选点、松弛与前驱记录</h2>
+<h3>3.1 算例与初始化</h3>
+<p>原料给出的图有 6 个顶点（编号 0 至 5），出边如下：$0\to1(1)$、$0\to2(5)$、$0\to3(2)$、$1\to2(3)$、$1\to4(7)$、$2\to5(6)$、$3\to5(8)$、$4\to5(4)$，顶点 5 无出边。邻接矩阵（Python 版）：</p>
+<pre><code>import sys
+INF = sys.maxsize
+graph = [
+    [INF, 1, 5, 2, INF, INF],   # 顶点0：0→1(1), 0→2(5), 0→3(2)
+    [INF, INF, 3, INF, 7, INF], # 顶点1：1→2(3), 1→4(7)
+    [INF, INF, INF, INF, INF, 6],  # 顶点2：2→5(6)
+    [INF, INF, INF, INF, INF, 8],  # 顶点3：3→5(8)
+    [INF, INF, INF, INF, INF, 4],  # 顶点4：4→5(4)
+    [INF, INF, INF, INF, INF, INF] # 顶点5无出边
+]</code></pre>
+<p>初始化时令 $\mathrm{dist}[0]=0$、其余为 $\infty$，$\mathrm{path}$ 全部置 $-1$，起点先入已确定集合 $S$，于是第一轮的候选距离就是起点行的各边权：$\mathrm{dist}=[0,1,5,2,\infty,\infty]$，$\mathrm{path}[1]=\mathrm{path}[2]=\mathrm{path}[3]=0$。</p>
+<h3>3.2 每轮 dist 更新表</h3>
+<p>下表为完整手算过程，末列 $\mathrm{dist}$ 与 $\mathrm{path}$ 的顺序固定为顶点 0 至 5；表中每一步均已用脚本重跑核对，与原料一致。</p>
+<table>
+<tr><th>轮次</th><th>选入 S 的顶点（dist）</th><th>本轮松弛（旧值→新值）</th><th>S</th><th>dist 数组</th><th>path 数组</th></tr>
+<tr><td>初始</td><td>—</td><td>—</td><td>0</td><td>0, 1, 5, 2, ∞, ∞</td><td>-1, 0, 0, 0, -1, -1</td></tr>
+<tr><td>1</td><td>顶点 1（1）</td><td>1→2：5 变 4；1→4：∞ 变 8</td><td>0 1</td><td>0, 1, 4, 2, 8, ∞</td><td>-1, 0, 1, 0, 1, -1</td></tr>
+<tr><td>2</td><td>顶点 3（2）</td><td>3→5：∞ 变 10</td><td>0 1 3</td><td>0, 1, 4, 2, 8, 10</td><td>-1, 0, 1, 0, 1, 3</td></tr>
+<tr><td>3</td><td>顶点 2（4）</td><td>2→5：4+6=10，不优于 10，无更新</td><td>0 1 3 2</td><td>0, 1, 4, 2, 8, 10</td><td>-1, 0, 1, 0, 1, 3</td></tr>
+<tr><td>4</td><td>顶点 4（8）</td><td>4→5：8+4=12，不优于 10，无更新</td><td>0 1 3 2 4</td><td>0, 1, 4, 2, 8, 10</td><td>-1, 0, 1, 0, 1, 3</td></tr>
+<tr><td>5</td><td>顶点 5（10）</td><td>无出边</td><td>0 1 3 2 4 5</td><td>0, 1, 4, 2, 8, 10</td><td>-1, 0, 1, 0, 1, 3</td></tr>
+</table>
+<p>需要留意第 3 轮：$4+6=10$ 与已有 $\mathrm{dist}[5]=10$ 相等，松弛条件是严格小于，故 $\mathrm{path}[5]$ 保留先确定的 3。于是到顶点 5 的最短路长度是 10，代码输出路径 $0\to3\to5$；而 $0\to1\to2\to5$ 同样是长度 10 的最短路，只是不会被前驱数组记录——<strong>前驱数组只保留一条最短路树边，等长的另一条会丢失</strong>。</p>
+<p>原料的 C 语言版本在初始化上与 Python 版略有差异：它直接用起点行初始化 <code>dist</code>，并把起点立即标记为已确定，循环从 <code>i = 1</code> 开始执行 $n-1$ 轮，其余逻辑一致。</p>
+<h3>3.3 代码</h3>
+<pre><code>import sys
+
+def dijkstra(graph, start):
+    n = len(graph)
+    dist = [sys.maxsize] * n
+    dist[start] = 0
+    path = [-1] * n          # path[i]：最短路径中 i 的前驱顶点
+    visited = [False] * n    # visited[i]：顶点 i 是否已加入集合 S
+
+    for _ in range(n):
+        min_dist, u = sys.maxsize, -1
+        for i in range(n):                       # 找未访问中 dist 最小者
+            if not visited[i] and dist[i] &lt; min_dist:
+                min_dist, u = dist[i], i
+        if u == -1:
+            break                                # 剩余顶点均不可达
+        visited[u] = True
+
+        for v in range(n):                       # 松弛 u 的出边
+            if not visited[v] and graph[u][v] != sys.maxsize \
+               and dist[u] + graph[u][v] &lt; dist[v]:
+                dist[v] = dist[u] + graph[u][v]
+                path[v] = u
+    return dist, path
+
+def get_shortest_path(path, start, end):
+    if path[end] == -1 and start != end:
+        return []
+    path_list, current = [end], end
+    while current != start:
+        current = path[current]
+        if current == -1:
+            return []
+        path_list.append(current)
+    return path_list[::-1]</code></pre>
+<p>运行结果：到顶点 1 长度 1（0→1）、到 2 长度 4（0→1→2）、到 3 长度 2（0→3）、到 4 长度 8（0→1→4）、到 5 长度 10（0→3→5），与手算表逐行吻合。</p>
+<h3>3.4 为什么不能处理负权</h3>
+<p>Dijkstra 的正确性依赖一个贪心前提：<strong>从未确定集合中选出的 $u$，其 $\mathrm{dist}[u]$ 已经是最终答案</strong>。因为所有边权非负，任何绕过其他未确定顶点再到 $u$ 的路径都不会更短。一旦存在负权边，这个前提失效——已经被标记为&quot;已确定&quot;的顶点，可能后来被一条经过更晚确定顶点的路径改写得更短，而算法不会再回去松弛它。</p>
+<p>构造一个最小反例：$0\to1$ 权 1，$0\to2$ 权 3，$2\to1$ 权 $-3$。</p>
+<table>
+<tr><th>步骤</th><th>算法行为</th><th>dist[1]</th><th>dist[2]</th></tr>
+<tr><td>初始</td><td>dist[1]=1，dist[2]=3</td><td>1</td><td>3</td></tr>
+<tr><td>选顶点 1</td><td>dist[1]=1 最小，标记为已确定</td><td>1</td><td>3</td></tr>
+<tr><td>选顶点 2</td><td>松弛 2→1 得 3+(-3)=0，但顶点 1 已确定，跳过</td><td>1（错）</td><td>3</td></tr>
+</table>
+<p>脚本验证：Dijkstra 输出 $\mathrm{dist}[1]=1$，而穷举路径的真值是 0（走 $0\to2\to1$）。结论是：<strong>Dijkstra 可以有零权边，不可以有负权边</strong>；若必须处理负权边，应改用 Floyd（无负环时）或 Bellman-Ford 类逐轮松弛算法。</p>
+<h2>四、Floyd：三重循环与回路、负环的处理</h2>
+<h3>4.1 递推与&quot;中间顶点&quot;的含义</h3>
+<p>Floyd 的三重循环把 $k$ 放在最外层，其语义是：当外层循环进行到 $k$ 时，矩阵中所有&quot;内部顶点只取自 $\{0,\dots,k\}$&quot;的最优值已经就绪，于是允许路径第一次经过顶点 $k$：</p>
+<p>$$ d[i][j]\leftarrow\min\bigl(d[i][j],\ d[i][k]+d[k][j]\bigr) $$</p>
+<p>原料对此的表述是&quot;$k$ 作为中间节点，尝试用 $i\to k\to j$ 替代 $i\to j$&quot;。$k$ 必须置于最外层，否则同一轮内 $d[i][k]$ 或 $d[k][j]$ 可能已被本轮更新，等价于一次放开了多个中间顶点，动态规划的层次就乱了。核心代码：</p>
+<pre><code>def floyd_warshall(graph):
+    n = len(graph)
+    dist = [[float(&#x27;inf&#x27;)] * n for _ in range(n)]
+    for i in range(n):
+        dist[i][i] = 0                     # 自身到自身距离为 0
+    for i in range(n):
+        for j in range(n):
+            if graph[i][j] != 0:
+                dist[i][j] = graph[i][j]    # 0 表示无直接边
+
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if dist[i][k] + dist[k][j] &lt; dist[i][j]:
+                    dist[i][j] = dist[i][k] + dist[k][j]
+
+    for i in range(n):                      # 负权回路检测
+        if dist[i][i] &lt; 0:
+            print(&quot;检测到负权回路，顶点&quot;, i, &quot;在回路中&quot;)
+            return None
+    return dist</code></pre>
+<h3>4.2 正权回路算例的矩阵快照</h3>
+<p>原料的第一个算例是 3 顶点正权回路 $0\to1(1)$、$1\to2(1)$、$2\to0(1)$。逐 $k$ 的状态（$D^{(-1)}$ 为初始阵）：</p>
+<p>$$ D^{(-1)}=\begin{pmatrix}0&amp;1&amp;\infty\\ \infty&amp;0&amp;1\\ 1&amp;\infty&amp;0\end{pmatrix} $$</p>
+<p>$$ D^{(0)}=\begin{pmatrix}0&amp;1&amp;\infty\\ \infty&amp;0&amp;1\\ 1&amp;2&amp;0\end{pmatrix} $$</p>
+<p>$$ D^{(1)}=\begin{pmatrix}0&amp;1&amp;2\\ \infty&amp;0&amp;1\\ 1&amp;2&amp;0\end{pmatrix} $$</p>
+<p>$$ D^{(2)}=\begin{pmatrix}0&amp;1&amp;2\\ 2&amp;0&amp;1\\ 1&amp;2&amp;0\end{pmatrix} $$</p>
+<p>变化逐项为：$k=0$ 时 $2\to0\to1$ 使 $d[2][1]$ 由 $\infty$ 变 2；$k=1$ 时 $0\to1\to2$ 使 $d[0][2]$ 变 2；$k=2$ 时 $1\to2\to0$ 使 $d[1][0]$ 变 2。对角线始终为 0，说明正权回路被算法自然忽略：绕圈只会更长，$\min$ 不会选中它。</p>
+<h3>4.3 负权回路算例与检测</h3>
+<p>把中间那条边改成负权（$0\to1(1)$、$1\to2(-3)$、$2\to0(1)$，回路总权 $-1$）：</p>
+<p>$$ D^{(-1)}=\begin{pmatrix}0&amp;1&amp;\infty\\ \infty&amp;0&amp;-3\\ 1&amp;\infty&amp;0\end{pmatrix} $$</p>
+<p>$$ D^{(0)}=\begin{pmatrix}0&amp;1&amp;\infty\\ \infty&amp;0&amp;-3\\ 1&amp;2&amp;0\end{pmatrix} $$</p>
+<p>$$ D^{(1)}=\begin{pmatrix}0&amp;1&amp;-2\\ \infty&amp;0&amp;-3\\ 1&amp;2&amp;-1\end{pmatrix} $$</p>
+<p>$$ D^{(2)}=\begin{pmatrix}-1&amp;0&amp;-3\\ -2&amp;-1&amp;-4\\ 0&amp;1&amp;-2\end{pmatrix} $$</p>
+<p>最后一张矩阵的对角线出现 $-1,-1,-2$，脚本验证一致。这就是负环检测的原理：<strong>正常图中顶点到自身的距离恒为 0，一旦 $d[i][i]&lt;0$，说明存在从 $i$ 出发绕回 $i$ 的负权回路</strong>。此时这些顶点之间的最短路径不存在（可以无限绕圈使总权趋于负无穷），算法只能报告异常，不能给出有效数值。</p>
+<p>再取 3.1 节的 6 顶点图跑 Floyd，第 0 行的最终值为 $0,1,4,2,8,10$，与 Dijkstra 的 <code>dist</code> 数组完全一致——这是互相校验的好办法：单源用 Dijkstra 手算，全对用 Floyd 检查。</p>
+<h3>4.4 回路情形的完整分类</h3>
+<p>原料的主题正是&quot;图中能否存在回路&quot;。准确的结论是：<strong>允许回路，也允许负权边，但不允许总权重为负的回路</strong>。</p>
+<table>
+<tr><th>图的情形</th><th>是否允许</th><th>原因</th></tr>
+<tr><td>正权回路（总权大于 0）</td><td>允许</td><td>绕路只会更远，算法自动忽略</td></tr>
+<tr><td>零权回路（总权等于 0）</td><td>允许</td><td>绕圈不改变长度，结果仍收敛到最短值</td></tr>
+<tr><td>普通负权边（不在回路上）</td><td>允许</td><td>Floyd 相对 Dijkstra 的主要优势</td></tr>
+<tr><td>负权回路（总权小于 0）</td><td>禁止</td><td>可无限绕圈，最短路径不存在，只能被检测出来</td></tr>
+</table>
+<p>原料中&quot;$-2+5=3$ 的回路（含负权边的正总权回路）Floyd 可正常运行&quot;这一例值得强调：判断标准不是&quot;回路里有没有负边&quot;，而是&quot;回路总权是否为负&quot;。</p>
+<h2>五、Warshall：传递闭包的布尔矩阵迭代</h2>
+<h3>5.1 递推式与四阶算例</h3>
+<p>传递闭包只回答&quot;$i$ 能否到达 $j$&quot;，递推式为</p>
+<p>$$ W^{(k)}[i][j]=W^{(k-1)}[i][j]\ \lor\ \bigl(W^{(k-1)}[i][k]\ \land\ W^{(k-1)}[k][j]\bigr) $$</p>
+<p>原料的算例是 4 阶邻接矩阵（行、列下标从 1 开始）：</p>
+<p>$$ W^{(0)}=\begin{pmatrix}1&amp;0&amp;0&amp;1\\ 0&amp;1&amp;1&amp;1\\ 0&amp;0&amp;1&amp;0\\ 1&amp;1&amp;0&amp;0\end{pmatrix} $$</p>
+<p>计算 $W^{(1)}$ 时中间点固定为顶点 1，即只允许借道 $i\to1\to j$。原料的逐元素计算如下（&quot;或&quot;&quot;且&quot;分别记作 $\lor$ $\land$）：</p>
+<table>
+<tr><th>位置</th><th>计算式</th><th>结果</th></tr>
+<tr><td>(1,1)</td><td>1</td><td>1</td></tr>
+<tr><td>(1,2)</td><td>0 或 (1 且 0)</td><td>0</td></tr>
+<tr><td>(1,3)</td><td>0 或 (1 且 0)</td><td>0</td></tr>
+<tr><td>(1,4)</td><td>1 或 (1 且 1)</td><td>1</td></tr>
+<tr><td>(2,1)</td><td>0 或 (0 且 1)</td><td>0</td></tr>
+<tr><td>(2,2)</td><td>1 或 (0 且 0)</td><td>1</td></tr>
+<tr><td>(2,3)</td><td>1 或 (0 且 0)</td><td>1</td></tr>
+<tr><td>(2,4)</td><td>1 或 (0 且 1)</td><td>1</td></tr>
+<tr><td>(3,1)</td><td>0 或 (0 且 1)</td><td>0</td></tr>
+<tr><td>(3,2)</td><td>0 或 (0 且 0)</td><td>0</td></tr>
+<tr><td>(3,3)</td><td>1 或 (0 且 0)</td><td>1</td></tr>
+<tr><td>(3,4)</td><td>0 或 (0 且 1)</td><td>0</td></tr>
+<tr><td>(4,1)</td><td>1 或 (1 且 1)</td><td>1</td></tr>
+<tr><td>(4,2)</td><td>1 或 (1 且 0)</td><td>1</td></tr>
+<tr><td>(4,3)</td><td>0 或 (1 且 0)</td><td>0</td></tr>
+<tr><td>(4,4)</td><td>0 或 (1 且 1)</td><td>1</td></tr>
+</table>
+<p>唯一发生变化的元素是 $(4,4)$：由 0 变 1，因为存在路径 $4\to1\to4$。脚本重跑结果与原料的 $W^{(1)}$ 完全一致：</p>
+<p>$$ W^{(1)}=\begin{pmatrix}1&amp;0&amp;0&amp;1\\ 0&amp;1&amp;1&amp;1\\ 0&amp;0&amp;1&amp;0\\ 1&amp;1&amp;0&amp;1\end{pmatrix} $$</p>
+<h3>5.2 &quot;(4,3) 为什么没变成 1&quot;</h3>
+<p>这是原料中被专门追问的一点，也是理解 $k$ 语义的关键。代入公式：$W^{(0)}[4][3]=0$，$W^{(0)}[4][1]=1$，而 $W^{(0)}[1][3]=0$，于是</p>
+<p>$$ W^{(1)}[4][3]=0\ \lor\ (1\ \land\ 0)=0 $$</p>
+<p>即 4 虽然能到 1，但 1 不能到 3，中转不成立。<strong>当前轮次只放开了顶点 1 这一个中间点</strong>，更长路径上的其他中转顶点尚未获准使用，所以位置仍保持 0。这解释了为什么必须把 $k$ 放在最外层：只有等到 $k=2$ 之后，才可能通过别的中转点把 $(4,3)$ 补成 1。</p>
+<p>继续按算法推完剩余三轮（原料只给到 $W^{(1)}$，以下快照由本文按公式重跑，与脚本一致）：</p>
+<table>
+<tr><th>轮次</th><th>中间点</th><th>本轮新置 1 的元素</th><th>依据</th></tr>
+<tr><td>k=1</td><td>顶点 1</td><td>(4,4)</td><td>4 到 1 且 1 到 4</td></tr>
+<tr><td>k=2</td><td>顶点 2</td><td>(4,3)</td><td>4 到 2 且 2 到 3</td></tr>
+<tr><td>k=3</td><td>顶点 3</td><td>无</td><td>第 3 列只有 $W[3][3]=1$</td></tr>
+<tr><td>k=4</td><td>顶点 4</td><td>(1,2)、(1,3)、(2,1)</td><td>经由顶点 4 这一&quot;枢纽&quot;中转</td></tr>
+</table>
+<p>$$ W^{(2)}=\begin{pmatrix}1&amp;0&amp;0&amp;1\\ 0&amp;1&amp;1&amp;1\\ 0&amp;0&amp;1&amp;0\\ 1&amp;1&amp;1&amp;1\end{pmatrix} $$</p>
+<p>$$ W^{(3)}=\begin{pmatrix}1&amp;0&amp;0&amp;1\\ 0&amp;1&amp;1&amp;1\\ 0&amp;0&amp;1&amp;0\\ 1&amp;1&amp;1&amp;1\end{pmatrix} $$</p>
+<p>$$ W^{(4)}=\begin{pmatrix}1&amp;1&amp;1&amp;1\\ 1&amp;1&amp;1&amp;1\\ 0&amp;0&amp;1&amp;0\\ 1&amp;1&amp;1&amp;1\end{pmatrix} $$</p>
+<p>最终闭包说明：从顶点 3 出发只能到达自身，其余顶点之间两两可达。$W^{(3)}$ 与 $W^{(2)}$ 相同，说明放开顶点 3 作为中间点没有带来新的连通对——迭代中出现&quot;矩阵不再变化&quot;即可提前终止。</p>
+<h3>5.3 代码</h3>
+<pre><code>def warshall(W):
+    n = len(W)
+    A = [row[:] for row in W]
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                A[i][j] = A[i][j] or (A[i][k] and A[k][j])
+    return A</code></pre>
+<p>与 Floyd 同构，差别只在元素类型（布尔而非整数）与运算（&quot;或/且&quot;而非&quot;取小/相加&quot;）。</p>
+<h2>六、哈希表：冲突处理与代码实现</h2>
+<h3>6.1 基本概念与术语</h3>
+<p>哈希表把关键字经散列函数映射为表下标，冲突不可避免。原料涉及的处理方法有<strong>链地址法（拉链法）</strong>、<strong>开放定址法（线性探测、二次探测）</strong>与<strong>公共溢出区法</strong>。衡量拥挤程度的指标是<strong>装填因子</strong>：</p>
+<p>$$ \alpha=\frac{\text{表中已存元素数}}{\text{表的总槽位数}} $$</p>
+<p>开放定址法要求 $0\le\alpha&lt;1$，否则主表无空槽可探测；链地址法因每个槽位可挂整条链表，$\alpha$ 可以大于等于 1。实际实现常设阈值（如 0.75）触发扩容。</p>
+<table>
+<tr><th>方法</th><th>冲突后的处置</th><th>删除的实现</th><th>α 上限</th></tr>
+<tr><td>链地址法</td><td>追加到对应桶的链表</td><td>链表节点摘除并释放</td><td>可超过 1</td></tr>
+<tr><td>线性探测</td><td>下标逐 1 后移找空槽</td><td>只能逻辑删除，留占位标记</td><td>必须小于 1</td></tr>
+<tr><td>二次探测</td><td>按平方步长探测</td><td>同上</td><td>必须小于 1，且只能探到部分空槽</td></tr>
+<tr><td>公共溢出区</td><td>冲突元素一律进溢出顺序表</td><td>置空并前移整理</td><td>主表可满，溢出区有独立容量</td></tr>
+</table>
+<h3>6.2 链地址法的查找与删除</h3>
+<p>原料给出的结构约定为：<code>HashTable</code> 含桶数组 <code>elem</code>、模数 <code>divisor</code> 与元素计数 <code>n</code>，桶内节点类型为 <code>ChainNode</code>，元素键写作 <code>p-&gt;data.key</code>。插入过程原料以文字描述：先求 <code>x.key % LT.divisor</code> 得桶下标 <code>i</code>；用 <code>p</code> 遍历链表、<code>q</code> 记录前驱，若键已存在则直接返回 <code>false</code>；否则新建节点，<code>q</code> 非空时插在链尾，<code>q</code> 为空时作为头节点；成功后 <code>LT.n</code> 加 1。查找与删除代码如下（照原料原样列出）：</p>
+<pre><code>HElemType* Search(HashTable&amp; LT, int key) {
+    ChainNode *p;
+    int i = key % LT.divisor;  // 计算散列地址
+    p = LT.elem[i];            // 指向对应桶的链表头
+    while (p != NULL &amp;&amp; p-&gt;data.key != key) {
+        p = p-&gt;next;           // 遍历链表查找 key
+    }
+    if (p != NULL)
+        return &amp;(p-&gt;data);     // 找到，返回元素地址
+    else
+        return NULL;           // 未找到，返回空
+}
+
+bool Delete(HashTable&amp; LT, int key) {
+    ChainNode *p, *q = NULL;
+    int i = key % LT.divisor;  // 计算散列地址
+    p = LT.elem[i];
+    while (p != NULL &amp;&amp; p-&gt;data.key != key) {
+        q = p;                 // q 记录 p 的前驱节点
+        p = p-&gt;next;
+    }
+    if (p == NULL)
+        return false;          // 未找到该元素
+    if (q == NULL) {
+        LT.elem[i] = p-&gt;next;  // 删除的是链表头节点
+    } else {
+        q-&gt;next = p-&gt;next;     // 删除中间或尾部节点
+    }
+    free(p);
+    LT.n--;
+    return true;
+}</code></pre>
+<p>删除须同时持有当前指针与前驱指针，头节点的特殊分支正由 <code>q == NULL</code> 判别。</p>
+<h3>6.3 公共溢出区法的完整实现</h3>
+<p>原料中可完整运行的一份实现采用&quot;主表 + 公共溢出区&quot;，散列函数为除留余数法，空槽用 <code>-32768</code> 标记。插入时主表地址为空则直接落位，否则追加到溢出区并计数；查找先查主表再遍历溢出区。</p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;cstdlib&gt;
+using namespace std;
+#define HASHSIZE 10
+#define NULLKEY -32768
+
+typedef struct hash {
+    int *element;         // 哈希主表
+    int *extraElement;    // 公共溢出区
+    int count;            // 溢出区元素个数
+} HashTable;
+
+void Init(HashTable *p) {
+    p-&gt;element = (int*)malloc(sizeof(int) * HASHSIZE);
+    p-&gt;extraElement = (int*)malloc(sizeof(int) * HASHSIZE);
+    for (int i = 0; i &lt; HASHSIZE; ++i) {
+        p-&gt;element[i] = NULLKEY;
+        p-&gt;extraElement[i] = NULLKEY;
+    }
+    p-&gt;count = 0;
+}
+
+int HASH(int key) { return key % HASHSIZE; }   // 除留余数法
+
+void InsertHash(HashTable *p, int key) {
+    int addr = HASH(key);
+    if (p-&gt;element[addr] == NULLKEY)
+        p-&gt;element[addr] = key;                // 无冲突，进主表
+    else if (p-&gt;count &lt; HASHSIZE)
+        p-&gt;extraElement[p-&gt;count++] = key;     // 冲突，进溢出区
+    else
+        cout &lt;&lt; &quot;溢出区已满，插入失败！key=&quot; &lt;&lt; key &lt;&lt; endl;
+}
+
+int Search(HashTable *p, int key) {
+    int addr = HASH(key);
+    if (key == p-&gt;element[addr]) return addr;  // 命中主表
+    for (int i = 0; i &lt; p-&gt;count; ++i)
+        if (p-&gt;extraElement[i] == key) {
+            cout &lt;&lt; &quot;元素在溢出表中，下标：&quot; &lt;&lt; i &lt;&lt; endl;
+            return i + HASHSIZE;               // 用 HASHSIZE 区分主表与溢出区
+        }
+    return -1;
+}
+
+bool DeleteHash(HashTable *p, int key) {
+    int addr = HASH(key);
+    if (p-&gt;element[addr] == key) {
+        p-&gt;element[addr] = NULLKEY;            // 主表置空
+        return true;
+    }
+    for (int i = 0; i &lt; p-&gt;count; ++i) {
+        if (p-&gt;extraElement[i] == key) {
+            for (int j = i; j &lt; p-&gt;count - 1; ++j)
+                p-&gt;extraElement[j] = p-&gt;extraElement[j + 1];  // 前移整理
+            p-&gt;extraElement[p-&gt;count - 1] = NULLKEY;
+            p-&gt;count--;
+            return true;
+        }
+    }
+    return false;
+}
+
+void DestroyHash(HashTable *p) {
+    free(p-&gt;element);
+    free(p-&gt;extraElement);
+    p-&gt;element = NULL;
+    p-&gt;extraElement = NULL;
+    p-&gt;count = 0;
+}</code></pre>
+<p>插入轨迹用脚本按同一规则重跑（测试数组 9 个元素 <code>12, 45, 2, 6, 78, 9, 0, 1, 15</code>）：</p>
+<table>
+<tr><th>插入顺序</th><th>key</th><th>HASH(key)=key%10</th><th>落位</th></tr>
+<tr><td>1</td><td>12</td><td>2</td><td>主表下标 2</td></tr>
+<tr><td>2</td><td>45</td><td>5</td><td>主表下标 5</td></tr>
+<tr><td>3</td><td>2</td><td>2</td><td>冲突，溢出区下标 0</td></tr>
+<tr><td>4</td><td>6</td><td>6</td><td>主表下标 6</td></tr>
+<tr><td>5</td><td>78</td><td>8</td><td>主表下标 8</td></tr>
+<tr><td>6</td><td>9</td><td>9</td><td>主表下标 9</td></tr>
+<tr><td>7</td><td>0</td><td>0</td><td>主表下标 0</td></tr>
+<tr><td>8</td><td>1</td><td>1</td><td>主表下标 1</td></tr>
+<tr><td>9</td><td>15</td><td>5</td><td>冲突，溢出区下标 1</td></tr>
+</table>
+<p>原料附的&quot;运行结果&quot;写作&quot;元素在主表中，地址 2 / 主表删除 key=2 成功&quot;，与算法不符：12 先占主表下标 2，key 2 必然进溢出区，查找应命中溢出区、删除也应走溢出区分支并触发前移整理。<strong>原料此处不一致，本文按算法重跑。</strong> 另外原料原稿把数组写成 <code>int a[10]</code> 却只列 9 个初值，第 10 个元素被默认初始化为 0，导致 0 被重复插入并多占一个溢出区槽位（<code>count</code> 变 3），修正为 <code>a[9]</code> 后与上表一致。</p>
+<h3>6.4 线性探测与平均查找长度</h3>
+<p>原料的另一份算例：散列函数 $H(\mathrm{key})=\mathrm{key}\%13$，冲突用线性探测，依次插入 <code>19, 1, 23, 14, 55, 20, 84, 27, 68, 11, 10, 77</code>，表地址范围 0 至 18。逐关键字的落位（探测次数按&quot;比较过的槽位数&quot;计，脚本重跑）：</p>
+<table>
+<tr><th>关键字</th><th>H(key)</th><th>实际地址</th><th>探测次数</th><th>说明</th></tr>
+<tr><td>19</td><td>6</td><td>6</td><td>1</td><td>直接落位</td></tr>
+<tr><td>1</td><td>1</td><td>1</td><td>1</td><td>直接落位</td></tr>
+<tr><td>23</td><td>10</td><td>10</td><td>1</td><td>直接落位</td></tr>
+<tr><td>14</td><td>1</td><td>2</td><td>2</td><td>地址 1 冲突</td></tr>
+<tr><td>55</td><td>3</td><td>3</td><td>1</td><td>直接落位</td></tr>
+<tr><td>20</td><td>7</td><td>7</td><td>1</td><td>直接落位</td></tr>
+<tr><td>84</td><td>6</td><td>8</td><td>3</td><td>6、7 已占</td></tr>
+<tr><td>27</td><td>1</td><td>4</td><td>4</td><td>1、2、3 已占</td></tr>
+<tr><td>68</td><td>3</td><td>5</td><td>3</td><td>3、4 已占</td></tr>
+<tr><td>11</td><td>11</td><td>11</td><td>1</td><td>直接落位</td></tr>
+<tr><td>10</td><td>10</td><td>12</td><td>3</td><td>10、11 已占</td></tr>
+<tr><td>77</td><td>12</td><td>13</td><td>2</td><td>12 已占</td></tr>
+</table>
+<p>成表结果为：下标 1 至 8 依次是 <code>1, 14, 55, 27, 68, 19, 20, 84</code>，下标 10 至 13 依次是 <code>23, 11, 10, 77</code>，下标 0、9、14 至 18 为空。表中各关键字的实际地址与原料一致，但原料把探测次数记成&quot;冲突次数&quot;，故其成功 ASL 写作 $19/12\approx1.58$；按比较次数计应为</p>
+<p>$$ \mathrm{ASL}_{\text{成功}}=\frac{1+1+1+2+1+1+3+4+3+1+3+2}{12}=\frac{23}{12}\approx1.92 $$</p>
+<p><strong>原料此处不一致，本文按算法重跑。</strong> 查找不成功的 ASL 要对每个<strong>初始散列地址</strong>（$0$ 至 $12$ 共 13 种，与表长无关）算&quot;从该地址探到第一个空槽的比较次数&quot;：</p>
+<table>
+<tr><th>初始地址</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr>
+<tr><td>探测次数</td><td>1</td><td>9</td><td>8</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>5</td><td>4</td><td>3</td></tr>
+</table>
+<p>原料把 10、11、12 三档记作 4、3、2，漏数了地址 13 上的关键字 77，因此得到 $55/13\approx4.23$；修正后总和为 58，</p>
+<p>$$ \mathrm{ASL}_{\text{不成功}}=\frac{58}{13}\approx4.46 $$</p>
+<p>原料另一份小算例（表长 6，$H(\mathrm{key})=\mathrm{key}\%5$，依次插入 20、24、1 后再插入 5）中，5 落在下标 2，探测 3 次，成功 ASL 为 $(1+1+3+1)/4=1.5$，与原料一致；但失败 ASL 原料记作 $16/5=3.2$，其中初始地址 4 被记为&quot;4→5→0→1→2→3 共 6 次&quot;，而它自己给出的表里下标 5 是空槽，探测应在下标 5 停止，正确值为 2，于是 $\mathrm{ASL}_{\text{失败}}=(4+3+2+1+2)/5=12/5=2.4$。<strong>原料此处不一致，本文按算法重跑。</strong></p>
+<p>两个分母的取法必须分开记：<strong>成功除以表中元素个数，失败除以散列函数能产生的初始地址个数</strong>。表长 16 而 $p=13$ 时，地址 13 至 15 不可能是初始地址，不能进分母；同理删除后的表要按当前剩余元素数取分母。</p>
+<h3>6.5 ASL 作为 α 的函数</h3>
+<p>原料强调一条结论：平均查找长度是装填因子 $\alpha$ 的函数，而不是元素个数 $n$ 的函数。各方法的表达式与实例值如下（$\alpha=0.75$ 与 $\alpha=1,2$ 为原料所给算例）：</p>
+<table>
+<tr><th>方法</th><th>查找成功</th><th>查找不成功</th><th>α=0.75</th><th>α=1</th><th>α=2</th></tr>
+<tr><td>线性探测</td><td>$\frac{1}{2}\bigl(1+\frac{1}{1-\alpha}\bigr)$</td><td>$\frac{1}{2}\bigl(1+\frac{1}{(1-\alpha)^2}\bigr)$</td><td>2.5 与 8.5</td><td>—</td><td>—</td></tr>
+<tr><td>二次探测</td><td>$-\frac{1}{\alpha}\ln(1-\alpha)$</td><td>$\frac{1}{1-\alpha}$</td><td>约 1.848 与 4</td><td>—</td><td>—</td></tr>
+<tr><td>链地址法</td><td>$1+\frac{\alpha}{2}$</td><td>$\alpha+e^{-\alpha}$，约等于 $\alpha$</td><td>—</td><td>1.5 与约 1.368</td><td>2 与约 2.135</td></tr>
+</table>
+<p>可见线性探测在 $\alpha$ 接近 1 时急剧恶化，二次探测较优但只能探到部分空槽，链地址法在 $\alpha&gt;1$ 时仍保持稳定，代价是额外的指针空间。</p>
+<h2>七、栈与队列：实现与应用</h2>
+<h3>7.1 结构特性与两种底层实现</h3>
+<p>栈是仅允许在栈顶插入与删除的线性表，特性后进先出（LIFO）；队列仅允许在队尾插入、队头删除，特性先进先出（FIFO）。原料给出一组 C++ 模板实现：顺序栈以 <code>topIndex</code> 从 $-1$ 起记栈顶，入栈 <code>data[++topIndex] = item</code>，越界判据是 <code>topIndex == capacity - 1</code>；链栈把 <code>push</code> 写成头插（<code>newNode-&gt;next = topNode; topNode = newNode</code>），出栈即摘头节点，两者的插入删除都是 $O(1)$。</p>
+<p>需澄清原料的一处问答：<strong>二叉树的广度优先搜索基于队列，深度优先搜索基于栈</strong>，链表只是栈或队列的一种底层实现方式，&quot;DFS 基于链表&quot;的说法不成立。队列的角色见原料 <code>BFS</code>：根入队，出队即访问，再把左右孩子依次入队。</p>
+<h3>7.2 循环队列判空与判满的三种方案</h3>
+<p>顺序队列直接线性使用后会出现&quot;假溢出&quot;——<code>rear</code> 到数组末尾而前部仍有空位，因此取模构成循环队列，代价是 <code>front</code> 与 <code>rear</code> 重合时无法区分空与满。原料给的前两种实现正好对应两种解法：</p>
+<pre><code>// 方案一：牺牲一个存储单元
+template&lt;typename T&gt;
+class ArrayQueue {
+private:
+    T* data; int frontIndex, rearIndex, capacity;
+public:
+    ArrayQueue(int size = 10) : capacity(size), frontIndex(0), rearIndex(0) {
+        data = new T[capacity];
+    }
+    void push(const T&amp; item) {
+        if (isFull()) throw std::overflow_error(&quot;Queue full&quot;);
+        data[rearIndex] = item;
+        rearIndex = (rearIndex + 1) % capacity;
+    }
+    T pop() {
+        if (empty()) throw std::underflow_error(&quot;Queue empty&quot;);
+        T result = data[frontIndex];
+        frontIndex = (frontIndex + 1) % capacity;
+        return result;
+    }
+    bool empty() const { return frontIndex == rearIndex; }
+    bool isFull() const { return (rearIndex + 1) % capacity == frontIndex; }
+    int size() const { return (rearIndex - frontIndex + capacity) % capacity; }
+};
+
+// 方案二：增设元素个数 size
+template&lt;typename T, int MAX_SIZE&gt;
+class ArrayQueue2 {
+private:
+    T arr[MAX_SIZE]; int front, rear, size;
+public:
+    ArrayQueue2() : front(0), rear(0), size(0) {}
+    bool empty() const { return size == 0; }
+    bool full()  const { return size == MAX_SIZE; }
+    void enqueue(const T&amp; item) {
+        if (full()) throw std::overflow_error(&quot;Queue is full&quot;);
+        arr[rear] = item;
+        rear = (rear + 1) % MAX_SIZE;
+        size++;
+    }
+    T dequeue() {
+        if (empty()) throw std::underflow_error(&quot;Queue is empty&quot;);
+        T result = arr[front];
+        front = (front + 1) % MAX_SIZE;
+        size--;
+        return result;
+    }
+};</code></pre>
+<p>方案三是在入队后置 <code>tag = 1</code>、出队后置 <code>tag = 0</code>，用 <code>front == rear</code> 搭配 <code>tag</code> 的值得到满与空。三者比较（表中数值经脚本模拟核对）：</p>
+<table>
+<tr><th>方案</th><th>判空条件</th><th>判满条件</th><th>可存元素数（表长 m）</th><th>额外开销</th><th>备注</th></tr>
+<tr><td>牺牲一个单元</td><td>front 等于 rear</td><td>(rear+1) % m 等于 front</td><td>m-1</td><td>无</td><td>长度公式 $(rear-front+m)\%m$</td></tr>
+<tr><td>增设 size 计数</td><td>size 等于 0</td><td>size 等于 m</td><td>m</td><td>一个整型变量</td><td>出队入队都要维护 size</td></tr>
+<tr><td>增设 tag</td><td>front 等于 rear 且 tag 等于 0</td><td>front 等于 rear 且 tag 等于 1</td><td>m</td><td>一个标志位</td><td>每次操作都要改写 tag，易漏</td></tr>
+</table>
+<p>模拟结果：表长 6 的方案一在第 5 次入队后即报满，只能存 5 个；表长 5 的方案二与方案三都能存满 5 个，但方案三在 <code>front == rear</code> 时若不检查 <code>tag</code> 就会把满队列误判为空，本文的核对脚本正是先踩了这一点才修正。</p>
+<h3>7.3 括号匹配</h3>
+<p>原料的实践项目要求明确：支持 <code>()</code>、<code>[]</code>、<code>{}</code> 三类括号，输入串允许含非括号字符，空串判定为匹配，并要求复用此前定义的 <code>LinkedListStack</code>，把判定拆成 <code>isMatchingPair</code>（判断一对括号是否匹配）与 <code>isBalanced</code>（遍历字符串配合栈检查）两个函数。核心逻辑：遇左括号入栈，遇右括号则先看栈是否为空、再看栈顶是否配对，遍历结束后<strong>以栈空作为匹配的最终判据</strong>。</p>
+<pre><code>bool isBalanced(const string&amp; s) {
+    for (char c : s) {
+        if (isLeftBracket(c)) {
+            stack.push(c);
+        } else if (isRightBracket(c)) {
+            if (stack.empty() || !isMatchingPair(stack.top(), c)) {
+                return false;      // 多余右括号或类型不符
+            }
+            stack.pop();
+        }                       // 非括号字符直接忽略
+    }
+    return stack.empty();        // 余下左括号则不匹配
+}</code></pre>
+<p>正确性需两个条件同时成立：遍历中未提前返回不匹配，且结束时栈为空。栈状态如下（本文另按同一逻辑补跑三个用例）：</p>
+<table>
+<tr><th>输入</th><th>栈的变化</th><th>结果</th></tr>
+<tr><td><code>()</code></td><td>空，压入左括号，弹出，空</td><td>匹配</td></tr>
+<tr><td><code>([)]</code></td><td>处理到 <code>)</code> 时栈顶为 <code>[</code></td><td>中途不匹配</td></tr>
+<tr><td><code>()[]{} </code></td><td>逐对压入弹出，最终空</td><td>匹配</td></tr>
+<tr><td><code>{[(])}</code></td><td>处理到 <code>]</code> 时栈顶为 <code>(</code></td><td>中途不匹配</td></tr>
+<tr><td><code>(()</code></td><td>结束时栈中剩一个左括号</td><td>不匹配</td></tr>
+<tr><td><code>a(b+c)</code></td><td>过滤非括号字符后栈最终为空</td><td>匹配</td></tr>
+</table>
+<p>此处有一个原料内部不一致的坑值得记下：另一份 C++ 版 <code>isValid</code> 写作&quot;若字符是右括号则检查，否则一律入栈&quot;，于是字母、<code>+</code>、空格都被当作左括号压栈，输入 <code>a(b+c)</code> 时返回假。这与项目&quot;允许包含非括号字符&quot;的要求矛盾，必须先判断字符属于左括号集合再入栈。<strong>原料此处不一致，本文按项目要求书写。</strong></p>
+<h3>7.4 表达式求值：中缀转后缀再求值</h3>
+<p>原料把括号匹配进一步扩展成&quot;表达式计算器&quot;项目：用栈管理中缀转后缀过程中的运算符优先级，用循环队列或栈存放后缀输出，再遍历后缀表达式求值。优先级与两个核心函数照原料列出（原料中乘除号写作 × 与 ÷，代码块保持原样；若逐字符处理，需注意二者在 UTF-8 源文件中各占两字节，实际编码应替换为 <code>*</code> 与 <code>/</code>）：</p>
+<pre><code>std::unordered_map&lt;char, int&gt; precedence = {
+    {&#x27;+&#x27;, 1}, {&#x27;-&#x27;, 1},
+    {&#x27;×&#x27;, 2}, {&#x27;÷&#x27;, 2},
+    {&#x27;(&#x27;, 0}
+};
+
+std::string infixToPostfix(const std::string&amp; infix) {
+    LinkedListStack&lt;char&gt; opStack;
+    std::string postfix;
+    for (char c : infix) {
+        if (isdigit(c)) {                        // 操作数直接输出
+            postfix += c;
+        } else if (c == &#x27;(&#x27;) {                   // 左括号入栈
+            opStack.push(c);
+        } else if (c == &#x27;)&#x27;) {                   // 右括号：弹到左括号为止
+            while (opStack.top() != &#x27;(&#x27;) {
+                postfix += opStack.pop();
+            }
+            opStack.pop();
+        } else {                                 // 运算符：弹出不低者优先级
+            while (!opStack.empty() &amp;&amp;
+                   precedence[opStack.top()] &gt;= precedence[c]) {
+                postfix += opStack.pop();
+            }
+            opStack.push(c);
+        }
+    }
+    while (!opStack.empty()) {                   // 弹出剩余运算符
+        postfix += opStack.pop();
+    }
+    return postfix;
+}
+
+int evaluatePostfix(const std::string&amp; postfix) {
+    LinkedListStack&lt;int&gt; numStack;
+    for (char c : postfix) {
+        if (isdigit(c)) {
+            numStack.push(c - &#x27;0&#x27;);
+        } else {
+            int b = numStack.pop();
+            int a = numStack.pop();
+            switch (c) {
+                case &#x27;+&#x27;: numStack.push(a + b); break;
+                case &#x27;-&#x27;: numStack.push(a - b); break;
+                case &#x27;×&#x27;: numStack.push(a * b); break;
+                case &#x27;÷&#x27;:
+                    if (b == 0) throw std::invalid_argument(&quot;Division by zero&quot;);
+                    numStack.push(a / b);
+                    break;
+            }
+        }
+    }
+    return numStack.pop();
+}</code></pre>
+<p>求值部分的要点是<strong>出栈顺序</strong>：先弹出的是右操作数 <code>b</code>，后弹出的是左操作数 <code>a</code>，减法与除法不可交换，顺序写反即错。<code>(3+5)*2-8/4</code> 的转换过程逐步如下（脚本重跑）：</p>
+<table>
+<tr><th>读入</th><th>后缀输出</th><th>运算符栈</th></tr>
+<tr><td>(</td><td>空</td><td>左括号</td></tr>
+<tr><td>3</td><td>3</td><td>左括号</td></tr>
+<tr><td>+</td><td>3</td><td>左括号，加号</td></tr>
+<tr><td>5</td><td>3 5</td><td>左括号，加号</td></tr>
+<tr><td>)</td><td>3 5 +</td><td>空</td></tr>
+<tr><td>×</td><td>3 5 +</td><td>乘号</td></tr>
+<tr><td>2</td><td>3 5 + 2</td><td>乘号</td></tr>
+<tr><td>-</td><td>3 5 + 2 ×</td><td>减号</td></tr>
+<tr><td>8</td><td>3 5 + 2 × 8</td><td>减号</td></tr>
+<tr><td>/</td><td>3 5 + 2 × 8</td><td>减号，除号</td></tr>
+<tr><td>4</td><td>3 5 + 2 × 8 4</td><td>减号，除号</td></tr>
+<tr><td>结束</td><td>3 5 + 2 × 8 4 / -</td><td>空</td></tr>
+</table>
+<p>求值结果 14。原料的测试用例表把该表达式的预期输出写成 12，而 $8\times2-8/4=16-2=14$，<strong>原料此处不一致，本文按算法重跑</strong>；同表中 <code>3+5*2</code> 的后缀式 $3\ 5\ 2\ *\ +$ 与结果 13、<code>10÷0</code> 抛异常、<code>5+(</code> 括号不匹配、<code>a+3*2</code> 含非法字符三项均与重跑结果一致。</p>
+<p>实现的局限也应记入：<code>isdigit(c)</code> 与 <code>postfix += c</code> 只处理单个字符，多位数操作数会被拆散，后缀串按字符拼接也缺分隔符，故原料把&quot;支持多位数输入&quot;列为扩展要求。</p>
+<h3>7.5 其他易错处</h3>
+<p>用链表实现栈时，<code>size()</code> 的遍历条件若写成 <code>while (temp-&gt;next)</code>，当栈中只有一个节点时循环体不执行、返回 0，与真实大小 1 不符；正确写法是 <code>while (temp)</code>，并在循环内计数后移动指针。用 <code>list</code> 或 <code>vector</code> 尾部做队列时，头侧出队是 $O(n)$，需改用 <code>collections.deque</code>（Python）或标准库 <code>queue</code>（底层默认 <code>deque</code>）；C++ 的 <code>queue</code> 在 <code>std</code> 命名空间，需包含 <code>&lt;queue&gt;</code>。</p>
+<h2>八、常见误区</h2>
+<ol><li>以为 Dijkstra 只是&quot;有负权边就崩&quot;。真正的失效机制是顶点一旦标记为已确定就不再回改，负权边可能改写已确定顶点的答案；3.4 节的反例中 $\mathrm{dist}[1]$ 停在 1 而真值是 0。</li><li>把前驱数组当成&quot;所有最短路&quot;。它只保存一条，等价的另一条路径不会体现。</li><li>Floyd 的 $k$ 放到最内层，或在本轮中提前使用被更新过的 $d[i][k]$，破坏&quot;中间顶点不超过 $k$&quot;的不变式。</li><li>混淆&quot;含负权边的回路&quot;与&quot;负权回路&quot;。判据是回路总权是否为负，$-2+5=3$ 的回路可以正常处理。</li><li>见到 $d[i][i]&lt;0$ 仍继续使用矩阵值。此时相关顶点对之间无最短路径，只能报告负环。</li><li>Warshall 中把 $(i,j)$ 未变 1 理解为算法漏算，实际是当轮只放开一个中间点；$(4,3)$ 要等到 $k=2$ 才置 1。</li><li>认为开放定址法可以 $\alpha\ge1$。线性探测要求 $\alpha&lt;1$，否则无空槽可探；链地址法才允许 $\alpha\ge1$。</li><li>计算 ASL 时分母取错：成功应除以表中元素数，失败应除以初始散列地址数（$p=13$ 时不是表长 16）。</li><li>把探测次数记成冲突次数，导致 ASL 整体偏小一号——这是原料算例中出现最多的偏差。</li><li>在开放定址表中用置空来删除元素，会切断同义词的探测链，必须使用逻辑删除标记。</li><li>公共溢出区法删除后不前移整理，溢出区留下空值占位；原稿数组长度与初值个数不一致还会造成重复插入。</li><li>循环队列判满用 <code>front == rear</code>，与判空条件冲突，必须配合牺牲一个单元、<code>size</code> 或 <code>tag</code> 之一。</li><li>使用 <code>tag</code> 方案时，出队的空判断也必须带上 <code>tag == 0</code>，只写 <code>front == rear</code> 会把满队列误判为空。</li><li>括号匹配只检查最后栈是否为空，忽略遍历中&quot;遇右括号时栈已空&quot;的分支，<code>)(</code> 这类输入会被漏判。</li><li>括号匹配实现把所有非右括号字符都当左括号入栈，导致含字母或运算符的表达式误判。</li><li>后缀表达式求值时先弹左操作数、后弹右操作数，减法与除法结果取反。</li></ol>
+<h2>九、总结要点</h2>
+<p>三种矩阵型算法共享同一套&quot;放开中间点&quot;的动态规划思想，差别只在代数结构与循环次序：Dijkstra 以贪心把中间点限制逐步外推为最终答案，代价是必须非负权；Floyd 用 $O(n^3)$ 换取全点对最短路，并能容纳负权边、检出负权回路；Warshall 把&quot;取小&quot;换成&quot;或&quot;、&quot;相加&quot;换成&quot;且&quot;，只求可达性。手算时 Dijkstra 看 <code>dist</code> 与 <code>path</code> 两个数组的逐轮变化，Floyd 与 Warshall 看矩阵快照逐 $k$ 的变化，两者的不变式都是&quot;内部顶点不超过当前 $k$&quot;。</p>
+<p>哈希表的三条主线是散列函数、冲突处理与性能度量：链地址法与公共溢出区法在代码上分别是&quot;链表摘挂&quot;与&quot;两段查找 + 前移整理&quot;，开放定址法在删除上必须用逻辑删除；性能用装填因子 $\alpha$ 而非 $n$ 来刻画，$\alpha$ 越接近 1，线性探测的 ASL 增长越剧烈，这也是实践中设定阈值扩容的理由。</p>
+<p>栈与队列的要点集中在两处判据与两类应用。判据是循环队列的满空区分（牺牲一个单元、<code>size</code>、<code>tag</code> 三选一），应用是括号匹配与表达式求值（中缀转后缀用运算符栈，求值用操作数栈），它们的共同结构特征是&quot;最近打开的最先闭合&quot;，因此必须用栈；凡是&quot;先进来的先处理&quot;就应交给队列。原料中三处 ASL 与一处表达式结果的偏差均已按算法重跑并逐处标注，其余表格与原对话保持一致。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Dijkstra 算法求解最短路径 / 编写哈希表代码 / 栈与队列学习及实践</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

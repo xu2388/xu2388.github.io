@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H&E→IHC 虚拟染色 · 扩散模型解耦学习文献调研与可复现实验方案</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-soft:#f7f8fa;
+    --bg-softer:#fbfcfd;
+    --panel:#ffffff;
+    --border:#e4e7ec;
+    --border-strong:#cdd3dc;
+    --text:#171a1f;
+    --text-2:#3d444d;
+    --muted:#6b7480;
+    --accent:#1a56db;
+    --accent-soft:#eaf0fd;
+    --green:#0d7a3f;
+    --green-soft:#e6f5ec;
+    --amber:#9a6200;
+    --amber-soft:#fdf3e2;
+    --red:#c22a2a;
+    --red-soft:#fdeceb;
+    --purple:#6b32c9;
+    --purple-soft:#f1ebfd;
+    --gray-soft:#eef0f3;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;scroll-padding-top:20px;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:var(--sans);font-size:15px;line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{display:flex;max-width:1560px;margin:0 auto;}
+  /* ---------- sidebar ---------- */
+  nav.toc{
+    width:286px;flex:0 0 286px;position:sticky;top:0;align-self:flex-start;
+    height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;
+    border-right:1px solid var(--border);background:var(--bg-softer);
+  }
+  nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--accent);text-transform:uppercase;margin-bottom:4px;}
+  nav.toc .brand-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+  nav.toc a{
+    display:block;color:var(--text-2);text-decoration:none;font-size:13px;
+    padding:5px 9px;border-radius:6px;border-left:2px solid transparent;
+  }
+  nav.toc a:hover{background:var(--gray-soft);color:var(--accent);}
+  nav.toc a.lv1{font-weight:650;margin-top:9px;color:var(--text);}
+  nav.toc a.lv2{padding-left:20px;font-size:12.5px;color:var(--muted);}
+  /* ---------- main ---------- */
+  main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px;}
+  header.doc{border-bottom:2px solid var(--border-strong);padding-bottom:22px;margin-bottom:30px;}
+  header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;}
+  header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em;}
+  header.doc .sub{font-size:14.5px;color:var(--muted);margin:0;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .meta-row span{font-size:12px;background:var(--gray-soft);border:1px solid var(--border);color:var(--text-2);padding:3px 10px;border-radius:20px;}
+  h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--accent);letter-spacing:-.01em;}
+  h2 .num{color:var(--accent);font-weight:800;margin-right:8px;}
+  h3{font-size:18px;margin:34px 0 12px;color:var(--text);}
+  h3::before{content:"▍";color:var(--accent);margin-right:6px;font-size:14px;}
+  h4{font-size:15.5px;margin:24px 0 9px;color:var(--text);}
+  h5{font-size:14px;margin:18px 0 7px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  p{margin:9px 0;}
+  ul,ol{margin:9px 0 9px 22px;padding:0;}
+  li{margin:5px 0;}
+  a{color:var(--accent);}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--gray-soft);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f;}
+  pre{
+    background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--accent);
+    border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);
+    font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0;
+  }
+  pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit;}
+  /* ---------- callouts ---------- */
+  .box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--bg-soft);}
+  .box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em;}
+  .box.key{background:var(--accent-soft);border-color:#c2d4f7;}
+  .box.key .bt{color:var(--accent);}
+  .box.warn{background:var(--amber-soft);border-color:#f0dcb4;}
+  .box.warn .bt{color:var(--amber);}
+  .box.stop{background:var(--red-soft);border-color:#f4cfcc;}
+  .box.stop .bt{color:var(--red);}
+  .box.good{background:var(--green-soft);border-color:#c2e4cf;}
+  .box.good .bt{color:var(--green);}
+  .box.pur{background:var(--purple-soft);border-color:#d9c9f7;}
+  .box.pur .bt{color:var(--purple);}
+  /* ---------- tables ---------- */
+  .tbl-scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px;}
+  table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:640px;}
+  thead th{
+    background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;
+    border-bottom:2px solid var(--border-strong);white-space:nowrap;font-size:12.3px;
+  }
+  td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6;}
+  tbody tr:nth-child(even){background:var(--bg-softer);}
+  tbody tr:hover{background:var(--accent-soft);}
+  td.c,th.c{text-align:center;}
+  .nowrap{white-space:nowrap;}
+  /* ---------- badges ---------- */
+  .b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6;}
+  .bS{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bA{background:var(--accent-soft);color:var(--accent);border:1px solid #c2d4f7;}
+  .bB{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+  .bC{background:var(--gray-soft);color:var(--muted);border:1px solid var(--border-strong);}
+  .bHigh{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bMed{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+  .bLow{background:var(--gray-soft);color:var(--muted);border:1px solid var(--border-strong);}
+  .bT1{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bT2{background:var(--accent-soft);color:var(--accent);border:1px solid #c2d4f7;}
+  .bT3{background:var(--gray-soft);color:var(--muted);border:1px solid var(--border-strong);}
+  .stars{color:#d99000;letter-spacing:1px;}
+  /* ---------- paper card ---------- */
+  .card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:var(--panel);}
+  .card > .ch{
+    background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;
+  }
+  .card > .ch .t{font-weight:700;font-size:15px;line-height:1.45;}
+  .card > .ch .v{font-size:12px;color:var(--muted);margin-top:3px;}
+  .card > .cb{padding:6px 18px 18px;}
+  .kv{display:grid;grid-template-columns:118px 1fr;gap:3px 14px;font-size:13.2px;margin:12px 0;}
+  .kv dt{color:var(--muted);font-weight:600;font-size:12.3px;padding-top:1px;}
+  .kv dd{margin:0;}
+  /* ---------- flow diagram ---------- */
+  .flow{background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:20px;margin:16px 0;overflow-x:auto;}
+  .fnode{
+    display:inline-block;border:1.5px solid var(--border-strong);background:#fff;border-radius:7px;
+    padding:7px 14px;font-size:12.5px;text-align:center;line-height:1.45;font-family:var(--mono);
+  }
+  .fnode.hl{border-color:var(--accent);background:var(--accent-soft);font-weight:700;color:var(--accent);}
+  .fnode.gr{border-color:#b7e0c7;background:var(--green-soft);}
+  .fnode.am{border-color:#f0dcb4;background:var(--amber-soft);}
+  .fnode.pu{border-color:#d9c9f7;background:var(--purple-soft);}
+  .farrow{display:block;text-align:center;color:var(--muted);font-size:15px;line-height:1.2;margin:5px 0;}
+  .frow{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;align-items:center;}
+  /* ---------- misc ---------- */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr;}}
+  .mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--bg-softer);}
+  .mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px;}
+  .mini p{font-size:12.8px;margin:4px 0;color:var(--text-2);}
+  .toc-note{font-size:12.5px;color:var(--muted);margin-top:8px;}
+  hr{border:none;border-top:1px solid var(--border);margin:34px 0;}
+  .small{font-size:12.5px;color:var(--muted);}
+  .tag{display:inline-block;font-size:11px;background:var(--gray-soft);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin:2px 3px 2px 0;color:var(--text-2);font-family:var(--mono);}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:10px 0 0;}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  @media(max-width:900px){
+    nav.toc{display:none;}
+    main{padding:22px 18px 90px;}
+    header.doc h1{font-size:23px;}
+  }
+  @media print{
+    nav.toc{display:none;} main{padding:0;max-width:none;}
+    .card{break-inside:avoid;} h2{break-before:page;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">H&E → IHC</div>
+  <div class="brand-sub">扩散模型 · 解耦学习<br>面向 PSPStain 的落地调研</div>
+  <a class="lv1" href="#s0">摘要与核心结论</a>
+  <a class="lv1" href="#s1">Part 1 · 研究问题定义</a>
+  <a class="lv1" href="#s2">Part 2 · 解耦方向总分类</a>
+  <a class="lv1" href="#s3">Part 3 · 扩散模型解耦论文</a>
+  <a class="lv2" href="#s3-tbl">总表（22 篇）</a>
+  <a class="lv2" href="#s3-card">核心论文精读</a>
+  <a class="lv1" href="#s4">Part 4 · 虚拟染色 / 病理方向</a>
+  <a class="lv2" href="#s4-tbl">总表（16 篇）</a>
+  <a class="lv2" href="#s4-card">核心论文精读</a>
+  <a class="lv1" href="#s5">Part 5 · 可迁移的非医学工作</a>
+  <a class="lv1" href="#s6">Part 6 · 最适合 PSPStain 的 Top 5</a>
+  <a class="lv1" href="#s7">Part 7 · 三套实验方案</a>
+  <a class="lv1" href="#s8">Part 8 · Ablation 实验设计</a>
+  <a class="lv1" href="#s9">Part 9 · 最终推荐技术路线</a>
+  <a class="lv1" href="#s10">Part 10 · 优先级路线图</a>
+  <a class="lv1" href="#s11">附录 · 检索式与可信度</a>
+</nav>
+
+<main>
+
+<header class="doc">
+  <div class="kicker">Literature Survey &amp; Reproducible Experiment Design</div>
+  <h1>扩散模型中的内容–风格 / 结构–染色信息解耦学习<br>面向 H&amp;E → IHC 虚拟染色的文献调研与可复现实验方案设计</h1>
+  <p class="sub">以 PSPStain 为基线，寻找「改动小、有公开代码、有 ablation 收益、与 H&amp;E→IHC 问题结构匹配」的解耦方案</p>
+  <div class="meta-row">
+    <span>检索时间：2026-09-30</span>
+    <span>覆盖文献：60+ 篇（2020–2026）</span>
+    <span>目标：明天可以开始写代码</span>
+    <span>优先级：可复现 &gt; 可解释 &gt; 改动小 &gt; 有代码 &gt; 有收益 &gt; 复杂度</span>
+  </div>
+</header>
+
+<!-- ================================================================= -->
+<h2 id="s0"><span class="num">0</span>摘要与核心结论（先看这一节）</h2>
+
+<div class="box key">
+  <div class="bt">一句话结论</div>
+  <p style="margin:0">在 H&amp;E→IHC 上，<b>真正值得做的解耦不是「content ↔ style」，而是「structure/anatomy（来自 H&amp;E，须保持）↔ stain-expression（须被生成，且携带语义）」</b>。前者是 <i>信息保持</i> 问题，后者是 <i>条件生成</i> 问题——两者性质不同，这是 H&amp;E→IHC 与自然图像风格迁移最本质的区别。因此，MUNIT 式的「内容码 + 风格码」经典范式只能算<b>部分适配</b>；真正匹配的是 <b>共享/私有特征分解</b> 与 <b>病理语义条件（pathology encoder）× 染色条件（tone/stain encoder）双条件解耦</b>。</p>
+</div>
+
+<h3>0.1 明天开始写代码，第一件事做什么？</h3>
+<div class="box good">
+  <div class="bt">✅ 直接答案</div>
+  <ol style="margin-bottom:0">
+    <li><b>先复现 PSPStain baseline</b>（官方代码 <code>ccitachi/PSPStain</code>，BCI + MIST 数据集，5 项指标全部对齐论文）。这是唯一不可跳过的一步。</li>
+    <li><b>第一周的最小实验 = 只做一件事</b>：把生成器换成「条件扩散 + 残差分解」，条件用 H&amp;E latent 拼接（InstructPix2Pix 式），<b>保留 PSPStain 原有的两个 loss</b>（FOD / 原型一致性）直接作用在 x̂₀ 预测上，再加一条 <b>低通结构一致性约束</b>。<br>
+    这条路线同时借用了 <b>Star-Diff</b>（残差 + 噪声双 U-Net，改动最小）与 <b>HistDiST</b>（VAE latent 拼接 + DDIM inversion 保结构）。</li>
+    <li><b>不要第一周就上双编码器 content/style 解耦。</b>先拿到「扩散化本身是否涨点」的干净结论，再叠加解耦模块——否则 ablation 无法归因。</li>
+  </ol>
+</div>
+
+<h3>0.2 六个必须记住的判断</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">判断</th><th>结论与依据</th></tr></thead>
+<tbody>
+<tr><td><b>① 最匹配的解耦轴</b></td><td><b>structure ↔ stain-expression</b>（S 级）。H&amp;E 提供核形态、腺体结构、血管、空间组织；IHC 必须新增 DAB 显色分布、强度、亚细胞定位。这条轴天然对应「保持不变 vs 需要生成」。</td></tr>
+<tr><td><b>② 次优解耦轴</b></td><td><b>domain-invariant ↔ domain-specific</b>（A 级）。EGSDE 的双能量函数、MIU-Diff 的 MI 引导能量都是这一族，且在虚拟染色上已被验证。</td></tr>
+<tr><td><b>③ 需要警惕的轴</b></td><td><b>content ↔ style（经典）</b>（B 级）。风险：IHC 的「style」不只是颜色统计，它携带<b>语义</b>（哪些细胞阳性）。若 style code 退化成颜色码，会丢掉蛋白表达信息 → 指标反而掉。</td></tr>
+<tr><td><b>④ 频域解耦</b></td><td><b>低频=结构、高频=染色</b>这个假设在病理上<b>不成立</b>，须实验验证（见 Part 2.6）。但「低频注入保结构」这一<b>用法</b>（ILVR / SDEdit）是 S 级低成本手段，与假设是否成立无关。</td></tr>
+<tr><td><b>⑤ 推理时没有 IHC reference 怎么办</b></td><td>这是本任务的核心约束。业界已收敛到<b>三条成熟解法</b>：<span class="tag">可学习 target-domain token/embedding</span>（UNIStainNet 的 64-d FiLM stain 向量、PD-UniST 的 prompt、PGVMS 的 prompt）<span class="tag">tone encoder 学目标域先验</span>（D-VST）<span class="tag">能量引导采样</span>（EGSDE / MIU-Diff）。<b>不要用「需要 style reference 图」的方案。</b></td></tr>
+<tr><td><b>⑥ 最大陷阱</b></td><td><b>过度堆模块</b>。本报告推荐的路径每一步只加一个模块，且每个模块都必须回答「拿掉它指标掉多少」。凡是没有 ablation 证据的模块，一律不进主模型。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>0.3 推荐路线速览（详见 Part 9–10）</h3>
+<div class="flow">
+  <div class="frow">
+    <span class="fnode">H&amp;E 输入</span>
+    <span class="farrow" style="display:inline;margin:0">→</span>
+    <span class="fnode hl">Structure Encoder<br>(共享/结构分支)</span>
+    <span class="farrow" style="display:inline;margin:0">+</span>
+    <span class="fnode pu">Stain Token<br>(目标域可学习先验)</span>
+  </div>
+  <span class="farrow">↓ &nbsp;dual conditioning (concat latent + cross-attn)</span>
+  <div class="frow"><span class="fnode hl">条件 Latent Diffusion U-Net</span></div>
+  <span class="farrow">↓ &nbsp;x̂₀</span>
+  <div class="frow">
+    <span class="fnode gr">FOD loss (PSPStain 原 loss ①)</span>
+    <span class="fnode gr">Prototype loss (PSPStain 原 loss ②)</span>
+    <span class="fnode am">低通结构一致性</span>
+    <span class="fnode am">正交/独立性正则</span>
+  </div>
+  <span class="farrow">↓</span>
+  <div class="frow"><span class="fnode">虚拟 IHC</span></div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s1"><span class="num">1</span>Part 1 · 研究问题定义：为什么 H&amp;E→IHC 需要解耦？</h2>
+
+<h3>1.1 任务的信息论结构</h3>
+<p>先把问题写清楚，后面所有技术判断都从这张表推出来。</p>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:20%">信息成分</th><th style="width:26%">在 H&amp;E 中是否存在</th><th style="width:26%">在 IHC 中的角色</th><th>生成模型应该做什么</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>组织形态 / 结构</b><br><span class="small">核边界、腺体、血管、空间组织</span></td>
+  <td><span class="b bS">存在且清晰</span></td>
+  <td>与 H&amp;E 高度共享</td>
+  <td><b>保持（preserve）</b>。这是硬约束——临床要求形态学不能变。</td>
+</tr>
+<tr>
+  <td><b>染色外观 / 颜色统计</b><br><span class="small">色调、饱和度、亮度分布</span></td>
+  <td><span class="b bS">存在（苏木素/伊红）</span></td>
+  <td>完全不同（DAB 棕 / 复染蓝）</td>
+  <td><b>替换（replace）</b>。这是最表层、最容易做的一层。</td>
+</tr>
+<tr>
+  <td><b>蛋白表达语义</b><br><span class="small">哪些细胞阳性、强度分级、亚细胞定位</span></td>
+  <td><span class="b bC">不存在</span></td>
+  <td><b>核心临床价值所在</b></td>
+  <td><b>生成（hallucinate）</b>。必须从形态学线索推断，这是任务最难的部分。</td>
+</tr>
+<tr>
+  <td><b>采集域差异</b><br><span class="small">扫描仪、批次、染色 protocol</span></td>
+  <td>存在（干扰）</td>
+  <td>存在（干扰）</td>
+  <td><b>解耦掉（discard）</b>。不应影响生成结果。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+  <div class="bt">⚠️ 关键结构性矛盾</div>
+  <p style="margin:0">传统 content/style 解耦假设：<b>内容来自源图，风格来自参考图</b>，两者都是「已有信息」。<br>
+  但 H&amp;E→IHC 是<b>不对称</b>的：结构是「已有信息」（要保住），而染色语义是「不存在的信息」（要造出来）。<br>
+  所以本任务的解耦目标不是「分离两种已有信息」，而是<b>「分离『应保持的』与『应新生成的』，并保证新生成的部分是病理语义正确的」</b>。<br>
+  → 这就是为什么本报告把 <b>structure ↔ stain-expression</b> 列为第一优先，而把经典 <b>content ↔ style</b> 降为第二优先。</p>
+</div>
+
+<h3>1.2 不解耦会发生什么？（现有方法的失败模式）</h3>
+<div class="grid2">
+  <div class="mini">
+    <div class="mt">失败模式 A：结构漂移 / spatial shift</div>
+    <p>生成器为了拟合染色分布而移动像素，导致核位置、腺体轮廓偏移。下游 HER2/Ki67 计数直接失效。</p>
+    <p class="small">对应文献：UNIStainNet 明确指出 H&amp;E–IHC 来自相邻切片，存在 10–50 px 固有错位，像素级 L1 监督会惩罚正确的生成。</p>
+  </div>
+  <div class="mini">
+    <div class="mt">失败模式 B：病理泄漏（pathology leakage）</div>
+    <p>非病变区域被误染成阳性、或阳性区域漏染。D-VST 把这个现象<b>显式命名</b>并作为核心动机。</p>
+    <p class="small">本质原因：病理条件与染色条件在 U-Net 里纠缠在一起，模型分不清「这块区域该不该染」和「染成什么颜色」。</p>
+  </div>
+  <div class="mini">
+    <div class="mt">失败模式 C：染色饱和 / 强度失真</div>
+    <p>生成图视觉上「像 IHC」但 DAB 强度分布错误，IOD（积分光密度）偏差大 → 分级错误。</p>
+    <p class="small">这正是 PSPStain 的 PALS/FOD 策略要解决的问题：约束蛋白表达水平的一致性。</p>
+  </div>
+  <div class="mini">
+    <div class="mt">失败模式 D：模式坍塌 / 多样性丢失</div>
+    <p>GAN 类方法在 IHC 这种强条件任务上容易输出「平均染色」，丢失局部异质性。这是引入扩散模型的主要动机之一。</p>
+    <p class="small">StainDiffuser 的出发点即：扩散模型抗模式坍塌，但需要小数据收敛的多任务设计。</p>
+  </div>
+</div>
+
+<h3>1.3 为什么「扩散 + 解耦」是合理的技术组合</h3>
+<ul>
+  <li><b>扩散提供</b>：高保真生成、抗模式坍塌、天然的概率框架（可容纳随机性——IHC 本身就有切片间差异）。</li>
+  <li><b>解耦提供</b>：把「保结构」和「造染色」拆成两个可控自由度，避免二者在同一个梯度场里互相拉扯。</li>
+  <li><b>理论上的漂亮对应</b>：DisDiff（NeurIPS 2023）证明 DPM 的 score 场可以被分解为若干<b>子梯度场</b>，每个条件于一个已发现的因子。这给「在扩散里做解耦」提供了直接的理论落脚点：<b>不是解耦 latent，而是解耦 score</b>。</li>
+</ul>
+
+<!-- ================================================================= -->
+<h2 id="s2"><span class="num">2</span>Part 2 · 解耦方向总分类（Taxonomy）</h2>
+
+<h3>2.1 完整分类树</h3>
+<pre><code>Disentanglement in Generative Models
+│
+├── 1. Content / Style ──────────────── 经典双码范式
+│     ├── content code  ← 源图
+│     └── style code    ← 参考图 / 随机采样
+│     ▸ MUNIT, DRIT, StarGAN v2, DiffuseIT, SDDM
+│     ▸ H&E→IHC 适配度: B（style 语义不足）
+│
+├── 2. Structure / Appearance ───────── 空间结构与外观统计分离
+│     ├── structure: 几何、边界、形态
+│     └── appearance: 纹理、颜色、材质
+│     ▸ ILVR, SDEdit, SPGAN, Star-Diff, Structure-Preserving Diffusion
+│     ▸ H&E→IHC 适配度: S ★首选
+│
+├── 3. Shared / Private ─────────────── 共享编码器 + 私有编码器
+│     ├── shared  : 域不变（形态学）
+│     └── private : 域特有（染色协议 / 目标染色）
+│     ▸ DAFD, 多数 UDA 特征解耦工作, EGSDE（双能量）
+│     ▸ H&E→IHC 适配度: A ★次选
+│
+├── 4. Semantic / Texture ───────────── 语义 vs 纹理
+│     ├── semantic: 病理语义（蛋白表达等级）
+│     └── texture : 高频纹理细节
+│     ▸ UNIStainNet（UNI token 语义 + 纹理损失）, CSDN
+│     ▸ H&E→IHC 适配度: A（语义侧价值高）
+│
+├── 5. Spatial / Stain ──────────────── 空间条件 vs 染色条件
+│     ├── spatial: mask / 边缘 / 结构图（ControlNet 式）
+│     └── stain  : 染色类型 / 色调（tone token）
+│     ▸ D-VST（pathology encoder + tone encoder）, DiffStain, UNIStainNet（SPADE + FiLM）
+│     ▸ H&E→IHC 适配度: S ★首选（直接命中 pathology leakage）
+│
+├── 6. Frequency / Spatial ──────────── 频域分解
+│     ├── low-freq : 全局结构 / 亮度（存疑）
+│     └── high-freq: 细节 / 纹理（存疑）
+│     ▸ ILVR, WaveDM, FreDiff, HDW-SR, DreamSalon
+│     ▸ H&E→IHC 适配度: B（"低频=结构"需实验验证；"低频注入"用法为 S）
+│
+├── 7. Latent / Condition ───────────── 隐空间拆分 vs 条件注入
+│     ├── latent split : z = [z_struct, z_stain]
+│     └── condition    : cross-attn / AdaIN / SPADE 注入
+│     ▸ Diffusion Autoencoders, FDAE, InfoDiffusion, HistDiST, CSDN
+│     ▸ H&E→IHC 适配度: A
+│
+└── 8. Identity / Variation ─────────── 身份 vs 变化（人脸专用）
+      ▸ Face-Adapter, REFace, InFS
+      ▸ H&E→IHC 适配度: C（概念可借，机制不可迁）
+</code></pre>
+
+<h3>2.2 逐类适配性判定</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:15%">解耦轴</th><th class="c" style="width:9%">H&amp;E→IHC<br>适配度</th><th style="width:38%">为什么</th><th>迁移时的最大风险</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>Structure / Appearance</b></td>
+  <td class="c"><span class="b bS">S</span></td>
+  <td>H&amp;E 的形态学信息就是「结构」，IHC 新增的 DAB 分布就是「外观/表达」。二者的「保持 vs 生成」职责天然分离，不需要额外假设。</td>
+  <td>「appearance」若只建模颜色统计，会丢掉表达语义。须把 appearance 分支升级为 <b>semantically-aware stain branch</b>。</td>
+</tr>
+<tr>
+  <td><b>Spatial / Stain（双条件）</b></td>
+  <td class="c"><span class="b bS">S</span></td>
+  <td>D-VST 直接把这个思路用在 H&amp;E→IHC 上，并显式解决「pathology leakage」。是目前<b>唯一同时处理「病理正确性」与「色调可控性」</b>的扩散框架。</td>
+  <td>需要 tone 标注（或从训练集统计得到）。BCI/MIST 有 4 种 stain 标签，天然可用。</td>
+</tr>
+<tr>
+  <td><b>Shared / Private</b></td>
+  <td class="c"><span class="b bA">A</span></td>
+  <td>「域不变 = 组织形态」「域特有 = 染色协议/目标 marker」这个划分对病理学完全成立，且与 UDA 文献成熟度匹配。</td>
+  <td>需要显式正交/独立性约束，否则两路会退化成同一路（表示坍塌）。</td>
+</tr>
+<tr>
+  <td><b>Semantic / Texture</b></td>
+  <td class="c"><span class="b bA">A</span></td>
+  <td>UNIStainNet 的 ablation 硬证据：<b>去掉 UNI 语义条件，FID 30.0→40.1、Pearson-r 0.937→0.681</b>。说明「病理语义条件」的边际价值极大。</td>
+  <td>依赖病理基础模型（UNI / Phikon / GigaPath），有额外显存与下载成本。</td>
+</tr>
+<tr>
+  <td><b>Latent / Condition</b></td>
+  <td class="c"><span class="b bA">A</span></td>
+  <td>实现层最灵活：可以是 latent 拼接、cross-attention、AdaIN/SPADE、或 learnable token。HistDiST 已验证「VAE latent 拼接 + cross-attn」在 H&amp;E→IHC 上有效。</td>
+  <td>latent 显式拆分（z=[z_struct,z_stain]）在扩散里训练不稳定，容易出现「一路学全部、另一路学零」。</td>
+</tr>
+<tr>
+  <td><b>Content / Style</b></td>
+  <td class="c"><span class="b bB">B</span></td>
+  <td>思想可借（DiffuseIT/SDDM 的机制清晰、代码完整），但「style」在本任务中语义负载过重。</td>
+  <td>style code 退化为颜色码 → 蛋白表达信息丢失 → IOD/分级指标反而下降。</td>
+</tr>
+<tr>
+  <td><b>Frequency / Spatial</b></td>
+  <td class="c"><span class="b bB">B</span></td>
+  <td><b>「低频=结构」在病理上未被证实</b>。DAB 阳性区域在空间上是大块低频结构，而细胞核边界是高频——两者与自然图像的直觉相反。</td>
+  <td>若把高频当作「染色细节」而丢弃，会破坏核边界（临床最关键的结构）。<b>只建议把低频注入当正则用，不建议把频域当作主解耦轴。</b></td>
+</tr>
+<tr>
+  <td><b>Identity / Variation</b></td>
+  <td class="c"><span class="b bC">C</span></td>
+  <td>人脸任务的身份是「已有且需保持」，与 H&amp;E→IHC 的「需新生成的染色语义」结构不同。</td>
+  <td>概念类比会误导设计。不建议投入。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>2.3 「真正解耦」 vs 「看起来像解耦」 —— 三类方法判别标准</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:16%">类型</th><th style="width:32%">判别标准（可操作）</th><th style="width:26%">代表工作</th><th>在 H&amp;E→IHC 中的价值</th></tr></thead>
+<tbody>
+<tr>
+  <td><span class="b bT1">Type 1<br>显式解耦</span></td>
+  <td>论文显式定义了两个（或以上）语义明确的表示，并给出<b>数学约束</b>：正交性、独立性、互信息最小化、对比式对齐、重构闭环。</td>
+  <td>MUNIT, SDDM, DisDiff(NIPS23), InfoDiffusion, FDAE, DisDiff(MICCAI25), D-VST</td>
+  <td><b>最高</b>。约束可写成 loss，直接挂到 PSPStain 的训练目标上，ablation 干净。</td>
+</tr>
+<tr>
+  <td><span class="b bT2">Type 2<br>隐式解耦</span></td>
+  <td>论文不叫 disentanglement，但通过 <b>dual branch / condition branch / cross-attention / 双编码器 / shared+private</b> 在功能上实现了分离。</td>
+  <td>HistDiST（双条件）, UNIStainNet（SPADE+FiLM）, DiffuseIT（ViT key vs attn map）, ControlNet, Face-Adapter</td>
+  <td><b>高</b>。工程上最容易落地——往往只是改条件注入方式，不动 loss。</td>
+</tr>
+<tr>
+  <td><span class="b bT3">Type 3<br>伪解耦</span></td>
+  <td>只是加了 structure loss / perceptual loss / edge loss / cycle consistency / identity loss。这些是<b>输出空间的约束</b>，不是表示层面的分离。</td>
+  <td>Star-Diff 的 edge/结构残差项、多数 GAN 类染色迁移的「结构一致性 loss」、SPGAN</td>
+  <td><b>中</b>。不要把它们当解耦卖点，但<b>它们是必要的配套</b>——解耦之后必须有约束保证被「保持」的那部分真的被保持。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box">
+  <div class="bt">📌 本报告的分类标注约定</div>
+  <p style="margin:0">Part 3–5 的每一篇论文都会标注 <span class="b bT1">T1 显式</span> / <span class="b bT2">T2 隐式</span> / <span class="b bT3">T3 伪解耦</span>，并给出 <span class="b bS">S</span><span class="b bA">A</span><span class="b bB">B</span><span class="b bC">C</span> 的迁移适配度与 <span class="b bHigh">High</span><span class="b bMed">Med</span><span class="b bLow">Low</span> 的预期实验价值。</p>
+</div>
+
+<h3>2.4 关于频域解耦的专门澄清</h3>
+<div class="box stop">
+  <div class="bt">🚫 不要直接假设「低频 = 结构，高频 = 染色」</div>
+  <p>这个假设在自然图像风格迁移里成立（内容=低频布局，纹理=高频）。但在病理图像里至少有三处反例：</p>
+  <ul style="margin-bottom:0">
+    <li><b>DAB 阳性区域是大块连通区</b> → 属于低频，但它恰恰是「需要新生成的染色信息」。</li>
+    <li><b>细胞核边界、染色质颗粒是高频</b> → 属于高频，但它是「必须保持的结构」。</li>
+    <li><b>H&amp;E 的伊红胞质纹理也是高频</b> → 属于高频，但它<b>不应该</b>被保持（IHC 里没有这个外观）。</li>
+  </ul>
+</div>
+<p>因此本报告的立场是：</p>
+<ul>
+  <li><b>不把频域作为主解耦轴</b>（避免错误的归纳偏置）。</li>
+  <li><b>但把「低频注入」作为廉价而有效的结构正则</b>：ILVR（ICCV 2021）在每一步去噪时，用参考图的低通分量替换预测图的低通分量；SDEdit 用噪声强度 <code>t₀</code> 控制「保留多少结构」。两者在 MIU-Diff 中被当作 baseline 对比，在 HistDiST 中由 <b>DDIM inversion + η-cosine schedule</b> 承担同样的角色（η=0 时结构对齐最好但 FID 最差；η=0.2 是论文选定的平衡点）。</li>
+</ul>
+
+<!-- ================================================================= -->
+<h2 id="s3"><span class="num">3</span>Part 3 · 扩散模型中的解耦论文</h2>
+
+<h3 id="s3-tbl">3.1 总表（22 篇，按解耦机制分组）</h3>
+<div class="legend">
+  <span><span class="b bT1">T1</span>显式解耦</span>
+  <span><span class="b bT2">T2</span>隐式解耦</span>
+  <span><span class="b bT3">T3</span>伪解耦</span>
+  <span><span class="b bS">S</span>直接可迁</span>
+  <span><span class="b bA">A</span>少量修改</span>
+  <span><span class="b bB">B</span>仅借思想</span>
+  <span><span class="b bC">C</span>不建议</span>
+</div>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr>
+  <th style="width:15%">Paper</th><th class="c">Year</th><th class="c">Venue</th>
+  <th style="width:13%">解耦对象</th><th class="c">类型</th>
+  <th style="width:22%">核心机制（解耦发生在哪）</th>
+  <th class="c">Code</th><th class="c">H&amp;E→IHC<br>适配</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><b>DisDiff</b></td><td class="c">2023</td><td class="c">NeurIPS</td><td>因子 ↔ 子梯度场</td><td class="c"><span class="b bT1">T1</span></td><td>把预训练 DPM 的 score 分解为条件于各因子的<b>子梯度场</b>；无监督发现因子</td><td class="c"><a href="https://github.com/ThomasMrY/DisDiff">官方</a></td><td class="c"><span class="b bA">A</span></td></tr>
+<tr><td><b>SDDM</b></td><td class="c">2023</td><td class="c">ICML</td><td>Content ↔ Style（score）</td><td class="c"><span class="b bT1">T1</span></td><td>在<b>流形上分解 score</b>：content score + style score，显式优化纠缠分布</td><td class="c">部分</td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>DiffuseIT</b></td><td class="c">2023</td><td class="c">ICLR</td><td>Content ↔ Style（表征）</td><td class="c"><span class="b bT2">T2</span></td><td>ViT 多层 self-attention 的 <b>key</b> 作 style；ViT attention map 作 content；用 loss 引导去噪</td><td class="c"><a href="https://github.com/cyclomon/DiffuseIT">官方</a></td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>InfoDiffusion</b></td><td class="c">2023</td><td class="c">ICML</td><td>隐变量 ↔ 观测</td><td class="c"><span class="b bT1">T1</span></td><td>在扩散中加入低维隐变量 + <b>信息瓶颈/冗余最小化</b>，得到可解释解耦表示</td><td class="c"><a href="https://github.com/isjakewong/InfoDiffusion">官方</a></td><td class="c"><span class="b bA">A</span></td></tr>
+<tr><td><b>FDAE</b></td><td class="c">2024</td><td class="c">AAAI</td><td>概念 ↔ 概念</td><td class="c"><span class="b bT1">T1</span></td><td>Factorized 扩散自编码器；<b>content decorrelation loss + mask entropy loss</b></td><td class="c">部分</td><td class="c"><span class="b bA">A</span></td></tr>
+<tr><td><b>Diffusion Autoencoders</b></td><td class="c">2022</td><td class="c">CVPR</td><td>Semantic ↔ Stochastic</td><td class="c"><span class="b bT1">T1</span></td><td>语义编码器给 z_sem（高层语义），扩散子码 z_sto 承担随机细节；<b>latent 拆分的经典范式</b></td><td class="c">官方</td><td class="c"><span class="b bA">A</span></td></tr>
+<tr><td><b>DDIB</b></td><td class="c">2023</td><td class="c">ICLR</td><td>Domain A ↔ Domain B</td><td class="c"><span class="b bT2">T2</span></td><td>两个独立训练的扩散模型，通过<b>共享高斯隐空间</b>桥接（PF-ODE 可逆）</td><td class="c"><a href="https://github.com/suxuann/ddib">官方</a></td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>EGSDE</b></td><td class="c">2022</td><td class="c">NeurIPS</td><td>域不变 ↔ 域特有</td><td class="c"><span class="b bT1">T1</span></td><td>两个能量函数：content energy（保内容）+ style energy（贴目标域），<b>能量引导 SDE 采样</b></td><td class="c"><a href="https://github.com/ML-GSAI/EGSDE">官方</a></td><td class="c"><span class="b bS">S</span></td></tr>
+<tr><td><b>ILVR</b></td><td class="c">2021</td><td class="c">ICCV</td><td>低频 ↔ 高频</td><td class="c"><span class="b bT2">T2</span></td><td>每一步用参考图<b>低通分量替换</b>预测图的低通分量；无需训练</td><td class="c"><a href="https://github.com/jychoi118/ilvr_adm">官方</a></td><td class="c"><span class="b bS">S</span></td></tr>
+<tr><td><b>SDEdit</b></td><td class="c">2022</td><td class="c">ICLR</td><td>结构 ↔ 外观（强度旋钮）</td><td class="c"><span class="b bT2">T2</span></td><td>加噪到 t₀ 再反向去噪，<b>t₀ 控制保结构程度</b>；零训练</td><td class="c">官方</td><td class="c"><span class="b bS">S</span></td></tr>
+<tr><td><b>StyleID</b></td><td class="c">2024</td><td class="c">CVPR</td><td>内容 ↔ 风格（attention）</td><td class="c"><span class="b bT2">T2</span></td><td>训练-free：操纵 self-attention 的 <b>query/key 替换</b>实现风格注入</td><td class="c"><a href="https://github.com/jiwoogit/StyleID">官方</a></td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>ControlNet</b></td><td class="c">2023</td><td class="c">ICCV</td><td>空间条件 ↔ 生成</td><td class="c"><span class="b bT2">T2</span></td><td>可训练副本 + <b>零卷积</b>注入空间条件；条件与生成解耦的工程标准</td><td class="c"><a href="https://github.com/lllyasviel/ControlNet">官方</a></td><td class="c"><span class="b bS">S</span></td></tr>
+<tr><td><b>T2I-Adapter</b></td><td class="c">2023</td><td class="c">arXiv</td><td>空间条件 ↔ 生成</td><td class="c"><span class="b bT2">T2</span></td><td>比 ControlNet 更轻量：小网络学条件→特征映射，加性注入</td><td class="c">官方</td><td class="c"><span class="b bS">S</span></td></tr>
+<tr><td><b>CSDN / MCL</b></td><td class="c">2024</td><td class="c">arXiv</td><td>Content ↔ Style（query）</td><td class="c"><span class="b bT1">T1</span></td><td>Q-Former <b>两套可学习 query</b>（各 16 个）+ ITC/ITM/ITG 多模态对齐 loss；style 只注入 U-Net middle block</td><td class="c">未开源</td><td class="c"><span class="b bA">A</span></td></tr>
+<tr><td><b>SLD-Font</b></td><td class="c">2026</td><td class="c">arXiv</td><td>结构 ↔ 风格（双编码器）</td><td class="c"><span class="b bT1">T1</span></td><td>内容/风格来自<b>两个独立编码器</b>，在结构层级做解耦；few-shot</td><td class="c">—</td><td class="c"><span class="b bA">A</span></td></tr>
+<tr><td><b>DisControlFace</b></td><td class="c">2024</td><td class="c">ACM MM</td><td>高层语义 ↔ 低层控制</td><td class="c"><span class="b bT1">T1</span></td><td>显式解耦条件控制：语义条件与空间条件分离注入</td><td class="c">官方</td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>Face-Adapter</b></td><td class="c">2024</td><td class="c">ECCV</td><td>Identity / Attribute / Spatial</td><td class="c"><span class="b bT2">T2</span></td><td>三分支解耦；identity 通过 transformer decoder 映射到 <b>text 空间</b>当 prompt</td><td class="c">官方</td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>DreamSalon</b></td><td class="c">2024</td><td class="c">CVPR</td><td>高频编辑 ↔ 低频质量</td><td class="c"><span class="b bT2">T2</span></td><td>按预测噪声的<b>频率与梯度</b>分阶段（editing / boosting）</td><td class="c">—</td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>HiSD</b></td><td class="c">2020</td><td class="c">NeurIPS</td><td>多层风格标签</td><td class="c"><span class="b bT1">T1</span></td><td>层级式风格解耦，多标签独立控制（GAN 时代经典）</td><td class="c">官方</td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>MUNIT</b></td><td class="c">2018</td><td class="c">ECCV</td><td>Content ↔ Style</td><td class="c"><span class="b bT1">T1</span></td><td>内容码 + 风格码，双向重构 + 循环一致性；<b>理论基石</b></td><td class="c"><a href="https://github.com/NVlabs/MUNIT">官方</a></td><td class="c"><span class="b bB">B</span></td></tr>
+<tr><td><b>StarGAN v2</b></td><td class="c">2020</td><td class="c">CVPR</td><td>Domain ↔ Style code</td><td class="c"><span class="b bT1">T1</span></td><td>映射网络 + style encoder 产生多样化风格码；单模型多域</td><td class="c"><a href="https://github.com/clovaai/stargan-v2">官方</a></td><td class="c"><span class="b bA">A</span></td></tr>
+<tr><td><b>CUT</b></td><td class="c">2020</td><td class="c">ECCV</td><td>Patch ↔ Patch（互信息）</td><td class="c"><span class="b bT1">T1</span></td><td><b>PatchNCE</b>：最大化输入/输出对应 patch 的互信息，实现「结构对应」约束</td><td class="c"><a href="https://github.com/taesungp/contrastive-unpaired-translation">官方</a></td><td class="c"><span class="b bS">S</span></td></tr>
+<tr><td><b>AdaIN</b></td><td class="c">2017</td><td class="c">ICCV</td><td>内容统计 ↔ 风格统计</td><td class="c"><span class="b bT1">T1</span></td><td>用风格图特征的 <b>mean/var</b> 调制内容图特征；解耦的最简形式</td><td class="c">官方</td><td class="c"><span class="b bA">A</span></td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">注：<b>Code</b> 列标注「官方」= 有官方公开仓库；「部分」= 有非官方/社区实现；「未开源」= 论文声明将开源但截至检索日未见；「—」= Paper-only。</p>
+
+<h3 id="s3-card">3.2 核心论文精读（8 篇，按对 H&amp;E→IHC 的价值排序）</h3>
+
+<!-- ===== DisDiff NeurIPS ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">① DisDiff: Unsupervised Disentanglement of Diffusion Probabilistic Models</div>
+      <div class="v">Tao Yang, Yuwang Wang, Yan Lv, Nanning Zheng · <b>NeurIPS 2023</b> · arXiv:2301.13721</div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bA">A 较适合</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Task</dt><dd>无监督解耦扩散概率模型（提出新任务：<b>disentanglement of DPMs</b>）</dd>
+      <dt>Code</dt><dd><a href="https://github.com/ThomasMrY/DisDiff">github.com/ThomasMrY/DisDiff</a>（官方 PyTorch + 预训练模型）</dd>
+      <dt>Dataset</dt><dd>合成数据 + 真实数据（CelebA / 等）</dd>
+    </dl>
+
+    <h5>它到底解决什么问题</h5>
+    <p>作者认为：DPM 虽然生成能力强，但它的 score 场是<b>纠缠</b>的——所有语义因子混在一个 ε<sub>θ</sub> 里。所以不能像 GAN/VAE 那样直接在 latent 上做解耦，因为 DPM 的「latent」就是噪声，本身没有语义。于是他们换了个对象：<b>解耦 score 场本身</b>。给定一个预训练 DPM，不用任何因子标注，自动发现背后的因子，并把梯度场拆成若干子梯度场。</p>
+
+    <h5>解耦对象</h5>
+    <pre><code>发现出的因子 f₁, f₂, ..., f_K   ↔   子梯度场  ε_θ = Σ_k ε_θ^(k)(x_t, t | r_k)
+（每个子梯度场条件于对应因子的表示 r_k）</code></pre>
+
+    <h5>解耦在哪里发生</h5>
+    <p><b>Noise prediction / score field</b>（不是 latent、不是 encoder）。这是本方法最本质的特征。</p>
+
+    <h5>简化网络结构</h5>
+    <div class="flow">
+      <div class="frow">
+        <span class="fnode">x_t, t</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode hl">共享 U-Net backbone</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode">共享特征 h</span>
+      </div>
+      <span class="farrow">↓ &nbsp;split</span>
+      <div class="frow">
+        <span class="fnode pu">head₁ → ε⁽¹⁾ (r₁)</span>
+        <span class="fnode pu">head₂ → ε⁽²⁾ (r₂)</span>
+        <span class="fnode pu">… → …</span>
+        <span class="fnode pu">head_K → ε⁽ᴷ⁾ (r_K)</span>
+      </div>
+      <span class="farrow">↓ &nbsp;Σ</span>
+      <div class="frow"><span class="fnode hl">ε_θ = Σ ε⁽ᵏ⁾</span></div>
+    </div>
+
+    <h5>核心公式</h5>
+    <pre><code>总 score（子梯度场求和）:
+  ε_θ(x_t, t) = Σ_{k=1..K} ε_θ^(k)(x_t, t | r_k)
+
+解耦损失（每个子场的表示应互相独立 / 不可互预测）:
+  L_dis = Σ_{k≠j}  D( r_k , stop_grad( ε_θ^(j) ) )   ← 阻止子场之间的信息泄漏
+
+训练目标（保持原扩散损失 + 解耦正则）:
+  L = L_simple(ε_θ)  +  λ · L_dis</code></pre>
+    <p class="small">符号：ε_θ 为噪声预测网络；r_k 为第 k 个因子的表示；K 为因子数（超参）；λ 为解耦权重。</p>
+
+    <h5>结果 / Ablation 要点</h5>
+    <ul>
+      <li>在合成数据集上能自动发现真值因子，并实现「单因子编辑而不影响其他因子」。</li>
+      <li><b>Ablation 关键</b>：去掉解耦正则后，子场之间出现明显信息串扰，单因子编辑会连带改变其他属性 → 直接证明解耦项有效。</li>
+      <li>论文给出预训练模型，复现成本低。</li>
+    </ul>
+
+    <div class="box good">
+      <div class="bt">迁移到 H&amp;E→IHC 的可行性 · <span class="b bA">A</span></div>
+      <p><b>怎么用</b>：把 K 设为 2（K=1 结构因子、K=2 染色因子），共享 U-Net，输出两个子场相加。这样「保结构」和「加染色」在梯度层面就分开了，理论上比在 latent 层拆更稳。</p>
+      <p><b>风险</b>：因子数 K 需要先验设定；子场分解在 2 因子的病理场景下是否有足够的可辨识性，需要实验验证（建议先在小规模子集上做可视化）。</p>
+      <p style="margin-bottom:0"><b>预期收益</b>：<span class="b bHigh">High</span> —— 因为它直接提供了「在扩散里做解耦」的<b>理论正确做法</b>，且代码完整、可改造成 2 因子版本。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EGSDE ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">② EGSDE: Unpaired Image-to-Image Translation via Energy-Guided Stochastic Differential Equations</div>
+      <div class="v">Min Zhao et al. · <b>NeurIPS 2022</b> · arXiv:2207.06635</div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bS">S 直接可迁</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Task</dt><dd>非配对 image-to-image translation</dd>
+      <dt>Code</dt><dd><a href="https://github.com/ML-GSAI/EGSDE">github.com/ML-GSAI/EGSDE</a>（官方）</dd>
+      <dt>关键地位</dt><dd><b>MIU-Diff（虚拟染色）直接把它当 baseline 对比</b>，说明其在病理翻译上的可迁移性已被同行认可。</dd>
+    </dl>
+
+    <h5>它到底解决什么问题</h5>
+    <p>无条件扩散模型只保证「像目标域」，不保证「和源图内容一致」。EGSDE 用<b>两个预先训练好的能量函数</b>在采样时提供引导：一个负责「内容要像源图」，另一个负责「风格要像目标域」。不需要重新训练生成模型。</p>
+
+    <h5>解耦对象</h5>
+    <pre><code>E_content（域不变 / 内容保持）  ↔  E_style（域特有 / 目标风格）</code></pre>
+
+    <h5>解耦在哪里发生</h5>
+    <p><b>采样过程（denoising 的 guidance 项）</b>——不是在网络里，而是在 SDE 的漂移项里加两个能量梯度。这是「解耦即引导」的典范。</p>
+
+    <h5>核心公式</h5>
+    <pre><code>反向 SDE 加引导后的漂移项:
+  dx = [ f(x,t) − g(t)² ( ∇_x log p_t(x) 
+                        − λ_c ∇_x E_content(x, y)
+                        − λ_s ∇_x E_style(x, c) ) ] dt + g(t) dw̄
+
+能量函数（域分类器 / 特征距离的指数形式）:
+  E_content(x, y) = − S_content( Φ(x), Φ(y) )
+  E_style  (x, c) = − S_style ( Ψ(x), c )
+
+引导强度按时间衰减（前期管风格、后期管内容）:
+  λ(t) = λ · (1 − t/T)</code></pre>
+    <p class="small">Φ、Ψ 为特征提取器；S 为相似度（如余弦）；λ_c、λ_s 为两个能量的权重；λ(t) 的时间调度是关键设计。</p>
+
+    <h5>结果 / Ablation 要点</h5>
+    <ul>
+      <li>在多个非配对 I2I 任务上优于 GAN 与扩散 baseline，尤其<b>内容保真度</b>明显更好。</li>
+      <li><b>Ablation</b>：分别去掉 E_content / E_style → 分别退化为「内容漂移」/「风格不贴」；论文给出引导初始时刻 M 的敏感性分析。</li>
+      <li>完全 training-free 的引导 → 可以<b>零成本叠加在任何扩散 baseline 上</b>。</li>
+    </ul>
+
+    <div class="box good">
+      <div class="bt">迁移到 H&amp;E→IHC 的可行性 · <span class="b bS">S</span></div>
+      <p><b>怎么用</b>：E_content 用「H&amp;E 与生成图在病理基础模型（UNI/Phikon）特征空间的距离」；E_style 用「生成图与 IHC 域的分布距离」。</p>
+      <p><b>为什么是 S</b>：① 不需要改网络结构；② 不需要改训练流程（先训一个条件扩散，再在推理时加引导）；③ 引导项可随时开关 → <b>ablation 极其干净</b>。</p>
+      <p style="margin-bottom:0"><b>风险</b>：需要额外训练两个能量函数（判别器），但成本远低于重训生成器。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DiffuseIT ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">③ DiffuseIT: Diffusion-based Image Translation using Disentangled Style and Content Representation</div>
+      <div class="v">Gihyun Kwon, Jong Chul Ye · <b>ICLR 2023</b> · arXiv:2209.15264</div>
+    </div>
+    <div><span class="b bT2">T2 隐式</span> <span class="b bB">B 仅借思想</span> <span class="b bMed">Med</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Task</dt><dd>非配对图像翻译（语义文本引导 / 单张目标图引导）</dd>
+      <dt>Code</dt><dd><a href="https://github.com/cyclomon/DiffuseIT">github.com/cyclomon/DiffuseIT</a>（官方）</dd>
+      <dt>Dataset</dt><dd>CelebA-HQ, AFHQ, MetFaces, ImageNet</dd>
+    </dl>
+
+    <h5>它到底解决什么问题</h5>
+    <p>扩散模型做图像翻译时，<b>内容容易在反向过程中丢失</b>。作者提出用 ViT 的中间表征来同时提供「风格」和「内容」的引导信号。</p>
+
+    <h5>解耦对象与位置</h5>
+    <pre><code>Style  ← ViT multi-head self-attention 的中间 KEY（"slicing ViT"）
+Content ← ViT 的 self-attention map（空间对应关系）
+解耦位置：<b>预训练 ViT 的表征空间</b>，然后通过 loss 引导扩散的 denoising</code></pre>
+
+    <h5>核心公式（引导损失）</h5>
+    <pre><code>内容保持损失（结构自相似性匹配）:
+  L_content = ‖ S_A( x̂₀ ) − S_A( y ) ‖₁
+  （S_A 为由 attention map 构成的自相似性矩阵）
+
+风格匹配损失（ViT key 的统计对齐）:
+  L_style = ‖ Key(x̂₀) − Key(x_ref) ‖₁  （或 Gram 矩阵形式）
+
+总损失:
+  L = λ_c · L_content + λ_s · L_style</code></pre>
+
+    <h5>Ablation 要点</h5>
+    <ul>
+      <li>单独用 CLIP 引导 → 内容丢失严重；加入 ViT key/attention 的双引导后内容保真度显著提升。</li>
+      <li>论文展示了「保内容 + 换风格」的清晰解耦效果（同一内容配不同风格）。</li>
+    </ul>
+
+    <div class="box">
+      <div class="bt">迁移到 H&amp;E→IHC 的可行性 · <span class="b bB">B</span></div>
+      <p><b>可借的部分</b>：<b>「用基础模型的自相似性矩阵做内容约束」</b>这个 trick 非常廉价且有效。直接换成病理基础模型（UNI/Phikon/GigaPath）的特征，构造 <code>L_struct = ‖ S(x̂₀) − S(x_H&amp;E) ‖₁</code>，就是一条高质量的结构保持 loss。UNIStainNet 的 edge loss 与 HistDiST 的 PHV 指标都是同一思路的不同变体。</p>
+      <p><b>不建议的部分</b>：不要照搬「从 ViT key 里抽 style」——自然图像 ViT 的 key 捕捉的是纹理/光照风格，而 IHC 的「风格」是蛋白表达语义，语义层次不匹配。应改用<b>病理域专用的 style 表示</b>（见 Part 3 的 D-VST / Part 4）。</p>
+      <p style="margin-bottom:0"><b>预期收益</b>：<span class="b bMed">Med</span> —— 结构约束是「必要的配套」而非「涨点主力」。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SDDM ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">④ SDDM: Score-Decomposed Diffusion Models on Manifolds for Unpaired Image-to-Image Translation</div>
+      <div class="v">Sun et al. · <b>ICML 2023</b> · arXiv:2308.02154</div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bB">B 仅借思想</span> <span class="b bMed">Med</span></div>
+  </div>
+  <div class="cb">
+    <h5>核心思想（与 DisDiff 的对照）</h5>
+    <p>SDDM 在<b>流形上</b>显式分解 score 场：把纠缠在一起的分布拆成「内容 score」与「风格 score」两个子分布，并各自优化。它指出标准 score-based 扩散中的 score guidance 在数学上是「隐式纠缠」的，因此显式分解更可控。</p>
+    <div class="grid2">
+      <div class="mini">
+        <div class="mt">DisDiff (NeurIPS 2023)</div>
+        <p>无监督<b>发现</b>因子（不知道 K 是什么），再拆 score。偏向表征学习。</p>
+        <p class="small">适合：想让模型自己找出「什么是结构、什么是染色」。</p>
+      </div>
+      <div class="mini">
+        <div class="mt">SDDM (ICML 2023)</div>
+        <p>已知两因子（content/style），在流形上<b>显式</b>拆 score。偏向图像翻译。</p>
+        <p class="small">适合：已经明确知道要拆成「结构 / 染色」两路。</p>
+      </div>
+    </div>
+    <h5>核心公式（示意）</h5>
+    <pre><code>分解 score:
+  ∇_x log p(x | y)  =  ∇_x log p_content(x)  +  ∇_x log p_style(x | y)
+
+流形约束（两子分布各自落在低维流形上）:
+  min_{M_c, M_s}  D( p_content ‖ p_{M_c} ) + D( p_style ‖ p_{M_s} )
+
+总目标 = 扩散损失 + λ · 流形正则</code></pre>
+    <div class="box">
+      <div class="bt">迁移可行性 · <span class="b bB">B</span></div>
+      <p style="margin-bottom:0">理论漂亮，但「流形分析」部分实现较重，且论文未提供官方代码。建议<b>只借用其「显式拆 content/style score」的建模直觉</b>，具体实现用 DisDiff 的开源代码改造更现实。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== InfoDiffusion ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">⑤ InfoDiffusion: Representation Learning Using Information Diffusion Models</div>
+      <div class="v">Yingheng Wang et al. · <b>ICML 2023</b> · arXiv:2306.08757</div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bA">A 较适合</span> <span class="b bMed">Med</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Code</dt><dd><a href="https://github.com/isjakewong/InfoDiffusion">github.com/isjakewong/InfoDiffusion</a>（官方）</dd>
+    </dl>
+    <h5>它到底解决什么问题</h5>
+    <p>标准扩散模型的隐空间<b>没有语义</b>（噪声就是噪声）。InfoDiffusion 在扩散框架里引入<b>低维辅助隐变量</b>，并用<b>信息瓶颈 / 冗余最小化</b>目标保证这些隐变量学到「可解释、可解耦」的表示，而不是把信息全塞进去。</p>
+    <h5>核心公式</h5>
+    <pre><code>引入低维隐变量 v（辅助表示）:
+  变分下界:  L = E[ log p(x|v,z) ] − β · KL( q(v|x) ‖ p(v) ) − KL( q(z) ‖ p(z) )
+
+冗余最小化（关键：让不同维度承载不同信息）:
+  L_redundancy = Σ_{i≠j}  I( v_i ; v_j | x )  → 最小化</code></pre>
+    <h5>迁移可行性 · <span class="b bA">A</span></h5>
+    <p style="margin-bottom:0"><b>价值点</b>：它给出了「<b>如何保证拆出来的两路真的不冗余</b>」的标准做法。当你在 PSPStain 上加 z_struct 和 z_stain 两路时，直接套用它的 redundancy 项，可以避免「两路学同一件事」的退化。这是 Part 7 方案 C 中「正交/独立性正则」的理论来源之一。</p>
+  </div>
+</div>
+
+<!-- ===== CSDN ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">⑥ Content-Style Disentangled Representation for Controllable Artistic Image Stylization and Generation</div>
+      <div class="v">Ma Zhuoqi et al. · <b>arXiv 2024</b> (2412.14496)</div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bA">A 较适合</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <h5>为什么值得看（工程价值高）</h5>
+    <p>它把「content/style 解耦」做得<b>模块清晰、可直接抄结构</b>：</p>
+    <ul>
+      <li><b>两套可学习 query embedding</b>（各 16 个）分别负责 content 与 style，通过 Q-Former 从图像/文本中抽取。作者明确说：<b>物理上分离的 query 是显式解耦的关键</b>（相比 DEADiff 的两个独立 Q-Former，更小更快）。</li>
+      <li><b>style 只注入 U-Net 的 middle block</b>（借鉴 InstantStyle）→ 防止内容泄漏。这是一个非常有用的工程 trick。</li>
+      <li><b>训练时随机替换</b>：把图像特征抽出的 style/content embedding 随机替换为文本抽出的，防止模型「抄图作弊」。这是一个极好的正则技巧，可以直接搬到 H&amp;E→IHC（防止生成器直接从 H&amp;E 抄结构而不学染色语义）。</li>
+    </ul>
+    <h5>核心公式</h5>
+    <pre><code>第一阶段（解耦）:
+  L = L_s + L_c
+  L_s = ITC_s + ITM_s + ITG_s      # style 分支的对比/匹配/生成三任务
+  L_c = ITC_c + ITM_c + ITG_c      # content 分支同理
+
+第二阶段（生成）:
+  L_rec = E[ ‖ ε − ε_θ( z_t, t, c, s ) ‖² ]    # c=content prompt, s=style prompt
+
+交叉注意力（style 只在 middle block 拼接）:
+  K = [ e_c^SD W_c^K , Concat( e_c^SD W_c^K, e_s^SD W_s^K )_{middle} ]
+  V = [ e_c^SD W_c^V , Concat( e_c^SD W_c^V, e_s^SD W_s^V )_{middle} ]
+  Z_new = Softmax( Q Kᵀ / √d ) V</code></pre>
+    <h5>Ablation 要点</h5>
+    <ul>
+      <li><b>只用 ITC</b>：内容对齐最好（TA 0.315）但风格细节差（SS 0.273）→ 说明<b>单个对比损失不足以解耦</b>。</li>
+      <li><b>完整 ITC+ITM+ITG</b>：SS 提升到 0.293，达到最佳平衡。</li>
+      <li><b>输入模态 ablation</b>：固定组合 vs 多模态混合训练 → 多模态明显更好。</li>
+    </ul>
+    <div class="box">
+      <div class="bt">迁移可行性 · <span class="b bA">A</span></div>
+      <p style="margin-bottom:0"><b>可直接借用的三个 trick</b>：① 两套独立 query 做显式解耦；② style 只注入 middle block；③ 训练时随机替换 modality 防作弊。代码未开源，但结构描述足够清晰，可自行实现（每个 trick 都是 10–30 行改动）。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ILVR / SDEdit 组合 ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">⑦ ILVR + SDEdit：零训练的结构保持「旋钮」</div>
+      <div class="v">ILVR: ICCV 2021 (arXiv:2108.02938) · SDEdit: ICLR 2022</div>
+    </div>
+    <div><span class="b bT2">T2 隐式</span> <span class="b bS">S 直接可迁</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <h5>为什么把它们放一起</h5>
+    <p>它们是<b>成本最低、最容易做 ablation、且已被病理文献验证</b>的结构保持手段。MIU-Diff 的 baseline 表里同时包含 ILVR、SDEdit、EGSDE——说明在虚拟染色领域这三者是公认的对照组。</p>
+    <h5>机制</h5>
+    <pre><code>ILVR（Iterative Latent Variable Refinement）:
+  每一步去噪:
+    x_{t-1} = DDPM(x_t)                          # 无条件/条件生成
+    x_{t-1} = φ_N(y_{t-1}) + (I − φ_N)(x_{t-1})  # 用参考图的低通分量替换
+  其中 φ_N 为低通滤波（下采样 N 倍再上采样）
+
+SDEdit（Stochastic Differential Editing）:
+  1) 把输入图加噪到 t₀  （t₀ 越大 = 保留结构越少）
+  2) 从 t₀ 反向去噪到 0
+  → t₀ 就是一个「保结构强度」的单一旋钮</code></pre>
+    <h5>在 H&amp;E→IHC 上的正确用法</h5>
+    <ul>
+      <li><b>ILVR 的参考图用 H&amp;E 本身</b>（不是 IHC）→ 强制生成结果在低频上与 H&amp;E 对齐，这是「结构保持」的直接实现。</li>
+      <li>⚠️ <b>但要注意</b>：ILVR 的低通替换会把 H&amp;E 的<b>整体色调</b>也带进来（因为低频包含全局颜色）。对 H&amp;E→IHC 这种「颜色必须完全改变」的任务，需要在替换前先做<b>染色去卷积 / 颜色归一化</b>，或者把替换限制在「结构通道」（如灰度 / 光密度域）。MIU-Diff 就明确在翻译前<b>先去掉 H&amp;E 的颜色</b>（x₀ → x′₀）。</li>
+      <li>HistDiST 的 <b>DDIM inversion + η-cosine(0.2)</b> 本质上是 SDEdit 的升级版，并给出了定量结论：<b>η=0（全确定性）结构最好但 FID 最差；η=0.2 是最优平衡点</b>。这是一个可以直接拿来用的超参起点。</li>
+    </ul>
+    <div class="box good">
+      <div class="bt">迁移可行性 · <span class="b bS">S</span></div>
+      <p style="margin-bottom:0"><b>这是第一周最应该实现的模块</b>：零训练、十几行代码、ablation 干净（开/关 + 调 t₀/η）、且预期对 SSIM / 结构指标有直接提升。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Diffusion Autoencoders ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">⑧ Diffusion Autoencoders（DDIM + 语义编码器）：latent 拆分的理论范式</div>
+      <div class="v">Konpat Preechakul et al. · <b>CVPR 2022 Oral</b></div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bA">A 较适合</span> <span class="b bMed">Med</span></div>
+  </div>
+  <div class="cb">
+    <h5>核心思想</h5>
+    <p>标准 DDIM 的隐空间是纯高斯噪声，没有语义。本文加一个<b>语义编码器</b>输出 z_sem（高层语义），扩散过程负责剩余的随机细节 z_sto。于是：</p>
+    <pre><code>z = [ z_sem , z_sto ]
+  z_sem : 语义编码器给出（有语义、可插值、可编辑）
+  z_sto : 随机噪声子码（承担不可控的细节变化）
+
+训练:
+  L = L_diffusion(x, t | z_sem)  +  L_aux(z_sem 的重构/语义监督)</code></pre>
+    <h5>对本项目的直接启发</h5>
+    <ul>
+      <li><b>「语义码 + 随机码」的拆分正是 H&amp;E→IHC 需要的</b>：语义码 = 病理结构/表达等级（从 H&amp;E 推得）；随机码 = 切片间染色差异（不可控、无需建模）。</li>
+      <li>如果做「一对多」生成（同一 H&amp;E 生成多种可能的 IHC），随机码就是多样性的来源。</li>
+    </ul>
+    <div class="box">
+      <div class="bt">迁移可行性 · <span class="b bA">A</span></div>
+      <p style="margin-bottom:0">不直接迁移（它是无条件生成的语义编辑框架），但<b>为 Part 7 方案 C 的「z_struct + z_stain + z_noise」三分结构提供了理论依据</b>。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s4"><span class="num">4</span>Part 4 · 虚拟染色 / 病理图像方向</h2>
+
+<h3 id="s4-tbl">4.1 总表（16 篇）</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr>
+  <th style="width:14%">Paper</th><th class="c">Year</th><th class="c">Venue</th>
+  <th style="width:11%">Task</th><th style="width:14%">解耦 / 条件设计</th>
+  <th class="c">类型</th><th class="c">Code</th>
+  <th class="c">指标提升<br>（相对基线）</th><th class="c">迁移<br>适配</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>PSPStain</b><br><span class="small">（你的 baseline）</span></td><td class="c">2024</td><td class="c">MICCAI</td><td>H&amp;E→IHC</td>
+  <td>PALS(FOD) + PCLS(原型一致性)</td><td class="c"><span class="b bT1">T1</span></td>
+  <td class="c"><a href="https://github.com/ccitachi/PSPStain">官方</a></td>
+  <td class="c">优于 SOTA 虚拟染色方法</td><td class="c">—</td>
+</tr>
+<tr>
+  <td><b>PGVMS</b></td><td class="c">2026</td><td class="c">TMI</td><td>多路 IHC</td>
+  <td>prompt-guided + 病理语义保持</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c"><a href="https://github.com/ccitachi/PGVMS">官方</a></td>
+  <td class="c">仅用单路 IHC 训练 → 多路</td><td class="c"><span class="b bS">S</span></td>
+</tr>
+<tr>
+  <td><b>D-VST</b></td><td class="c">2025</td><td class="c">NeurIPS</td><td>跨染料染色</td>
+  <td><b>pathology encoder + tone encoder</b>；两阶段课程学习；解决 pathology leakage</td><td class="c"><span class="b bT1">T1</span></td>
+  <td class="c">将开源</td>
+  <td class="c">在 4 种染料 3 个任务上超越 GAN/扩散方法</td><td class="c"><span class="b bS">S</span></td>
+</tr>
+<tr>
+  <td><b>HistDiST</b></td><td class="c">2025</td><td class="c">arXiv<br><span class="small">(会议投稿中)</span></td><td>H&amp;E→IHC<br>(4 marker)</td>
+  <td>双条件：Phikon cross-attn + VAE latent 拼接；DDIM inversion + η-cosine</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c"><a href="https://github.com/ErikGro/HistDiST">官方</a></td>
+  <td class="c">MRA +28%（Ki67）；FID 31.3 vs 34.9</td><td class="c"><span class="b bS">S</span></td>
+</tr>
+<tr>
+  <td><b>MIU-Diff</b></td><td class="c">2025</td><td class="c">arXiv</td><td>非配对虚拟染色</td>
+  <td>互信息引导能量（全局 MI 估计 + 局部对比）</td><td class="c"><span class="b bT1">T1</span></td>
+  <td class="c">待开源</td>
+  <td class="c">Hist 0.670（w/o MI 仅 0.217）</td><td class="c"><span class="b bA">A</span></td>
+</tr>
+<tr>
+  <td><b>UNIStainNet</b></td><td class="c">2026</td><td class="c">ACM-BCB</td><td>H&amp;E→IHC<br>(4 marker)</td>
+  <td>双 SPADE：UNI 密集空间 token（空间调制）+ FiLM stain embedding（通道调制）</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c"><a href="https://github.com/aauthors131/UNIStainNet">官方</a></td>
+  <td class="c">BCI FID 34.6 vs PSPStain 45.7；SSIM 0.541 vs 0.433</td><td class="c"><span class="b bS">S</span></td>
+</tr>
+<tr>
+  <td><b>PD-UniST</b></td><td class="c">2025</td><td class="c">MICCAI</td><td>非配对 H&amp;E→IHC</td>
+  <td>prompt-driven 通用模型（一个模型多 marker）</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c"><a href="https://github.com/chujie-zhang/PD-UniST">官方</a></td>
+  <td class="c">通用性 + 泛化性提升</td><td class="c"><span class="b bS">S</span></td>
+</tr>
+<tr>
+  <td><b>StainDiffuser</b></td><td class="c">2024/25</td><td class="c">arXiv</td><td>H&amp;E→IHC</td>
+  <td>多任务双扩散：IHC 生成 + H&amp;E 细胞分割（训练时用粗分割标签）</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c">官方</td>
+  <td class="c">超越 20+ I2I baseline，两种 marker</td><td class="c"><span class="b bA">A</span></td>
+</tr>
+<tr>
+  <td><b>Star-Diff</b></td><td class="c">2025</td><td class="c">CBM</td><td>H&amp;E→IHC</td>
+  <td><b>残差扩散</b>：结构残差 U-Net + 噪声 U-Net 双网络</td><td class="c"><span class="b bT1">T1</span></td>
+  <td class="c"><a href="https://github.com/anomredux/Star-Diff">非官方</a></td>
+  <td class="c">BCI PSNR 21.30 vs PyramidPix2pix 18.94</td><td class="c"><span class="b bS">S</span></td>
+</tr>
+<tr>
+  <td><b>DisDiff</b> (MRI)</td><td class="c">2025</td><td class="c">MICCAI</td><td>多对比 MRI 翻译</td>
+  <td><b>Disentangled module</b> 拆 content/style + <b>content discriminator</b> 保解剖一致</td><td class="c"><span class="b bT1">T1</span></td>
+  <td class="c">N/A</td>
+  <td class="c">图像质量与结构保持均优于现有方法</td><td class="c"><span class="b bA">A</span></td>
+</tr>
+<tr>
+  <td><b>DiffStain</b></td><td class="c">2025</td><td class="c">MICCAI</td><td>明场→荧光</td>
+  <td>无监督谱聚类生成 mask → 引导反向去噪（mask guidance）</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c"><a href="https://github.com/StrengthInNumber/DiffStain">官方</a></td>
+  <td class="c">SOTA on public microscopy datasets</td><td class="c"><span class="b bA">A</span></td>
+</tr>
+<tr>
+  <td><b>StainDiff</b></td><td class="c">2023</td><td class="c">MICCAI</td><td>染色风格迁移</td>
+  <td>DDPM + self-ensemble（首个把 DPM 用于染色迁移）</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c">—</td>
+  <td class="c">染色风格迁移质量提升</td><td class="c"><span class="b bB">B</span></td>
+</tr>
+<tr>
+  <td><b>MDCL</b></td><td class="c">2024</td><td class="c">ISBI/TMI</td><td>非配对 H&amp;E→IHC</td>
+  <td>Mix-Domain Contrastive Learning（域间 + 域内对比监督）</td><td class="c"><span class="b bT1">T1</span></td>
+  <td class="c">官方</td>
+  <td class="c">多指标优于 ASP / CUT 等</td><td class="c"><span class="b bA">A</span></td>
+</tr>
+<tr>
+  <td><b>Structure-Preserving<br>Diffusion (Unpaired Medical)</b></td><td class="c">2024</td><td class="c">MICCAI-W</td><td>非配对医学翻译</td>
+  <td>结构保持约束融入扩散</td><td class="c"><span class="b bT3">T3</span></td>
+  <td class="c">—</td>
+  <td class="c">结构指标优于基线</td><td class="c"><span class="b bB">B</span></td>
+</tr>
+<tr>
+  <td><b>SynDiff</b></td><td class="c">2023</td><td class="c">TMI</td><td>非配对医学翻译</td>
+  <td>对抗扩散：条件扩散过程 + 对抗训练</td><td class="c"><span class="b bT2">T2</span></td>
+  <td class="c"><a href="https://github.com/icon-lab/SynDiff">官方</a></td>
+  <td class="c">多数据集优于 GAN/扩散基线</td><td class="c"><span class="b bA">A</span></td>
+</tr>
+<tr>
+  <td><b>SPGAN</b><br><span class="small">Stain Style Transfer via Structure-Preserving</span></td><td class="c">2020</td><td class="c">MICCAI-W</td><td>染色风格迁移</td>
+  <td>结构保持的染色风格迁移（最早提出该问题）</td><td class="c"><span class="b bT3">T3</span></td>
+  <td class="c">—</td>
+  <td class="c">结构一致性提升</td><td class="c"><span class="b bB">B</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s4-card">4.2 核心论文精读（5 篇，全部与你的任务直接相关）</h3>
+
+<!-- ===== PSPStain ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">① PSPStain（你的 baseline）· Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining</div>
+      <div class="v">Fuqiang Chen, Ranran Zhang, Boyun Zheng, Yiwen Sun, Jiahui He, Wenjian Qin · <b>MICCAI 2024</b> · arXiv:2407.03655</div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bS">S</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Code</dt><dd><a href="https://github.com/ccitachi/PSPStain">github.com/ccitachi/PSPStain</a>（官方；含 checkpoint 与 pretrain UNet）</dd>
+      <dt>Dataset</dt><dd>BCI（Breast Cancer Immunohistochemical，HER2）· MIST（HER2 / Ki67 / ER / PR）</dd>
+      <dt>Base</dt><dd>构建于 <b>CUT</b>（Contrastive Unpaired Translation）+ <b>ASP</b>（Adaptive Supervised PatchNCE）之上</dd>
+      <dt>Journal 版</dt><dd><b>PGVMS</b>（TMI 2026）· <a href="https://github.com/ccitachi/PGVMS">github.com/ccitachi/PGVMS</a></dd>
+    </dl>
+
+    <h5>两个核心策略（＝你要保留的两个 loss）</h5>
+    <div class="grid2">
+      <div class="mini">
+        <div class="mt">PALS · Protein-Aware Learning Strategy</div>
+        <p>引入 <b>FOD map（Focal Optical Density，焦点光密度）</b>，保持蛋白表达水平的连贯性——即「分子级语义信息」。</p>
+        <p class="small">解决的问题：虚拟染色视觉上像 IHC，但 DAB 强度分布不对 → 分级错误。</p>
+      </div>
+      <div class="mini">
+        <div class="mt">PCLS · Prototype-Consistent Learning Strategy</div>
+        <p>通过<b>原型一致性学习</b>增强跨图像语义交互，解决「病理语义空间错位（spatial misalignment）」问题。</p>
+        <p class="small">解决的问题：H&amp;E 与 IHC 来自相邻切片，存在固有错位，逐像素监督会惩罚正确的生成。</p>
+      </div>
+    </div>
+
+    <h5>官方报告的评估设置</h5>
+    <p>5 项指标 = <b>3 项临床相关 + 2 项图像质量</b>；使用 ImageJ 计算光密度值。并在「真实染色与虚拟染色的分期（staging）一致性」上给出病理相关性。</p>
+
+    <div class="box key">
+      <div class="bt">🔧 改造 PSPStain 的关键切入点（本报告后续所有方案的锚点）</div>
+      <ol style="margin-bottom:0">
+        <li><b>生成器</b>：CUT 的 ResNet 生成器 → 条件扩散 U-Net（这是「扩散化」的唯一必要改动）。</li>
+        <li><b>判别器</b>：CUT 的 PatchGAN 判别器可保留，用于对抗正则（UNIStainNet 的 ablation 证明判别器去掉后 FID 从 30.0 崩到 160.5）。</li>
+        <li><b>两个 loss</b>：FOD loss 与原型一致性 loss 都是<b>作用在输出图像 / 特征上的</b>，因此可以<b>原样保留</b>，只需把「生成输出」从 G(x) 换成扩散的 x̂₀ 预测。这是本项目最大的便利。</li>
+        <li><b>解耦模块</b>：新增在「条件编码」侧，不侵入扩散主干。</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ===== D-VST ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">② D-VST · Diffusion Transformer for Pathology-Correct Tone-Controllable Cross-Dye Virtual Staining of WSI</div>
+      <div class="v">Shurong Yang, Dong Wei, Yihuang Hu, Qiong Peng, Hong Liu, Yawen Huang, Xian Wu, Yefeng Zheng, Liansheng Wang · <b>NeurIPS 2025</b></div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bS">S 直接可迁</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <div class="box key">
+      <div class="bt">🎯 为什么这是本报告的第一名候选</div>
+      <p style="margin:0">这是目前检索到的、<b>唯一一篇把「病理条件」与「色调/染色条件」显式拆成两个 encoder 并专门解决 H&amp;E→IHC 的扩散工作</b>。而且它的核心动机（pathology leakage）与你描述的「结构/内容应与染色信息解耦」完全同构。它的任务设置（跨染料染色，含 H&amp;E→IHC）与你的任务一致。</p>
+    </div>
+
+    <h5>它到底解决什么问题</h5>
+    <p>跨染料虚拟染色需要「病理正确 + 色调可控」。但病理条件与色调条件在扩散模型里<b>难以解耦</b>，导致 <b>pathology leakage</b>：非病变区域被误染成病变区、反之亦然。</p>
+
+    <h5>解耦对象与位置</h5>
+    <pre><code>Pathology condition（病理语义：哪里有病变/表达）
+        ↔
+Tone condition（染色色调：染成什么颜色/强度）
+
+解耦位置：<b>输入端两个独立 encoder</b> + <b>两阶段课程学习</b></code></pre>
+
+    <h5>简化网络结构</h5>
+    <div class="flow">
+      <div class="frow">
+        <span class="fnode">H&amp;E</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode hl">Pathology Encoder</span>
+        <span class="fnode" style="border:none;background:none">|</span>
+        <span class="fnode">tone 标签</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode pu">Tone Encoder</span>
+      </div>
+      <span class="farrow">↓ &nbsp;z_path &nbsp;+&nbsp; z_tone</span>
+      <div class="frow"><span class="fnode hl">Diffusion Transformer (DiT)</span></div>
+      <span class="farrow">↓ &nbsp;两阶段课程学习（先学病理，再学色调）</span>
+      <div class="frow"><span class="fnode gr">虚拟 IHC（色调可控）</span></div>
+    </div>
+
+    <h5>第二个组件：WSI 推理</h5>
+    <p><b>frequency-aware adaptive patch sampling</b>：面向十亿像素级 WSI 的高效零样本推理。如果你的工作最终要上全切片，这部分是现成方案。</p>
+
+    <h5>Ablation 证据</h5>
+    <p>论文在 <b>4 种染料、3 个虚拟染色任务</b>上做实验，报告在图像质量与病理准确性上均优于 GAN 与扩散方法。核心 ablation 是「两阶段课程学习 vs 单阶段联合训练」——证明<b>解耦需要靠训练策略保证，而不只是靠网络结构</b>。这一点非常重要：<b>结构上分了两个 encoder 不等于真的解耦了，必须用课程学习/正则强制分开。</b></p>
+
+    <div class="box good">
+      <div class="bt">迁移可行性 · <span class="b bS">S</span> · 预期价值 <span class="b bHigh">High</span></div>
+      <p><b>直接迁移方式</b>：把 PSPStain 的扩散主干改成「pathology encoder（吃 H&amp;E）+ tone encoder（吃 stain 标签）」的双条件结构；tone 标签在 BCI/MIST 上天然可用（HER2/Ki67/ER/PR 四种）。两阶段课程学习可直接复刻：<b>阶段一</b>固定 tone 只训病理分支；<b>阶段二</b>解冻 tone 分支。</p>
+      <p style="margin-bottom:0"><b>风险</b>：① 代码尚未开源（论文称将开源），需要按论文描述自行实现；② DiT 主干比 U-Net 训练成本高，建议先用 U-Net 替代验证概念。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HistDiST ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">③ HistDiST · Histopathological Diffusion-based Stain Transfer</div>
+      <div class="v">Erik Großkopf, Valay Bundele, Mehran Hosseinzadeh, Hendrik P.A. Lensch（Univ. Tübingen）· <b>2025</b> · arXiv:2505.06793</div>
+    </div>
+    <div><span class="b bT2">T2 隐式</span> <span class="b bS">S 直接可迁</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Code</dt><dd><a href="https://github.com/ErikGro/HistDiST">github.com/ErikGro/HistDiST</a>（官方，含 Stable Diffusion 微调脚本）</dd>
+      <dt>Task</dt><dd>H&amp;E → ER / HER2 / Ki67 / PR（4 个 marker）</dd>
+      <dt>Dataset</dt><dd>MIST（4 stain，~4k train / 1000 test each）· BCI（3896 train / 977 test）</dd>
+    </dl>
+
+    <h5>核心机制：双条件（dual conditioning）</h5>
+    <div class="grid2">
+      <div class="mini">
+        <div class="mt">条件 ①：语义（cross-attention）</div>
+        <p><b>Phikon</b>（在 4000 万病理图上自监督训练的 ViT）提取 H&amp;E 的<b>形态学 embedding</b>，注入 U-Net 的 <b>cross-attention</b> 层。</p>
+        <p class="small">作用：提供「病理相关的上下文」，贯穿整个去噪过程。</p>
+      </div>
+      <div class="mini">
+        <div class="mt">条件 ②：结构（latent 拼接）</div>
+        <p>VAE 编码的 H&amp;E latent 与噪声 latent <b>在 U-Net 输入端通道拼接</b>（InstructPix2Pix 式）。</p>
+        <p class="small">作用：提供早期、像素对齐的结构引导。</p>
+      </div>
+    </div>
+    <p>这两个条件<b>分工明确</b>：一个管语义（该染什么），一个管结构（不要动形）。这正是你需要的解耦结构。</p>
+
+    <h5>其他关键工程细节</h5>
+    <ul>
+      <li><b>重标定噪声调度 + 零终端 SNR</b>；用 <b>v-prediction</b>（γ=5）替代 ε-prediction——因为零 SNR 下 ε-prediction 退化为平凡解，会导致<b>亮度偏置</b>。</li>
+      <li><b>联合训练</b>：无条件 H&amp;E 生成 + H&amp;E→IHC 翻译，一起训。VAE 冻结，只微调 U-Net。</li>
+      <li><b>推理</b>：DDIM inversion（H&amp;E → 噪声，保形态）+ DDIM 去噪（η-cosine schedule，起始 20% 加噪）。</li>
+    </ul>
+
+    <h5>结果（Table 1 摘录）</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>任务</th><th class="c">指标</th><th class="c">HistDiST</th><th class="c">最佳基线 (MDCL)</th></tr></thead>
+      <tbody>
+        <tr><td>MIST_ER</td><td class="c">MRA ↑</td><td class="c"><b>0.552</b></td><td class="c">0.322</td></tr>
+        <tr><td>MIST_ER</td><td class="c">SSIM ↑</td><td class="c"><b>0.2278</b></td><td class="c">0.2172 (PyramidP2P)</td></tr>
+        <tr><td>MIST_ER</td><td class="c">FID ↓</td><td class="c"><b>31.3</b></td><td class="c">34.9</td></tr>
+        <tr><td>MIST_Ki67</td><td class="c">MRA ↑</td><td class="c"><b>0.484</b></td><td class="c">0.201</td></tr>
+        <tr><td>BCI_HER2</td><td class="c">MRA ↑</td><td class="c"><b>0.218</b></td><td class="c">0.084</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="small">MRA = Molecular Retrieval Accuracy（论文提出的新指标），用 <b>GigaPath</b> embedding 度量「预测 IHC 的嵌入是否最匹配其真值」。</p>
+
+    <h5>Ablation（Table 2 左，ER 任务）—— 这是本报告最有价值的 ablation 之一</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>配置</th><th class="c">SSIM ↑</th><th class="c">PHV_avg ↓</th><th class="c">FID ↓</th></tr></thead>
+      <tbody>
+        <tr><td>SD + 输入条件（IC）</td><td class="c">0.154</td><td class="c">0.559</td><td class="c">61.3</td></tr>
+        <tr><td>+ v-prediction</td><td class="c">0.198</td><td class="c">0.501</td><td class="c">37.5</td></tr>
+        <tr><td>+ DDIM Inversion</td><td class="c">0.228</td><td class="c">0.511</td><td class="c">41.3</td></tr>
+        <tr><td><b>+ Phikon cross-attention（完整）</b></td><td class="c"><b>0.227</b></td><td class="c"><b>0.436</b></td><td class="c"><b>31.3</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="box warn">
+      <div class="bt">⚠️ 这张表告诉我们一件关键的事</div>
+      <p style="margin:0">每一层改动都是<b>逐步累加有效</b>的，且 DDIM inversion 单独加时 FID 反而变差（41.3 vs 37.5）——说明<b>「结构保持」与「分布拟合」之间存在真实的 trade-off</b>，必须靠额外的语义条件（Phikon cross-attn）才能同时拿下 PHV 和 FID。<br>
+      <b>对你的启示</b>：不要指望单一的结构约束能同时提升所有指标。你的 ablation 必须按指标分层解读（结构类指标 vs 分布类指标 vs 语义类指标）。</p>
+    </div>
+
+    <h5>η 调度消融（Table 2 右）</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>η 调度</th><th class="c">PHV_avg ↓</th><th class="c">MRA ↑</th><th class="c">FID ↓</th></tr></thead>
+      <tbody>
+        <tr><td>η 常数</td><td class="c">0.450</td><td class="c">0.598</td><td class="c">41.7</td></tr>
+        <tr><td>η cosine</td><td class="c">0.443</td><td class="c">0.559</td><td class="c">34.3</td></tr>
+        <tr><td><b>η cosine, start 20%（选定）</b></td><td class="c"><b>0.436</b></td><td class="c">0.552</td><td class="c"><b>31.3</b></td></tr>
+        <tr><td>η cosine, start 30%</td><td class="c">0.433</td><td class="c">0.547</td><td class="c">30.1</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="small">→ <b>直接可用结论</b>：η = 0 时结构对齐最好但 FID 最差；start 20% 是结构/分布的最佳平衡；超过 30% 出现明显结构偏差。</p>
+
+    <div class="box good">
+      <div class="bt">迁移可行性 · <span class="b bS">S</span> · 预期价值 <span class="b bHigh">High</span></div>
+      <p style="margin-bottom:0"><b>这是本报告推荐的第一实现顺序候选</b>（与 D-VST 并列）。理由：① 官方代码可用；② 基于 Stable Diffusion 微调，生态成熟；③ 双条件设计可直接映射到「结构条件 + 语义条件」；④ 提供了完整的 ablation 阶梯和 η 超参起点，你可以直接复刻这条曲线作为自己的 baseline 报告。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MIU-Diff ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">④ MIU-Diff · Score-based Diffusion Model for Unpaired Virtual Histology Staining</div>
+      <div class="v">Anran Liu, Xiaofei Wang, Jing Cai, Chao Li · <b>2025</b> · arXiv:2506.23184</div>
+    </div>
+    <div><span class="b bT1">T1 显式</span> <span class="b bA">A 较适合</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Task</dt><dd><b>非配对</b>虚拟染色（H&amp;E → IHC），明确处理「非像素对齐」</dd>
+      <dt>Dataset</dt><dd>BCI（HER2）· MIST（HER2 / Ki67）</dd>
+      <dt>Code</dt><dd>论文称接收后开源（截至检索日未见）</dd>
+    </dl>
+
+    <h5>它到底解决什么问题</h5>
+    <p>H&amp;E 与 IHC 来自<b>相邻切片</b>，不是像素对齐的。此时「哪些结构信息是两域共享的」变得模糊。作者用<b>互信息（MI）</b>来量化「共享的结构信息」，并把它做成能量函数来引导扩散采样。</p>
+
+    <h5>两阶段框架</h5>
+    <pre><code>Stage 1: 在 IHC 边缘分布 q(y₀) 上预训练<b>无条件</b> score-based 扩散模型
+Stage 2: 用 MI 引导的能量函数学条件分布 q(y₀ | x₀)
+
+预处理: 先去掉 H&amp;E 的颜色 (x₀ → x′₀)，再做翻译   ← 关键细节</code></pre>
+
+    <h5>核心公式</h5>
+    <pre><code>带能量引导的反向 SDE:
+  dy = [ −½β(t) dt − β(t)( ê(y,t) − ∇_y M(y, x₀, t) ) ] dt + √β(t) dw̄
+
+MI 引导能量函数:
+  M(y, x, t) = λ_t · U(y, x, t) + (1 − λ_t) · I(y, x, t)
+  其中  λ_t = t / S
+        U(y_t) = H(y_t) − I(x_t ; y_t)      ← 独有染色信息 = 熵 − 互信息
+
+全局 MI 估计器（MINE 式）:
+  I(g_y ; y) ≥ (1/L) Σ_l G_θ(g_y^l, y^l) − log( (1/L) Σ_l exp( G_θ(g_y^l, ȳ^l) ) )
+
+局部对比损失（细胞级结构一致性）:
+  ℓ_PCL(y_t, x₀) = E[ Σ_i Σ_j ℓ( z_{y_t,i}^p , z_{x₀,i}^p , z_{x₀,i}^{P\p} ) ]</code></pre>
+    <p class="small">符号：H 为熵；I(·;·) 为互信息；U 为「独有信息」；g_y 为生成图的特征；z 为 patch 特征；p 为正样本 patch 索引。</p>
+
+    <h5>结果（BCI/MIST）</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>数据集</th><th class="c">PSNR ↑</th><th class="c">VIF ↑</th><th class="c">Hist ↑</th><th class="c">IOD×10⁷ ↓</th></tr></thead>
+      <tbody>
+        <tr><td>MIST_HER2</td><td class="c">14.368</td><td class="c">0.611</td><td class="c"><b>0.670</b></td><td class="c"><b>−1.146</b></td></tr>
+        <tr><td>MIST_Ki67</td><td class="c">14.201</td><td class="c">0.586</td><td class="c">0.507</td><td class="c">−0.523</td></tr>
+        <tr><td>BCI_HER2</td><td class="c">15.120</td><td class="c">0.773</td><td class="c">0.640</td><td class="c">−0.792</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>对比基线</b>：CUT、ASP（GAN 类）；ILVR、SDEdit、EGSDE（扩散类）。</p>
+    <div class="box warn">
+      <div class="bt">⚠️ 作者自己给出的重要提醒</div>
+      <p style="margin:0">「<b>在非配对生成中，更高的 PSNR 并不总意味着更好的生成质量</b>」（因为结构错位会惩罚正确的生成）。<br>
+      → <b>对你的直接影响</b>：你的实验报告里，PSNR 只能作为参考指标；必须同时报告 <b>Hist（直方图相关）、IOD（光密度偏差）、VIF（视觉信息保真）</b> 这类「染色语义」指标。这与 PSPStain 的 5 指标设计（3 临床 + 2 图像质量）是一致的。</p>
+    </div>
+
+    <h5>Ablation（全局 MI 引导）</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>配置</th><th class="c">Hist ↑ (MIST_HER2)</th><th>现象</th></tr></thead>
+      <tbody>
+        <tr><td>仅 I 引导（只最大化互信息）</td><td class="c">0.321</td><td>染色不充分</td></tr>
+        <tr><td>仅 U 引导（只保留独有信息）</td><td class="c">0.558</td><td>较好</td></tr>
+        <tr><td><b>w/o MI-guided</b>（完全去掉）</td><td class="c">0.217</td><td>颜色失真 + 结构丢失</td></tr>
+        <tr><td><b>完整 MI-guided</b></td><td class="c"><b>0.670</b></td><td>最佳</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>去掉 MI 引导，Hist 从 0.670 掉到 0.217（↓ 68%）</b>——这是一个非常强的 ablation 证据，说明「显式建模共享/独有信息」的边际价值巨大。</p>
+
+    <div class="box good">
+      <div class="bt">迁移可行性 · <span class="b bA">A</span> · 预期价值 <span class="b bHigh">High</span></div>
+      <p><b>可迁移的两个核心件</b>：</p>
+      <ul>
+        <li><b>局部对比损失 ℓ_PCL</b>：与 PSPStain 的 PCLS 原型一致性思想高度同源（都是跨图/跨 patch 语义对齐），可以作为 PCLS 的替代或补充实现。改动量小。</li>
+        <li><b>MI 引导能量</b>：可以替代 EGSDE 的 style energy，成为「域特有信息」的显式建模。</li>
+      </ul>
+      <p style="margin-bottom:0"><b>风险</b>：代码未开源；MINE 估计器训练需要额外一个网络；论文用了 2×V100，且把 1024 图缩到 256 训练（显存限制）。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== UNIStainNet ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">⑤ UNIStainNet · Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</div>
+      <div class="v">Jillur Rahman Saurav, Thuong Le Hoai Pham, Pritam Mukherjee, Paul Yi, Brent A. Orr, Jacob M. Luber · <b>ACM-BCB 2026</b> · arXiv:2603.12716</div>
+    </div>
+    <div><span class="b bT2">T2 隐式</span> <span class="b bS">S 直接可迁</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <dl class="kv">
+      <dt>Code</dt><dd><a href="https://github.com/aauthors131/UNIStainNet">github.com/aauthors131/UNIStainNet</a>（官方）</dd>
+      <dt>Task</dt><dd>H&amp;E→IHC，<b>单一模型服务 4 个 marker</b>（HER2 / Ki67 / ER / PR）</dd>
+    </dl>
+
+    <h5>核心：双 SPADE 条件（这是「解耦」最干净的工程实现）</h5>
+    <pre><code>h' = ( γ_UNI + γ_cls ) ⊙ ĥ  +  ( β_UNI + β_cls )
+
+  γ_UNI, β_UNI : <b>空间调制</b>（spatially-varying）← 来自 UNI 的密集空间 token
+                  → 承载「组织形态」信息
+  γ_cls, β_cls : <b>通道调制</b>（FiLM）← 来自可学习的 64-d stain embedding e_y
+                  → 承载「染色身份」信息</code></pre>
+    <div class="box key">
+      <div class="bt">💡 这一行公式就是「结构 / 染色解耦」的最简可落地形式</div>
+      <p style="margin:0">同一层归一化里，<b>空间维度的调制管结构，通道维度的调制管染色</b>。两者物理上分离、梯度上分离，但共享同一个卷积核。这比双编码器 + 双 latent 轻得多，且改动量极小。</p>
+    </div>
+
+    <h5>其他组件</h5>
+    <ul>
+      <li><b>UNI 条件</b>：冻结的 UNI ViT-L/16（1 亿+ 病理图预训练），图像切成 4×4 子图分别过 UNI，token 重组成 32×32 网格（1024 tokens，d=1024），再投影到 512 维，生成 4 个分辨率（32/64/128/256）的条件图注入解码器各阶段。</li>
+      <li><b>Edge Encoder</b>：H&amp;E RGB 拼接 Sobel 梯度图，5 个尺度提取结构先验。</li>
+      <li><b>Misalignment-aware loss suite</b>：LPIPS（在 128/256 降分辨率上算，此时错位是亚像素级）、L1（在 64px 上算）、Edge loss（Sobel 梯度在 512/256 上，沿 H&amp;E→生成图这个像素对齐轴）、对抗 hinge loss + R1、Feature Matching、<b>DAB stain loss</b>（匹配每图 top-10% DAB 强度，用 Beer–Lambert 颜色去卷积）。</li>
+      <li><b>训练</b>：TTUR + 1000 步 warmup；对抗训练延迟到 step 2000；<b>随机条件 dropout</b>（class 10%、UNI 10%、both 5%）；EMA 0.999。</li>
+    </ul>
+
+    <h5>结果</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>BCI</th><th class="c">FID ↓</th><th class="c">KID×1k ↓</th><th class="c">SSIM ↑</th></tr></thead>
+      <tbody>
+        <tr><td>ASP†</td><td class="c">65.1</td><td class="c">9.9</td><td class="c">0.503</td></tr>
+        <tr><td>ODA-GAN†</td><td class="c">59.3</td><td class="c">10.1</td><td class="c">0.473</td></tr>
+        <tr><td><b>PSPStain‡（你的 baseline）</b></td><td class="c">45.7</td><td class="c">30.4</td><td class="c">0.433</td></tr>
+        <tr><td>PASB</td><td class="c">43.6</td><td class="c">9.6</td><td class="c">0.426</td></tr>
+        <tr><td><b>UNIStainNet</b></td><td class="c"><b>34.6</b></td><td class="c"><b>6.5</b></td><td class="c"><b>0.541</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="small">MIST 4 marker 平均：FID <b>29.0–34.5</b>，Pearson-r &gt; 0.92，DAB KL &lt; 0.19。统一模型（1 个，42M 参数）与 4 个专家模型（170M 参数）性能持平。</p>
+
+    <h5>Ablation（Table 6，MIST 4-stain 统一模型）—— 极具参考价值</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>配置</th><th class="c">FID ↓</th><th class="c">Pearson-r ↑</th><th class="c">DAB KL ↓</th><th>解读</th></tr></thead>
+      <tbody>
+        <tr><td>完整模型</td><td class="c"><b>30.0</b></td><td class="c"><b>0.937</b></td><td class="c"><b>0.159</b></td><td>—</td></tr>
+        <tr><td><b>− UNI 特征</b></td><td class="c">40.1</td><td class="c">0.681</td><td class="c">0.669</td><td><b>语义条件是最关键组件</b>（FID +34%，P-r −27%）</td></tr>
+        <tr><td>− 判别器</td><td class="c">160.5</td><td class="c">0.927</td><td class="c">2.884</td><td><b>判别器不可去掉</b>（FID 崩 5 倍）</td></tr>
+        <tr><td>− Edge encoder</td><td class="c">31.7</td><td class="c">0.939</td><td class="c">0.162</td><td>边际有效（MIST 上有效，BCI 上可忽略）</td></tr>
+        <tr><td>− DAB loss</td><td class="c">30.4</td><td class="c">0.927</td><td class="c">0.184</td><td>主要影响染色准确度</td></tr>
+        <tr><td>− LPIPS</td><td class="c">31.4</td><td class="c">0.931</td><td class="c">0.189</td><td>感知质量</td></tr>
+        <tr><td>− Feature matching</td><td class="c">29.9</td><td class="c">0.932</td><td class="c">0.171</td><td>FID 略好但染色准确度变差（trade-off）</td></tr>
+        <tr><td>CLS ×4（降 UNI 分辨率）</td><td class="c">33.7</td><td class="c">0.938</td><td class="c">0.150</td><td>空间 token 的分辨率对 FID 重要、对染色准确度不重要</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>额外发现</b>：把 UNI 换成 DINOv3，DAB KL 恶化 <b>+79%</b> → <b>病理专用预训练确实重要</b>。</p>
+
+    <div class="box good">
+      <div class="bt">迁移可行性 · <span class="b bS">S</span> · 预期价值 <span class="b bHigh">High</span></div>
+      <p><b>为什么价值高</b>：它给了你<b>一条已经被 ablation 验证的、模块化的、增量式改进路线</b>，而且每个模块都能单独开关。你甚至可以直接复刻它的 ablation 表来设计自己的实验。</p>
+      <p><b>最该抄的两个东西</b>：</p>
+      <ul>
+        <li><b>双 SPADE（γ_UNI+γ_cls / β_UNI+β_cls）</b>——解耦的最简实现，可移植到扩散 U-Net 的每个 block。</li>
+        <li><b>Misalignment-aware loss 设计</b>——在低分辨率上算 L1/LPIPS、在像素对齐轴上算 edge loss。<b>这条直接解决你 PCLS 想解决的错位问题</b>，且比 PCLS 更简单。</li>
+      </ul>
+      <p style="margin-bottom:0"><b>注意</b>：它本身是 GAN（SPADE-UNet），不是扩散。迁移时要决定：是把 SPADE 条件搬到扩散 U-Net 里，还是把扩散作为「生成器替换」后保留这套 loss 设计。本报告推荐<b>后者</b>（更省事）。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s5"><span class="num">5</span>Part 5 · 最值得迁移的非医学工作</h2>
+
+<div class="box pur">
+  <div class="bt">为什么非医学方法反而可能有用？</div>
+  <p style="margin:0">因为你的瓶颈<b>不是病理学知识，而是生成模型的架构与训练策略</b>。病理领域的方法（PSPStain / UNIStainNet / HistDiST）已经把「任务定义」和「评价指标」做得很好了，但在「<b>如何在扩散模型内部做可验证的解耦</b>」这件事上，自然图像领域的积累要深得多——他们有合成数据、有可控的真值因子、有严格的 ablation 文化。<b>你要借的是机制，不是任务。</b></p>
+</div>
+
+<h3>5.1 十篇最值得看的非医学工作</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:14%">Paper</th><th class="c">Year</th><th class="c">Venue</th><th style="width:20%">可抽象出的机制</th><th style="width:26%">为什么对 H&amp;E→IHC 有用</th><th class="c">迁移<br>适配</th><th class="c">预期<br>价值</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>DisDiff</b></td><td class="c">2023</td><td class="c">NeurIPS</td>
+  <td>把 DPM 的 score 分解为子梯度场</td>
+  <td>「保结构」与「加染色」在<b>梯度层</b>分开，避免二者在同一梯度里互相拉扯。是「扩散内解耦」最正统的做法。</td>
+  <td class="c"><span class="b bA">A</span></td><td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td><b>EGSDE</b></td><td class="c">2022</td><td class="c">NeurIPS</td>
+  <td>双能量函数引导采样（content / style）</td>
+  <td><b>不改网络、不改训练</b>就能加解耦；引导项可开关 → ablation 完美。且已被 MIU-Diff 用作病理 baseline。</td>
+  <td class="c"><span class="b bS">S</span></td><td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td><b>ILVR</b></td><td class="c">2021</td><td class="c">ICCV</td>
+  <td>低通分量注入保结构</td>
+  <td>零训练、十几行代码、直接提升结构类指标。是「第一周最小实验」的首选组件。</td>
+  <td class="c"><span class="b bS">S</span></td><td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td><b>SDEdit</b></td><td class="c">2022</td><td class="c">ICLR</td>
+  <td>t₀ 作为「保结构强度」单一旋钮</td>
+  <td>给你一个<b>可调的超参</b>来显式控制结构/外观 trade-off，实验报告里能画出一条漂亮的曲线。</td>
+  <td class="c"><span class="b bS">S</span></td><td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td><b>ControlNet</b></td><td class="c">2023</td><td class="c">ICCV</td>
+  <td>可训练副本 + 零卷积注入空间条件</td>
+  <td>把「结构条件」以<b>旁路</b>方式注入冻结主干——不动主模型、参数量可控、可单独训练。是「结构条件」的工程标准答案。</td>
+  <td class="c"><span class="b bS">S</span></td><td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td><b>T2I-Adapter</b></td><td class="c">2023</td><td class="c">arXiv</td>
+  <td>轻量适配器，加性注入条件</td>
+  <td>比 ControlNet 更省参数。适合「只加结构条件，不想翻倍参数」的场景。</td>
+  <td class="c"><span class="b bS">S</span></td><td class="c"><span class="b bMed">Med</span></td>
+</tr>
+<tr>
+  <td><b>CSDN + MCL</b></td><td class="c">2024</td><td class="c">arXiv</td>
+  <td>两套可学习 query 显式解耦 + style 只注入 middle block</td>
+  <td>三个可直接抄的 trick：<b>独立 query 解耦</b>、<b>middle-block-only 注入防泄漏</b>、<b>训练时随机替换模态防作弊</b>。第三个对「防止生成器直接抄 H&amp;E 结构」特别有用。</td>
+  <td class="c"><span class="b bA">A</span></td><td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td><b>InfoDiffusion</b></td><td class="c">2023</td><td class="c">ICML</td>
+  <td>低维隐变量 + 冗余最小化</td>
+  <td>给你「<b>如何保证两路真的不冗余</b>」的标准做法。防止 z_struct 和 z_stain 退化成同一路。</td>
+  <td class="c"><span class="b bA">A</span></td><td class="c"><span class="b bMed">Med</span></td>
+</tr>
+<tr>
+  <td><b>Diffusion Autoencoders</b></td><td class="c">2022</td><td class="c">CVPR</td>
+  <td>z = [z_sem, z_sto] 语义码 + 随机码</td>
+  <td>为「<b>语义码 = 结构/表达，随机码 = 切片间染色差异</b>」提供理论依据。若做一对多生成，随机码就是多样性来源。</td>
+  <td class="c"><span class="b bA">A</span></td><td class="c"><span class="b bMed">Med</span></td>
+</tr>
+<tr>
+  <td><b>FDAE</b></td><td class="c">2024</td><td class="c">AAAI</td>
+  <td>content decorrelation loss + mask entropy loss</td>
+  <td>两个<b>即插即用的正则项</b>，可直接加到你的解耦训练里。mask entropy 项对「稀疏表达区域」建模有启发。</td>
+  <td class="c"><span class="b bA">A</span></td><td class="c"><span class="b bMed">Med</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>5.2 三个「看起来相关但实际不建议」的方向</h3>
+<div class="grid3">
+  <div class="mini">
+    <div class="mt" style="color:var(--red)">✗ Identity / Variation 解耦（人脸）</div>
+    <p>Face-Adapter / REFace / InFS 把 identity 映射到 text 空间当 prompt，机制漂亮。但人脸任务里 identity 是「已有需保持」，而你的染色语义是「需新生成」。结构不同。</p>
+    <p class="small"><b>可以借的</b>：只有「把某类信息映射成 prompt token」这个形式。</p>
+  </div>
+  <div class="mini">
+    <div class="mt" style="color:var(--red)">✗ 纯文字引导（CLIP / 语义文本）</div>
+    <p>用 CLIP 引导做「风格」在自然图像上有效，但病理图像的 CLIP 语义对齐很弱（需要病理专用基础模型）。</p>
+    <p class="small"><b>替代</b>：改用 Phikon / UNI / GigaPath 的病理特征。</p>
+  </div>
+  <div class="mini">
+    <div class="mt" style="color:var(--red)">✗ 需要 style reference 图的方案</div>
+    <p>任何「source image + style reference image → output」的范式，在 H&amp;E→IHC 推理时都没有 reference 可用。</p>
+    <p class="small"><b>替代</b>：改用可学习的 target-domain token（见 Part 6 第 3 节）。</p>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s6"><span class="num">6</span>Part 6 · 最适合 PSPStain 的 Top 5 候选方法</h2>
+
+<div class="box">
+  <div class="bt">筛选标准（不是学术排名）</div>
+  <p style="margin:0">迁移难度低 + 有公开代码 + 有实验收益证据 + 与 H&amp;E→IHC 问题结构匹配。<br>
+  综合四个维度打分，从 60+ 篇中筛出 5 个。</p>
+</div>
+
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th class="c" style="width:5%">#</th><th style="width:19%">候选</th><th class="c">迁移难度</th><th class="c">代码</th><th class="c">收益证据</th><th class="c">问题匹配</th><th class="c">综合</th></tr>
+</thead>
+<tbody>
+<tr><td class="c"><b>1</b></td><td><b>D-VST</b><br><span class="small">双 encoder 解耦 + 课程学习</span></td><td class="c">★★★</td><td class="c"><span class="b bB">待开源</span></td><td class="c"><span class="b bHigh">强</span></td><td class="c"><span class="b bHigh">极强</span></td><td class="c"><span class="b bHigh">High</span></td></tr>
+<tr><td class="c"><b>2</b></td><td><b>HistDiST</b><br><span class="small">双条件 + DDIM inversion + v-pred</span></td><td class="c">★★</td><td class="c"><span class="b bS">官方</span></td><td class="c"><span class="b bHigh">强</span></td><td class="c"><span class="b bHigh">强</span></td><td class="c"><span class="b bHigh">High</span></td></tr>
+<tr><td class="c"><b>3</b></td><td><b>UNIStainNet</b><br><span class="small">双 SPADE（空间×通道）+ 错位感知 loss</span></td><td class="c">★</td><td class="c"><span class="b bS">官方</span></td><td class="c"><span class="b bHigh">强</span></td><td class="c"><span class="b bHigh">强</span></td><td class="c"><span class="b bHigh">High</span></td></tr>
+<tr><td class="c"><b>4</b></td><td><b>Star-Diff</b><br><span class="small">残差扩散（结构残差 + 噪声双 U-Net）</span></td><td class="c">★</td><td class="c"><span class="b bA">非官方</span></td><td class="c"><span class="b bMed">中</span></td><td class="c"><span class="b bHigh">强</span></td><td class="c"><span class="b bHigh">High</span></td></tr>
+<tr><td class="c"><b>5</b></td><td><b>EGSDE</b>（+ ILVR/SDEdit）<br><span class="small">双能量引导 + 低频注入</span></td><td class="c">★</td><td class="c"><span class="b bS">官方</span></td><td class="c"><span class="b bHigh">强</span></td><td class="c"><span class="b bMed">中</span></td><td class="c"><span class="b bHigh">High</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- Top1 -->
+<h3>Top 1 · D-VST 的 pathology / tone 双条件解耦</h3>
+<div class="card">
+  <div class="cb">
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th style="width:26%">问题</th><th>答案</th></tr></thead>
+      <tbody>
+        <tr><td><b>1. 核心思想</b></td><td>把「病理条件（哪里该染）」与「色调条件（染成什么样）」拆成两个独立 encoder，再用两阶段课程学习强制它们在训练中真的分开，从而消除 pathology leakage。</td></tr>
+        <tr><td><b>2. 需要改 PSPStain 哪部分</b></td><td>生成器整体替换（CUT ResNet → 条件扩散主干）；判别器可保留；两个 loss 保留。新增两个 encoder。</td></tr>
+        <tr><td><b>3. 是否需要改变 loss</b></td><td>需要。新增「条件解耦约束」——最简形式是<b>条件 dropout + 交叉重建</b>（去掉 tone 条件时输出应失去染色特异性，去掉病理条件时输出应失去结构）。</td></tr>
+        <tr><td><b>4. 是否需要新增 encoder</b></td><td>是，两个：Pathology Encoder（吃 H&amp;E）+ Tone Encoder（吃 stain 标签）。</td></tr>
+        <tr><td><b>5. 是否需要新增 condition</b></td><td>是，双条件（z_path + z_tone）。</td></tr>
+        <tr><td><b>6. 是否需要新增 attention</b></td><td>建议：z_path 走 cross-attention 注入（语义类条件），z_tone 走 AdaIN/FiLM 或 latent 拼接（全局类条件）。</td></tr>
+        <tr><td><b>7. 是否增加训练成本</b></td><td>中等。两阶段课程学习需要两个训练阶段；DiT 主干建议先用 U-Net 替代。</td></tr>
+        <tr><td><b>8. 是否可以直接迁移到 diffusion</b></td><td>是，它本身就是扩散方法。</td></tr>
+        <tr><td><b>9. 预计实验风险</b></td><td><b>中高</b>。代码未开源需自行实现；「两阶段课程学习」的超参（何时解冻、解冻后 lr）需要调；DiT 在小数据集（4k 样本）上可能不如 U-Net。</td></tr>
+        <tr><td><b>10. 最小可行实现</b></td><td><b>先不做 DiT。</b>用标准 U-Net + 两个条件分支（pathology: H&amp;E latent；tone: 64-d stain embedding），只做「条件 dropout」这一个解耦正则。跑通后再加课程学习。</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- Top2 -->
+<h3>Top 2 · HistDiST 的双条件 + 推理策略</h3>
+<div class="card">
+  <div class="cb">
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th style="width:26%">问题</th><th>答案</th></tr></thead>
+      <tbody>
+        <tr><td><b>1. 核心思想</b></td><td>两个条件分工：Phikon 语义 embedding 走 cross-attention（管「染什么」），VAE 的 H&amp;E latent 走输入端拼接（管「不要动形」）。推理时用 DDIM inversion 保形态 + η-cosine 引入受控随机性。</td></tr>
+        <tr><td><b>2. 需要改 PSPStain 哪部分</b></td><td>生成器 → SD 微调（或从零训一个小 LDM）；新增 Phikon 特征提取分支。</td></tr>
+        <tr><td><b>3. 是否需要改变 loss</b></td><td>是：v-prediction 损失 + 重标定噪声调度（零终端 SNR）。PSPStain 的两个 loss 可以<b>额外叠加</b>在 x̂₀ 上。</td></tr>
+        <tr><td><b>4. 是否需要新增 encoder</b></td><td>需要 VAE 编码器（可冻结预训练） + Phikon（冻结）。</td></tr>
+        <tr><td><b>5. 是否需要新增 condition</b></td><td>是，双条件。</td></tr>
+        <tr><td><b>6. 是否需要新增 attention</b></td><td>是，Phikon 条件走 cross-attention（可复用 SD 自带的 cross-attn 层，只换 KV 来源）。</td></tr>
+        <tr><td><b>7. 是否增加训练成本</b></td><td>中。冻结 VAE 和 Phikon，只微调 U-Net。</td></tr>
+        <tr><td><b>8. 是否可以直接迁移到 diffusion</b></td><td>是。</td></tr>
+        <tr><td><b>9. 预计实验风险</b></td><td><b>低</b>。官方代码 + 完整 ablation 阶梯 + 明确的 η 超参起点。主要风险是 SD 在小病理数据上的过拟合（论文用「联合无条件生成」缓解，建议照做）。</td></tr>
+        <tr><td><b>10. 最小可行实现</b></td><td>直接 clone 官方 repo，在 BCI 上复现；然后把 PSPStain 的 FOD loss 加到训练目标里，看 PSNR/SSIM/DAB 指标是否进一步改善。<b>这是投入产出比最高的一条路。</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- Top3 -->
+<h3>Top 3 · UNIStainNet 的双 SPADE 解耦 + 错位感知 loss</h3>
+<div class="card">
+  <div class="cb">
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th style="width:26%">问题</th><th>答案</th></tr></thead>
+      <tbody>
+        <tr><td><b>1. 核心思想</b></td><td>在一行归一化公式里做解耦：<b>空间调制管结构、通道调制管染色</b>。配一套「错位感知」的 loss（在低分辨率上算 L1/LPIPS，在像素对齐轴上算 edge loss）。</td></tr>
+        <tr><td><b>2. 需要改 PSPStain 哪部分</b></td><td>把扩散 U-Net 的每个 block 的归一化层换成双 SPADE；把 PCLS 换成它的错位感知 loss 组合。</td></tr>
+        <tr><td><b>3. 是否需要改变 loss</b></td><td>是：L1（64px）+ LPIPS（128/256）+ Edge（Sobel，512/256）+ 对抗 hinge + R1 + Feature Matching + DAB loss。</td></tr>
+        <tr><td><b>4. 是否需要新增 encoder</b></td><td>是：UNI（冻结）+ Edge Encoder + 可学习 stain embedding。</td></tr>
+        <tr><td><b>5. 是否需要新增 condition</b></td><td>是：UNI 密集空间 token + stain embedding。</td></tr>
+        <tr><td><b>6. 是否需要新增 attention</b></td><td>可选（bottleneck 有 self-attention）。核心是 SPADE，不是 attention。</td></tr>
+        <tr><td><b>7. 是否增加训练成本</b></td><td>低—中。UNI 冻结；42M 参数（比 4 个专家模型省 4 倍）。</td></tr>
+        <tr><td><b>8. 是否可以直接迁移到 diffusion</b></td><td><b>需要适配</b>：原文是 GAN。但双 SPADE 和 loss suite 都可移植到扩散 U-Net（把 SPADE 加到每个 resblock）。</td></tr>
+        <tr><td><b>9. 预计实验风险</b></td><td><b>低</b>。改动是「加法式」的，每一项都可单独开关；有完整 ablation 表可对照。</td></tr>
+        <tr><td><b>10. 最小可行实现</b></td><td>只做一件事：<b>把 stain embedding 的 FiLM 通道调制加到扩散 U-Net 上</b>，先验证「通道调制能控制染色」这一点。这一步改动最小、风险最低。</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- Top4 -->
+<h3>Top 4 · Star-Diff 的残差扩散分解</h3>
+<div class="card">
+  <div class="cb">
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th style="width:26%">问题</th><th>答案</th></tr></thead>
+      <tbody>
+        <tr><td><b>1. 核心思想</b></td><td>把虚拟染色重新表述为「图像恢复」。前向过程同时加入<b>确定性结构残差</b>（H&amp;E 与 IHC 的差异）和<b>随机噪声</b>，用<b>两个轻量 U-Net</b> 分别预测这两项。10 步 DDIM 即可出图。</td></tr>
+        <tr><td><b>2. 需要改 PSPStain 哪部分</b></td><td>生成器替换为「双 U-Net 残差扩散」；PSPStain 的两个 loss 挂在最终 x̂₀ 上。</td></tr>
+        <tr><td><b>3. 是否需要改变 loss</b></td><td>是：残差预测损失 + 噪声预测损失。可叠加 PSPStain 两个 loss。</td></tr>
+        <tr><td><b>4. 是否需要新增 encoder</b></td><td>否。两个 U-Net 即全部。</td></tr>
+        <tr><td><b>5. 是否需要新增 condition</b></td><td>H&amp;E 作为条件输入即可（拼接）。</td></tr>
+        <tr><td><b>6. 是否需要新增 attention</b></td><td>否。</td></tr>
+        <tr><td><b>7. 是否增加训练成本</b></td><td><b>低</b>。轻量 U-Net（lucidrains 实现，dim=64），10 步推理。</td></tr>
+        <tr><td><b>8. 是否可以直接迁移到 diffusion</b></td><td>是，它本身就是扩散，且是<b>最简的扩散化路径</b>。</td></tr>
+        <tr><td><b>9. 预计实验风险</b></td><td><b>低</b>。风险点是「残差分解」在非配对数据上是否成立（原文是配对设置）。BCI/MIST 是配对数据集，适配良好。</td></tr>
+        <tr><td><b>10. 最小可行实现</b></td><td><b>这是「PSPStain → Diffusion」这一步的最佳实现选择。</b>clone 非官方实现（RDDM 框架），在 BCI 上跑通，然后把 FOD loss 加进去。<b>作为 M1 阶段的实现基础。</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="box warn">
+      <div class="bt">⚠️ 关于非官方实现</div>
+      <p style="margin:0">Star-Diff 目前只有社区非官方复现（<a href="https://github.com/anomredux/Star-Diff">anomredux/Star-Diff</a>，基于 RDDM）。作者自报 BCI PSNR 21.30±0.01 / SSIM 0.53 / Accuracy 0.68 / SFS 0.74；复现版 PSNR 21.63（超过原文）但 SSIM 0.444 / Accuracy 0.424 / SFS 0.466（低于原文）。<b>复现版存在明显 gap</b>（作者归因于未公开的架构细节、1024 vs 512 分辨率、训练调度差异）。使用时需注意：<b>PSNR 可信，其他指标需自行重训验证。</b></p>
+    </div>
+  </div>
+</div>
+
+<!-- Top5 -->
+<h3>Top 5 · EGSDE 双能量引导 + ILVR/SDEdit 结构旋钮</h3>
+<div class="card">
+  <div class="cb">
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th style="width:26%">问题</th><th>答案</th></tr></thead>
+      <tbody>
+        <tr><td><b>1. 核心思想</b></td><td>不改生成网络、不改训练流程。在采样时用两个能量函数（content energy 保内容、style energy 贴目标域）引导 SDE；配合 ILVR 的低频注入或 SDEdit 的 t₀ 旋钮控制保结构强度。</td></tr>
+        <tr><td><b>2. 需要改 PSPStain 哪部分</b></td><td><b>几乎不用改。</b>先训一个条件扩散 baseline，然后加引导项和低频注入。</td></tr>
+        <tr><td><b>3. 是否需要改变 loss</b></td><td>需要额外训两个能量函数（判别器），但生成器训练目标不变。</td></tr>
+        <tr><td><b>4. 是否需要新增 encoder</b></td><td>否（能量函数内部可用病理基础模型特征，但那是独立模块）。</td></tr>
+        <tr><td><b>5. 是否需要新增 condition</b></td><td>否。</td></tr>
+        <tr><td><b>6. 是否需要新增 attention</b></td><td>否。</td></tr>
+        <tr><td><b>7. 是否增加训练成本</b></td><td><b>最低</b>。引导是 inference-time 的；低频注入零训练。</td></tr>
+        <tr><td><b>8. 是否可以直接迁移到 diffusion</b></td><td>是。</td></tr>
+        <tr><td><b>9. 预计实验风险</b></td><td><b>最低</b>。因为完全不侵入主模型，随时可开关。</td></tr>
+        <tr><td><b>10. 最小可行实现</b></td><td><b>ILVR 低频注入 → 20 行代码。</b>建议作为 M1 阶段的结构约束组件；EGSDE 引导作为 M4 阶段的增强。</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="box stop">
+      <div class="bt">⚠️ ILVR 在 H&amp;E→IHC 上的一个必须处理的细节</div>
+      <p style="margin:0">低频分量包含<b>全局颜色</b>。直接替换会把 H&amp;E 的粉紫色带进 IHC。<br>
+      <b>解决</b>：① 像 MIU-Diff 那样先做颜色去除（x₀ → x′₀）再翻译；② 或只在<b>灰度/光密度通道</b>做低频替换；③ 或用颜色去卷积分离 H/E 通道后只保留结构通道。任选其一，但<b>不能不处理</b>。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s7"><span class="num">7</span>Part 7 · 三套可直接做实验的方案</h2>
+
+<h3>Experiment A · 最保守方案</h3>
+<div class="box key">
+  <div class="bt">定位</div>
+  <p style="margin:0">回答一个干净的科学问题：<b>「把 PSPStain 的生成器换成扩散，本身能不能涨点？」</b><br>
+  只加一个最小解耦件，其余全部保持。目的是拿到一个可信的、可归因的 M1 baseline。</p>
+</div>
+
+<div class="grid2">
+  <div>
+    <h5>网络结构</h5>
+    <pre><code>H&E (x)
+  │
+  ├─→ VAE Encoder (冻结) ──→ z_HE ──┐
+  │                                  │ 通道拼接
+  └─→ [残差 U-Net r_θ] ──┐           │
+                          ├─→ 条件扩散 U-Net ──→ x̂₀ (IHC)
+      [噪声 U-Net ε_θ] ──┘           │
+                                     │
+      t (timestep) ──────────────────┘
+
+判别器: PatchGAN (沿用 CUT 的)
+结构约束: ILVR 低频注入（在灰度/OD 通道）</code></pre>
+  </div>
+  <div>
+    <h5>Loss</h5>
+    <pre><code>L = L_residual          # 结构残差预测
+  + L_noise             # 噪声预测
+  + λ_fod · L_FOD       # ★ PSPStain 原 loss ①（保留）
+  + λ_proto · L_PCLS    # ★ PSPStain 原 loss ②（保留）
+  + λ_adv · L_adv       # PatchGAN 对抗
+  + λ_lf · L_lowfreq    # ILVR 低频一致性
+
+初值建议: λ_fod = 1.0, λ_proto = 1.0,
+          λ_adv = 0.1, λ_lf = 0.5</code></pre>
+  </div>
+</div>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:20%">项目</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><b>训练流程</b></td><td>① 冻结 VAE；② 从零训残差 U-Net + 噪声 U-Net（BCI/MIST，512×512 crop）；③ 加 PSPStain 两个 loss（作用在 x̂₀）；④ 100–200k steps，EMA。</td></tr>
+<tr><td><b>推理流程</b></td><td>H&amp;E → VAE encode → z_HE → 10 步 DDIM 条件去噪 → x̂₀ → IHC。可选加 ILVR 低频替换。</td></tr>
+<tr><td><b>需要修改的代码位置</b></td><td><code>models/</code> 新增 <code>residual_diffusion_model.py</code>；<code>train.py</code> 的训练循环改为扩散采样；<code>util/losses.py</code> 里的 FOD 与 PCLS 改为接收 x̂₀。<b>其余不动。</b></td></tr>
+<tr><td><b>新增参数</b></td><td>2 × 轻量 U-Net（dim=64）≈ 30–50M；无新增 encoder。</td></tr>
+<tr><td><b>实验变量</b></td><td>① 有/无扩散；② 有/无 ILVR 低频注入；③ 低频替换的通道选择（RGB vs 灰度 vs OD）。</td></tr>
+<tr><td><b>评价指标</b></td><td>PSNR / SSIM / LPIPS / FID / <b>DAB-KL / Pearson-r（染色语义）</b> / 核分割一致性（下游）。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Experiment B · 最值得优先尝试（推荐主路线）</h3>
+<div class="box good">
+  <div class="bt">定位</div>
+  <p style="margin:0">在 Experiment A 的基础上，加入<b>一个真正的解耦机制</b>：<b>双条件 + 双 SPADE</b>。这是本报告最推荐的方案——<b>改动可控、机制清晰、有 ablation 先例、直接命中 H&amp;E→IHC 的核心矛盾</b>。</p>
+</div>
+
+<div class="flow">
+  <div class="frow">
+    <span class="fnode">H&amp;E</span>
+  </div>
+  <span class="farrow">↓</span>
+  <div class="frow">
+    <span class="fnode hl">Pathology Encoder<br><span class="small">(UNI / Phikon 冻结 → 密集空间 token)</span></span>
+    <span class="fnode pu">Stain Token<br><span class="small">(可学习 64-d embedding)</span></span>
+  </div>
+  <span class="farrow">↓ &nbsp; z_path &nbsp;(空间) &nbsp;+&nbsp; z_stain &nbsp;(通道)</span>
+  <div class="frow">
+    <span class="fnode hl">双 SPADE 条件扩散 U-Net</span>
+  </div>
+  <span class="farrow">↓ &nbsp; h' = (γ_path + γ_stain) ⊙ ĥ + (β_path + β_stain)</span>
+  <div class="frow"><span class="fnode gr">x̂₀ → 虚拟 IHC</span></div>
+</div>
+
+<h5>为什么这样组合（每一块解决什么）</h5>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">模块</th><th style="width:34%">解决什么具体问题</th><th>为什么必须有它</th></tr></thead>
+<tbody>
+<tr><td><b>Pathology Encoder<br>（空间调制）</b></td><td>「哪里是腺体、哪里是核、哪里是间质」→ 决定该在哪里产生染色模式</td><td>UNIStainNet ablation：去掉语义条件 FID 30.0→40.1、P-r 0.937→0.681。<b>这是单项收益最大的模块。</b></td></tr>
+<tr><td><b>Stain Token<br>（通道调制）</b></td><td>「这次要生成 HER2 还是 Ki67」→ 决定染色身份</td><td>解决「推理时没有 IHC reference」的问题。一个模型服务多 marker，参数省 4 倍。</td></tr>
+<tr><td><b>双 SPADE 而非双编码器</b></td><td>在<b>同一层</b>里物理分离「空间维度的信息」与「通道维度的信息」</td><td>改动量最小（只改归一化层），梯度天然分离，不需要额外的正交/独立性 loss。</td></tr>
+<tr><td><b>条件 dropout</b></td><td>防止模型只用一路条件（表示坍塌）</td><td>UNIStainNet 用了 class 10% / UNI 10% / both 5% 的随机 dropout。极低成本、极高收益。</td></tr>
+<tr><td><b>错位感知 loss</b></td><td>H&amp;E–IHC 有 10–50 px 固有错位，逐像素监督会惩罚正确生成</td><td>替代/增强 PCLS。在低分辨率算 L1/LPIPS，在像素对齐轴上算 edge loss。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="grid2">
+  <div>
+    <h5>Loss</h5>
+    <pre><code>L = L_diffusion(x̂₀, x_IHC)
+  + λ_fod  · L_FOD(x̂₀, x_H&E)     # PSPStain ①
+  + λ_proto· L_PCLS(x̂₀, x_H&E)    # PSPStain ②
+  + λ_adv  · L_adv(x̂₀)            # PatchGAN
+  + λ_edge · L_edge(x̂₀, x_H&E)    # 像素对齐轴 Sobel
+  + λ_lf   · L_lowfreq(x̂₀, x_H&E) # ILVR
+  + λ_drop · L_cond_dropout        # 条件 dropout 正则</code></pre>
+  </div>
+  <div>
+    <h5>训练流程（关键：先冻后解）</h5>
+    <pre><code>Phase 1 (warmup, ~20k steps):
+  冻结 Stain Token
+  只训 pathology 分支 + 扩散主干
+  → 让模型先学会"看结构"
+
+Phase 2 (main, ~150k steps):
+  解冻 Stain Token（lr × 0.1）
+  启用条件 dropout
+  → 让模型学会"区分染色身份"
+
+Phase 3 (finetune, ~30k steps):
+  加入对抗 loss
+  → 提升纹理真实感</code></pre>
+  </div>
+</div>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:20%">项目</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><b>推理流程</b></td><td>H&amp;E → UNI 密集 token + 指定的 stain token → 双 SPADE 条件扩散 → DDIM 20 步（η-cosine, start 20%）→ IHC。<b>无需 IHC reference。</b></td></tr>
+<tr><td><b>需要修改的代码位置</b></td><td>① <code>models/</code> 新增 <code>dual_spade_unet.py</code>（替换原 U-Net 的 norm 层）；② 新增 <code>pathology_encoder.py</code>（UNI 冻结包装）；③ 新增 <code>stain_token.py</code>（nn.Embedding(num_stains, 64)）；④ <code>train.py</code> 加三阶段调度；⑤ <code>util/losses.py</code> 加 edge / lowfreq / cond_dropout。</td></tr>
+<tr><td><b>新增参数</b></td><td>UNI 冻结（0 可训）· SPADE 调制层 ≈ 2–5M · stain token ≈ 1k · 病理 token 投影 ≈ 5M。<b>总计 ≈ +8M（相对 U-Net 主干增幅 &lt; 20%）</b>。</td></tr>
+<tr><td><b>实验变量</b></td><td>① 单条件 vs 双条件；② 双 SPADE vs 双编码器 vs latent 拼接；③ 有无条件 dropout；④ 有无 Phase 1 课程学习；⑤ UNI vs Phikon vs DINOv3（验证病理专用预训练的必要性）。</td></tr>
+<tr><td><b>评价指标</b></td><td>PSNR / SSIM / LPIPS / FID / KID / <b>DAB-KL</b> / <b>Pearson-r</b> / <b>IOD 偏差</b> / <b>MRA（HistDiST 的分子检索准确率）</b> / 核分割 Dice / HER2 分级准确率。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Experiment C · 进一步增强方案</h3>
+<div class="box warn">
+  <div class="bt">⚠️ 只在 A 和 B 都拿到稳定正向结果后再做</div>
+  <p style="margin:0">C 方案引入<b>显式 latent 解耦 + 能量引导</b>，机制更"正统"，但训练稳定性风险更高。不要跳过 A/B 直接做 C。</p>
+</div>
+
+<div class="flow">
+  <div class="frow">
+    <span class="fnode">H&amp;E</span>
+  </div>
+  <span class="farrow">↓</span>
+  <div class="frow">
+    <span class="fnode hl">Structure Encoder</span>
+    <span class="fnode pu">Stain Encoder</span>
+    <span class="fnode am">(可选) IHC Encoder<br><span class="small">仅训练时用</span></span>
+  </div>
+  <span class="farrow">↓ &nbsp; z_struct &nbsp;+&nbsp; z_stain &nbsp;+&nbsp; z_noise</span>
+  <div class="frow">
+    <span class="fnode hl">双 SPADE 条件扩散 U-Net</span>
+    <span class="farrow" style="display:inline;margin:0">←</span>
+    <span class="fnode">EGSDE 双能量引导<br><span class="small">(inference-time)</span></span>
+  </div>
+  <span class="farrow">↓ &nbsp; x̂₀</span>
+  <div class="frow"><span class="fnode gr">虚拟 IHC</span></div>
+</div>
+
+<div class="grid2">
+  <div>
+    <h5>Loss（在 B 的基础上新增）</h5>
+    <pre><code>+ λ_orth  · L_orthogonality      # z_struct ⊥ z_stain
++ λ_indep · L_redundancy          # InfoDiffusion 式冗余最小化
++ λ_cross · L_cross_recon         # 交叉重建（换 z_stain → 换染色）
++ λ_mi    · L_MI                  # MIU-Diff 式互信息引导</code></pre>
+  </div>
+  <div>
+    <h5>EGSDE 引导（推理时）</h5>
+    <pre><code>dx = [f − g²( ∇log p_t(x)
+             − λ_c ∇E_content(x, x_H&E)
+             − λ_s ∇E_style(x, c_stain) )]dt
+                + g dw̄
+
+E_content: 病理基础模型特征距离
+E_style  : 目标染色域分布距离</code></pre>
+  </div>
+</div>
+
+<div class="box pur">
+  <div class="bt">推理时没有 IHC reference，z_stain 从哪来？—— 三条可行路径</div>
+  <ol style="margin-bottom:0">
+    <li><b>可学习 target-domain token（首选）</b><br>
+    <code>z_stain = nn.Embedding(num_markers, d)</code>，训练时随梯度学习。BCI/MIST 有 4 个 marker → 4 个 token。<b>最简、最稳、已被 UNIStainNet / PD-UniST / PGVMS 三篇工作验证。</b></li>
+    <li><b>学习目标域先验分布</b><br>
+    <code>z_stain ~ N(μ_IHC, σ_IHC)</code>，用 IHC 训练集统计或 VAE 后验拟合。D-VST 的 tone encoder 属于这一类。优势：支持一对多采样（同一 H&amp;E 生成多种合理 IHC）。</li>
+    <li><b>能量引导采样（无显式 z_stain）</b><br>
+    不显式建 z_stain，而在采样时用 E_style 把结果推向目标染色域。EGSDE / MIU-Diff 的做法。优势：完全 training-free 的引导。</li>
+  </ol>
+</div>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:20%">项目</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><b>是否需要 IHC encoder</b></td><td><b>训练时需要，推理时不需要。</b>训练时用 IHC encoder 提供 z_stain 的监督信号（让 z_stain 真的编码了染色信息），推理时改为从 token 或先验采样。</td></tr>
+<tr><td><b>如何训练解耦</b></td><td>① 交叉重建：<code>(z_struct, z_stain') → x̂</code>，换 stain 码应改变染色但不改结构；② 正交/冗余损失强制两路独立；③ 交换一致性：<code>(z_struct', z_stain) → x̂</code> 应保留染色但改变结构。</td></tr>
+<tr><td><b>新增参数</b></td><td>Stain Encoder（仅训练用，可弃）≈ 10M；正交/冗余 loss 无参数。总计 +10M。</td></tr>
+<tr><td><b>风险</b></td><td><b>高。</b>显式 latent 拆分在扩散里容易表示坍塌（一路学全部、一路学零）。必须先做可视化诊断（t-SNE / 线性探针）确认两路确实分离了，再报告指标。</td></tr>
+<tr><td><b>停止条件</b></td><td>若 t-SNE 显示 z_struct 与 z_stain 不可分，或交叉重建失败（换码后图像不变），<b>立即回退到 B 方案</b>，不要继续调参。</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s8"><span class="num">8</span>Part 8 · Ablation 实验设计</h2>
+
+<h3>8.1 主 ablation tree（M0 → M6）</h3>
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:13px;line-height:1.9">
+M0  PSPStain (baseline, GAN + CUT)
+ │      └─ 科学问题：现有 SOTA 的指标水平是多少？
+ │
+ ├─→ M1  M0 + Diffusion 生成器
+ │        └─ 科学问题：扩散化本身是否涨点？（先只换生成器，loss 全保留）
+ │
+ ├─→ M2  M1 + ILVR / 低频结构约束
+ │        └─ 科学问题：显式的结构保持能否提升 SSIM / 核一致性？
+ │
+ ├─→ M3  M2 + Stain Token（通道调制 FiLM）
+ │        └─ 科学问题：显式的染色条件能否提升 DAB 相关指标？
+ │
+ ├─→ M4  M3 + Pathology Encoder（空间调制 SPADE）
+ │        └─ 科学问题：病理语义条件是否是最大的单项收益来源？
+ │
+ ├─→ M5  M4 + 条件 dropout + 课程学习
+ │        └─ 科学问题：解耦是否需要训练策略强制？只加结构够不够？
+ │
+ └─→ M6  M5 + 能量引导（EGSDE）+ 显式 latent 解耦
+          └─ 科学问题：显式解耦 + 推理引导的边际收益是否值得复杂度？
+</pre>
+</div>
+
+<h3>8.2 每一步验证什么、看什么指标、什么时候停</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th class="c" style="width:6%">模型</th><th style="width:22%">新增内容</th><th style="width:26%">验证的科学问题</th><th style="width:24%">主要观察指标</th><th>停止 / 回退条件</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td class="c"><b>M0</b></td><td>—（复现）</td>
+  <td>基线水平是否与论文一致？</td>
+  <td>5 项指标（PSNR/SSIM/LPIPS/FID/DAB-KL）</td>
+  <td>若复现指标与论文差距 &gt; 10%，先查数据划分与预处理，<b>不要进入 M1</b>。</td>
+</tr>
+<tr>
+  <td class="c"><b>M1</b></td><td>生成器 → 残差条件扩散</td>
+  <td>扩散化本身是否带来收益？</td>
+  <td>FID、LPIPS 应改善（扩散的抗模式坍塌）；SSIM 可能持平或略降</td>
+  <td>若 FID 明显改善但 SSIM 大跌 → 说明结构丢失，<b>必须进 M2</b>。若所有指标都跌 → 检查扩散训练是否收敛。</td>
+</tr>
+<tr>
+  <td class="c"><b>M2</b></td><td>ILVR 低频注入</td>
+  <td>结构约束能否换回 SSIM？</td>
+  <td><b>SSIM ↑、核分割 Dice ↑</b>；FID 可能略升（trade-off）</td>
+  <td>若 SSIM 提升 &lt; 1%，说明低频替换的通道选择有问题（检查颜色污染）。</td>
+</tr>
+<tr>
+  <td class="c"><b>M3</b></td><td>Stain Token + 通道 FiLM</td>
+  <td>显式染色条件能否提升染色指标？</td>
+  <td><b>DAB-KL ↓、Pearson-r ↑、IOD 偏差 ↓</b></td>
+  <td>若染色指标不动 → token 未被有效使用，检查 FiLM 初始化（γ=1, β=0）。</td>
+</tr>
+<tr>
+  <td class="c"><b>M4</b></td><td>Pathology Encoder + 空间 SPADE</td>
+  <td>语义条件是否是最大收益来源？</td>
+  <td><b>FID ↓、Pearson-r ↑、DAB-KL ↓</b>（预期本步提升最大）</td>
+  <td>若提升很小 → 病理基础模型选择有问题（对比 UNI / Phikon / DINOv3）。</td>
+</tr>
+<tr>
+  <td class="c"><b>M5</b></td><td>条件 dropout + 两阶段课程</td>
+  <td>解耦是否需要训练策略强制？</td>
+  <td>跨 marker 泛化能力；单条件退化测试</td>
+  <td>若 dropout 无影响 → 说明模型本来就没用两路条件（表示坍塌），需检查 SPADE 实现。</td>
+</tr>
+<tr>
+  <td class="c"><b>M6</b></td><td>EGSDE 引导 + latent 解耦</td>
+  <td>显式解耦的边际收益是否值得复杂度？</td>
+  <td>各指标是否全面优于 M5</td>
+  <td><b>若提升 &lt; 2% 且训练成本翻倍 → 放弃 M6，以 M5 作为最终模型。</b></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>8.3 必须单独做的三个诊断实验（不占主 ablation 名额）</h3>
+<div class="grid3">
+  <div class="mini">
+    <div class="mt">诊断 1 · 解耦可视化</div>
+    <p>对 z_struct / z_stain 做 t-SNE 或线性探针分类。若两路不可分 → 解耦没成功，指标提升可能来自别的原因。</p>
+    <p class="small"><b>判据</b>：线性探针从 z_stain 预测 marker 类型的准确率 &gt; 95%；从 z_struct 预测 marker 类型 ≈ 随机（1/4 = 25%）。</p>
+  </div>
+  <div class="mini">
+    <div class="mt">诊断 2 · 交换一致性</div>
+    <p>固定 z_struct、替换 z_stain → 图像染色应改变但结构不变；反之亦然。</p>
+    <p class="small"><b>判据</b>：换 stain 后 SSIM(结构) &gt; 0.9 且 DAB-KL 变化 &gt; 0.3；换 struct 后结构 SSIM &lt; 0.7。</p>
+  </div>
+  <div class="mini">
+    <div class="mt">诊断 3 · 条件依赖度</div>
+    <p>推理时把某一条件置零/打乱，看输出退化程度。</p>
+    <p class="small"><b>判据</b>：打乱 pathology 条件 → FID 应显著恶化；打乱 stain token → 染色指标应显著恶化。两者都无影响 → 条件未被使用。</p>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s9"><span class="num">9</span>Part 9 · 最终推荐技术路线</h2>
+
+<h3>9.1 推荐的最小可行模型（Minimal Viable Model, MVM）</h3>
+<div class="box good">
+  <div class="bt">MVM = M1 + M2 + M3（对应 Experiment A 的增强版）</div>
+  <p style="margin:0">只做三件事：<b>扩散化 + 低频结构约束 + 染色 token 条件</b>。<br>
+  不引入新 encoder，不引入显式 latent 解耦，不做课程学习。<b>目标是两周内拿到可报告的结果。</b></p>
+</div>
+
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:12.5px;line-height:1.8">
+                       ┌──────────────────────┐
+                       │        H&E           │
+                       └──────────┬───────────┘
+                                  │
+                    ┌─────────────┴─────────────┐
+                    ↓                           ↓
+          ┌──────────────────┐        ┌──────────────────┐
+          │  VAE Encoder     │        │  Stain Token     │
+          │  (冻结)          │        │  (可学习 64-d)    │
+          └────────┬─────────┘        └────────┬─────────┘
+                   │  z_HE                     │  z_stain
+                   │                           │
+                   └─────────────┬─────────────┘
+                                 ↓
+                    ┌────────────────────────────┐
+                    │  残差条件扩散 U-Net          │
+                    │  (r_θ 残差 + ε_θ 噪声)      │
+                    │  FiLM: h'=(1+γ(z_s))⊙h+β(z_s)│
+                    └──────────────┬─────────────┘
+                                   ↓  x̂₀
+                    ┌────────────────────────────┐
+                    │  ILVR 低频注入 (灰度/OD 通道) │
+                    └──────────────┬─────────────┘
+                                   ↓
+                          ┌────────────────┐
+                          │  虚拟 IHC       │
+                          └────────────────┘
+</pre>
+</div>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">维度</th><th>配置</th></tr></thead>
+<tbody>
+<tr><td><b>网络结构</b></td><td>两个轻量 U-Net（残差 + 噪声，dim=64）+ 冻结 VAE + <code>nn.Embedding(4, 64)</code> stain token + FiLM 调制层。判别器沿用 CUT 的 PatchGAN。</td></tr>
+<tr><td><b>解耦位置</b></td><td><b>条件侧</b>（channel-wise FiLM）+ <b>输出侧</b>（低频约束）。<b>不动 latent，不动 score。</b></td></tr>
+<tr><td><b>Loss</b></td><td>L = L_res + L_noise + λ_fod·L_FOD + λ_proto·L_PCLS + λ_adv·L_adv + λ_lf·L_lowfreq</td></tr>
+<tr><td><b>扩散训练方式</b></td><td>残差扩散（RDDM 式）：<code>x_t = x_0 + ᾱ_t·(H&amp;E − IHC) + β̄_t·ε</code>；v-prediction；零终端 SNR 噪声调度。</td></tr>
+<tr><td><b>条件信息</b></td><td>H&amp;E latent（VAE，通道拼接）+ stain token（FiLM 通道调制）</td></tr>
+<tr><td><b>训练流程</b></td><td>单阶段，100–150k steps，512×512 crop，AdamW 1e-4，EMA 0.999，batch 4–8（单卡 24G 可跑）</td></tr>
+<tr><td><b>推理流程</b></td><td>10–20 步 DDIM + η-cosine(0.2) + ILVR 低频替换。指定 stain token → 指定 marker。<b>无需 IHC reference。</b></td></tr>
+<tr><td><b>Ablation</b></td><td>M0 → M1 → M2 → M3（四行表，干净可归因）</td></tr>
+<tr><td><b>评价方式</b></td><td>PSNR / SSIM / LPIPS / FID / DAB-KL / Pearson-r / IOD 偏差 / 核分割 Dice</td></tr>
+<tr><td><b>复现难度</b></td><td><span class="stars">★★</span>（较容易）—— 有 Star-Diff 非官方实现 + RDDM 官方代码可作起点；PSPStain 的两个 loss 可直接搬。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.2 推荐的增强模型（Enhanced Model）</h3>
+<div class="box key">
+  <div class="bt">Enhanced = MVM + 病理语义条件 + 双 SPADE + 课程学习（对应 Experiment B）</div>
+  <p style="margin:0">在 MVM 基础上加<b>一个冻结的病理基础模型</b>做空间条件，并把 FiLM 升级为双 SPADE。这是「结构 / 染色解耦」的完整实现。</p>
+</div>
+
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:12px;line-height:1.75">
+        ┌───────────────┐
+        │     H&E       │
+        └───────┬───────┘
+                │
+      ┌─────────┴─────────┐
+      ↓                   ↓
+┌───────────────┐   ┌──────────────────┐
+│ UNI / Phikon  │   │  Stain Token     │
+│  (冻结)        │   │  (可学习 64-d)    │
+└───────┬───────┘   └────────┬─────────┘
+        │  z_path            │  z_stain
+        │  (32×32 密集 token) │  (全局向量)
+        └─────────┬──────────┘
+                  ↓
+      ┌────────────────────────────────────┐
+      │   双 SPADE 条件扩散 U-Net           │
+      │   h' = (γ_path + γ_stain) ⊙ ĥ      │
+      │        + (β_path + β_stain)         │
+      │   空间调制 = 结构 / 通道调制 = 染色   │
+      └────────────────┬───────────────────┘
+                       ↓  x̂₀
+      ┌────────────────────────────────────┐
+      │  结构约束: ILVR + Edge(Sobel)       │
+      │  语义约束: FOD + PCLS + DAB         │
+      │  对抗约束: PatchGAN                 │
+      └────────────────┬───────────────────┘
+                       ↓
+              ┌─────────────────┐
+              │  虚拟 IHC        │
+              └─────────────────┘
+
+  训练: Phase1 冻结 stain token → Phase2 解冻 + 条件 dropout → Phase3 加对抗
+</pre>
+</div>
+
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">维度</th><th>MVM</th><th>Enhanced</th></tr></thead>
+<tbody>
+<tr><td><b>网络结构</b></td><td>残差扩散 U-Net + FiLM</td><td>残差扩散 U-Net + <b>双 SPADE</b> + UNI 冻结分支</td></tr>
+<tr><td><b>解耦位置</b></td><td>条件侧（通道调制）</td><td>条件侧（<b>空间 + 通道双重调制</b>）</td></tr>
+<tr><td><b>Loss</b></td><td>6 项</td><td>8 项（+ Edge、+ DAB、+ 条件 dropout 正则）</td></tr>
+<tr><td><b>扩散训练方式</b></td><td>残差扩散，单阶段</td><td>残差扩散，<b>三阶段课程学习</b></td></tr>
+<tr><td><b>条件信息</b></td><td>H&amp;E latent + stain token</td><td>H&amp;E latent + <b>病理语义 token</b> + stain token</td></tr>
+<tr><td><b>训练流程</b></td><td>100–150k steps</td><td>200k steps，三阶段（20k / 150k / 30k）</td></tr>
+<tr><td><b>推理流程</b></td><td>DDIM 10–20 步 + ILVR</td><td>DDIM 20 步 + η-cosine(0.2) + DDIM inversion + ILVR</td></tr>
+<tr><td><b>Ablation</b></td><td>M0–M3</td><td>M0–M6</td></tr>
+<tr><td><b>评价方式</b></td><td>8 项</td><td>8 项 + <b>MRA</b> + 跨 marker 泛化</td></tr>
+<tr><td><b>复现难度</b></td><td><span class="stars">★★</span></td><td><span class="stars">★★★☆</span>（中等偏上）—— 需要下载病理基础模型权重，SPADE 需自己实现，课程学习需调参。</td></tr>
+<tr><td><b>预期收益</b></td><td><span class="b bMed">Med–High</span></td><td><span class="b bHigh">High</span>（依据 UNIStainNet ablation：语义条件单项收益最大）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.3 关于「不要直接假设架构正确」——本报告对初始设想的修正</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:34%">你最初的设想</th><th style="width:12%">本报告判断</th><th>修正理由与建议</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>Structure Encoder + Stain/Domain Encoder → z_structure + z_stain → Diffusion U-Net → IHC</code></td>
+  <td><span class="b bA">部分成立</span></td>
+  <td>方向正确，但<b>「两个 encoder + 两个 latent 相加」在扩散里容易表示坍塌</b>。建议改为：<b>一个共享 backbone + 两路条件调制（空间 SPADE + 通道 FiLM）</b>。这样既实现了解耦，又避免了双 latent 的训练不稳定性。<b>先做 MVM（FiLM 单路），验证有效后再升级到双 SPADE。</b></td>
+</tr>
+<tr>
+  <td>保留 PSPStain 的两个核心 loss</td>
+  <td><span class="b bS">完全成立</span></td>
+  <td>这是本项目最大的优势。FOD loss 和 PCLS 都作用在输出/特征上，与生成器类型无关，<b>可以直接挂到扩散的 x̂₀ 上</b>。建议在 M1 阶段就加上，作为「扩散化不丢原有能力」的保障。</td>
+</tr>
+<tr>
+  <td>不简单地把 ResNet 换成 U-Net</td>
+  <td><span class="b bS">判断正确</span></td>
+  <td>同意。推荐用<b>残差扩散（RDDM 式）</b>而不是标准 DDPM——它把「结构差异」和「随机噪声」分开建模，天然契合「保结构 + 造染色」的需求，且只需 10 步推理。</td>
+</tr>
+<tr>
+  <td>希望解耦 content / structure / stain / target-domain / texture</td>
+  <td><span class="b bB">需收敛</span></td>
+  <td><b>不要同时解耦五样东西。</b>五路解耦在小数据（4k 样本）上几乎必然失败。建议只保留两轴：<b>structure ↔ stain-expression</b>（主）+ <b>domain-invariant ↔ domain-specific</b>（辅）。texture 作为 stain-expression 的子成分，不单独建轴。</td>
+</tr>
+<tr>
+  <td>「减少结构破坏 + 提高目标染色准确性」</td>
+  <td><span class="b bS">目标正确</span></td>
+  <td>这两个目标需要<b>分开的指标</b>来度量：结构破坏 → SSIM / 核分割 Dice / edge 一致性；染色准确性 → DAB-KL / Pearson-r / IOD 偏差 / MRA。<b>不要用单一指标（尤其不要只看 PSNR）判断成功。</b></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s10"><span class="num">10</span>Part 10 · 实验优先级路线图</h2>
+
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:13px;line-height:2.0">
+Step 0   复现 PSPStain baseline
+   │     观察: 5 项指标是否对齐论文；确认数据划分、ImageJ OD 计算流程
+   │     停止条件: 指标差距 &gt; 10% → 先查数据与预处理，不进入 Step 1
+   ↓
+Step 1   PSPStain → Diffusion baseline (M1)
+   │     实现: 残差扩散 U-Net（RDDM 式）+ 保留 PSPStain 两个 loss
+   │     观察: FID / LPIPS 是否改善；SSIM 是否掉
+   │     停止条件: 若所有指标都跌 → 检查扩散收敛与噪声调度；不要急着加模块
+   ↓
+Step 2   加入最简单的结构约束 (M2)
+   │     实现: ILVR 低频注入（灰度/OD 通道，避免颜色污染）
+   │     观察: SSIM、核分割 Dice
+   │     停止条件: SSIM 提升 &lt; 1% → 检查通道选择
+   ↓
+Step 3   加入 stain condition (M3)
+   │     实现: nn.Embedding(4,64) + FiLM 通道调制
+   │     观察: DAB-KL、Pearson-r、IOD 偏差
+   │     停止条件: 染色指标不动 → 检查 FiLM 初始化 (γ=1, β=0)
+   ↓
+Step 4   加入 pathology 语义条件 (M4)  ← 预期提升最大的一步
+   │     实现: UNI/Phikon 冻结 → 密集 token → 空间 SPADE
+   │     观察: FID、Pearson-r、DAB-KL
+   │     停止条件: 提升很小 → 换病理基础模型对比（UNI vs Phikon vs DINOv3）
+   ↓
+Step 5   加入条件 dropout + 课程学习 (M5)
+   │     实现: class 10% / path 10% / both 5% dropout；两阶段解冻
+   │     观察: 跨 marker 泛化、单条件退化测试、t-SNE 解耦可视化
+   │     停止条件: dropout 无影响 → 表示坍塌，检查 SPADE 实现
+   ↓
+Step 6   加入 cross-attention + 能量引导 + latent 解耦 (M6)
+         实现: EGSDE 双能量引导；正交/冗余 loss；交叉重建
+         观察: 各指标是否全面优于 M5
+         停止条件: 提升 &lt; 2% 且成本翻倍 → 放弃 M6，以 M5 为最终模型
+</pre>
+</div>
+
+<h3>10.1 时间与资源分配建议</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th class="c" style="width:8%">阶段</th><th style="width:20%">目标</th><th class="c" style="width:14%">GPU 需求</th><th style="width:26%">最大风险</th><th>缓解措施</th></tr></thead>
+<tbody>
+<tr><td class="c"><b>Step 0</b></td><td>复现基线</td><td class="c">1×24G</td><td>官方代码环境依赖复杂（CUT/ASP 依赖）</td><td>用官方 <code>environment.yml</code>；确认 pretrain UNet 与数据集匹配</td></tr>
+<tr><td class="c"><b>Step 1</b></td><td>扩散化</td><td class="c">1×24G</td><td>扩散在 4k 小数据上不收敛</td><td>用 Star-Diff/RDDM 的轻量 U-Net（dim=64）；先 256×256 验证再上 512</td></tr>
+<tr><td class="c"><b>Step 2</b></td><td>结构约束</td><td class="c">1×24G</td><td>颜色污染（低频带进 H&amp;E 色调）</td><td>颜色去卷积 / 灰度通道替换（MIU-Diff 做法）</td></tr>
+<tr><td class="c"><b>Step 3</b></td><td>染色条件</td><td class="c">1×24G</td><td>token 未被使用</td><td>FiLM 零初始化；加条件 dropout 强制依赖</td></tr>
+<tr><td class="c"><b>Step 4</b></td><td>语义条件</td><td class="c">1×32G</td><td>病理基础模型显存开销</td><td>UNI/Phikon 冻结 + fp16；token 预先离线提取缓存</td></tr>
+<tr><td class="c"><b>Step 5</b></td><td>解耦训练策略</td><td class="c">1×32G</td><td>两阶段调度超参难调</td><td>从「只加条件 dropout」开始，课程学习后置</td></tr>
+<tr><td class="c"><b>Step 6</b></td><td>显式解耦 + 引导</td><td class="c">2×32G</td><td>表示坍塌、训练不稳定</td><td>先做解耦可视化诊断；无分离就立即回退</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>10.2 全局停止规则（写进实验日志）</h3>
+<div class="box stop">
+  <div class="bt">🚦 出现以下任一情况，立即停止当前方向并回退</div>
+  <ol style="margin-bottom:0">
+    <li><b>结构类指标（SSIM / Dice）在连续 3 个实验配置中持续下降</b> → 说明解耦牺牲了结构，当前设计有问题。</li>
+    <li><b>t-SNE / 线性探针显示两路表示不可分</b> → 解耦失败，指标提升来自其他因素，不可归因。</li>
+    <li><b>某个模块的 ablation 显示「拿掉它指标不变或更好」</b> → 该模块无效，删除，不要为它辩护。</li>
+    <li><b>新增模块使训练成本翻倍但指标提升 &lt; 2%</b> → 不符合「改动小 &gt; 复杂度」的优先级，放弃。</li>
+    <li><b>只在某一个数据集上有效、另一个上无效</b> → 过拟合数据集特性，需先做跨数据集验证再继续。</li>
+  </ol>
+</div>
+
+<h3>10.3 最终必须回答的核心问题</h3>
+<div class="box key">
+  <div class="bt">❓ 对于 H&amp;E→IHC，如果已有 PSPStain baseline 且要把生成框架换成 diffusion，「content / structure / stain information disentanglement」应该怎样设计？</div>
+  <p><b>答案（本报告结论）</b>：</p>
+  <p>不要做「两个 encoder → 两个 latent → 相加」的显式拆分（在 4k 小数据 + 扩散框架下会表示坍塌）。<br>
+  应该做的是 <b>「单一扩散主干 + 两路条件调制」</b>：</p>
+  <ul>
+    <li><b>解耦轴只取两轴</b>：structure（空间）↔ stain-expression（通道）。</li>
+    <li><b>解耦位置在条件注入层</b>，不在 latent，也不在 score：<br>
+    <code>h' = (γ_path + γ_stain) ⊙ ĥ + (β_path + β_stain)</code><br>
+    空间调制承载组织形态，通道调制承载染色身份。物理分离、梯度分离、共享卷积核。</li>
+    <li><b>结构保持靠三件事</b>：① 低频注入（ILVR，灰度/OD 通道）；② edge loss（像素对齐轴）；③ 残差扩散把结构差异显式建模。</li>
+    <li><b>染色语义靠两件事</b>：① 病理基础模型（UNI/Phikon）提供语义条件；② PSPStain 的 FOD + PCLS 直接挂到 x̂₀ 上。</li>
+    <li><b>解耦靠训练策略强制</b>：条件 dropout + 两阶段课程学习。<b>只加结构不加策略，不等于解耦。</b></li>
+    <li><b>推理时不需要 IHC reference</b>：用可学习的 stain token（4 个 marker → 4 个 embedding）。</li>
+  </ul>
+  <p style="margin-bottom:0"><b>预期收益</b>：参考 UNIStainNet 的 ablation（语义条件单项：FID −34%、Pearson-r +38%）与 HistDiST（MRA +28%），这套设计在 BCI/MIST 上有较大概率带来<b>可测量的指标提升</b>，且每一步都可独立验证、可回退。</p>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s11"><span class="num">11</span>附录 · 检索策略、可信度声明与参考文献</h2>
+
+<h3>11.1 检索策略</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:26%">优先级</th><th style="width:12%">占比</th><th>主要检索词</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>P1 · 扩散 + 解耦</b></td><td class="c">~50%</td>
+  <td><code>disentangled diffusion model</code> · <code>diffusion content style disentanglement</code> · <code>diffusion factorized latent</code> · <code>diffusion structure appearance disentanglement</code> · <code>score decomposition</code> · <code>diffusion identity preserving</code> · <code>conditional diffusion disentanglement</code></td>
+</tr>
+<tr>
+  <td><b>P2 · 虚拟染色 / 病理</b></td><td class="c">~30%</td>
+  <td><code>virtual staining diffusion</code> · <code>virtual staining disentanglement</code> · <code>H&amp;E to IHC diffusion</code> · <code>histopathology stain transfer</code> · <code>stain-aware diffusion</code> · <code>pathology image disentanglement</code></td>
+</tr>
+<tr>
+  <td><b>P3 · 非医学可迁移</b></td><td class="c">~20%</td>
+  <td><code>image-to-image diffusion</code> · <code>controllable diffusion</code> · <code>structure-preserving diffusion</code> · <code>unpaired image translation</code> · <code>domain adaptation feature disentanglement</code> · <code>frequency disentanglement</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><b>来源</b>：arXiv · Google Scholar · IEEE Xplore · CVPR / ICCV / ECCV / MICCAI / NeurIPS / ICLR / ICML / AAAI / ACM MM · TPAMI / TMI / Medical Image Analysis / Pattern Recognition / Computerized Medical Imaging and Graphics · Computers in Biology and Medicine · Nature Communications · Light: Science &amp; Applications · PubMed。<br>
+<b>时间范围</b>：主体 2021–2026；保留少量更早经典解耦工作（MUNIT 2018 / AdaIN 2017 / CUT 2020 / StarGAN v2 2020 / HiSD 2020 / SDEdit 2022）作为理论基础。</p>
+
+<h3>11.2 可信度声明（重要）</h3>
+<div class="box warn">
+  <div class="bt">⚠️ 请在使用本报告数据前阅读</div>
+  <ul style="margin-bottom:0">
+    <li><b>论文指标</b>：Part 3–5 表格中的数值来自<b>各论文自报结果</b>，检索时通过摘要、正文抽取或论文官方仓库 README 获取，<b>未做独立复现验证</b>。跨论文的数值不具严格可比性（数据集划分、预处理、评测脚本可能不同）。</li>
+    <li><b>代码可用性</b>：标注「官方」表示检索到官方仓库；「待开源 / 未开源」表示论文声明将开源但截至 2026-09-30 未见；「非官方」表示社区复现（如 Star-Diff），其复现结果与原文存在 gap，已在正文中标注。</li>
+    <li><b>UniSTainNet 年份/venue</b>：项目页与 arXiv 标注为 CVPR 2025，arXiv 编号（2603.xxxxx）显示为 2026 年 3 月上传。请以最终正式出版信息为准。</li>
+    <li><b>HistDiST venue</b>：检索时为 arXiv 预印本（2505.06793v2），未见明确会议/期刊归属，格式接近会议投稿。后续可能已正式发表，请核实。</li>
+    <li><b>D-VST</b>：NeurIPS 2025 主会议，论文声明「代码与训练模型将发布」，检索日未见仓库。</li>
+    <li><b>迁移可行性评分（S/A/B/C）</b>：为本报告的<b>主观工程判断</b>，依据是「机制是否与 H&amp;E→IHC 的信息结构匹配 + 改动量 + 代码可用性」，不是论文质量评价。</li>
+  </ul>
+</div>
+
+<h3>11.3 参考文献</h3>
+
+<h5>扩散 + 解耦</h5>
+<ol class="small" style="line-height:1.85">
+<li>Yang T, Wang Y, Lv Y, Zheng N. <b>DisDiff: Unsupervised Disentanglement of Diffusion Probabilistic Models</b>. NeurIPS 2023. arXiv:2301.13721 · <a href="https://github.com/ThomasMrY/DisDiff">code</a></li>
+<li>Sun et al. <b>SDDM: Score-Decomposed Diffusion Models on Manifolds for Unpaired Image-to-Image Translation</b>. ICML 2023. arXiv:2308.02154</li>
+<li>Kwon G, Ye JC. <b>Diffusion-based Image Translation using Disentangled Style and Content Representation</b>. ICLR 2023. arXiv:2209.15264 · <a href="https://github.com/cyclomon/DiffuseIT">code</a></li>
+<li>Wang Y et al. <b>InfoDiffusion: Representation Learning Using Information Diffusion Models</b>. ICML 2023. arXiv:2306.08757 · <a href="https://github.com/isjakewong/InfoDiffusion">code</a></li>
+<li>Wu et al. <b>Factorized Diffusion Autoencoder for Unsupervised Disentangled Representation Learning (FDAE)</b>. AAAI 2024 · <a href="https://ojs.aaai.org/index.php/AAAI/article/view/28407">paper</a></li>
+<li>Preechakul K et al. <b>Diffusion Autoencoders: Toward a Meaningful and Decodable Representation</b>. CVPR 2022 Oral</li>
+<li>Su X et al. <b>Dual Diffusion Implicit Bridges for Image-to-Image Translation (DDIB)</b>. ICLR 2023 · <a href="https://github.com/suxuann/ddib">code</a></li>
+<li>Zhao M et al. <b>EGSDE: Unpaired Image-to-Image Translation via Energy-Guided Stochastic Differential Equations</b>. NeurIPS 2022. arXiv:2207.06635 · <a href="https://github.com/ML-GSAI/EGSDE">code</a></li>
+<li>Choi J et al. <b>ILVR: Conditioning Method for Denoising Diffusion Probabilistic Models</b>. ICCV 2021 Oral. arXiv:2108.02938 · <a href="https://github.com/jychoi118/ilvr_adm">code</a></li>
+<li>Meng C et al. <b>SDEdit: Guided Image Synthesis and Editing with Stochastic Differential Equations</b>. ICLR 2022</li>
+<li>Jeong J et al. <b>Style Injection in Diffusion: A Training-free Approach (StyleID)</b>. CVPR 2024 Highlight · <a href="https://github.com/jiwoogit/StyleID">code</a></li>
+<li>Zhang L, Rao A, Agrawala M. <b>Adding Conditional Control to Text-to-Image Diffusion Models (ControlNet)</b>. ICCV 2023</li>
+<li>Mou C et al. <b>T2I-Adapter: Learning Adapters to Dig out More Controllable Ability for Text-to-Image Diffusion Models</b>. arXiv 2023</li>
+<li>Ma Z et al. <b>Content-Style Disentangled Representation for Controllable Artistic Image Stylization and Generation</b>. arXiv 2024. 2412.14496</li>
+<li>Li et al. <b>Structure-Level Disentangled Diffusion for Few-Shot Chinese Font Generation (SLD-Font)</b>. arXiv 2026. 2602.18874</li>
+<li>Han Y et al. <b>Face-Adapter for Pre-Trained Diffusion Models with Fine-Grained ID and Attribute Control</b>. ECCV 2024</li>
+<li>Lin H. <b>DreamSalon: A Staged Diffusion Framework for Preserving Identity-Context in Editable Face Generation</b>. CVPR 2024</li>
+<li>Li X et al. <b>Image-to-Image Translation via Hierarchical Style Disentanglement (HiSD)</b>. NeurIPS 2020</li>
+<li>Huang X, Belongie S. <b>Multimodal Unsupervised Image-to-Image Translation (MUNIT)</b>. ECCV 2018 · <a href="https://github.com/NVlabs/MUNIT">code</a></li>
+<li>Choi Y et al. <b>StarGAN v2: Diverse Image Synthesis for Multiple Domains</b>. CVPR 2020 · <a href="https://github.com/clovaai/stargan-v2">code</a></li>
+<li>Park T et al. <b>Contrastive Learning for Unpaired Image-to-Image Translation (CUT)</b>. ECCV 2020 · <a href="https://github.com/taesungp/contrastive-unpaired-translation">code</a></li>
+<li>Huang X, Belongie S. <b>Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization (AdaIN)</b>. ICCV 2017</li>
+</ol>
+
+<h5>虚拟染色 / 病理图像</h5>
+<ol class="small" start="23" style="line-height:1.85">
+<li>Chen F, Zhang R, Zheng B, Sun Y, He J, Qin W. <b>Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining (PSPStain)</b>. MICCAI 2024. arXiv:2407.03655 · <a href="https://github.com/ccitachi/PSPStain">code</a></li>
+<li>Chen F et al. <b>PGVMS: A Prompt-Guided Unified Framework for Virtual Multiplex IHC Staining with Pathological Semantic Preservation</b>. IEEE TMI 2026. arXiv:2602.23292 · <a href="https://github.com/ccitachi/PGVMS">code</a></li>
+<li>Yang S, Wei D, Hu Y, et al. <b>D-VST: Diffusion Transformer for Pathology-Correct Tone-Controllable Cross-Dye Virtual Staining of Whole Slide Images</b>. NeurIPS 2025</li>
+<li>Großkopf E, Bundele V, Hosseinzadeh M, Lensch HPA. <b>HistDiST: Histopathological Diffusion-based Stain Transfer</b>. arXiv 2025. 2505.06793 · <a href="https://github.com/ErikGro/HistDiST">code</a></li>
+<li>Liu A, Wang X, Cai J, Li C. <b>Score-based Diffusion Model for Unpaired Virtual Histology Staining (MIU-Diff)</b>. arXiv 2025. 2506.23184</li>
+<li>Saurav JR, Pham TLH, Mukherjee P, Yi P, Orr BA, Luber JM. <b>UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</b>. ACM-BCB 2026. arXiv:2603.12716 · <a href="https://github.com/aauthors131/UNIStainNet">code</a></li>
+<li>Zhang C et al. <b>PD-UniST: Prompt-Driven Universal Model for Unpaired H&amp;E-to-IHC Stain Translation</b>. MICCAI 2025 · <a href="https://github.com/chujie-zhang/PD-UniST">code</a></li>
+<li>Kataria T, Knudsen B, Elhabian SY. <b>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</b>. arXiv 2024/2025. 2403.11340</li>
+<li>Vink T et al. <b>From Pixels to Pathology: Restoration Diffusion for Diagnostic-Consistent Virtual IHC (Star-Diff)</b>. Computers in Biology and Medicine 2025. arXiv:2508.02528 · <a href="https://github.com/anomredux/Star-Diff">unofficial code</a></li>
+<li>Zhang Y, Yu Z, Zhang X, et al. <b>DisDiff: Disentanglement Diffusion Network for MR Imaging Translation</b>. MICCAI 2025</li>
+<li>Han Y, Jiang J, Pei Y. <b>DiffStain: Conditioned Diffusion-Based Semantic Virtual Staining with Mask Guidance</b>. MICCAI 2025 · <a href="https://github.com/StrengthInNumber/DiffStain">code</a></li>
+<li>Zhang et al. <b>StainDiff: Transfer Stain Styles of Histology Images with Denoising Diffusion Probabilistic Models and Self-Ensemble</b>. MICCAI 2023</li>
+<li>Zhang et al. <b>Mix-Domain Contrastive Learning for Unpaired H&amp;E-to-IHC Stain Translation (MDCL)</b>. IEEE ISBI/TMI 2024. arXiv:2406.11799</li>
+<li>Özbey M et al. <b>Unsupervised Medical Image Translation with Adversarial Diffusion Models (SynDiff)</b>. IEEE TMI 2023 · <a href="https://github.com/icon-lab/SynDiff">code</a></li>
+<li>Salehi P, Chlebus G. <b>Stain Style Transfer of Histopathology Images via Structure-Preserving Generative Models</b>. MICCAI Workshop 2020</li>
+<li>Rivenson Y et al. <b>Deep learning-enabled virtual histological staining of biological samples</b>. Light: Science &amp; Applications 2023</li>
+</ol>
+
+<hr>
+<p class="small" style="text-align:center;margin-top:30px">
+本报告由 WorkBuddy AI 基于公开文献检索生成 · 检索日期 2026-09-30<br>
+所有论文数据来自作者自报结果，迁移可行性评分为工程判断，请在正式实验前自行核实<br>
+建议：<b>先做 Step 0（复现 PSPStain），再做 Step 1（扩散化），不要在两者之前动手设计解耦模块。</b>
+</p>
+
+</main>
+</div>
+</body>
+</html>

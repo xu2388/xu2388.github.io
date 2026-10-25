@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散模型「黑团」伪影 · 成因分类、诊断流程与解决方案</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">Artifact forensics</div><div class="sub">扩散模型黑团伪影<br>成因分类 · 诊断 · 解决</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l2" href="#s0-1">最关键的一条判据</a>
+<a class="l2" href="#s0-2">成因总表</a>
+<a class="l1" href="#s1">1 · 先分类：黑团长什么样</a>
+<a class="l1" href="#s2">2 · 通用扩散模型的成因</a>
+<a class="l2" href="#s2-1">A 解码器与潜空间</a>
+<a class="l2" href="#s2-2">B 引导与采样</a>
+<a class="l2" href="#s2-3">C 架构与注意力</a>
+<a class="l2" href="#s2-4">D 训练数据</a>
+<a class="l1" href="#s3">3 · 虚拟染色特有的成因</a>
+<a class="l2" href="#s3-1">E 真实病理固有暗色伪影</a>
+<a class="l2" href="#s3-2">F 结构幻觉（最像你的情况）</a>
+<a class="l2" href="#s3-3">G 光密度饱和</a>
+<a class="l2" href="#s3-4">H 非配对与残差路径</a>
+<a class="l1" href="#s4">4 · 诊断流程（决策树）</a>
+<a class="l1" href="#s5">5 · 解决方案总表</a>
+<a class="l1" href="#s6">6 · 你项目的具体建议</a>
+<a class="l1" href="#s7">7 · 实测反馈后的方案收窄 ★</a>
+<a class="l2" href="#s7-1">为什么 clamp 只能减半</a>
+<a class="l2" href="#s7-2">解法阶梯</a>
+<a class="l2" href="#s7-3">必须提醒的陷阱</a>
+<a class="l2" href="#s7-4">更新后的行动顺序</a>
+<a class="l1" href="#s8">8 · 文献与链接</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Diffusion artifact forensics · Black blob failure mode</div>
+<h1>扩散模型「黑团」伪影 · 成因分类、诊断流程与解决方案</h1>
+<p class="desc">针对 H&amp;E→IHC 虚拟染色中出现的 2–3 处明显黑团，横向调研通用扩散模型生成领域的同类失败模式</p>
+<div class="meta"><span>调研日期 2026-10-03</span><span>更新 2026-10-04（实测反馈收窄）</span><span>症状：2–3 处离散黑团</span><span>覆盖 8 类成因</span><span>含 12 步诊断决策树</span><span>已核对 arXiv / GitHub / Nature / 厂商技术文档</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<h3 id="s0-1">最关键的一条判据：2–3 个「离散」黑团，几乎排除了全局性成因</h3>
+<div class="box key"><div class="bt">这条判断决定了排查方向</div>
+<p>你描述的是「明显的黑团，2-3 个」——<strong>数量少、位置离散、局部性强</strong>。这个形态本身就是一个强约束：</p>
+<ul>
+<li><strong>全局性成因会均匀地毁掉整张图</strong>，不会只留 2–3 个团。CFG 引导过强、噪声调度无零终端 SNR、采样步数不足，这些问题的表现是<strong>全图过饱和 / 对比度异常 / 细节糊</strong>，而不是几个孤立黑团。所以它们<strong>大概率不是你的主因</strong>。</li>
+<li><strong>离散的少数黑团指向「局部机制」</strong>：潜空间某个位置解码失败、某几个 patch 语义损坏、或某个特定区域触发了幻觉。这类问题的共同特征是<strong>定位性</strong>——它们只影响图像的某一小块。</li>
+</ul>
+<p style="margin-bottom:0">因此我把成因按「是否具备定位性」重新排序，而不是按文献热度排序。<strong>最可疑的前三名：VAE/潜空间解码失败、DiT 异常 token、结构幻觉（OOD 条件区）。</strong></p>
+<p style="margin-bottom:0" class="small">→ 2026-10-04 更新：用户实测已确认第一项（A1/A2），并排除了 A3（fp16 溢出）。<strong>请看 <a href="#s7">第 7 节</a> 的方案收窄。</strong></p></div>
+
+<h3 id="s0-2">成因总表（按与「离散黑团」的吻合度排序）</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:5%" class="c">#</th><th style="width:22%">成因</th><th style="width:12%" class="c">是否定位性</th><th style="width:10%" class="c">与你的症状吻合度</th><th>一句话机制</th></tr></thead>
+<tbody>
+<tr style="background:var(--greenSoft)"><td class="c"><strong>A1</strong></td><td><strong>VAE / 潜空间解码失败</strong> <span class="b high">已确认</span></td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b high">高</span></td><td>扩散采样落进解码器没见过的潜空间区域 → 该处解码成异常暗块</td></tr>
+<tr style="background:var(--greenSoft)"><td class="c"><strong>F</strong></td><td><strong>结构幻觉（OOD 条件区）</strong></td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b high">高</span></td><td>H&amp;E 输入里罕见的形态超出训练分布 → 模型在该处编造出密集深色结构</td></tr>
+<tr style="background:var(--greenSoft)"><td class="c"><strong>C1</strong></td><td><strong>DiT 异常 token</strong></td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b high">高</span></td><td>少数高范数 token 吸走过量注意力，其所在 patch 语义损坏 → 局部伪影</td></tr>
+<tr style="opacity:.5"><td class="c"><strong>A3</strong></td><td><s>fp16 数值溢出</s></td><td class="c"><span class="b medium">半</span></td><td class="c"><span class="b bad">已排除</span></td><td><strong>2026-10-04 实测排除</strong>：fp16 与 fp32 采样下黑团都出现，fp32 照样有 → 与精度无关</td></tr>
+<tr style="background:var(--amberSoft)"><td class="c"><strong>E</strong></td><td>真实病理固有暗色伪影被学到</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b medium">中</span></td><td>训练集里的褶皱/笔迹/气泡/DAB 沉淀被模型重建甚至放大</td></tr>
+<tr style="background:var(--amberSoft)"><td class="c"><strong>G</strong></td><td>光密度 / Beer–Lambert 饱和</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b medium">中</span></td><td>浓度或 OD 预测溢出 → <code>exp(−OD)→0</code> → 该像素变黑</td></tr>
+<tr><td class="c">D1</td><td>训练数据里的暗色残影（水印/文字）</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b medium">中低</span></td><td>模型学到「该补一个暗团」，在无关位置复现</td></tr>
+<tr><td class="c">H2</td><td>残差扩散路径数值冲突</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b medium">中低</span></td><td><code>I_res = I_IHC − I_HE</code> 在亮度差极大处幅值爆炸</td></tr>
+<tr><td class="c">B1</td><td>CFG 引导过强</td><td class="c"><span class="b bad">否（全局）</span></td><td class="c"><span class="b low">低</span></td><td>更新方向的平行分量 = 对预测施加 gain&gt;1 → 全图过饱和</td></tr>
+<tr><td class="c">B2</td><td>噪声调度无零终端 SNR</td><td class="c"><span class="b bad">否（全局）</span></td><td class="c"><span class="b low">低</span></td><td>训练/推理不匹配 → 整体质量下降</td></tr>
+<tr><td class="c">B3</td><td>采样器 / 步数不当</td><td class="c"><span class="b bad">否（全局）</span></td><td class="c"><span class="b low">低</span></td><td>细节缺失、发糊，通常不是孤立黑团</td></tr>
+</tbody></table></div>
+<p class="small">「定位性」= 该成因能否只影响图像的局部小块。你观察到的 2–3 个离散黑团强烈指向定位性成因。</p>
+
+<h2 id="s1"><span class="num">1</span>先分类：黑团长什么样，对应什么机制</h2>
+<p>排查前先给伪影做形态学分类。不同形态几乎一一对应不同机制：</p>
+<div class="scroll"><table>
+<thead><tr><th style="width:18%">形态</th><th style="width:26%">外观特征</th><th style="width:18%">最可能的机制</th><th>关键鉴别点</th></tr></thead>
+<tbody>
+<tr><td><strong>离散深色团块</strong></td><td>2–5 个孤立暗块，边界较清晰，内部无结构</td><td>潜空间解码失败 / 异常 token</td><td><strong>换个 seed 是否还在同一位置</strong>？在 → 条件相关；不在 → 采样相关</td></tr>
+<tr><td><strong>假细胞团</strong></td><td>暗块<em>看起来像</em>密集细胞核或淋巴细胞聚集</td><td>结构幻觉</td><td>该处 H&amp;E 输入是否本身异常/罕见？</td></tr>
+<tr><td><strong>模糊暗晕</strong></td><td>暗块边界模糊，像污渍晕开</td><td>数据学到的污渍/褶皱/DAB 沉淀</td><td>真实 IHC 同位置是否也有暗斑？</td></tr>
+<tr><td><strong>硬边纯黑</strong></td><td>边界极锐利，像素值贴 0</td><td>数值溢出（fp16 NaN）或 OD 饱和，<strong>也可能是 VAE 输出被 clamp</strong></td><td>强制 fp32 是否消失？<span class="small">（若 fp32 下仍在，见 <a href="#s7">第 7 节</a>：是 decoder 输出 ≤ −1 被 clamp，不是精度问题）</span></td></tr>
+<tr><td><strong>全图过饱和</strong></td><td>颜色整体过艳、暗部死黑、亮部死白</td><td>CFG 引导过强</td><td>降 guidance scale 是否缓解？</td></tr>
+<tr><td><strong>棋盘格 / 网格纹</strong></td><td>规则周期性暗纹</td><td>转置卷积上采样伪影</td><td>是否与 8/16/32 像素周期对齐？</td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>通用扩散模型的成因</h2>
+<p>这一节是横向调研的收获——同样的黑团在其他生成领域早已被系统性报告过，机制是通用的。</p>
+
+<h3 id="s2-1">A · 解码器与潜空间（最高频的成因）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">A1 · VAE 解码器黑团 —— 有据可查的经典问题</div><div class="v">CompVis/stable-diffusion Issue #384（2022）· 至今未彻底关闭</div></div><div><span class="b high">定位性</span> <span class="b bad">高频</span></div></div>
+<div class="body">
+<p><strong>报告原文描述：</strong>「生成图像时有很高概率出现<strong>小的蓝色或黑色团块</strong>，在平滑纹理这类简单图像上尤其明显。」报告者在多台机器、多个在线生成器上<strong>100% 稳定复现</strong>，并且明确指出：<strong>换采样器、换步数、调 CFG 基本没有效果</strong>。</p>
+<p>这句话极其重要——它直接印证了第 0 节的判断：<strong>黑团不是采样参数问题</strong>。</p>
+<p><strong>社区验证的修复路径：</strong></p>
+<ul>
+<li>换成重新微调的 VAE（<code>vae-ft-mse-840000-ema-pruned</code>）→ 报告者实测「明显改善，大多数情况下已不再明显」</li>
+<li>但<strong>纹理类图像仍然顽固</strong>——说明 VAE 修复是缓解而非根治</li>
+<li>有用户用负向提示词 <code>blue spot, blue dot</code> 压制——属于 hack，不解决机制</li>
+</ul>
+<p><strong>机制解读：</strong>VAE 解码器是在<em>编码器输出的潜空间分布</em>上训练的。扩散采样在潜空间里自由游走，会走到<strong>编码器从未产生过的区域</strong>。解码器对这类「域外潜变量」没有约束，输出就会崩塌成局部异常色块。这与下面的 A2 是同一个问题的两种表述。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">A2 · 潜空间「暗区」（Dark Areas）—— 概念性解释</div><div class="v">TopVAE, arXiv 2606.13955（2026-06）</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>这篇论文提出了一个非常贴切的概念：<strong>latent space 中存在「暗区」（dark areas）——采样过程中可达、但解码出来是无效输出的潜空间区域</strong>。</p>
+<p>原文：「现有 VAE 通常用重建目标学习，这<strong>不保证潜空间平滑、有效、可导航</strong>……这导致暗区：潜空间中在扩散采样时可达、但解码为不连通或无效结果的区域。」</p>
+<p>该文的解法 <strong>TopVAE</strong> 让<strong>解码器在训练阶段就内化结构约束</strong>，从而消除暗区，无需测试时修正。效果：QM9 上 FCD-3D 降低 77%。</p>
+<div class="box warn"><div class="bt">为什么这篇论文对你重要</div><p style="margin-bottom:0">它虽然做的是<strong>分子生成</strong>，不是图像，但给出了你问题的<strong>理论骨架</strong>：黑团不是「模型画错了」，而是<strong>采样点落到了解码器的盲区</strong>。这解释了为什么黑团总是<strong>局部、离散、无结构</strong>——因为它对应潜空间里一个个孤立的坏点，而不是整片坏区域。对策方向也随之明确：<strong>要么收紧潜空间（约束采样不越界），要么强化解码器（让盲区变小）</strong>。</p></div>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">A3 · fp16 数值溢出 —— 硬边纯黑</div><div class="v">madebyollin/sdxl-vae-fp16-fix</div></div><div><span class="b medium">半定位性</span></div></div>
+<div class="body">
+<p>SDXL 的 VAE 在 fp16 下解码时，<strong>内部激活值会超出 fp16 的表示范围（±65504）→ 溢出成 NaN/Inf → 渲染为黑色</strong>。社区修复版 <code>sdxl-vae-fp16-fix</code> 的做法是：<strong>微调 VAE 以减小内部激活幅度</strong>，保持输出质量的同时让 fp16 可稳定运行。</p>
+<p><strong>鉴别特征：</strong>黑块边界<strong>极其锐利</strong>、像素值贴 0；强制 fp32 解码后消失。这与 A1/A2 的「有渐变的暗块」不同。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">A4 · 解码器的拉回度量畸变</div><div class="v">Latent Diffusion Inversion Requires Understanding the Latent Space（CVPR 2026）</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>该文指出：LDM 在潜空间里的行为是<strong>空间非均匀</strong>的——<strong>VAE 解码器拉回（pullback）到像素空间的度量，在局部畸变越大的地方，生成/反演越容易出错</strong>。这为「黑团为什么出现在某些特定位置而不是均匀分布」提供了又一个解释：<strong>畸变大的区域就是脆弱区</strong>。</p>
+</div></div>
+
+<h3 id="s2-2">B · 引导与采样（全局性，与你的症状吻合度低，但需排除）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">B1 · CFG 引导过强导致过饱和</div><div class="v">APG, arXiv 2410.02416（ETH Zürich + Disney Research）</div></div><div><span class="b bad">全局性</span></div></div>
+<div class="body">
+<p><strong>数学机制（这篇论文讲得最清楚）：</strong>CFG 的更新可以重写为</p>
+<pre><code>D̂_CFG = D_θ(z_t, t, y) + (w − 1)·ΔD_t
+其中 ΔD_t = D_θ(z_t,t,y) − D_θ(z_t,t,y_null)</code></pre>
+<p>把更新方向 ΔD_t 按<strong>相对于条件预测</strong>分解为平行与正交两部分：</p>
+<ul>
+<li><strong>正交分量 ΔD⊥</strong> → 提升图像质量（有用的部分）</li>
+<li><strong>平行分量 ΔD∥</strong> → 导致过饱和（有害的部分）</li>
+</ul>
+<p>平行分量等效于给预测乘上一个 <strong>gain &gt; 1 的系数</strong>，把像素值往量程两端推：</p>
+<pre><code>D_θ + (w−1)·ΔD∥ = [ 1 + (w−1)·‖ΔD∥‖/‖D_θ‖ ] · D_θ</code></pre>
+<p>论文进一步证明，CFG 更新等价于<strong>在「条件与无条件预测之差的 ℓ₂ 距离」上做一步梯度上升</strong>（学习率 γ = w−1），而这个目标函数<strong>没有最大值</strong>，所以 w 大时会发生<strong>任意漂移</strong>。</p>
+<p><strong>修复：APG（Adaptive Projected Guidance）</strong>——投影掉平行分量（η≈0）+ 重缩放限制漂移 + 反向动量。实测：</p>
+<div class="scroll"><table>
+<thead><tr><th>模型</th><th class="c">方法</th><th class="c">FID ↓</th><th class="c">Recall ↑</th><th class="c">饱和度 ↓</th></tr></thead>
+<tbody>
+<tr><td rowspan="2">EDM2-S (w=4)</td><td class="c">CFG</td><td class="c">10.42</td><td class="c">0.48</td><td class="c">0.46</td></tr>
+<tr><td class="c"><strong>APG</strong></td><td class="c"><strong>6.49</strong></td><td class="c"><strong>0.62</strong></td><td class="c"><strong>0.33</strong></td></tr>
+<tr><td rowspan="2">DiT-XL/2 (w=4)</td><td class="c">CFG</td><td class="c">19.14</td><td class="c">0.35</td><td class="c">0.37</td></tr>
+<tr><td class="c"><strong>APG</strong></td><td class="c"><strong>9.34</strong></td><td class="c"><strong>0.56</strong></td><td class="c"><strong>0.30</strong></td></tr>
+<tr><td rowspan="2">SDXL (w=15)</td><td class="c">CFG</td><td class="c">26.29</td><td class="c">0.49</td><td class="c">0.28</td></tr>
+<tr><td class="c"><strong>APG</strong></td><td class="c"><strong>25.35</strong></td><td class="c"><strong>0.50</strong></td><td class="c"><strong>0.18</strong></td></tr>
+</tbody></table></div>
+<p><strong>关键实现细节（容易踩坑）：</strong>投影<strong>必须作用在「去噪预测」D_θ 上，不能作用在噪声预测 ε_θ 或其他输出类型上</strong>，否则效果与 CFG 几乎一样。推荐 η=0、β∈[−0.75,−0.25]。开销可忽略（SDXL 单张前向 130 ms，引导步骤仅 0.45 ms）。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">B2 · 噪声调度没有零终端 SNR</div><div class="v">Common Diffusion Noise Schedules and Sample Steps are Flawed, arXiv 2305.08891（WACV 2024）</div></div><div><span class="b bad">全局性</span></div></div>
+<div class="body">
+<p>常见噪声调度<strong>不保证最后一步的 SNR 为 0</strong>，且部分采样器实现<strong>不从最后一步开始采样</strong>。这造成训练与推理的<strong>不一致</strong>：训练时模型见过的最噪数据仍然残留信号，而推理时喂进去的是<strong>纯高斯噪声</strong>。</p>
+<p><strong>三项修复：</strong>① 重缩放噪声调度以强制零终端 SNR；② 用 v-prediction 训练；③ 从最后一步开始采样。这一项在你的 R3 损失报告里已经详细展开过，此处不重复。</p>
+</div></div>
+
+<h3 id="s2-3">C · 架构与注意力</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">C1 · DiT 异常 token —— 定位性伪影的架构解释</div><div class="v">Taming Outlier Tokens in Diffusion Transformers, arXiv 2605.05206（2026-05）</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>ViT/DiT 里存在<strong>异常 token（outlier tokens）</strong>：<strong>范数异常大、吸走过量注意力、却几乎不携带局部信息</strong>。该文发现这个现象在 RAE-DiT 管线的<strong>编码器和去噪器里都会出现</strong>，尤其是中间层。</p>
+<div class="box stop"><div class="bt">最反直觉、也最有价值的一条发现</div><p style="margin-bottom:0">「<strong>单纯把高范数 token 屏蔽掉并不能改善性能</strong>，说明问题不只是几个极端值造成的，而是<strong>与局部 patch 语义损坏更相关</strong>。」</p></div>
+<p><strong>这句话直接解释了你的黑团：</strong>少数 patch 的语义被损坏 → 该 patch 解码成无意义的暗块。因为损坏是<strong>局部的、稀疏的</strong>，所以表现为<strong>2–3 个离散黑团</strong>。这也说明「把异常值 clip 掉」这种直觉做法是错的。</p>
+<p><strong>修复：Dual-Stage Registers (DSR)</strong>——在编码器和去噪器两端都引入 register token（有训练好的就用训练的，没有就用递归测试时 register，去噪器用 diffusion register）。跨 ImageNet 与大规模文生图，均能<strong>稳定减少 outlier 伪影并提升生成质量</strong>。</p>
+</div></div>
+
+<h3 id="s2-4">D · 训练数据</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">D1 · 训练数据里的暗色残影被学到</div><div class="v">社区实践 + CompVis #384 讨论串</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>社区发现：当训练数据里含有<strong>水印、文字、logo、深色污点</strong>时，模型会学到「某类图像应该带一个暗团」，并在<strong>无关位置凭空补出来</strong>。这是 SD 早期蓝黑团块的另一个来源。</p>
+<p>缓解手段：数据清洗（最难但最有效）、负向提示词（hack）。</p>
+<div class="box warn"><div class="bt">对你的直接含义</div><p style="margin-bottom:0">如果 BCI/MIST 训练集里存在<strong>系统性重复出现的暗色伪影</strong>（同一台扫描仪、同一批切片、同一个记号笔习惯），模型极可能把它们当成「应该有的东西」而复现。排查方法：<strong>统计黑团出现的位置是否与某个扫描仪/批次相关</strong>。</p></div>
+</div></div>
+
+<h2 id="s3"><span class="num">3</span>虚拟染色特有的成因</h2>
+<p>这一节是通用文献<strong>不会告诉你</strong>的部分——它们是病理图像这个领域独有的。</p>
+
+<h3 id="s3-1">E · 真实病理图像里本来就有暗色伪影</h3>
+<div class="card">
+<div class="ch"><div><div class="title">E1 · WSI 的六类固有伪影</div><div class="v">HistoART, arXiv 2507.00044（FDA/CDRH）</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>该工具针对全切片图像（WSI）的<strong>六类常见伪影</strong>：</p>
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">伪影类型</th><th style="width:22%">视觉表现</th><th>与「黑团」的关系</th></tr></thead>
+<tbody>
+<tr><td><strong>组织褶皱</strong>（tissue folds）</td><td><strong>深色重叠区</strong>，因组织层数叠加导致吸收增强</td><td><span class="b bad">高度相关</span> 褶皱在 IHC 里就是深色块</td></tr>
+<tr><td>离焦区域</td><td>模糊、对比度低</td><td>间接（模糊区易触发幻觉）</td></tr>
+<tr><td><strong>气泡</strong>（air bubbles）</td><td>暗色环状或圆形区域</td><td><span class="b medium">相关</span> 可呈暗团</td></tr>
+<tr><td>组织损伤</td><td>撕裂、挤压变形</td><td>间接</td></tr>
+<tr><td><strong>记号笔痕迹</strong>（marker traces）</td><td><strong>深色、高饱和的涂抹块</strong></td><td><span class="b bad">高度相关</span> 笔迹是典型的深色团块</td></tr>
+<tr><td>血液污染</td><td>暗红色弥散区</td><td><span class="b medium">相关</span></td></tr>
+</tbody></table></div>
+<p>检测性能：微调 UNI 基础模型 patch 级 AUROC <strong>0.995</strong>（ResNet50 为 0.977，手工特征为 0.940），在 50,000+ patch、多厂商扫描仪（Hamamatsu / Philips / Leica Aperio AT2）上验证。</p>
+<div class="box key"><div class="bt">为什么这对你是关键信息</div>
+<p style="margin-bottom:0">这说明<strong>「深色团块」在真实病理图像里是常态，不是异常</strong>。所以：<strong>你的模型产生黑团，可能不是「生成错误」，而是「忠实复现了训练数据里的真实伪影」</strong>。这两种情况的处理方式完全相反——前者要修模型，后者要清洗数据。<strong>必须先分清是哪一种。</strong></p></div>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E2 · IHC 染色本身的暗色伪影</div><div class="v">IHC/DAB 标准故障排查文档（Thermo Fisher / Boster / 试剂厂商技术中心）</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>真实 IHC 切片上就存在多种<strong>深色伪影</strong>，它们都会被模型当作「正确的目标」学到：</p>
+<ul>
+<li><strong>DAB 沉淀（precipitate）</strong>——显色剂析出形成<strong>深棕色/近黑色斑点或团块</strong>，是 IHC 最常见的伪影之一</li>
+<li><strong>过染（over-staining）</strong>——苏木素或 DAB 浓度/时间过度 → 局部死黑</li>
+<li><strong>背景染色过高</strong>——非特异性结合导致整体发暗</li>
+<li><strong>干片伪影</strong>——试剂蒸发留下的深色边缘</li>
+</ul>
+<p>厂商排查文档给出的根因包括：显色时间过长、抗体浓度过高、封闭不充分、洗涤不彻底、切片干燥等。</p>
+<div class="box warn"><div class="bt">对你的直接含义</div><p style="margin-bottom:0">如果 BCI/MIST 的 IHC 标注图里存在 DAB 沉淀或过染区域，模型会把它们当成<strong>目标分布的一部分</strong>去学习。<strong>尤其是非配对设定</strong>——你无法用逐像素损失惩罚它，模型完全有自由在 H&amp;E 上「贴」出这样的暗团。</p></div>
+</div></div>
+
+<h3 id="s3-2">F · 结构幻觉 —— 最符合「2–3 个离散黑团」的机制</h3>
+<div class="card">
+<div class="ch"><div><div class="title">F1 · 条件图像里的 OOD 区域触发幻觉</div><div class="v">Tackling Structural Hallucination in Image Translation with Local Diffusion, arXiv 2404.05980（ECCV 2024, UCL + AstraZeneca）</div></div><div><span class="b high">定位性</span> <span class="b high">最贴合</span></div></div>
+<div class="body">
+<p><strong>这篇是我认为最贴合你问题的一篇。</strong>它把这类失败模式正式定义为 <strong>structural hallucination（结构幻觉）</strong>：模型生成<strong>看起来合理、但结构错误</strong>的重建结果。</p>
+<p><strong>核心命题：</strong>幻觉由<strong>条件图像中的局部 OOD（分布外）区域</strong>引起。</p>
+<h4>为什么 OOD 会触发幻觉（论文的理论论证）</h4>
+<ul>
+<li>标准反向过程估计 <code>p(x_{t−1} | x_t)</code>，它<strong>以「部分加噪的数据」为条件，因此是不精确的</strong>。</li>
+<li>当某区域是 OOD 时，把它与图像其余部分<strong>混在一起</strong>会产生<strong>跨区域干扰</strong>：OOD 成分在预测正常区域时充当了「无关噪声」，反之亦然。</li>
+<li>论文证明：把估计和条件都<strong>按 IND/OOD 分区</strong>后能得到更紧的 ELBO 界（<code>ELBO ≤ ELBO_partition</code>）。<strong>不分区就会幻觉。</strong></li>
+</ul>
+<h4>实证证据（很能说明问题）</h4>
+<ul>
+<li>只在数字 <strong>8</strong> 上训练的 DDPM，给它一个 <strong>3</strong> → 产生幻觉</li>
+<li>只在<strong>健康脑</strong>上训练的 DDPM，给它<strong>带肿瘤的脑</strong> → 把肿瘤「修复」成健康组织</li>
+<li><strong>边界敏感：</strong>「微小的边界调整会导致显著的预测差异」——说明 OOD 定位的准确性至关重要</li>
+</ul>
+<h4>伪影在反向过程的哪个阶段形成</h4>
+<div class="box stop"><div class="bt">关键时序发现</div><p style="margin-bottom:0">幻觉<strong>主要发生在反向过程的早期和中期</strong>，末期基本不受影响。从更靠近末尾处开始反向过程，能同时改善图像质量与结构准确度（Dice、SSIM 均提升）。这与「模型先捕捉低频结构、再细化高频细节」的规律一致。</p></div>
+<h4>修复：Local Diffusion（免训练，可插入任意预训练扩散模型）</h4>
+<ol>
+<li><strong>OOD 估计</strong>——用 <strong>PatchCore</strong>（单类分类，WideResNet-50 主干）生成条件图像的 OOD 概率图；无需训练、无需 OOD 样本</li>
+<li><strong>分支</strong>——把条件拆成 <code>cond^ood</code> 与 <code>cond^ind</code> 两个掩码图，<strong>并行跑两路局部生成</strong></li>
+<li><strong>融合</strong>——朴素拼接会产生边界伪影，需用融合算子合成（论文 Eq.8），之后反向过程等价于标准 DDPM 采样</li>
+<li><strong>调度</strong>——<strong>早期分支</strong>（抢在幻觉热点形成前）、<strong>后期融合</strong>（恢复真实感）；切换点由一个辅助分类器分数决定</li>
+</ol>
+<h4>数字</h4>
+<div class="scroll"><table>
+<thead><tr><th>任务</th><th class="c">基线 DDPM</th><th class="c">+ Local Diffusion</th><th class="c">提升</th></tr></thead>
+<tbody>
+<tr><td>BraTS 肿瘤 Dice ↑</td><td class="c">0.194</td><td class="c"><strong>0.590</strong></td><td class="c"><strong>≈3×</strong></td></tr>
+<tr><td>MVTec 异常准确率 % ↑</td><td class="c">58.4</td><td class="c"><strong>85.0</strong></td><td class="c">+21.2</td></tr>
+<tr><td>MNIST 准确率 % ↑</td><td class="c">95.7</td><td class="c"><strong>98.0</strong></td><td class="c">+1.5</td></tr>
+</tbody></table></div>
+<p>论文宣称在真实医学数据上<strong>降低误诊风险 40%</strong>，自然图像上 25%。</p>
+<div class="box key"><div class="bt">为什么我认为这就是你的主因（高置信度假设）</div>
+<p>把这条机制映射到 H&amp;E→IHC：</p>
+<ol>
+<li>H&amp;E 输入里出现<strong>训练集罕见的形态</strong>——比如密集淋巴细胞浸润区、坏死区、出血区、黏液湖、钙化灶、异物肉芽肿。这些在 H&amp;E 上<strong>本身就是深色/高细胞密度区域</strong>。</li>
+<li>这些区域对模型是 <strong>OOD</strong>。</li>
+<li>模型不知道该怎么染 → <strong>编造出一个密集深色细胞团</strong>。</li>
+<li>结果就是你看到的：<strong>2–3 个看起来像细胞团、但其实是幻觉的黑团</strong>。</li>
+</ol>
+<p style="margin-bottom:0">这个假设的<strong>可证伪预测</strong>：黑团应该出现在 <strong>H&amp;E 输入本身就异常/罕见的位置</strong>，且<strong>换 seed 后仍然出现在同一位置</strong>（因为它由条件决定，不由随机性决定）。第 4 节的诊断流程第 1、7 步就是在验证这一点。</p></div>
+</div></div>
+
+<h3 id="s3-3">G · 光密度 / Beer–Lambert 饱和</h3>
+<div class="card">
+<div class="ch"><div><div class="title">G1 · 浓度或 OD 预测溢出导致死黑</div><div class="v">与你 R2/R4 报告中的物理输出头直接相关</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>Beer–Lambert 定律：<code>X̄ = (x̄₀·1ᵀ) ⊙ exp(−S·Dᵀ)</code>，其中光密度 <code>OD = −log(I/I₀)</code>。</p>
+<p><strong>风险链条：</strong></p>
+<pre><code>扩散模型预测浓度/OD → 某处浓度预测过大
+   → OD 数值很大
+   → exp(−OD) → 趋近 0
+   → 该像素 RGB 趋近全黑
+   → 表现为「硬边纯黑团」</code></pre>
+<p>反过来，若在 RGB 空间训练，则不会出现这种<strong>结构性</strong>的饱和；但会失去物理合规性。<strong>这是一个真实的两难。</strong></p>
+<div class="box warn"><div class="bt">如果你已经采用了物理输出头，这一条要优先排查</div><p style="margin-bottom:0">鉴别特征：黑块<strong>边界锐利、像素值精确贴 0</strong>，且<strong>在 OD/浓度图上能看到该处数值远超正常范围</strong>。解法不是调采样参数，而是<strong>给浓度/OD 预测加上界（clamp / softplus + 上限）或换用有界的参数化</strong>。</p></div>
+</div></div>
+
+<h3 id="s3-4">H · 非配对设定与残差路径</h3>
+<div class="card">
+<div class="ch"><div><div class="title">H1 · 非配对训练的实例级不可控</div><div class="v">你在 R2 报告中已确认的理论结论</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>非配对设定下 <code>p(IHC|H&amp;E)</code> 的 coupling <strong>不可辨识</strong>；cycle consistency 只保证<strong>分布匹配</strong>，不保证<strong>实例正确</strong>。含义是：模型有充分的自由度把某个暗色模式「贴」到语义上不匹配的位置，而分布级指标（FID）<strong>不会报警</strong>。</p>
+<p>这正是为什么黑团能在 FID 看起来正常的情况下持续存在——<strong>它是实例级失败，分布级指标看不见</strong>。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">H2 · 残差扩散的路径数值冲突</div><div class="v">Star-Diff（arXiv 2508.02528）路径相关</div></div><div><span class="b high">定位性</span></div></div>
+<div class="body">
+<p>Star-Diff 把任务改写为 restoration diffusion：</p>
+<pre><code>x_t = x_0 + ᾱ_t·ε + β̄_t·I_res
+I_res = I_IHC − I_HE</code></pre>
+<p><strong>风险点：</strong>在 H&amp;E 与 IHC 亮度差异极大的区域（例如密集深染细胞核区——H&amp;E 上已是很深的紫色，IHC 上是强 DAB 棕色），<code>I_res</code> 的幅值会显著高于平均。若残差 U-Net 的预测在该处失控，<code>x_t</code> 会被推向异常值，反向过程在该局部崩塌 → 黑团。</p>
+<p><strong>鉴别特征：</strong>黑团位置应与<strong>H&amp;E 上细胞密度最高、染色最深的区域</strong>重合。这可以直接验证。</p>
+</div></div>
+
+<h2 id="s4"><span class="num">4</span>诊断流程（决策树）</h2>
+<p>不要靠猜。下面 12 步按<strong>信息增益从高到低</strong>排序，通常走到第 3–5 步就能定位。</p>
+
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>第 1 步  换 5 个 seed，重新生成同一张 H&E 的 IHC
+        ├─ 黑团总在【同一位置】 → 由【条件】决定 → 跳到第 7 步
+        └─ 黑团【位置随机】     → 由【采样/解码】决定 → 继续第 2 步
+
+第 2 步  把同一张 H&E 走一遍 VAE 编码→解码（不经过扩散）
+        ├─ 重建图【就有黑团】 → 确定是【解码器/潜空间】问题 → 跳到第 9 步
+        └─ 重建图【干净】     → 问题出在扩散过程本身 → 继续第 3 步
+
+第 3 步  强制 fp32 做 VAE 解码（禁用 fp16/autocast）
+        ├─ 黑团【消失】 → 数值溢出（A3）→ 换 sdxl-vae-fp16-fix 或常驻 fp32
+        └─ 仍在       → 继续第 4 步
+
+第 4 步  把 guidance scale 降到 1.0（等价关闭 CFG）
+        ├─ 黑团【消失或明显减弱】 → CFG 过饱和（B1）→ 上 APG，η=0
+        └─ 仍在                → 继续第 5 步
+
+第 5 步  逐步增加采样步数（如 20 → 50 → 100）
+        ├─ 黑团【消失】 → 采样不足（B3）
+        └─ 仍在       → 继续第 6 步
+
+第 6 步  可视化潜空间，检查是否存在【异常通道/异常位置】
+        · 逐通道计算统计量，找方差或幅值离群的通道
+        · 把可疑通道置零后重新解码，看黑团是否消失
+        ├─ 定位到离群通道 → 潜空间异常（A1/A2）→ 见第 9 步
+        └─ 未定位到     → 继续第 7 步
+
+第 7 步  检查 H&E 输入在黑团对应位置【本身是否异常/罕见】
+        · 该处是否是密集淋巴细胞浸润、坏死、出血、黏液、钙化？
+        · 用 PatchCore 或异常检测模型给 H&E 算 OOD 分数图
+        ├─ 该处 OOD 分数高 → 结构幻觉（F1）→ 上 Local Diffusion 思路
+        └─ 该处正常       → 继续第 8 步
+
+第 8 步  取真实 IHC 对照，检查同位置是否【本来就有暗色伪影】
+        · 褶皱？笔迹？气泡？DAB 沉淀？过染？
+        ├─ 真实图也有 → 【不是模型错误】，是数据问题 → 见第 10 步
+        └─ 真实图没有 → 继续第 9 步
+
+第 9 步  检查是否用了物理输出头（浓度/OD → Beer-Lambert）
+        · 画出 OD/浓度图，看黑团处数值是否溢出
+        ├─ 溢出 → 光密度饱和（G1）→ 加值域约束
+        └─ 未溢出 → 继续第 11 步
+
+第 10 步 统计黑团位置与【扫描仪/批次/切片】的相关性
+        · 是否集中在某台扫描仪、某批切片、某个染色批次？
+        ├─ 相关 → 训练数据系统性伪影（D1/E1/E2）→ 清洗数据 + 加伪影检测过滤
+        └─ 不相关 → 继续第 11 步
+
+第 11 步 检查 H&E 上黑团位置的【细胞密度/染色深度】
+        ├─ 都在最深的区域 → 残差路径数值冲突（H2）→ 对 I_res 做归一化/截断
+        └─ 无规律      → 继续第 12 步
+
+第 12 步 用 DiT 的 register token 干预（若是 DiT 架构）
+        · 统计中间层 token 范数分布，找离群 token
+        · 注意：不要简单 mask 掉，那已被证明无效
+        → 上 Dual-Stage Registers (DSR)</code></pre></div>
+
+<div class="box good"><div class="bt">最省时的顺序</div><p style="margin-bottom:0">如果只做三步，就做<strong>第 1 步（换 seed）、第 2 步（纯 VAE 重建）、第 7 步（H&amp;E 该处是否 OOD）</strong>。这三步分别回答「是条件问题还是采样问题」「是不是解码器」「是不是幻觉」，覆盖了绝大多数情况。</p></div>
+
+<h2 id="s5"><span class="num">5</span>解决方案总表</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:8%" class="c">成因</th><th style="width:22%">解决方案</th><th style="width:12%" class="c">改动成本</th><th style="width:12%" class="c">可复现性</th><th>说明与出处</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>A1</strong></td><td>换用重新微调的 VAE</td><td class="c"><span class="b high">极低</span></td><td class="c"><span class="b high">高</span></td><td>CompVis #384 社区验证；对纹理类仍不彻底</td></tr>
+<tr><td class="c"><strong>A2</strong></td><td>收紧潜空间：加 KL 权重 / 约束采样范围 / TopVAE 式拓扑优化解码器</td><td class="c"><span class="b bad">高</span></td><td class="c"><span class="b medium">中</span></td><td>TopVAE（2606.13955）思路，需重训 VAE</td></tr>
+<tr><td class="c"><strong>A3</strong></td><td>VAE 常驻 fp32，或用 fp16-fix 版 VAE</td><td class="c"><span class="b high">极低</span></td><td class="c"><span class="b high">高</span></td><td>sdxl-vae-fp16-fix；代价是显存略增</td></tr>
+<tr><td class="c"><strong>B1</strong></td><td>换 APG 替代 CFG（η=0）</td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">高</span></td><td>即插即用，开销可忽略；<strong>投影必须作用在去噪预测上</strong></td></tr>
+<tr><td class="c"><strong>B2</strong></td><td>zero terminal SNR + v-prediction + 从最后一步采样</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td><td>需重训；你在 R3 已有详细方案</td></tr>
+<tr><td class="c"><strong>C1</strong></td><td>引入 register token（DSR）</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b medium">中</span></td><td><strong>不要 mask 高范数 token</strong>，已被证明无效</td></tr>
+<tr><td class="c"><strong>D1</strong></td><td>训练数据清洗 + 负向约束</td><td class="c"><span class="b bad">高</span></td><td class="c"><span class="b high">高</span></td><td>最难但最根本；先做相关性统计再动手</td></tr>
+<tr><td class="c"><strong>E1/E2</strong></td><td>用 HistoART / UNI 做伪影检测，过滤训练 patch</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td><td>AUROC 0.995；同时可用于<strong>生成结果的质量筛</strong></td></tr>
+<tr><td class="c"><strong>F1</strong></td><td>Local Diffusion：OOD 检测 + 分支 + 融合（免训练）</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td><td>BraTS Dice 0.194→0.590；<strong>免训练、可插入现有模型</strong></td></tr>
+<tr><td class="c"><strong>G1</strong></td><td>浓度/OD 预测加值域约束（clamp / 有界参数化）</td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">高</span></td><td>若已用物理输出头，这是必做项</td></tr>
+<tr><td class="c"><strong>H1</strong></td><td>加实例级约束（PCLS 式原型一致性 / 逐实例判别）</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td><td>你已有 PCLS，可直接复用</td></tr>
+<tr><td class="c"><strong>H2</strong></td><td>对 <code>I_res</code> 做归一化或幅值截断</td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">高</span></td><td>仅当采用 Star-Diff 式残差扩散时相关</td></tr>
+</tbody></table></div>
+
+<h2 id="s6"><span class="num">6</span>你项目的具体建议</h2>
+
+<div class="box key"><div class="bt">我的判断（2026-10-04 更新）</div>
+<p>按「2–3 个离散黑团」这个症状，原先判断最可能的主因是 <strong>F1（结构幻觉）</strong>，其次是 <strong>A1/A2（潜空间解码失败）</strong>。</p>
+<p><strong>收到你的实测反馈后修正：</strong>既然 fp16 与 fp32 下黑团都出现，<strong>A3 已排除</strong>；而你描述的「潜码落到 VAE 未见区域 → decoder 输出 ≤ −1 → clamp 成纯黑」这个机制链，说明 <strong>A1/A2 已经被你直接观察到</strong>。</p>
+<p style="margin-bottom:0">因此当前主因排序改为：<strong>A1/A2（潜空间流形覆盖不足）为第一顺位</strong>；<strong>F1（结构幻觉）仍需用 §7 的诊断 1 排除</strong>——因为换 VAE 治不了幻觉，两者必须分开确认。详见 <a href="#s7">第 7 节</a>。</p></div>
+
+<h3>建议的排查顺序（半天内可完成）</h3>
+<ol>
+<li><strong>换 5 个 seed 重跑同一张 H&amp;E。</strong> 这一步就能把问题对半分——位置固定 → 条件/数据问题；位置随机 → 采样/解码问题。成本几乎为零，信息量最大。</li>
+<li><strong>纯 VAE 重建测试。</strong> 把 H&amp;E 走一遍 encode→decode（不经过扩散）。若重建图就有黑团，问题不在扩散，而在 VAE——那 A1/A2/A3 就是答案，后面的步骤都不用做了。</li>
+<li><strong>检查黑团位置的 H&amp;E 是否 OOD。</strong> 把黑团坐标对应回 H&amp;E，看该处是否是密集淋巴细胞区、坏死区、出血区等罕见形态。若是，F1 基本坐实。</li>
+<li><strong>取真实 IHC 对照。</strong> 看同位置真实切片上是否本来就有暗色伪影（褶皱/笔迹/DAB 沉淀）。若有，说明这是数据问题而非模型问题。</li>
+</ol>
+
+<h3>按结果分派</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">若确认是 F1（结构幻觉）</div><p><strong>不要</strong>去调采样参数，那无效。</p><p>做两件事：① 用 PatchCore 给 H&amp;E 算 OOD 图，把 OOD 区域标出来；② 参考 Local Diffusion 的分支—融合思路，对 OOD 区域单独处理。这是<strong>免训练</strong>的，可以立刻在现有模型上试。</p><p>同时把 OOD 图作为<strong>可信性证据</strong>输出——这正是你 R2 报告里「不确定性图」模块 M3 的天然实现。</p></div>
+<div class="mini"><div class="mt">若确认是 A1/A2（潜空间）</div><p>先试最便宜的：换 VAE、VAE 常驻 fp32。这两步成本极低。</p><p>若仍不解决，考虑<strong>收紧潜空间</strong>——但注意这要重训 VAE，成本高。一个折中：在采样末端对潜变量做 soft clamp，把明显越界的维度拉回训练分布范围。</p></div>
+<div class="mini"><div class="mt">若确认是 G1（OD 饱和）</div><p>给浓度/OD 预测加<strong>有界参数化</strong>。最简单：输出过 <code>softplus</code> 后再乘一个可学习上界，或用 <code>sigmoid</code> 映射到 [0, C_max]。</p><p>这是物理输出头的<strong>必做项</strong>，不做就一定会偶发死黑。建议在你 R2 报告的 M1 模块里直接加进去。</p></div>
+<div class="mini"><div class="mt">若确认是 E（数据伪影）</div><p>不要试图让模型「学会不生成」——非配对设定下你没有这个监督信号。</p><p>正确做法是<strong>在数据侧过滤</strong>：用 HistoART 式的方法（UNI 微调，AUROC 0.995）先把带伪影的 patch 挑出来。这同时能提升训练集质量。</p></div>
+</div>
+
+<h3>无论哪种成因都值得做的两件事</h3>
+<div class="box good"><div class="bt">① 建立伪影回归测试集</div><p style="margin-bottom:0">挑 20–30 张<strong>会稳定产生黑团</strong>的 H&amp;E，固定 seed，每次改动后重跑，统计黑团的<strong>数量、面积、位置</strong>。没有这个基线，你无法判断改动是有效还是碰巧。这比看单张图可靠得多。</p></div>
+<div class="box good"><div class="bt">② 把伪影检测接进评价体系</div><p style="margin-bottom:0">你 R2 报告里的四层评价缺少<strong>「伪影层」</strong>。建议加一层：用 AQuA（无需真值的幻觉检测）或简单的暗块检测器，把<strong>伪影率</strong>作为独立指标。理由：黑团是<strong>实例级失败</strong>，FID/PSNR 这类分布级指标<strong>看不见它</strong>——这正是它能在指标正常的情况下长期存在的原因。</p></div>
+
+<div class="box stop"><div class="bt">一个必须避免的误区</div><p style="margin-bottom:0">不要把黑团当作「调参没调好」去反复试采样器、步数、CFG。CompVis #384 的报告者已经明确说过：<strong>换采样器、换步数、调 CFG 基本没有效果</strong>。如果你的黑团是定位性的，那么全局性的调参<strong>在原理上就不可能解决它</strong>——方向错了，试多久都是浪费。</p></div>
+
+<h2 id="s7"><span class="num">7</span>实测反馈后的方案收窄（2026-10-04 更新）</h2>
+<p>这一节是新的。你把实测结果反馈回来后，11 类成因可以收窄到 1 类，方案也随之明确——而且其中一个方向有<strong>直接对口的论文证据</strong>。</p>
+
+<div class="box key"><div class="bt">你的实测把 11 类成因砍到 1 类</div>
+<p>你补充的两条实测证据，各自排除了一整类成因：</p>
+<ul>
+<li><strong>训练侧</strong>（loss NaN、梯度 inf、采样全黑）→ 根因是 UNet 前向超出 fp16 指数范围 → <strong>bf16 根治</strong>。这条本身是标准结论：bf16 的指数位宽与 fp32 相同（8 位），量程一致，溢出问题从根上消失。代价是尾数位从 10 位降到 7 位，精度略低——但对溢出来说这是正确的取舍。</li>
+<li><strong>采样侧</strong>（局部黑团、其余部分正常）→ 潜码局部落到 SD1.5 VAE 未见过的区域 → decoder 输出极端值 ≤ −1 → 被 clamp 成纯黑。</li>
+<li><strong>决定性的一条：fp16 与 fp32 采样下黑团都出现，fp32 照样有。</strong> 这把 §0 总表里的 <strong>A3（fp16 数值溢出）直接划掉</strong>，同时把 <strong>A1/A2（潜空间解码失败）从「高吻合度」提升为「确认」</strong>。</li>
+</ul>
+<p style="margin-bottom:0"><strong>注意这两条是两个独立的故障，不是同一问题的两种表现。</strong> 训练侧是<strong>数值表示范围</strong>问题（已根治）；采样侧是<strong>潜空间流形覆盖</strong>问题（未根治）。把它们混在一起讨论，是之前反复调参无效的原因之一。</p></div>
+
+<div class="box good"><div class="bt">§0 的定位性判据被证实了</div>
+<p style="margin-bottom:0">本报告 §0 的核心论证是「<strong>2–3 个离散黑团这个形态本身排除了全局性成因</strong>」。你的实测——fp32 下依然存在、且是局部的——完全印证了这条判据：<strong>B 类（CFG / 噪声调度 / 采样步数）确实不是主因，A 类（潜空间）确实是。</strong> 同时也说明「不要去调采样参数」这条建议是对的。</p></div>
+
+<h3 id="s7-1">为什么分位数 clamp 只能减半，不能根治</h3>
+<p>你的 clamp 把潜码限制在「真实 IHC 潜码 0.05%/99.95% 分位」构成的箱体内。它减半而不根治，有四个各自独立的原因——理解这四个原因，才知道下一步该往哪儿改：</p>
+<div class="grid2">
+<div class="mini"><div class="mt">① 箱体不是流形</div><p>真实潜码分布是一个<strong>弯曲、低维、薄的流形</strong>；clamp 定义的是一个<strong>轴对齐超矩形</strong>。</p><p>潜码维度是 4×64×64 = <strong>16384 维</strong>。在高维空间里箱体体积远大于流形体积——<strong>箱内绝大多数点仍在流形外</strong>。clamp 只能砍掉「离群到箱外」的部分，箱内的非法点原样保留。</p></div>
+<div class="mini"><div class="mt">② 全局分位数忽略逐通道各向异性</div><p>SD VAE 的 4 个潜通道方差差异很大。用一个跨通道的全局分位数，会让<strong>天然小方差的通道即使偏离 5σ 也仍在箱内</strong>。</p><p>改法：逐通道标准化后再 clamp——<code>z_c ← μ_c + clip((z_c−μ_c)/σ_c, −k, k)·σ_c</code>，k≈3。</p></div>
+<div class="mini"><div class="mt">③ 末端补救来不及</div><p>如果只在解码前 clamp 一次，采样过程中的越界<strong>已经影响了后续所有步的走向</strong>。</p><p>而且 Local Diffusion 的结论是：伪影在反向过程的<strong>早期/中期就已形成</strong>。等到末端再拉回，轨迹早已走偏。</p></div>
+<div class="mini"><div class="mt">④ 它约束边缘分布，不是联合分布</div><p>clamp 逐维限制取值范围，但潜码的非法性往往体现在<strong>维度之间的联合关系</strong>上（例如某两个通道的比值异常）。</p><p>逐维约束对这种失败完全无效——这是「箱体不是流形」的另一种表述。</p></div>
+</div>
+<p class="small">小结：clamp 是一个<strong>凸的外逼近</strong>，它能砍掉明显越界的离群点（这就是「减半」的来源），但抓不住「箱内但非法」的点。要真正解决，必须要么<strong>收紧到流形附近</strong>，要么<strong>扩大流形的覆盖范围</strong>。</p>
+
+<h3 id="s7-2">解法阶梯（按「改动成本 × 预期收益」排序）</h3>
+
+<h4>Tier 0 · 先做两个诊断（半天，零训练成本）</h4>
+<div class="card">
+<div class="ch"><div><div class="title">诊断 1 · 黑团位置是否与「DAB 最强 / 蛋白表达最高」的区域重合</div><div class="v">可证伪的预测，一次就能验</div></div><div><span class="b high">零成本</span></div></div>
+<div class="body">
+<p><strong>推理链：</strong>H&amp;E 与 IHC 的主要差异就是 DAB 沉积。如果 VAE 的流形是自然图像形状的，那么<strong>越偏离自然图像的区域（强 DAB 的深棕色）流形越薄</strong>，越容易落进盲区。</p>
+<p><strong>预测：</strong>黑团应该落在 <strong>DAB 最强、蛋白表达最高</strong>的位置，而不是随机分布。</p>
+<p><strong>做法：</strong>把黑团坐标映射回对应的真实 IHC 切片，看该处是否是最强表达区（HER2 3+ 的膜强染、Ki67 的高增殖区）。</p>
+<p><strong>若成立：</strong>直接坐实「流形在 IHC 偏离 H&amp;E 最远处最薄」，Tier 3 的优先级立刻升到最高。</p>
+</div></div>
+
+<div class="card">
+<div class="ch"><div><div class="title">诊断 2 · AE 重建上限测试（论文给出的筛选判据）</div><div class="v">arXiv 2604.12152 的核心方法</div></div><div><span class="b high">零成本</span><span class="b purple">可直接复用</span></div></div>
+<div class="body">
+<p>该论文最重要的实用结论：<strong>VAE 单独的重建质量（纯 encode→decode，不经过扩散）是下游扩散质量的绝对上限，且可预测下游表现（R² = 0.67, Pearson r = 0.82, p &lt; 0.001）。</strong></p>
+<p>换句话说——<strong>你不需要训练扩散模型，就能先筛掉不合格的 VAE。</strong></p>
+<p><strong>具体做法（分层是关键）：</strong></p>
+<pre><code>对真实 IHC patch：
+  1. z = E(IHC)；ÎHC = D(z)          # 纯 AE 往返，无扩散
+  2. 计算重建 PSNR / SSIM
+  3. 【分层统计】按该 patch 的 DAB 强度 / 平均光密度分组
+       · 低 DAB 组 vs 高 DAB 组，各自的重建 PSNR
+  4. 判据：
+       若高 DAB 组的重建 PSNR 显著低于低 DAB 组
+         → 流形在 IHC 偏离 H&amp;E 最远处最薄 → 坐实根因
+       若两组接近
+         → 流形覆盖没问题，回头查 F1（结构幻觉）</code></pre>
+<p class="small">这一步同时给你一个<strong>可量化的 VAE 筛选基线</strong>：任何候选 VAE 换进来之前，先在真实 IHC 上量它的 AE 上限。上限低，扩散训得再好也白搭。</p>
+</div></div>
+
+<h4>Tier 1 · 推理期收紧（改动小，无需重训）</h4>
+<div class="scroll"><table>
+<thead><tr><th style="width:26%">手段</th><th style="width:12%" class="c">改动</th><th>做法与理由</th></tr></thead>
+<tbody>
+<tr><td><strong>逐通道标准化 clamp（每步都做）</strong></td><td class="c"><span class="b high">极低</span></td><td>把全局分位数换成逐通道 μ±kσ（k≈3），且<strong>在每一步去噪后都施加</strong>，而不是只在末端。直接修掉「原因②」和「原因③」。约 5 行代码。</td></tr>
+<tr><td><strong>事件触发的编码器回投</strong></td><td class="c"><span class="b high">低</span></td><td>检测到 x̂₀ 越界时，做 <code>z ← E(D(z))</code>。<strong>编码器本身就是一个学到的「投回流形」算子</strong>——它把任意图像映到一个解码器能正常处理的潜码。注意诚实地说：这会把<strong>硬黑团变成软暗区</strong>，是缓解而非修复内容。</td></tr>
+<tr><td><strong>潜码低通（3×3 高斯）</strong></td><td class="c"><span class="b high">低</span></td><td>解码器崩溃常伴随潜码高频能量异常。对潜码做轻度低通后再解码。理由：真实潜码是空间平滑的，OOD 潜码往往不是。<strong>此条为待验证的假设</strong>，请自行做对照实验。</td></tr>
+<tr><td><strong>区域级物理回退</strong></td><td class="c"><span class="b medium">中</span></td><td>检测出黑团区域后，该区域<strong>改用物理模型渲染</strong>（你的 M1 物理输出头 / Beer–Lambert 前向），再与扩散结果融合。逻辑自洽：<strong>学习模型失效的地方，正是物理先验该接管的地方。</strong> 与你 R2 报告的 M1/M3 模块天然衔接。</td></tr>
+</tbody></table></div>
+
+<h4>Tier 2 · 训练期锚定（改动中，需重训）</h4>
+<div class="card">
+<div class="ch"><div><div class="title">潜空间锚定损失 —— 从源头减少越界</div><div class="v">原理性修法，实现简单</div></div><div><span class="b medium">需重训</span><span class="b high">可复现</span></div></div>
+<div class="body">
+<p>思路：既然越界是问题，就<strong>在训练时直接惩罚越界的 x̂₀</strong>。用真实潜码的逐通道统计量（μ_c, σ_c）做标准化，对超出 k 倍标准差的量加惩罚：</p>
+<pre><code>L_anchor = λ · mean( ReLU( |(x̂₀ − μ) / σ| − k )² )     # k ≈ 3
+
+总损失 = L_diffusion + L_PALS + L_PCLS + L_anchor</code></pre>
+<p>优点：① 与 PSPStain 原有两个 loss <strong>不冲突</strong>，是纯增量项；② 完全可复现（μ、σ 从真实 IHC 潜码统计即可）；③ 可解释（就是「别预测出解码器处理不了的东西」）。</p>
+<p class="small">λ 建议先取小值（如 0.01–0.05），观察是否影响生成质量。</p>
+</div></div>
+
+<h4>Tier 3 · 换 / 微调 VAE —— 文献证明的主导因素</h4>
+
+<div class="box good"><div class="bt">★ 2026-10-04 新增：存在可直接下载的「drop-in」病理 VAE，且无需重训扩散模型</div>
+<p><strong>StonyBrook-CVLab/sd-vae-ft-ema-path</strong>（HuggingFace，83.7M 参数，safetensors，F32）</p>
+<p>来源：MICCAI 2025 <em>Pathology Image Compression with Pre-trained Autoencoders</em>（arXiv 2503.11591，Stony Brook / Argonne / UChicago）。基座是 <code>stabilityai/sd-vae-ft-ema</code>，即 <strong>SD 1.5 VAE（KL-f8-c8）</strong>。</p>
+<p><strong>为什么它算 drop-in：</strong>论文<strong>只微调了解码器，编码器完全冻结</strong>。原话：「By preserving the encoder, we ensure that the <strong>AE latent space is unchanged</strong> and we only learn to interpret it differently during reconstruction.」→ 潜码分布不变 → <strong>已有的扩散模型不需要重训</strong>，换解码器即可。</p>
+<p><strong>微调配方（完全可复现）：</strong>TCGA 乳腺 / 结肠 / 前列腺 <strong>2,500 张 WSI、2,400 万 patch</strong>（256×256 @20×）；损失 = <code>L1 + PatchGAN + UNI 感知损失</code>；8×A100 / 12 万步 / lr 5e-5。</p>
+<p><strong>效果：</strong>UNI 嵌入相似度 <strong>0.837 → 0.932</strong>，并超过同压缩比的 JPEG-50（0.904）。</p>
+<pre><code>from diffusers import AutoencoderKL
+vae = AutoencoderKL.from_pretrained("StonyBrook-CVLab/sd-vae-ft-ema-path")</code></pre>
+<p class="small">注意：HF 页面自动生成的示例用的是 <code>DiffusionPipeline</code>——那是通用模板，对这里的用途<strong>不对</strong>，你要的是 <code>AutoencoderKL</code>。</p></div>
+
+<div class="box warn"><div class="bt">两个必须知道的前提</div>
+<p><strong>① 它是在 H&amp;E 病理图上微调的，不是 IHC。</strong> 你的黑团出现在高 DAB 区（IHC 特有），所以这个 VAE 把「自然图像流形」换成了「H&amp;E 病理流形」——<strong>比原来好很多，但没有完全覆盖 IHC</strong>。建议：先直接试；若仍有残留，用同一配方<strong>在你自己的 IHC patch 上再微调一次解码器</strong>（只调解码器，成本低）。</p>
+<p style="margin-bottom:0"><strong>② 若你现在用的是 <code>sd-vae-ft-mse</code> 而非 <code>ft-ema</code></strong>：两者是同一个原始 SD VAE 的两个不同微调版本，架构与潜码形状相同、潜码分布略有差异。实践上可直接试；若出现整体色调 / 对比偏移，就按论文配方自己微调 <code>ft-mse</code> 的解码器。</p></div>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:26%">候选</th><th style="width:14%" class="c">潜码形状</th><th>能否直接用 / 代价</th></tr></thead>
+<tbody>
+<tr style="background:var(--greenSoft)"><td><strong>StonyBrook-CVLab/<br>sd-vae-ft-ema-path</strong></td><td class="c">4×64×64<br><span class="small">与 SD1.5 相同</span></td><td><span class="b high">首选</span> <strong>drop-in，扩散模型无需重训</strong>。仅解码器微调于病理，潜空间不变。</td></tr>
+<tr><td>StonyBrook-CVLab/<br>sd-3.5-large-vae-path</td><td class="c">16 通道</td><td><span class="b medium">需重训</span> 潜码形状不同（16ch）。重建质量最好（UNI 0.978），但必须重训扩散模型。</td></tr>
+<tr><td>StonyBrook-CVLab/<br>dc-ae-f32c32-path</td><td class="c">32 通道 / 32×</td><td><span class="b medium">需重训</span> 压缩最激进（0.3B 参数）。微调后 UNI 0.733 → 0.906。</td></tr>
+<tr><td>StanfordMIMI/MedVAE</td><td class="c">3×64×64</td><td><span class="b bad">不适合</span> 官方发布的 checkpoint <strong>只有 X 光与 MRI/CT，没有病理</strong>（详见下方更正）。</td></tr>
+<tr><td>sdxl-vae-fp16-fix</td><td class="c">4×128×128</td><td><span class="b bad">不相关</span> 只修 fp16 数值溢出，不是领域适配——而精度问题你已排除。</td></tr>
+<tr><td>D-VST / HistDiT</td><td class="c">—</td><td><span class="b bad">无自研 VAE</span> D-VST 用 PixArt-α + SDXL VAE；HistDiT 用冻结的 <code>sd-vae-ft-mse</code>。</td></tr>
+</tbody></table></div>
+
+<div class="box stop"><div class="bt">arXiv 2604.12152 的核心结论（直接对口你的问题）</div>
+<p>论文标题即结论：<strong>Domain-Specific Latent Representations Improve the Fidelity of Diffusion-Based Medical Image Super-Resolution</strong>（arXiv 2604.12152, 2026-04）。</p>
+<p>摘要第一句：「医学图像超分辨的潜扩散模型<strong>普遍沿用为自然照片设计的 VAE</strong>。我们证明这个<strong>默认选择——而不是扩散架构——才是重建质量的主导约束</strong>。」</p>
+<p style="margin-bottom:0">他们做了受控实验：<strong>固定其他所有组件</strong>（UNet 架构、训练目标、噪声调度、评估协议），只把通用 SD VAE 换成领域特定 VAE（MedVAE，105 万张医学图像预训练）→ <strong>PSNR 提升 +2.91 ~ +3.29 dB</strong>，Cohen's d = 1.37–1.86，p &lt; 10⁻²⁰（n = 1,820）。</p></div>
+
+<div class="box key"><div class="bt">为什么这条结论直接解释了「你的 clamp 只能减半」</div>
+<p>该论文做了系统消融：<strong>推理调度（T = 50–1000）、预测目标（x₀-prediction vs ε-prediction）、损失权重、生成架构（DDPM vs rectified flow matching）</strong>。</p>
+<p style="margin-bottom:0">结论是：<strong>没有任何训练侧或推理侧的改动能接近「换 VAE」带来的提升；SD-VAE 与 MedVAE 的差距在所有消融条件下稳定在 ±0.15 dB 以内。</strong> 这正是你观察到的现象——你在采样/解码侧做约束，只能拿回一小部分，因为<strong>瓶颈根本不在这里</strong>。</p></div>
+
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">项目</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><strong>候选 VAE（已更正）</strong></td><td>见上方候选表。<strong>更正说明：</strong>MedVAE 官方发布的 checkpoint 只有 <strong>X 光（胸片 / 乳腺 FFDM）与 MRI / CT</strong>，<strong>不含病理</strong>；且 arXiv 2604.12152 的三个数据集（膝 MRI / 脑 MRI / 胸片）<strong>均未测试病理</strong>。因此该论文的 +2.91~3.29 dB 结论<strong>不能直接外推到病理任务</strong>。病理场景请优先使用上方表中 StonyBrook-CVLab 的病理微调 VAE。</td></tr>
+<tr><td><strong>为什么它（病理微调 VAE）能修好你的黑团</strong></td><td>病理微调<strong>扩大了解码器的有效覆盖范围</strong> → 强 DAB 区域不再是盲区 → 解码不再崩溃。这是<strong>扩大流形覆盖</strong>的路线，与 Tier 1 的「收紧采样」是两条互补的路。</td></tr>
+<tr><td><strong>代价（分两级，务必区分）</strong></td><td><strong>① 仅微调解码器（首推）：</strong>潜空间不变 → <strong>扩散模型无需重训</strong>，成本极低。<br><strong>② 换潜码形状</strong>（MedVAE 3×64×64 / SD3.5 16ch / DC-AE 32ch）：扩散模型<strong>必须重训</strong>——这是最后手段，不是第一步。</td></tr>
+<tr><td><strong>复现资源</strong></td><td>病理微调 VAE 权重：<code>huggingface.co/StonyBrook-CVLab</code>（arXiv 2503.11591）。MedVAE：<code>github.com/StanfordMIMI/MedVAE</code>（仅 X 光 / MRI / CT）。arXiv 2604.12152 的实现：<code>github.com/sebasmos/latent-sr</code>。该论文明确建议<strong>在扩散架构搜索之前完成 VAE 选型</strong>。</td></tr>
+<tr><td><strong>备选路径</strong></td><td>若不便换 VAE：在你自己的 H&amp;E + IHC 数据上<strong>微调 SD VAE 的解码器</strong>（编码器可冻结或轻调），再重算 scaling factor。效果通常不如领域预训练 VAE，但比不动强。注意微调后必须重训扩散模型。</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">一个必须知道的边界条件：换 VAE 治不了幻觉</div>
+<p>同一篇论文还有一个容易被忽略但极重要的发现：<strong>重建保真度与生成幻觉由相互独立的部件控制。</strong> 换 VAE 后 PSNR 涨了约 3 dB，但<strong>两者的幻觉率相当</strong>（Cohen's h &lt; 0.02，跨全部数据集）。</p>
+<p style="margin-bottom:0">对你的直接含义：<strong>换 VAE 治的是「解码失败型黑团」，治不了「幻觉型黑团」。</strong> 所以 Tier 0 的诊断 1 仍然必须做——它决定你面对的是哪一种。如果黑团其实是 F1（结构幻觉），换 VAE 会让你白花重训的成本。</p></div>
+
+<h4>Tier 4 · 绕开（架构级，成本最高）</h4>
+<div class="grid2">
+<div class="mini"><div class="mt">像素空间扩散</div><p>完全不用 VAE，直接在像素空间做扩散 → <strong>整类问题从原理上消失</strong>。</p><p>代价：显存与采样时间显著上升；病理 patch 分辨率高，代价更明显。</p><p>注意：你刚精读的 <strong>Star-Diff</strong> 的公式 <code>x_t = x₀ + ᾱ_t·ε + β̄_t·I_res</code> 是直接在图像空间写的（I_res 由图像相减得到），这条路线天然规避了潜空间问题。</p></div>
+<div class="mini"><div class="mt">混合路线</div><p>潜扩散出主体 + <strong>像素空间精修</strong>只处理被标记的异常区域。</p><p>兼顾效率与稳健性，但管线复杂度上升——按你的优先级（可复现 &gt; 改动小），这条应排在最后考虑。</p></div>
+</div>
+
+<h3 id="s7-3">必须提醒的一个陷阱</h3>
+<div class="box stop"><div class="bt">你的 clamp 可能把「可检测的失败」变成了「不可检测的失败」</div>
+<p>你现在的 clamp 让黑团「减半」。但剩下的那一半<strong>可能因为幅值被压小而变得更不显眼——但它并没有被修复</strong>。</p>
+<p>如果 clamp 把伪影压到了你的质检阈值以下，你就把一个<strong>能被眼睛发现的失败</strong>变成了一个<strong>只有对照真实 IHC 才能发现的失败</strong>。对临床可信性而言，这比留着明显的黑团<strong>更危险</strong>——因为它绕过了你自己的质量把关。</p>
+<p style="margin-bottom:0"><strong>建议的配套动作：</strong>clamp 的同时<strong>记录被 clamp 的像素比例与区域位置</strong>，把它作为一项指标输出。这样「减半」是一个<strong>可观测的改进</strong>，而不是一个<strong>被隐藏的退化</strong>。这条也正好落实 §6 里「把伪影检测接进评价体系」的建议。</p></div>
+
+<h3 id="s7-4">更新后的行动顺序</h3>
+<div class="flow"><pre style="background:none;border:none;padding:0;margin:0"><code>第 1 步（半天）  诊断 1 + 诊断 2
+                 ├─ 黑团落在最强 DAB 区 + 高 DAB 组 AE 重建 PSNR 明显更低
+                 │    → 确认「流形覆盖不足」→ 直奔第 2 步
+                 ├─ 黑团落在罕见形态区（OOD 条件）且 AE 重建正常
+                 │    → 是 F1 结构幻觉 → 走 §6 的 PatchCore + Local Diffusion
+                 └─ 两者都不明显 → 继续第 2 步
+
+第 2 步（半天）  ★ 换 sd-vae-ft-ema-path 解码器 —— 全方案性价比最高的一步
+                 · 只需改一行 from_pretrained，扩散模型完全不动
+                 · 同时记录「被 clamp 像素比例」作为基线，后续对比才有意义
+                 ├─ 黑团基本消失 → 收工，补一个伪影率指标即可
+                 └─ 明显减少但仍有残留 → 继续第 3 步
+
+第 3 步（1–2 天）Tier 1：逐通道标准化 clamp（每步）+ 越界时编码器回投
+                 · 无需重训，作为第 2 步之上的进一步收紧
+
+第 4 步（可选）  Tier 2：加 L_anchor 重训一版，对比黑团率
+                 · 与 PALS / PCLS 不冲突，是纯增量项
+
+第 5 步（仍有残留时）
+                 Tier 3 进阶：用论文配方在【你自己的 IHC patch】上再微调解码器
+                 · 仍然只调解码器 → 潜空间仍不变 → 扩散模型仍不用重训
+                 · 只有在连这都无效时，才考虑换潜码形状（SD3.5 / DC-AE / MedVAE），
+                   那时才必须重训扩散模型 —— 这是最后手段，不是第一步</code></pre></div>
+
+<div class="box good"><div class="bt">一句话总结</div><p style="margin-bottom:0">你的诊断是对的：<strong>这不是精度问题，是潜空间流形覆盖问题。</strong> 而 clamp 是「收紧采样」，只能拿回箱外那部分收益——所以要根治，方向是<strong>扩大流形的覆盖范围（换/微调 VAE）</strong>，或者<strong>把约束从箱体升级到流形附近（逐通道 + 每步 + 回投）</strong>。文献证据（arXiv 2604.12152）明确指向前者才是主导因素。</p></div>
+
+<h2 id="s8"><span class="num">8</span>文献与链接</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:32%">来源</th><th style="width:14%">类型</th><th>内容与关键数字</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/CompVis/stable-diffusion/issues/384">CompVis/stable-diffusion Issue #384</a></td><td>Issue</td><td>蓝/黑团块 100% 可复现；换采样器/步数/CFG 无效；换 VAE 可大幅缓解</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2606.13955">TopVAE, arXiv 2606.13955</a></td><td>论文</td><td>潜空间「暗区」概念；QM9 FCD-3D 降低 77%</td></tr>
+<tr><td><a href="https://huggingface.co/madebyollin/sdxl-vae-fp16-fix">sdxl-vae-fp16-fix</a></td><td>模型</td><td>修复 fp16 解码 NaN → 黑块；微调减小内部激活幅度</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2410.02416">APG, arXiv 2410.02416</a></td><td>论文</td><td>CFG 平行分量导致过饱和；SDXL w=15 饱和度 0.28→0.18，FID 26.29→25.35</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2305.08891">Zero Terminal SNR, arXiv 2305.08891</a></td><td>论文</td><td>噪声调度无零终端 SNR + 采样不从最后一步开始 = 缺陷</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2605.05206">Taming Outlier Tokens, arXiv 2605.05206</a></td><td>论文</td><td>DiT 异常 token；<strong>mask 高范数 token 无效</strong>，本质是局部 patch 语义损坏；DSR 修复</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2404.05980">Local Diffusion, arXiv 2404.05980</a></td><td>论文</td><td><strong>结构幻觉</strong>；OOD 触发；BraTS Dice 0.194→0.590；伪影在反向早期/中期形成</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2507.00044">HistoART, arXiv 2507.00044</a></td><td>论文</td><td>WSI 六类伪影（褶皱/离焦/气泡/损伤/笔迹/血液）；UNI 微调 AUROC 0.995</td></tr>
+<tr><td><a href="https://www.nature.com/articles/s41551-025-01421-9">AQuA, Nature BME 2025</a></td><td>论文</td><td>无需真值的虚拟染色幻觉检测；准确率 97.8–99.8%</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2604.12152">Domain-Specific Latent Representations, arXiv 2604.12152</a></td><td>论文</td><td><strong>直接对口本问题</strong>。换领域 VAE → PSNR +2.91~3.29 dB（Cohen's d 1.37–1.86, p&lt;10⁻²⁰）；<strong>任何训练/推理侧消融均无法接近，差距稳定在 ±0.15 dB</strong>；AE 上限可预测下游（R²=0.67）；<strong>保真度与幻觉由独立部件控制</strong></td></tr>
+<tr><td><a href="https://github.com/sebasmos/latent-sr">latent-sr（代码与权重）</a></td><td>代码</td><td>上述论文的开源实现，含 MedVAE 权重</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2503.11591">Pathology Image Compression with Pre-trained Autoencoders, arXiv 2503.11591</a></td><td>论文</td><td><strong>MICCAI 2025，直接给出病理微调 VAE 权重</strong>。基准三个 AE（SD-1.5 / SD-3 / DC-AE-f32）；<strong>仅微调解码器</strong>（编码器冻结 → 潜空间不变 → 扩散模型无需重训）；损失 = L1 + PatchGAN + UNI 感知损失；SD-1.5 的 UNI 相似度 0.837 → <strong>0.932</strong></td></tr>
+<tr><td><a href="https://huggingface.co/StonyBrook-CVLab/sd-vae-ft-ema-path">StonyBrook-CVLab/sd-vae-ft-ema-path</a></td><td>模型</td><td><strong>可直接下载</strong>。SD 1.5 VAE（KL-f8-c8）的病理微调版，4×64×64 潜码，<strong>与 SD1.5 同架构 → drop-in</strong></td></tr>
+<tr><td><a href="https://huggingface.co/collections/StonyBrook-CVLab/pathology-fine-tuned-aes">pathology-fine-tuned-aes（HF 集合）</a></td><td>模型</td><td>三个病理微调 AE：sd-vae-ft-ema-path / sd-3.5-large-vae-path / dc-ae-f32c32-path</td></tr>
+<tr><td>MedVAE（Varma 等）</td><td>模型</td><td><code>medvae 4 3 2d</code>，KL-正则化 VAE，105 万张医学图像 / 20 数据集；潜码 3×64×64。<strong>注意：发布权重仅含 X 光与 MRI/CT，无病理</strong></td></tr>
+<tr><td><a href="https://arxiv.org/abs/2604.08305">HistDiT, arXiv 2604.08305</a></td><td>论文</td><td>病理潜扩散，使用 <code>sd-vae-ft-mse</code> <strong>冻结</strong>，<strong>全文未讨论潜空间域差问题</strong> —— 说明这是病理 LDM 文献的空白，也意味着你没有现成的「论文答案」可抄</td></tr>
+<tr><td>Thermo Fisher / Boster IHC 故障排查指南</td><td>厂商文档</td><td>DAB 沉淀、过染、背景过高、干片伪影的根因与处理</td></tr>
+</tbody></table></div>
+
+<hr>
+<p class="small">本报告由 WorkBuddy AI 生成 · 2026-10-03 · 归类：05_伪影与失败模式 · 与 R1–R5 五份报告同属 H&amp;E→IHC 扩散模型调研系列</p>
+</main>
+</div></body>
+</html>

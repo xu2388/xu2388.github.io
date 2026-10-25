@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfcfd">
+<meta name="format-detection" content="telephone=no">
+<title>CUT 五条改动 · 代码级执行蓝图</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:14px 0}.cite{font-size:12.5px;color:var(--muted);border-left:3px solid var(--strong);padding-left:12px}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){html{scroll-padding-top:12px}body{font-size:16px;line-height:1.75;overflow-x:hidden}.wrap{display:block;width:100%;max-width:none}nav.toc{display:block;position:sticky;top:0;z-index:10;width:100%;height:auto;max-height:52px;overflow-x:auto;overflow-y:hidden;padding:9px 12px;border-right:0;border-bottom:1px solid var(--border);background:rgba(251,252,253,.96);-webkit-overflow-scrolling:touch;white-space:nowrap}nav.toc .brand{display:inline-block;margin:0 14px 0 0;font-size:12px}nav.toc .sub{display:none}nav.toc a{display:inline-block;margin:0 4px 0 0;padding:5px 9px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:12px;white-space:nowrap}nav.toc a.l1{margin-top:0;font-weight:700;color:var(--text)}nav.toc a.l2{padding-left:9px;font-size:12px;color:var(--muted)}main{width:100%;max-width:none;padding:22px 14px 72px}header.doc{padding-bottom:18px;margin-bottom:26px}header.doc .kicker{font-size:11px;letter-spacing:.08em}header.doc h1{font-size:25px;line-height:1.38;margin:8px 0 12px;overflow-wrap:anywhere}header.doc .desc{font-size:15px;line-height:1.7}.meta{gap:6px;margin-top:14px}.meta span{font-size:11.5px;padding:4px 8px;line-height:1.45}h2{font-size:21px;line-height:1.4;margin:40px 0 14px;padding-bottom:7px}h3{font-size:17px;line-height:1.5;margin:26px 0 9px}h4{font-size:15px}p{margin:8px 0}ul,ol{margin-left:20px}.box{padding:13px 14px;margin:14px 0;border-radius:9px}.box .bt{font-size:13px}.card{margin:14px 0}.card .ch{padding:10px 13px}.card .body{padding:7px 13px 13px}.grid2{grid-template-columns:1fr;gap:12px}.mini{padding:11px 12px}.scroll{margin:13px 0;border-radius:8px;-webkit-overflow-scrolling:touch}.scroll:after{content:"左右滑动查看表格";display:block;padding:5px 10px;color:var(--muted);font-size:11px;background:var(--softer);border-top:1px solid var(--border)}table{min-width:700px;font-size:13px}thead th{padding:9px 9px;font-size:12px}td{padding:8px 9px}.flow{margin:13px 0;padding:11px 12px;overflow:hidden}.flow pre,pre{margin:10px 0;padding:11px 12px;font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}.formula{margin:11px 0;padding:11px 12px;font-size:12px;line-height:1.65;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.b{font-size:10.5px;padding:2px 6px}.cite{font-size:12px}a{overflow-wrap:anywhere}}@media(max-width:380px){main{padding-left:11px;padding-right:11px}header.doc h1{font-size:22px}h2{font-size:19px}.meta span{font-size:11px}nav.toc{padding-left:9px;padding-right:9px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">CUT 改动 · 执行蓝图</div>
+<div class="sub">五条改动 → 代码级落地<br>文件 / 接口 / 最小验证实验<br>截至 2026-10-16</div>
+<a class="l1" href="#s0">0 · 蓝图定位与决策回顾</a>
+<a class="l1" href="#s1">1 · 代码库定位与确认清单</a>
+<a class="l1" href="#s2">2 · 改动② DySample 接入（最强）</a>
+<a class="l1" href="#s3">3 · 改动① 小波下采样 4 档</a>
+<a class="l1" href="#s4">4 · 改动③ 梯度冲突：E0 实测</a>
+<a class="l1" href="#s5">5 · 冲突存在时的正确工具</a>
+<a class="l1" href="#s6">6 · 改动④ 3 通道 OD 域</a>
+<a class="l1" href="#s7">7 · 改动⑤ 模块仓库（止）</a>
+<a class="l1" href="#s8">8 · 实验路线图 E0→E1→E2</a>
+<a class="l1" href="#s9">9 · 消融树 M0–M6</a>
+<a class="l1" href="#s10">10 · 风险、回滚与落地检查</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Implementation blueprint · CUT / PSPStain</div>
+<h1>CUT 五条改动：代码级执行蓝图</h1>
+<p class="desc">本蓝图把《五条改动方案可行性审查》的判定落成可执行的代码改动：要改哪个文件、在哪个接口插入、最小验证实验怎么跑。五条里真正站得住的是 <b>DySample 上采样（首次把可学习上采样带进 GAN 生成器）</b> 与 <b>小波下采样（首次在 CUT 系动重采样路径）</b>；门控解梯度冲突被判定为机制错配，改为「先 E0 实测、再决定用 λ 调度 / PCGrad」；2 通道 H 的顾虑是错的，真障碍是 DAB 污染苏木素，改走 3 通道 OD 域。</p>
+<div class="meta"><span>对象：PSPStain（CUT 骨架，FastCUT 模式）</span><span>netG=resnet_6blocks</span><span>netD=n_layers(5)</span><span>input_nc=output_nc=3</span><span>报告日期：2026-10-16</span><span>配套：<code>06_方案可行性审查/CUT架构五条改动方案可行性审查.html</code></span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>蓝图定位与决策回顾</h2>
+<p>本文是《可行性审查》的下游交付。审查给的是「能不能做、错在哪」，本蓝图给的是「怎么改、改哪、先验证什么」。下列决策是蓝图的唯一依据，不再重证。</p>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>原方案</th><th>判定</th><th>蓝图落地动作</th></tr></thead>
+<tbody>
+<tr><td>①</td><td>小波卷积换下采样</td><td><span class="b medium">方向对·有误读</span></td><td>拆 <b>4 档</b>小波下采样，全部落在 ResNet 生成器的 <code>downsampling</code> 段；V4 抗混叠打底为必选</td></tr>
+<tr><td>②</td><td>DySample 换上采样</td><td><span class="b high">★ 最强·填空格</span></td><td>替换 ResNet 生成器的 <code>Upsample(nearest)</code> 段；定位为「固定抗混叠打底 + 可学习采样补偿」</td></tr>
+<tr><td>③</td><td>门控解梯度冲突</td><td><span class="b bad">机制不匹配</span></td><td>不直接写门控；先跑 <b>E0</b> 量冲突，存在再上 λ 调度 / PCGrad（§5）</td></tr>
+<tr><td>④</td><td>H 通道生成再反推 RGB</td><td><span class="b good">顾虑错·改 OD 域</span></td><td>不改输入通道数；改走 <b>3 通道 OD 域</b> + 苏木素保护损失（§6）</td></tr>
+<tr><td>⑤</td><td>再去模块仓库找</td><td><span class="b low">收益递减</span></td><td>停止泛搜；按落点定向补齐（已在 §3 收口）</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">★ 一句话定位（写进论文 novelty 的句子）</div><p>CUT→ASP→PSPStain→CCPL 四代生成器 / 判别器架构五年未动、创新全在损失层；<b>本工作是这条谱系链上第一次修改重采样路径</b>——以「抗混叠固定的可学习上采样（DySample）+ 小波下采样」替代原 nearest‑upsample / stride‑conv，并在受控实验中量化其对结构保持与 PatchNCE 一致性训练的影响。</p></div>
+
+<h2 id="s1"><span class="num">1</span>代码库定位与确认清单</h2>
+<p>下列路径是 CUT / PSPStain 的<b>标准布局</b>。你的 checkout 可能略有差异（PSPStain 在 CUT 基础上加了 <code>netSeg</code> 与 pyramid loss），落地前先逐项确认，避免改错文件。</p>
+<div class="scroll"><table>
+<thead><tr><th>要改的内容</th><th>标准文件</th><th>标准符号 / 函数</th><th>确认动作</th></tr></thead>
+<tbody>
+<tr><td>生成器结构（上/下采样落点）</td><td><code>models/networks.py</code></td><td><code>class ResnetGenerator</code></td><td>搜 <code>nn.Upsample(scale_factor=2</code> 与 <code>stride=2</code> 的两次下采样</td></tr>
+<tr><td>损失计算 / backward_G</td><td><code>models/cut_model.py</code></td><td><code>def backward_G</code> / <code>def optimize_parameters</code></td><td>确认 <code>loss_G = loss_G_GAN + loss_NCE</code> 的相加顺序（FastCUT：<code>nce_idt=False</code>，仅 1 项 NCE）</td></tr>
+<tr><td>新增模块（DySample / 小波）</td><td>新建 <code>models/ops_resample.py</code></td><td><code>DySample</code> / <code>HaarDownsampleLL</code> / <code>BlurPool</code></td><td>放一个文件，统一 import</td></tr>
+<tr><td>命令行开关</td><td><code>options/train_options.py</code></td><td><code>parser.add_argument('--...')</code></td><td>加 <code>--up_mode</code> / <code>--down_mode</code> / <code>--od_domain</code> / <code>--log_grad_conflict</code></td></tr>
+<tr><td>PSPStain 额外损失（若保留）</td><td><code>models/pspstain_model.py</code> 或 <code>cut_model.py</code> 扩展</td><td><code>netSeg</code> / pyramid / MLPA / CTPC</td><td>确认这些损失挂在 <code>netG</code> 还是 <code>netSeg</code>，E0 只量 <code>netG</code> 的冲突</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">⚠ 落地前必须确认的三件事</div>
+<ul>
+<li><b>FastCUT 开关</b>：PSPStain 用 FastCUT ⇒ <code>nce_idt=False</code>、<code>lambda_NCE=10.0</code>、<code>flip_equivariance=True</code>。这意味着生成器只背 <b>1 项</b> NCE（不是 2 项、也不是 3 项），E0 冲突只在这 1 项 NCE 与 GAN 之间。</li>
+<li><b>下采样段是 2 次 stride‑2 卷积</b>：原 CUT <code>ResnetGenerator</code> 用 <code>Conv(k=3,s=2,p=1)</code> 做 2 级降采样；小波下采样要替换的就是这 2 处，<b>不是</b> MSCW 那种「池化 + WTConv(stride=1)」。</li>
+<li><b>上采样段是 <code>Upsample(nearest)</code> + Conv</b>：DySample 替换的是 <code>Upsample(nearest)</code> 那一步（空间放大），后面的 1×1/3×3 Conv 通道减半保持不变。</li>
+</ul></div>
+
+<h2 id="s2"><span class="num">2</span>改动② DySample 接入（最强，填空格）</h2>
+<div class="box good"><div class="bt">为什么是这条</div><p>你库里已核实：<b>CARAFE / FADE / SAPA / DySample 这类可学习上采样，无一篇进入 GAN 生成器</b>。CUT 系上采样至今是 <code>nn.Upsample(nearest)</code>。把 DySample 接进 <code>ResnetGenerator</code> 的上采样段，是谱系链上第一个动「采样方式」的工作——这是真实的新颖性，不需要你发明算子。</p></div>
+<h3>2.1 接入点（替换 Upsample(nearest)）</h3>
+<p>CUT 标准上采样段（<code>ResnetGenerator.__init__</code> 内）原写法：</p>
+<pre><code># 原 CUT 上采样段（2 级）
+for i in range(n_downsampling):
+    mult = 2 ** (n_downsampling - i)
+    model += [nn.Upsample(scale_factor=2, mode='nearest'),
+              nn.Conv2d(ngf * mult, int(ngf * mult / 2),
+                        kernel_size=3, stride=1, padding=1, bias=use_bias),
+              norm_layer(int(ngf * mult / 2)),
+              nn.ReLU(True)]</code></pre>
+<p>改为（DySample 只做空间放大、通道数不变；后面 Conv 仍把通道减半）：</p>
+<pre><code># 改后：DySample 做可学习上采样（保持通道数 = ngf*mult），Conv 照旧减半
+from models.ops_resample import DySample
+for i in range(n_downsampling):
+    mult = 2 ** (n_downsampling - i)
+    model += [DySample(in_channels=ngf * mult, scale=2, style='pix', groups=4),
+              nn.Conv2d(ngf * mult, int(ngf * mult / 2),
+                        kernel_size=3, stride=1, padding=1, bias=use_bias),
+              norm_layer(int(ngf * mult / 2)),
+              nn.ReLU(True)]</code></pre>
+<div class="box warn"><div class="bt">★ 关键修正：DySample 不带频域保证</div><p>DySample 是<b>可学习采样位置</b>，不是抗混叠算子。直接「替换」nearest 可能引入新混叠。正确定位是 <b>「固定抗混叠打底 + 可学习采样补偿」</b>：在 DySample 之前保留一次轻量抗混叠（见 §3 的 V4 <code>BlurPool</code> 思路，或直接在 DySample 输出后接一个 3×3 低通），把 DySample 当「在抗混叠基底上做补偿的残差」，而不是裸替换。</p></div>
+<h3>2.2 DySample 本体（用官方文件，勿手写）</h3>
+<p><code>DySample</code> 来自 Wang et al., <b>《Learning Dynamic Sampling Position for Semantic Segmentation》(ICCV 2023)</b>，仓库 <code>github.com/tiny-smart/dysample</code>（Apache‑2.0）。请把官方 <code>dysample.py</code> 原样放进 <code>models/</code>，本蓝图只负责接入与通道处理，<b>不重复实现其内部 grid_sample</b>。选型建议：</p>
+<div class="grid2">
+<div class="mini"><div class="mt">style='pix'（推荐）</div><p>带 scope 幅度调制，比 cnt 更稳；groups=4 足够，groups 过大会涨参。</p></div>
+<div class="mini"><div class="mt">scale=2</div><p>与原 nearest 的 2× 对齐，不破坏 ResNet 的 6‑block 中间分辨率。</p></div>
+</div>
+<div class="box"><div class="bt">离线兜底（仅当无法拉官方仓库时）</div><p>若环境离线，可用下面的轻量「采样补偿」占位实现先跑通管线（效果弱于官方 DySample，仅用于验证架构接线）：</p></div>
+<pre><code>import torch, torch.nn as nn, torch.nn.functional as F
+class DySampleLite(nn.Module):
+    """轻量可学习上采样：content-aware offset 残差 + 双线性重采样。
+       非官方 DySample 等价物，仅作离线接线兜底。"""
+    def __init__(self, in_ch, scale=2, groups=4):
+        super().__init__()
+        self.scale = scale
+        self.offset = nn.Conv2d(in_ch, 2 * groups * scale * scale, 3, 1, 1, bias=False)
+        self.groups = groups
+    def forward(self, x):
+        B, C, H, W = x.shape
+        off = self.offset(x).tanh() * (self.scale / 2)   # [-s/2, s/2]
+        off = off.view(B * self.groups, 2, self.scale * self.scale, H, W)
+        grid = F.affine_grid(torch.eye(2,3).to(x)[None].repeat(B,1,1),
+                             (B, C, H*self.scale, W*self.scale))
+        # 把 offset 累加到 base grid 上（简化，逐组循环更稳）
+        out = F.grid_sample(x, grid + off.mean(1).permute(0,2,3,1),
+                            align_corners=False, mode='bilinear')
+        return out</code></pre>
+
+<h2 id="s3"><span class="num">3</span>改动① 小波下采样 4 档（拆误读）</h2>
+<p>原方案「小波卷积换下采样」的误读在于：MSCW 里 WTConv <b>不是</b>下采样算子（池化负责降分辨率，WTConv 在已降分辨率上 stride=1 做卷积）。正确做法是把「抗混叠」和「小波特征」拆开，给出 4 档，全部落在生成器的 2 级 <code>stride=2</code> 下采样处。</p>
+<div class="scroll"><table>
+<thead><tr><th>档</th><th>做法</th><th>改动量</th><th>风险</th><th>何时选</th></tr></thead>
+<tbody>
+<tr><td>V1</td><td>硬 Haar LL 下采样（去混叠，无学习）</td><td>极小</td><td>最低；但低频-only 可能丢纹理</td><td>作为所有档的<b>打底</b>先做对照</td></tr>
+<tr><td>V2</td><td>DWT 四子带 + 1×1 可学习融合（WTConv 思路）</td><td>小</td><td>中；通道 4× 后需 1×1 压回</td><td>想要显式频带分离时</td></tr>
+<tr><td>V3</td><td>stride‑conv 保留 + 小波一致性正则（loss 侧）</td><td>小</td><td>低；不改结构</td><td>最保守，先做</td></tr>
+<tr><td>V4</td><td>抗混叠 BlurPool 打底（固定低通 + stride）</td><td>极小</td><td>最低</td><td><b>必选</b>：DySample 的配套抗混叠</td></tr>
+</tbody></table></div>
+<h3>3.1 V1 / V4 的自包含实现（可直接用）</h3>
+<pre><code>import torch, torch.nn as nn, torch.nn.functional as F
+
+class HaarDownsampleLL(nn.Module):
+    """2x 下采样，仅取 Haar 低频 LL 带（抗混叠、无学习）。
+       保持通道数不变，空间 H,W 减半。"""
+    def __init__(self):
+        super().__init__()
+        ll = torch.tensor([[1.,1.],[1.,1.]]) / 2.0
+        self.register_buffer('k', ll.unsqueeze(0).unsqueeze(0))
+    def forward(self, x):
+        if x.shape[-2] % 2: x = F.pad(x, (0,0,0,1))
+        if x.shape[-1] % 2: x = F.pad(x, (0,1))
+        w = self.k.repeat(x.shape[1], 1, 1, 1)
+        return F.conv2d(x, w, stride=2, groups=x.shape[1])
+
+class BlurPool(nn.Module):
+    """抗混叠下采样：固定 3x3 低通（[1,2,1]^2/16）+ stride=2。
+       放在 DySample 之前当抗混叠打底，或替换原 stride=2 卷积。"""
+    def __init__(self, channels):
+        super().__init__()
+        k = torch.tensor([[1.,2.,1.],[2.,4.,2.],[1.,2.,1.]]) / 16.0
+        self.register_buffer('k', k.unsqueeze(0).unsqueeze(0).repeat(channels,1,1,1))
+    def forward(self, x):
+        return F.conv2d(x, self.k, stride=2, padding=1, groups=x.shape[1])</code></pre>
+<h3>3.2 接入（替换原 stride=2 卷积的 2 级下采样）</h3>
+<pre><code># 原 CUT 下采样段
+# model += [nn.Conv2d(ngf*mult, ngf*mult*2, 3, stride=2, padding=1, bias=use_bias), norm, ReLU]
+# 改后（V4 抗混叠打底 + 通道翻倍；或 V1 Haar LL 后再 conv 翻倍）
+for i in range(n_downsampling):
+    mult = 2 ** i
+    down_ch = ngf * mult
+    if self.down_mode == 'blurpool':           # V4
+        model += [BlurPool(down_ch),
+                  nn.Conv2d(down_ch, down_ch*2, 3, 1, 1, bias=use_bias),
+                  norm_layer(down_ch*2), nn.ReLU(True)]
+    elif self.down_mode == 'haar':             # V1
+        model += [HaarDownsampleLL(),
+                  nn.Conv2d(down_ch, down_ch*2, 3, 1, 1, bias=use_bias),
+                  norm_layer(down_ch*2), nn.ReLU(True)]
+    # V2 / V3 在 ops_resample 中另写，结构类似</code></pre>
+<div class="box"><div class="bt">接线约定</div><p>无论 V1/V2/V4，下采样段都要保持「空间 /2、通道 ×2」的 ResNet 约定，否则 6 个 ResBlock 的中间分辨率与后续上采样对不上。V3 不动结构，只在 <code>backward_G</code> 里加一个「原图小波子带 vs 生成图小波子带」的 L1 正则。</p></div>
+
+<h2 id="s4"><span class="num">4</span>改动③ 梯度冲突：先跑 E0 实测</h2>
+<p>《审查》判定「门控解梯度冲突」是<b>机制不匹配</b>：门控作用在<b>特征路径</b>，而 GAN loss 与 NCE loss 的冲突发生在<b>同一组生成器参数</b>的梯度空间——CUT 是两者先相加再一次性 <code>backward()</code>，门控根本碰不到两条梯度。所以正确第一步不是写门控，而是<b>量出冲突到底存不存在、有多大</b>。</p>
+<h3>4.1 E0：只在 backward_G 加梯度钩子，不改任何结构</h3>
+<pre><code># 在 CUTModel.backward_G 中，原 loss_G.backward() 之前插入量测
+def measure_grad_conflict(self):
+    params = [p for p in self.netG.parameters() if p.requires_grad]
+    # --- 单独求 GAN 对 G 的梯度 ---
+    self.optimizer_G.zero_grad(set_to_none=True)
+    self.loss_G_GAN.backward(retain_graph=True)
+    g_gan = [p.grad.detach().clone() for p in params]
+    # --- 单独求 NCE 对 G 的梯度（FastCUT 仅 1 项 NCE）---
+    self.optimizer_G.zero_grad(set_to_none=True)
+    self.loss_NCE.backward(retain_graph=True)
+    g_nce = [p.grad.detach().clone() for p in params]
+    self.optimizer_G.zero_grad(set_to_none=True)
+
+    dot   = sum((a*b).sum() for a,b in zip(g_gan, g_nce))
+    n_gan = torch.sqrt(sum((g*g).sum() for g in g_gan))
+    n_nce = torch.sqrt(sum((g*g).sum() for g in g_nce))
+    cos   = dot / (n_gan * n_nce + 1e-8)
+    # 冲突判据（来自 MEMORY_梯度冲突）：g = g_gan+g_nce，
+    #   若  gᵀg < -‖g_gan - g_nce‖²   则两梯度方向性冲突
+    g_sum = [a+b for a,b in zip(g_gan, g_nce)]
+    g_norm2 = sum((g*g).sum() for g in g_sum)
+    g_diff2 = sum(((a-b)**2).sum() for a,b in zip(g_gan, g_nce))
+    conflict = float(g_norm2) < -float(g_diff2)
+    # λ_crit：NCE 应占的相对权重上界
+    lam_crit = float(n_nce**2 / (n_nce**2 + n_gan**2 + 1e-8))
+    return dict(cos=float(cos), conflict=conflict, lam_crit=lam_crit)
+
+# 训练循环里每 K 步记录一次（不影响反向，纯观测）
+if self.opt.log_grad_conflict and (self.step % 200 == 0):
+    m = self.measure_grad_conflict()
+    self.logger.write(f"step {self.step} cos={m['cos']:.3f} "
+                      f"conflict={m['conflict']} lam_crit={m['lam_crit']:.3f}")</code></pre>
+<div class="box key"><div class="bt">E0 判读</div>
+<ul>
+<li><b>cos ≈ 0 或 &gt; 0</b>（无冲突）：第 ③ 条整条不必要，门控 / 调度都不用写，直接删掉这条方案。</li>
+<li><b>cos &lt; 0 且 conflict=True</b>（方向性冲突）：再上 §5 的 λ 调度或 PCGrad；<b>仍然不是门控</b>。</li>
+<li>跑 <b>3 个 seed</b>，记录 cos / lam_crit 的分布，作为论文「为何需要 / 不需要梯度协调」的实证。</li>
+</ul></div>
+
+<h2 id="s5"><span class="num">5</span>冲突存在时的正确工具（替代门控）</h2>
+<p>若 E0 确认冲突，用以下二者之一，<b>都作用在参数空间的梯度上，而非特征路径</b>。</p>
+<h3>5.1 λ 调度（最小改动，推荐首选）</h3>
+<p>把「固定 <code>lambda_NCE=10.0</code>」改成随训练动态、且受 <code>lam_crit</code> 约束的系数：</p>
+<pre><code># 用 cosine 相似度把 NCE 权重往「不压制 GAN」方向调
+def dynamic_lam(self, cos, lam_crit, base=10.0):
+    # cos<0（冲突）时下调 NCE 权重，且不超过 lam_crit 给出的上界
+    if cos < 0:
+        factor = 1.0 + cos            # cos∈[-1,0] -> factor∈[0,1]
+        lam = base * max(factor, 0.1) * min(lam_crit, 1.0)
+    else:
+        lam = base * min(lam_crit, 1.0)
+    return lam
+# backward_G 里：
+# self.loss_G = self.loss_G_GAN + self.dynamic_lam(cos, lam_crit) * self.loss_NCE</code></pre>
+<h3>5.2 PCGrad（冲突投影，改动稍大）</h3>
+<pre><code>def pcgrad(g_a, g_b):
+    """把 g_b 投影到 g_a 正交补，消除对 g_a 的负面分量。"""
+    dot = sum((a*b).sum() for a,b in zip(g_a, g_b))
+    na2 = sum((a*a).sum() for a in g_a) + 1e-8
+    if dot < 0:
+        return [b - dot / na2 * a for a, b in zip(g_a, g_b)]
+    return g_b
+# 用法：先分别求 g_gan / g_nce（见 §4.1），g_nce' = pcgrad(g_gan, g_nce)，
+# 再手动把 g_gan + g_nce' 写回参数 .grad 并 step。需关掉原自动 backward。</code></pre>
+<div class="box stop"><div class="bt">⛔ 不要做的事</div><p>不要在生成器中间特征上套一个「门控向量」去「改善对抗 / NCE 冲突」——审稿人一句「门控如何改变两个损失在同一组参数上的梯度方向」就会让这条塌掉。冲突是参数空间的，工具必须是 §4/§5 这类梯度层操作。</p></div>
+
+<h2 id="s6"><span class="num">6</span>改动④ 3 通道 OD 域（DAB 污染修正）</h2>
+<p>原方案「2 通道 H 生成再反推 RGB」的顾虑是<b>错的</b>：CUT 的 <code>input_nc</code>/<code>output_nc</code> 完全独立，2 通道输入直接能跑，不需要反推。但库里查过的真问题在别处——<b>IHC 复染弱 10×、DAB 饱和区污染苏木素约 65%</b>。所以正确方向不是压成 2 通道，而是<b>在 3 通道 OD（光学密度）域做生成</b>，并加苏木素保护。</p>
+<h3>6.1 Beer–Lambert 边界（RGB ⇄ OD）</h3>
+<pre><code>import torch, torch.nn.functional as F
+def rgb_to_od(x):                 # x in [0,1]
+    eps = 1e-6
+    return -torch.log10(torch.clamp(x, eps, 1.0))
+def od_to_rgb(od):
+    return torch.clamp(10 ** (-od), 0.0, 1.0)</code></pre>
+<h3>6.2 接入方式（不改生成器 I/O 维度）</h3>
+<div class="flow"><p><b>方案 A（推荐，最小侵入）</b>：生成器仍在 RGB 空间，但加一个 <b>苏木素通道保护损失</b>——把目标 IHC 与生成 IHC 各自做 RGB→OD，取 OD 的第 0 轴（苏木素）算 L1；同时约束 DAB 通道（第 1 轴）只在阳性区域激活。不改 <code>input_nc/output_nc</code>。</p>
+<p><b>方案 B（彻底）</b>：把生成器整体搬到 OD 域——在 <code>forward</code> 入口 <code>fake_B_od = netG(rgb_to_od(real_A))</code>，出口 <code>fake_B = od_to_rgb(fake_B_od)</code>。此时输出仍是 3 通道 RGB 喂给判别器，但生成器内部在浓度域运算，天然规避 DAB 饱和非线性。</p></div>
+<pre><code># 苏木素保护损失（方案 A 的核心新增）
+def hematoxylin_protection(self, fake_rgb, real_rgb):
+    fo, ro = rgb_to_od(fake_rgb), rgb_to_od(real_rgb)   # B,3,H,W
+    loss_H = F.l1_loss(fo[:, 0], ro[:, 0])              # 苏木素轴一致性
+    # DAB 只在阳性区活跃：惩罚 fake 在全图的 DAB 扩散
+    loss_DAB_sparse = fo[:, 1].abs().mean()
+    return loss_H + 0.5 * loss_DAB_sparse</code></pre>
+<div class="box"><div class="bt">为什么不是「2 通道 H」</div><p>压成 2 通道会让生成器丢掉 DAB 与残差背景的耦合信息，而真问题（DAB 饱和污染苏木素）恰恰需要<b>显式分离并保护苏木素轴</b>——OD 域的逐轴约束比压通道更对症，且不牺牲信息量。</p></div>
+
+<h2 id="s7"><span class="num">7</span>改动⑤ 模块仓库（止步）</h2>
+<p>《审查》判定第 ⑤ 条收益递减：你本地的 <code>plug-nplay-modules</code> 合集被镜像 ≥10 次，且 <b>「医学来源」∩「频域」= ∅</b>——20 个标称医学来源的模块里含 FFT/DWT/DCT 的为 0。继续泛搜只会重复已知项。</p>
+<div class="box"><div class="bt">收口规则</div><p>停止泛搜；只按本蓝图的<b>落点</b>定向补齐：下采样（§3 已覆盖）、上采样（§2 DySample）、梯度协调（§4/§5）。若后续要补频域算子，唯一真 2D‑FFT 模块是库里的 <code>DynamicFilter</code>，其余 WTConv×2 为拷贝、<code>小波下采样.py</code> 已映射到 §3 V1/V2。</p></div>
+
+<h2 id="s8"><span class="num">8</span>实验路线图 E0→E1→E2</h2>
+<p>严格按依赖顺序，<b>E0 不通过就不进 E1 的架构改动</b>，避免把结构噪声误归因到 DySample / 小波。</p>
+<div class="scroll"><table>
+<thead><tr><th>阶段</th><th>做什么</th><th>依赖</th><th>判定门槛</th><th>时长估计</th></tr></thead>
+<tbody>
+<tr><td><b>E0</b></td><td>只加日志（§4.1），跑基线 + 3 seed 量 cos/lam_crit</td><td>无</td><td>产出冲突分布图；决定要不要 §5</td><td>≈ 1× 训练</td></tr>
+<tr><td><b>E1</b></td><td>架构最小集：DySample(§2) + V4 BlurPool 打底(§3)</td><td>E0 完成</td><td>同等训练步下 FID/PSNR 不劣于基线，且棋盘格伪影下降</td><td>≈ 1× 训练</td></tr>
+<tr><td><b>E2a</b></td><td>若 E0 冲突存在：上 λ 调度 / PCGrad（§5）</td><td>E0 冲突=True</td><td>冲突指标下降、训练更稳定</td><td>≈ 0.5× 训练</td></tr>
+<tr><td><b>E2b</b></td><td>OD 域 + 苏木素保护（§6），替代或叠加 E1</td><td>E1 完成</td><td>DAB 污染苏木素比例下降、H 轴 PSNR 提升</td><td>≈ 1× 训练</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">最小可发表单元</div><p>即便 E2 全不做，<b>「E0 冲突实证 + E1（DySample + 抗混叠打底）」已构成一条完整、可辩护的 novelty</b>：谱系链上第一次改重采样路径 + 第一次把可学习上采样带进 GAN 生成器。其余都是加分项。</p></div>
+
+<h2 id="s9"><span class="num">9</span>消融树 M0–M6</h2>
+<p>与《CUT系谱系链》呼应：前四代只在损失层动刀，你的 M 系列第一次动架构 +（可选）动浓度域。</p>
+<div class="scroll"><table>
+<thead><tr><th>编号</th><th>配置</th><th>要验证的假设</th></tr></thead>
+<tbody>
+<tr><td>M0</td><td>原 PSPStain（CUT 骨架，nearest 上采样，stride‑conv 下采样）</td><td>基线</td></tr>
+<tr><td>M1</td><td>M0 + V4 BlurPool 打底（仅抗混叠，无学习）</td><td>抗混叠本身是否去棋盘格</td></tr>
+<tr><td>M2</td><td>M1 + DySample（可学习采样补偿）</td><td>★ 主 novelty：可学习上采样进 GAN</td></tr>
+<tr><td>M3</td><td>M1 + V1 Haar LL / V2 小波融合下采样</td><td>小波下采样是否优于纯抗混叠</td></tr>
+<tr><td>M4</td><td>M2 + E0 冲突存在时的 λ 调度 / PCGrad</td><td>梯度协调是否再提点</td></tr>
+<tr><td>M5</td><td>M2 + OD 域 + 苏木素保护（§6 方案 B）</td><td>DAB 污染是否下降、H 轴 PSNR 是否升</td></tr>
+<tr><td>M6</td><td>M2 + M3 + M5 全加</td><td>架构 + 浓度域联合上限</td></tr>
+</tbody></table></div>
+
+<h2 id="s10"><span class="num">10</span>风险、回滚与落地检查</h2>
+<div class="grid2">
+<div class="mini"><div class="mt">⚠ 主要风险</div>
+<p>1. DySample 裸替换引入新混叠 → 用 V4 打底兜底。</p>
+<p>2. 下采样改错分辨率 → 6 block 中间尺寸对不上，必崩；改完先单 batch forward 验尺寸。</p>
+<p>3. E0 钩子 retain_graph 占显存 → 量完立即 zero_grad，仅观测不 step。</p>
+<p>4. OD 域数值：RGB→OD 的 log 在 0 处爆炸 → 已加 clamp(eps,1)。</p>
+</div>
+<div class="mini"><div class="mt">↩ 回滚策略</div>
+<p>所有改动走 <code>--up_mode</code> / <code>--down_mode</code> / <code>--od_domain</code> 开关，默认 = 原 CUT 行为；出问题一键回退到 M0。</p>
+<p>DySample / 小波模块独立成 <code>models/ops_resample.py</code>，不污染 <code>networks.py</code> 主干。</p>
+</div>
+</div>
+<h3>10.1 落地检查清单（逐项打勾）</h3>
+<ul>
+<li>□ 确认 checkout 的 <code>ResnetGenerator</code> 下采样段是 2× <code>stride=2</code> Conv、上采样段是 <code>Upsample(nearest)+Conv</code></li>
+<li>□ 确认 FastCUT 开关：<code>nce_idt=False</code>，仅 1 项 NCE</li>
+<li>□ <code>models/ops_resample.py</code> 写好 DySample（官方）/ HaarDownsampleLL / BlurPool，单测 forward 尺寸</li>
+<li>□ <code>options/train_options.py</code> 加 <code>--up_mode --down_mode --od_domain --log_grad_conflict</code></li>
+<li>□ 先跑 <b>E0</b>（仅日志），3 seed，出 cos / conflict / lam_crit 图</li>
+<li>□ 冲突=False → 删第③条；冲突=True → 上 §5 λ 调度（首选）或 PCGrad</li>
+<li>□ 跑 <b>E1</b>：DySample + V4 打底，与 M0 同步比 FID/PSNR/棋盘格</li>
+<li>□ （可选）E2b：OD 域 + 苏木素保护</li>
+<li>□ novelty 句落定：「四代谱系首次改重采样路径」</li>
+</ul>
+<hr>
+<p class="small">配套文档：<code>06_方案可行性审查/CUT架构五条改动方案可行性审查.html</code>（判定依据）；<code>01_调研报告/CUT系谱系链与缝合四层贡献度_方案定位.html</code>（谱系与新颖性定位）；<code>01_调研报告/GAN频域_小众开源仓库清单_缝合素材库.html</code>（DySample / WTConv 归属与许可）。本蓝图所有代码段以「接入点 + 自包含算子」形式给出，DySample 内部实现以官方仓库为准。</p>
+</main></div></body>
+</html>

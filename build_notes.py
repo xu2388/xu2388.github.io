@@ -12,8 +12,9 @@ NOTES_DIR = os.path.join(ROOT, "notes")
 OUT_DIR = os.path.join(ROOT, "articles", "notes")
 INDEX_OUT = os.path.join(ROOT, "articles", "notes-index.html")
 
-SUBJECT_ORDER = ["计算机网络", "数据库/MySQL", "JavaWeb", "数据结构与算法", "深度学习/神经网络",
-                 "大数据技术", "信号与系统", "数字图像处理", "高等数学/最优化", "大学物理",
+SUBJECT_ORDER = ["计算机网络", "计算机组成原理", "操作系统/Linux", "数据库/MySQL", "JavaWeb", "Web开发/前端",
+                 "数据结构与算法", "离散数学", "线性代数", "机器学习", "深度学习/神经网络", "大数据技术", "区块链/分布式",
+                 "信号与系统", "数字图像处理", "高等数学/最优化", "概率论/数理统计", "大学物理",
                  "英语/雅思", "思政/毛概/近代史", "虚拟染色/科研", "其他"]
 
 def parse(path):
@@ -54,7 +55,7 @@ PAGE = """<!DOCTYPE html>
 <h1>{title}</h1>
 <div class="meta">{cat} · {subject} · 整理自豆包对话 {source}</div>
 {body}
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/{source_html}">{source}</a></p>
+<p class="muted" style="margin-top:28px">原始对话：{source_links}</p>
 <a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
@@ -65,6 +66,22 @@ PAGE = """<!DOCTYPE html>
 
 def esc_json(s):
     return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+
+def source_links(src):
+    """把 source 字段渲染成回链列表。
+
+    source 可能写成 "010_毛概第一章.md（另含 011_毛概第三章.md）" 这种多来源，
+    整串当文件名会生成 404 链接，所以这里逐个拆出来分别建链。
+    """
+    parts = re.findall(r"[^（）()\s]+\.md", src)
+    if not parts:
+        return htmlmod.escape(src)
+    links = []
+    for i, f in enumerate(parts):
+        stem = f[:-3] if f.endswith(".md") else f
+        sep = "" if i == 0 else "、"
+        links.append('%s<a href="../kb-doubao/%s.html">%s</a>' % (sep, htmlmod.escape(stem), htmlmod.escape(f)))
+    return "".join(links)
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -80,11 +97,10 @@ def main():
         source = fm.get("source", "")
         summary = fm.get("summary", "")
         slug = os.path.splitext(os.path.basename(p))[0] + ".html"
-        source_html = source[:-3] + ".html" if source.endswith(".md") else source
         page = PAGE.format(
             title=htmlmod.escape(title), title_json=esc_json(title),
             cat=cat, subject=subject, summary_json=esc_json(summary),
-            body=render_md(body), source=htmlmod.escape(source), source_html=htmlmod.escape(source_html),
+            body=render_md(body), source=htmlmod.escape(source), source_links=source_links(source),
         )
         open(os.path.join(OUT_DIR, slug), "w", encoding="utf-8").write(page)
         entries.append({"title": title, "slug": slug, "subject": subject, "cat": cat,

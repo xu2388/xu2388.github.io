@@ -13,13 +13,10 @@
 <body>
 <header class="site-header">
   <div class="container">
-    <h1 class="site-title">科研与学习档案</h1>
+    <h1 class="site-title">我的个人博客</h1>
     <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
-    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">8</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
 
   </div>
 </header>
@@ -34,7 +31,7 @@
 <h2>一、引言：虚拟染色的任务定义与评价口径</h2>
 <p>H&amp;E 染色是病理诊断的常规起点，其信息维度限于细胞形态、组织构型与核浆比例；IHC 染色则在分子层面显示特定蛋白的表达水平与空间分布，是分型与用药决策的直接依据。然而 IHC 流程需额外切片，并经历脱蜡、抗原修复、抗体孵育与显色等步骤，成本高、周期长，且对少量活检组织构成不可逆消耗。虚拟染色以 H&amp;E 为输入直接合成 IHC，其临床价值在于以零额外组织损耗换取第二模态的读片信息。</p>
 <p>将该任务形式化，记 H&amp;E 图像为 $x \in \mathbb{R}^{H\times W\times 3}$，目标 IHC 图像为 $y$，则学习目标为</p>
-<p>$$ G^\* = \arg\min_{G}\ \mathbb{E}_{(x,y)\sim p_{data}}\left[\mathcal{L}_{task}\big(G(x),\,y\big)\right] + \lambda\,\mathcal{L}_{reg}(G), $$</p>
+<p>$$ G^{*} = \arg\min_{G}\ \mathbb{E}_{(x,y)\sim p_{data}}\left[\mathcal{L}_{task}\big(G(x),\,y\big)\right] + \lambda\,\mathcal{L}_{reg}(G), $$</p>
 <p>其中 $\mathcal{L}_{task}$ 刻画生成结果与真实 IHC 的差异，$\mathcal{L}_{reg}$ 为正则或对抗项。该式看似平凡，实则全部争议都集中于两点：$\mathcal{L}_{task}$ 应在何种表示空间上度量；以及 $G(x)$ 与 $y$ 之间的空间对应是否成立。</p>
 <p>第一点决定了&quot;生成什么&quot;。若在 RGB 空间以 $\ell_1/\ell_2$ 度量，模型倾向于拟合染料的颜色分布而非蛋白表达的空间强度，其后果是图像&quot;看起来像 IHC&quot;却在阳性区域定位与表达分级上不可用。第二点决定了&quot;监督是否有效&quot;。连续切片在制片过程中必然产生组织形变、厚度差异与局部撕裂，使同一解剖位置在两张切片上并不落在同一像素坐标。设真实对应由形变场 $\phi$ 给出，则观测到的配对实为 $\big(x,\ y\circ\phi\big)$ 而非 $\big(x,y\big)$；以逐像素损失在 $\big(x,y\big)$ 上优化，等价于对 $\phi$ 施加了一个错误的恒等假设。</p>
 <p>评价口径的混乱由此派生。PSNR 与 SSIM 定义于像素域：</p>

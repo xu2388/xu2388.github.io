@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散模型虚拟染色中的「蛋白表达约束」· 约束位置地图 · H&amp;E→IHC 调研</title>
+
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.route{border:1px solid var(--border);border-radius:10px;padding:14px 17px;margin:14px 0;background:var(--softer)}.route .rt{font-weight:750;font-size:15px;margin-bottom:5px}.route .rmeta{font-size:12px;color:var(--muted)}.cite{font-size:11.5px;color:var(--muted)}.tag{font-size:11px;font-weight:700;color:var(--muted);background:#eef0f3;padding:2px 6px;border-radius:4px}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+<div class="brand">Protein Constraint</div>
+<div class="sub">扩散模型虚拟染色中「蛋白表达约束」的约束位置地图<br>2026-10-06</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · 三个坐标轴</a>
+<a class="l1" href="#s2">2 · 真正用于扩散的蛋白约束</a>
+<a class="l2" href="#s2-1">2.1 Star-Diff（评价）</a>
+<a class="l2" href="#s2-2">2.2 MIU-Diff（采样期）</a>
+<a class="l2" href="#s2-3">2.3 OT-StainNet ★</a>
+<a class="l2" href="#s2-4">2.4 其余六篇</a>
+<a class="l2" href="#s2-5">2.5 小结</a>
+<a class="l1" href="#s3">3 · 非扩散但可迁移（九类）</a>
+<a class="l2" href="#s3-1">3.1 DAB / OD / FOD</a>
+<a class="l2" href="#s3-2">3.2 H-score / 分级</a>
+<a class="l2" href="#s3-3">3.3 表达等级 / 分类</a>
+<a class="l2" href="#s3-4">3.4 foundation model 特征</a>
+<a class="l2" href="#s3-5">3.5 ranking / contrastive</a>
+<a class="l2" href="#s3-6">3.6 分布 / histogram</a>
+<a class="l2" href="#s3-7">3.7 弱配准 / OT</a>
+<a class="l2" href="#s3-8">3.8 多任务辅助头</a>
+<a class="l2" href="#s3-9">3.9 物理 stain / 浓度</a>
+<a class="l1" href="#s4">4 · 论文总表（11 列）</a>
+<a class="l1" href="#s5">5 · 约束挂在扩散的哪里</a>
+<a class="l2" href="#s5-1">5.1 位置总表</a>
+<a class="l2" href="#s5-2">5.2 梯度怎么回去</a>
+<a class="l2" href="#s5-3">5.3 路线图</a>
+<a class="l1" href="#s6">6 · 训练约束 vs 评价指标</a>
+<a class="l1" href="#s7">7 · 空间错位会不会毁掉约束</a>
+<a class="l1" href="#s8">8 · 六方案 A–F 逐项评价</a>
+<a class="l1" href="#s9">9 · 分阶段实验建议</a>
+<a class="l1" href="#s10">10 · 先做什么</a>
+<a class="l1" href="#s11">11 · 暂时不要做</a>
+<a class="l1" href="#s12">12 · 证据边界</a>
+<a class="l1" href="#s13">13 · 与库内既有报告的分工</a>
+</nav>
+
+<main>
+
+<header class="doc">
+<div class="kicker">H&amp;E → IHC · Diffusion · Protein Constraint</div>
+<h1>扩散模型虚拟染色中的「蛋白表达约束」<br>——约束位置地图与可执行路线</h1>
+<p class="desc">围绕一个问题组织：在 H&amp;E/IHC <strong>空间不严格配准</strong>的现实条件下，业内究竟如何<strong>显式约束目标蛋白表达</strong>；这些约束分别作用于 <strong>diffusion 的哪里</strong>；哪些已被充分研究；哪些还没解决；<strong>最应该先做哪一个实验</strong>。</p>
+<div class="meta">
+<span>2026-10-06</span>
+<span>22 篇论文 + 6 篇内部报告交叉引用</span>
+<span>每条引用标注核实等级</span>
+<span>主轴 = 约束位置（不是方法名）</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box key">
+<div class="bt">一句话判定</div>
+<p><strong>「扩散模型 + 蛋白感知的<em>训练损失</em>」这个组合，在能核实的文献里是空的。</strong>扩散这一侧最多做到两件事：把<strong>蛋白身份当条件输入</strong>（marker one-hot / 文本 prompt），以及把<strong>蛋白分级当评价指标</strong>（HER2 分类器算 SFS）。真正的蛋白约束——FOD、DAB 强度、HER2 分级损失——<strong>全部长在非扩散模型（GAN / CUT）上</strong>，而且约束对象几乎都是<strong>图像级的 OD / FOD 代理量</strong>，不是学出来的蛋白特征。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">但「空白」不等于「没人接近」——三个位置各有人占了半格</div>
+<ul>
+<li><strong>位置② latent/feature</strong>：<strong>OT-StainNet</strong>（AAAI 2025）用 <strong>SD-Turbo + LoRA</strong> 做生成器，用<strong>最优传输</strong>在弱配对的相邻切片之间建「语义对应」，再用相关矩阵一致性损失监督。这是<strong>扩散 backbone + 弱配对 + 软对应</strong>三者同时成立的第一篇。</li>
+<li><strong>位置⑤ 采样期</strong>：<strong>MIU-Diff</strong>（arXiv 2506.23184）是病理虚拟染色里唯一在<strong>反向 SDE 里注入 guidance</strong>的工作，数据是<strong>连续切片（弱配对）</strong>——但它的 guidance 信号是<strong>「染色独有信息 + 跨模态结构互信息」两项组合</strong>，<strong>不含蛋白</strong>。<br><span class="small">★ 勘误（2026-10-08 核实）：本条原写「完全非配对」与「信号是互信息（结构）」，两处均需修正。① 其原文逐字为「All H&amp;E-IHC pairs are from <b>consecutive slices, but not strictly pixel-aligned</b>」⇒ 是<b>弱配对</b>，与本报告 §5 表格中「扩散 + 弱配对已成立」的归类一致（原文此处与 §5 自相矛盾）。② 其采样期能量函数原文 Eq.(2) 为 <b>M(y,x,t) = λ<sub>t</sub>U(y,x,t) + (1−λ<sub>t</sub>)I(y,x,t)，λ<sub>t</sub> = t/S</b>，其中 U(y<sub>t</sub>) = H(y<sub>t</sub>) − I(x<sub>t</sub>;y<sub>t</sub>) 是<b>染色独有信息</b>、I 才是结构互信息 ⇒ 它<b>有一个染色侧项</b>，不是「只有结构」。<b>但「蛋白 guidance 在扩散侧一格都没有」的结论不变</b>（U 与 I 都不含蛋白）。详见 <code>06_方案可行性审查/DAB-only浓度扩散_文献先例地图与模型选型审查.html</code> §3.4。</span></li>
+<li><strong>位置① 训练损失</strong>：<strong>HER2 Score-Aware NCMT</strong>（Diagnostics 2026）真的把 HER2 序数分数做成 MSE 训练损失，挂在<strong>编码器中间层特征</strong>上——但它是 <strong>GAN</strong>，而且<strong>要求配准</strong>。它顺手做了一个<strong>错位受控实验</strong>，给出了本报告最有价值的一组数字（见 §7）。</li>
+</ul>
+</div>
+
+<h3>六个必须记住的判断</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26px" class="c">#</th><th style="width:38%">判断</th><th>依据</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><strong>扩散 + 蛋白训练损失 = 空</strong></td><td>能读到的每一篇扩散虚拟染色论文，蛋白信号要么是条件、要么是评价，<strong>没有一篇把它反传到去噪网络</strong>（Star-Diff / MIU-Diff / OT-StainNet / marker-LDM / VIMs / StainDiffuser / HistDiST / UNIStainNet 逐篇核对）</td></tr>
+<tr><td class="c">2</td><td><strong>现役的蛋白约束都是「图像级 OD 代理量」</strong></td><td>PSPStain 的 FOD（OD<sup>1.8</sup>）、CCPL 的双通道 FOD、UNIStainNet 的 top-10% DAB 强度——<strong>都不是学出来的蛋白特征</strong>，是色解卷积后的强度统计量。论文里叫「protein-aware」，但没验证过它真的编码蛋白表达</td></tr>
+<tr><td class="c">3</td><td><strong>分级（grade）比强度（intensity）更接近「蛋白语义」</strong></td><td>HER2 NCMT 把 0/1+/2+/3+ 当<strong>连续序数</strong>回归；MIL-CycleGAN 用<strong>滑片级 CIN 标签</strong>做弱监督。两者都<strong>不需要像素对应</strong>——这是对错位最友好的形态</td></tr>
+<tr><td class="c">4</td><td><strong>错位不是噪声，是系统性的标签污染，而且已被量化</strong></td><td>HER2 NCMT 的受控实验：把 H&amp;E 裁剪平移 0→24 px，FID <strong>38.8 → 46.68</strong>、KID <strong>5.6 → 9.3</strong>。作者原话：<em>spatial mismatch acts as label noise and reduces marker-specific translation fidelity</em></td></tr>
+<tr><td class="c">5</td><td><strong>辅助损失挂进扩散不是免费的</strong></td><td>库内已有结论 + Lantern 受控实验：去噪梯度与辅助损失的<strong>冲突角 92°–128°</strong>（&gt;90° 即对抗）。必须做 warmup 渐入 + <strong>末期关闭</strong>（Lantern 收益最大的一条：FPD 236.3 → 32.84）</td></tr>
+<tr><td class="c">6</td><td><strong>「在浓度空间做蛋白约束」这个组合仍然没人做</strong></td><td>三格全空：扩散生成 RGB 后反演浓度（无）· 扩散直接生成浓度（无）· 可微物理渲染器放进扩散生成空间（无）。最近的建筑块各自独立存在（StainQuant 的可微 BL、Loo 2025 的 BL 伪标签、SGCD 的采样期染色引导<strong>已核实</strong>——但它是<strong>造参考图</strong>，不是物理渲染器，见 <a href="SGCD_Stain-Guided_CycleDiffusion_精读_代码级复核与可迁移性判定.html">SGCD 精读</a>）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>你最想知道的 5 个问题 —— 直接答案</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">Q1 · 有没有真正用于扩散虚拟染色的 protein-aware loss？</div>
+<p><span class="b bad">没有</span>（在能核实的范围内）。</p>
+<p>扩散侧：蛋白信号只出现在<strong>条件</strong>（marker-LDM 的 one-hot、VIMs 的文本 prompt）与<strong>评价</strong>（Star-Diff 的 SFS、HistDiST 的 MRA、MIU-Diff 的 IOD）。</p>
+<p>真正的蛋白<strong>训练损失</strong>全部在非扩散：PSPStain / PGVMS 的 FOD、CCPL 的双通道 FOD、UNIStainNet 的 DAB 强度损失、HER2 NCMT 的序数分数 MSE。</p>
+</div>
+<div class="mini">
+<div class="mt">Q2 · 现在最常见的是哪一种？</div>
+<p><span class="b medium">DAB / OD 代理量</span>在<strong>非扩散</strong>里最常见（PSPStain / CCPL / UNIStainNet / Wei et al.）。</p>
+<p><span class="b blue">条件注入</span>在<strong>扩散</strong>里最常见（marker one-hot / 文本 prompt / foundation model token）。</p>
+<p><span class="b low">protein feature</span>与<span class="b low">sampling guidance</span>最少：前者只在 FeatStainDiff（且不生成图像），后者只有 MIU-Diff（且信号不是蛋白）。</p>
+</div>
+<div class="mini">
+<div class="mt">Q3 · 约束挂在扩散的哪个位置？</div>
+<p>五格分布见 <a href="#s5-1">§5.1 总表</a>。速览：</p>
+<p><strong>x̂₀ / 最终 RGB</strong>：PSPStain、CCPL、UNIStainNet、PaPIS（全是非扩散）</p>
+<p><strong>latent / feature</strong>：OT-StainNet（扩散）、VSMT、HER2 NCMT</p>
+<p><strong>条件输入</strong>：marker-LDM、VIMs、HistDiST、UNIStainNet</p>
+<p><strong>采样期</strong>：MIU-Diff、SGCD<span class="b high">已核实</span><span class="cite">（★ 但发布的代码里该引导被写死 <code>guide = False</code>，实为死代码）</span></p>
+<p><strong>ε / v 本身</strong>：<span class="b bad">无</span>——没有一篇把蛋白损失挂在噪声预测目标上</p>
+</div>
+<div class="mini">
+<div class="mt">Q4 · 哪些方法不需要严格配准？</div>
+<p><span class="b high">完全不需要空间对应</span>：MIL-CycleGAN（滑片级 MIL）· PGVMS PCLS（原型）· USIGAN（非平衡 OT，显式去掉弱配对项）· MIU-Diff（域内估互信息）</p>
+<p><span class="b medium">弱配准即可</span>：OT-StainNet · ASP · UNIStainNet（10–50 px 容差）· DGR · Star-Diff（SFS 指标）</p>
+<p><span class="b bad">要求配准</span>：HER2 NCMT · TDKstain · CCPL · FeatStainDiff</p>
+</div>
+</div>
+
+<div class="box pur">
+<div class="bt">Q5 · 明显空缺在哪</div>
+<p>指导书给的目标组合是：<code>diffusion + explicit protein/stain representation + protein-aware constraint + weak/non-aligned H&amp;E/IHC</code>。逐格核对后：</p>
+<ul>
+<li><strong>已有人做到</strong>：扩散 + 弱配准（OT-StainNet、MIU-Diff）；非扩散 + 显式浓度表示（StainQuant）；非扩散 + 蛋白约束 + 弱配准（PGVMS、USIGAN、MIL-CycleGAN）。</li>
+<li><strong>没人做到</strong>：<strong>扩散 × 显式浓度/OD 生成空间 × 蛋白约束</strong> 这三者的交集。扩散侧的蛋白约束目前<strong>一格都没有</strong>。</li>
+<li><strong>你的工作可能补的空</strong>：不是「发明一个新 loss」，而是<strong>把一个已经存在的蛋白约束（FOD 或序数分级）搬进扩散，并且证明它在非配准下仍然有效</strong>。这个「搬运 + 有效性证明」本身就是可发表的，因为它同时补上了「扩散侧无蛋白约束」和「蛋白约束未在非配准扩散下验证」两个缺口。</li>
+</ul>
+</div>
+
+<div class="box stop">
+<div class="bt">诚实边界声明（请先读）</div>
+<ul>
+<li>本报告<strong>没有跑过任何实验</strong>。所有判断来自论文原文 / 摘要的核实，以及库内既有报告的交叉引用。</li>
+<li>每条引用标注了核实等级：<span class="b high">已核实</span> = 我本人抓取了原文/摘要页面并读到该结论；<span class="b medium">库内已核实</span> = 本项目此前某轮已逐条核对过的内部结论；<span class="b low">未核实</span> = 只见到二手描述，<strong>不可当作事实引用</strong>。</li>
+<li><strong>已回填核实（2026-10-08）</strong>：FeatStainDiff 原文 PDF 已读取全文；其 CSB/MMD/FMoE 公式与训练逻辑已核实。但官方仓库核心 <code>model.py</code> 暂 withheld，代码级实现细节仍未核实。ConCLR 与部分 Springer 章节仍只读到摘要/README。</li>
+<li>「没有找到」≠「不存在」。本报告的阴性结论只代表<strong>在本次检索式与可获取范围内</strong>未发现。</li>
+</ul>
+</div>
+
+<h2 id="s1"><span class="num">1</span>三个坐标轴 —— 本报告怎么组织文献</h2>
+
+<p>指导书的核心要求是：<strong>不要按方法名罗列，要按「约束挂在 diffusion 的哪里」组织</strong>。所以本报告给每篇论文三个坐标。</p>
+
+<h3>轴 1 · 位置：约束挂在扩散流程的哪一格</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:60px" class="c">位置</th><th>名字</th><th>典型流程</th><th>本报告的判定</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>①</strong></td><td>训练损失 · 挂在<strong>预测目标</strong>（ε / v / x̂₀）</td><td><code>noisy x_t → U-Net → ε̂ → 反推 x̂₀ → 蛋白量 → L_protein → 回传</code></td><td><span class="b bad">扩散侧空白</span>。非扩散侧有（PSPStain 等，但它们的「x̂₀」是生成器直接输出）</td></tr>
+<tr><td class="c"><strong>②</strong></td><td>训练损失 · 挂在 <strong>latent / feature</strong></td><td><code>Diffusion latent → 特征提取器 → L_protein</code></td><td><span class="b medium">有 1 篇扩散</span>：OT-StainNet（特征相关矩阵一致性）</td></tr>
+<tr><td class="c"><strong>③</strong></td><td><strong>条件输入</strong></td><td><code>H&amp;E + protein condition → U-Net</code></td><td><span class="b high">扩散侧最常见</span>：marker one-hot / 文本 prompt / FM token</td></tr>
+<tr><td class="c"><strong>④</strong></td><td>训练损失 · 挂在<strong>最终 RGB</strong></td><td><code>生成图 → 色解卷积 → DAB → L</code></td><td><span class="b medium">非扩散为主</span>：CCPL、UNIStainNet、PaPIS</td></tr>
+<tr><td class="c"><strong>⑤</strong></td><td><strong>采样期 guidance</strong></td><td><code>每步采样 → protein score → 修正去噪方向</code></td><td><span class="b medium">扩散侧只有 1 篇</span>：MIU-Diff，<strong>但信号是结构不是蛋白</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">为什么把 ① 和 ④ 分开？</div>
+<p>因为<strong>梯度回传的路径完全不同</strong>。挂在 ④（最终 RGB）上，你是在<strong>生成结果</strong>上算损失，一次前向只产生一个 x̂₀，梯度干净；挂在 ① 上，你要先<strong>从 ε̂ 反推 x̂₀</strong>，而这一步在小 t 处会放大误差，且损失的数值量级随 t 剧烈变化（详见 §5.2）。<strong>指导书 §十六 问的正是这件事，本报告在 §5.2 正面回答。</strong></p>
+</div>
+
+<h3>轴 2 · 对象：约束作用在什么量上</h3>
+<p>沿用指导书 §十四 的六分法，本报告补一条边界说明：</p>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:60px" class="c">类</th><th>约束对象</th><th>算不算「蛋白约束」</th><th>代表工作</th></tr></thead>
+<tbody>
+<tr><td class="c">A</td><td>RGB 图像（L1 / SSIM / perceptual）</td><td><span class="b bad">不算</span>。单独列出，不作重点</td><td>几乎所有</td></tr>
+<tr><td class="c">B</td><td><strong>DAB / OD / 浓度</strong></td><td><span class="b high">算</span>，但是<strong>强度代理量</strong></td><td>PSPStain、CCPL、UNIStainNet、StainQuant、Loo 2025</td></tr>
+<tr><td class="c">C</td><td><strong>protein feature</strong></td><td><span class="b medium">存疑</span>——多数是<strong>形态特征</strong>冒充蛋白特征</td><td>FeatStainDiff、VSMT、UNIStainNet（UNI 作条件）</td></tr>
+<tr><td class="c">D</td><td><strong>protein grade / 分类</strong></td><td><span class="b high">算</span>，且<strong>对错位最友好</strong></td><td>HER2 NCMT、MIL-CycleGAN、TDKstain（评价）</td></tr>
+<tr><td class="c">E</td><td><strong>distribution / ranking / 关系</strong></td><td><span class="b high">算</span>，弱配准友好</td><td>PGVMS PALS、USIGAN、ASP</td></tr>
+<tr><td class="c">F</td><td><strong>采样期 protein guidance</strong></td><td><span class="b bad">扩散侧空白</span></td><td>MIU-Diff（结构，非蛋白）、SGCD<span class="b high">已核实</span>（<strong>非蛋白</strong>：引导目标是染色参考图，与蛋白表达无关）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>轴 3 · 对配准的依赖程度（指导书 §十八 的五级）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:70px" class="c">Level</th><th>依赖形态</th><th>数学形态</th><th>错位后果</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>L1</strong></td><td>强依赖像素对应</td><td><code>L1(DAB_fake, DAB_real)</code></td><td><span class="b bad">被错位直接破坏</span>（实测见 §7）</td></tr>
+<tr><td class="c"><strong>L2</strong></td><td>patch / region 级</td><td>patch 均值、block 均值</td><td><span class="b medium">稍鲁棒</span>，但边界处仍污染</td></tr>
+<tr><td class="c"><strong>L3</strong></td><td>分布级</td><td>histogram / OT / 相关矩阵</td><td><span class="b high">鲁棒</span>——不比较对应像素</td></tr>
+<tr><td class="c"><strong>L4</strong></td><td>ranking / 关系级</td><td><code>A &gt; B ⇒ A′ &gt; B′</code></td><td><span class="b high">鲁棒</span>——只需相对序</td></tr>
+<tr><td class="c"><strong>L5</strong></td><td>语义 / 临床级</td><td>分级、滑片级标签</td><td><span class="b high">完全不需要</span>像素对应</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>每篇论文的阅读模板（指导书 §十五 的九项，压缩为七项）</h3>
+<pre><code>【论文名】 venue / year / arXiv-ID / DOI       核实等级
+
+① 它解决什么问题           — 人话，不超过 5 句
+② 是不是 diffusion          — 是/否 + 什么扩散 + 扩散负责什么
+③ 怎么约束蛋白              — 输入 → 扩散 → 得到什么 → 提取什么 → 算什么 → 回传/guidance
+④ 大白话：它在阻止模型犯什么错
+⑤ 挂在哪里                  — ①ε/v/x̂₀ ②latent/feature ③条件 ④最终RGB ⑤采样期
+⑥ 配准要求                  — L1 / L2 / L3 / L4 / L5
+⑦ 训练还是评价 + 蛋白约束强度（★1–★5）+ 对你有没有用</code></pre>
+
+<h2 id="s2"><span class="num">2</span>真正用于扩散虚拟染色的蛋白约束</h2>
+
+<p>这一节只收<strong>生成器是扩散/score-based</strong>的工作。每篇都回答「它到底在管什么」和「挂在哪里」。</p>
+
+<div class="card" id="s2-1">
+<div class="ch">
+<div>
+<div class="title">2.1 Star-Diff —— 扩散 + HER2 分类器，但分类器只用来<strong>评价</strong></div>
+<div class="v">arXiv:2508.02528 · 2025-08-04 · Liu, Deng, Li, Kazemi, … Mogler, Schüffler（TU München） <span class="b high">已核实</span></div>
+</div>
+<div><span class="b blue">Diffusion</span> <span class="b low">评价指标</span></div>
+</div>
+<div class="body">
+<p><strong>① 它解决什么。</strong>把虚拟染色重新表述成<strong>图像复原</strong>任务：H&amp;E 是「退化」的 IHC，模型去恢复它。作者点出两个核心困难：<em>(1) 缺少对合成图像 vs <strong>错位的</strong> IHC 真值的公平评价；(2) 翻译过程中要保持结构完整性与生物变异</em>。</p>
+<p><strong>② 是不是扩散。</strong>是。结构感知的<strong>复原扩散</strong>，<strong>残差通路 + 噪声通路双路</strong>——一条预测 <code>I_res = I_IHC − I_HE</code>，一条预测 ε，γ<sub>t</sub>=0 时退化为标准 DDPM。x₀ 就是真实 IHC。</p>
+<p><strong>③ 怎么约束蛋白。</strong></p>
+<pre><code>H&amp;E → 残差+噪声双路扩散 → 生成 IHC 图
+                              ↓
+                    HER2 分类器（ResNet）
+                              ↓
+              分类准确率 → Semantic Fidelity Score (SFS)
+                              ↓
+                     ✗ 不回传。只在测试时算</code></pre>
+<p><strong>④ 大白话。</strong>它<strong>不阻止模型犯任何蛋白错误</strong>。它做的是「事后体检」：生成完，拿一个 HER2 分类器去判，看分类性能掉了多少。原话：<em>a clinical-grading-task-driven metric that quantifies class-wise semantic degradation based on biomarker classification accuracy</em>，并且 <em>unlike pixel-level metrics such as SSIM and PSNR, SFS remains robust under spatial misalignment</em>。</p>
+<p><strong>⑤ 挂在哪里。</strong><span class="b low">不在训练里</span>。这是<strong>评价指标</strong>，不是约束。</p>
+<p><strong>⑥ 配准要求。</strong>L5 级——作者明确以「错位真值」为动机，SFS 设计上就对错位鲁棒。</p>
+<p><strong>⑦ 强度与可用性。</strong>蛋白约束强度 <strong>★☆☆☆☆</strong>。但它给你两件可直接用的东西：<strong>(a) SFS 这个指标本身</strong>（你需要的正是「错位下仍可比的蛋白级指标」）；<strong>(b) 残差 + 噪声双路</strong>这个结构，正是库内报告推荐的 RDDM 式双扩散。</p>
+</div>
+</div>
+
+<div class="card" id="s2-2">
+<div class="ch">
+<div>
+<div class="title">2.2 MIU-Diff —— 病理虚拟染色里<strong>唯一</strong>的采样期 guidance，但信号是<strong>互信息</strong></div>
+<div class="v">arXiv:2506.23184 · 2025-06-29 · Liu, Wang, Cai, Li · CMMCA 2025 (MICCAI workshop) <span class="b high">已核实</span></div>
+</div>
+<div><span class="b blue">Diffusion</span> <span class="b tealb">采样期</span></div>
+</div>
+<div class="body">
+<p><strong>① 它解决什么。</strong>非配对虚拟染色的三个难点：<em>① 染色风格与组织结构难以有效分解；② 染色过程需要可控、且能适应不同组织与蛋白；③ H&amp;E 与 IHC <strong>本身就不是像素对齐</strong>，需要严格的结构一致性建模。</em></p>
+<p><strong>② 是不是扩散。</strong>是，<strong>score-based</strong>（反向 SDE）。</p>
+<p><strong>③ 怎么约束。</strong></p>
+<pre><code>H&amp;E ──┐
+      ├─→ 全局互信息能量函数 M(y,x₀,t)  ← 分解「组织结构 vs 染色特征」
+      │            ↓  ∇_y M
+y_t ──┴─→ 反向 SDE：dy = [−½β(t)dt − β(t)(ê(y,t) − ∇_y M)]dt + √β(t) dw̄
+                       ↑ 这就是 guidance：把采样均值整体平移 −Σk
+      ↓
+  生成 IHC + 局部互信息对比学习（细胞级结构一致性）</code></pre>
+<p><strong>④ 大白话。</strong>扩散本来按自己的 score 走，互信息能量在旁边说「你和源图的结构对不上了」，于是把每一步的采样结果往「结构更像 H&amp;E」的方向推。<strong>但它管的是「结构」，不是「蛋白」。</strong>摘要里那句 <em>precise control of the staining intensity</em> 指的是染色强度可控（timestep-customized），不是「DAB 表达量正确」。</p>
+<p><strong>⑤ 挂在哪里。</strong><span class="b tealb">采样期</span>——注入到反向 SDE 的漂移项（实现上是「平移转移核均值 <code>μ − Σk</code>」，<code>k = ∇M</code>）。<strong>这是 classifier guidance 的变体</strong>（用能量函数的梯度替代分类器梯度）。</p>
+<p><strong>⑥ 配准要求。</strong><span class="b high">L3–L5</span>。作者明确说是<strong>非配对</strong>，而且互信息估计器是<strong>在 IHC 域内部</strong>训的（IHC vs 它自己的梯度图），<strong>故意回避跨模态对齐</strong>。这是本报告里对「连续切片」最友好的扩散工作之一。</p>
+<p><strong>⑦ 强度与可用性。</strong>蛋白约束强度 <strong>★☆☆☆☆</strong>（信号不是蛋白）。<strong>但它是你方案 F 的现成模板</strong>：把互信息能量换成<strong>蛋白能量</strong>（例如一个 HER2/DAB 打分器的负对数似然），整套机制可以原样搬。</p>
+</div>
+</div>
+
+<div class="card" id="s2-3">
+<div class="ch">
+<div>
+<div class="title">2.3 ★ OT-StainNet —— 扩散 backbone + 最优传输 + 弱配对，三者同时成立的第一篇</div>
+<div class="v">AAAI 2025, 39(3):3194–3202 · DOI 10.1609/aaai.v39i3.32329 · Guan, Wang, Zhang, Zhang, Zhang（哈工大深圳 / 鹏城实验室） <span class="b high">已核实</span></div>
+</div>
+<div><span class="b blue">Diffusion</span> <span class="b purple">软对应</span> <span class="b high">弱配对</span></div>
+</div>
+<div class="body">
+<p><strong>① 它解决什么。</strong>H&amp;E 与 IHC 是<strong>同一组织的相邻切片</strong>，<em>not precisely aligned at the pixel level</em>；现有方法没法充分利用这种弱配对监督信号。它用最优传输在 H&amp;E 与 IHC 的特征集合之间建立<strong>语义对应</strong>，再用相关矩阵一致性约束虚拟 IHC 的特征结构。</p>
+<p><strong>② 是不是扩散。</strong>是。<strong>用预训练扩散模型当生成器</strong>（SD-Turbo 级潜扩散），<strong>用 LoRA 适配器 + 对抗训练微调</strong>。注意这是个混合体：主干是扩散，训练目标里有对抗项。</p>
+<p><strong>③ 怎么约束。</strong></p>
+<pre><code>H&amp;E 特征集 F_H ∈ R^{n×d}      IHC 特征集 F_I ∈ R^{n×d}
+        │                              │
+        └──────────┬───────────────────┘
+                   ▼
+       OT：min_P ⟨P, C⟩,  C_uv = ‖f_H^u − f_I^v‖₂   ← 代价 = L2
+                   ▼
+       软目标 F̂_I = Pᵀ F_I        ← 「A 原来只能配 A，现在可以配 A1/A2/A3，
+                                     由耦合矩阵按总代价最小来分配权重」
+                   ▼
+   SCC 语义一致性：‖ Corr(虚拟 IHC 特征) − Corr(真实 IHC 特征) ‖
+                   ▼
+   L_total = λ_adv L_adv + λ_cycle L_cycle + λ_id L_id + λ_sc L_sc</code></pre>
+<p><strong>④ 大白话。</strong>它阻止模型犯的错是：<strong>「因为切片错位，模型被迫去学一个错误的对齐」</strong>。做法是先把「谁该配谁」这件事交给最优传输去<strong>软性决定</strong>，再要求生成图的<strong>特征间相关性结构</strong>（而不是像素值）与真实 IHC 一致。</p>
+<p><strong>⑤ 挂在哪里。</strong><span class="b purple">② latent / feature</span>——训练损失，作用在特征相关矩阵上。<strong>不在采样循环里</strong>（OT 只负责建监督信号，不修改去噪轨迹）。</p>
+<p><strong>⑥ 配准要求。</strong><span class="b high">L3</span>。原话：<em>adjacent images of the same tissue stained with H&amp;E and IHC are not precisely aligned at the pixel level</em>。论文用<strong>四种 IHC 染色 / 两个数据集</strong>验证。</p>
+<p><strong>⑦ 强度与可用性。</strong>蛋白约束强度 <strong>★★☆☆☆</strong>——它约束的是<strong>特征相关性</strong>，没有任何 DAB / OD / 分级信号，所以是「保持染色转移过程中的语义相关性」，不是「保持蛋白表达量」。<strong>但对你的价值极高</strong>：它是「扩散 + 弱配对」的<strong>唯一可直接复现的骨架</strong>，你只要把它的 SCC 换成蛋白量（FOD / 分级）就得到了目标组合。</p>
+<div class="box warn" style="margin-top:12px">
+<div class="bt">一个必须注意的细节</div>
+<p>论文写的是<strong>平衡 Kantorovich 形式</strong>（<code>min_P ⟨P,C⟩</code>），<strong>但全文没有说明 P 用什么算法求解</strong>（既没提 Sinkhorn，也没提熵正则）。而 USIGAN 用的是<strong>非平衡</strong> OT（去掉弱配对项）。<br><strong>★ 2026-10-06 更正：</strong>我原先在这里写「<strong>没有熵正则 / Sinkhorn 项</strong>」——<strong>那是把「论文没提」当成了「没有」，不成立。</strong>拿到 OT-StainNet 全文后确认：它只是<strong>没写求解器</strong>；而 n×n 精确 LP 在训练循环里根本不可行（n=1024 时单次约 10⁹ 量级 × 3 万次迭代）⇒ <strong>它实际用的很可能就是熵正则 + Sinkhorn。</strong>⇒ <strong>「病理 OT 里没人用 Sinkhorn」这个阴性结论站不住，只能说「两篇都没写」。</strong>详见 <code>02_论文翻译/OT-StainNet_论文中文翻译.html</code>。</p>
+</div>
+</div>
+</div>
+
+<div class="card" id="s2-4">
+<div class="ch">
+<div>
+<div class="title">2.4 其余六篇：蛋白信号只作「条件」或只作「评价」</div>
+<div class="v">marker-LDM / VIMs / StainDiffuser / HistDiST / UNIStainNet / FeatStainDiff</div>
+</div>
+<div><span class="b blue">Diffusion</span> <span class="b low">无蛋白训练损失</span></div>
+</div>
+<div class="body">
+<div class="scroll">
+<table>
+<thead><tr><th style="width:15%">论文</th><th style="width:16%">扩散形态</th><th style="width:26%">蛋白信号是什么</th><th style="width:14%">挂在哪里</th><th>配准 / 关键事实</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>Marker-wise Conditioned Diffusion</strong><br><span class="cite">AAAI 2026 · arXiv:2508.14681</span><br><span class="b medium">库内已核实</span></td>
+<td>潜扩散（SD v2 级），DDPM，v-prediction</td>
+<td><strong>marker 身份 one-hot</strong>（DAPI / panCK / CD3 等），<strong>不含表达量</strong></td>
+<td><span class="b blue">③ 条件</span><br>加到时间嵌入上</td>
+<td>配对同区域；第二阶段在像素空间做单步 L1+L2 微调</td>
+</tr>
+<tr>
+<td><strong>VIMs</strong><br><span class="cite">MICCAI Workshop 2024 · arXiv:2407.19113</span><br><span class="b medium">库内已核实</span></td>
+<td>潜扩散 + LoRA，视觉语言模型，单步扩散</td>
+<td><strong>每个 marker 的文本 prompt</strong>（核标记 / 胞质标记）</td>
+<td><span class="b blue">③ 条件</span></td>
+<td>单标配对训练，测试时配对与非配对都试</td>
+</tr>
+<tr>
+<td><strong>StainDiffuser</strong><br><span class="cite">arXiv:2403.11340</span><br><span class="b high">已核实</span></td>
+<td>双 DDPM（IHC 生成 + H&amp;E 分割），ε-prediction</td>
+<td><strong>没有蛋白信号</strong>。辅助分割掩膜是<strong>对 DAB 通道做 μ+2σ 阈值</strong>自动生成的，只在训练用</td>
+<td><span class="b blue">① ε 损失</span><br><code>L = L_gen + λL_seg</code></td>
+<td>约束的是<strong>结构</strong>（细胞），不是表达量</td>
+</tr>
+<tr>
+<td><strong>HistDiST</strong><br><span class="cite">DAGM GCPR 2025 · arXiv:2505.06793</span><br><span class="b medium">库内已核实</span></td>
+<td>潜扩散，v-prediction，零终端 SNR，DDIM 反演</td>
+<td><strong>Phikon 形态嵌入作条件</strong>；<strong>MRA（分子检索准确率，用 GigaPath 嵌入）作评价</strong></td>
+<td><span class="b blue">③ 条件</span><br>MRA = 评价</td>
+<td>摘要未说明配准要求。MRA 是<strong>检索式</strong>指标，不要求像素对应</td>
+</tr>
+<tr>
+<td><strong>UNIStainNet</strong><br><span class="cite">arXiv:2603.12716 · 2026-03-13</span><br><span class="b high">已核实</span></td>
+<td>SPADE-UNet，<strong>摘要未说明是扩散还是 GAN</strong></td>
+<td><strong>冻结的 UNI 基础模型 token 作条件</strong>；外加一套 <strong>misalignment-aware 损失</strong>保持<strong>染色定量精度</strong>；可学习染色嵌入支持单模型多 marker</td>
+<td><span class="b blue">③ 条件</span> + <span class="b purple">④ 图像级定量损失</span></td>
+<td>MIST 上四种染色（HER2/Ki67/ER/PR）单模型 SOTA；BCI 最优。失败分析：<strong>误差系统性集中在非肿瘤组织</strong>。原话：<em>the generator itself receives no direct guidance from pathology foundation models</em>（这是它的动机）</td>
+</tr>
+<tr>
+<td><strong>FeatStainDiff</strong><br><span class="cite">MedIA 112 (2026) 104138</span><br><span class="b medium">库内已核实</span></td>
+<td><strong>特征级</strong>扩散（U-ViT 式去噪器）</td>
+<td>跨染色<strong>特征变换</strong>；对比语义桥接 + 频域 MoE</td>
+<td><span class="b purple">② feature</span></td>
+<td><strong>明确「不生成 IHC 图像」</strong>；<strong>要求配对且配准的特征</strong>（RegWSI 对齐）⇒ 非配对场景不可用</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<h3 id="s2-5">2.5 小结：扩散侧的四条硬事实</h3>
+<div class="box stop">
+<div class="bt">四条</div>
+<ol>
+<li><strong>没有一篇把蛋白损失反传到去噪网络。</strong>八篇逐篇核对后，蛋白信号的全部去向是：条件输入（marker-LDM、VIMs、HistDiST、UNIStainNet）或评价指标（Star-Diff SFS、HistDiST MRA、MIU-Diff IOD）。</li>
+<li><strong>没有一篇把损失挂在 ε / v 上。</strong>唯一挂在「扩散预测目标」上的是 StainDiffuser 的<strong>分割</strong>辅助损失——那是结构，不是蛋白。</li>
+<li><strong>只有一篇在采样期做 guidance</strong>（MIU-Diff），而且信号是<strong>「染色独有信息 + 跨模态结构互信息」两项组合</strong>（<code>M = λ<sub>t</sub>U + (1−λ<sub>t</sub>)I</code>）——<strong>但两项都不含蛋白</strong>。蛋白 guidance 在扩散侧<strong>一格都没有</strong>。<span class="small">★ 勘误（2026-10-08）：原写「信号是互信息（结构）」不完整，已按原文 Eq.(2) 更正；结论不变。</span></li>
+<li><strong>「扩散 + 弱配对」已经成立</strong>（OT-StainNet 用 OT、MIU-Diff 用域内互信息）。所以你的<strong>数据现实不是障碍</strong>——障碍只在「蛋白约束还没有被搬进扩散」这一步。</li>
+</ol>
+</div>
+
+<h2 id="s3"><span class="num">3</span>非扩散、但可以迁移的蛋白约束（指导书九类逐类回答）</h2>
+
+<p>每一类都回答指导书要求的三问：<strong>这一类在 diffusion virtual staining 里有没有人做？最接近的 diffusion 工作是什么？能不能迁移？</strong></p>
+
+<h3 id="s3-1">3.1 第一类 · DAB / OD / FOD 直接约束</h3>
+
+<div class="box key">
+<div class="bt">本类三问</div>
+<p><strong>扩散里有人做吗？</strong><span class="b bad">没有。</span>能核实的扩散虚拟染色论文<strong>没有一篇</strong>把 DAB / OD 量写进损失。</p>
+<p><strong>最接近的扩散工作？</strong>UNIStainNet 的 misalignment-aware 染色定量损失——但它的 backbone 摘要未说明是不是扩散，且它约束的是<strong>最终图像的染色定量统计</strong>，属于位置 ④。</p>
+<p><strong>能迁移吗？</strong><span class="b high">能，而且这是本报告推荐的第一优先级。</span>因为损失形式简单（对统计量做 L2），且已有非扩散实现可逐行对照。</p>
+</div>
+
+<h4>FOD 到底是什么</h4>
+<p>指导书里反复出现 FOD，先把它说清楚（库内已核实）：</p>
+<div class="formula">OD = −log₁₀(I / I₀) 　→　FOD = OD<sup>α</sup>（PSPStain 取 α = 1.8，阈值 T ≈ 0.15）</div>
+<p>直观理解：<strong>OD 是「有多深」，FOD 是把「深」做了一次非线性重加权后的量</strong>，目的是让高表达区（深染色）在损失里占更大权重。它<strong>不是</strong>生物学蛋白浓度，是<strong>染色强度的一个可计算代理</strong>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:15%">工作</th><th style="width:9%">模型</th><th style="width:30%">约束形式（原样）</th><th style="width:10%">挂在哪</th><th>大白话：它阻止模型犯什么错</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>PSPStain</strong><br><span class="cite">MICCAI 2024 · arXiv:2407.03655</span><br><span class="b medium">库内已核实</span></td>
+<td>GAN / CUT</td>
+<td><strong>L_MLPA</strong> = ① FOD 全局均值 L2 ② <strong>20-bin 直方图</strong> L2 ③ <strong>16-block 区域均值</strong> L2，λ = 1.0</td>
+<td><span class="b purple">④ 输出</span></td>
+<td>「你整体染得太深 / 太浅了」+「你的表达分布形状不对」+「你某一块区域整体偏了」。<strong>不要求像素一一对应</strong>（三个统计量都天然鲁棒）</td>
+</tr>
+<tr>
+<td><strong>CCPL</strong><br><span class="cite">arXiv:2506.07559</span><br><span class="b medium">库内已核实</span></td>
+<td>CUT / GAN</td>
+<td><strong>双通道 FOD</strong>：<code>L_dual = αL_H + (1−α)L_D</code>，分别在 H 与 DAB 的 OD 上算；外加核↔膜跨通道相关性</td>
+<td><span class="b purple">④ 输出</span></td>
+<td>「核和膜的表达要各自对」+「核被膜包着，两者不能各管各的」</td>
+</tr>
+<tr>
+<td><strong>UNIStainNet DAB 损失</strong><br><span class="cite">arXiv:2603.12716</span><br><span class="b medium">库内已核实</span></td>
+<td>SPADE-UNet</td>
+<td><code>L_DAB = ‖mean(top10%(DAB_gen)) − mean(top10%(DAB_gt))‖</code>，λ<sub>DAB</sub> = 0.2</td>
+<td><span class="b purple">④ 输出</span></td>
+<td>只看<strong>最强的 10%</strong> 区域的平均强度。阻止「高表达区被生成得太弱」——这正是 HER2 判读最敏感的地方</td>
+</tr>
+<tr>
+<td><strong>Wei et al.</strong>（DeStainer / ReStainer）<br><span class="b medium">库内已核实</span></td>
+<td>GAN</td>
+<td>DAB 通道 L1 + <strong>HER2 分级 focal loss</strong>（从 H&amp;E 的苏木素通道估分级）</td>
+<td><span class="b purple">④ 输出</span></td>
+<td>「DAB 通道逐像素别偏」+「分级别错」</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">必须指出的一件事：「protein-aware」这个标签在多数论文里<strong>没有被验证</strong></div>
+<p>PSPStain / PGVMS 把 FOD 称作 protein-aware，但 <strong>FOD 是色解卷积后的强度统计量</strong>，论文<strong>没有证明这个表示真的编码蛋白表达</strong>（没有做「FOD 变化 ↔ 真实蛋白量变化」的相关性验证）。UNIStainNet 用的 UNI 是 <strong>H&amp;E 形态</strong>预训练的，论文自己也<strong>不主张</strong>它有蛋白语义。</p>
+<p>⇒ 指导书 §八 那句「普通 pathology feature ≠ protein feature」<strong>在文献里几乎没人明确区分</strong>。这本身是一个可以在你论文里指出的方法论问题。</p>
+</div>
+
+<h3 id="s3-2">3.2 第二类 · H-score / protein grading / biomarker score 约束</h3>
+
+<div class="box key">
+<div class="bt">本类三问</div>
+<p><strong>扩散里有人做吗？</strong><span class="b bad">没有。</span>扩散侧的分级<strong>全部是评价</strong>（Star-Diff 的 SFS）。</p>
+<p><strong>最接近的扩散工作？</strong>Star-Diff——它<strong>发明了</strong>一个分级驱动的指标 SFS，并且证明了它对错位鲁棒。这是你最该直接拿来当评价指标的东西。</p>
+<p><strong>能迁移吗？</strong><span class="b high">分级作为训练损失能迁移</span>，但必须解决两个问题：<strong>(a) H-score 本身不可微</strong>（分箱计数）；<strong>(b) 需要滑片级或序数级标签</strong>。</p>
+</div>
+
+<h4>指导书最关心的那个区分：H-score 是训练还是评价？</h4>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:20%">工作</th><th style="width:9%">模型</th><th style="width:13%">H-score / 分级</th><th style="width:26%">具体形式</th><th>配准要求</th></tr></thead>
+<tbody>
+<tr style="background:var(--greenSoft)">
+<td><strong>HER2 Score-Aware NCMT</strong><br><span class="cite">Diagnostics 2026 · PMC13163341 / PMID 42122020</span><br><span class="b high">已核实</span></td>
+<td>GAN<br>(ResNet-9 + 5 层 PatchGAN)</td>
+<td><span class="b high">训练损失</span><br>（也是评价）</td>
+<td><strong>HER2 序数分数（0/1+/2+/3+ → 连续值）做 MSE</strong>；<code>L_score</code> 同时监督<strong>生成图 ŷ 与真实图 y</strong>；<strong>挂在编码器中间层特征</strong>上，每层一个轻量回归头，跨层平均；<code>L_total = 翻译损失 + λ₁L_SimSiam + λ₂L_SC + λ₃L_score</code></td>
+<td><span class="b bad">要求配准</span><br>BCI 已配准 patch 对（4873 对 / 51 张 WSI）</td>
+</tr>
+<tr style="background:var(--greenSoft)">
+<td><strong>MIL-CycleGAN</strong>（p16 / Ki-67）<br><span class="cite">Front. Med. Technol. 8:1783365 · DOI 10.3389/fmedt.2026.1783365</span><br><span class="b high">已核实</span></td>
+<td>CycleGAN</td>
+<td><span class="b high">训练损失</span></td>
+<td><strong>滑片级 CIN 分级标签</strong>做 MIL 弱监督：bag = 一张切片，instance = 生成出来的 IHC patch，注意力池化聚合；原话 <em>the auxiliary classification loss encourages the generator to maintain lesion-related structural features during the H&amp;E-to-IHC translation process</em>；注意力权重还反过来<strong>调制循环一致性与感知损失</strong></td>
+<td><span class="b high">弱配对即可</span><br>原话：<em>the resulting pairs are not strictly pixel-aligned … considered weakly paired rather than fully paired</em></td>
+</tr>
+<tr>
+<td><strong>TDKstain</strong><br><span class="cite">MICCAI 2024 · LNCS 15004 pp.3–13 · DOI 10.1007/978-3-031-72083-3_1</span><br><span class="b high">已核实</span></td>
+<td>GAN</td>
+<td><span class="b low">评价</span></td>
+<td>损失是<strong>任务先验</strong>：核密度估计器（辅助正则分支，做真实图与生成图的细胞对齐）+ 膜染色强度分支。HER2 出现在 <em>downstream tasks for generated images</em></td>
+<td><span class="b bad">要求配准</span><br>RegH2I，2592 对已配准</td>
+</tr>
+<tr>
+<td><strong>Star-Diff SFS</strong><br><span class="cite">arXiv:2508.02528</span><br><span class="b high">已核实</span></td>
+<td><strong>扩散</strong></td>
+<td><span class="b low">评价</span></td>
+<td>HER2 分类器 → 分类准确率 → 语义保真分数</td>
+<td><span class="b high">错位鲁棒</span></td>
+</tr>
+<tr>
+<td><strong>PGVMS</strong><br><span class="cite">TMI 2026 · arXiv:2602.23292</span><br><span class="b high">已核实</span></td>
+<td><strong>摘要未说明</strong></td>
+<td><span class="b low">评价</span></td>
+<td>HER2 用 OD 阈值 500/2000/5000 分 4 类，ViT-B/32 下游分类</td>
+<td>训练用 uniplex；PCLS 校正空间错位</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>★ H-score 可不可微？</h4>
+<div class="box stop">
+<div class="bt">不可微。这是它至今没进扩散训练的根本原因</div>
+<p>标准定义：<code>H-score = (1×%弱) + (2×%中) + (3×%强)</code>，范围 0–300。其中的 <code>%</code> 是<strong>按强度分箱后的计数比例</strong>（典型阈值：DAB &lt; 0.2 阴性 / 0.2–0.4 弱 / 0.4–1 中 / &gt; 1 强）——<strong>硬阈值 + 计数 = 离散、不可导</strong>。</p>
+<p><strong>本次检索没有找到</strong>任何病理论文构造「软 H-score 损失」。可用的替代有三条：</p>
+<ol>
+<li><strong>序数回归</strong>（HER2 NCMT 的做法）：把 0/1+/2+/3+ 当<strong>连续目标值</strong>做 MSE。简单、已有人做、但丢掉了「强度加权」的语义。</li>
+<li><strong>软分箱</strong>：把硬阈值换成 softmax 权重，<code>H-score ≈ Σᵢ wᵢ·softmaxᵢ</code>，变成可导的加权期望。通用文献里有「可微直方图」（differentiable histogram with hard binning, arXiv:2012.06311）可借。</li>
+<li><strong>直接回归连续 DAB 加权和</strong>，绕过分类。有文献本身指出连续 DAB 优于分类分箱。</li>
+</ol>
+<p><strong>建议</strong>：如果你要加分级约束，<strong>先做第 1 条（序数回归）</strong>，因为它有已发表先例，出问题时可归因。</p>
+</div>
+
+<h3 id="s3-3">3.3 第三类 · 表达等级 / 分类约束</h3>
+
+<div class="box key">
+<div class="bt">本类三问</div>
+<p><strong>扩散里有人做吗？</strong><span class="b bad">没有</span>（训练层面）。</p>
+<p><strong>最接近的扩散工作？</strong>Star-Diff 的 SFS —— 它把「分类器准确率」当成生成质量的度量，<strong>但只在测试时</strong>。</p>
+<p><strong>能迁移吗？</strong><span class="b high">能，而且这一类的「弱监督变体」是对错位最友好的。</span>MIL-CycleGAN 已经证明：<strong>用滑片级标签 + MIL，完全不需要像素对应</strong>。</p>
+</div>
+
+<p>指导书问「它到底是让生成图像像真实 IHC，还是让生成图像得到正确蛋白分级？」——<strong>答案在这两类里是分开的</strong>：</p>
+<div class="grid2">
+<div class="mini">
+<div class="mt">路线 α：让生成图「像」真实 IHC</div>
+<p>L1 / SSIM / LPIPS / adversarial / PatchNCE。<strong>全部是外观约束</strong>。</p>
+<p>问题：<strong>外观像 ≠ 表达对</strong>。UNIStainNet 同时用了 LPIPS、edge loss、feature matching <strong>和</strong> DAB 损失；论文自己的消融显示去掉 UNI 条件会同时恶化 FID 与 DAB KL——<strong>但不能因此说「感知损失保护了蛋白表达」</strong>。</p>
+</div>
+<div class="mini">
+<div class="mt">路线 β：让生成图「被判对」</div>
+<p>HER2 序数回归 / MIL 分级 / 分类器一致性。<strong>直接针对蛋白语义</strong>。</p>
+<p>优势：<strong>对错位天然鲁棒</strong>（分级是区域/滑片级属性，不需要像素对应）。</p>
+<p>风险：<strong>可能被「捷径」利用</strong>——分类器只看全局特征时，模型可以生成一个「分级对但空间错」的图。</p>
+</div>
+</div>
+
+<h3 id="s3-4">3.4 第四类 · protein feature / foundation model 特征约束</h3>
+
+<div class="box stop">
+<div class="bt">本类三问 —— 这是最值得警惕的一类</div>
+<p><strong>扩散里有人做吗？</strong><span class="b bad">没有一篇用 FM 做特征损失。</span>FM 在虚拟染色里只以两种身份出现：<strong>条件</strong>（UNIStainNet 用 UNI 的 dense token 喂 SPADE；HistDiST 用 Phikon 嵌入作条件）或<strong>评价</strong>（HistDiST 的 MRA 用 GigaPath 嵌入）。</p>
+<p><strong>最接近的扩散工作？</strong><strong>FeatStainDiff</strong>——但它<strong>不生成 IHC 图像</strong>（只做特征级变换），而且<strong>要求配对且配准的特征</strong>，你的非配对场景用不了。</p>
+<p><strong>能迁移吗？</strong><span class="b medium">技术上能，但有一个前提必须先解决：证明你的「蛋白特征」真的是蛋白特征。</span></p>
+</div>
+
+<div class="box warn">
+<div class="bt">指导书 §八 那条「普通 pathology feature ≠ protein feature」—— 文献里几乎没人验证过</div>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:20%">工作</th><th style="width:22%">用的提取器</th><th style="width:16%">粒度</th><th>它验证过「这个特征编码蛋白表达」吗</th></tr></thead>
+<tbody>
+<tr><td>UNIStainNet</td><td>UNI（ViT-L/16，DINOv2 在 H&amp;E 上预训练），<strong>冻结</strong></td><td>32×32 token 网格（d=1024）</td><td><span class="b bad">没有，且论文不主张</span>。它把 UNI 当<strong>形态</strong>条件用；自己的 DAB 损失是强度代理</td></tr>
+<tr><td>HistDiST</td><td>Phikon 嵌入（条件）/ GigaPath 嵌入（MRA 评价）</td><td>图像级</td><td><span class="b medium">用 MRA 间接验证</span>——检索式指标，不是表达量相关性</td></tr>
+<tr><td>VSMT<br><span class="cite">CVPR 2026</span></td><td>四个任务特定辅助网络（<strong>不是 FM</strong>）</td><td>特征级</td><td><span class="b bad">没有</span>。IHC 分类辅助最接近 biomarker 语义，但未验证</td></tr>
+<tr><td>FeatStainDiff</td><td>未公开的「预训练特征提取器」</td><td>特征级</td><td><span class="b low">无法核实</span>（正文付费墙）</td></tr>
+<tr><td>PaPIS<br><span class="cite">arXiv:2507.12624</span></td><td>细胞形态分割模型特征 + Retinex 分解</td><td>图像级</td><td><span class="b bad">论文自己承认</span>未与病理医生评分或蛋白表达建立相关性</td></tr>
+</tbody>
+</table>
+</div>
+<p>⇒ <strong>本报告未找到任何一篇工作做到</strong>：「证明把 <code>f(生成图)</code> 拉近 <code>f(真实图)</code>（f 为病理 FM）能改善<strong>蛋白表达</strong>保真度，而不只是改善感知/形态相似度」。</p>
+<p>⇒ 这既是空白，<strong>也是一个陷阱</strong>：如果你要加 FM 特征损失，你<strong>必须自己先做一个验证实验</strong>（例如：FM 特征在 HER2 分级上的线性探针准确率是否显著高于随机；或者 FM 特征能否区分 DAB 高/低表达区）。<strong>否则你无法在论文里说「这个损失保护了蛋白表达」</strong>——指导书 §二十六 明确禁止这种写法。</p>
+</div>
+
+<h3 id="s3-5">3.5 第五类 · Contrastive / ranking / relative expression 约束</h3>
+
+<div class="box key">
+<div class="bt">本类三问</div>
+<p><strong>扩散里有人做吗？</strong><span class="b medium">部分有。</span>OT-StainNet 用的是<strong>特征相关矩阵一致性</strong>（扩散 backbone），MIU-Diff 用<strong>局部互信息对比学习</strong>（扩散，采样期附近）。<strong>但两者都不是「蛋白表达排序」</strong>。</p>
+<p><strong>最接近的扩散工作？</strong>OT-StainNet（相关性结构）+ MIU-Diff（局部对比）。</p>
+<p><strong>能迁移吗？</strong><span class="b high">能，而且这是对「连续切片」最自然的方向之一。</span>因为 ranking 只需要<strong>相对序</strong>，不需要坐标。</p>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:18%">工作</th><th style="width:10%">模型</th><th style="width:34%">约束的数学对象</th><th>它对「一对多」的处理</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>OT-StainNet</strong><br><span class="cite">AAAI 2025</span><br><span class="b high">已核实</span></td>
+<td><strong>扩散</strong></td>
+<td>平衡 Kantorovich OT，代价 = 特征 L2 距离；软目标 <code>F̂_I = PᵀF_I</code>；再算相关矩阵一致性</td>
+<td><strong>真正的一对多</strong>：H&amp;E 特征 u 可以按耦合矩阵的一行权重分配到多个 IHC 特征</td>
+</tr>
+<tr>
+<td><strong>USIGAN</strong><br><span class="cite">IEEE TIP 2026 · arXiv:2507.05843</span><br><span class="b high">已核实</span></td>
+<td>GAN</td>
+<td><strong>非平衡 OT</strong>（UOT-CTM）+ 病理自对应（PC-SCM）；原话 <em>extracts global morphological semantics <strong>without relying on positional correspondence</strong></em>、<em>by <strong>removing weakly paired terms in the joint marginal distribution</strong></em></td>
+<td><strong>显式允许质量不守恒</strong>——即「A 可能只对应 A1/A2 的一部分，剩下的质量直接丢掉」</td>
+</tr>
+<tr>
+<td><strong>ASP</strong>（Adaptive Supervised PatchNCE）<br><span class="cite">MICCAI 2023 · arXiv:2303.06193</span><br><span class="b high">已核实</span></td>
+<td>对比学习 / CUT 系</td>
+<td>InfoNCE + <strong>权重调度</strong>；原话：<em>augments it further with weight scheduling to mitigate the negative impact of <strong>noisy supervision</strong></em></td>
+<td><span class="b bad">不是一对多</span>——它是<strong>「硬匹配 + 软加权」</strong>：正样本仍是一个 patch，但锚点-正样本相似度低时把该样本权重压低</td>
+</tr>
+<tr>
+<td><strong>ConCLR</strong><br><span class="cite">IEEE TIP 34 (2025) 7744–7758</span><br><span class="b low">未核实</span></td>
+<td>未核实</td>
+<td>上下文感知对比学习，针对<strong>不一致图像对</strong></td>
+<td>未核实</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">一个必须说清的区别</div>
+<p>指导书设想的形态是：<code>真实 IHC: A 高、B 低 ⇒ 生成 IHC: A′ &gt; B′</code>。<strong>本次检索没有找到任何虚拟染色工作真的这么做。</strong></p>
+<p>OT-StainNet 和 USIGAN 做的是「<strong>特征相关结构</strong>一致」，ASP 做的是「<strong>加权后的 patch 对比</strong>」。三者都<strong>不是表达量的序关系</strong>。</p>
+<p>⇒ <strong>「蛋白表达 ranking loss」在虚拟染色里是空的</strong>，而且它的实现成本很低（只要你能给出区域级或滑片级的表达强弱标签）。<strong>这是本报告认为最有性价比的空白之一。</strong></p>
+</div>
+
+<h3 id="s3-6">3.6 第六类 · 分布 / histogram / statistics 约束</h3>
+
+<div class="box key">
+<div class="bt">本类三问</div>
+<p><strong>扩散里有人做吗？</strong><span class="b bad">没有</span>。</p>
+<p><strong>最接近的扩散工作？</strong>无直接对应。间接最近的是 OT-StainNet（分布级的特征相关）与 MIU-Diff（域内互信息）。</p>
+<p><strong>能迁移吗？</strong><span class="b high">能，而且这是「弱配准下最成熟的形态」</span>——PSPStain 的 20-bin 直方图损失就是它，已经被验证有效。</p>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:20%">工作</th><th style="width:30%">分布级约束</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><strong>PSPStain</strong>（L_MLPA 的第 ② 项）</td><td>FOD 的 <strong>20-bin 直方图 L2</strong></td><td>指导书设想的那种「高表达 20% / 中 50% / 低 30%」的形态，PSPStain 已经在做</td></tr>
+<tr><td><strong>PSPStain / PGVMS</strong>（第 ③ 项）</td><td><strong>16-block 区域均值 L2</strong></td><td>介于 L2 与 L3 之间：比逐像素鲁棒，比全局分布精细</td></tr>
+<tr><td><strong>PGVMS · PALS</strong></td><td><em>direct quantification and constraint of protein <strong>distributions</strong></em></td><td>摘要原文即「直接量化并约束蛋白分布」，是分布级约束的最明确表述</td></tr>
+<tr><td><strong>MVFStain</strong><br><span class="b medium">库内已核实</span></td><td>风格特征上的直方图损失</td><td><strong>作用在「风格」上，不是表达</strong>——注意别混</td></tr>
+<tr><td><strong>PGVMS · PCLS</strong></td><td>跨图<strong>原型一致性</strong>（肿瘤掩膜上的表达 prototype）</td><td>用「原型」代替「像素对应」，是 L3/L4 混合形态</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s3-7">3.7 第七类 · 弱配准 / soft correspondence / optimal transport</h3>
+
+<div class="box key">
+<div class="bt">本类三问 —— 这是指导书特别要求调查的一类</div>
+<p><strong>扩散里有人做吗？</strong><span class="b high">有，但只有一篇</span>：<strong>OT-StainNet</strong>（AAAI 2025，扩散 backbone + OT 软对应）。</p>
+<p><strong>OT 在扩散<em>采样循环</em>里有人做吗？</strong><span class="b bad">没有。</span>OT-StainNet 的 OT 只用来<strong>建训练监督</strong>（<code>F̂_I = PᵀF_I</code>），不修改去噪轨迹。这是本报告识别出的一个明确空白。</p>
+<p><strong>能迁移吗？</strong><span class="b high">能，而且 OT-StainNet 是唯一「扩散 + 弱配对」的可直接复现骨架。</span></p>
+</div>
+
+<p>指导书要求的「大白话解释」，这里给出：</p>
+<div class="box pur">
+<div class="bt">OT 到底做了什么（人话版）</div>
+<p><strong>以前</strong>：第 3 号 H&amp;E patch 必须配第 3 号 IHC patch。如果切片错位了 20 像素，这个「必须」就是在教模型学错的东西。</p>
+<p><strong>现在</strong>：第 3 号 H&amp;E patch 可以配第 3 号、第 4 号、第 5 号 IHC patch 中的<strong>任意一个</strong>，甚至按权重各配一点。<strong>谁配谁，由一个全局最优的目标决定</strong>——把所有 patch 两两之间的特征距离写成一张代价矩阵 <code>C</code>，然后找一个「运输方案」<code>P</code>，使总代价 <code>⟨P,C⟩</code> 最小。</p>
+<p>这个 <code>P</code> 就是<strong>软对应</strong>。用它去加权真实 IHC 的特征，得到 <code>F̂_I = PᵀF_I</code>——这就是「<strong>按最优方案混合出来的、该配给这个 H&amp;E patch 的 IHC 特征</strong>」。</p>
+<p><strong>非平衡版</strong>（USIGAN）更进一步：允许<strong>质量不守恒</strong>，即「这个 H&amp;E patch 在 IHC 里根本没有对应物」也可以，多余质量直接丢弃。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">本次未找到的两件事</div>
+<ol>
+<li><strong>病理 OT 的两篇（OT-StainNet 平衡、USIGAN 非平衡）都只写了 Kantorovich 形式，都没有说明求解器。</strong>所以只能说「<strong>论文未说明</strong>」，<strong>不能断言「没有 Sinkhorn / 熵正则」</strong>（<strong>2026-10-06 更正</strong>：拿到 OT-StainNet 全文后确认它只是没写；而精确 LP 在训练循环里不可行 ⇒ 实际很可能用的就是 Sinkhorn）。如果你要用 Sinkhorn（它在 mini-batch 上更稳、更快），这仍然是一个可写进方法贡献的差异点——<strong>但要写成「显式说明并消融求解器」，而不是「首次引入」</strong>。</li>
+<li><strong>「patch 可能对应附近 5–10 个 patch」这种显式 k-NN 软匹配，在虚拟染色里没有直接实现。</strong>OT 的软对应在数学上覆盖了它，但没有人用「局部窗口内 k 个候选」这种更朴素的形态做过。</li>
+</ol>
+</div>
+
+<h3 id="s3-8">3.8 第八类 · 多任务 / 辅助蛋白预测头</h3>
+
+<div class="box key">
+<div class="bt">本类三问</div>
+<p><strong>扩散里有人做吗？</strong><span class="b medium">半有。</span>StainDiffuser 有辅助头，但那是<strong>分割</strong>头（结构）。<strong>没有扩散工作挂「蛋白预测头」。</strong></p>
+<p><strong>最接近的扩散工作？</strong>StainDiffuser（<code>L = L_gen + λL_seg</code>，挂在 ε 上）。</p>
+<p><strong>能迁移吗？</strong><span class="b high">能。</span>HER2 NCMT 已经在 GAN 上验证了「中间层特征 + 轻量回归头 + 序数 MSE」这套形态。</p>
+</div>
+
+<p>指导书要求区分「直接约束图像中的 protein staining」还是「只约束生成图像能被分类器识别」。本次核对的结论是：</p>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">工作</th><th style="width:16%">约束对象</th><th style="width:16%">标签层级</th><th>它其实在约束什么</th></tr></thead>
+<tbody>
+<tr><td><strong>HER2 NCMT</strong></td><td>编码器中间层特征</td><td>patch 级序数分数</td><td>约束<strong>特征的线性可分性</strong>——介于「图像中的染色」与「能被分类」之间</td></tr>
+<tr><td><strong>MIL-CycleGAN</strong></td><td>生成 IHC patch → MIL 分类器</td><td><strong>滑片级</strong>（bag）</td><td>约束「生成图整体能被判对分级」——<strong>不保证局部表达对</strong></td></tr>
+<tr><td><strong>StainDiffuser</strong></td><td>ε 损失 + 分割分支</td><td>像素级分割掩膜</td><td>约束<strong>细胞结构</strong>，与蛋白表达无关</td></tr>
+<tr><td><strong>DeepLIIF</strong><br><span class="b medium">库内已核实</span></td><td>多任务：解卷积 + 分割 + 单细胞定量</td><td>细胞级</td><td>少数<strong>真正把「细胞级」带进训练</strong>的框架</td></tr>
+<tr><td><strong>AdvLIF</strong><br><span class="b medium">库内已核实</span></td><td>虚拟染色 + 核分割联合</td><td>细胞级</td><td>用 <strong>IHC Quantification Difference = 0.092</strong>（最低）证明定量保真度</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s3-9">3.9 第九类 · 物理 stain / concentration / Beer–Lambert 约束</h3>
+
+<div class="box key">
+<div class="bt">本类三问 —— 与你的思路最相关</div>
+<p><strong>扩散里有人做吗？</strong><span class="b bad">没有。</span>没有任何工作让扩散模型<strong>直接生成染色浓度</strong>。</p>
+<p><strong>最接近的扩散工作？</strong>严格说是 <strong>SGCD</strong>（NeurIPS 2025 <strong>Spotlight Poster</strong>，DOI 10.52202/085713-1305，双扩散 UDA，<strong>stain-guided consistency loss</strong>）。<span class="b high">已核实</span>（2026-10-07：拿到原文 PDF 31 页 + 官方实现源码，结论见 <a href="SGCD_Stain-Guided_CycleDiffusion_精读_代码级复核与可迁移性判定.html">SGCD 精读</a>）：它<strong>确实用了 Beer–Lambert</strong>——<code>vahadane.py</code> 的 <code>SPCN</code> 里逐字是 <code>Is_norm = 255 * np.exp(-1 * np.dot(Wt, Hs_norm))</code>，即 <code>I_ref = I₀·exp(−W_T·H_S)</code>。<strong>但它只是用 BL 造一张「参考图」当引导目标，没有把可微渲染器放进生成空间，输出仍是 RGB</strong> ⇒ <strong>原先「不要把它当作「扩散里的物理渲染器」引用」这条警告是对的</strong>，只是现在有了机制级理由。</p>
+<p><strong>能迁移吗？</strong><span class="b high">能，而且这是你「可解释」这条主线的全部依据。</span>但请注意：<strong>建筑块是分开存在的，拼起来没人做过。</strong></p>
+</div>
+
+<h4>指导书要的四个问题，逐条回答</h4>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">工作</th><th style="width:10%">生成器</th><th style="width:30%">物理渲染怎么做</th><th>关键事实</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>StainQuant</strong><br><span class="cite">arXiv:2601.11336</span><br><span class="b high">库内代码级已核实</span></td>
+<td><strong>U-Net 自编码器</strong>（<strong>不是</strong>扩散）</td>
+<td>可微 Beer–Lambert：<code>od = Σ C·B</code>，<code>rgb = exp(−od)</code>；<strong>没有 I₀</strong>（隐含为 1）；基矩阵 <strong>可学习</strong>，初始化自手工 RGB 三元组</td>
+<td>预测 <strong>K=5 个非负浓度图</strong>（H / CDX2 / MUC2 / MUC5 / CD8），<strong>有明确物理意义</strong>。但它是<strong>分离器不是生成器</strong>，且代码有三个坑：末端 ReLU（负半轴梯度为 0）· 基只做 L2 归一化<strong>无非负约束</strong>（⇒ 输出可 &gt;1）· <code>default.yaml</code> 是 demo 残留（max_epochs=2，作者本机 Windows 路径）</td>
+</tr>
+<tr>
+<td><strong>Loo et al. 2025</strong><br><span class="cite">Cancer Res Commun</span><br><span class="b medium">库内已核实</span></td>
+<td>生成式（非扩散）</td>
+<td><strong>由 mIF 反渲染成 pseudo-IHC（Beer–Lambert）当训练目标</strong></td>
+<td>这是「用物理模型造训练目标」的现成先例。评价端给出目前公开文献里最完整的细胞级表达验证：PanCK 阳性面积 r=0.96 · CD3 阳性细胞密度 r=0.89 · <strong>PD-L1 TPS r=0.46 · CPS r=0.71</strong>（注意 TPS 明显更差——<strong>说明「阳性比例」类指标本身就不稳</strong>）</td>
+</tr>
+<tr>
+<td><strong>PSPStain / CCPL</strong></td>
+<td>GAN / CUT</td>
+<td>经典 Beer–Lambert 色解卷积（OD = −log I），矩阵<strong>固定</strong>（Ruifrok）</td>
+<td>它们把 OD 当<strong>损失的作用域</strong>，但不做<strong>可微前向渲染</strong>——即不把「浓度 → RGB」写成网络的一部分</td>
+</tr>
+<tr>
+<td><strong>SGCD</strong><br><span class="cite">NeurIPS 2025 Spotlight Poster · DOI 10.52202/085713-1305</span><br><span class="b high">已核实</span></td>
+<td><strong>扩散</strong>（双扩散）</td>
+<td>标题与摘要已核实：<em>a stain-guided consistency loss is introduced to enhance the denoising capability of the dual diffusion model</em>。<strong>Beer–Lambert 已核实</strong>（<code>SPCN</code> 里 <code>255*exp(-Wt@Hs)</code>）——但<strong>只用于造参考图</strong>，不进生成空间；★ 且发布的代码里该引导被写死 <code>guide = False</code>（死代码）</td>
+<td>任务是 <strong>UDA 分类</strong>不是虚拟染色；输出是 RGB。<strong>即使 BL 成立，也只是「可迁移思路」</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">指导书 §十三 要求的明确回答</div>
+<p><strong>「有没有人让 diffusion 直接生成 stain concentration，而不是直接生成 RGB IHC？」</strong></p>
+<p>⇒ <strong>目前没找到直接对应方法。</strong>不硬凑。</p>
+<p>三格现状（这是本报告最重要的一张判定）：</p>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:34%">位置</th><th style="width:14%">状态</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>① 扩散生成 RGB → <strong>事后</strong>反演浓度</td><td><span class="b bad">空的</span></td><td>能核实的扩散虚拟染色论文全部停在 RGB，<strong>没有一篇做解卷积</strong>；而做解卷积的（CCPL / PSPStain）全是 GAN</td></tr>
+<tr><td>② <strong>非扩散</strong>模型生成/导出浓度</td><td><span class="b medium">有人做</span></td><td>StainQuant（可微 BL + 可学习基 + 非负浓度，但是自编码器/分离器）；Loo 2025（BL 伪标签）</td></tr>
+<tr><td>③ <strong>扩散</strong>模型生成浓度</td><td><span class="b bad">空的</span></td><td>无</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>⇒ 三者交集（扩散 × 可微物理渲染器 × 蛋白约束 × 非配准）仍然是空的。这个结论与库内既有报告的判断一致，本次检索未推翻它。</strong></p>
+</div>
+
+<h2 id="s4"><span class="num">4</span>论文总表（指导书 §二十 的 11 列）</h2>
+
+<p class="small">「Protein constraint」一列按指导书要求写成<strong>一句话描述它到底在做什么</strong>，不写 loss 名字。核实等级见 §0 的说明。</p>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th style="width:13%">Paper</th>
+<th style="width:6%" class="c">扩散?</th>
+<th style="width:9%">IHC 任务</th>
+<th style="width:11%">Protein 信息是什么</th>
+<th style="width:9%">怎么提取</th>
+<th style="width:20%">Protein constraint（一句话）</th>
+<th style="width:9%">挂在哪里</th>
+<th style="width:8%">配准要求</th>
+<th style="width:6%">训练/评价</th>
+<th style="width:5%" class="c">强度</th>
+<th>能否迁移</th>
+</tr></thead>
+<tbody>
+
+<tr>
+<td><strong>Star-Diff</strong><br><span class="cite">arXiv 2508.02528</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→HER2 IHC</td>
+<td>HER2 分级（分类器输出）</td>
+<td>ResNet 分类器</td>
+<td>生成完拿 HER2 分类器判一遍，用<strong>分类准确率的退化程度</strong>衡量生成图还剩多少诊断信息。<strong>不回传</strong></td>
+<td>不在训练里</td>
+<td><span class="b high">错位鲁棒</span></td>
+<td><span class="b low">评价</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b high">指标直接可用</span></td>
+</tr>
+
+<tr>
+<td><strong>MIU-Diff</strong><br><span class="cite">arXiv 2506.23184</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→IHC（连续切片 / 弱配对）<span class="small">★ 原写「非配对」，2026-10-08 核实更正</span></td>
+<td>无蛋白信息（染色独有信息 U + 结构互信息 I）</td>
+<td>域内 MINE 式对比网</td>
+<td>每一步采样时，用 <b>M = λ<sub>t</sub>U + (1−λ<sub>t</sub>)I</b> 两项能量修正去噪方向：U 管染色、I 管结构。<strong>两项都不管蛋白</strong></td>
+<td><span class="b tealb">⑤ 采样期</span></td>
+<td><span class="b medium">弱配对（连续切片）</span><span class="small">★ 原写「完全非配对」</span></td>
+<td><span class="b tealb">采样 guidance</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b high">方案 F 的现成模板</span></td>
+</tr>
+
+<tr style="background:var(--blueSoft)">
+<td><strong>OT-StainNet</strong><br><span class="cite">AAAI 2025 · 39(3):3194</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→4 种 IHC</td>
+<td>无显式蛋白量（特征相关结构）</td>
+<td>特征提取 + OT 软对应</td>
+<td>先把「谁该配谁」交给<strong>最优传输软性决定</strong>，再要求生成图的<strong>特征间相关结构</strong>与真实 IHC 一致。阻止「因错位而学错对齐」</td>
+<td><span class="b purple">② feature</span></td>
+<td><span class="b high">弱配对</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★☆☆☆</td>
+<td><span class="b high">★ 直接复现骨架</span></td>
+</tr>
+
+<tr>
+<td><strong>Marker-wise LDM</strong><br><span class="cite">AAAI 2026 · arXiv 2508.14681</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→多重 IHC/IF</td>
+<td><strong>marker 身份</strong>（DAPI/panCK/CD3…）</td>
+<td>one-hot 向量</td>
+<td>只告诉模型「现在要染哪个 marker」，<strong>不约束表达量</strong></td>
+<td><span class="b blue">③ 条件</span></td>
+<td><span class="b bad">配对同区域</span></td>
+<td><span class="b blue">条件</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b medium">多 marker 单模型思路可用</span></td>
+</tr>
+
+<tr>
+<td><strong>VIMs</strong><br><span class="cite">arXiv 2407.19113</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→多重 IHC</td>
+<td>marker 文本描述（核/胞质）</td>
+<td>视觉语言模型</td>
+<td>用文本 prompt 指定 marker 类型，<strong>不约束表达量</strong></td>
+<td><span class="b blue">③ 条件</span></td>
+<td><span class="b medium">训练配对</span></td>
+<td><span class="b blue">条件</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b low">prompt 接口可借</span></td>
+</tr>
+
+<tr>
+<td><strong>StainDiffuser</strong><br><span class="cite">arXiv 2403.11340</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→IHC（双 marker）</td>
+<td>无（DAB 阈值分割掩膜）</td>
+<td>对 DAB 通道 μ+2σ 阈值</td>
+<td>用 DAB 通道阈值化得到的<strong>细胞掩膜</strong>做辅助分割损失。<strong>约束的是细胞结构，不是表达量</strong></td>
+<td><span class="b blue">① ε 损失</span></td>
+<td><span class="b low">未说明</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b medium">辅助头形态可借</span></td>
+</tr>
+
+<tr>
+<td><strong>HistDiST</strong><br><span class="cite">arXiv 2505.06793</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→IHC</td>
+<td>Phikon 形态嵌入（条件）；GigaPath 嵌入（MRA 评价）</td>
+<td>冻结病理 FM</td>
+<td>条件端用形态嵌入引导生成；评价端用<strong>分子检索准确率</strong>看生成图能否检索到对的 IHC。<strong>训练端无蛋白约束</strong></td>
+<td><span class="b blue">③ 条件</span></td>
+<td><span class="b low">未说明</span></td>
+<td><span class="b low">MRA = 评价</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b medium">MRA 可作评价指标</span></td>
+</tr>
+
+<tr>
+<td><strong>UNIStainNet</strong><br><span class="cite">arXiv 2603.12716</span></td>
+<td class="c"><span class="b low">未说明</span></td>
+<td>H&amp;E→4 种 IHC 单模型</td>
+<td>染色定量（top-10% DAB 强度）+ UNI token 条件</td>
+<td>Beer–Lambert 色解卷积 + 冻结 UNI</td>
+<td>两件事：<strong>把 UNI 的空间 token 当条件</strong>（形态引导），以及<strong>一套抗错位损失保住染色定量统计</strong>（最强 10% DAB 区域的平均强度要对）</td>
+<td><span class="b blue">③ 条件</span>+<span class="b purple">④ 图像</span></td>
+<td><span class="b medium">10–50 px 容差</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★☆☆</td>
+<td><span class="b high">抗错位损失套件可借</span></td>
+</tr>
+
+<tr>
+<td><strong>FeatStainDiff</strong><br><span class="cite">MedIA 112 (2026) 104138</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td>H&amp;E→IHC <strong>特征</strong>（<strong>不生成图像</strong>）</td>
+<td>IHC 特征本身</td>
+<td>未公开的预训练提取器</td>
+<td>在<strong>特征空间</strong>做跨染色变换（对比语义桥接 + 频域 MoE），<strong>根本不产出 IHC 图</strong></td>
+<td><span class="b purple">② feature</span></td>
+<td><span class="b bad">要求配对且配准</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★☆☆</td>
+<td><span class="b bad">非配对场景不可用</span></td>
+</tr>
+
+<tr style="background:var(--greenSoft)">
+<td><strong>PSPStain</strong><br><span class="cite">MICCAI 2024 · arXiv 2407.03655</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→HER2 IHC</td>
+<td><strong>FOD</strong>（= OD<sup>1.8</sup>）</td>
+<td>Ruifrok 色解卷积取 DAB OD</td>
+<td>把生成图的 FOD 与真实图的 FOD 在<strong>三个统计量</strong>上比：全局均值、20-bin 直方图、16-block 区域均值。让模型<strong>别把表达整体生成得过强/过弱/分布形状走样</strong></td>
+<td><span class="b purple">④ 输出</span></td>
+<td><span class="b high">容忍错位</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★★☆</td>
+<td><span class="b high">★ 首选搬运对象</span></td>
+</tr>
+
+<tr style="background:var(--greenSoft)">
+<td><strong>PGVMS</strong><br><span class="cite">TMI 2026 · arXiv 2602.23292</span></td>
+<td class="c"><span class="b low">未说明</span></td>
+<td>H&amp;E→多重 IHC</td>
+<td><strong>蛋白分布</strong>（直接量化）</td>
+<td>PALS</td>
+<td>PALS：<em>direct quantification and constraint of protein <strong>distributions</strong></em>；PCLS：用<strong>跨图原型一致性</strong>代替像素对应来校正错位。训练只用 uniplex 数据</td>
+<td><span class="b purple">④ 输出</span>+<span class="b purple">② 原型</span></td>
+<td><span class="b high">错位（PCLS 校正）</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★★☆</td>
+<td><span class="b high">原型一致性可搬</span></td>
+</tr>
+
+<tr>
+<td><strong>CCPL</strong><br><span class="cite">arXiv 2506.07559</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→HER2 IHC</td>
+<td>H / DAB 双通道 OD（FOD）</td>
+<td>HED 色空间解卷积</td>
+<td>分别在核通道与膜通道上算 FOD 损失，并强制<strong>核与膜的表达相关性</strong>（核被膜包着，两者不能各管各的）</td>
+<td><span class="b purple">④ 输出</span></td>
+<td><span class="b bad">要求配对</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★★☆</td>
+<td><span class="b medium">双通道思路可搬</span></td>
+</tr>
+
+<tr>
+<td><strong>TDKstain</strong><br><span class="cite">MICCAI 2024 · LNCS 15004</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→HER2 IHC</td>
+<td>核密度 + 膜染色强度</td>
+<td>两个专门网络</td>
+<td>用 HER2 判读的<strong>领域知识</strong>做先验：核密度估计器保证细胞对齐，膜分支保证膜染色强度一致。<strong>HER2 分数只在生成图的下游任务里评</strong></td>
+<td><span class="b purple">④ 输出</span></td>
+<td><span class="b bad">要求配准（RegH2I）</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★☆☆</td>
+<td><span class="b medium">膜/核先验可借</span></td>
+</tr>
+
+<tr style="background:var(--amberSoft)">
+<td><strong>HER2 Score-Aware NCMT</strong><br><span class="cite">Diagnostics 2026 · PMC13163341</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→HER2 IHC</td>
+<td><strong>HER2 序数分数</strong>（0/1+/2+/3+）</td>
+<td>编码器中间层特征 + 轻量回归头</td>
+<td>把 HER2 分级当<strong>连续序数</strong>回归，MSE 同时监督生成图与真实图，<strong>逐层挂回归头再平均</strong>。让模型的中间特征带上分级信息</td>
+<td><span class="b purple">② feature</span></td>
+<td><span class="b bad">要求配准</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★★☆</td>
+<td><span class="b high">形态可直接搬到扩散</span></td>
+</tr>
+
+<tr style="background:var(--amberSoft)">
+<td><strong>MIL-CycleGAN</strong><br><span class="cite">Front. Med. Technol. 8:1783365</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→p16 / Ki-67</td>
+<td><strong>滑片级 CIN 分级</strong></td>
+<td>MIL 注意力池化</td>
+<td>用<strong>滑片级标签</strong>做弱监督：bag 是一张切片，instance 是生成的 IHC patch，注意力聚合后算分类损失。<strong>完全不需要像素对应</strong></td>
+<td><span class="b purple">② feature</span>+<span class="b tealb">⑤ 语义</span></td>
+<td><span class="b high">弱配对</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★★☆</td>
+<td><span class="b high">★ 对错位最友好</span></td>
+</tr>
+
+<tr>
+<td><strong>USIGAN</strong><br><span class="cite">IEEE TIP 2026 · arXiv 2507.05843</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→IHC</td>
+<td>无显式蛋白量</td>
+<td>非平衡 OT + 自对应</td>
+<td>用<strong>非平衡最优传输</strong>建集合级相关矩阵一致性，<strong>显式去掉弱配对项</strong>，允许「A 在 IHC 里没有对应物」</td>
+<td><span class="b purple">② feature</span></td>
+<td><span class="b high">弱配对</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★☆☆☆</td>
+<td><span class="b high">非平衡 OT 可借</span></td>
+</tr>
+
+<tr>
+<td><strong>ASP</strong><br><span class="cite">MICCAI 2023 · arXiv 2303.06193</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→4 种 IHC（MIST）</td>
+<td>无</td>
+<td>patch 对比 + 权重调度</td>
+<td>用<strong>自适应权重</strong>压制「噪声监督」的影响：锚点与正样本相似度低时，把该样本的对比损失权重压低</td>
+<td><span class="b purple">② feature</span></td>
+<td><span class="b medium">容忍不一致</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b medium">权重调度可借</span></td>
+</tr>
+
+<tr>
+<td><strong>PaPIS</strong><br><span class="cite">arXiv 2507.12624</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>通用虚拟染色</td>
+<td>细胞形态特征（<strong>非蛋白</strong>）</td>
+<td>形态分割模型 + Retinex 分解</td>
+<td>把「病理感知的图像相似度」<strong>从指标变成损失</strong>加进训练。但它约束的是<strong>感知/形态质量</strong>，论文自承未与病理评分或蛋白表达建立相关性</td>
+<td><span class="b purple">④ 输出</span></td>
+<td><span class="b bad">全参考（需配准）</span></td>
+<td><span class="b high">训练 + 评价</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b medium">「指标转损失」范式可借</span></td>
+</tr>
+
+<tr>
+<td><strong>StainQuant</strong><br><span class="cite">arXiv 2601.11336</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>染色分离（非翻译）</td>
+<td><strong>K=5 个非负浓度图</strong>（H/CDX2/MUC2/MUC5/CD8）</td>
+<td>可学习染色基矩阵 + 可微 BL</td>
+<td>没有蛋白约束损失。它做的是<strong>可微 Beer–Lambert 前向渲染</strong>：浓度 → OD → RGB，端到端可训</td>
+<td><span class="b purple">④ 输出（渲染器）</span></td>
+<td><span class="b high">不需要</span></td>
+<td><span class="b high">训练（自编码）</span></td>
+<td class="c">★★☆☆☆</td>
+<td><span class="b high">渲染器可直接搬</span></td>
+</tr>
+
+<tr>
+<td><strong>Loo et al. 2025</strong><br><span class="cite">Cancer Res Commun</span></td>
+<td class="c"><span class="b bad">否</span></td>
+<td>label-free→IHC</td>
+<td>细胞级阳性率 / 密度 / TPS / CPS</td>
+<td>Visiopharm 分割 + Beer–Lambert 伪标签</td>
+<td>用 <strong>mIF 经 Beer–Lambert 反渲染出 pseudo-IHC</strong> 当训练目标；评价端给出最完整的细胞级验证（TPS r=0.46、CPS r=0.71）</td>
+<td><span class="b purple">④ 输出</span></td>
+<td><span class="b high">不需要</span></td>
+<td><span class="b high">训练 + 评价</span></td>
+<td class="c">★★★★☆</td>
+<td><span class="b medium">伪标签 + 细胞级指标</span></td>
+</tr>
+
+<tr>
+<td><strong>SGCD</strong><br><span class="cite">NeurIPS 2025 spotlight</span></td>
+<td class="c"><span class="b blue">是</span></td>
+<td><strong>UDA 分类</strong>（非虚拟染色）</td>
+<td>无</td>
+<td>—</td>
+<td>双扩散 + 双向生成约束 + <strong>stain-guided 一致性损失</strong>提升去噪能力。<span class="b high">Beer–Lambert 已核实</span>：官方实现的 SPCN 逐字使用 <code>255*exp(-Wt@Hs)</code>；但只造参考图，不进生成空间。</td>
+<td><span class="b tealb">⑤ 去噪过程</span></td>
+<td><span class="b high">非配对</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★☆☆☆☆</td>
+<td><span class="b low">仅作思路参考</span></td>
+</tr>
+
+<tr>
+<td><strong>Wei et al.</strong>（DeStainer）</td>
+<td class="c"><span class="b bad">否</span></td>
+<td>H&amp;E→IHC</td>
+<td>DAB 通道 + HER2 分级</td>
+<td>色解卷积 + 苏木素通道估分级</td>
+<td>DAB 通道逐像素 L1 + <strong>HER2 分级 focal loss</strong></td>
+<td><span class="b purple">④ 输出</span></td>
+<td><span class="b low">未核实</span></td>
+<td><span class="b high">训练</span></td>
+<td class="c">★★★★☆</td>
+<td><span class="b medium">分级损失形态可借</span></td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<h2 id="s5"><span class="num">5</span>约束挂在扩散的哪里 —— 总表、梯度回传、路线图</h2>
+
+<h3 id="s5-1">5.1 位置总表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th style="width:24%">方法</th>
+<th class="c" style="width:8%">ε / v</th>
+<th class="c" style="width:9%">x̂₀ 重构</th>
+<th class="c" style="width:9%">最终 RGB</th>
+<th class="c" style="width:11%">latent / feature</th>
+<th class="c" style="width:9%">条件输入</th>
+<th class="c" style="width:9%">采样期</th>
+<th>说明</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Star-Diff</strong>（扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>蛋白信号<strong>完全不在训练里</strong>（只在测试时算 SFS）</td></tr>
+<tr><td><strong>MIU-Diff</strong>（扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c"><span class="b tealb">✔</span></td><td>互信息能量注入反向 SDE；另有局部对比项作用在特征上。<strong>非蛋白</strong></td></tr>
+<tr style="background:var(--blueSoft)"><td><strong>OT-StainNet</strong>（扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td>特征相关矩阵一致性；OT 只建监督。<strong>非蛋白量</strong></td></tr>
+<tr><td><strong>Marker-wise LDM</strong>（扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b blue">✔</span></td><td class="c">—</td><td>marker one-hot</td></tr>
+<tr><td><strong>VIMs</strong>（扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b blue">✔</span></td><td class="c">—</td><td>文本 prompt</td></tr>
+<tr><td><strong>StainDiffuser</strong>（扩散）</td><td class="c"><span class="b blue">✔</span></td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>ε 上的<strong>分割</strong>辅助损失（结构，非蛋白）</td></tr>
+<tr><td><strong>HistDiST</strong>（扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b blue">✔</span></td><td class="c">—</td><td>Phikon 嵌入作条件</td></tr>
+<tr><td><strong>UNIStainNet</strong>（backbone 未说明）</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c"><span class="b blue">✔</span></td><td class="c">—</td><td>UNI token 条件 + 抗错位染色定量损失</td></tr>
+<tr><td><strong>FeatStainDiff</strong>（扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td>特征空间即生成空间</td></tr>
+<tr style="background:var(--greenSoft)"><td><strong>PSPStain / PGVMS</strong>（非扩散）</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>FOD 三统计量 + 原型一致性</td></tr>
+<tr style="background:var(--greenSoft)"><td><strong>CCPL</strong>（非扩散）</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>H / DAB 双通道 FOD</td></tr>
+<tr style="background:var(--amberSoft)"><td><strong>HER2 NCMT</strong>（非扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td>HER2 序数 MSE 挂编码器中间层</td></tr>
+<tr style="background:var(--amberSoft)"><td><strong>MIL-CycleGAN</strong>（非扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td>滑片级 MIL 分类损失</td></tr>
+<tr><td><strong>USIGAN / ASP</strong>（非扩散）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td>集合级相关矩阵 / patch 对比</td></tr>
+<tr><td><strong>PaPIS</strong>（非扩散）</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>感知指标转损失（非蛋白）</td></tr>
+<tr><td><strong>SGCD</strong>（扩散）<span class="b high">已核实</span></td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b purple">✔</span></td><td class="c">—</td><td class="c"><span class="b tealb">✔</span></td><td>stain-guided 一致性损失提升去噪能力。<strong>★ 已核实：发布的代码里该引导被写死 <code>guide = False</code>，实为死代码</strong>；且 <code>W_t@H_s</code> 在 H&amp;E→IHC 上会把伊红密度当 DAB 密度</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">这张表里最重要的一格</div>
+<p><strong>ε / v 那一列全是空的</strong>（除了 StainDiffuser 的分割损失）。也就是说：<strong>没有任何工作把「蛋白」这件事挂在扩散的噪声预测目标上。</strong></p>
+<p>这不是因为不可能——而是因为<strong>难</strong>（见 §5.2）。谁先把它做对，谁就占住了这个位置。</p>
+</div>
+
+<h3 id="s5-2">5.2 梯度怎么回去 —— 指导书 §十六 的正面回答</h3>
+
+<p>指导书问：<em>「模型明明预测的是 epsilon，为什么还能算 x0 loss？」</em> 下面是完整答案。</p>
+
+<h4>(1) x̂₀ 是 ε̂ 的一步线性函数，所以「挂 ε」和「挂 x̂₀」是同一件事的两端</h4>
+<div class="formula">x<sub>t</sub> = √ᾱ<sub>t</sub> · x<sub>0</sub> + √(1−ᾱ<sub>t</sub>) · ε 　⟹　 x̂<sub>0</sub> = ( x<sub>t</sub> − √(1−ᾱ<sub>t</sub>) · ε̂ ) ⁄ √ᾱ<sub>t</sub></div>
+<p><strong>逐项解释：</strong></p>
+<ul>
+<li><code>x_t</code>：训练时实际喂进网络的加噪图（已知）。</li>
+<li><code>ε̂</code>：网络输出。当网络用 ε-prediction 时它就是预测的噪声；用 v-prediction 时先转成 ε̂ 再代进同一个式子。</li>
+<li><code>ᾱ_t</code>：累积噪声系数（调度表给定，已知）。</li>
+<li>⇒ <strong>x̂₀ 与 ε̂ 只差一个已知的仿射变换</strong>。所以在 x̂₀ 上算损失，梯度原封不动地回到 ε̂ 上，再回到网络参数。<strong>不需要额外网络，不需要采样循环。</strong></li>
+</ul>
+
+<pre><code>x_t ──→ U-Net ──→ ε̂ ──┬──→ L_denoise = ‖ε̂ − ε‖²        ← 原有的扩散损失
+                        │
+                        └──→ x̂₀ = (x_t − √(1−ᾱ_t)·ε̂)/√ᾱ_t
+                                  ↓
+                          render / deconvolve（可微）
+                                  ↓
+                              DAB / OD / FOD
+                                  ↓
+                          L_protein = D(FOD(x̂₀), FOD(x₀))
+                                  ↓
+                          w_t · λ · L_protein   ← 加权后与 L_denoise 相加
+                                  ↓
+                             ∂/∂θ  ← 两条梯度在参数空间相遇（可能打架）</code></pre>
+
+<h4>(2) 但这不是免费的 —— 三个必须处理的问题</h4>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:18%">问题</th><th style="width:34%">机制</th><th>后果与对策</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>① 尺度随 t 剧变</strong></td>
+<td><code>x̂₀</code> 的质量依赖 t：低 t 时 x̂₀ 已经很清楚，高 t 时 x̂₀ 基本是噪声。<strong>辅助损失的数值量级会随 t 跨越几个数量级。</strong></td>
+<td>固定 λ 意味着：<strong>高 t 时辅助损失主导（而且是噪声主导的错误信号），低 t 时几乎不起作用</strong>。⇒ 必须做<strong>时间步加权</strong>或<strong>只在低 t 区间启用</strong>。</td>
+</tr>
+<tr>
+<td><strong>② 数值爆炸</strong></td>
+<td><code>1/√ᾱ_t</code> 在小 t 处……其实 t→0 时 ᾱ_t→1，反而是安全的；真正的风险是<strong>ε̂ 的微小误差被 1/√ᾱ_t 放大</strong>后进入 FOD 的非线性区。</td>
+<td>用 <strong>v-prediction</strong> 或 <strong>x̂₀-prediction</strong> 参数化比 ε-prediction 更稳（v-space 在 SNR→0 时最稳定）。</td>
+</tr>
+<tr style="background:var(--redSoft)">
+<td><strong>③ 梯度方向冲突</strong></td>
+<td>定义冲突角 <code>θ_conf = arccos(ĝ_d · ĝ_a)</code>，其中 <code>g_d</code> 是去噪梯度、<code>g_a</code> 是辅助损失梯度。<br><strong>θ &lt; 90° 相互促进 · θ = 90° 正交 · θ &gt; 90° 相互对抗。</strong><br>Lantern（arXiv 2607.25060, 2026）在高能物理量热器模拟上做了受控实验（架构/损失/权重/预处理全固定，唯一变量是梯度组合规则）：<strong>去噪梯度与物理残差损失的冲突角在训练中从合作转为对抗，实测 92°–128°</strong>。</td>
+<td><strong>调 λ 只能改幅度，改不了方向。</strong>只要 θ &gt; 90°，无论 λ 多小你都在持续把网络往两个矛盾方向拉。<br>⇒ 必须用<strong>门控 + 末期关闭</strong>，必要时用梯度手术（GradBlend / PCGrad）。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">已有的解法（库内报告已系统整理，这里只给结论）</div>
+<ul>
+<li><strong>把扩散训练看作多任务学习</strong>：T 个时间步就是 T 个任务，它们之间本来就有真实冲突（Min-SNR 论文 ICCV 2023 的 Figure 2 证明：微调某个时间步会帮到相邻时间步、但害到远处的时间步）。</li>
+<li><strong>Min-SNR-γ 加权</strong>：<code>w_t = min{ SNR(t), γ }</code>（预测 x₀ 时；预测 ε 时为 <code>min{γ/SNR(t), 1}</code>），推荐 <strong>γ = 5</strong>。效果：<strong>收敛加速 3.4×</strong>。HistDiST 正是用了这一套（v-prediction + 零终端 SNR + Min-SNR）。</li>
+<li><strong>三阶段调度（本报告推荐）</strong>：
+<ol>
+<li><strong>Phase 1 · 纯扩散预热</strong>（前 15–20% 迭代）：只训 <code>L_residual + L_noise</code>，让模型先站稳 score 场。<strong>此阶段绝对不加蛋白损失。</strong></li>
+<li><strong>Phase 2 · 辅助损失渐入</strong>（20%–80%）：<code>L = L_diff + w(s)·λ·L_protein</code>，<code>w(s)</code> 用 cosine ramp 从 0 升到 1；<strong>每 500 步记录一次冲突角</strong>。</li>
+<li><strong>Phase 3 · 末期纯扩散</strong>（最后 15–20%）：关闭所有辅助损失。<strong>这是收益最大的一条</strong>——Lantern 实测 FPD <strong>236.3 → 32.84</strong>。</li>
+</ol>
+</li>
+</ul>
+</div>
+
+<div class="box warn">
+<div class="bt">正式训练前先做这个（1–2 小时，零训练成本）</div>
+<pre><code>1. 用已有 checkpoint（或 Phase 1 训出的小模型）
+2. 取一个 batch 做一次前向
+3. 分别取梯度（注意 retain_graph=True，不要用 backward）：
+     g_d = ∇_θ L_denoise
+     g_p = ∇_θ L_protein
+4. θ_conf = arccos( ĝ_d · ĝ_p ) * 180/π
+5. 训练中每 500 步重复，画曲线
+
+判读：
+  θ &lt; 90°  → 可以放心加权
+  θ ≈ 90°  → 加了没用但不伤
+  θ &gt; 90°  → 必须门控 + 末期关闭（预期 FOD 这类「逐区域物理量」会落在这一档）</code></pre>
+<p><strong>预期</strong>：FOD 是光密度域的逐区域约束，与像素/体素残差同类 ⇒ <strong>预计 θ &gt; 90°</strong>，需要保护。而<strong>分布级 / ranking 级</strong>的蛋白损失只用到统计量，与逐像素去噪的梯度冲突预计更小——<strong>这也是本报告推荐「分布级优先」的原因之一</strong>（它既对错位鲁棒，又对梯度冲突更友好）。</p>
+</div>
+
+<h3 id="s5-3">5.3 方法路线图（指导书 §二十一，每个框里放真实论文）</h3>
+
+<pre><code>Protein Constraint
+│
+├── Image-level（图像级）
+│   ├── DAB 强度   ── UNIStainNet (L_DAB, top-10%) · Wei et al. (DAB L1)
+│   ├── OD         ── StainQuant（可微 BL，但是自编码器）· Loo 2025（BL 伪标签）
+│   └── FOD        ── PSPStain ★ · PGVMS ★ · CCPL（双通道 FOD）
+│
+├── Region-level（区域级）
+│   ├── patch 均值     ── PSPStain 的 16-block 区域均值项
+│   ├── local statistics ── 同上
+│   └── histogram      ── PSPStain 的 20-bin 直方图项 ★ · MVFStain（作用在风格，非表达）
+│
+├── Semantic-level（语义级）
+│   ├── protein feature ── FeatStainDiff（特征级扩散，不生成图）· VSMT（任务特定网，非 FM）
+│   ├── foundation model ── UNIStainNet（UNI 作**条件**）· HistDiST（Phikon 条件 / GigaPath 评价）
+│   └── contrastive      ── ASP（权重调度）· ConCLR（未核实）
+│
+├── Clinical-level（临床级）
+│   ├── HER2 grading   ── HER2 NCMT ★（真训练损失，序数 MSE）· Star-Diff SFS（评价）
+│   ├── H-score        ── **无人用于训练**（不可微，见 §3.2）
+│   └── biomarker class ── MIL-CycleGAN ★（滑片级 MIL）· PGVMS（OD 阈值分 4 类）
+│
+└── Diffusion-native guidance（扩散原生引导）
+    ├── latent guidance      ── OT-StainNet（训练期特征一致性，非采样）
+    ├── classifier/energy    ── MIU-Diff ★（互信息能量注入反向 SDE，**信号是结构**）
+    │                            SGCD（stain-guided 一致性；★ 已核实，代码里为死代码）
+    └── sampling optimization ── **空**。可迁移模板：Universal Guidance (2302.07121)、
+                                 Semantic Diffusion Guidance (2112.05744)、
+                                 Contrastive Energy Prediction (ICML 2023)
+
+★ = 该类里对「非配准 H&amp;E→IHC」最直接可用的一篇
+红色空缺 = 本报告判定为「无人做」的位置</code></pre>
+
+<div class="box pur">
+<div class="bt">这张图的三处空白</div>
+<ol>
+<li><strong>H-score 训练损失</strong>：整条线上没有人做（不可微是根本障碍）。</li>
+<li><strong>sampling optimization 里的蛋白信号</strong>：MIU-Diff 占了「采样期 guidance」这个位置，但用的是结构信号。<strong>把蛋白能量放进去是空的。</strong></li>
+<li><strong>「扩散 × 浓度生成空间」整条分支不存在</strong>：图上 Image-level 的 OD / FOD 全是非扩散模型。</li>
+</ol>
+</div>
+
+<h2 id="s6"><span class="num">6</span>训练约束 vs 评价指标（指导书 §十七）</h2>
+
+<p>指导书要求单独开一章。这一章的价值在于：<strong>把 H-score 当评价指标引用、却写成「使用了 H-score loss」是文献里最常见的误读之一。</strong></p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">训练约束（会改变模型）</div>
+<p><code>L_FOD</code>（PSPStain / PGVMS / CCPL）· <code>L_DAB</code>（UNIStainNet）· <code>L_score</code>（HER2 NCMT）· <code>L_MIL</code>（MIL-CycleGAN）· <code>L_sc</code>（OT-StainNet）· <code>L_UOT</code>（USIGAN）· <code>L_ASP</code>（ASP）· <code>L_papis</code>（PaPIS）· DAB L1（Wei et al.）</p>
+<p><strong>作用</strong>：在训练过程中把参数推向某个方向。</p>
+</div>
+<div class="mini">
+<div class="mt">评价指标（只判断，不改变模型）</div>
+<p>SFS（Star-Diff）· MRA（HistDiST）· IOD / mIOD（PSPStain、PGVMS、USIGAN）· DAB KL / Pearson-r（UNIStainNet）· FOD 分布相似度 · HER2 分级准确率（TDKstain 下游）· TPS / CPS（Loo 2025）· PCPA / SIA（CCPL 的人工指标）</p>
+<p><strong>作用</strong>：训练结束后判断模型有没有保住蛋白表达。</p>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">三个必须警惕的混淆（库内报告已提出，本次核对后完全同意）</div>
+<p><strong>混淆一：把 perceptual loss 当成表达约束。</strong>UNIStainNet 同时用了 LPIPS、edge loss、feature matching <strong>和</strong> DAB 损失。论文自己的消融显示去掉 UNI 条件会同时恶化 FID 与 DAB KL——但<strong>不能因此说「perceptual loss 保护了蛋白表达」</strong>。前三个是外观约束。</p>
+<p><strong>混淆二：把评价指标当成训练约束。</strong>IOD / mIOD 在 PSPStain、PGVMS、USIGAN 里<strong>主要是评价指标</strong>。只有 PSPStain / PGVMS 的 <strong>FOD 形式</strong>才真正进了 loss。同一篇论文里，「IOD 评价」和「FOD loss」是两个不同的东西，摘要里最容易混。</p>
+<p><strong>混淆三：「intensity」到底指什么。</strong>RGB 强度 / 灰度值（越大越亮，<strong>与 OD 反相关</strong>）/ 光密度（越大越深）——三者尺度完全不同。UNIStainNet 明确指出：<strong>不同工作对「光密度相关性」的定义不同（raw IoD 差 / 逐像素 Pearson-r / 积分密度相关），导致跨论文比较失效。</strong>它还举了一个实例：同一个方法（ASP on MIST-HER2）在不同论文里被报成 FID <strong>51.4 / 89.3 / 177</strong>，<strong>超过 3 倍差异</strong>。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">对你写作的直接要求</div>
+<p>如果你最终加了 FOD 损失，请<strong>同时</strong>报：(a) 训练损失用了哪几项统计量（均值 / 直方图 / block）；(b) 评价用了哪些表达级指标（IOD / Pearson-r / DAB KL / 分级一致性），<strong>并且明确写出这两组是不同的东西</strong>。这能直接避免审稿人把两者混为一谈。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>空间错位会不会毁掉蛋白约束</h2>
+
+<h3>7.1 已被量化的证据（这是本报告最硬的一组数字）</h3>
+
+<p><strong>HER2 Score-Aware NCMT</strong>（Diagnostics 2026）做了一个受控错位实验：<strong>保持目标 IHC 裁剪不动，平移输入的 H&amp;E 裁剪</strong>，四个方向平均。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>平移量（像素）</th><th class="c">FID ↓</th><th class="c">KID ↓</th><th class="c">PHV ↓</th></tr></thead>
+<tbody>
+<tr><td>0</td><td class="c"><strong>38.8</strong></td><td class="c"><strong>5.6</strong></td><td class="c"><strong>0.439</strong></td></tr>
+<tr><td>8</td><td class="c">42.05</td><td class="c">7.2</td><td class="c">0.455</td></tr>
+<tr><td>16</td><td class="c">42.77</td><td class="c">7.7</td><td class="c">0.445</td></tr>
+<tr><td>24</td><td class="c"><strong>46.68</strong></td><td class="c"><strong>9.3</strong></td><td class="c">0.464</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>作者原话（<strong>已核实</strong>）：</p>
+<blockquote style="border-left:3px solid var(--red);margin:10px 0;padding:6px 14px;background:var(--redSoft);font-size:13.5px">
+increasing offset magnitude progressively worsened FID, KID, and PHV avg., <strong>indicating that spatial mismatch acts as label noise and reduces marker-specific translation fidelity.</strong>
+</blockquote>
+<blockquote style="border-left:3px solid var(--red);margin:10px 0;padding:6px 14px;background:var(--redSoft);font-size:13.5px">
+The reliance on serial sections introduces inherent morphological shifts and physical distortions, <strong>precluding precise pixel-to-pixel registration</strong> … local discrepancies near tissue boundaries and glandular structures introduce <strong>label noise</strong> … Such noise may force the model to <strong>prioritize coarse contextual patterns over genuine marker-related morphology</strong>.
+</blockquote>
+
+<div class="box stop">
+<div class="bt">这三句话对你的意义</div>
+<ol>
+<li><strong>24 px 的错位让 FID 涨了 20%</strong>（38.8 → 46.68）。这不是小数点级别的噪声。</li>
+<li>它揭示了错位的<strong>具体危害机制</strong>：<em>force the model to prioritize coarse contextual patterns over genuine marker-related morphology</em> —— <strong>模型会退化成「学大尺度上下文」而不是「学 marker 相关形态」</strong>。这正好解释了为什么很多虚拟染色模型「看起来像但分级不准」。</li>
+<li>作者给出的出路是：<strong>patch 级软匹配 · 不确定性感知损失 · 形变容忍模块</strong>——这三条与本报告 §3.7 的结论一致。</li>
+</ol>
+</div>
+
+<h3>7.2 逐方法的错位鲁棒性定级</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:24%">方法</th><th class="c" style="width:8%">Level</th><th style="width:30%">为什么在这个级别</th><th>在 24 px 错位下预计</th></tr></thead>
+<tbody>
+<tr style="background:var(--greenSoft)"><td><strong>MIL-CycleGAN</strong></td><td class="c"><strong>L5</strong></td><td>滑片级标签，bag = 整张切片；实例级无需标注</td><td><span class="b high">几乎不受影响</span></td></tr>
+<tr style="background:var(--greenSoft)"><td><strong>MIU-Diff</strong></td><td class="c"><strong>L3–L5</strong></td><td>互信息估计器<strong>在 IHC 域内部训练</strong>，故意回避跨模态对齐</td><td><span class="b high">几乎不受影响</span></td></tr>
+<tr style="background:var(--greenSoft)"><td><strong>USIGAN</strong></td><td class="c"><strong>L3</strong></td><td>非平衡 OT + 显式去掉弱配对项，允许质量不守恒</td><td><span class="b high">设计上就为此而生</span></td></tr>
+<tr style="background:var(--greenSoft)"><td><strong>PSPStain / PGVMS 的 FOD 三统计量</strong></td><td class="c"><strong>L2–L3</strong></td><td>均值 / 直方图 / block 均值都不比较对应像素</td><td><span class="b high">鲁棒</span>（直方图项最鲁棒，block 项稍弱）</td></tr>
+<tr><td><strong>Star-Diff SFS</strong></td><td class="c"><strong>L5</strong></td><td>分类驱动的指标，作者明确说 <em>robust under spatial misalignment</em></td><td><span class="b high">鲁棒（但它只是指标）</span></td></tr>
+<tr><td><strong>OT-StainNet</strong></td><td class="c"><strong>L3</strong></td><td>OT 软对应替代硬配对；相关矩阵一致性</td><td><span class="b high">鲁棒</span></td></tr>
+<tr><td><strong>ASP</strong></td><td class="c"><strong>L2</strong></td><td>仍是硬匹配 + 软加权；正样本仍是一个 patch</td><td><span class="b medium">缓解但未消除</span></td></tr>
+<tr><td><strong>UNIStainNet 抗错位损失套件</strong></td><td class="c"><strong>L2</strong></td><td>论文按 10–50 px 容差设计</td><td><span class="b medium">有容差，但仍是图像级</span></td></tr>
+<tr style="background:var(--redSoft)"><td><strong>HER2 NCMT 的序数分数损失</strong></td><td class="c"><strong>L1</strong></td><td>要求已配准的 BCI patch 对</td><td><span class="b bad">直接受损（FID 38.8→46.68）</span></td></tr>
+<tr style="background:var(--redSoft)"><td><strong>CCPL 的双通道 FOD</strong></td><td class="c"><strong>L1</strong></td><td>论文要求配对</td><td><span class="b bad">受损</span></td></tr>
+<tr style="background:var(--redSoft)"><td><strong>TDKstain</strong></td><td class="c"><strong>L1</strong></td><td>用 RegH2I（2592 对已配准）</td><td><span class="b bad">受损</span></td></tr>
+<tr style="background:var(--redSoft)"><td><strong>PaPIS</strong></td><td class="c"><strong>L1</strong></td><td>全参考指标 ⇒ 必须配准</td><td><span class="b bad">受损</span></td></tr>
+<tr style="background:var(--redSoft)"><td><strong>FeatStainDiff</strong></td><td class="c"><strong>L1</strong></td><td>要求配对且配准的特征</td><td><span class="b bad">不可用</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">给你的直接结论</div>
+<p><strong>错位不是「精度略降」，而是「把模型推向错误的解」。</strong>所以你的蛋白约束<strong>必须至少是 L3（分布级）</strong>。L1 / L2 的约束在你数据上<strong>不是效果差的问题，是会主动教模型学错东西</strong>。</p>
+<p>⇒ 这一条直接排除了「直接对 DAB 图做逐像素 L1」这个最直觉的方案。</p>
+</div>
+
+<h2 id="s8"><span class="num">8</span>六方案 A–F 逐项评价（指导书 §二十二）</h2>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th style="width:6%">方案</th>
+<th style="width:17%">做法</th>
+<th class="c" style="width:9%">已有论文</th>
+<th class="c" style="width:7%">实现难度</th>
+<th class="c" style="width:8%">需要配准</th>
+<th class="c" style="width:8%">真针对蛋白</th>
+<th class="c" style="width:9%">与 StainFuser 兼容</th>
+<th class="c" style="width:7%">训练稳定</th>
+<th class="c" style="width:7%">计算成本</th>
+<th class="c" style="width:7%">创新空间</th>
+<th class="c">优先级</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="c"><strong>A</strong></td>
+<td>直接在生成的 RGB IHC 上做蛋白损失（L1 / 感知）</td>
+<td class="c"><span class="b high">很多</span></td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b bad">需要</span></td>
+<td class="c"><span class="b bad">不算</span></td>
+<td class="c"><span class="b high">高</span></td>
+<td class="c"><span class="b high">好</span></td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b bad">无</span></td>
+<td class="c"><span class="b bad">不建议</span></td>
+</tr>
+<tr style="background:var(--blueSoft)">
+<td class="c"><strong>B</strong></td>
+<td><strong>生成图 → 色解卷积 → DAB/OD/FOD → 蛋白损失</strong></td>
+<td class="c"><span class="b medium">非扩散有</span><br><span class="b bad">扩散无</span></td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">不需要</span><br>（用分布级）</td>
+<td class="c"><span class="b high">是</span><br>（强度代理）</td>
+<td class="c"><span class="b high">高</span></td>
+<td class="c"><span class="b medium">中<br>（需调度）</span></td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b medium">中<br>（位置空缺）</span></td>
+<td class="c"><span class="b high">★★★<br>第一</span></td>
+</tr>
+<tr>
+<td class="c"><strong>C</strong></td>
+<td>扩散<strong>直接生成</strong> semantic stain / 浓度，在该空间做蛋白约束</td>
+<td class="c"><span class="b bad">无</span><br>（最近：StainQuant 非扩散）</td>
+<td class="c"><span class="b bad">很高</span></td>
+<td class="c"><span class="b high">不需要</span></td>
+<td class="c"><span class="b high">是</span></td>
+<td class="c"><span class="b bad">低<br>（要换解码器）</span></td>
+<td class="c"><span class="b bad">未知</span></td>
+<td class="c"><span class="b bad">高</span></td>
+<td class="c"><span class="b high">很高</span></td>
+<td class="c"><span class="b medium">★★<br>第三</span></td>
+</tr>
+<tr>
+<td class="c"><strong>D</strong></td>
+<td>加 protein feature / foundation model 特征损失</td>
+<td class="c"><span class="b low">扩散无</span><br>（FeatStainDiff 不生成图）</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b bad">多数需要</span></td>
+<td class="c"><span class="b bad">存疑</span><br>（形态≠蛋白）</td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b low">不建议<br>（除非先验证）</span></td>
+</tr>
+<tr style="background:var(--greenSoft)">
+<td class="c"><strong>E</strong></td>
+<td>ranking / distribution / soft correspondence</td>
+<td class="c"><span class="b medium">OT 有<br>ranking 无</span></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b high">不需要</span></td>
+<td class="c"><span class="b high">是</span><br>（序关系）</td>
+<td class="c"><span class="b high">高</span></td>
+<td class="c"><span class="b high">好</span></td>
+<td class="c"><span class="b high">低</span></td>
+<td class="c"><span class="b high">高<br>（rank loss 空）</span></td>
+<td class="c"><span class="b high">★★★<br>第二</span></td>
+</tr>
+<tr>
+<td class="c"><strong>F</strong></td>
+<td>采样阶段做 protein guidance</td>
+<td class="c"><span class="b low">结构 guidance 有<br>蛋白 guidance 无</span></td>
+<td class="c"><span class="b medium">中高</span></td>
+<td class="c"><span class="b high">不需要</span></td>
+<td class="c"><span class="b high">是</span></td>
+<td class="c"><span class="b medium">中<br>（要改进推理）</span></td>
+<td class="c"><span class="b medium">中</span></td>
+<td class="c"><span class="b medium">中<br>（推理变慢）</span></td>
+<td class="c"><span class="b high">高</span></td>
+<td class="c"><span class="b high">★★★<br>第二梯队</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>逐项说明</h4>
+
+<div class="route">
+<div class="rt">方案 A · 直接 RGB 上做蛋白损失 —— <span class="b bad">不建议</span></div>
+<div class="rmeta">已有论文：极多（L1/SSIM/LPIPS/adversarial/PatchNCE）</div>
+<p><strong>为什么不建议</strong>：① 它不是 protein-specific 的，指导书 §十四 自己就把这一类划成「不算，单独列出，不要作为重点」；② 逐像素 RGB 损失<strong>在错位下有害</strong>（HER2 NCMT 的受控实验证明：错位被当作 label noise）；③ 它无法回答「蛋白表达有没有保住」这个问题。⇒ <strong>可以留作 baseline 对照，但不能当贡献。</strong></p>
+</div>
+
+<div class="route" style="background:var(--blueSoft);border-color:#c2d4f7">
+<div class="rt">方案 B · 先得到 DAB / OD / FOD，再做蛋白损失 —— <span class="b high">第一优先级</span></div>
+<div class="rmeta">已有论文：非扩散有（PSPStain / PGVMS / CCPL / UNIStainNet / Wei et al.）；扩散无</div>
+<p><strong>为什么排第一</strong>：</p>
+<ol>
+<li><strong>有已发表先例可逐行对照</strong>——PSPStain 的 L_MLPA 三项（全局均值 / 20-bin 直方图 / 16-block 区域均值）是完整可查的。你不需要发明新损失，只需要<strong>把它搬到一个新位置（x̂₀）并证明有效</strong>。</li>
+<li><strong>损失形式简单</strong>：对统计量做 L2，没有额外网络、没有对抗训练、没有 OT 求解器。</li>
+<li><strong>对错位天然鲁棒</strong>（L2–L3 级）：均值 / 直方图 / block 均值都不比较对应像素。</li>
+<li><strong>与 StainFuser 改动最小</strong>：加一个 x̂₀ 反推 + 一个损失函数，不动主干、不动解码器、不动 ControlNet。</li>
+<li><strong>直接补上最大的空缺</strong>：「扩散侧没有任何蛋白约束」这一格。</li>
+</ol>
+<p><strong>实现难度低</strong>，但要注意两件事：① 色解卷积矩阵 M 必须先固定（否则「浓度」不可比，H-score 无从谈起）；② 必须做 §5.2 的梯度冲突角诊断。</p>
+<p><strong>推荐的具体形态</strong>：<strong>先只做两项</strong>——<strong>全局 FOD 均值 + 20-bin 直方图</strong>。理由：这两项都是 L3 分布级，对错位最鲁棒，且与去噪梯度的冲突预计最小。<strong>16-block 区域均值项暂缓</strong>（它介于 L2/L3 之间，在错位下会引入边界噪声）。</p>
+</div>
+
+<div class="route">
+<div class="rt">方案 C · 扩散直接生成浓度表示 —— <span class="b medium">第三，但要留着</span></div>
+<div class="rmeta">已有论文：无（最近的是 StainQuant，非扩散，且是分离器不是生成器）</div>
+<p><strong>创新空间最高</strong>（三格全空，见 §3.9），<strong>但与 StainFuser 兼容性最低</strong>：StainFuser 的输出是 SD2.1 VAE 的 4 通道 latent，<strong>VAE 全冻</strong>。要改成输出 <code>[C_H, C_DAB, C_res]</code>，<strong>不是「加一个头」，是换解码器</strong>——等于放弃预训练 VAE 的解码先验，重训规模大。</p>
+<p><strong>为什么现在不做</strong>：它是一个「换生成空间」的改动，不是「加一个损失」的改动。在 baseline 和 Stage 1/2 有结论之前做它，一旦出问题你无法归因是「浓度空间不行」还是「训练调度不行」。<strong>放在 Stage 3。</strong></p>
+<p><strong>但它是你「可解释」这条主线的唯一落点</strong>，所以不要放弃，只是排序靠后。</p>
+</div>
+
+<div class="route">
+<div class="rt">方案 D · protein feature / foundation model 损失 —— <span class="b low">不建议（除非先做验证）</span></div>
+<div class="rmeta">已有论文：扩散无；FeatStainDiff 是特征级扩散但不生成图且要求配对</div>
+<p><strong>核心障碍不是实现，是定义。</strong>如 §3.4 所述，<strong>本次检索没有找到任何工作验证过「病理 FM 特征编码蛋白表达」</strong>。UNI 是 H&amp;E 形态预训练的，论文自己也不主张它有蛋白语义。</p>
+<p>⇒ 如果你加这个损失，你<strong>必须自己先做一个前置验证实验</strong>（例如：FM 特征在 HER2 分级上的线性探针准确率 vs 随机基线；或 FM 特征能否区分 DAB 高/低表达区）。<strong>否则你无法在论文里说「这个损失保护了蛋白表达」</strong>——指导书 §二十六 明确禁止这种写法。</p>
+<p>⇒ 结论：<strong>不是不能做，是它的前置成本被严重低估了</strong>。</p>
+</div>
+
+<div class="route" style="background:var(--greenSoft);border-color:#c2e4cf">
+<div class="rt">方案 E · ranking / distribution / soft correspondence —— <span class="b high">第二优先级</span></div>
+<div class="rmeta">已有论文：OT 软对应有（OT-StainNet 扩散、USIGAN GAN）；<strong>蛋白表达 ranking 损失没有</strong></div>
+<p><strong>为什么排第二</strong>：</p>
+<ol>
+<li><strong>对错位最友好</strong>（L3–L4）：ranking 只需要相对序，distribution 不需要坐标。</li>
+<li><strong>文献空白且成本低</strong>：指导书设想的 <code>A &gt; B ⇒ A′ &gt; B′</code> 这个形态，<strong>本次检索没有找到任何虚拟染色工作真的这么做</strong>。而实现它只需要「区域级表达强弱标签」。</li>
+<li><strong>与梯度冲突最友好</strong>：只用统计量/序关系，与逐像素去噪的梯度方向冲突预计小。</li>
+</ol>
+<p><strong>具体形态建议</strong>：把生成图与真实图各自切成 K 个区域，按真实图的 FOD 均值排序，要求生成图的排序与之一致（pairwise ranking loss 或 Spearman 相关）。<strong>这是「分布级」的严格加强版</strong>，且完全不需要坐标对应。</p>
+</div>
+
+<div class="route" style="background:var(--tealSoft);border-color:#b8e2e7">
+<div class="rt">方案 F · 采样阶段 protein guidance —— <span class="b high">第二梯队（方案 B 成功后的自然下一步）</span></div>
+<div class="rmeta">已有论文：结构 guidance 有（MIU-Diff）；<strong>蛋白 guidance 无</strong></div>
+<p><strong>为什么排第二梯队而不是第一</strong>：它需要你先有一个<strong>可微的蛋白量函数</strong>——而这正是方案 B 产出的东西。<strong>所以 F 是 B 的下游，不是替代。</strong></p>
+<p><strong>但它的性价比极高</strong>：一旦你有了 <code>φ(x̂₀) → FOD</code>，把它从「训练期损失」升级成「采样期能量」几乎不需要新设计：</p>
+<pre><code>训练期（方案 B）：  L = L_diff + λ·‖φ(x̂₀) − φ(x₀)‖²
+采样期（方案 F）：  ∇_y E(y) = ∇_y ‖φ(y) − target‖²
+                    把 ∇_y E 注入反向 SDE 的漂移项（MIU-Diff 的现成实现）</code></pre>
+<p>而且它回答一个训练损失回答不了的问题：<strong>「推理时能不能主动把表达推向目标值？」</strong>——这对临床场景（比如给定 HER2 分级目标）有意义。</p>
+</div>
+
+<h2 id="s9"><span class="num">9</span>分阶段实验建议（指导书 §二十三）</h2>
+
+<p class="small">指导书要求：不要一下给 5 个 loss；每一步必须说明「这个实验到底在验证什么假设」。</p>
+
+<div class="card">
+<div class="ch"><div><div class="title">Stage 0 · 复现扩散 baseline（不可跳过）</div><div class="v">唯一的「无蛋白约束」对照</div></div><div><span class="b blue">前提</span></div></div>
+<div class="body">
+<p><strong>做什么</strong>：StainFuser 改造版跑通，只改条件内容（H&amp;E 的染色分解），不加任何蛋白损失。输出空间保持 RGB latent 不动。</p>
+<p><strong>验证什么假设</strong>：<em>「扩散框架本身能不能做 H&amp;E→IHC」</em>——把「框架能力」与「蛋白约束的增益」分开。没有这个对照，你后面所有的提升都无法归因。</p>
+<p><strong>必须同时记录</strong>：① 参考片与真值的相关性（确认没有泄漏）；② 生成图的 IOD / Pearson-r / FOD 分布，作为后续所有比较的基线；③ 采样图与 loss 曲线。</p>
+<p><strong>止损</strong>：如果 baseline 生成的图连「像 IHC」都做不到，先解决框架问题，不要加蛋白损失。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">Stage 1 · 只加最成熟、最确定的蛋白约束</div><div class="v">方案 B 轻量版：FOD 全局均值 + 20-bin 直方图，挂在 x̂₀ 上</div></div><div><span class="b high">第一优先级</span></div></div>
+<div class="body">
+<p><strong>为什么选它</strong>：它是唯一有「已发表先例 + 形式简单 + 对错位鲁棒 + 与 StainFuser 改动最小」四项同时成立的选项。</p>
+<p><strong>验证什么假设</strong>：<em>「一个在 GAN 上被验证过的 OD 空间统计约束，搬到扩散的 x̂₀ 上之后是否仍然有效」</em>。这是一个<strong>迁移性假设</strong>，不是创新假设——所以它的实验设计必须干净（单变量），而且它的结论无论正负都有价值。</p>
+<p><strong>必须做的三件事</strong>：</p>
+<ol>
+<li><strong>正式训练前先测梯度冲突角</strong>（1–2 小时，见 §5.2）。若 θ &gt; 90°，必须用三阶段调度。</li>
+<li><strong>三阶段调度</strong>：纯扩散预热（15–20%）→ cosine ramp 渐入（20–80%）→ 末期关闭（最后 15–20%）。</li>
+<li><strong>消融必须包含「错误对照」</strong>：全程开辅助损失（无 warmup、无末期关闭）这一档<strong>预期会变差</strong>。如果它没变差，说明你的实现有 bug，而不是「调度不重要」。</li>
+</ol>
+<p><strong>判据</strong>：主判据<strong>不是</strong> PSNR/FID，而是<strong>表达级指标</strong>（FOD 分布距离 / IOD 相关 / Pearson-r）<strong>与下游分级一致性</strong>。</p>
+<p><strong>止损</strong>：如果表达级指标没有显著改善，且冲突角确认 &gt; 90°、调度已做对——<strong>干净地记为阴性结论</strong>：说明「OD 空间统计约束在扩散上迁移失败」，转而做 Stage 2。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">Stage 2 · 再加一种对空间错位更鲁棒的约束</div><div class="v">方案 E：区域级表达 ranking 损失</div></div><div><span class="b high">第二优先级</span></div></div>
+<div class="body">
+<p><strong>验证什么假设</strong>：<em>「分布级约束不够，需要序关系约束」</em>——即「生成图的表达分布对了，但空间上的高低关系还是错的」。</p>
+<p>这个假设<strong>可证伪</strong>：如果 Stage 1 之后，FOD 分布距离已经很低、但<strong>区域级排序相关性</strong>（Spearman）仍然很差，就说明分布约束确实漏掉了空间信息，ranking 损失有理由存在。反过来，如果排序相关性本来就跟着分布一起变好了，那 ranking 损失<strong>没有存在必要</strong>。</p>
+<p><strong>为什么放在 Stage 2 而不是和 Stage 1 一起</strong>：一次只引入一个新失败模式。两个损失一起加，出问题时无法归因。</p>
+<p><strong>额外好处</strong>：这一条在文献里是空的（§3.5），所以它同时是一个可写的贡献点。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">Stage 3 · semantic stain representation / 物理渲染</div><div class="v">方案 C：换生成空间到浓度，加可微 Beer–Lambert 前向</div></div><div><span class="b medium">第三</span></div></div>
+<div class="body">
+<p><strong>验证什么假设</strong>：<em>「在浓度空间做生成，比在 RGB 空间生成再解释，能带来更好的可解释性与表达保真度」</em>。</p>
+<p><strong>为什么最后做</strong>：它是<strong>换解码器</strong>级别的改动（StainFuser 的 VAE 全冻，输出 4 通道 latent），不是加一个损失。必须在 Stage 1/2 已经建立了稳定的评价体系之后再做，否则失败时无法归因。</p>
+<p><strong>前置条件（两个，不能跳）</strong>：</p>
+<ol>
+<li><strong>先固定 stain matrix M</strong>——否则「浓度」不可比，H-score 无从谈起。</li>
+<li><strong>标定 M 时必须加无色轴断言</strong>（由标定出的 M 张成的平面不应能表示「无色」，即 <code>angle(u, span(M)) &gt; 5°</code> 且 <code>u ∉ cone(M)</code>，其中 <code>u = (1,1,1)/√3</code>）。否则纯光照变化会被解释成「更多 H + 更多 DAB」，<strong>光照泄漏进 DAB 通道</strong>。</li>
+</ol>
+<p><strong>可直接搬的建筑块</strong>：StainQuant 的 <code>od = Σ C·B</code> / <code>rgb = exp(−od)</code> 两行正演渲染器 + 可学习基矩阵 + 颜色锚定损失。但必须改掉它的三个坑（末端 ReLU → softplus；基加非负约束；<code>default.yaml</code> 是 demo 残留不可用）。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">Stage 4 · diffusion-native protein guidance</div><div class="v">方案 F：把 Stage 1 的 φ(x̂₀) 改成采样期能量函数</div></div><div><span class="b tealb">第四</span></div></div>
+<div class="body">
+<p><strong>验证什么假设</strong>：<em>「推理时能不能主动把蛋白表达推向目标，而不只是被动地不跑偏」</em>。</p>
+<p><strong>为什么它排最后但值得做</strong>：它的实现几乎零新增设计（复用 Stage 1 的蛋白量函数 + MIU-Diff 的能量注入机制），但回答了一个<strong>训练损失无法回答</strong>的问题——可控性。如果临床场景需要「给定 HER2 分级生成对应 IHC」，这是唯一路径。</p>
+<p><strong>判据</strong>：把 guidance 强度作为自变量，画「表达指标 vs 强度」曲线。如果曲线能在不破坏结构的前提下单调改善表达指标，就证明了可控性成立。</p>
+</div>
+</div>
+
+<h2 id="s10"><span class="num">10</span>先做什么（指导书 §二十九）</h2>
+
+<div class="box good">
+<div class="bt">明确结论</div>
+<pre><code>第一优先级：方案 B 轻量版
+            —— 在扩散的 x̂₀ 上挂 FOD 的「全局均值 + 20-bin 直方图」两项损失
+原因：      ① 唯一同时满足「有已发表先例 + 形式简单 + 对错位鲁棒 + 改动最小」的选项
+            ② 直接补上「扩散侧无任何蛋白约束」这个已核实为空缺的位置
+            ③ 无论成败都能归因：成功 = 迁移性成立；失败 = 迁移性不成立（都是可写的结论）
+
+第二优先级：方案 E 的 ranking 变体
+            —— 区域级表达序关系损失
+原因：      ① 对错位最友好（L4，只需相对序，不需要坐标）
+            ② 文献里是空的（本次检索未找到任何虚拟染色工作做表达 ranking）
+            ③ 实现成本极低（只需区域级表达强弱标签）
+            ④ 与梯度冲突最友好
+
+暂时不建议：方案 C（换生成空间到浓度）
+原因：      它是换解码器级别的改动，不是加一个损失。放在 Stage 3，等评价体系稳定后做。
+            前置条件（固定 M + 无色轴断言）必须先满足。
+
+暂时不建议：方案 D（foundation model 特征损失）
+原因：      「病理形态特征 ≠ 蛋白表达特征」这个前提在文献里从未被验证。
+            你会先花大量时间证明你的特征有意义，而且这个证明本身不产生方法贡献。
+            除非你愿意把「验证 FM 特征是否编码蛋白表达」本身当成一个实验先做掉。
+
+不建议：    方案 A（直接 RGB 上做蛋白损失）
+原因：      不是 protein-specific；且在错位下有害（已被 HER2 NCMT 的受控实验量化）。</code></pre>
+</div>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">如果只允许改一次模型，最值得先加哪个？</div>
+<p><strong>在 x̂₀ 上加 FOD 的分布级损失（全局均值 + 直方图）。</strong></p>
+<p>理由：改动量最小（一个损失 + 一个 x̂₀ 反推），但占住的位置最值钱（扩散侧的蛋白约束空白）。而且它的失败也是有信息的——它直接告诉你「OD 空间约束能不能迁移到扩散」。</p>
+</div>
+<div class="mini">
+<div class="mt">如果这个方法有效，下一步最自然的第二个实验是什么？</div>
+<p><strong>方案 F：把同一个蛋白量函数搬到采样期当能量函数。</strong></p>
+<p>理由：<strong>零新增设计</strong>——<code>φ(x̂₀) → FOD</code> 这个函数已经存在（Stage 1 做的），MIU-Diff 的能量注入机制也已有现成实现。你只需要把「训练期损失」换成「采样期梯度」。</p>
+<p>而且它打开的是<strong>可控性</strong>这个新问题（给定目标表达生成 IHC），比「再降 0.5 个 FID」有价值得多。</p>
+</div>
+</div>
+
+<h2 id="s11"><span class="num">11</span>暂时不要做的东西</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26%">不要做</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td><strong>直接对 DAB 图做逐像素 L1 / L2</strong></td><td>L1 级约束在错位下<strong>有害</strong>，不是「效果差」——HER2 NCMT 的受控实验已量化（FID 38.8→46.68），作者原话是「spatial mismatch acts as <strong>label noise</strong>」</td></tr>
+<tr><td><strong>用 H-score 当训练损失（不加改造）</strong></td><td>标准 H-score 含<strong>硬阈值分箱 + 计数</strong>，不可导。本次检索未找到任何软 H-score 损失的病理实现。要用就先改造成序数回归或软分箱</td></tr>
+<tr><td><strong>用 foundation model 特征损失（不做前置验证）</strong></td><td>「FM 特征编码蛋白表达」在文献里<strong>从未被验证</strong>。不验证就用，等于把「感知相似度」说成「蛋白保真度」——指导书 §二十六 明确禁止</td></tr>
+<tr><td><strong>一次加两个以上蛋白损失</strong></td><td>辅助损失与去噪损失的<strong>冲突角实测 92°–128°</strong>。一次引入一个新失败模式，否则无法归因</td></tr>
+<tr><td><strong>全程开辅助损失（无 warmup、无末期关闭）</strong></td><td>Lantern 的受控实验：末期关闭是收益最大的一条（FPD 236.3 → 32.84）。全程开是已知的错误配置</td></tr>
+<tr><td><strong>用 PSNR / SSIM 判断蛋白保真度</strong></td><td>多篇论文独立指出其与生物学正确性不相关。PGVMS 明确指出「加高斯模糊会<strong>提高</strong> PSNR/SSIM，同时<strong>降低</strong>生物学保真度」</td></tr>
+<tr><td><strong>跨论文比较 FID / IOD</strong></td><td>UNIStainNet 指出同一方法（ASP on MIST-HER2）被报成 FID <strong>51.4 / 89.3 / 177</strong>；IoD 的定义也不统一</td></tr>
+<tr><td><strong>现在就换生成空间到浓度</strong></td><td>它是换解码器级别的改动，且前置条件（固定 M + 无色轴断言）未满足。放 Stage 3</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s12"><span class="num">12</span>证据边界与未核实清单</h2>
+
+<div class="box stop">
+<div class="bt">明确未核实的事项（不要当作事实引用）</div>
+<p class="small">★ <strong>第 1 条（SGCD）已于 2026-10-07 结案</strong>——保留在此以便追溯，其余各条仍未核实。新增结论见 <a href="SGCD_Stain-Guided_CycleDiffusion_精读_代码级复核与可迁移性判定.html">SGCD 精读报告</a>。</p>
+<ol>
+<li><strong>SGCD 是否真的用 Beer–Lambert。</strong><span class="b high">★ 已结案（2026-10-07）</span>：拿到原文 PDF（31 页）并读完，<strong>确实用了</strong>——<code>vahadane.py</code> 的 <code>SPCN</code> 逐字为 <code>Is_norm = 255 * np.exp(-1 * np.dot(Wt, Hs_norm))</code>，与论文 <code>I_ref = I₀·exp(−W_T·H_S)</code> 一致。<strong>但它是「造参考图」，不是「把渲染器放进生成空间」</strong>，所以原先「不要当作扩散里的物理渲染器引用」这条警告<strong>依然成立</strong>。另核实到：<strong>发布的官方实现把该引导写死为 <code>guide = False</code>（死代码）</strong>，且论文超参与代码差 1–2 个数量级。完整判定见 <a href="SGCD_Stain-Guided_CycleDiffusion_精读_代码级复核与可迁移性判定.html">SGCD_Stain-Guided_CycleDiffusion_精读_代码级复核与可迁移性判定.html</a>。</li>
+<li><strong>PGVMS 的 backbone 是不是扩散。</strong>摘要<strong>完全没提</strong>。有二手描述称是扩散，但同一批描述也把它归为 CUT 系。<strong>未核实</strong>。本报告在正文中一律标注为「摘要未说明」。</li>
+<li><strong>UNIStainNet 的 backbone。</strong>摘要只说 SPADE-UNet，未说扩散还是 GAN。<strong>★ 已解决</strong>：流匹配版报告（§14.2）从官方正文核实到原话 <em>"Diffusion-based approaches involve iterative inference, whereas GAN-based methods (including UNIStainNet) require only one pass"</em> ⇒ <strong>它是 GAN，不是扩散、也不是流匹配</strong>。引用时不要再把它算作扩散工作。</li>
+<li><strong>UNIStainNet 的 venue。</strong>部分二手博客标「CVPR 2025」、另有标「CVPR 2026」。<strong>★ 已核实为 ACM-BCB 2026</strong>——ACM DL DOI <code>10.1145/3807503.3819452</code> 落地页写明 <em>"Proceedings of the 17th ACM International Conference on Bioinformatics, Computational Biology and Health Informatics"</em>。注意 <strong>arXiv 2603.12716 页面本身不标注任何 venue</strong>，所以只查 arXiv 会看不出。库内三份报告曾各写一个不同的 venue，已统一。</li>
+<li><strong>FeatStainDiff 的代码级实现细节。</strong>（<strong>已结案，2026-10-08</strong>）原文 PDF 已读取，损失公式/特征提取器（ResNet50、UNI、CONCH）/训练与推理逻辑已核实；官方仓库核心 <code>model.py</code> 暂 withheld，因此 DCT 轴与代码细节仍未核实。已确认：特征级、<strong>不生成 IHC 图像</strong>、需要配对且配准特征。</li>
+<li><strong>ConCLR 的方法细节。</strong>IEEE 付费墙。<strong>未核实</strong>。</li>
+<li><strong>DGR（Nat. Commun. 2026）的 backbone。</strong>Nature 页面被拦截。<strong>未核实</strong>。</li>
+<li><strong>Star-Diff 的损失项全貌。</strong>只核实了摘要。SFS 是否曾经进入训练<strong>未核实</strong>（摘要只说它是评价指标）。</li>
+<li><strong>「病理 OT 里没有 Sinkhorn」这个阴性结论</strong>，只在本次检索式范围内成立。<strong>★ 2026-10-06 已更正：该结论本身不成立</strong>——它建立在「论文没提」之上，而拿到 OT-StainNet 全文后确认论文只是<strong>未说明求解器</strong>。正确表述是「<strong>两篇病理 OT 工作都未说明 OT 的求解方式</strong>」。</li>
+<li><strong>ARIPNet 类的工作没有纳入本报告</strong>——它与蛋白约束无关（属频域/结构方向，见库内另一份频域报告）。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">三条方法论提醒</div>
+<ol>
+<li><strong>「没有找到」≠「不存在」。</strong>本报告的所有阴性结论（扩散侧无蛋白损失、无 ranking 损失、无浓度生成空间）都只代表<strong>在本次检索式与可获取范围内</strong>未发现。若要写成论文的「首次」，请自己做一轮反向检索（用「谁引用了 PSPStain 的 FOD」「谁在扩散上做 FOD」这类引用检索，而不是关键词检索）。</li>
+<li><strong>摘要 ≠ 正文。</strong>本报告多条判断依赖摘要。凡是「摘要没说 backbone」的地方，我都标成「未说明」而不是「不是」。<strong>动手实现前请打开正文核对一遍。</strong></li>
+<li><strong>论文说的机制 ≠ 代码做的机制。</strong>库内对 StainQuant 的代码级复核发现三处「论文/描述 ≠ 代码」（感知损失实际是随机权重、基向量无非负约束、<code>default.yaml</code> 是 demo 残留）。<strong>搬运任何实现前，先读代码。</strong></li>
+</ol>
+</div>
+
+<h2 id="s13"><span class="num">13</span>与库内既有报告的分工</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:30%">报告</th><th style="width:22%">它回答什么</th><th>本报告与它的关系</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>protein-expression-representation-survey.html</strong></td>
+<td>「蛋白表达」这个量<strong>怎么表示</strong>（OD / IOD / FOD / 统计 / 空间 / 频域），以及各表示在虚拟染色里是<strong>训练还是评价</strong></td>
+<td><strong>本报告复用它的 §7.2（两组机制表）、§8.1（物理+数学组合）、§9.1（角色归属表）、§9.2（三种混淆）</strong>，不重复推导。<br><strong>本报告新增的是：扩散位置轴</strong>——它按「量」组织，本报告按「约束挂在扩散的哪里」组织。</td>
+</tr>
+<tr>
+<td><strong>HE2IHC_Diffusion_Loss_Combination_Guide.html</strong></td>
+<td>「噪声预测损失与其他损失能否一起训练」——梯度冲突、Min-SNR、三阶段配方</td>
+<td>本报告 §5.2 <strong>直接引用它的结论</strong>（冲突角 92°–128°、Min-SNR γ=5、三阶段、末期关闭 FPD 236.3→32.84）。<br>本报告新增的是：<strong>把这个调度知识接到具体的蛋白损失上</strong>，并给出诊断实验。</td>
+</tr>
+<tr>
+<td><strong>弱配准下蛋白表达保真_评价与训练路线调研.html</strong></td>
+<td>弱配准下的四条路线（distribution / morphology-conditioned / ranking / OT）与 MVP 设计</td>
+<td>本报告 §3.6 / §3.7 / §7 <strong>与它互补</strong>：它给路线，本报告给<strong>「这些路线在扩散上有没有先例」的判定</strong>与<strong>错位鲁棒性的量化证据</strong>（HER2 NCMT 的受控实验）。</td>
+</tr>
+<tr>
+<td><strong>StainFuser改造_实施任务书_v2.md</strong></td>
+<td>StainFuser 具体怎么改（cond 内容、泄漏判定、尺度一致性、阶段路线）</td>
+<td>本报告是它的<strong>上游文献依据</strong>。§10 的「先做什么」与任务书的 §5 阶段 1 一致。</td>
+</tr>
+<tr>
+<td><strong>频域在扩散模型中的应用_结构保持视角_调研报告.html</strong></td>
+<td>频域能插在扩散的哪六个位置，以及各位置的判定</td>
+<td>两份报告<strong>共用同一个「位置分类」方法论</strong>，但对象不同（那份是频域，本报告是蛋白）。频域那六个位置与本报告五个位置可以叠加：<strong>「采样期修正」是两份报告唯一同时判为「立即可做」的位置</strong>。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="foot">
+<p><strong>扩散模型虚拟染色中的「蛋白表达约束」· 约束位置地图</strong> · 2026-10-06</p>
+<p>依据：22 篇论文（其中 17 篇本人抓取原文/摘要核实，5 篇为库内已核实的内部结论）+ 5 篇库内既有报告交叉引用。所有核实等级已在正文标注。</p>
+<p>本报告未跑任何实验。阴性结论仅代表本次检索范围内未发现。动手实现前请打开正文核对 backbone 与损失公式。</p>
+</div>
+
+</main>
+</div>
+</body>
+</html>

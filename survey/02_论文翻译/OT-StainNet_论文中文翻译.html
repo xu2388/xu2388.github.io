@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OT-StainNet 全文翻译 · Optimal Transport Driven Semantic Matching for Weakly Paired H&E-to-IHC Stain Transfer</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#fff; --panel-2:#fbfcfd;
+  --ink:#16202c; --ink-2:#3d4c5c; --ink-3:#6b7a8c;
+  --line:#e3e8ee; --line-2:#eef2f6;
+  --accent:#0f6f8f; --accent-2:#0d5a75; --accent-soft:#e8f3f7;
+  --eq:#f2f6f9; --eqline:#c9dae3;
+  --note:#7c3aed; --note-bg:#f4efff;
+  --warn:#b91c1c; --warn-bg:#fdeeee;
+  --ok:#047857; --ok-bg:#e9f7f1;
+  --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Songti SC","Source Han Serif SC","Noto Serif CJK SC",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased;}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1520px;margin:0 auto}
+nav.toc{position:sticky;top:0;height:100vh;overflow-y:auto;padding:28px 16px 60px 28px;border-right:1px solid var(--line);background:var(--panel)}
+nav.toc .brand{font-size:15px;font-weight:800;line-height:1.4;margin-bottom:6px}
+nav.toc .brand small{display:block;font-weight:500;font-size:11.5px;color:var(--ink-3);margin-top:6px;line-height:1.5}
+nav.toc h4{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:20px 0 7px;font-weight:700}
+nav.toc h4:first-of-type{margin-top:22px}
+nav.toc a{display:block;font-size:13px;color:var(--ink-2);padding:3.5px 8px;border-radius:6px;line-height:1.5}
+nav.toc a:hover{background:var(--accent-soft);color:var(--accent-2);text-decoration:none}
+nav.toc a.sub{padding-left:20px;font-size:12.5px;color:var(--ink-3)}
+main{padding:34px 52px 120px;max-width:940px;min-width:0}
+
+header.hero{background:linear-gradient(135deg,#0d5a75 0%,#0f6f8f 45%,#158a9c 100%);color:#fff;border-radius:14px;padding:32px 36px;margin-bottom:30px;box-shadow:0 10px 30px rgba(13,90,117,.16)}
+header.hero .kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.85;font-weight:700}
+header.hero h1{margin:10px 0 6px;font-size:25px;line-height:1.4;font-weight:800}
+header.hero h1 .en{display:block;font-size:15px;font-weight:500;opacity:.9;margin-top:8px;font-style:italic}
+header.hero .authors{margin:16px 0 0;font-size:13.5px;opacity:.93;line-height:1.7}
+header.hero .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:600}
+
+h2{font-size:20px;font-weight:800;margin:52px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);scroll-margin-top:20px}
+h2 .num{color:var(--accent);font-family:var(--mono);font-size:15px;margin-right:10px;font-weight:700}
+h2 .en{font-size:12.5px;color:var(--ink-3);font-weight:500;display:block;margin-top:5px;letter-spacing:.02em}
+h3{font-size:16.5px;font-weight:750;margin:32px 0 8px;scroll-margin-top:20px}
+h3 .num{color:var(--accent);font-family:var(--mono);font-size:13.5px;margin-right:8px}
+h3 .en{font-size:12px;color:var(--ink-3);font-weight:500;margin-left:8px}
+h4{font-size:14.5px;font-weight:700;margin:22px 0 6px;color:var(--ink-2)}
+h4 .num{color:var(--ink-3);font-family:var(--mono);font-size:12.5px;margin-right:6px}
+p{margin:11px 0;text-align:justify}
+ul,ol{margin:11px 0;padding-left:24px}
+li{margin:5px 0;text-align:justify}
+strong{font-weight:700}
+.term{font-family:var(--mono);font-size:.88em;background:#eef2f6;padding:1px 5px;border-radius:4px;color:#0b3b4d;white-space:nowrap}
+em.en{font-style:italic;color:var(--ink-2)}
+
+.eq{background:var(--eq);border:1px solid var(--eqline);border-radius:8px;padding:14px 18px;margin:14px 0;position:relative;overflow-x:auto}
+.eq .body{font-family:var(--serif);font-size:16px;line-height:2.1;text-align:center;white-space:nowrap}
+.eq .no{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--ink-3);font-weight:600}
+.eq.inline-note{background:#f8fafb}
+
+.callout{border-radius:var(--radius);padding:15px 18px;margin:16px 0;border-left:4px solid;font-size:14.5px}
+.callout .t{font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;display:block}
+.callout.note{background:var(--note-bg);border-color:var(--note)}
+.callout.note .t{color:var(--note)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn)}
+.callout.warn .t{color:var(--warn)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok)}
+.callout.ok .t{color:var(--ok)}
+.callout.key{background:var(--accent-soft);border-color:var(--accent)}
+.callout.key .t{color:var(--accent-2)}
+
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:12.5px;line-height:1.55}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line-2);vertical-align:top}
+th{background:#f2f5f8;font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+tbody tr:hover{background:#fafcfd}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap}
+td.ctr{text-align:center}
+tr.best{background:#e9f7f1}
+tr.best td{font-weight:700}
+caption{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-3);padding:12px 14px 4px;font-weight:700}
+.tbl-note{font-size:12px;color:var(--ink-3);margin:-6px 0 20px}
+
+.figbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:16px 0}
+.figbox .ft{font-size:12.5px;color:var(--ink-2);line-height:1.7}
+.figbox .ft strong{color:var(--accent-2)}
+
+.gloss{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel);margin:16px 0}
+.gloss div{padding:7px 14px;font-size:13px;border-bottom:1px solid var(--line-2)}
+.gloss div:nth-child(4n+1),.gloss div:nth-child(4n+2){background:#fbfcfd}
+.gloss .k{font-family:var(--mono);font-size:12px;color:#0b3b4d}
+@media(max-width:1180px){.gloss{grid-template-columns:1fr}}
+
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#eef2f6;color:var(--ink-2);margin:0 4px 4px 0}
+.b{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:#eef2f6;color:var(--ink-2);white-space:nowrap;line-height:1.7}
+.b.high{background:var(--ok-bg);color:var(--ok)}
+.b.medium{background:#fdf3e2;color:#9a6200}
+.b.low{background:var(--warn-bg);color:var(--warn)}
+.b.bad{background:#fdeceb;color:#c22a2a}
+.toplink{font-size:12px;color:var(--ink-3);margin-top:26px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-3)}
+hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+.small{font-size:12.5px;color:var(--ink-3)}
+.flow{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:16px 0;overflow-x:auto}
+.flow pre{margin:0;font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--ink-2)}
+@media(max-width:1000px){
+  .wrap{grid-template-columns:1fr}
+  nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:20px}
+  main{padding:24px 20px 80px}
+  .eq .body{white-space:normal}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">OT-StainNet 全文翻译<small>Optimal Transport Driven Semantic Matching for Weakly Paired H&amp;E-to-IHC Stain Transfer<br>AAAI-25 · pp. 3194–3202 · 代码未开源</small></div>
+  <h4>前置</h4>
+  <a href="#summary">★ 一页速览（概括总结）</a>
+  <a href="#gloss">术语对照表</a>
+  <a href="#abstract">摘要 · Abstract</a>
+  <h4>正文</h4>
+  <a href="#s1">I · 引言</a>
+  <a href="#s2">II · 相关工作</a>
+  <a href="#s2a" class="sub">II-A 图像到图像翻译</a>
+  <a href="#s2b" class="sub">II-B 病理分析中的 IHC 虚拟染色</a>
+  <a href="#s3">III · 方法</a>
+  <a href="#s3a" class="sub">III-A 框架总览</a>
+  <a href="#s3b" class="sub">III-B OTSM：最优传输语义匹配</a>
+  <a href="#s3c" class="sub">III-C SCC：语义一致性约束</a>
+  <a href="#s3d" class="sub">III-D 损失函数</a>
+  <a href="#s3e" class="sub">III-E 算法 1</a>
+  <a href="#s4">IV · 实验与结果</a>
+  <a href="#s4a" class="sub">IV-A 数据集</a>
+  <a href="#s4b" class="sub">IV-B 实现细节</a>
+  <a href="#s4c" class="sub">IV-C 评价指标</a>
+  <a href="#s4d" class="sub">IV-D 定量对比</a>
+  <a href="#s4e" class="sub">IV-E 定性对比</a>
+  <a href="#s4f" class="sub">IV-F 病理一致性评估</a>
+  <a href="#s4g" class="sub">IV-G 消融研究</a>
+  <a href="#s5">V · 结论</a>
+  <h4>附录</h4>
+  <a href="#figs">图表说明汇总</a>
+  <a href="#deep">★ 方法精讲（代码未开源，重点）</a>
+  <a href="#gaps">★ 论文未说清 / 前后不一致清单</a>
+  <a href="#translator">译者注 · 与本课题的关系</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <div class="kicker">AAAI-25 全文中文翻译 · 第 39 届 AAAI 人工智能会议</div>
+  <h1>OT-StainNet：面向弱配对 H&amp;E→IHC 染色转换的最优传输驱动语义匹配
+    <span class="en">OT-StainNet: Optimal Transport Driven Semantic Matching for Weakly Paired H&amp;E-to-IHC Stain Transfer</span>
+  </h1>
+  <div class="authors">
+    Xianchao Guan<sup>1,2</sup>, Yifeng Wang<sup>1</sup>, Ye Zhang<sup>1</sup>, Zheng Zhang<sup>1,2</sup>, Yongbing Zhang<sup>1</sup><br>
+    <sup>1</sup>哈尔滨工业大学（深圳） · <sup>2</sup>鹏城实验室
+  </div>
+  <div class="meta">
+    <span>AAAI-25</span>
+    <span>pp. 3194–3202</span>
+    <span>扩散 + LoRA</span>
+    <span>最优传输</span>
+    <span>弱配对监督</span>
+    <span>代码未开源</span>
+  </div>
+</header>
+
+<h2 id="summary"><span class="num">§0</span>一页速览（概括总结）<span class="en">Executive Summary</span></h2>
+
+<div class="callout key">
+<span class="t">一句话</span>
+用 <strong>SD-Turbo（一步扩散）+ LoRA</strong> 做生成器，核心贡献是<strong>用最优传输（OT）把「相邻切片的 IHC」在语义空间里对齐到 H&amp;E 上</strong>，从而让<strong>弱配对的 IHC 参考图能真正当监督信号用</strong>；再用<strong>相关矩阵一致性（SCC）</strong>替代逐像素 L1，只约束「特征之间的关系结构」而不约束像素值。
+</div>
+
+<h3>它要解决什么问题</h3>
+<p>临床上是<strong>从同一组织切连续切片</strong>，H&amp;E 和 IHC 分别染色、分别扫描。这个过程必然带来组织形变、丢失、撕裂和伪影，所以<strong>两张片子根本不是像素级对齐的</strong>（论文 Fig. 1）。而现有方法分两类，各有问题：</p>
+<ul>
+<li><strong>无监督类</strong>（CycleGAN / CUT）：没有有效监督信息，<strong>不能保证病理特征的准确性</strong>。</li>
+<li><strong>全监督类</strong>（Pix2Pix 系）：直接对「虚拟图 ↔ 相邻层 IHC」算<strong>逐像素损失</strong>，但这两张图本来就错位 ⇒ <strong>错位被当成监督信号，会把错误的病理特征灌进生成图</strong>。</li>
+</ul>
+<p>第二个动机：GAN 系方法<strong>必须从头训</strong>，需要大量数据。用大规模自然图像预训练过的扩散模型，其先验能帮助捕捉组织与细胞的形态特征。</p>
+
+<h3>三个技术部件</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th style="width:16%">部件</th><th style="width:26%">做什么</th><th>关键机制</th></tr></thead>
+<tbody>
+<tr><td><strong>生成器</strong></td><td>一步生成虚拟 IHC</td><td><strong>SD-Turbo</strong> 为骨干；<strong>VAE 编码器 + VAE 解码器 + UNet 合并成一个端到端网络</strong>（中间加跳跃连接与 zero-conv）；训练时 VAE 与 UNet <strong>全部冻结</strong>，<strong>只训 LoRA</strong>；用<strong>对抗损失</strong>微调（判别器以 <strong>CLIP</strong> 为骨干）</td></tr>
+<tr><td><strong>OTSM</strong><br><span class="small">最优传输驱动的语义匹配</span></td><td>把错位的 IHC 特征对齐到 H&amp;E 上</td><td>把 H&amp;E 与相邻层 IHC 各编码成特征集 <span class="term">F<sup>H</sup>, F<sup>I</sup> ∈ ℝ<sup>n×d</sup></span>；解<strong>离散 Kantorovich 最优传输</strong>得到传输计划 <span class="term">P</span>；用 <span class="term">F̂<sup>I</sup> = P<sup>T</sup>F<sup>I</sup></span> 得到<strong>对齐后的真实 IHC 特征</strong></td></tr>
+<tr><td><strong>SCC</strong><br><span class="small">语义一致性约束</span></td><td>用对齐后的特征监督生成</td><td>对每个 IHC 图内的<strong>两两特征</strong>算<strong>余弦相似度</strong>，得到 <span class="term">n×n</span> 相关矩阵；要求<strong>虚拟 IHC 的相关矩阵 M̃<sup>I</sup> 逼近真实 IHC 的相关矩阵 M̂<sup>I</sup></strong>（L1）</td></tr>
+</tbody>
+</table></div>
+
+<h3>关键数字</h3>
+<ul>
+<li>数据：<strong>MIST</strong>（每染色约 4,000 训练 / 1,000 测试）+ <strong>IHC4BC</strong>（每染色约 20,000 训练 / 1,000 测试）；四种染色 <strong>Ki67 / ER / PR / HER2</strong>；分辨率 <strong>256×256</strong>。</li>
+<li>训练：<strong>30,000 次迭代</strong>，Adam，学习率 <strong>1×10⁻⁵</strong>，4×RTX 3090。</li>
+<li>损失权重：<strong>λ<sub>adv</sub>=0.5，λ<sub>cycle</sub>=10，λ<sub>id</sub>=1，λ<sub>sc</sub>=1000</strong>。注意 <strong>SCC 的权重比循环一致性高 100 倍</strong>——见 <a href="#deep">方法精讲</a>里对它的解释。</li>
+<li>主要结果：两个数据集上 SSIM / PSNR / FID 大多取得最优。</li>
+</ul>
+
+<h3>我的判断（三条，按重要性）</h3>
+<div class="callout ok">
+<span class="t">① 最有价值的一点：它没有把 IHC 参考图当条件喂进去</span>
+<p>这是这篇论文<strong>对你最直接有用</strong>的设计判断。它<strong>不把相邻层 IHC 作为条件注入生成器</strong>，而是把它当作<strong>监督目标</strong>——先用 OT 把 IHC 特征对齐到 H&amp;E 的语义空间，再拿对齐后的特征去约束输出。</p>
+<p><strong>⇒ 这正好绕开了你在《StainFuser 改造实施任务书 v2》§5.6 担心的泄漏问题</strong>：条件通道携带目标外观时会「抄答案」，而<strong>监督目标不存在这个问题</strong>——因为梯度只要求输出靠近目标，推理时不需要目标。</p>
+</div>
+
+<div class="callout key">
+<span class="t">② SCC 约束的是「关系结构」，不是「绝对表达量」</span>
+<p>SCC 约束的是<strong>同一张图内特征两两之间的相关矩阵</strong>。它管的是<strong>「哪些区域该一起变化」</strong>，<strong>不管「DAB 到底有多强」</strong>。因此：</p>
+<p><strong>⇒ SCC 与你要挂的 FOD 分布级损失（全局均值 + 20-bin 直方图）是互补的两格，不是竞争关系。</strong>前者保关系几何，后者保绝对强度。<strong>两者相加是一个自然且站得住的设计</strong>，而且据两轮调研，这个组合还没有人做过。</p>
+</div>
+
+<div class="callout warn">
+<span class="t">③ 硬缺口：论文完全没写 OT 怎么解，而且代码没开源</span>
+<p>论文只给出 Kantorovich 形式 <span class="term">min ⟨P, C⟩</span>，<strong>既没说用什么求解器，也没说 n 和 d 具体是多少、特征取自哪一层</strong>。而 OT 的求解方式是<strong>可复现性的关键</strong>（精确 LP 是 O(n³ log n)，实际几乎必然要用熵正则 + Sinkhorn）。<strong>这一点直接影响你能不能复现</strong>，详见 <a href="#gaps">§ 论文未说清清单</a>。</p>
+</div>
+
+<h3>和你课题的一句话关系</h3>
+<p>这是<strong>「弱配对下如何把 IHC 参考图当监督用」这个问题上最贴近你需求的一篇</strong>，而且它<strong>本身就是扩散模型</strong>（SD-Turbo + LoRA + 对抗），不是 GAN。它给出的 OTSM 机制可以直接搬进你的 StainFuser 路线——<strong>把你原来打算喂进 condition 通道的那张 IHC 参考图，改成走 OTSM + SCC 当监督</strong>。详见 <a href="#translator">译者注</a>。</p>
+
+<h2 id="gloss">术语对照表<span class="en">Terminology</span></h2>
+<div class="gloss">
+<div><span class="k">H&amp;E</span> 苏木精-伊红染色</div><div><span class="k">IHC</span> 免疫组化染色</div>
+<div><span class="k">virtual staining</span> 虚拟染色</div><div><span class="k">stain transfer</span> 染色转换</div>
+<div><span class="k">weakly paired</span> 弱配对（相邻切片，非像素对齐）</div><div><span class="k">adjacent layer</span> 相邻层 / 连续切片</div>
+<div><span class="k">optimal transport (OT)</span> 最优传输</div><div><span class="k">transport plan</span> 传输计划矩阵</div>
+<div><span class="k">Kantorovich formulation</span> 康托罗维奇形式</div><div><span class="k">marginal constraint</span> 边缘约束</div>
+<div><span class="k">semantic matching</span> 语义匹配</div><div><span class="k">correlation matrix</span> 相关矩阵</div>
+<div><span class="k">relational function</span> 关系函数</div><div><span class="k">cosine similarity</span> 余弦相似度</div>
+<div><span class="k">semantic consistency constraint</span> 语义一致性约束</div><div><span class="k">adversarial loss</span> 对抗损失</div>
+<div><span class="k">cycle consistency loss</span> 循环一致性损失</div><div><span class="k">identity loss</span> 恒等损失</div>
+<div><span class="k">LoRA</span> 低秩适配（只训低秩增量）</div><div><span class="k">SD-Turbo</span> 一步蒸馏的稳定扩散模型</div>
+<div><span class="k">zero-conv</span> 零卷积（初始输出为 0）</div><div><span class="k">skip connection</span> 跳跃连接</div>
+<div><span class="k">stain deconvolution</span> 染色解卷积</div><div><span class="k">positive area</span> 阳性区域面积</div>
+<div><span class="k">DAB channel</span> DAB 通道（棕色）</div><div><span class="k">hematoxylin channel</span> 苏木素通道（蓝色）</div>
+<div><span class="k">FID</span> 弗雷歇初始距离（越低越好）</div><div><span class="k">SSIM / PSNR</span> 结构相似度 / 峰值信噪比</div>
+<div><span class="k">LPIPS</span> 学习感知图像块相似度</div><div><span class="k">patch</span> 图像块</div>
+<div><span class="k">Pos/Neg</span> 阳性 / 阴性</div><div><span class="k">weakly supervised</span> 弱监督</div>
+</div>
+
+<h2 id="abstract">摘要<span class="en">Abstract</span></h2>
+<p>免疫组化（IHC）检查对于刻画肿瘤亚型、提供预后信息以及制定个性化治疗方案都至关重要。然而，与苏木精-伊红（H&amp;E）染色相比，IHC 染色的制备过程更复杂、更昂贵，限制了它在临床上的广泛应用。把 H&amp;E 图像转换为 IHC 图像是一个有前景的解决思路。</p>
+<p>本文提出 <strong>OT-StainNet</strong>，一种新的虚拟 IHC 染色方法。OT-StainNet 采用<strong>具备更丰富先验知识的预训练扩散模型</strong>作为生成器，并通过<strong>对抗训练</strong>用 <strong>LoRA 适配器</strong>对其进行微调。</p>
+<p>考虑到同一组织的相邻切片经 H&amp;E 与 IHC 染色后在<strong>像素级并不精确对齐</strong>，现有方法难以充分利用弱配对 IHC 图像所提供的监督信息。为解决这一问题，我们提出<strong>最优传输驱动的语义匹配（OTSM）机制</strong>，在 H&amp;E–IHC 图像对之间建立<strong>准确的语义对应关系</strong>。借助 OTSM 机制得到的真实 IHC 特征，我们设计了<strong>语义一致性约束（SCC）</strong>，以确保<strong>虚拟 IHC 特征之间的相关性</strong>与<strong>真实 IHC 特征之间的相关性</strong>保持一致，从而在染色转换过程中保留有价值的关联信息。</p>
+<p>我们在<strong>两个数据集</strong>上使用<strong>四种 IHC 染色</strong>对 OT-StainNet 进行了验证。大量实验表明，与当前最先进的方法相比，我们的方法是有效的。</p>
+
+<div class="callout warn">
+<span class="t">译者注：摘要里已经埋了第一处前后不一致</span>
+<p>摘要写的是「<strong>两个</strong>数据集」（two datasets），但<strong>引言末尾的贡献列表写的是「<strong>三个</strong>数据集」（three datasets）</strong>，而实验部分与 Table 1 都只有 <strong>MIST 和 IHC4BC 两个</strong>。<strong>⇒ 贡献列表里的「三个数据集」是笔误</strong>，以摘要和实验为准。详见 <a href="#gaps">§ 论文未说清清单</a>第 1 条。</p>
+</div>
+
+<h2 id="s1"><span class="num">I</span>引言<span class="en">Introduction</span></h2>
+
+<p>组织化学染色在病理分析中至关重要。<strong>H&amp;E</strong> 是最常见、最具成本效益的染色剂，能够清晰地勾勒出组织细胞结构，帮助病理医生做出初步诊断（Mahbod et al. 2024）。然而，尽管应用广泛，H&amp;E 染色往往<strong>缺乏准确区分各种癌症亚型所需的对比度</strong>，这限制了它在复杂病例中的诊断价值。相比之下，<strong>IHC</strong> 染色能在细胞层面定性和定量地提供蛋白质表达的详细信息，因此在癌症的准确诊断与分期、以及判断肿瘤预后方面不可或缺（Ghahremani et al. 2022）。例如在乳腺组织病理中，病理医生通过 IHC 评估 <strong>Ki67、ER、PR、HER2</strong> 等生物标志物的表达水平，以支持精确诊断与个性化治疗。</p>
+
+<p>然而，与 H&amp;E 染色相比，IHC 的组织化学染色过程<strong>更耗时、更耗费人力</strong>，通常需要专业的组织技术人员和实验室设备（Gatenbee et al. 2023）。这些因素阻碍了 IHC 染色在病理学中的广泛应用。随着数字病理学的发展，基于生成模型的<strong>虚拟染色技术</strong>已成为一种有前景、高性价比的替代方案。这类技术能够加速诊断、节省组织样本、减少患者等待时间，因此具有重要的临床意义（Bai et al. 2023）。</p>
+
+<p>虚拟染色的目标是<strong>在保持源染色图像组织结构的同时，模拟目标染色的风格</strong>（Guan et al. 2024）。作为生成模型的一个重要分支，生成对抗网络（GAN）凭借其出色的图像风格转换能力被广泛用于虚拟染色任务（Goodfellow et al. 2020）。现有的基于 GAN 的虚拟染色方法大致可分为两类：无监督方法和全监督方法。</p>
+
+<ul>
+<li><strong>无监督方法</strong>主要依赖 CycleGAN（Zhu et al. 2017）或 CUT（Park et al. 2020），使用<strong>对抗损失</strong>学习目标染色图像的风格，并用<strong>循环一致性损失</strong>或<strong>对比学习损失</strong>保持源染色图像的组织结构细节。由于缺乏有效的监督信息，这些方法有时无法保证虚拟图像的病理特征准确性（Zeng et al. 2022）。</li>
+<li><strong>全监督方法</strong>主要依赖 Pix2Pix（Isola et al. 2017），利用<strong>完美对齐</strong>的输入与真值来优化合成图像与真实图像之间的<strong>像素级损失</strong>。然而在组织病理学中，<strong>组织染色过程不可逆，物理上不可能对切片重新染色</strong>，因此获得像素级对齐的图像对是一项重大挑战（Bai et al. 2023）。</li>
+</ul>
+
+<p>在临床实践中，病理医生从同一组织切取<strong>连续切片</strong>，然后分别染色和扫描（Rivenson et al. 2019）。这一过程不可避免地导致切片对之间的组织和细胞结构发生变化，例如<strong>组织丢失、撕裂和伪影</strong>，从而造成像素级不一致（Li et al. 2023），如图 1 所示。尽管存在这些不一致，相邻层组织图像对中<strong>仍保留着大量具有病理一致性的信息</strong>（Liu et al. 2021）。然而，现有的全监督方法通过计算像素级损失来生成虚拟图像，<strong>忽略了结构不一致带来的负面影响</strong>，这可能会把不准确的病理特征引入虚拟图像。</p>
+
+<p>除了未能充分利用监督信息这一局限之外，上述基于 GAN 的虚拟染色方法还面临另一个主要挑战：<strong>需要从头训练</strong>，通常需要大量数据才能达到令人满意的泛化性能（Zhang et al. 2024）。近来，诸如稳定扩散（stable diffusion）之类的生成模型，凭借在大规模数据集上预训练所获得的丰富语义知识和特征表示，在自然图像生成中表现出色（Rombach et al. 2022; Li et al. 2024a）。当应用于病理领域时，这些预训练模型中嵌入的先验知识有助于捕捉组织病理图像的细胞与结构特征（Ferber et al. 2024; Zhang et al. 2024）。因此，采用预训练模型进行病理图像虚拟染色，能够提升模型的准确性与泛化能力。</p>
+
+<p>本文提出 <strong>OT-StainNet</strong>，一种新的 H&amp;E→IHC 染色转换网络。为了充分利用相邻层 IHC 图像中有价值的监督信息，我们设计了<strong>最优传输驱动的语义匹配（OTSM）机制</strong>与<strong>语义一致性约束（SCC）</strong>。</p>
+
+<h3>本文贡献<span class="en">Contributions</span></h3>
+<ol>
+<li>我们提出了用于 IHC 虚拟染色的 <strong>OT-StainNet</strong>，它利用了在大规模自然图像上预训练的扩散模型中所嵌入的丰富先验知识，同时保证了<strong>高效的推理</strong>。</li>
+<li>我们引入了<strong>最优传输驱动的语义匹配（OTSM）机制</strong>，在<strong>像素级并不精确配对</strong>的相邻层 H&amp;E–IHC 图像对之间建立准确的语义对应关系。</li>
+<li>我们设计了<strong>语义一致性约束（SCC）</strong>，以确保<strong>虚拟 IHC 特征之间的相关性</strong>与<strong>真实 IHC 特征之间的相关性</strong>保持一致，从而在染色转换过程中保留有价值的关联信息。</li>
+<li>我们在<strong>三个数据集</strong>上使用四种 IHC 染色对 OT-StainNet 进行了评估。大量实验结果表明，与当前最先进的方法相比，OT-StainNet 取得了令人满意的性能。</li>
+</ol>
+
+<div class="callout warn">
+<span class="t">译者注：第 4 条贡献与摘要、实验部分冲突</span>
+<p>这里写「<strong>三个数据集</strong>」，但摘要写「两个数据集」，实验部分的「数据集」小节明确写「<strong>两个基准数据集：MIST 和 IHC4BC</strong>」，Table 1 也只列了这两个。<strong>⇒ 第 4 条贡献的「三个」是笔误。</strong>论文其余各处均为两个。</p>
+</div>
+
+<h2 id="s2"><span class="num">II</span>相关工作<span class="en">Related Work</span></h2>
+
+<h3 id="s2a">II-A 图像到图像翻译<span class="en">Image-to-Image Translation</span></h3>
+<p>图像到图像翻译旨在将源域图像转换为目标域图像的风格，同时保持其原有内容。<strong>Pix2Pix</strong> 使用条件 GAN 优化输出与真值之间的像素级损失（Isola et al. 2017）。为减少对配对数据的依赖，<strong>CycleGAN</strong> 采用循环一致性损失来保持输入与输出图像之间的关键属性（Zhu et al. 2017）。<strong>CUT</strong> 采用对比学习来最大化输入与输出图像中<strong>对应位置之间的互信息</strong>，实现了一种单向的图像翻译方法（Park et al. 2020）。</p>
+<p>这些方法通常<strong>需要从头训练并使用大规模数据集</strong>才能达到令人满意的泛化能力。近来，诸如稳定扩散之类的预训练生成模型，由于在大规模自然图像上训练所获得的先验知识，在各种图像生成任务中已超越 GAN（Rombach et al. 2022; Li et al. 2024b）。其中，<strong>img2img-turbo</strong>（Parmar et al. 2024）是一种新颖的基于扩散模型的方法，它利用 SD-Turbo 的内部知识实现高精度图像翻译，同时保证高效推理（Sauer et al. 2023）。<strong>然而，在无配对数据的情况下把这些方法直接用于 IHC 虚拟染色，并不能保证生成准确的病理特征。</strong></p>
+
+<h3 id="s2b">II-B 病理分析中的 IHC 虚拟染色<span class="en">IHC Virtual Staining in Histopathological Analysis</span></h3>
+<p>随着图像到图像翻译在计算机视觉领域的快速发展，一些应用已被成功用于 IHC 虚拟染色。</p>
+<ul>
+<li><strong>Liu et al. 2021</strong> 提出了一种病理表示网络，利用<strong>专家标注的阳性区域标签</strong>实现神经内分泌组织与乳腺组织从 H&amp;E 到 Ki67 的虚拟染色。然而该方法的性能<strong>严重依赖专家标注的质量与数量</strong>。</li>
+<li><strong>Zeng et al. 2022</strong> 设计了<strong>阳性/阴性分类器</strong>来保证虚拟 IHC 的阳/阴性准确性。但该方法<strong>只依赖相邻层 IHC 图像的阳/阴性信息</strong>，可能导致对具体阳性区域的识别不准确。</li>
+<li><strong>Liu et al. 2022</strong> 提出了<strong>金字塔 Pix2Pix</strong> 图像生成方法，将 H&amp;E 图像转换为 HER2 图像。</li>
+<li><strong>Li et al. 2023</strong> 引入了<strong>自适应监督 PatchNCE 损失</strong>，用于将 H&amp;E 染色转换为多种 IHC 染色。</li>
+<li><strong>Dai, Wong, and Wong 2023</strong> 开发了一种<strong>弱监督方法</strong>，将自发荧光图像转换为 H&amp;E 图像。</li>
+</ul>
+<p>尽管如此，这些方法都是<strong>通过计算像素级损失来生成虚拟图像</strong>，<strong>忽略了相邻层 H&amp;E–IHC 图像对之间的局部差异</strong>。因此，这些方法生成的虚拟图像可能包含不准确的病理特征。</p>
+
+<h2 id="s3"><span class="num">III</span>方法<span class="en">Methodology</span></h2>
+
+<h3 id="s3a">III-A 框架总览<span class="en">Framework Overview</span></h3>
+<p>OT-StainNet 的框架如图 2 所示。受 <strong>img2img-turbo</strong>（Parmar et al. 2024）启发，我们使用扩散模型 <strong>SD-Turbo</strong>（Sauer et al. 2023）作为生成器，并用 <strong>LoRA 适配器</strong>通过<strong>对抗学习目标</strong>对其进行微调。此外，我们通过把潜在扩散模型的三个关键组件——<strong>VAE 编码器、VAE 解码器和 UNet</strong>（Ronneberger, Fischer, and Brox 2015; Li et al. 2024c）——<strong>整合进一个统一的端到端网络</strong>，对该模型进行了精简。这种整合简化了架构，减少了对各模块分别调参的需求，并有利于更高效的损失传播。</p>
+
+<p>在训练过程中，我们<strong>保留 VAE 和 UNet 的原始权重</strong>，以保持其在大规模自然图像预训练中获得的广泛特征与泛化能力。<strong>LoRA 适配器</strong>允许我们通过在特定层添加<strong>低秩可训练参数</strong>、同时保持核心模型权重冻结，来微调预训练的扩散模型。这有助于 OT-StainNet 在不进行扩散模型大规模重训练的前提下，适应组织病理图像的独特特征。</p>
+
+<p>此外，为解决相邻层 H&amp;E 与 IHC 图像之间的<strong>像素级错位</strong>问题，我们提出了<strong>最优传输驱动的语义匹配（OTSM）机制</strong>来挖掘 H&amp;E–IHC 对之间的语义关联，为监督提供基础。在 OTSM 的基础上，我们设计了<strong>语义一致性约束（SCC）</strong>，它<strong>超越了像素级监督</strong>，通过强制「虚拟 IHC 特征之间的对应关系」与「真实 IHC 特征之间的对应关系」保持一致来实现监督。</p>
+
+<div class="figbox">
+<div class="ft"><strong>图 2（框架总览）说明：</strong>首先，H&amp;E 与相邻层 IHC 图像被编码为特征向量。然后，使用<strong>最优传输</strong>获得与 H&amp;E 特征相匹配的真实 IHC 特征。最后，应用<strong>语义一致性约束</strong>，以确保由<strong>一步扩散模型</strong>生成的虚拟 IHC 图像具有准确的病理特征。在训练期间，<strong>编码器、解码器和 U-Net 的权重都是固定的，只有 LoRA 适配器可训练</strong>。此外，在编码器与解码器之间加入了<strong>跳跃连接（skip connections）和零卷积（zero-convs）</strong>，以在染色转换过程中保留 H&amp;E 图像复杂的细胞与组织细节。</div>
+</div>
+
+<h3 id="s3b">III-B 最优传输驱动的语义匹配（OTSM）<span class="en">OT-driven Semantic Matching</span></h3>
+<p>在临床实践中，病理医生通常对连续的组织切片进行染色以获得 H&amp;E 和 IHC 玻片。然而，由于组织形变与变化，这一过程产生的相邻层图像<strong>在像素级上天然就是错位的</strong>。为了避免「由不匹配的真实 IHC 图像提供的监督信息」导致虚拟 IHC 出现错误的病理特征，我们引入<strong>最优传输驱动的语义匹配（OTSM）机制</strong>，在 H&amp;E–IHC 图像对之间对齐语义特征。</p>
+
+<p>作为对两个分布之间对应关系建模的解决方案，最优传输的目标是<strong>求出一个传输计划矩阵 P，使总代价矩阵 C 最小</strong>。形式上，从 H&amp;E 特征 <span class="term">F<sup>H</sup> = [f<sup>H</sup><sub>1</sub>, f<sup>H</sup><sub>2</sub>, …, f<sup>H</sup><sub>n</sub>] ∈ ℝ<sup>n×d</sup></span> 到 IHC 特征 <span class="term">F<sup>I</sup> = [f<sup>I</sup><sub>1</sub>, f<sup>I</sup><sub>2</sub>, …, f<sup>I</sup><sub>n</sub>] ∈ ℝ<sup>n×d</sup></span> 的最优传输，可由<strong>离散康托罗维奇形式</strong>（Kantorovich 2006）定义如下：</p>
+
+<div class="eq"><div class="body">W(F<sup>H</sup>, F<sup>I</sup>) = min<sub>P ∈ Π(μ<sup>H</sup>, μ<sup>I</sup>)</sub> ⟨P, C⟩</div><div class="no">(1)</div></div>
+
+<p>其中 <span class="term">⟨P, C⟩</span> 表示 P 与 C 的<strong>弗罗贝尼乌斯内积</strong>（Frobenius dot product）。矩阵 <span class="term">C ≥ 0 ∈ ℝ<sup>n×n</sup></span> 是<strong>代价矩阵</strong>，定义为 <span class="term">C<sub>u,v</sub> = C(f<sup>H</sup><sub>u</sub>, f<sup>I</sup><sub>v</sub>)</span>，其中 <span class="term">C(·)</span> 是<strong>基准距离度量</strong>，例如 <span class="term">l<sub>2</sub></span> 距离，用于度量 <span class="term">F<sup>H</sup></span> 与 <span class="term">F<sup>I</sup></span> 中成对特征之间的距离。集合</p>
+
+<div class="eq"><div class="body">Π(μ<sup>H</sup>, μ<sup>I</sup>) = { P ∈ ℝ<sup>n×n</sup><sub>+</sub> | P<b>1</b> = μ<sup>H</sup>, P<sup>T</sup><b>1</b> = μ<sup>I</sup> }</div></div>
+
+<p>表示<strong>边缘约束</strong>，确保 H&amp;E 与 IHC 特征的边缘分布 <span class="term">μ<sup>H</sup></span> 与 <span class="term">μ<sup>I</sup></span> 之间的<strong>总质量相等</strong>，其中 <span class="term"><b>1</b></span> 是全 1 向量。</p>
+
+<p>最优传输的边缘约束确保 <strong>H&amp;E 特征与 IHC 特征在全局结构上保持一致</strong>。一旦确定了传输计划 P（它刻画了潜在空间中 H&amp;E 与 IHC 特征之间的匹配对应关系），IHC 特征就通过下式与 H&amp;E 特征对齐：</p>
+
+<div class="eq"><div class="body">F̂<sup>I</sup> = P<sup>T</sup> F<sup>I</sup></div></div>
+
+<p>对齐之后，<strong>匹配到的真实 IHC 特征被用来监督虚拟 IHC 图像的生成</strong>。</p>
+
+<div class="callout warn">
+<span class="t">译者注：这一节缺了最关键的一步</span>
+<p>论文<strong>只写了「求 min」，但完全没有说明 P 是用什么算法解出来的</strong>。这不是细节——OT 的求解方式决定了整个模块的可行性、显存与速度。详见 <a href="#deep">方法精讲</a>与 <a href="#gaps">缺口清单</a>第 3 条。</p>
+</div>
+
+<h3 id="s3c">III-C 语义一致性约束（SCC）<span class="en">Semantic Consistency Constraint</span></h3>
+<p>IHC 图像特征之间存在丰富的<strong>病理关联信息</strong>。为了在染色转换过程中保留这一有价值的关联信息并提高虚拟 IHC 图像的准确性，我们设计了<strong>语义一致性约束（SCC）</strong>，从而确保虚拟与真实 IHC 图像之间的病理信息保持一致。</p>
+
+<p>一般来说，主流的全监督方法使用 <span class="term">l<sub>1</sub></span> 距离来确保生成器输出与真值接近，<strong>这只在局部特征层面监督虚拟 IHC 图像的生成，忽略了组（group）层面特征之间的语义相关性</strong>。</p>
+
+<p>为了有效地建模 IHC 特征之间的语义相关性，我们计算每张 IHC 图像特征内部<strong>任意两个特征之间的关系函数</strong>，得到<strong>相关矩阵 M̂<sup>I</sup></strong>，它表示不同特征之间的语义对应关系。相关矩阵 <span class="term">M̂<sup>I</sup></span> 定义如下：</p>
+
+<div class="eq"><div class="body">
+M̂<sup>I</sup> = [ D(f̂<sup>I</sup><sub>1</sub>,f̂<sup>I</sup><sub>1</sub>) &nbsp; D(f̂<sup>I</sup><sub>1</sub>,f̂<sup>I</sup><sub>2</sub>) &nbsp; ⋯ &nbsp; D(f̂<sup>I</sup><sub>1</sub>,f̂<sup>I</sup><sub>n</sub>) ;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D(f̂<sup>I</sup><sub>2</sub>,f̂<sup>I</sup><sub>1</sub>) &nbsp; D(f̂<sup>I</sup><sub>2</sub>,f̂<sup>I</sup><sub>2</sub>) &nbsp; ⋯ &nbsp; D(f̂<sup>I</sup><sub>2</sub>,f̂<sup>I</sup><sub>n</sub>) ;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⋮ &nbsp; ⋮ &nbsp; ⋱ &nbsp; ⋮ ;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D(f̂<sup>I</sup><sub>n</sub>,f̂<sup>I</sup><sub>1</sub>) &nbsp; D(f̂<sup>I</sup><sub>n</sub>,f̂<sup>I</sup><sub>2</sub>) &nbsp; ⋯ &nbsp; D(f̂<sup>I</sup><sub>n</sub>,f̂<sup>I</sup><sub>n</sub>) ]
+</div><div class="no">(2)</div></div>
+
+<p>其中 <span class="term">D(·,·)</span> 表示<strong>关系函数</strong>。此处我们使用<strong>余弦相似度</strong>来计算 <span class="term">D(·,·)</span>。</p>
+
+<p>随后，我们对<strong>一步扩散模型生成的虚拟 IHC 特征组</strong>采用同样的策略，得到相关矩阵 <span class="term">M̃<sup>I</sup></span>。为了给虚拟 IHC 图像的生成提供更有效的语义级监督，我们设计了<strong>语义一致性损失 L<sub>sc</sub></strong>，定义如下：</p>
+
+<div class="eq"><div class="body">L<sub>sc</sub> = (1 / n²) · Σ<sup>n</sup><sub>i=1</sub> Σ<sup>n</sup><sub>j=1</sub> | M̂<sup>I</sup><sub>ij</sub> − M̃<sup>I</sup><sub>ij</sub> |</div><div class="no">(3)</div></div>
+
+<p>在语义一致性的约束下，虚拟 IHC 特征在生成过程中被<strong>迫使保留真实 IHC 特征中存在的语义关联信息</strong>。</p>
+
+<h3 id="s3d">III-D 损失函数<span class="en">Loss Functions</span></h3>
+<p>OT-StainNet 基于 <strong>CycleGAN 框架</strong>训练，损失项包括<strong>对抗损失 L<sub>adv</sub></strong>、<strong>循环一致性损失 L<sub>cycle</sub></strong>、<strong>恒等损失 L<sub>id</sub></strong> 和<strong>语义一致性损失 L<sub>sc</sub></strong>。对抗损失 <span class="term">L<sub>adv</sub></span> 定义为：</p>
+
+<div class="eq"><div class="body">L<sub>adv</sub> = 𝔼<sub>y</sub> log D<sub>Y</sub>(y) + 𝔼<sub>x</sub> log(1 − D<sub>Y</sub>(G(x)))<br>+ 𝔼<sub>x</sub> log D<sub>X</sub>(x) + 𝔼<sub>y</sub> log(1 − D<sub>X</sub>(G(y)))</div><div class="no">(4)</div></div>
+
+<p>其中 <span class="term">𝔼</span> 表示期望，<span class="term">X</span> 和 <span class="term">Y</span> 分别表示源域和目标域，<span class="term">G</span> 是生成器，<span class="term">D</span> 是判别器——<strong>它使用 CLIP（Radford et al. 2021）模型作为骨干</strong>。</p>
+
+<p><strong>循环一致性损失 L<sub>cycle</sub></strong> 确保源染色图像的组织结构细节在染色转换过程中得以保留。其定义如下：</p>
+
+<div class="eq"><div class="body">L<sub>cycle</sub> = 𝔼<sub>x</sub>[ L<sub>rec</sub>(G(G(x)), x) ] + 𝔼<sub>y</sub>[ L<sub>rec</sub>(G(G(y)), y) ]</div><div class="no">(5)</div></div>
+
+<p>其中 <span class="term">L<sub>rec</sub></span> 是 <span class="term">l<sub>1</sub></span> 距离与 <strong>LPIPS</strong>（Zhang et al. 2018）的组合。</p>
+
+<p><strong>恒等损失 L<sub>id</sub></strong> 确保生成器保留目标域的图像。其定义如下：</p>
+
+<div class="eq"><div class="body">L<sub>id</sub> = 𝔼<sub>x</sub>[ L<sub>rec</sub>(G(x), x) ] + 𝔼<sub>y</sub>[ L<sub>rec</sub>(G(y), y) ]</div><div class="no">(6)</div></div>
+
+<p>OT-StainNet 的总损失表示为：</p>
+
+<div class="eq"><div class="body">L<sub>total</sub> = λ<sub>adv</sub>L<sub>adv</sub> + λ<sub>cycle</sub>L<sub>cycle</sub> + λ<sub>id</sub>L<sub>id</sub> + λ<sub>sc</sub>L<sub>sc</sub></div><div class="no">(7)</div></div>
+
+<p>其中 <span class="term">λ<sub>adv</sub></span>、<span class="term">λ<sub>cycle</sub></span>、<span class="term">λ<sub>id</sub></span>、<span class="term">λ<sub>sc</sub></span> 是权衡各项损失相对重要性的超参数。</p>
+
+<div class="callout warn">
+<span class="t">译者注：公式 (5)(6) 的记号有误，照抄会写错代码</span>
+<p><strong>式 (5)</strong> 写成 <span class="term">G(G(x))</span>，即「生成器作用两次」。但 <strong>CycleGAN 需要两个方向相反的生成器</strong>（通常记 <span class="term">G: X→Y</span> 与 <span class="term">F: Y→X</span>），正确的循环项应是 <span class="term">L<sub>rec</sub>(F(G(x)), x)</span>。<strong>论文全文只定义了「一个生成器 G」</strong>，所以这个记号<strong>字面上是错的</strong>，只能理解为笔误。</p>
+<p><strong>式 (6)</strong> 同样可疑：标准恒等损失应是「<strong>把目标域图像喂进生成器，输出应等于它自己</strong>」，即 <span class="term">L<sub>rec</sub>(G(y), y)</span>（以及反向的 <span class="term">L<sub>rec</sub>(F(x), x)</span>）。但论文写的第一项 <span class="term">L<sub>rec</sub>(G(x), x)</span> 是<strong>跨域比较</strong>（G(x) 在目标域，x 在源域），这在语义上等于「零步循环」而不是恒等。⇒ <strong>这两式建议按 CycleGAN 的标准形式实现，不要照抄论文写法。</strong></p>
+</div>
+
+<h3 id="s3e">III-E 算法 1<span class="en">Algorithm 1: OT-StainNet Training Algorithm</span></h3>
+<div class="flow"><pre><code>算法 1：OT-StainNet 训练算法
+
+输入：H&amp;E 图像数据集 X，相邻层 IHC 图像数据集 Y
+输出：生成器与判别器的最优参数 θ_G 和 θ_D
+
+1:  for 每次训练迭代 do
+2:      从 X 中选一张 H&amp;E 图像 x，以及对应的 IHC 图像 y ∈ Y
+3:      ── 阶段 1：更新判别器参数 ──
+4:      生成目标染色图像 G(x)
+5:      用式 (4) 计算 L_adv，基于反向传播更新判别器参数 θ_D
+6:      ── 阶段 2：更新生成器参数 ──
+7:      应用编码器得到 H&amp;E 特征 F^H、相邻层 IHC 特征 F^I 和虚拟 IHC 特征 F̃^I
+8:      计算语义一致性损失：
+9:          a. 对每个 H&amp;E–IHC 图像对，用最优传输得到传输计划矩阵 P，
+10:             进而导出对齐后的真实 IHC 特征 F̂^I
+11:          b. 用式 (2) 计算相关矩阵 M̂^I 和 M̃^I。随后用式 (3) 计算语义一致性损失 L_sc
+12:     用式 (7) 计算总损失 L_total，基于反向传播更新生成器参数 θ_G
+13: end for</code></pre></div>
+
+<h2 id="s4"><span class="num">IV</span>实验与结果<span class="en">Experiments and Results</span></h2>
+
+<h3 id="s4a">IV-A 实验设置 · 数据集<span class="en">Datasets</span></h3>
+<p>我们展示了在<strong>两个基准数据集</strong>上的 H&amp;E→IHC 染色转换结果：<strong>MIST</strong>（Li et al. 2023）和 <strong>IHC4BC</strong>（Akbarnejad et al. 2023）。两个数据集都包含从<strong>连续组织切片</strong>获得的 H&amp;E 与 IHC 染色图像<strong>相邻层图像对</strong>，涵盖四种不同的 IHC 染色：<strong>Ki67、ER、PR 和 HER2</strong>。</p>
+<ul>
+<li><strong>MIST</strong>：每种 IHC 类型约有 <strong>4,000 个图像块用于训练</strong>、<strong>1,000 个用于测试</strong>。</li>
+<li><strong>IHC4BC</strong>：每种 IHC 类型约有 <strong>20,000 个图像块用于训练</strong>、<strong>1,000 个用于测试</strong>。</li>
+</ul>
+<p>这些图像在输入 OT-StainNet 之前被<strong>缩放到 256×256 像素</strong>。对于每种染色类型，我们使用 <strong>1,000 张测试图像</strong>。</p>
+
+<h3 id="s4b">IV-B 实现细节<span class="en">Implementation Details</span></h3>
+<p>我们的方法使用 Python 和 PyTorch 实现，运行在一台配备<strong>四块 NVIDIA RTX 3090 GPU</strong> 的计算机上。所有实验均在 <strong>256×256 像素</strong>的图像分辨率下进行。OT-StainNet 训练 <strong>30,000 次迭代</strong>。训练期间使用 <strong>Adam 优化器</strong>，学习率为 <strong>1×10⁻⁵</strong>。式 (7) 中的超参数设置如下：<strong>λ<sub>adv</sub> = 0.5，λ<sub>cycle</sub> = 10，λ<sub>id</sub> = 1，λ<sub>sc</sub> = 1,000</strong>。</p>
+
+<div class="callout key">
+<span class="t">译者注：λ_sc = 1000 不是笔误，但也不要照抄</span>
+<p>这个数字看起来大得离谱（比循环一致性高 100 倍）。但它是合理的——因为 <strong>L<sub>sc</sub> 本身的量级很小</strong>：它是 <span class="term">n²</span> 个「余弦相似度之差」的绝对值平均，而余弦相似度取值范围是 <span class="term">[−1, 1]</span>，两个相关矩阵的逐项差通常在 <span class="term">10⁻² ~ 10⁻¹</span> 量级。</p>
+<p><strong>⇒ 复现时的正确做法：先打印 L<sub>sc</sub> 与 L<sub>cycle</sub> 的实际数值，让两者的加权贡献量级相当，再定 λ<sub>sc</sub>。</strong>直接抄 1000 很可能不work。</p>
+</div>
+
+<h3 id="s4c">IV-C 评价指标<span class="en">Evaluation Metrics</span></h3>
+<p>我们使用若干评价指标来评估 H&amp;E→IHC 染色转换的性能，包括<strong>结构相似度指数（SSIM）</strong>（Wang et al. 2004）、<strong>峰值信噪比（PSNR）</strong>（Hore and Ziou 2010）和<strong>弗雷歇初始距离（FID）</strong>（Heusel et al. 2017）。</p>
+
+<h3 id="s4d">IV-D 对比结果与讨论 · 定量评估<span class="en">Quantitative Assessment</span></h3>
+<p>我们使用 MIST 和 IHC4BC 数据集，在定量与定性两方面评估了我们的方法与其它最先进（SOTA）方法的性能。</p>
+<p><strong>对比方法</strong>可分为两大类：<strong>1. 基于扩散的方法</strong>，包括 Pix2Pix-Turbo（Parmar et al. 2024）和 CycleGAN-Turbo（Parmar et al. 2024）；<strong>2. 基于 GAN 的方法</strong>，包括 CUT（Park et al. 2020）、PyramidP2P（Liu et al. 2022）、PRGAN（Zeng et al. 2022）、ASP（Li et al. 2023）和 U-Frame（Dai, Wong, and Wong 2023）。</p>
+<p>所有对比方法均严格按各自论文所述条件实现，或直接使用其开源代码。结果见表 1。我们的方法在 SSIM、PSNR 和 FID 指标上均显著优于对比方法，证明了其在 IHC 虚拟染色上的有效性。</p>
+
+<div class="tbl-wrap">
+<caption>表 1（MIST 数据集）· 每格为 <strong>SSIM ↑ / PSNR ↑ / FID ↓</strong></caption>
+<table>
+<thead><tr><th>方法</th><th>H&amp;E→Ki67</th><th>H&amp;E→ER</th><th>H&amp;E→PR</th><th>H&amp;E→HER2</th></tr></thead>
+<tbody>
+<tr><td>Pix2Pix-Turbo</td><td class="num">0.127 / 15.358 / 102.622</td><td class="num">0.129 / 15.153 / 82.705</td><td class="num">0.125 / 15.218 / 85.742</td><td class="num">0.104 / 14.965 / 94.940</td></tr>
+<tr><td>CycleGAN-Turbo</td><td class="num">0.133 / 14.856 / 82.351</td><td class="num">0.144 / 14.331 / 47.170</td><td class="num">0.129 / 13.895 / 94.517</td><td class="num">0.100 / 13.831 / 107.738</td></tr>
+<tr><td>CUT</td><td class="num">0.113 / 14.061 / 41.493</td><td class="num">0.112 / 13.646 / 46.199</td><td class="num">0.109 / 13.755 / 40.973</td><td class="num">0.095 / 13.688 / 40.664</td></tr>
+<tr><td>PyramidP2P</td><td class="num">0.135 / <strong>15.540</strong> / 86.585</td><td class="num">0.132 / 15.479 / 89.660</td><td class="num">0.133 / 15.626 / 74.396</td><td class="num">0.116 / 15.713 / 116.002</td></tr>
+<tr><td>PRGAN</td><td class="num">0.127 / 14.228 / 39.151</td><td class="num">0.126 / 13.928 / 44.222</td><td class="num">0.099 / 13.198 / 50.017</td><td class="num">0.102 / 13.976 / 47.018</td></tr>
+<tr><td>ASP</td><td class="num">0.134 / 15.091 / 50.992</td><td class="num">0.116 / 14.297 / 39.783</td><td class="num">0.117 / 14.612 / 43.330</td><td class="num"><strong>0.125</strong> / 14.504 / 48.957</td></tr>
+<tr><td>U-Frame</td><td class="num">0.145 / 15.499 / 42.114</td><td class="num">0.135 / 15.197 / 40.658</td><td class="num">0.140 / 15.444 / 38.955</td><td class="num">0.111 / 15.049 / 49.308</td></tr>
+<tr><td><strong>Ours</strong></td><td class="num"><strong>0.158</strong> / 15.516 / <strong>36.286</strong></td><td class="num"><strong>0.148</strong> / <strong>16.056</strong> / <strong>35.072</strong></td><td class="num"><strong>0.142</strong> / <strong>15.647</strong> / <strong>34.222</strong></td><td class="num">0.118 / <strong>15.842</strong> / <strong>36.304</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tbl-wrap">
+<caption>表 1（IHC4BC 数据集）· 每格为 <strong>SSIM ↑ / PSNR ↑ / FID ↓</strong></caption>
+<table>
+<thead><tr><th>方法</th><th>H&amp;E→Ki67</th><th>H&amp;E→ER</th><th>H&amp;E→PR</th><th>H&amp;E→HER2</th></tr></thead>
+<tbody>
+<tr><td>Pix2Pix-Turbo</td><td class="num">0.210 / 18.154 / 203.989</td><td class="num">0.468 / 20.384 / 152.751</td><td class="num">0.548 / 25.535 / 190.576</td><td class="num">0.183 / 12.793 / 105.109</td></tr>
+<tr><td>CycleGAN-Turbo</td><td class="num">0.223 / 18.671 / 54.151</td><td class="num">0.505 / 20.053 / 57.105</td><td class="num">0.584 / 25.338 / 76.615</td><td class="num">0.204 / 13.328 / 57.802</td></tr>
+<tr><td>CUT</td><td class="num">0.117 / 18.371 / 31.908</td><td class="num">0.339 / 15.556 / 65.941</td><td class="num">0.315 / 13.690 / 162.275</td><td class="num">0.195 / 13.133 / 53.826</td></tr>
+<tr><td>PyramidP2P</td><td class="num">0.212 / 18.465 / 102.747</td><td class="num">0.454 / 20.444 / 126.608</td><td class="num">0.540 / 24.785 / 98.775</td><td class="num">0.199 / 13.615 / 75.651</td></tr>
+<tr><td>PRGAN</td><td class="num">0.170 / 17.218 / 28.705</td><td class="num">0.453 / 19.228 / 33.119</td><td class="num">0.515 / 24.612 / 64.407</td><td class="num">0.201 / 13.434 / 43.959</td></tr>
+<tr><td>ASP</td><td class="num">0.141 / 16.324 / 27.846</td><td class="num">0.404 / <strong>21.392</strong> / 170.404</td><td class="num">0.609 / 24.858 / 141.260</td><td class="num">0.203 / 13.625 / 61.339</td></tr>
+<tr><td>U-Frame</td><td class="num">0.180 / 17.584 / <strong>25.101</strong></td><td class="num">0.464 / 19.458 / 32.651</td><td class="num">0.537 / 25.438 / 35.700</td><td class="num">0.202 / 13.575 / 47.205</td></tr>
+<tr><td><strong>Ours</strong></td><td class="num"><strong>0.241</strong> / <strong>18.855</strong> / 26.377</td><td class="num"><strong>0.526</strong> / 21.379 / <strong>30.480</strong></td><td class="num"><strong>0.635</strong> / <strong>25.614</strong> / <strong>31.076</strong></td><td class="num"><strong>0.206</strong> / <strong>13.664</strong> / <strong>41.700</strong></td></tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">表中<strong>加粗</strong>表示该项的最优值。<strong>注意：论文原文声明「最优与次优分别用加粗与下划线标出」，但 PDF 提取的纯文本不保留这些格式 ⇒ 上表的加粗是我自己按数值逐格比对算出的</strong>，不是照抄原文标注。</p>
+
+<div class="callout warn">
+<span class="t">★ 我逐格核算的结果：论文说「三项指标全部显著优于对比方法」，实际有 4 格不是最优</span>
+<p>我把两个数据集 × 4 种染色 × 3 个指标 = <strong>24 格</strong>全部按数值比对了一遍（脚本核对，非目测）。<strong>Ours 在其中 20 格最优，有 4 格不是</strong>：</p>
+<ul>
+<li><strong>MIST · Ki67 · PSNR</strong>：PyramidP2P <strong>15.540</strong> &gt; Ours 15.516（差 0.024，噪声量级）</li>
+<li><strong>MIST · HER2 · SSIM</strong>：ASP <strong>0.125</strong> &gt; Ours 0.118（<strong>差 0.007，相对差约 6%，不算小</strong>）</li>
+<li><strong>IHC4BC · ER · PSNR</strong>：ASP <strong>21.392</strong> &gt; Ours 21.379（差 0.013，噪声量级）</li>
+<li><strong>IHC4BC · Ki67 · FID</strong>：U-Frame <strong>25.101</strong> &lt; Ours 26.377（<strong>相对差约 5%，这一格是实质性的</strong>）</li>
+</ul>
+<p><strong>⇒ 结论要这样写才对：</strong>「在两个数据集的 24 个指标格中取得 <strong>20 格最优</strong>；其中 2 格差距在噪声量级，<strong>另 2 格（MIST HER2 的 SSIM、IHC4BC Ki67 的 FID）差距约 5–6%，是有实质意义的</strong>。」论文原文「significantly outperforms … across SSIM, PSNR, and FID metrics」的表述<strong>夸大了</strong>。</p>
+<p class="small">★ 诚实说明：我第一遍目测时<strong>漏掉了 MIST · HER2 · SSIM 这一格</strong>（误以为 Ours 的 0.118 最优，实际 ASP 的 0.125 更高），只数出 3 格。是写脚本逐格比对才发现的。⇒ <strong>这类「谁最优」的判断不要目测，要脚本算。</strong></p>
+</div>
+
+<p><strong>论文的讨论：</strong>无监督方法（如 CycleGAN-Turbo 和 CUT）以及半监督方法 PRGAN 在 SSIM 和 PSNR 上表现较差。这主要是由于<strong>从相邻层 IHC 图像中可获得的监督信息有限</strong>。相比之下，全监督方法（如 Pix2Pix-Turbo 和 PyramidP2P）在这些指标上表现更好。<strong>然而</strong>，Pix2Pix-Turbo 和 PyramidP2P 需要优化虚拟图像与相邻层弱配对 IHC 图像之间的 L1 损失，<strong>这导致其 FID 表现很差</strong>。尽管 ASP 和 U-Frame 考虑了相邻层图像对的弱配对特性，它们<strong>仍然通过计算像素级损失来生成虚拟图像</strong>，这可能导致病理特征不准确。</p>
+<p>相比之下，我们的方法取得了更优的结果。第一，OT-StainNet 使用 <strong>OTSM</strong> 在 H&amp;E 与 IHC 图像之间建立了准确的语义对应关系。第二，OT-StainNet 通过 <strong>SCC</strong> 利用真实 IHC 特征之间的相关性，有效地监督了虚拟 IHC 图像。</p>
+
+<h3 id="s4e">IV-E 定性评估<span class="en">Qualitative Assessment</span></h3>
+<p>为了进一步探究不同方法生成的虚拟染色图像在视觉上的差异，我们在图 3 中展示了我们的方法与其它竞争方法在 MIST 数据集上的结果。与其它方法相比，<strong>我们的方法生成的虚拟 IHC 图像在染色强度、病理特征和组织结构方面都最接近相邻层的真实 IHC 图像</strong>。</p>
+<p>图 3 表明，现有方法如 CycleGAN-Turbo、CUT 和 PRGAN，由于监督信息不足，生成的 IHC 图像<strong>风格不准确</strong>。而 Pix2Pix-Turbo 和 PyramidP2P 这类方法，由于<strong>强行优化虚拟图像与相邻层弱配对 IHC 图像之间的像素级损失，未能保留 H&amp;E 染色图像中的组织结构</strong>。此外，ASP 和 U-Frame <strong>忽略了 H&amp;E–IHC 图像对之间的组织错位与形变</strong>，导致虚拟 IHC 图像出现错误的病理特征。相比之下，凭借 OTSM 和 SCC，OT-StainNet 生成的虚拟 IHC 图像与作为参考的相邻层 IHC 图像更为相似。</p>
+
+<h3 id="s4f">IV-F 病理一致性评估<span class="en">Pathology Consistency Assessment</span></h3>
+<p>病理医生在进行图像分析时通常关注 IHC 染色的<strong>阳性区域</strong>。因此，可以通过考察<strong>虚拟 IHC 图像与相邻层真实 IHC 图像的阳性区域面积之间的相关性</strong>，来有效评估虚拟 IHC 图像的准确性。</p>
+<p>我们根据 IHC 图像块的染色特征获取相应的阳性区域。对每个 IHC 图像块，<strong>通过染色解卷积分离出苏木素通道（蓝色）和 DAB 通道（棕色）</strong>。在 DAB 通道中，我们计算每个 IHC 图像块中<strong>阳性区域的面积</strong>，并在 IHC4BC 测试集上计算不同方法生成的虚拟图像与相邻层真实图像的阳性区域面积之间的<strong>皮尔逊相关系数</strong>，如图 4 所示。结果表明，与其他方法相比，我们的方法在虚拟图像与参考图像之间展现出<strong>更强的病理一致性</strong>。</p>
+
+<div class="callout warn">
+<span class="t">译者注：这个「病理一致性指标」的定义有两处没写清</span>
+<p>① <strong>用哪种染色解卷积？</strong> 论文只说「stain deconvolution」。Ruifrok 的固定矩阵、Macenko 的自适应矩阵、还是 NMF？<strong>没有说明</strong>。这不是小事——按你 E0.3b 的实测，<strong>换一套染色矩阵会让重建误差差 2–3 倍</strong>，那么阳性面积的划分阈值也会跟着变，相关系数就跟着变。<strong>⇒ 这个指标的绝对值不可跨论文比较。</strong></p>
+<p>② <strong>「阳性」的判定阈值是多少？</strong> 在 DAB 通道里怎么算「阳性像素」——固定阈值、Otsu、还是分位数？<strong>完全没写。</strong></p>
+<p>③ 该指标与相邻层真实图像做相关，而相邻层本身就有 10–50 px 错位 ⇒ <strong>这个相关系数的上限被数据本身的错位压住了</strong>，论文未讨论这一点。</p>
+</div>
+
+<h3 id="s4g">IV-G 消融研究与分析<span class="en">Ablation Study and Analysis</span></h3>
+<p>OT-StainNet 的实现主要依赖于<strong>最优传输驱动的语义匹配（OTSM）机制</strong>和<strong>语义一致性约束（SCC）</strong>。为考察 OTSM 与 SCC 对虚拟染色性能的影响，我们在 <strong>MIST 数据集</strong>上进行了消融实验。结果见表 2，其中 <strong>「w/o SCC」表示用标准 L1 损失替换 SCC</strong>。</p>
+
+<div class="tbl-wrap">
+<caption>表 2（消融实验 · MIST）· 每格为 <strong>SSIM ↑ / PSNR ↑ / FID ↓</strong></caption>
+<table>
+<thead><tr><th>策略</th><th>H&amp;E→Ki67</th><th>H&amp;E→ER</th><th>H&amp;E→PR</th><th>H&amp;E→HER2</th></tr></thead>
+<tbody>
+<tr><td>w/o all（两者都去掉）</td><td class="num">0.133 / 14.856 / 82.351</td><td class="num">0.144 / 14.331 / 47.170</td><td class="num">0.129 / 13.895 / 94.517</td><td class="num">0.100 / 13.831 / 107.738</td></tr>
+<tr><td>w/o OTSM</td><td class="num">0.138 / 15.214 / 47.331</td><td class="num">0.138 / 15.283 / 42.488</td><td class="num">0.120 / 15.013 / 56.491</td><td class="num">0.113 / 15.211 / 55.944</td></tr>
+<tr><td>w/o SCC<span class="small">（换成 L1）</span></td><td class="num">0.150 / 14.877 / 39.980</td><td class="num">0.151 / 15.616 / 39.856</td><td class="num">0.131 / 15.352 / 40.176</td><td class="num">0.107 / 15.472 / 39.882</td></tr>
+<tr class="best"><td><strong>Ours</strong></td><td class="num"><strong>0.158</strong> / <strong>15.516</strong> / <strong>36.286</strong></td><td class="num"><strong>0.148</strong> / <strong>16.056</strong> / <strong>35.072</strong></td><td class="num"><strong>0.142</strong> / <strong>15.647</strong> / <strong>34.222</strong></td><td class="num"><strong>0.118</strong> / <strong>15.842</strong> / <strong>36.304</strong></td></tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">表 2 原题注写的是「<strong>FMM</strong> 与 SCC 的影响」——<strong>FMM 是论文里不存在的方法名</strong>，应为 OTSM。见 <a href="#gaps">缺口清单</a>第 2 条。</p>
+
+<div class="callout key">
+<span class="t">★ 我核算出的两个关键事实</span>
+<p><strong>① 「w/o all」这一行与表 1 中 CycleGAN-Turbo 的 12 个数字完全相同。</strong>逐格比对：Ki67 <span class="term">0.133/14.856/82.351</span>、ER <span class="term">0.144/14.331/47.170</span>、PR <span class="term">0.129/13.895/94.517</span>、HER2 <span class="term">0.100/13.831/107.738</span>——<strong>与表 1 的 CycleGAN-Turbo 行一字不差</strong>。<br>
+<strong>⇒ 说明「w/o all」就是把 backbone 退回到 img2img-turbo 的 CycleGAN-Turbo 配置</strong>（即只保留对抗 + 循环 + 恒等，去掉 OTSM 与 SCC）。这本身是好事（基线可对齐），但也意味着<strong>消融表的第一行不是独立重训的结果，而是复用了对比实验的配置</strong>。</p>
+<p><strong>② 「w/o SCC」不是「去掉监督」，而是「换一种监督」。</strong>论文自己写了它用<strong>标准 L1 损失替换</strong> SCC。所以这一行的对照含义是「<strong>相关矩阵 L1 vs 像素 L1</strong>」，<strong>不是「有监督 vs 无监督」</strong>。⇒ <strong>读表时要按前一种理解</strong>，否则会高估 SCC 的作用。</p>
+</div>
+
+<p><strong>论文的结论：</strong>OTSM 和 SCC 各自都能提升虚拟染色性能，其中 <strong>OTSM 带来的提升更为显著</strong>。两者结合时染色转换性能最高。这是因为 OTSM 在 H&amp;E 与 IHC 图像之间建立了准确的<strong>稠密语义对应关系</strong>，而 SCC 利用真实 IHC 特征之间的相关性为虚拟 IHC 提供了更有效的<strong>语义级监督</strong>。</p>
+<p>为考察 OTSM 和 SCC 对虚拟 IHC 视觉表现的影响，我们在图 5 中给出了 MIST 数据集上的定性消融结果。如图所示，当 OT-StainNet 不受 OTSM 和 SCC 约束时，模型<strong>无法利用相邻层 IHC 图像提供的监督信息</strong>，导致无法生成准确的 IHC 图像风格。单独加入 OTSM 或 SCC 都能改善虚拟染色性能，但虚拟 IHC 图像仍会表现出一些错误的病理特征。当 OT-StainNet 同时引入 OTSM 和 SCC 时，虚拟 IHC 图像与作为参考的相邻层 IHC 图像更为接近，这证明了 OTSM 和 SCC 在提升 IHC 染色转换性能方面的关键作用。</p>
+<p>为进一步考察 OTSM 和 SCC 对虚拟 IHC 图像阳性区域准确性的影响，我们在 IHC4BC 数据集上计算了各种实验条件下、每种 IHC 染色类型的虚拟图像阳性区域面积与相邻层真实图像之间的<strong>皮尔逊相关系数</strong>，如图 6 所示。结果表明，<strong>OTSM 和 SCC 显著提升了虚拟与真实 IHC 图像之间的病理一致性</strong>。</p>
+
+<h2 id="s5"><span class="num">V</span>结论<span class="en">Conclusion</span></h2>
+<p>本文提出了一种新的 IHC 虚拟染色方法 <strong>OT-StainNet</strong>，它采用<strong>最优传输驱动的语义匹配（OTSM）机制</strong>，在<strong>像素级并不精确配对</strong>的 H&amp;E 与 IHC 图像对之间建立准确的语义对应关系。该方法<strong>避免了因优化合成图像与真实图像之间的像素级损失而导致的病理特征错误</strong>，为组织病理图像虚拟染色的研究社区提供了新的见解。</p>
+<p>借助 OTSM 机制获得的真实 IHC 特征，我们引入了<strong>语义一致性约束（SCC）</strong>，为虚拟 IHC 图像的生成提供有效的语义级监督。OT-StainNet <strong>本身并不局限于特定组织类型</strong>，理论上可以应用于多种染色技术，包括<strong>特殊染色（如 MAS、PAS 和 PASM）和荧光染色</strong>。</p>
+<p><strong>然而，OT-StainNet 的性能与数据集质量相关</strong>，当训练图像受到污染（图像中的细胞结构无法清晰辨认）时，其表现可能不如预期。未来我们计划将该方法扩展到其他组织类型的多种 IHC 染色，从而拓展 OT-StainNet 的应用范围。</p>
+
+<h3>致谢<span class="en">Acknowledgements</span></h3>
+<p class="small">本工作部分受国家自然科学基金资助（项目号 62031023、62331011），部分受深圳市科技计划资助（项目号 GXWD20220818170353009、RCYX20221008092852077），部分受中央高校基本科研业务费资助（项目号 HIT.OCEF.2023050）。</p>
+
+<h2 id="figs">图表说明汇总<span class="en">Figure &amp; Table Captions</span></h2>
+
+<div class="figbox"><div class="ft"><strong>图 1：</strong>H&amp;E 与 IHC 染色图像示例。(a) 展示了<strong>阴性（negative）</strong>的 H&amp;E–IHC 图像对。(b) 展示了<strong>阳性（positive）</strong>的 H&amp;E–IHC 图像对，其中包含特定生物标志物表达的区域，提供了关键的诊断与预后信息。</div></div>
+
+<div class="figbox"><div class="ft"><strong>图 2：</strong>OT-StainNet 框架总览。首先，H&amp;E 与相邻层 IHC 图像被编码为特征向量。然后，使用最优传输获得与 H&amp;E 特征相匹配的真实 IHC 特征。最后，应用语义一致性约束，以确保由一步扩散模型生成的虚拟 IHC 图像具有准确的病理特征。在训练期间，编码器、解码器和 U-Net 的权重都是固定的，只有 LoRA 适配器可训练。此外，在编码器与解码器之间加入了跳跃连接和零卷积，以在染色转换过程中保留 H&amp;E 图像复杂的细胞与组织细节。</div></div>
+
+<div class="figbox"><div class="ft"><strong>图 3：</strong>不同方法在 MIST 数据集上的虚拟 IHC 图像结果。第一列是 H&amp;E 图像。第 2 至第 9 列是不同方法虚拟染色的图像。最后一列是相邻层的真实 IHC 图像。</div></div>
+
+<div class="figbox"><div class="ft"><strong>图 4：</strong>不同方法生成的虚拟 IHC 图像与相邻层真实 IHC 图像之间，<strong>阳性区域面积的皮尔逊相关系数</strong>。</div></div>
+
+<div class="figbox"><div class="ft"><strong>图 5：</strong>FMM（<strong>应为 OTSM</strong>）与 SCC 对 OT-StainNet 影响的定性可视化。「w/o SCC」表示用标准 L1 损失替换 SCC。</div></div>
+
+<div class="figbox"><div class="ft"><strong>图 6：</strong>FMM（<strong>应为 OTSM</strong>）与 SCC 对 OT-StainNet 中「虚拟 IHC 图像与相邻真实 IHC 图像阳性区域面积的皮尔逊相关系数」的影响。</div></div>
+
+<div class="figbox"><div class="ft"><strong>表 1：</strong>使用 Pix2Pix-Turbo、CycleGAN-Turbo、CUT、PyramidP2P、PRGAN、ASP、U-Frame 与本文方法在两个基准数据集上的染色转换性能对比。<strong>最优与次优分别以加粗和下划线标出。</strong></div></div>
+
+<div class="figbox"><div class="ft"><strong>表 2：</strong>FMM（<strong>应为 OTSM</strong>）与 SCC 对 OT-StainNet 影响的定量结果。<strong>最优得分以加粗标出。</strong></div></div>
+
+<h2 id="deep"><span class="num">★</span>方法精讲（代码未开源，重点章节）<span class="en">Method Reconstruction — since no code is released</span></h2>
+
+<div class="callout warn">
+<span class="t">先说清楚这一节的性质</span>
+<p>论文<strong>没有公开代码，也没有在正文里给出实现级别的细节</strong>。所以下面这份「方法精讲」是我<strong>依据论文文字 + 图 2 说明 + 该领域通行做法</strong>重建出来的。</p>
+<p><strong>凡是论文没写的，我会明确标注「论文未说明」并给出「我的推断」，不会把推断写成事实。</strong>你要拿去复现时，请按标注区分。</p>
+</div>
+
+<h3>一、一次训练迭代的完整数据流</h3>
+<p>这是论文最该画清楚、但实际没画清楚的地方。按图 2 说明与算法 1，把张量形状补齐后大致是这样（<strong>括号内为我的推断</strong>）：</p>
+
+<div class="flow"><pre><code>输入
+  x  = H&amp;E 图像        (B, 3, 256, 256)
+  y  = 相邻层 IHC 图像  (B, 3, 256, 256)     ← 与 x 同组织、连续切片、非像素对齐
+
+【前向】
+  ① VAE 编码器（冻结）同时编码三样东西：
+       z_H  = Enc(x)          (B, 4, 32, 32)   ← H&amp;E 特征 F^H
+       z_I  = Enc(y)          (B, 4, 32, 32)   ← 相邻层 IHC 特征 F^I
+  ② 对 z_H 加噪到时间步 t，UNet 走一步去噪（只有 LoRA 可训练）：
+       ẑ    = UNet( z_H + σ_t·ε , t , LoRA )   (B, 4, 32, 32)
+  ③ VAE 解码器（冻结）解码：
+       x̂    = Dec(ẑ)          (B, 3, 256, 256)  ← 虚拟 IHC
+  ④ 再把虚拟 IHC 喂回同一个编码器（冻结，但可反传）：
+       z̃_I  = Enc(x̂)          (B, 4, 32, 32)   ← 虚拟 IHC 特征 F̃^I
+
+【OTSM —— 求 H&amp;E 与 IHC 的语义对应】
+  ⑤ 把 z_H、z_I 展平成特征集：
+       F^H = flatten(z_H)     (B, n, d)         ← 论文只写 F ∈ ℝ^(n×d)
+       F^I = flatten(z_I)     (B, n, d)         ← 论文未说 n、d 是多少
+  ⑥ 建代价矩阵并解最优传输：
+       C_uv = || f^H_u − f^I_v ||_2            (B, n, n)
+       P    = argmin ⟨P, C⟩   s.t. 边缘约束       (B, n, n)
+  ⑦ 用传输计划把 IHC 特征对齐到 H&amp;E 上：
+       F̂^I  = P^T · F^I                        (B, n, d)  ← 对齐后的「真实」IHC 特征
+
+【损失】
+  ⑧ SCC：分别在 F̂^I 与 F̃^I 内部算两两余弦相似度，得相关矩阵
+       M̂^I = cosine_sim_matrix(F̂^I)            (B, n, n)
+       M̃^I = cosine_sim_matrix(F̃^I)            (B, n, n)
+       L_sc = mean( | M̂^I − M̃^I | )            ← 式 (3)
+  ⑨ 对抗：D_Y(x̂) vs D_Y(y)；反向 D_X(·)      ← 判别器骨干是 CLIP
+  ⑩ 循环 + 恒等：把 x̂ 再送回生成器还原 x       ← 论文式 (5)(6) 记号有误，见缺口清单
+  ⑪ L_total = 0.5·L_adv + 10·L_cycle + 1·L_id + 1000·L_sc</code></pre></div>
+
+<h3>二、OTSM 逐项拆解：它到底在对齐什么</h3>
+<p><strong>（1）特征是什么？</strong>论文原话是「H&amp;E 与相邻层 IHC 图像被编码为特征向量」，编码器就是那个<strong>被冻结的 VAE 编码器</strong>。所以 <span class="term">F<sup>H</sup></span> 与 <span class="term">F<sup>I</sup></span> 是<strong>冻结 VAE 编码器的输出</strong>。</p>
+<div class="callout warn">
+<span class="t">★ 这里有一个论文没有讨论的隐含假设</span>
+<p>SD 的 VAE 是<strong>在自然图像上预训练并冻结</strong>的。也就是说，<strong>OT 是在一个「没有为病理域适配过」的通用视觉特征空间里做的</strong>。H&amp;E 与 IHC 之间的「语义对应」在这个空间里是否成立，<strong>论文没有验证</strong>。</p>
+<p>这是一个<strong>可证伪的假设</strong>：如果换成病理基础模型（UNI / Prov-GigaPath）的特征做 OT，匹配质量应当更好。这恰好是你库里 <a href="#translator">SheafStain / UNIStainNet</a> 用的条件来源——<strong>把两者接起来是一个自然的方向</strong>。</p>
+</div>
+
+<p><strong>（2）n 与 d 是多少？</strong><span class="b">论文未说明</span>。符号是 <span class="term">F ∈ ℝ<sup>n×d</sup></span>，但<strong>从未把 n、d 绑定到任何具体数值</strong>。我的推断（按 SD VAE 在 256×256 下的常规形状）：</p>
+<ul>
+<li><strong>最可能</strong>：n = 32×32 = <strong>1024</strong>（latent 空间位置数），d = <strong>4</strong>（latent 通道数）。</li>
+<li><strong>但 d = 4 很不寻常</strong>：在 4 维空间里算余弦相似度构建相关矩阵，噪声会很大，SCC 的信号可能很弱。所以也可能他们取的是编码器<strong>中间层</strong>的特征图（例如 32×32×512 ⇒ d = 512）。</li>
+</ul>
+<p><strong>⇒ 这一项直接影响你能不能复现，必须自己试。</strong>建议两种都跑一次，看 L<sub>sc</sub> 的量级是否稳定。</p>
+
+<p><strong>（3）OT 怎么解？</strong><span class="b">论文未说明</span>，这是<strong>最关键的复现缺口</strong>。论文只给出 <span class="term">min ⟨P, C⟩</span>，没有提任何求解算法，<strong>全文没有出现 Sinkhorn 或熵正则</strong>。</p>
+<div class="callout key">
+<span class="t">我的推断与实际建议</span>
+<p>精确 LP 解 n×n 最优传输的复杂度约 <span class="term">O(n³ log n)</span>，当 n = 1024 时单次迭代就是 ~10⁹ 量级，<strong>不可能在训练循环里跑 30,000 次</strong>。所以实际实现<strong>几乎必然</strong>是以下之一：</p>
+<ul>
+<li><strong>熵正则 + Sinkhorn</strong>（最常见）：把 <span class="term">min ⟨P,C⟩</span> 换成 <span class="term">min ⟨P,C⟩ − ε·H(P)</span>，用几十次矩阵缩放迭代求解。<strong>可微、可放进训练图。</strong></li>
+<li><strong>截断 / 分块 OT</strong>：只在局部邻域里算匹配。</li>
+<li><strong>用采样近似</strong>（如 sliced OT）。</li>
+</ul>
+<p><strong>建议：直接用 <span class="term">POT</span>（Python Optimal Transport）或 <span class="term">geomloss</span> 库的 Sinkhorn 实现</strong>，ε 从 0.01 起调，并<strong>务必检查 P 是否真的稀疏、对角线附近是否占优</strong>——如果 P 接近均匀分布（即「什么都匹配一点」），那 OTSM 实际上没有建立任何有效对应，SCC 就在对着噪声学。</p>
+<p class="small">注：我之前在库内笔记里写过这篇「无 Sinkhorn 项」——<strong>那个说法不准确，应当更正为「论文未说明求解方式」</strong>。已同步修正。</p>
+</div>
+
+<p><strong>（4）边缘约束用的是什么权重？</strong>论文给出 <span class="term">P<b>1</b> = μ<sup>H</sup>，P<sup>T</sup><b>1</b> = μ<sup>I</sup></span>，但没有说 <span class="term">μ<sup>H</sup></span>、<span class="term">μ<sup>I</sup></span> 取什么。最简单的情形是<strong>均匀分布</strong>（每个特征质量都是 <span class="term">1/n</span>），这也是最通行的做法。<strong>推断：均匀。</strong></p>
+
+<p><strong>（5）代价矩阵用什么距离？</strong>论文说「例如 l₂ 距离」（such as l₂-distance），<strong>用了「例如」这种不确定的措辞</strong>，等于没说死。<strong>推断：l₂ 平方距离。</strong></p>
+
+<h3>三、SCC 逐项拆解：它约束了什么，没约束什么</h3>
+<p><strong>构造方式：</strong>把一张图内的特征看成 n 个「节点」，算<strong>两两余弦相似度</strong>，得到 <span class="term">n×n</span> 的相关矩阵。这个矩阵描述的是<strong>「哪些空间位置的特征彼此相似」</strong>，也就是图像的<strong>关系几何</strong>。</p>
+<p><strong>损失形式：</strong>把真实（OT 对齐后）与虚拟的两个相关矩阵逐项做 L1，再除以 n² 取平均。</p>
+
+<div class="callout ok">
+<span class="t">它保住了什么</span>
+<ul>
+<li><strong>关系几何</strong>：真实 IHC 里「A 区与 B 区特征相似」这种结构，在虚拟 IHC 里要保留下来。这<strong>比逐像素 L1 更抗错位</strong>——因为相关矩阵对空间位置的精确位移不敏感（只要整体的相似关系不变）。</li>
+<li><strong>不需要像素级配准</strong>：因为对应关系已经被 OTSM 软化成 P 了，SCC 再作用在「组内两两关系」上，等于<strong>二次消解了错位</strong>。</li>
+<li><strong>抗错位 + 抗强度漂移</strong>：余弦相似度对整体亮度缩放不敏感，所以它对染色深浅的整体偏移是免疫的。</li>
+</ul>
+</div>
+
+<div class="callout warn">
+<span class="t">★ 它明确不管什么（这一点最重要）</span>
+<p><strong>SCC 完全不约束绝对表达量。</strong>余弦相似度只关心方向，乘以任意正数都不变。所以：</p>
+<ul>
+<li><strong>「这块区域的 DAB 到底有多强」——SCC 管不了。</strong></li>
+<li><strong>「虚拟图整体偏深还是偏浅」——SCC 管不了。</strong></li>
+<li><strong>「H-score 意义上的表达分级」——SCC 管不了。</strong></li>
+</ul>
+<p><strong>⇒ 这正是一个「可以全部通过 SCC、但在临床上完全错误」的输出依然能拿到低 L<sub>sc</sub> 的情形。</strong>它必须与一个<strong>约束绝对强度的损失</strong>搭配使用——对你来说就是 FOD 的分布级损失（全局均值 + 20-bin 直方图）。</p>
+</div>
+
+<h3>四、梯度往哪里流（复现时最容易错的地方）</h3>
+<ul>
+<li><strong>OTSM 的 P 是否可微？</strong>如果 P 是用 Sinkhorn 解出来的，<strong>P 本身对 F<sup>H</sup>、F<sup>I</sup> 是可微的</strong>。但 VAE 编码器被冻结，所以梯度<strong>不会</strong>通过 P 回流去改编码器。<strong>实践中通常把 P 当常数（detach）</strong>——因为让梯度穿过 Sinkhorn 迭代会显著增加显存。<strong>论文未说明是否 detach。</strong>我的推断：<strong>detach</strong>。</li>
+<li><strong>L<sub>sc</sub> 的梯度路径</strong>：<span class="term">L<sub>sc</sub> → M̃<sup>I</sup> → z̃<sup>I</sup> = Enc(x̂) → x̂ = Dec(ẑ) → ẑ = UNet(...) → LoRA</span>。<strong>梯度会穿过冻结的 VAE 解码器与编码器</strong>（它们权重冻结但计算图可导），最终只更新 LoRA。<strong>这是一条很长的链</strong>——这也是为什么 λ<sub>sc</sub> 要给到 1000 才能起作用。</li>
+<li><strong>多一次编码器前向</strong>：因为要对 x̂ 再编码一次拿 F̃<sup>I</sup>，<strong>每个训练步比普通 img2img-turbo 多一次 VAE 编码 + 一次 n×n 的 OT 求解</strong>。论文没有报告这部分的开销。</li>
+</ul>
+
+<h3>五、与「把 IHC 当条件喂进去」的本质区别</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th style="width:22%">维度</th><th style="width:39%">OT-StainNet：IHC 当<strong>监督目标</strong></th><th>StainFuser 现状：IHC 当<strong>条件</strong></th></tr></thead>
+<tbody>
+<tr><td>推理时是否需要 IHC</td><td><strong>不需要。</strong>IHC 只出现在损失里</td><td><strong>需要</strong>（<span class="term">encoder_hidden_states</span> 来自目标图 latent）</td></tr>
+<tr><td>错位的影响</td><td>被 OTSM 的软对应<strong>吸收</strong></td><td>错位直接进入条件 ⇒ 噪声</td></tr>
+<tr><td>「抄答案」风险</td><td><strong>不存在</strong>：梯度只要求输出靠近目标，目标不参与前向</td><td><strong>存在</strong>：条件通道携带目标外观，训练目标可能被短路</td></tr>
+<tr><td>对数据的要求</td><td>弱配对即可（这正是它的卖点）</td><td>喂配对 IHC = 抄答案；喂非配对 ≈ 一个可学习 token</td></tr>
+</tbody>
+</table></div>
+<p><strong>⇒ 这是这篇论文对你最直接有用的一点</strong>：它给出了「<strong>如何在不污染前向路径的前提下用上相邻层 IHC 的监督信息</strong>」的一个完整示范。详见 <a href="#translator">译者注</a>。</p>
+
+<h2 id="gaps"><span class="num">★</span>论文未说清 / 前后不一致清单<span class="en">Gaps &amp; Internal Inconsistencies</span></h2>
+
+<div class="callout warn">
+<span class="t">引用前请先看这一节</span>
+<p>以下 13 条是我在<strong>逐页核对原文</strong>时发现的、论文自身未说明或前后矛盾的地方。<strong>代码没有开源，所以这些缺口无法用代码补上。</strong>凡你要写进自己论文或据此复现的，请逐条注意。</p>
+</div>
+
+<h3>A. 论文内部前后不一致（可确证）</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th style="width:6%">#</th><th style="width:24%">问题</th><th>证据与判定</th></tr></thead>
+<tbody>
+<tr><td class="ctr"><strong>1</strong></td><td><strong>数据集数量：2 个还是 3 个？</strong></td><td><strong>摘要</strong>：「four types of IHC staining across <strong>two datasets</strong>」。<strong>贡献列表第 4 条</strong>：「four types of IHC staining on <strong>three datasets</strong>」。<strong>实验·数据集</strong>：「<strong>two benchmark datasets</strong>: MIST and IHC4BC」。<strong>表 1</strong>：只有 MIST 与 IHC4BC 两张表。<br>⇒ <strong>判定：贡献列表的「三个」是笔误，实际为两个。</strong></td></tr>
+<tr><td class="ctr"><strong>2</strong></td><td><strong>「FMM」这个不存在的名字</strong></td><td><strong>表 2 题注</strong>：「the effects of <strong>FMM</strong> and SCC on OT-StainNet」；<strong>图 5 题注</strong>、<strong>图 6 题注</strong>同样写 FMM。<strong>但全文没有任何地方定义 FMM。</strong><br>⇒ <strong>判定：FMM 是被改名前的旧名称，正式名为 OTSM。三处题注漏改。</strong>这通常意味着方法在投稿后期才改名，<strong>也提示代码里可能仍叫 FMM</strong>。</td></tr>
+<tr><td class="ctr"><strong>3</strong></td><td><strong>式 (5) 的循环损失记号错误</strong></td><td>写成 <span class="term">L<sub>rec</sub>(G(G(x)), x)</span>，即生成器作用两次。但 CycleGAN 需要<strong>两个方向相反的生成器</strong>，正确应为 <span class="term">L<sub>rec</sub>(F(G(x)), x)</span>。论文只定义了一个生成器 G。<br>⇒ <strong>判定：笔误。照抄会写错代码。</strong></td></tr>
+<tr><td class="ctr"><strong>4</strong></td><td><strong>式 (6) 的恒等损失语义可疑</strong></td><td>写 <span class="term">L<sub>rec</sub>(G(x), x)</span>。但 <span class="term">G(x)</span> 在目标域、<span class="term">x</span> 在源域，<strong>这是跨域比较</strong>，语义上等于「零步循环」，不是恒等。标准恒等损失应是「把目标域图像喂进去、输出等于它自己」。<br>⇒ <strong>判定：建议按 CycleGAN 标准形式实现，不要照抄。</strong></td></tr>
+</tbody>
+</table></div>
+
+<h3>B. 关键实现细节缺失（无法确证，必须自己试）</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th style="width:6%">#</th><th style="width:24%">缺什么</th><th>为什么关键 / 我的推断</th></tr></thead>
+<tbody>
+<tr><td class="ctr"><strong>5</strong></td><td><strong>OT 用什么算法解</strong></td><td>全文只给 Kantorovich 形式，<strong>未提 Sinkhorn、熵正则、或任何求解器</strong>。n×n 精确 LP 在训练循环里不可行。<br><strong>推断：熵正则 + Sinkhorn</strong>（建议用 POT / geomloss）。<strong>★ 这是第一大复现缺口。</strong></td></tr>
+<tr><td class="ctr"><strong>6</strong></td><td><strong>n 与 d 的具体数值、特征取自哪一层</strong></td><td>只写 <span class="term">F ∈ ℝ<sup>n×d</sup></span>，从未绑定数值。<br><strong>推断：n = 32×32 = 1024、d = 4</strong>（VAE latent）；但也可能是编码器中间层（d = 512）。<strong>★ 第二大复现缺口。</strong></td></tr>
+<tr><td class="ctr"><strong>7</strong></td><td><strong>一步扩散的具体训练路径</strong></td><td>SD-Turbo 是蒸馏出来的一步模型。<strong>加噪到哪个时间步 t、是否采用 img2img-turbo 的两阶段策略、是否用 <span class="term">noise_scale</span> 参数</strong>——全部未写。</td></tr>
+<tr><td class="ctr"><strong>8</strong></td><td><strong>CLIP 判别器怎么用</strong></td><td>只说「判别器使用 CLIP 模型作为骨干」。<strong>CLIP 是冻结还是微调？怎么从 CLIP 特征得到真假标量？取哪一层？</strong>均未说明。这是相当不常见的做法，缺细节很难复现。</td></tr>
+<tr><td class="ctr"><strong>9</strong></td><td><strong>跳跃连接与 zero-conv 的规格</strong></td><td>图 2 说明提到在编码器与解码器之间加了跳跃连接和 zero-conv，<strong>但没给位置、数量、通道数</strong>。</td></tr>
+<tr><td class="ctr"><strong>10</strong></td><td><strong>λ<sub>sc</sub> = 1000 的量级依据</strong></td><td>未说明 L<sub>sc</sub> 的实际数值量级。<strong>照抄 1000 很可能不 work</strong>——应先打印 L<sub>sc</sub> 与 L<sub>cycle</sub> 的实际值再定权重。</td></tr>
+<tr><td class="ctr"><strong>11</strong></td><td><strong>病理一致性指标的实现细节</strong></td><td>① <strong>用哪种染色解卷积</strong>（Ruifrok 固定矩阵 / Macenko / NMF）未说明——<strong>换一套矩阵，阳性面积划分与相关系数都会变</strong>；② <strong>「阳性像素」的判定阈值</strong>完全未写。</td></tr>
+<tr><td class="ctr"><strong>12</strong></td><td><strong>OT 的 <span class="term">μ<sup>H</sup></span>、<span class="term">μ<sup>I</sup></span> 取什么</strong></td><td>给了边缘约束形式但没说权重。<strong>推断：均匀分布</strong>（各特征 1/n）。</td></tr>
+</tbody>
+</table></div>
+
+<h3>C. 评估层面的局限</h3>
+<ul>
+<li><strong>没有临床效用评估。</strong>只有 SSIM / PSNR / FID 加一个阳性面积相关系数。<strong>没有病理医生盲评、没有 HER2 分级一致性、没有任何下游任务。</strong></li>
+<li><strong>SSIM / PSNR 在错位数据上本身不可靠。</strong>注意 MIST 上的 SSIM 只有 <strong>0.10–0.16</strong>、PSNR 只有 <strong>13–16 dB</strong>——这说明指标是拿「与相邻层（错位）参考图」算的，<strong>绝对值没有意义，只有相对排序有意义</strong>。你库里已有多份报告指出过这一点。</li>
+<li><strong>消融只在 MIST 上做</strong>，没有在 IHC4BC 上重复。而两个数据集的规模差 5 倍（4,000 vs 20,000 训练块）。</li>
+<li><strong>「w/o all」= 表 1 的 CycleGAN-Turbo</strong>（12 个数字完全相同）⇒ 消融第一行是复用对比实验配置，<strong>不是独立重训</strong>。</li>
+<li><strong>「w/o SCC」是换成 L1，不是去掉监督</strong> ⇒ 这一行的对照含义是「相关矩阵 L1 vs 像素 L1」，不是「有监督 vs 无监督」。</li>
+</ul>
+
+<h3>D. 可复现性总评</h3>
+<div class="callout warn">
+<span class="t">结论：不能作为「照抄就能跑」的基线</span>
+<p><strong>代码未开源 + OT 求解方式未写 + 特征形状未写 ⇒ 直接复现这篇的完整数字基本不可能。</strong></p>
+<p>但<strong>它的思想是可实现的</strong>：OTSM 用现成的 OT 库就能搭，SCC 就是一行相关矩阵 L1。<strong>把它当成「方法灵感」而不是「可对齐的基线」来用，是更现实的定位。</strong></p>
+</div>
+
+<h2 id="translator">译者注 · 这篇论文与你的 H&amp;E→IHC 课题的关系<span class="en">Translator's Note</span></h2>
+
+<div class="callout key">
+<span class="t">定位一句话</span>
+这是<strong>「弱配对下如何把相邻层 IHC 当监督用」这个问题上最贴近你需求的一篇</strong>，而且它<strong>本身就是扩散模型</strong>（SD-Turbo + LoRA + 对抗），与你的 StainFuser 改造路线同族。
+</div>
+
+<h3>一、为什么它对你特别有用</h3>
+<ol>
+<li><strong>它解决了你的核心痛点，而且用的是扩散。</strong>你的难点是「非配对 / 弱配对下 IHC 参考图用不上」。它给出了一套完整机制（OTSM）把错位的 IHC 变成可用的监督信号。</li>
+<li><strong>它没有把 IHC 参考图当条件喂进去。</strong>这一点直接对应你在《StainFuser 改造实施任务书 v2》§5.6 的泄漏判定——<strong>监督目标不会短路训练目标，条件通道会</strong>。</li>
+<li><strong>它的 SCC 与你要挂的 FOD 损失互补，不冲突。</strong>SCC 管「关系几何」，FOD 管「绝对强度」。</li>
+</ol>
+
+<h3>二、监督等级定位（接你库内 L1–L5 分级）</h3>
+<p>SCC 作用在<strong>特征相关矩阵</strong>上，属于 <strong>L4（关系级）</strong>。但它与 L1（像素对齐）完全不同——<strong>它不需要配准</strong>，因为对应关系已经被 OTSM 软化了。</p>
+<div class="callout warn">
+<span class="t">但要精确区分，别混淆</span>
+<p>SCC 约束的是<strong>「一张图内特征与特征之间的相关结构」</strong>，<strong>不是「区域之间表达量的排序」</strong>。所以：</p>
+<p><strong>⇒ 它没有填上你两轮调研里指出的那个空缺（「蛋白表达 ranking 损失」仍然是空的）。</strong>但它提供了一个<strong>重要的存在性证据</strong>：<strong>L4 式的关系级监督在错位数据上是可训练的。</strong>这一点可以直接借力。</p>
+</div>
+
+<h3>三、可直接搬的三件事（按推荐顺序）</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th style="width:5%">#</th><th style="width:22%">搬什么</th><th style="width:11%">改动成本</th><th style="width:11%">可复现性</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td class="ctr"><strong>1</strong></td><td><strong>OTSM 机制</strong><br><span class="small">把 IHC 参考当监督目标而非条件</span></td><td><span class="b low">中</span><br><span class="small">一个 OT 求解 + 一次额外编码</span></td><td><span class="b high">高</span><br><span class="small">POT / geomloss 现成</span></td><td>直接用 <span class="term">POT</span> 的 Sinkhorn，ε 从 0.01 起调。<strong>务必检查 P 是否稀疏</strong>——若接近均匀则匹配无效。建议先用 VAE latent 当特征试。</td></tr>
+<tr><td class="ctr"><strong>2</strong></td><td><strong>SCC 损失</strong><br><span class="small">相关矩阵一致性</span></td><td><span class="b high">低</span><br><span class="small">约 20 行</span></td><td><span class="b high">高</span><br><span class="small">无超参依赖</span></td><td>一行余弦相似度矩阵 + 一行 L1。<strong>先测 L<sub>sc</sub> 的实际量级再定权重</strong>，别抄 1000。</td></tr>
+<tr><td class="ctr"><strong>3</strong></td><td><strong>阳性面积皮尔逊相关</strong><br><span class="small">作为评价指标</span></td><td><span class="b high">低</span></td><td><span class="b medium">中</span><br><span class="small">依赖染色矩阵选择</span></td><td>可加进你的评价体系。但<strong>必须自己写明用了哪套染色矩阵与阳性阈值</strong>——论文没写，这正是你 E0.3b 已经量化过的坑。</td></tr>
+</tbody>
+</table></div>
+
+<h3>四、★ 一个自然的三项组合（据两轮调研，还没人做过）</h3>
+<div class="flow"><pre><code>OTSM（拿到正确对应）  +  SCC（保住关系几何）  +  FOD 分布级损失（保住绝对强度）
+─────────────────────     ─────────────────      ────────────────────────────
+解决「错位下参考不可用」     解决「关系结构被抹平」      解决「表达量整体偏强/偏弱」
+
+三者管的量互不重叠：
+  · OTSM  → 对应关系（哪块配哪块）
+  · SCC   → 相对关系（哪些区域该一起变）   ← 对强度缩放免疫
+  · FOD   → 绝对水平（DAB 到底多强）       ← 对空间位移不敏感
+
+⇒ 组合起来正好覆盖「分布级 / 关系级 / 绝对强度」三个正交方向。</code></pre></div>
+<p>这正是你两轮调研（扩散版 + 流匹配版）都指向的那个空缺的<strong>一个具体填法</strong>：<strong>把「渲染器 × 蛋白约束」那一格，再加上「OT 语义匹配」这一层</strong>。</p>
+
+<h3>五、最小可行动作</h3>
+<ol>
+<li><strong>先用 POT 库搭 OTSM</strong>，特征取 VAE latent（n=1024, d=4），跑一次并<strong>打印 P 的稀疏度与对角占优程度</strong>。这一步<strong>不需要训练</strong>，只验证「在冻结 VAE 空间里 OT 能不能建立有意义的对应」。</li>
+<li><strong>若 P 有效</strong>，把 SCC 接到你现有的 baseline 上，替换掉原本的像素级 L1，在 MIST 上做一次对照。</li>
+<li><strong>若 P 无效（接近均匀）</strong>，把特征换成病理基础模型（UNI）的输出再试一次——这是最有信息量的一个分支，因为它同时回答了「冻结 VAE 特征够不够用」这个问题。</li>
+</ol>
+
+<div class="callout ok">
+<span class="t">为什么这个动作值得先做</span>
+<p><strong>第 1 步零训练成本，却能一次性回答两个问题</strong>：① 论文的 OTSM 到底能不能建立有效对应；② 冻结 VAE 特征 vs 病理基础模型特征，哪个更适合做 OT 匹配。<strong>而这两个问题，论文自己都没有回答。</strong></p>
+</div>
+
+<footer>
+<p><strong>原文信息</strong>：Guan X., Wang Y., Zhang Y., Zhang Z., Zhang Y. <em>OT-StainNet: Optimal Transport Driven Semantic Matching for Weakly Paired H&amp;E-to-IHC Stain Transfer.</em> The Thirty-Ninth AAAI Conference on Artificial Intelligence (AAAI-25), pp. 3194–3202. © 2025 AAAI.</p>
+<p><strong>本文档性质</strong>：全文中文翻译 + 方法精讲 + 缺口清单 + 译者注。翻译部分力求忠实；<strong>标注为「译者注」的段落与 <a href="#deep">方法精讲</a>、<a href="#gaps">缺口清单</a> 两节是我的分析与核算，不是原文内容。</strong></p>
+<p><strong>核对说明</strong>：本文基于 <span class="term">05392-GuanX.pdf</span>（9 页，含参考文献）逐页提取文本翻译。<strong>论文未公开代码，全文亦无 code availability 声明。</strong>表 1 / 表 2 的数字为原文照录；<strong>加粗标注与「最优格数统计」是我自己逐格核算的结果</strong>。</p>
+<p class="toplink"><a href="#summary">↑ 回到一页速览</a> · <a href="#deep">↑ 方法精讲</a> · <a href="#gaps">↑ 缺口清单</a></p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

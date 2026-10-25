@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>约束最优化：最优性条件、KKT 与对偶理论 · 学习笔记</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"约束最优化：最优性条件、KKT 与对偶理论 · 学习笔记","date":"2026-10-24","tags":["课程笔记","高等数学/最优化"],"category":"课程笔记","summary":"沿「下降方向集—可行方向集—切锥—F1 集合—约束规格—Farkas 引理」的层级复原 KKT 一阶必要条件的推导线索，落实互补松弛、乘子灵敏度、凸性充分条件与临界方向集上的二阶充分条件；对偶部分由拉格朗日函数下确界定义对偶函数与对偶问题，给出弱对偶、Slater 强对偶、对偶函数恒凹，并以对偶单纯形法与凸二次规划 KTT 条件、有效集法作算法引子。两则算例经独立复核：线性规划一次换基得最优解 (1/3,0,5/3) 与最优值 16/3；仅非负约束的凸二次规划唯一 KTT 点为 (0,4/3) 与最优值 −16/3。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>约束最优化：最优性条件、KKT 与对偶理论 · 学习笔记</h1>
+<div class="meta">课程笔记 · 高等数学/最优化 · 整理自豆包对话 豆包对话 · 约束最优化理论（一）最优性条件 知识点全解析</div>
+<h1>约束最优化：最优性条件、KKT 与对偶理论 · 学习笔记</h1>
+<h2>一、概述</h2>
+<p>本文研究的一般约束优化问题写作</p>
+<p>$$ \min \ f(x),\quad x\in\mathbb{R}^{n},\qquad \text{s.t. } \ g_i(x)\le 0\ (i=1,\dots,m),\ h_j(x)=0\ (j=1,\dots,l), $$</p>
+<p>可行集记为 $S=\{x: g_i(x)\le 0,\ h_j(x)=0\}$。全文默认 $f$、$g_i$、$h_j$ 连续可微；非光滑情形（例如含绝对值的约束）须先分段线性化，否则梯度语言失效。最优解分三档：$x^{*}\in S$ 若在某邻域内的可行点上最优为<strong>局部最优</strong>，在整个 $S$ 上最优为<strong>全局最优</strong>，若不等式对 $x\neq x^{*}$ 严格成立则称<strong>严格局部最优</strong>。</p>
+<p>约束优化的全部理论，可以压缩成一句话：<strong>在最优解处，目标函数的下降方向与可行方向不能同时存在</strong>。难点在于「可行方向」有三种精度不同的刻画方式，而 KKT 条件正是这三种刻画在附加条件下合流后的代数形式。本笔记按此逻辑组织：先补前置工具，再复原方向集的层级，然后给出 KKT 五条件、约束规格与二阶充分条件，最后进入对偶理论与两则算例。</p>
+<table>
+<tr><th>判定层级</th><th>依据</th><th>结论强度</th><th>附加条件</th></tr>
+<tr><td>局部最优推出梯度条件</td><td>$D(x^{*})\cap T(x^{*})=\varnothing$、约束规格、Farkas 引理</td><td>必要条件</td><td>约束规格成立（如 LICQ）</td></tr>
+<tr><td>KKT 点推出全局最优</td><td>$f$ 与 $g_i$ 凸、$h_j$ 线性</td><td>充要</td><td>问题是凸优化</td></tr>
+<tr><td>KKT 点推出严格局部最优</td><td>临界方向集上 $d^{\mathrm{T}}\nabla_x^{2}\mathcal{L}\, d&gt;0$</td><td>充分</td><td>约束规格成立</td></tr>
+</table>
+<h2>二、前置：方向导数、梯度与凸性</h2>
+<p>可微函数沿方向 $d$ 的方向导数为 $\nabla f(x)^{\mathrm{T}}d$，故</p>
+<ul><li><strong>下降方向</strong>：$\nabla f(x)^{\mathrm{T}}d&lt;0$；</li><li><strong>可行方向</strong>：自 $x$ 出发沿 $d$ 走一小段仍在 $S$ 内；</li><li><strong>切方向</strong>：可行方向的极限，见第三节。</li></ul>
+<p>集合侧的工具是凸集定义：任取 $x_1,x_2\in C$ 与 $\lambda\in[0,1]$，若 $\lambda x_1+(1-\lambda)x_2\in C$ 恒成立则 $C$ 为凸集。定义验证有固定四步：任取两点、构造凸组合、写出两点满足的约束、验证组合点仍满足约束。三类最常见的基本凸集，其验证要点各异：</p>
+<table>
+<tr><th>集合形式</th><th>结构身份</th><th>定义验证所用的工具</th></tr>
+<tr><td>$x_1+2x_2\ge 1$ 与 $x_1-x_2\ge 1$ 的解集</td><td>两个半空间之交</td><td>不等式对非负加权的保序性，按 $\lambda$ 合并同类项</td></tr>
+<tr><td>$x_2\ge \lvert x_1\rvert$ 的解集</td><td>凸函数 $\lvert x_1\rvert$ 的上方图（下水平集）</td><td>绝对值的三角不等式</td></tr>
+<tr><td>$x_1^{2}+x_2^{2}\le 10$ 的解集</td><td>欧氏球</td><td>柯西—施瓦茨不等式</td></tr>
+</table>
+<p>函数侧的核心结论是凸函数的一阶梯度不等式：$f$ 在凸集上连续可微且为凸函数，则对任意 $x_1,x_2$，</p>
+<p>$$ \nabla f(x_2)^{\mathrm{T}}(x_1-x_2)\le f(x_1)-f(x_2), $$</p>
+<p>且反向亦真，故它是连续可微函数为凸函数的充要条件。这条不等式在学习时容易被当作「泰勒展开的推论」而忽略其来源，实际推导只用了一元工具：令 $\varphi(t)=f(x_2+t(x_1-x_2))$，凸性使 $\varphi$ 为一元凸函数；由拉格朗日中值定理得 $f(x_1)-f(x_2)=\varphi(1)-\varphi(0)=\varphi&#x27;(\xi)$，$\xi\in(0,1)$；再用一元凸函数导数单调不减，$\varphi&#x27;(\xi)\ge\varphi&#x27;(0)=\nabla f(x_2)^{\mathrm{T}}(x_1-x_2)$，两式相接即得。严格凸对应的不等式取严格号，其几何含义是切平面处处位于图像下方。</p>
+<p>二次函数 $f(x)=\tfrac12 x^{\mathrm{T}}Ax+b^{\mathrm{T}}x$（$A$ 对称）的二阶泰勒展开无余项，故严格凸与 $A$ 正定互为充要：把一阶严格不等式与展开式联立即得 $x^{\mathrm{T}}Ax&gt;0$；反向代入展开式，二次项为正即严格凸。这一事实是后文凸二次规划全部判定的支点，也是「凸函数的下水平集是凸集」进而 $\{g_i(x)\le 0\}$ 为凸集（$g_i$ 凸）的依据。</p>
+<h2>三、最优性条件的层级：四个方向集</h2>
+<p>设 $x^{*}$ 为局部最优解。围绕 $x^{*}$ 定义四个集合：</p>
+<p>$$ D(x^{*})=\{d:\nabla f(x^{*})^{\mathrm{T}}d&lt;0\}, $$</p>
+<p>$$ F(x^{*})=\{d:\exists\,\delta&gt;0,\ x^{*}+\lambda d\in S,\ \forall \lambda\in(0,\delta)\}, $$</p>
+<p>取可行点列 $\{x_k\}\subset S$，$x_k\neq x^{*}$，$x_k\to x^{*}$，凡归一化差商 $\dfrac{x_k-x^{*}}{\lVert x_k-x^{*}\rVert}$ 的极限方向的正倍数，构成<strong>切锥</strong> $T(x^{*})$。再记有效指标集 $I=\{i:g_i(x^{*})=0\}$，并定义只由梯度刻画的集合</p>
+<p>$$ F_1(x^{*})=\{d:\nabla g_i(x^{*})^{\mathrm{T}}d\le 0\ (i\in I),\ \nabla h_j(x^{*})^{\mathrm{T}}d=0\ (\forall j)\}. $$</p>
+<table>
+<tr><th>集合</th><th>刻画方式</th><th>直观含义</th><th>精度</th></tr>
+<tr><td>$D(x^{*})$</td><td>目标梯度</td><td>能让 $f$ 下降的方向</td><td>一阶、精确</td></tr>
+<tr><td>$F(x^{*})$</td><td>集合本身</td><td>真能走出去的可行方向</td><td>精确但难算</td></tr>
+<tr><td>$T(x^{*})$</td><td>可行点列极限</td><td>可行方向的极限闭包</td><td>精确、仍难算</td></tr>
+<tr><td>$F_1(x^{*})$</td><td>有效约束梯度</td><td>用一阶泰勒近似的可行方向</td><td>易算，偏大</td></tr>
+</table>
+<p>三者的包含关系是整条推导的骨架：</p>
+<p>$$ F(x^{*})\subseteq T(x^{*})\subseteq F_1(x^{*}). $$</p>
+<p>前者因切锥是可行方向的极限扩充，后者因沿可行方向或切方向移动时，有效不等式左端一阶变化不可能为正、等式约束必须保持为零。</p>
+<p>局部最优的第一个抽象结论是 $D(x^{*})\cap T(x^{*})=\varnothing$：若存在 $d$ 既下降又属切锥，则可取沿 $d$ 逼近的可行点列 $x_k\to x^{*}$，充分大时 $f(x_k)&lt;f(x^{*})$，与局部最优矛盾。此结论精确但无法计算，因为 $T$ 依赖点列极限。约束规范的作用正是把 $T$ 换成可用梯度写出的 $F_1$，即令 $T(x^{*})=F_1(x^{*})$，于是必要条件化为 $D(x^{*})\cap F_1(x^{*})=\varnothing$。</p>
+<p>最后是 Farkas 引理，它把「两个集合不相交」翻译成「存在一组乘子」。其标准形式为：给定 $A$ 与 $c$，下述两系统恰有一个有解——系统一 $Ax\le 0$ 且 $c^{\mathrm{T}}x&gt;0$；系统二 $A^{\mathrm{T}}y=c$ 且 $y\ge 0$。套用到方向集上，$D(x^{*})\cap F_1(x^{*})=\varnothing$ 当且仅当存在 $\lambda_i\ge 0\ (i\in I)$ 与无符号限制的 $\mu_j$，使</p>
+<p>$$ \nabla f(x^{*})+\sum_{i\in I}\lambda_i\nabla g_i(x^{*})+\sum_{j}\mu_j\nabla h_j(x^{*})=0 . $$</p>
+<p>含等式约束的推广形式值得一并记下，因为它解释了「为何等式乘子可正可负」：把 $Bx=0$ 拆成 $Bx\le 0$ 与 $-Bx\le 0$，系统一化为 $\tilde{A}x\le 0$、$c^{\mathrm{T}}x&gt;0$，其中 $\tilde{A}$ 由 $A$、$B$、$-B$ 竖向拼接。对 $\tilde{A}$ 用 Farkas 得 $\tilde{y}\ge 0$ 使 $A^{\mathrm{T}}y+B^{\mathrm{T}}z_1-B^{\mathrm{T}}z_2=c$；令 $z=z_1-z_2$，两个非负向量之差可为任意实向量，故 $z$ 无符号限制，得到 $A^{\mathrm{T}}y+B^{\mathrm{T}}z=c$、$y\ge 0$。等式乘子的自由符号由此而来，而不是人为规定。</p>
+<h2>四、KKT 条件与互补松弛</h2>
+<p>把上述线索补齐可行性要求，即得 KKT 条件。若 $x^{*}$ 是局部最优解且约束规范成立，则存在 $\lambda\in\mathbb{R}^{m}$、$\mu\in\mathbb{R}^{l}$ 使下列五式同时成立：</p>
+<p>$$ \nabla f(x^{*})+\sum_{i=1}^{m}\lambda_i\nabla g_i(x^{*})+\sum_{j=1}^{l}\mu_j\nabla h_j(x^{*})=0 ; $$</p>
+<p>$$ \lambda_i\ge 0,\quad i=1,\dots,m ; $$</p>
+<p>$$ g_i(x^{*})\le 0,\quad i=1,\dots,m ; $$</p>
+<p>$$ h_j(x^{*})=0,\quad j=1,\dots,l ; $$</p>
+<p>$$ \lambda_i\, g_i(x^{*})=0,\quad i=1,\dots,m . $$</p>
+<table>
+<tr><th>条件</th><th>名称</th><th>作用</th><th>若忽略</th></tr>
+<tr><td>第一式</td><td>梯度条件（平稳性）</td><td>目标梯度被约束梯度线性表出</td><td>只剩可行性，无最优性信息</td></tr>
+<tr><td>第二式</td><td>乘子非负</td><td>极小化问题中不等式的「边际成本」为正</td><td>方向集分离失效，判定不成立</td></tr>
+<tr><td>第三、四式</td><td>原始可行性</td><td>$x^{*}\in S$</td><td>解不在可行域</td></tr>
+<tr><td>第五式</td><td>互补松弛</td><td>有效与无效约束的分派规则</td><td>无法删去无关约束、无法判定有效集</td></tr>
+</table>
+<p>互补松弛 $\lambda_i g_i(x^{*})=0$ 是笔者初学时最易轻视的一条，实际它承担两重功能。其一是逻辑分派：$\lambda_i&gt;0$ 当且仅当 $g_i(x^{*})=0$（强有效约束），$\lambda_i=0$ 则约束在梯度条件中不出现，等价于「无效约束可直接去掉」。其二是计算分派：手工求解时按哪些约束有效来分情况列方程，本质就是枚举互补松弛的二元选择。要注意 $\lambda_i=0$ 与 $g_i(x^{*})=0$ 可以同时成立，此时称弱有效约束，不能反过来由乘子为零断定约束不被取等。</p>
+<p>乘子的第二重意义是灵敏度分析。把有效不等式写成 $g_i(x)-b_i\le 0$ 形式后，右端项的微小扰动满足 $\Delta f\approx \lambda_i\,\Delta b_i$；等式约束 $h_j(x)-c_j=0$ 同理有 $\Delta f\approx \mu_j\,\Delta c_j$，且 $\mu_j$ 可正可负。$\lambda_i$ 越大说明该约束越是瓶颈，这为「优先放松哪个约束」提供了量化依据，也让乘子从辅助变量变成有工程含义的输出。</p>
+<h2>五、约束规格 LICQ 与其失效边界</h2>
+<p>约束规范是「保证 $T(x^{*})=F_1(x^{*})$」的一类附加条件，课程中给出两类。一是<strong>线性约束规范</strong>：$x^{*}$ 处的有效不等式约束与全部等式约束均为线性函数，则约束规范成立。二是 <strong>LICQ</strong>：有效不等式约束的梯度 $\nabla g_i(x^{*})\ (i\in I)$ 与全部等式约束梯度 $\nabla h_j(x^{*})$ 线性无关。线性约束规范可视为 LICQ 的特例。验证时只需检查 $I$ 中的约束与等式约束，无效约束的梯度一律不参与——这一点在初学时极易弄错，把 $m$ 个梯度全部拿去判线性无关，反而会把成立的 LICQ 判成不成立。</p>
+<p>关于失效方向，本文对原料给出的一处经典例子做了重新核算。例：$\min f(x)=x_2$，s.t. $g_1(x)=-x_1^{2}+x_2\le 0$，$g_2(x)=-x_2\le 0$，可行集为 $0\le x_2\le x_1^{2}$，$x^{*}=(0,0)$ 使 $f$ 取全局最小 $0$。在原点 $\nabla g_1=(0,1)^{\mathrm{T}}$、$\nabla g_2=(0,-1)^{\mathrm{T}}$，梯度组秩为 $1$，LICQ 确实不成立（约束在此形成尖点，$T\neq F_1$）。但原料断言此处「不存在非负乘子满足 KKT 梯度条件」，核算结果与此相反：梯度条件化为 $1+\lambda_1-\lambda_2=0$，取 $\lambda_1=0$、$\lambda_2=1$ 即满足，KKT 条件在该点成立。因此正确的表述是：<strong>约束规格失效只意味着 KKT 成立失去保证，并不意味着 KKT 必然失效</strong>；二者是单向蕴含关系。此处按定义重新推导，以复核结果为准。</p>
+<h2>六、二阶充分条件与临界方向集</h2>
+<p>一阶条件只能筛出 KKT 点，KKT 点未必最优。非凸问题要确认严格局部最优，需在二阶信息上再加条件。记拉格朗日函数</p>
+<p>$$ \mathcal{L}(x,\lambda,\mu)=f(x)+\sum_{i=1}^{m}\lambda_i g_i(x)+\sum_{j=1}^{l}\mu_j h_j(x), $$</p>
+<p>并记强有效指标集 $I_{+}=\{i\in I:\lambda_i&gt;0\}$。临界方向集定义为</p>
+<p>$$ \mathcal{C}(x^{*},\lambda^{*},\mu^{*})=\{d:\nabla g_i(x^{*})^{\mathrm{T}}d=0\ (i\in I_{+}),\ \nabla g_i(x^{*})^{\mathrm{T}}d\le 0\ (i\in I\setminus I_{+}),\ \nabla h_j(x^{*})^{\mathrm{T}}d=0\ (\forall j)\}. $$</p>
+<p><strong>二阶充分条件</strong>：设 $x^{*}$ 为 KKT 点且约束规格成立，若对一切非零 $d\in\mathcal{C}$ 有</p>
+<p>$$ d^{\mathrm{T}}\nabla_x^{2}\mathcal{L}(x^{*},\lambda^{*},\mu^{*})\,d&gt;0 , $$</p>
+<p>则 $x^{*}$ 是严格局部最优解。这里 $\nabla_x^{2}\mathcal{L}=\nabla^{2}f+\sum_i\lambda_i^{*}\nabla^{2}g_i+\sum_j\mu_j^{*}\nabla^{2}h_j$，乘子按常数处理；若约束全为线性，则 $\nabla_x^{2}\mathcal{L}=\nabla^{2}f$，判定大幅简化。</p>
+<p>临界方向集为何要做上述细分，其理由藏在一阶项的消失过程中。沿 $d\in\mathcal{C}$ 展开 $f$，一阶项 $\nabla f(x^{*})^{\mathrm{T}}d$ 由梯度条件改写为 $-\sum_{i\in I_{+}}\lambda_i\nabla g_i(x^{*})^{\mathrm{T}}d-\sum_j\mu_j\nabla h_j(x^{*})^{\mathrm{T}}d$；对 $i\in I_{+}$ 强制取等号、对等式强制取等号，正好使这一项为零，剩下 $d^{\mathrm{T}}\nabla_x^{2}\mathcal{L}\,d$ 的符号决定升降。反之，若对强有效约束只要求 $\le 0$，一阶项无法消尽，二阶条件便失去意义；而弱有效约束（$\lambda_i=0$）本就不出现在上式中，只需保留可行性即可。这也解释了为何临界集比 $F_1$ 更小：<strong>二阶条件只需在「一阶看不出方向」的那部分方向上检查正定性</strong>。</p>
+<p>与无约束情形的对照可帮助记忆：无约束时 $\mathcal{C}=\mathbb{R}^{n}$，条件退化为 $\nabla^{2}f(x^{*})$ 正定；约束问题中正定性只要求在切空间上成立，这恰好对应可行方向被约束「切掉」一部分的事实。凸性则是另一条更省事的路：$f$、$g_i$ 凸且 $h_j$ 线性时可行集为凸集，凸函数在凸集上的局部最优即全局最优，KKT 点直接就是全局最优解，无需再查二阶条件。</p>
+<h2>七、对偶理论与 Farkas 引理线索</h2>
+<p>对拉格朗日函数关于 $x$ 取下确界，得<strong>对偶函数</strong></p>
+<p>$$ d(\lambda,\mu)=\inf_{x\in X}\ \mathcal{L}(x,\lambda,\mu), $$</p>
+<p>即使原问题非凸，$d(\lambda,\mu)$ 作为一族关于 $(\lambda,\mu)$ 的仿射函数的逐点下确界仍是<strong>凹函数</strong>。以极大化 $d$ 形成的问题</p>
+<p>$$ \max \ d(\lambda,\mu),\quad \text{s.t. } \lambda\ge 0 $$</p>
+<p>称为对偶问题，记原问题最优值为 $v(P)$、对偶最优值为 $v(D)$，$\mu$ 无符号限制。弱对偶恒成立：任取可行 $x$ 与 $\lambda\ge 0$，有 $f(x)\ge \mathcal{L}(x,\lambda,\mu)\ge d(\lambda,\mu)$，故 $v(D)\le v(P)$，差值称对偶间隙。强对偶（$v(D)=v(P)$）需要条件：$X$ 凸、$f$ 与 $g_i$ 凸、$h_j$ 线性，并存在严格可行点 $\hat{x}$ 使 $g_i(\hat{x})&lt;0$（Slater 条件）。凸优化下 KKT 乘子恰为对偶最优解，这是「乘子即影子价格」的理论出处。</p>
+<p>Farkas 引理在两处起作用：一是第四节把 $D\cap F_1=\varnothing$ 翻译成乘子存在性，二是把等式约束的乘子符号限制消去。可以说 KKT 条件的存在性内核就是 Farkas 引理，其余部分是可行性与符号约定的组装。</p>
+<p>当 $X$ 为离散集时 Slater 条件不可能成立，对偶间隙会真实出现，这正是<strong>外逼近（割平面）算法</strong>登场的场合：$d(\lambda)=\min_{x\in X}\mathcal{L}(x,\lambda)$ 无解析式，于是取 $X$ 的有限子集 $X^{k}$，解线性极大问题 $\max t$ s.t. $t\le \mathcal{L}(x,\lambda)\ (\forall x\in X^{k})$，得 $(\lambda^{k},t^{k})$；再在 $X$ 上真算 $d(\lambda^{k})$，若 $t^{k}=d(\lambda^{k})$ 则停，否则把实现最小值的 $x^{k}$ 加入 $X^{k+1}$。$t^{k}$ 始终是 $d^{*}$ 的下界，每加一点即多一道割，故称外逼近。课程算例 $\min 3x_1^{2}+2x_2^{2}$ s.t. $-5x_1-2x_2+3\le 0$，$X$ 为由 $8x_1+8x_2\ge 1$、$0\le x_1\le 1$、$0\le x_2\le 2$ 确定的整数集，共五点，迭代如下：</p>
+<table>
+<tr><th>轮次 $k$</th><th>割（来自子集 $X^{k}$）</th><th>极大问题解 $\lambda^{k}$</th><th>上界 $t^{k}$</th><th>真值 $d(\lambda^{k})$</th><th>判定</th></tr>
+<tr><td>1</td><td>$t\le 5-4\lambda$</td><td>0</td><td>5</td><td>2</td><td>不终止</td></tr>
+<tr><td>2</td><td>加 $t\le 2+\lambda$</td><td>$3/5$</td><td>$13/5$</td><td>$9/5$</td><td>不终止</td></tr>
+<tr><td>3</td><td>加 $t\le 3-2\lambda$</td><td>$1/3$</td><td>$7/3$</td><td>$7/3$</td><td>终止</td></tr>
+</table>
+<p>故对偶最优解为 $\lambda^{*}=1/3$，$v(D)=7/3$；而原问题在 $X$ 上的最优值为 $3$（在 $(1,0)$ 处取得），间隙 $2/3$。原料第二行的真值一度写作 $8/5$，按五点枚举应为 $9/5$，本文以枚举复核值为准。</p>
+<h2>八、线性规划对偶与对偶单纯形法（算法引子）</h2>
+<p>线性规划的对偶可完全机械化。对称标准形下，</p>
+<p>$$ \min \ c^{\mathrm{T}}x\ \text{ s.t. } Ax\ge b,\ x\ge 0 \qquad\Longleftrightarrow\qquad \max \ b^{\mathrm{T}}y\ \text{ s.t. } A^{\mathrm{T}}y\le c,\ y\ge 0 . $$</p>
+<p>构造口诀：原问题变量与对偶约束一一对应，系数矩阵转置，右端项与目标系数互换，等式约束对应无符号限制变量，$\ge$ 型约束对应非负变量。多面体理论提供几何底座：标准形 $\min c^{\mathrm{T}}x$ s.t. $Ax=b$、$x\ge 0$（$A$ 行满秩）中，极点形如 $x=(B^{-1}b;\,0)$ 且 $B^{-1}b\ge 0$，极方向形如 $d=t(-B^{-1}a_j;\,e_j)$（$B^{-1}a_j\le 0$，$t&gt;0$），任何可行点可按极点与极方向凸组合分解；线性规划有最优解当且仅当 $c^{\mathrm{T}}d_j\ge 0$ 对一切极方向成立，且最优解必在极点取得。由于线性目标的梯度恒为 $c$，$c^{\mathrm{T}}d_j$ 正是目标沿 $d_j$ 的方向导数——第三节「不存在既可行又下降的方向」在多面体上具体化为「所有极方向的方向导数非负」。</p>
+<p>单纯形法与对偶单纯形法的分工可用下表概括。记基 $B$、非基 $N$，$\sigma_N^{\mathrm{T}}=c_N^{\mathrm{T}}-c_B^{\mathrm{T}}B^{-1}N$ 为检验数，$y^{\mathrm{T}}=c_B^{\mathrm{T}}B^{-1}$ 为单纯形乘子。</p>
+<table>
+<tr><th>对比维度</th><th>原始单纯形法</th><th>对偶单纯形法</th></tr>
+<tr><td>迭代前提</td><td>原始可行 $x_B\ge 0$，检验数可负</td><td>对偶可行 $\sigma_N\ge 0$，$x_B$ 可含负分量</td></tr>
+<tr><td>先定谁</td><td>先定入基（检验数最负）</td><td>先定出基（$x_B$ 最负的分量）</td></tr>
+<tr><td>后定谁</td><td>最小比值定出基</td><td>最小比值 $\theta_j=\sigma_j/(-\bar{a}_{rj})$，仅 $\bar{a}_{rj}&lt;0$ 可选</td></tr>
+<tr><td>全程保持</td><td>原始可行</td><td>对偶可行</td></tr>
+<tr><td>终止</td><td>双可行</td><td>双可行</td></tr>
+<tr><td>无解判定</td><td>入基列全 $\le 0$</td><td>出基行 $\bar{a}_{rj}$ 全 $\ge 0$，无入基候选</td></tr>
+</table>
+<p>两者都在寻找同时满足原始可行与对偶可行（即 KKT 条件）的基，这正是「所有凸优化算法的核心都是找 KKT 点」的第一次具体体现。</p>
+<h2>九、二次规划与有效集法（算法引子）</h2>
+<p>二次规划写作 $\min \tfrac12 x^{\mathrm{T}}Hx+c^{\mathrm{T}}x$ s.t. 线性约束。系数 $\tfrac12$ 是为让梯度恰为 $Hx+c$；$H$ 必取对称，因混合偏导相等，非对称部分对二次型无贡献。$H$ 半正定等价于目标凸，正定则严格凸、有唯一无约束最优解 $x^{*}=-H^{-1}c$（正定性可用顺序主子式判，亦可用配方法核验）。</p>
+<p>其 KTT 条件与 KKT 完全同构，共四组：梯度式 $Hx^{*}+c-A^{\mathrm{T}}\lambda^{*}-G^{\mathrm{T}}\mu^{*}=0$、等式可行 $Ax^{*}=b$、不等式可行 $Gx^{*}\le d$、互补松弛 $\mu_i^{*}g_i(x^{*})=0$，且 $\mu\ge 0$、$\lambda$ 无限制。因目标是凸二次、约束仿射，这些条件同时是充要的。最常用的特例是仅含非负约束 $x\ge 0$：此时 $g(x)=-x\le 0$，乘子可被梯度式消去，条件压缩为三条</p>
+<p>$$ Hx^{*}+c\ \ge\ 0,\qquad x^{*}\ \ge\ 0,\qquad (x^{*})^{\mathrm{T}}(Hx^{*}+c)=0 , $$</p>
+<p>逐分量看即「每个下标 $i$ 上 $x_i^{*}$ 与 $(Hx^{*}+c)_i$ 至少一个为零」，这正是互补松弛在 $n$ 维非负象限上的形态，也是低维手算的枚举依据。再看 $H=0$ 的情形，梯度式给出 $\mu=c-A^{\mathrm{T}}\lambda$，即 $\mu\ge 0$ 就是检验数非负，$x^{\mathrm{T}}\mu=0$ 就是线性规划的互补松弛：线性规划是二次规划的特例，KKT 是最优性条件的一般形式。</p>
+<p>有效集法处理带线性不等式的凸二次规划，思路与单纯形法换基同构，只是把「基」换成「有效集」。五步流程为：给定初始可行点 $x^{0}$ 并据其确定初始有效集（等式约束恒在集内，取等号的不等式加入）；在当前有效集上等式化，解等式约束二次规划子问题得方向 $d^{k}$；$d^{k}\neq 0$ 时按最大可行步长走，$d^{k}=0$ 时转入最优性检验；检验内容为解梯度方程得有效约束乘子，全部非负即终止（此时点是 KKT 点亦即全局最优），出现负乘子则删去对应约束重新迭代；碰到的新边界约束加入有效集。子问题本身是关于方向 $d$ 的二次规划：目标为 $\tfrac12 d^{\mathrm{T}}Hd+(Hx^{k}+c)^{\mathrm{T}}d$（$f$ 的二阶泰勒展开，二次型无误差），约束为有效约束的方向导数为零，即 $a_i^{\mathrm{T}}d=0$。这里需要交代一处学习痕迹：原料在示范最优性判定时，对同一候选点先后写出 $\lambda=2$ 与 $\lambda=0$ 两个互相矛盾的乘子值，并在「修正」之后仍宣布该点收敛。按定义复核，该候选点的梯度方程两个分量并不相容，它根本不是 KKT 点，故原料此处存在笔误，本文按定义重新推导，只保留方法流程与判定依据，不采用该处数值；带完整迭代表格的算例见姊妹篇《共轭梯度法、可行方向法与有效集法》。</p>
+<h2>十、算例一：对偶单纯形法全程迭代</h2>
+<p>求</p>
+<p>$$ \min \ f=x_1+2x_2+3x_3,\quad \text{s.t. } \ x_1+x_2-2x_3=-3,\ \ x_1-x_2+x_3=2,\ \ x\ge 0 . $$</p>
+<p>原料此题右端项写作 $-4$ 与 $-1$，但该处给出的最终答案 $(1/3,0,5/3)$ 代入后得 $x_1+x_2-2x_3=-3$、$x_1-x_2+x_3=2$，与所列方程不相容；按 $-4$、$-1$ 计算，三个基解中仅 $(0,6,5)$ 可行，最优值为 $27$。本文按与答案自洽的数据右端取 $-3$、$2$ 重做，全部结果均用符号计算复核，并保留原答案。</p>
+<p>记 $a_1=(1,1)^{\mathrm{T}}$，$a_2=(1,-1)^{\mathrm{T}}$，$a_3=(-2,1)^{\mathrm{T}}$，$b=(-3,2)^{\mathrm{T}}$，$c=(1,2,3)^{\mathrm{T}}$，取初始基 $B=(a_1,a_2)$。</p>
+<p><strong>第一步：算基量。</strong> $B^{-1}=\begin{pmatrix}1/2&amp;1/2\\1/2&amp;-1/2\end{pmatrix}$，于是</p>
+<p>$$ x_B=B^{-1}b=\begin{pmatrix}-1/2\\-5/2\end{pmatrix},\qquad \bar{A}_N=B^{-1}a_3=\begin{pmatrix}-1/2\\-3/2\end{pmatrix}. $$</p>
+<p><strong>第二步：算检验数。</strong> $c_B=(1,2)^{\mathrm{T}}$，$\sigma_3=c_3-c_B^{\mathrm{T}}B^{-1}a_3=3-\bigl(1\cdot(-\tfrac12)+2\cdot(-\tfrac32)\bigr)=3+\tfrac72=\tfrac{13}{2}\ge 0$，对偶可行成立；而 $x_B$ 含负分量，原始不可行。这正是对偶单纯形的适用局面。</p>
+<p><strong>第三步：定出基。</strong> 最负分量为 $-5/2$（第二行），故基变量 $x_2$ 出基。</p>
+<p><strong>第四步：定入基。</strong> 出基行中须 $\bar{a}_{rj}&lt;0$ 才构成候选，唯一候选为 $x_3$，其 $\bar{a}_{23}=-3/2$，比值 $\theta=\sigma_3/(-\bar{a}_{23})=\dfrac{13/2}{3/2}=\dfrac{13}{3}$，故 $x_3$ 入基。</p>
+<p><strong>第五步：行变换更新。</strong> 基的规范形为</p>
+<p>$$ x_1-\tfrac12 x_3=-\tfrac12,\qquad x_2-\tfrac32 x_3=-\tfrac52,\qquad f=-\tfrac{11}{2}+\tfrac{13}{2}x_3 . $$</p>
+<p>以第二式的主元 $-3/2$ 消元：第二式乘 $-2/3$ 得 $-\tfrac23 x_2+x_3=\tfrac53$；第一式加上它的 $\tfrac12$ 倍得 $x_1=\tfrac13$；目标式中代入 $x_3=\tfrac53+\tfrac23 x_2$ 得 $f=\tfrac{16}{3}+\tfrac{13}{3}x_2$。更新后的量列如下表。</p>
+<table>
+<tr><th>项目</th><th>换基前（$B=(a_1,a_2)$）</th><th>换基后（$\bar{B}=(a_1,a_3)$）</th></tr>
+<tr><td>基变量解</td><td>$(-1/2,\,-5/2)$，含负</td><td>$(1/3,\,5/3)$，全非负</td></tr>
+<tr><td>非基变量</td><td>$x_3$</td><td>$x_2$</td></tr>
+<tr><td>检验数</td><td>$\sigma_3=13/2\ge 0$</td><td>$\sigma_2=13/3\ge 0$</td></tr>
+<tr><td>目标表达</td><td>$f=-11/2+(13/2)x_3$</td><td>$f=16/3+(13/3)x_2$</td></tr>
+</table>
+<p><strong>第六步：判停。</strong> 新基同时满足原始可行与对偶可行，算法终止。令非基 $x_2=0$ 得</p>
+<p>$$ x^{*}=(1/3,\,0,\,5/3)^{\mathrm{T}},\qquad f^{*}=\tfrac13+0+3\cdot\tfrac53=\tfrac{16}{3}.$$</p>
+<p>复核：$1/3+0-2(5/3)=-3$、$1/3-0+5/3=2$、三分量非负，且 $\sigma_2=13/3&gt;0$ 表明沿该方向不能进一步下降，与弱对偶一致。整个过程只换基一次，是因为该题只有三个变量、两个约束，属于最典型的教学规模。</p>
+<h2>十一、算例二：仅含非负约束的凸二次规划</h2>
+<p>求</p>
+<p>$$ \min \ f=x_1^{2}+2x_1x_2+3x_2^{2}-2x_1-8x_2,\qquad \text{s.t. } x_1\ge 0,\ x_2\ge 0 . $$</p>
+<p><strong>第一步：标准化。</strong> 二次项写成 $\tfrac12 x^{\mathrm{T}}Hx$，交叉项 $2x_1x_2$ 的系数平分给 $H_{12}=H_{21}$，得</p>
+<p>$$ H=\begin{pmatrix}2&amp;2\\2&amp;6\end{pmatrix},\qquad c=\begin{pmatrix}-2\\-8\end{pmatrix},\qquad Hx+c=\begin{pmatrix}2x_1+2x_2-2\\ 2x_1+6x_2-8\end{pmatrix}.$$</p>
+<p>顺序主子式 $\Delta_1=2&gt;0$，$\Delta_2=12-4=8&gt;0$，故 $H$ 正定，问题严格凸，KTT 条件充要，唯一 KTT 点即唯一全局最优解。</p>
+<p><strong>第二步：写分量级 KTT 条件。</strong> 即 $(Hx^{*}+c)_1\ge 0$、$(Hx^{*}+c)_2\ge 0$、$x_1^{*}\ge 0$、$x_2^{*}\ge 0$，以及 $x_1^{*}(2x_1^{*}+2x_2^{*}-2)=0$、$x_2^{*}(2x_1^{*}+6x_2^{*}-8)=0$。</p>
+<p><strong>第三步：按互补松弛枚举四种组合。</strong> 每种组合解出候选点后，必须同时回验梯度非负与变量非负两条件，缺一即被淘汰。</p>
+<table>
+<tr><th>情形</th><th>取零的分量</th><th>候选点</th><th>$Hx+c$</th><th>淘汰或保留</th></tr>
+<tr><td>一</td><td>$x_1=0$，$x_2=0$</td><td>$(0,0)$</td><td>$(-2,-8)$</td><td>梯度不非负，淘汰</td></tr>
+<tr><td>二</td><td>$x_1=0$，$(Hx+c)_2=0$</td><td>$(0,4/3)$</td><td>$(2/3,0)$</td><td>两条件皆满足，保留</td></tr>
+<tr><td>三</td><td>$(Hx+c)_1=0$，$x_2=0$</td><td>$(1,0)$</td><td>$(0,-6)$</td><td>梯度第二量为负，淘汰</td></tr>
+<tr><td>四</td><td>两个梯度分量皆为零</td><td>$(-1/2,3/2)$</td><td>$(0,0)$</td><td>$x_1&lt;0$，淘汰</td></tr>
+</table>
+<p>情形四是无约束驻点：解 $2x_1+2x_2-2=0$、$2x_1+6x_2-8=0$，两式相减得 $4x_2=6$ 即 $x_2=3/2$，回代得 $x_1=-1/2$。它落在可行域外，故必须考虑边界，恰是情形二接管的位置。情形三的失败也值得留意：$(1,0)$ 处目标对 $x_2$ 的偏导为 $-6$，说明若允许 $x_2$ 增加目标还会下降，该点不可能是最优。</p>
+<p><strong>第四步：确认最优值。</strong> 唯一 KTT 点为</p>
+<p>$$ x^{*}=(0,\,4/3)^{\mathrm{T}},\qquad f^{*}=0+0+3\cdot\tfrac{16}{9}-0-8\cdot\tfrac43=\tfrac{16}{3}-\tfrac{32}{3}=-\tfrac{16}{3}.$$</p>
+<p><strong>第五步：内在一致性校验。</strong> 无约束最优值 $f(-1/2,3/2)=-11/2$，而 $-16/3&gt;-11/2$，加约束后最优值变差，方向正确；同时 $(0,4/3)$ 位于边界 $x_1=0$ 上，与「无约束解越界则最优解在边界」的直觉一致。两处独立校验均通过。</p>
+<h2>十二、常见误区</h2>
+<ol><li><strong>把约束规格当成等价条件</strong>：LICQ 成立保证 KKT 成立，LICQ 失效并不保证 KKT 失效，第五节的反例正是一处真实的失手，判定方向只能单向使用。</li><li><strong>验证 LICQ 时把无效约束也算进去</strong>：只有 $i\in I$ 的不等式梯度与等式梯度参与线性无关判定，多算会误判。</li><li><strong>忽视乘子符号</strong>：不等式乘子必须非负，等式乘子自由。分情况求解时若不回验 $\lambda_i\ge 0$，会把非 KKT 点当作最优——凸二次规划中曾出现取两约束均有效得到的点，其乘子之一为 $-2$，虽满足可行性与互补松弛，却不满足符号条件，因而必须淘汰；真正最优处只有一个约束有效。</li><li><strong>把互补松弛读成二选一</strong>：$\lambda_i=0$ 与 $g_i(x^{*})=0$ 可以同时成立（弱有效约束），不能由此断定约束未被取等。</li><li><strong>二阶条件检查范围过宽或过窄</strong>：只需在临界方向集上验正定；把 $F_1$ 当 $\mathcal{C}$ 会漏掉对 $I_{+}$ 取等的加强，把整个 $\mathbb{R}^{n}$ 当 $\mathcal{C}$ 则要求过严，会把极小点误判为不满足充分条件。</li><li><strong>混淆对偶间隙的必要条件</strong>：Slater 条件是充分而非必需，非凸或离散可行域中间隙可以真实为正，第七节算例的 $2/3$ 间隙即为一例。</li><li><strong>符号约定与标准形不一致</strong>：约束写成 $\le$ 型时入基候选要求 $\bar{a}_{rj}&lt;0$、步长限制要求 $a_i^{\mathrm{T}}d&gt;0$；一旦统一改成 $\ge$ 型，两处判别符号同时取反，照抄公式易错。</li><li><strong>只看数值不看自洽</strong>：原料中既有「答案与所列约束不相容」的算例，也有同一候选点上写出两个矛盾乘子的情形。手算时应养成三项交叉校验的习惯：解代回原约束、乘子代回梯度方程、最优值与无约束值比较大小。</li></ol>
+<h2>十三、总结要点</h2>
+<table>
+<tr><th>知识块</th><th>必须记住的式子或结论</th></tr>
+<tr><td>方向集层级</td><td>$F(x^{*})\subseteq T(x^{*})\subseteq F_1(x^{*})$；局部最优推出 $D\cap T=\varnothing$</td></tr>
+<tr><td>约束规格</td><td>作用是使 $T=F_1$，从而 $D\cap F_1=\varnothing$；LICQ 只看有效约束梯度</td></tr>
+<tr><td>KKT 五条件</td><td>梯度式、$\lambda\ge 0$、$g\le 0$、$h=0$、$\lambda_i g_i(x^{*})=0$</td></tr>
+<tr><td>Farkas 作用</td><td>把集合不相交译为乘子存在；等式拆两侧得 $z=z_1-z_2$ 无符号限制</td></tr>
+<tr><td>乘子含义</td><td>$\Delta f\approx \lambda_i\Delta b_i$，是灵敏度分析与影子价格的基础</td></tr>
+<tr><td>二阶充分条件</td><td>$\mathcal{C}$ 上 $d^{\mathrm{T}}\nabla_x^{2}\mathcal{L}\,d&gt;0$ 推出严格局部最优；线性约束时 $\nabla_x^{2}\mathcal{L}=\nabla^{2}f$</td></tr>
+<tr><td>凸充分条件</td><td>$f$、$g_i$ 凸且 $h_j$ 线性时，KKT 点即全局最优</td></tr>
+<tr><td>对偶框架</td><td>$d(\lambda,\mu)=\inf_x\mathcal{L}$ 恒为凹；$v(D)\le v(P)$；Slater 条件给强对偶</td></tr>
+<tr><td>线性规划对偶</td><td>变量与约束互换、$A$ 转置、$b$ 与 $c$ 互换；线性规划是 $H=0$ 的二次规划</td></tr>
+<tr><td>对偶单纯形</td><td>全程保持 $\sigma_N\ge 0$，先出基后入基，双可行即最优</td></tr>
+<tr><td>二次规划 KTT</td><td>仅非负约束时压缩为 $Hx+c\ge 0$、$x\ge 0$、$x^{\mathrm{T}}(Hx+c)=0$</td></tr>
+<tr><td>算例结果</td><td>线性规划 $x^{*}=(1/3,0,5/3)$、$f^{*}=16/3$；二次规划 $x^{*}=(0,4/3)$、$f^{*}=-16/3$</td></tr>
+</table>
+<p>贯穿全文的一条主线是：最优性判定最初以方向集的不相交形式表述，经约束规格换成梯度可计算的形式，再由 Farkas 引理落地为乘子方程组；对偶理论把同一组乘子解释为下界族的最优参数，算法则把「找满足 KKT 的点」具体化为换基（对偶单纯形）或维护有效集（有效集法）。理解了这条链，各节内容不再是并列的定理条目，而是同一件事在几何、代数与算法三个层面的重复呈现。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 约束最优化理论（一）最优性条件 知识点全解析</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

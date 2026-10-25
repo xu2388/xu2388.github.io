@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfcfd">
+<meta name="format-detection" content="telephone=no">
+<title>GAN+频域+门控：虚拟染色方法调研</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:14px 0}.cite{font-size:12.5px;color:var(--muted);border-left:3px solid var(--strong);padding-left:12px}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){html{scroll-padding-top:12px}body{font-size:16px;line-height:1.75;overflow-x:hidden}.wrap{display:block;width:100%;max-width:none}nav.toc{display:block;position:sticky;top:0;z-index:10;width:100%;height:auto;max-height:52px;overflow-x:auto;overflow-y:hidden;padding:9px 12px;border-right:0;border-bottom:1px solid var(--border);background:rgba(251,252,253,.96);-webkit-overflow-scrolling:touch;white-space:nowrap}nav.toc .brand{display:inline-block;margin:0 14px 0 0;font-size:12px}nav.toc .sub{display:none}nav.toc a{display:inline-block;margin:0 4px 0 0;padding:5px 9px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:12px;white-space:nowrap}nav.toc a.l1{margin-top:0;font-weight:700;color:var(--text)}nav.toc a.l2{padding-left:9px;font-size:12px;color:var(--muted)}main{width:100%;max-width:none;padding:22px 14px 72px}header.doc{padding-bottom:18px;margin-bottom:26px}header.doc .kicker{font-size:11px;letter-spacing:.08em}header.doc h1{font-size:25px;line-height:1.38;margin:8px 0 12px;overflow-wrap:anywhere}header.doc .desc{font-size:15px;line-height:1.7}.meta{gap:6px;margin-top:14px}.meta span{font-size:11.5px;padding:4px 8px;line-height:1.45}h2{font-size:21px;line-height:1.4;margin:40px 0 14px;padding-bottom:7px}h3{font-size:17px;line-height:1.5;margin:26px 0 9px}h4{font-size:15px}p{margin:8px 0}ul,ol{margin-left:20px}.box{padding:13px 14px;margin:14px 0;border-radius:9px}.box .bt{font-size:13px}.card{margin:14px 0}.card .ch{padding:10px 13px}.card .body{padding:7px 13px 13px}.grid2{grid-template-columns:1fr;gap:12px}.mini{padding:11px 12px}.scroll{margin:13px 0;border-radius:8px;-webkit-overflow-scrolling:touch}.scroll:after{content:"左右滑动查看表格";display:block;padding:5px 10px;color:var(--muted);font-size:11px;background:var(--softer);border-top:1px solid var(--border)}table{min-width:700px;font-size:13px}thead th{padding:9px 9px;font-size:12px}td{padding:8px 9px}.flow{margin:13px 0;padding:11px 12px;overflow:hidden}.flow pre,pre{margin:10px 0;padding:11px 12px;font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}.formula{margin:11px 0;padding:11px 12px;font-size:12px;line-height:1.65;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.b{font-size:10.5px;padding:2px 6px}.cite{font-size:12px}a{overflow-wrap:anywhere}}@media(max-width:380px){main{padding-left:11px;padding-right:11px}header.doc h1{font-size:22px}h2{font-size:19px}.meta span{font-size:11px}nav.toc{padding-left:9px;padding-right:9px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">GAN · frequency × gating</div>
+<div class="sub">虚拟染色 · 方法地图 · 可执行消融<br>截至 2026-10-13 · 一手证据优先</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 与既有报告的分工</a>
+<a class="l1" href="#s2">2 · 先把频域和门控说清楚</a>
+<a class="l2" href="#s21">2.1 频域到底约束什么</a>
+<a class="l2" href="#s22">2.2 门控到底控制什么</a>
+<a class="l1" href="#s3">3 · GAN+频域的方法地图</a>
+<a class="l2" href="#s31">3.1 频域 loss</a>
+<a class="l2" href="#s32">3.2 频域特征/skip</a>
+<a class="l2" href="#s33">3.3 频域判别器</a>
+<a class="l1" href="#s4">4 · GAN+门控的方法地图</a>
+<a class="l1" href="#s5">5 · 频域×门控的交叉位置</a>
+<a class="l1" href="#s6">6 · 迁移到 H&E→IHC 虚拟染色</a>
+<a class="l2" href="#s61">6.1 表达量、位置、形态要分开</a>
+<a class="l2" href="#s62">6.2 推荐架构</a>
+<a class="l1" href="#s7">7 · 可执行消融实验</a>
+<a class="l1" href="#s8">8 · 失败模式与止损</a>
+<a class="l1" href="#s9">9 · 证据边界与参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Research report · GAN × frequency × gating</div>
+<h1>GAN+频域+门控：面向 H&amp;E→IHC 虚拟染色的方法调研</h1>
+<p class="desc">你现在不是单纯想“给 GAN 加两个模块”，而是想让频域和门控分别针对 GAN 的失败模式：训练不稳定、局部纹理错误、棋盘格/频谱伪影、结构与表达脱钩、判别器 shortcut。本文按机制挂载位置整理 GAN+频域、GAN+门控和二者交叉的方法，并把可迁移部分收窄到 H&amp;E→IHC 虚拟染色。</p>
+<div class="meta"><span>主任务：H&amp;E→IHC 虚拟染色</span><span>生成框架：conditional GAN / CUT / image-to-image GAN</span><span>频域：FFT · DCT · DWT · FFL</span><span>门控：SE · CBAM · gated conv · residual/band gate</span><span>报告日期：2026-10-13</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="box key"><div class="bt">总判定：这个方向成立，但“频域”和“门控”必须先拆成不同的机制</div><p><b>频域更适合解决 GAN 的信息与判别问题：高频细节丢失、上采样周期伪影、结构边界和多尺度纹理不匹配；门控更适合解决 GAN 的路径与强度问题：某个条件/残差/频带是否应该进入当前层、进入多少。</b>二者可以结合，但不应该第一步就做“复杂频带专家路由”。</p></div>
+<div class="box good"><div class="bt">对你的项目最稳妥的主线</div><ol><li>保持现有 GAN backbone 和病理语义损失不变，先加入<strong>频域 loss</strong>，验证频率约束是否比原模型减少伪影、提升结构。</li><li>在 G 的中层加入<strong>轻量 residual gate</strong> 或 SE/Coordinate Attention，验证门控是否改善 D/G 失衡或结构保持。</li><li>再把固定 DWT 的 LL/LH/HL/HH 分支与 residual gate 结合，形成<strong>软频带门控</strong>。</li><li>最后才测试频域判别器或多专家路由；因为它们最容易学到 scanner、染色批次和 patch 采样 shortcut。</li></ol></div>
+<div class="box stop"><div class="bt">三条不能直接写进论文的强结论</div><ol><li>不能写“高频就是细胞结构、低频就是染色表达”。高频也包含噪声、扫描纹理和棋盘格；低频也可能承载大面积 DAB 阳性。</li><li>不能写“加入 attention/gating 就能稳定 GAN”。SE、CBAM、SAGAN 多数是特征重标定或长程建模，不是收敛证明。</li><li>不能写“WaveGAN/SSD-GAN 已经证明频域对 H&amp;E→IHC 有效”。它们提供机制先例，但任务、数据和评价不同，必须做 H&amp;E→IHC 的单因素复现。</li></ol></div>
+<div class="scroll"><table><thead><tr><th>你的问题</th><th>更匹配的机制</th><th>第一候选</th><th>主要风险</th><th>改动成本</th><th>可复现性</th></tr></thead><tbody>
+<tr><td>棋盘格、周期纹理、上采样伪影</td><td>生成器结构 + 频域监督</td><td>resize-conv / DWT high-band loss</td><td>平滑真实边界，误把噪声当目标</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>高频细节丢失</td><td>频域特征/skip + band loss</td><td>WaveGAN 风格 fixed Haar + high-band loss</td><td>复制 H&amp;E 特有纹理到 IHC</td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td></tr>
+<tr><td>判别器看不到高频</td><td>频域判别器</td><td>SSD-GAN 风格 spatial + spectral D</td><td>D 学到 scanner/site 频谱而非病理真实性</td><td><span class="b medium">中–高</span></td><td><span class="b medium">中</span></td></tr>
+<tr><td>条件/残差过强或过弱</td><td>软 residual/channel/spatial gate</td><td>G 中层 gated conv 或 <code>h'=h+γΔh</code></td><td>门控饱和、梯度被抑制、变成恒等映射</td><td><span class="b medium">低–中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>不同尺度的结构与染色冲突</td><td>频带 gate + pathology-aware loss</td><td>DWT 后每个 band 一个有界 gate</td><td>频带语义不可辨识，某一 band 被永久关掉</td><td><span class="b medium">中–高</span></td><td><span class="b low">中–低</span></td></tr>
+</tbody></table></div>
+
+<h2 id="s1"><span class="num">1</span>与既有报告的分工</h2>
+<p>这不是重新写一份 GAN 原理综述，而是把你已经从 diffusion 转向 GAN 后的两个改动，放回一个统一的“机制位置地图”。</p>
+<div class="scroll"><table><thead><tr><th>既有文件</th><th>已经回答的问题</th><th>本报告新增内容</th></tr></thead><tbody>
+<tr><td><a href="GAN问题与不足调研.html">GAN问题与不足调研.html</a></td><td>GAN 原理、梯度饱和、振荡、模式崩溃、棋盘格、D 过拟合、评价指标边界。</td><td>把频域和门控分别对应到这些问题，并判断哪个机制适合解决哪个故障。</td></tr>
+<tr><td><a href="GAN虚拟染色_方法路线与浓度域先例调研.html">GAN虚拟染色_方法路线与浓度域先例调研.html</a></td><td>Pix2Pix/CycleGAN/CUT/RegGAN、DAB/OD/FOD、病理表达与错位监督。</td><td>把频域表示放到 H/DAB/OD/FOD、结构和判别器位置，避免用 RGB 频谱替代蛋白表达。</td></tr>
+<tr><td><a href="PSPStain_频域条件注入_文献综述报告.html">PSPStain_频域条件注入_文献综述报告.html</a></td><td>频域条件、FFT/DCT/DWT、H&amp;E→IHC 的频域可迁移边界。</td><td>把“扩散频域条件”重映射到 GAN：频域 loss、特征分支、频域 D、band gate 四种落点。</td></tr>
+<tr><td><a href="扩散模型门控机制_文献地图与频域交汇.html">扩散模型门控机制_文献地图与频域交汇.html</a></td><td>门控的四类位置、门控失效、MoE 负结果、频带 gate 的空格。</td><td>区分 GAN 中的 feature modulation、gated conv、style branch routing、spectral gate；把 diffusion 的安全经验转为 GAN 消融。</td></tr>
+<tr><td><a href="../03_论文精读博客/pspstain_blog/PSPStain病理语义保持虚拟染色_论文精读博客.md">PSPStain 精读</a></td><td>蛋白感知 GAN 的 FOD/PCLS 与病理语义保持。</td><td>明确频域只能补结构/形态统计，不能替代 DAB/FOD 的表达量监督。</td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>先把频域和门控说清楚</h2>
+<h3 id="s21">2.1 频域到底约束什么</h3>
+<p>对一张图像 <code>x</code> 做 Fourier transform，可以得到复数频谱：</p>
+<div class="formula">F(x)=A(x)·exp(iφ(x))，其中 A 是幅度（frequency energy），φ 是相位（spatial arrangement）</div>
+<p>工程上常见的频域改动不是一类东西：</p>
+<div class="scroll"><table><thead><tr><th>频域落点</th><th>典型做法</th><th>它改变的是什么</th><th>不要把它误写成</th></tr></thead><tbody>
+<tr><td>输入/条件</td><td>给 G 输入 FFT/DCT/DWT bands</td><td>让 G 看见多尺度/频率信息</td><td>不是在频域生成</td></tr>
+<tr><td>中间特征</td><td>固定 Haar split、频带 skip、低/高频 branch</td><td>改变信息流与尺度融合</td><td>不是 learned frequency gate，除非有可学习 gate</td></tr>
+<tr><td>loss</td><td>FFT magnitude L1、DWT band L1、Focal Frequency Loss</td><td>训练时惩罚频率差异</td><td>不是频域判别器</td></tr>
+<tr><td>判别器</td><td>spatial D + Fourier classifier / spectral branch</td><td>让对抗反馈检查频谱真实性</td><td>不是简单的 frequency loss</td></tr>
+<tr><td>生成域</td><td>直接在 DCT/wavelet 空间生成</td><td>改变生成变量与几何</td><td>改动最大，不能只凭频谱指标推荐</td></tr>
+<tr><td>生成后 QC</td><td>频谱峰、自相关、频带能量筛查</td><td>检测周期伪影和分布偏差</td><td>不能反向修正训练</td></tr>
+</tbody></table></div>
+<p><b>对 H&amp;E→IHC 的关键边界：</b>全 RGB 的全局 FFT 频谱是“图像外观统计”，不是“蛋白表达量”。DAB 的表达量更适合 OD、FOD、IOD、p90、阳性面积和细胞级 precision/recall；频域更适合辅助描述边界、膜连续性、多尺度形态和周期伪影。</p>
+<h3 id="s22">2.2 门控到底控制什么</h3>
+<p>门控可以写成最简单的乘法：</p>
+<div class="formula">h' = a(x) ⊙ h</div>
+<p>也可以写成更安全的残差形式：</p>
+<div class="formula">h' = h + γ(x)·Δh(x)</div>
+<p>这两者的含义完全不同：</p>
+<div class="scroll"><table><thead><tr><th>门控类型</th><th>例子</th><th>控制对象</th><th>风险</th><th>是否是真正路由</th></tr></thead><tbody>
+<tr><td>channel attention</td><td>SE、CBAM channel、Coordinate Attention</td><td>特征通道权重</td><td>通道语义未必可解释</td><td>否，软重标定</td></tr>
+<tr><td>spatial attention</td><td>CBAM spatial、AttentionGAN mask</td><td>位置权重或前景掩码</td><td>可能选 scanner/background shortcut</td><td>否，软掩码</td></tr>
+<tr><td>gated convolution</td><td>Free-Form Image Inpainting</td><td>每个位置、每个通道的 feature transmission</td><td>gate saturation、梯度抑制</td><td>近似软选择</td></tr>
+<tr><td>residual gate</td><td>ReZero/LayerScale/小幅 γ</td><td>新增分支的整体强度</td><td>恒等映射或分支过强</td><td>否，路径强度控制</td></tr>
+<tr><td>expert/style routing</td><td>Gated-GAN、MEGAN、Dynamic Convolution</td><td>多个 branch/kernel/expert 的混合</td><td>routing collapse、专家失活</td><td>是，软或近似硬路由</td></tr>
+<tr><td>frequency-band gate</td><td>LL/LH/HL/HH 各自 gate</td><td>频带信息进入强度</td><td>频带被关掉、频带语义误配</td><td>只有显式 band weight 时才是</td></tr>
+</tbody></table></div>
+<p>因此你要写“门控解决 GAN 问题”，必须进一步写清楚：是控制 G 的哪一条分支、D 的哪一条分支、某个频带，还是训练过程中的 adversarial gradient。否则“门控”会变成一个无法证伪的总称。</p>
+
+<h2 id="s3"><span class="num">3</span>GAN+频域的方法地图</h2>
+<h3 id="s31">3.1 频域 loss：改动最小，适合第一阶段</h3>
+<div class="card"><div class="ch"><div><div class="title">Focal Frequency Loss（FFL）</div><div class="v">Jiang et al. · ICCV 2021 · arXiv:2012.12821 · <a href="https://github.com/EndlessSora/focal-frequency-loss">官方代码</a></div></div><span class="b high">首选低风险先例</span></div><div class="body"><p><b>做法：</b>把真实图和生成图变到频域，计算频率分量的差异，并自适应提高“难合成频率”的权重，降低已经容易合成的频率权重。</p><p><b>原文证据：</b>论文明确把 FFL 定义为 complementary to existing spatial losses，并在 VAE、pix2pix、SPADE、StyleGAN2 上验证。它是 <b>loss</b>，不是 frequency discriminator，也不要求你重写 GAN backbone。</p><p><b>适合你的地方：</b>能先回答“GAN 的频率缺陷是否值得约束”，而不把频域信息强行注入网络内部。最小实验是现有 GAN + DAB/FOD loss，再加一项小权重 FFL。</p><p><b>主要风险：</b>全 RGB 频谱差异可能奖励 scanner noise、压缩纹理或错误的 IHC 高频细节。对 H&amp;E→IHC 应优先在 H 通道、结构分支或 DWT bands 上做，而不是一上来对全 RGB 幅度谱强行匹配。</p></div></div>
+<h3 id="s32">3.2 频域特征与 skip：把低频结构、高频细节分开送给 G</h3>
+<div class="card"><div class="ch"><div><div class="title">WaveGAN</div><div class="v">Yang et al. · ECCV 2022 · arXiv:2207.07288 · <a href="https://github.com/kobeshegu/ECCV2022_WaveGAN">官方代码</a></div></div><span class="b blue">结构先例</span></div><div class="body"><p><b>做法：</b>对编码特征做多频率分解，使用 low-frequency skip connections 保留 outline/structure，同时使用 high-frequency skip connections 给生成器补充细节，并加入 frequency L1 loss。</p><p><b>它解决的不是 GAN 收敛：</b>论文主要针对 few-shot generation 中高频细节难合成的问题。它证明的是“频率分解 + skip + frequency loss”这一组合在其数据集上有效，不是 H&amp;E→IHC 的病理表达证明。</p><p><b>迁移到虚拟染色：</b>更合理的映射是把 H&E 的结构信息分支送入 G，帮助保留细胞核、腺体或膜边界；但不能直接把 H&E 的高频纹理复制成 IHC 的高频纹理。</p></div></div>
+<div class="card"><div class="ch"><div><div class="title">Frequency Domain Image Translation（FDIT）</div><div class="v">Cai et al. · ICCV 2021 · arXiv:2011.13611 · <a href="https://github.com/mu-cai/frequency-domain-image-translation">官方代码</a></div></div><span class="b medium">需任务重验</span></div><div class="body"><p><b>做法：</b>在 image translation 中显式分解低频与高频，把高频视为更接近 identity/structure 的信息，再从 pixel/Fourier 两侧做保持约束。</p><p><b>为什么不能直接照搬：</b>在普通风格迁移里“高频更像 identity”可以作为经验假设；在 H&E→IHC 里，目标染色的膜边界、DAB 沉积和 H&E 结构并不是同一个频谱对象。必须做“结构保留”而不是“源频谱复制”。</p></div></div>
+<h3 id="s33">3.3 频域判别器：让 D 看见空间之外的频谱真实性</h3>
+<div class="card"><div class="ch"><div><div class="title">SSD-GAN</div><div class="v">Chen et al. · AAAI 2021 · arXiv:2012.05535 · <a href="https://github.com/cyq373/SSD-GAN">官方代码</a></div></div><span class="b purple">高风险高价值</span></div><div class="body"><p><b>论文的核心诊断：</b>标准 GAN 的 D 经过 downsampling 后，可能缺失对高频信息的敏感性，导致 G 缺少学习真实高频细节的 incentive。</p><p><b>做法：</b>在 D 内嵌 frequency-aware classifier，使 D 同时从 spatial domain 和 spectral domain 判断 real/fake。它的优点是不用改 G 的生成变量，能较直接地把频谱差异回传给 G。</p><p><b>迁移风险：</b>H&E→IHC 中 scanner、切片批次、压缩、tile 边界和染色协议都会产生频谱差异。频域 D 可能学到 domain/site signature，而不是 DAB 真实性。必须加入跨 scanner/site 验证和“频域 D 只加在 G 还是 D/G 都加”的消融。</p></div></div>
+<div class="card"><div class="ch"><div><div class="title">DDFA-GAN 与 DCT-GAN 类方法</div><div class="v">双判别器 Fourier 先例、DCT discriminator/loss 先例</div></div><span class="b medium">相邻先例</span></div><div class="body"><p>医学图像中已有 spatial discriminator + Fourier discriminator 的双判别器路线，也有 DCT discriminator 或 DCT loss 用于去模糊、纹理恢复。它们说明“让 D 检查另一种表示”是可行的，但去模糊的目标是恢复清晰度，不等于虚拟染色中的结构和蛋白表达正确。</p><p><b>使用原则：</b>把它们当作机制先例，不当作 H&E→IHC 已验证方案。优先测试单一频域 loss，再测试频域 D；否则 D 变强后，训练崩溃的归因会变得困难。</p></div></div>
+<div class="box warn"><div class="bt">频域文献的共同负结果</div><p>“频域”工作常常只做了频谱可视化、后处理或频带 loss，并没有真正的 learned band gate；“wavelet GAN”也可能只是固定小波分解 + skip。写论文时必须把 <b>fixed decomposition、frequency loss、frequency discriminator、learned frequency gate</b> 分开。</p></div>
+
+<h2 id="s4"><span class="num">4</span>GAN+门控的方法地图</h2>
+<div class="scroll"><table><thead><tr><th>工作/模块</th><th>门控挂载位置</th><th>真正控制什么</th><th>是否是频域门控</th><th>适合迁移程度</th></tr></thead><tbody>
+<tr><td>SE</td><td>G/D feature channel</td><td>全局 channel reweighting</td><td>否</td><td><span class="b high">低成本基线</span></td></tr>
+<tr><td>CBAM / Coordinate Attention</td><td>channel + spatial/coordinate feature</td><td>位置感知的软特征调制</td><td>否</td><td><span class="b high">适合做对照</span></td></tr>
+<tr><td>Gated Convolution</td><td>G 的卷积层</td><td>每个位置、通道的动态 feature selection</td><td>否</td><td><span class="b high">真实门控先例</span></td></tr>
+<tr><td>SAGAN</td><td>G/D self-attention block</td><td>远距离位置的信息交互</td><td>否</td><td><span class="b medium">不是门控稳定器</span></td></tr>
+<tr><td>Gated-GAN</td><td>多 style transformer branches</td><td>style branch 的混合/选择</td><td>否</td><td><span class="b medium">需重做病理条件</span></td></tr>
+<tr><td>MEGAN / Dynamic Convolution</td><td>多个 expert/kernel</td><td>输入依赖的 expert/kernel mixing</td><td>可扩展但原文不特指频率</td><td><span class="b low">后置高风险</span></td></tr>
+<tr><td>band gate</td><td>LL/LH/HL/HH 或径向频带</td><td>频率分量进入强度</td><td><b>是</b></td><td><span class="b medium">研究空格</span></td></tr>
+</tbody></table></div>
+<h3>4.1 Gated Convolution：最接近“让网络自己决定哪里该传”的先例</h3>
+<p>Yu 等人的 <i>Free-Form Image Inpainting with Gated Convolution</i>（ICCV 2019，arXiv:1806.03589）把普通 convolution 改成 feature branch 与 gate branch：</p>
+<div class="formula">y = φ(W_f * x) ⊙ σ(W_g * x)</div>
+<p>其论文把它描述为 per-channel、per-location 的 learnable dynamic feature selection。它不是简单的 global attention，而是每一层每个位置都可以决定特征传递强度。论文还配合 SN-PatchGAN，但这个结果来自图像修复，不是虚拟染色。</p>
+<p><b>对你最有用的启示：</b>如果你想让模型在细胞边界、膜区域、背景区域使用不同的特征路径，gated conv 是比多专家 GAN 更低成本的第一个“真门控”方案。但必须监控 gate 的均值、方差、近零比例和梯度，否则它可能把难学的稀有结构直接关掉。</p>
+<h3>4.2 SE、CBAM、Coordinate Attention：低成本，但不是频带路由</h3>
+<p>SE、CBAM 和 Coordinate Attention 都属于 soft feature recalibration。它们可以帮助模型强调某些通道或位置，但中间 feature channel 未必对应 H、DAB、低频或高频的可解释语义。尤其在 U-Net 的 320/640/1280 feature channels 上，不能直接声称“这是染色通道 attention”。</p>
+<p>对 H&E→IHC 更稳妥的用法是：把它们作为<b>生成器中层的容量/特征基线</b>，而不是论文的最终创新。若 SE 已经有效，说明普通 channel reweighting 足够；只有在固定 Haar 频带上加入独立 gate 并证明 band-specific 消融有效，才有理由称为“频带门控”。</p>
+<h3>4.3 Gated-GAN、MEGAN 与动态专家：为什么不建议第一步就用</h3>
+<p>Gated-GAN 使用多个 style branches，门控根据 style 进行分支混合；MEGAN 使用多个生成器 expert 和 gating network；Dynamic Convolution 使用输入依赖的 kernel mixing。这类方法是真正的动态路由，但代价是：</p>
+<ul><li>某一个 expert 可能过早占据大多数样本，其他 expert 梯度不足；</li><li>路由器可能按 scanner、背景或 patch 位置分流，而不是按病理形态分流；</li><li>新增参数量使“方法有效”与“容量变大”难以区分；</li><li>需要 route entropy、expert utilization、每个 expert 的梯度和子集性能，否则无法证明路由真的有用。</li></ul>
+<div class="box stop"><div class="bt">不推荐的第一步</div><p>不要从“两个生成器 + 一个频带路由器 + 一个频域判别器”开始。它同时改变了容量、输入表示、对抗反馈和梯度路径，最后即使结果变化，也无法知道是哪一个机制起作用。对你的研究优先级而言，这种方案不符合“可解释、可复现、改动小”。</p></div>
+
+<h2 id="s5"><span class="num">5</span>频域×门控的交叉位置</h2>
+<p>目前最重要的结论是：文献已经有“频域 loss”“频域 skip”“频域 D”“普通 gating”，但把它们组合成明确的<strong>频带 gate</strong>并在虚拟染色中做严谨消融，仍然是一个需要自己验证的研究假设。</p>
+<div class="flow"><pre><code>H&E / 输入图像
+    │
+    ├─ fixed DWT ─► LL：大尺度结构/颜色场
+    │                LH/HL/HH：边界、方向纹理、局部细节
+    │
+    ├─ G_band = sigmoid(MLP/1×1 conv(features))
+    │              └─ [g_LL,g_LH,g_HL,g_HH]
+    │
+    └─ gated bands = [g_LL·LL, g_LH·LH, g_HL·HL, g_HH·HH]
+                         │
+                         ▼
+             G 的 residual/skip/condition 注入
+                         │
+                         ▼
+                  fake IHC RGB
+                         │
+      ┌──────────────────┼──────────────────┐
+      ▼                  ▼                  ▼
+ spatial D         DAB/FOD loss        band/edge loss
+      │                  │                  │
+      └────────────── G 的联合梯度 ────────┘</code></pre></div>
+<div class="scroll"><table><thead><tr><th>交叉方案</th><th>核心公式/数据流</th><th>优点</th><th>主要风险</th><th>成本</th><th>复现性</th></tr></thead><tbody>
+<tr><td>频带 loss + residual gate</td><td><code>L_band</code> 约束输出；<code>h'=h+γΔh</code></td><td>最容易归因，先改 loss 再控制分支强度</td><td>两个小增益可能叠加不显著</td><td><span class="b low">低–中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>固定 DWT + band gate</td><td><code>h'=Σ g_k·B_k(h)</code></td><td>显式可视化每个频带的使用强度</td><td>band 不是语义，gate 可能学成恒定</td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td></tr>
+<tr><td>频带 condition gate</td><td><code>cond_k= g_k·DWT_k(OD_H)</code></td><td>让 H&E 结构以不同尺度进入 G</td><td>复制源域频谱，弱化目标染色生成</td><td><span class="b medium">中</span></td><td><span class="b medium">中</span></td></tr>
+<tr><td>频域 D + band gate</td><td>频带 gate 进入 G，D 同时看 RGB/FFT</td><td>G 和 D 对频率问题共同建模</td><td>训练不稳定、shortcut、归因困难</td><td><span class="b high">高</span></td><td><span class="b low">中–低</span></td></tr>
+<tr><td>频带 expert routing</td><td>每个 band 对应一个 expert</td><td>最强表达能力，适合多模态研究</td><td>专家失活、参数膨胀、难以证明必要</td><td><span class="b bad">高</span></td><td><span class="b low">低</span></td></tr>
+</tbody></table></div>
+<div class="box teal"><div class="bt">建议你论文中的准确命名</div><p>第一版如果使用固定 DWT + 可学习权重，叫<b>frequency-aware gated feature fusion</b> 或“频带感知的软门控特征融合”；不要直接叫“frequency disentanglement”或“frequency expert routing”，除非你有频带独立性、路由利用率和反事实置零实验。</p></div>
+
+<h2 id="s6"><span class="num">6</span>迁移到 H&amp;E→IHC 虚拟染色</h2>
+<h3 id="s61">6.1 把表达量、表达位置、表达形态分开</h3>
+<p>虚拟染色最容易出现的概念错误是：把“频率”当成“蛋白表达”。更稳妥的拆法如下：</p>
+<div class="scroll"><table><thead><tr><th>目标变量</th><th>它回答的问题</th><th>推荐表示/指标</th><th>频域/门控的角色</th></tr></thead><tbody>
+<tr><td>表达量</td><td>蛋白染色有多强、阳性比例是多少</td><td>OD、DAB/FOD、IOD、p90、H-score、positive area</td><td>频域不能替代；门控不能凭空创造真值</td></tr>
+<tr><td>表达位置</td><td>哪些细胞、哪一侧膜、哪个区域阳性</td><td>细胞/膜 mask、实例级 precision/recall、centroid/边缘定位</td><td>空间 gate/结构 condition 可辅助，但必须防止 hallucination</td></tr>
+<tr><td>表达形态</td><td>膜是否连续、边界是否自然、沉积是否细碎或成块</td><td>DWT bands、局部 PSD、edge/membrane width、连通性</td><td>频域最适合在这一层提供正则</td></tr>
+<tr><td>输入结构</td><td>H&amp;E 中的核、腺体、组织边界如何传递</td><td>OD_H、nuclei/edge/morphology map</td><td>低频/高频 condition 进入 G，不能简单复制 RGB</td></tr>
+</tbody></table></div>
+<p>这也是为什么本报告推荐在 <code>OD_H</code>、结构图或 DWT band 上做频域约束，而不是把全图 RGB FFT 当作蛋白监督。已有 PSPStain/CCPL/ProgASP 等 GAN 虚拟染色工作已经占据了 RGB GAN + DAB/OD/FOD 监督这一格；你的增量应该是“频域如何改善形态和失败模式”，而不是把频域重新包装成表达量。</p>
+<h3 id="s62">6.2 推荐的第一版架构</h3>
+<div class="flow"><pre><code>H&E RGB x
+  │
+  ├─ stain/OD preprocessing
+  │      ├─ OD_H / morphology condition
+  │      └─ optional: nuclei/edge map
+  │
+  ├─ fixed 1–2 level Haar DWT
+  │      ├─ LL: coarse tissue structure
+  │      └─ LH/HL/HH: local boundaries/details
+  │
+  ▼
+G encoder/residual blocks
+  ├─ baseline feature h
+  ├─ small residual branch Δh
+  └─ gate γ or Coordinate Attention
+       h' = h + γ(x)·Δh
+  │
+  ▼
+G decoder → fake IHC RGB
+  │       ├─ spatial PatchGAN D
+  │       ├─ DAB/OD/FOD semantic loss
+  │       ├─ H&E↔fake structure/edge loss
+  │       └─ weak DWT band loss
+  │
+  └─ evaluation: expression + structure + spectrum + hallucination
+
+第一版不要同时加 spectral D 和 multi-expert routing。</code></pre></div>
+<table><thead><tr><th>模块</th><th>推荐状态</th><th>理由</th><th>改动成本</th><th>可复现性</th></tr></thead><tbody>
+<tr><td>原 GAN backbone</td><td><span class="b high">保持不变</span></td><td>先保证能归因到频域/门控</td><td><span class="b low">—</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>频域表示</td><td><span class="b high">固定 1–2 level DWT</span></td><td>比全局 FFT 有空间局部性、可分 LH/HL/HH</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>门控</td><td><span class="b high">G 中层 residual gate</span></td><td>不直接改 RGB 输出，避免输出层被 gate 压黑/压平</td><td><span class="b medium">低–中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>频域监督</td><td><span class="b medium">H/结构或 DWT band loss</span></td><td>不把频谱当 DAB 表达量</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>频域判别器</td><td><span class="b low">第二阶段</span></td><td>先验证 loss/feature 是否有效，避免 D 变强掩盖问题</td><td><span class="b medium">中–高</span></td><td><span class="b medium">中</span></td></tr>
+<tr><td>多专家/硬路由</td><td><span class="b bad">暂不做</span></td><td>需要证明不同专家确实学习不同组织/染色子分布</td><td><span class="b bad">高</span></td><td><span class="b low">低</span></td></tr>
+</tbody></table>
+
+<h2 id="s7"><span class="num">7</span>可执行消融实验</h2>
+<h3>7.1 单因素矩阵：先回答“到底是谁有效”</h3>
+<div class="scroll"><table><thead><tr><th>编号</th><th>唯一改动</th><th>目的</th><th>必须观察</th><th>通过条件</th></tr></thead><tbody>
+<tr><td>F0</td><td>现有 GAN baseline</td><td>建立可重复基线</td><td>3 seeds、D/G logits、梯度、FID/recall、DAB/FOD、结构</td><td>主要指标和失败模式可复现</td></tr>
+<tr><td>F1</td><td>+ FFL 或频域 L1，其他不变</td><td>验证频域 loss 是否有增益</td><td>频谱误差、棋盘峰、DAB/结构指标</td><td>频谱/伪影改善，且表达量不退化</td></tr>
+<tr><td>F2</td><td>+ fixed Haar skip，不加 gate</td><td>验证频带特征是否比 loss 有用</td><td>LL/LH/HL/HH 误差、边界指标</td><td>结构改善且未复制源域纹理</td></tr>
+<tr><td>G1</td><td>+ G 中层 SE</td><td>建立普通 channel attention 对照</td><td>参数/FLOPs、seed 方差、病理指标</td><td>说明是普通重标定还是更强机制</td></tr>
+<tr><td>G2</td><td>+ G 中层 gated conv</td><td>验证位置/通道软门控</td><td>gate 均值/方差/近零比例、梯度前后</td><td>gate 非恒定、非全关，且性能增益可复现</td></tr>
+<tr><td>FG1</td><td>F2 + band gate</td><td>验证频带×门控交叉</td><td>g_LL/g_LH/g_HL/g_HH 分布和置零反事实</td><td>不同 band 有可解释的使用差异，且置零会产生可预测变化</td></tr>
+<tr><td>D1</td><td>+ SSD-GAN 风格频域 D</td><td>验证对抗反馈是否缺高频</td><td>D spatial/spectral score、稳定性、site 泛化</td><td>频域增益不以 D 崩溃为代价</td></tr>
+<tr><td>R1</td><td>2 experts + soft router</td><td>只在前面有效后测试真实路由</td><td>route entropy、expert utilization、子集性能</td><td>每个 expert 都被训练且负责不同子集</td></tr>
+</tbody></table></div>
+<h3>7.2 频带 gate 的最小实现</h3>
+<p>第一版不要让 gate 直接决定多个网络专家，只让它控制固定 DWT 分支的强度：</p>
+<div class="formula">B(x)=[LL,LH,HL,HH]；g=sigmoid(MLP(GAP(h)))；h_band=Σ<sub>k</sub> norm(g<sub>k</sub>)·Proj<sub>k</sub>(B<sub>k</sub>(x))</div>
+<p>建议增加三个安全设计：</p>
+<ul><li><b>有界：</b>用 sigmoid 或 softplus 后再归一化，避免某一频带无限放大。</li><li><b>均值归一：</b>让 gate 的平均尺度接近 1，避免 gate 与 feature amplitude 产生不可辨识的整体缩放。</li><li><b>可关闭：</b>保留 identity/skip 路径，令 gate 只控制新增频带分支，不要让它直接乘在整个 backbone 上。</li></ul>
+<h3>7.3 必须做的反事实实验</h3>
+<div class="scroll"><table><thead><tr><th>反事实</th><th>如果观察到</th><th>说明</th></tr></thead><tbody>
+<tr><td>把生成器的高频 band 置零</td><td>结构边界和膜连续性明显下降</td><td>高频分支确实承担局部形态；但仍不能证明它是蛋白表达</td></tr>
+<tr><td>把低频 band 置零</td><td>颜色/大尺度 DAB 场明显变化</td><td>低频分支影响全局染色场；需防止把大面积背景当 expression</td></tr>
+<tr><td>固定 gate 为全 1</td><td>结果接近 band fusion baseline</td><td>可比较 learned gate 是否真正有用</td></tr>
+<tr><td>固定 gate 为均值</td><td>结果明显变差</td><td>说明空间/样本自适应可能有价值</td></tr>
+<tr><td>随机打乱 gate</td><td>结果和正常 gate 接近</td><td>警告：gate 可能没有学到有用路由</td></tr>
+<tr><td>跨 scanner/site 测试</td><td>频域方法明显掉点</td><td>警告：D 或 gate 学到采集域 shortcut</td></tr>
+</tbody></table></div>
+<h3>7.4 评价体系：不能只看 FID 或 PSNR</h3>
+<ul><li><b>分布级：</b>FID/KID、precision/recall、pathology feature distance。</li><li><b>表达级：</b>DAB/OD/FOD mean、histogram、p90/IOD、positive area、cell-level precision/recall、HER2/H-score agreement。</li><li><b>结构级：</b>nuclei/membrane boundary、cell centroid、membrane continuity、下游分割/分类。</li><li><b>频域级：</b>log radial power-spectrum distance、DWT LL/LH/HL/HH error、periodic peak energy、自相关。</li><li><b>失败级：</b>hallucinated-positive rate、missing-positive rate、重复纹理、棋盘格、ringing、seed-to-seed variance。</li></ul>
+
+<h2 id="s8"><span class="num">8</span>失败模式与止损</h2>
+<div class="scroll"><table><thead><tr><th>现象</th><th>优先怀疑</th><th>诊断动作</th><th>行动</th></tr></thead><tbody>
+<tr><td>gate 全部接近 0</td><td>新增分支无用、初始化/梯度链错误、gate 饱和</td><td>记录 raw gate、sigmoid gate、branch RMS、gate 前后梯度</td><td>先保留 identity，检查分支是否真的参与 optimizer；不要立刻增大 gate</td></tr>
+<tr><td>gate 全部接近 1</td><td>门控退化成普通分支、归一化失效</td><td>和固定 all-one baseline 对比</td><td>若性能相同，删除 gate；不要把参数存在当作机制有效</td></tr>
+<tr><td>高频 loss 下降但图像更噪</td><td>频域把 scanner/noise 当成目标</td><td>比较 tissue mask 内外频谱；按 site 分层</td><td>改用 DWT 局部 band、H/结构通道或 mask-weighted loss</td></tr>
+<tr><td>频域 D 加入后训练崩溃</td><td>D 过强、spectral shortcut、频域分支尺度不匹配</td><td>记录 spatial/spectral logits 和两条梯度范数</td><td>降低 spectral D 权重，先用 loss-only，再加 SN/TTUR</td></tr>
+<tr><td>FID 变好但 DAB/FOD 变差</td><td>频域/判别器奖励外观而非表达</td><td>表达量与频谱分开评价</td><td>拒绝该方案，调整频域 loss 挂载对象，不用 FID 掩盖退化</td></tr>
+<tr><td>结构更锐但 hallucinated-positive 增多</td><td>高频分支被当成“细胞细节生成器”</td><td>阳性细胞 FP/FN、膜定位、置零 band</td><td>降低 high-band 权重，加结构/表达约束，保留不确定性</td></tr>
+<tr><td>跨 scanner/site 失效</td><td>D/gate 学到采集域频谱</td><td>site-held-out，频谱归一化前后比较</td><td>频谱标准化、组织 mask、无条件/弱条件 D 对照</td></tr>
+<tr><td>专家路由只用一个 expert</td><td>routing collapse</td><td>route entropy、expert utilization、每个 expert 梯度</td><td>回退 soft gate；若无明确子群收益，删除专家路由</td></tr>
+</tbody></table></div>
+<div class="box stop"><div class="bt">明确止损标准</div><ul><li>若 F1/F2 没有在 3 个 seed 中稳定改善结构或伪影，就不进入频域 D。</li><li>若频域方法只改善 FID、却让 DAB/FOD 或阳性细胞指标恶化，不能称为成功。</li><li>若 band gate 的置零、固定、随机实验结果几乎相同，不能宣称“学到了频带路由”。</li><li>若频域 D 跨 site 失效且 spatial D 正常，优先判定为频谱 shortcut，而不是继续堆门控。</li><li>若 multi-expert 结果不能超过等参数量的单 G，停止专家路由。</li></ul></div>
+
+<h2 id="s9"><span class="num">9</span>证据边界与参考文献</h2>
+<div class="box warn"><div class="bt">本轮最重要的未核实与阴性结论</div><ul><li>本轮没有找到一个已经被充分验证、带公开官方代码、同时满足“GAN + 显式 learned frequency-band gate + H&amp;E→IHC + 蛋白表达验证”的成熟方法。无法区分“没人做过”和“做过但未被本轮检索覆盖”。</li><li>WaveGAN 是固定小波分解、skip connection 和 frequency L1 loss 的组合，不应直接写成 learned frequency gate。</li><li>SE、CBAM、Coordinate Attention 和 SAGAN 是 feature reweighting 或长程注意力，不等于动态专家路由，也不等于 GAN 收敛稳定器。</li><li>频域 D 的 H&amp;E→IHC 迁移风险尚未在你的数据上实测，scanner/site shortcut 是高置信度风险假设，可用跨 site 预测验证。</li><li>频带与病理语义的对应关系不能从频率名称直接推出，必须做 band-置零、固定 gate、随机 gate 和下游病理指标实验。</li><li>本报告引用的相邻医学图像频域 GAN 先例，其完整代码、数据和消融并非全部被本轮逐项复核；它们只能作为方法先例，不能作为你的任务收益保证。</li></ul></div>
+<h3>9.1 承重文献</h3>
+<div class="scroll"><table><thead><tr><th>文献</th><th>明确支持的内容</th><th>核实等级</th></tr></thead><tbody>
+<tr><td>Jiang et al., <i>Focal Frequency Loss for Image Reconstruction and Synthesis</i>, ICCV 2021, <a href="https://arxiv.org/abs/2012.12821">arXiv:2012.12821</a> · <a href="https://github.com/EndlessSora/focal-frequency-loss">code</a></td><td>频域 loss 自适应聚焦难合成频率；可作为 spatial loss 的补充；在 pix2pix/SPADE 等验证。</td><td><span class="b high">摘要/官方代码已核实</span></td></tr>
+<tr><td>Yang et al., <i>WaveGAN: Frequency-aware GAN for High-Fidelity Few-shot Image Generation</i>, ECCV 2022, <a href="https://arxiv.org/abs/2207.07288">arXiv:2207.07288</a> · <a href="https://github.com/kobeshegu/ECCV2022_WaveGAN">code</a></td><td>多频率特征分解、低/高频 skip、frequency L1 loss；高频细节先例。</td><td><span class="b high">摘要/官方代码已核实</span></td></tr>
+<tr><td>Chen et al., <i>SSD-GAN: Measuring the Realness in the Spatial and Spectral Domains</i>, AAAI 2021, <a href="https://arxiv.org/abs/2012.05535">arXiv:2012.05535</a> · <a href="https://github.com/cyq373/SSD-GAN">code</a></td><td>标准 D 下采样可能丢高频；在 D 内加入 frequency-aware classifier。</td><td><span class="b high">摘要/官方代码已核实</span></td></tr>
+<tr><td>Yu et al., <i>Free-Form Image Inpainting with Gated Convolution</i>, ICCV 2019, <a href="https://arxiv.org/abs/1806.03589">arXiv:1806.03589</a> · <a href="https://github.com/JiahuiYu/generative_inpainting">code</a></td><td>每位置、每通道的 learnable dynamic feature selection；gated conv 与 SN-PatchGAN。</td><td><span class="b high">摘要/官方代码已核实</span></td></tr>
+<tr><td>Zhang et al., <i>Self-Attention Generative Adversarial Networks</i>, ICML 2019, <a href="https://arxiv.org/abs/1805.08318">arXiv:1805.08318</a> · <a href="https://github.com/brain-research/self-attention-gan">code</a></td><td>长程依赖建模；G/D 中 self-attention；G 侧 spectral normalization 改善训练动态。</td><td><span class="b high">摘要/官方代码已核实</span></td></tr>
+<tr><td>Chen et al., <i>Dynamic Convolution: Attention over Convolution Kernels</i>, CVPR 2020, <a href="https://arxiv.org/abs/1912.03458">arXiv:1912.03458</a></td><td>输入依赖的多 kernel 混合；是真正动态 kernel 选择的相邻先例，但原文不是 GAN。</td><td><span class="b medium">官方摘要已核实</span></td></tr>
+<tr><td>Park et al., <i>Semantic Image Synthesis with SPADE</i>, CVPR 2019, <a href="https://arxiv.org/abs/1903.07291">arXiv:1903.07291</a> · <a href="https://github.com/NVlabs/SPADE">code</a></td><td>空间自适应归一化，以条件 layout 产生 gamma/beta；条件调制而非专家路由。</td><td><span class="b high">摘要/官方代码已核实</span></td></tr>
+<tr><td>Yang et al., <i>On the Frequency Bias of Generative Models</i>, NeurIPS 2021, <a href="https://arxiv.org/abs/2111.02447">arXiv:2111.02447</a></td><td>生成器上采样和判别器下采样共同影响频率偏置；棋盘格不能解释全部频谱差异。</td><td><span class="b medium">官方摘要已核实</span></td></tr>
+<tr><td>Sajjadi et al., <i>Assessing Generative Models via Precision and Recall</i>, NeurIPS 2018, <a href="https://arxiv.org/abs/1806.00035">arXiv:1806.00035</a></td><td>质量与覆盖应分开评估；单一 FID 难以区分失败模式。</td><td><span class="b high">官方摘要已核实</span></td></tr>
+</tbody></table></div>
+<h3>9.2 名称相似但不能直接当作本方向证据</h3>
+<ul><li><b>f-GAN</b> 的 f 是 f-divergence，不是 Fourier。</li><li>Fourier ptychographic virtual staining 里的 Fourier 主要指成像/采集模态，不自动表示 GAN 使用了 Fourier loss 或 frequency D。</li><li>Wavelet GAN、wavelet distillation、wavelet visualization 的机制不相同，必须看它到底是 fixed decomposition、loss、skip 还是 learned gate。</li></ul>
+<p class="cite">证据标记：<b>[VERIFIED]</b> 表示本轮实际读取到论文官方摘要/HTML、会议页或官方代码；<b>[THEORY]</b> 表示假设下的理论结论；<b>[EVIDENCE]</b> 表示论文实验；<b>[INFERENCE]</b> 表示迁移到 H&amp;E→IHC 的工程推断，需实测；<b>[UNVERIFIED]</b> 表示原文/代码未完整核实，不应作为强事实引用。</p>
+</main></div></body></html>

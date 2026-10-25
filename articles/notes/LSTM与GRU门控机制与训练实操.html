@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LSTM 与 GRU 的门控机制、BPTT 与梯度裁剪 · 学习笔记</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"LSTM 与 GRU 的门控机制、BPTT 与梯度裁剪 · 学习笔记","date":"2026-10-24","tags":["课程笔记","深度学习/神经网络"],"category":"课程笔记","summary":"围绕循环网络的门控单元本身展开：逐式给出 LSTM 遗忘门、输入门、输出门与候选状态的公式及逐元素含义，说明细胞状态加法通路为何能缓解梯度消失；对比 GRU 以更新门、重置门完成的三处结构简化；以时间步 T=3 的梯度累加为例推导 BPTT 中梯度连乘的来源，并整理 `clip_grad_norm_` 的裁剪阈值实践、朴素 RNN 与门控单元的对照实验设计，附字符级 LSTM 语言建模的实测训练日志与经核验的公开代码仓库清单。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>LSTM 与 GRU 的门控机制、BPTT 与梯度裁剪 · 学习笔记</h1>
+<div class="meta">课程笔记 · 深度学习/神经网络 · 整理自豆包对话 豆包对话 · RNN、GRU、LSTM经典代码GitHub地址</div>
+<h1>LSTM 与 GRU 的门控机制、BPTT 与梯度裁剪 · 学习笔记</h1>
+<h2>一、概述</h2>
+<p>本博客已有《循环神经网络语言模型（RNN-LM）》一文处理解言建模、Seq2Seq 与解码策略；本文不重复那部分内容，而是把焦点收在<strong>循环单元自身的结构与训练实操</strong>上：LSTM 与 GRU 内部的门控公式、细胞状态为何能缓解梯度消失、沿时间反向传播（BPTT）中梯度如何累加与衰减，以及梯度裁剪的用法与局限。</p>
+<p>原料来自课程学习与复现过程中的一系列问答对话，涉及第 6 章四个循环网络实验（基础 RNN 记忆实验、梯度爆炸实验、LSTM 记忆对比实验、双向 LSTM 文本分类）、GRU 与 LSTM 的结构对照，以及笔者自己动手训练的字符级与 token 级 LSTM 语言模型日志。所有公式、超参数与训练数值均取自原料，原料未给出的一律不补；原料自身存在矛盾之处（如日志中的学习率）按可自证的一侧记录并说明。</p>
+<h2>二、LSTM 的门控结构</h2>
+<h3>2.1 符号约定</h3>
+<p>设当前时间步的输入为 $x_t$，上一时刻的隐藏状态为 $h_{t-1}$（短期记忆），上一时刻的细胞状态为 $c_{t-1}$（长期记忆）。$f_t$、$i_t$、$o_t$ 分别为遗忘门、输入门与输出门，$\tilde{c}_t$ 为候选细胞状态，$c_t$ 与 $h_t$ 为本步更新后的细胞状态与隐藏输出。所有门均使用 sigmoid 激活 $\sigma$，输出被压缩到 $(0,1)$ 区间：接近 1 表示放行，接近 0 表示丢弃。</p>
+<h3>2.2 四路计算与状态更新</h3>
+<p>LSTM 单步计算先把 $x_t$ 与 $h_{t-1}$ <strong>拼接</strong>，作为四个分支共享的输入，再分四路计算：</p>
+<p>$$ f_t=\sigma\big(W_f\,[h_{t-1},\,x_t]+b_f\big) $$</p>
+<p>$$ i_t=\sigma\big(W_i\,[h_{t-1},\,x_t]+b_i\big) $$</p>
+<p>$$ \tilde{c}_t=\tanh\big(W_c\,[h_{t-1},\,x_t]+b_c\big) $$</p>
+<p>$$ o_t=\sigma\big(W_o\,[h_{t-1},\,x_t]+b_o\big) $$</p>
+<p>随后是两条核心更新式：</p>
+<p>$$ c_t=f_t\odot c_{t-1}+i_t\odot\tilde{c}_t $$</p>
+<p>$$ h_t=o_t\odot\tanh(c_t) $$</p>
+<p>其中 $\odot$ 为<strong>逐元素乘法</strong>：门控向量与记忆向量按维度一一对应相乘，每个记忆维度被独立地按不同比例放行或截断，而非整条向量统一开关。三门与候选状态的含义如下表。</p>
+<table>
+<tr><th>名称</th><th>公式骨架</th><th>控制的量</th><th>门值接近 1</th><th>门值接近 0</th></tr>
+<tr><td>遗忘门 $f_t$</td><td>$\sigma(W_f[h_{t-1},x_t]+b_f)$</td><td>旧细胞状态 $c_{t-1}$ 的保留比例</td><td>几乎完整保留旧记忆</td><td>大幅丢弃旧记忆</td></tr>
+<tr><td>输入门 $i_t$</td><td>$\sigma(W_i[h_{t-1},x_t]+b_i)$</td><td>候选状态 $\tilde{c}_t$ 的写入比例</td><td>新信息大量写入长期记忆</td><td>拒绝写入新内容</td></tr>
+<tr><td>候选状态 $\tilde{c}_t$</td><td>$\tanh(W_c[h_{t-1},x_t]+b_c)$</td><td>本步准备写入的新信息</td><td>输出范围为 $[-1,1]$，非门</td><td>——</td></tr>
+<tr><td>输出门 $o_t$</td><td>$\sigma(W_o[h_{t-1},x_t]+b_o)$</td><td>$\tanh(c_t)$ 对外输出的比例</td><td>长期记忆充分暴露给 $h_t$</td><td>本步几乎不输出记忆内容</td></tr>
+</table>
+<p>以细胞状态仅 3 维为例：若 $c_{t-1}=[2,5,-3]$、$f_t=[0.9,0.1,0.7]$，则逐项相乘得保留的旧记忆为 $[1.8,0.5,-2.1]$——第 1 维留 90%、第 2 维只留 10%、第 3 维留 70%。同理，候选记忆 $\tilde{c}_t=[1,-2,4]$ 配上 $i_t=[0.2,0.9,0.3]$，各维度写入比例互不相同。整个更新过程就是「旧记忆按比例过滤 + 新信息按比例筛选」再相加，几乎不会出现全部清空或全部写入的极端操作。</p>
+<p>一个必须分清的概念：<strong>权重固定不等于门值固定</strong>。三组的 $W$ 与 $b$ 是训练中经 BPTT 更新、训练后固定的「筛选规则」；而每个时间步的 $f_t,i_t,o_t$ 由当前输入与上一步隐藏状态<strong>实时计算</strong>，随输入动态变化。例如在数字求和任务中，模型读到序列开头的非零数字时让 $f_t$ 与 $i_t$ 接近 1，把数值存入细胞状态；其后大量补 0 时让 $i_t$ 接近 0，拒绝噪声写入，而 $c_t$ 始终保留先前之和——序列拉多长都不丢失。</p>
+<h2>三、细胞状态的加法通路为何能缓解梯度消失</h2>
+<p>朴素 RNN 只有一条隐藏状态通路：</p>
+<p>$$ h_t=\tanh(W\,h_{t-1}+U\,x_t+b) $$</p>
+<p>反向传播时每回传一个时间步，梯度都要乘一次 $W^{\top}$ 与一个恒不超过 1 的 tanh 导数因子，长序列上等价于矩阵<strong>连乘</strong>：若 $W$ 的最大特征值大于 1，梯度指数放大（爆炸）；小于 1 则指数衰减（消失），序列开头的信息对最终损失几乎没有影响。</p>
+<p>LSTM 同样使用 BPTT，但其核心改进在 $c_t$ 的传递路径上：细胞状态更新是<strong>加法形式</strong> $c_t=f_t\odot c_{t-1}+i_t\odot\tilde{c}_t$，梯度沿 $c_t$ 回传时每一步主要只乘以标量级的遗忘门 $f_t$，不再反复经历矩阵连乘，因此可以较顺畅地抵达更早的时间步。换言之，$c_t$ 是一条独立于 $h_t$ 的线性「传送带」，门控决定往带上放什么、取什么，而带上本身的传递不引入额外的指数衰减。这是结构层面的缓解，与后文的梯度裁剪（训练层面的稳定化）属于两类手段。</p>
+<h2>四、GRU：对 LSTM 的简化</h2>
+<p>GRU（Gated Recurrent Unit）是 2014 年提出的 LSTM 轻量化变体，核心思路是<strong>合并门控、精简状态</strong>：</p>
+<p>$$ z_t=\sigma\big(W_z\,[h_{t-1},\,x_t]+b_z\big) $$</p>
+<p>$$ r_t=\sigma\big(W_r\,[h_{t-1},\,x_t]+b_r\big) $$</p>
+<p>$$ \tilde{h}_t=\tanh\big(W_h\,[r_t\odot h_{t-1},\,x_t]+b_h\big) $$</p>
+<p>$$ h_t=(1-z_t)\odot h_{t-1}+z_t\odot\tilde{h}_t $$</p>
+<p>相对 LSTM 的三处改动：其一，把遗忘门与输入门<strong>绑定为更新门</strong> $z_t$——$1-z_t$ 控制旧记忆保留、$z_t$ 控制新信息写入，两者之和恒为 1，形成「保留多少旧的就替换多少新的」的约束；其二，<strong>移除输出门、合并双状态</strong>，只保留单一隐藏状态 $h_t$，不再对长期记忆做二次输出筛选；其三，新增的<strong>重置门</strong> $r_t$ 作用于候选状态的计算：$r_t$ 接近 0 时计算 $\tilde{h}_t$ 几乎忽略历史、只依赖当前输入，接近 1 时完整保留历史影响。</p>
+<table>
+<tr><th>维度</th><th>LSTM</th><th>GRU</th></tr>
+<tr><td>状态数量</td><td>双状态：细胞状态 $c_t$ + 隐藏状态 $h_t$</td><td>单状态：仅隐藏状态 $h_t$</td></tr>
+<tr><td>门控数量</td><td>3 个：遗忘门、输入门、输出门</td><td>2 个：更新门、重置门</td></tr>
+<tr><td>记忆更新逻辑</td><td>旧记忆与写入新记忆各自独立控制</td><td>更新门统一控制，新旧比例此消彼长</td></tr>
+<tr><td>权重矩阵组数</td><td>4 组</td><td>3 组，参数量约少 1/3</td></tr>
+<tr><td>实践倾向</td><td>记忆容量大，长窗口复杂场景上限更高</td><td>训练快、小数据集上更不易过拟合，适合快速基线</td></tr>
+</table>
+<p>课程实验的标准设计是在固定窗口长度、层数与隐藏维的部分条件下只替换循环单元，横向对比 RNN、LSTM、GRU 的收敛速度与精度，即单一变量对照。</p>
+<h2>五、BPTT：梯度沿时间累加与连乘的来源</h2>
+<h3>5.1 权重时间共享与前向</h3>
+<p>Vanilla RNN 只有 $U$（输入到隐藏）、$W$（隐藏到隐藏）、$V$（隐藏到输出）三组权重，在所有时间步完全复用，参数量与序列长度无关。总损失为各时间步损失之和：</p>
+<p>$$ L=\sum_{t=1}^{T}L_t(\hat{y}_t,\,y_t) $$</p>
+<p>语言建模类任务中，单步损失即预测下一词的交叉熵 $L_t=-\log P(y_t\mid x_1,\dots,x_t)$；训练采用教师强制（每步输入真实历史而非模型自身输出）。原料中对损失作用有一句准确的概括：<strong>网络结构决定梯度往哪传，损失函数决定梯度传多大</strong>。</p>
+<h3>5.2 时间步 T=3 的梯度累加</h3>
+<p>因为每组权重在每个时间步都被使用了一次，其总梯度等于各时间步产生的梯度<strong>之和</strong>。以序列长度 $T=3$ 为例：</p>
+<ul><li>对 $V$ 的梯度：$\dfrac{\partial L_1}{\partial V}+\dfrac{\partial L_2}{\partial V}+\dfrac{\partial L_3}{\partial V}$，三步各自直接对 $V$ 求导后累加；</li><li>对 $W$ 的梯度分三部分：$t=3$ 的损失经 $h_3$ 对 $W$ 产生一份梯度；$t=2$ 的损失经 $h_3\to h_2$ 回传产生一份；$t=1$ 的损失经 $h_3\to h_2\to h_1$ 回传再产生一份，最终总梯度为三者之和。</li></ul>
+<p>BPTT 的直观理解即：把 RNN 按时间步展开成一个深度等于序列长度、各层共享权重的前馈网络，再用普通反向传播计算并累加梯度。</p>
+<h3>5.3 消失与爆炸的分界</h3>
+<p>梯度从第 $T$ 步回传到第 1 步要连乘 $T$ 次 $W^{\top}$（再乘以 tanh 导数）：特征值决定这串连乘是指数增长还是指数衰减。序列 100 步就要乘 100 次，这正是实验 6.1 中「短序列精度尚可、长序列精度断崖下跌」的机理，也是第 3 节所述加法通路存在的意义。</p>
+<h2>六、梯度裁剪与训练实操</h2>
+<h3>6.1 clip_grad_norm_ 的用法</h3>
+<p>PyTorch 中梯度裁剪在 <code>loss.backward()</code> 之后、<code>optimizer.step()</code> 之前调用：</p>
+<pre><code>import torch.nn as nn
+
+loss.backward()
+nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
+optimizer.step()</code></pre>
+<p>其机制是计算全部参数梯度的 L2 范数，若超过阈值 <code>max_norm</code> 就把梯度整体<strong>等比例缩放</strong>到范数上限，方向不变。原料中的两组实践取值分别是：字符级 LSTM 代码补全基线用 <code>max_norm=5.0</code>，而沿用 AWD-LSTM 语言模型框架的 token 级训练用 <code>0.25</code>——阈值取值随任务与框架而异，不存在统一数值。</p>
+<p>配套的监控手段是自定义钩子逐步打印参数的梯度 L2 范数（实验 6.2 的做法）：不裁剪时原生 RNN 的梯度范数指数暴涨、损失剧烈震荡不收敛、权重无限变大；加裁剪后梯度范数被约束在可控区间，损失平稳下降、模型正常收敛。</p>
+<p><strong>裁剪的局限必须写清</strong>：梯度截断只解决梯度爆炸，无法修复梯度消失，也就不能解决长距离记忆问题；后者需要 LSTM/GRU 这类门控结构从机制上处理。这是实验 6.2 通向实验 6.3 的逻辑。</p>
+<h3>6.2 三个实验对象的训练表现对照</h3>
+<table>
+<tr><th>训练配置</th><th>长序列上的梯度行为</th><th>损失曲线</th><th>远距离记忆能力</th></tr>
+<tr><td>朴素 RNN，无裁剪</td><td>连乘导致指数放大或指数衰减</td><td>震荡不收敛，或开头信息梯度归零</td><td>基本失效，精度断崖下跌</td></tr>
+<tr><td>朴素 RNN + 梯度裁剪</td><td>范数被限幅，爆炸被抑制；消失依旧</td><td>平稳下降、可收敛</td><td>仍然差，短序列才可用</td></tr>
+<tr><td>LSTM（门控结构）</td><td>梯度主要沿细胞状态加法通路按 $f_t$ 缩放回传</td><td>平稳下降</td><td>长序列精度保持良好，下降幅度极小</td></tr>
+</table>
+<p>记忆能力的评测在原料中对应一组经典合成任务：前缀数字求和（只取序列前两个非零数字之和，其后补 0，用间隔步数控制难度）、奇偶校验、序列复制，以及 Hochreiter 提出 LSTM 时使用的复制记忆任务与 Adding Task（两个掩码位置相距越远越依赖长记忆）。严谨做法是固定隐藏维与参数量、只替换单元类型，扫描序列长度绘制「序列长度—准确率」曲线，同时观察同长度准确率与精度下降速度。</p>
+<h3>6.3 一次真实训练的日志记录</h3>
+<p>原料中最完整的一次实操是在 PY150 语料上训练多层 LSTM 语言模型。字符级基线脚本的超参数为：序列长度 128、批大小 32、嵌入维 128、隐藏维 256、2 层 LSTM（层间 dropout 0.2）、Adam 学习率 1e-3、训练 20 轮，每个批次反向传播后执行 <code>max_norm=5.0</code> 的梯度裁剪。token 级版本按 AWD-LSTM 框架配置：嵌入维 400、隐藏维 1152、3 层、dropout 0.4、序列长度 256、批大小 20，词表 50525，裁剪阈值 0.25。</p>
+<p>实际训练日志给出的数据：每轮 5054 个批次，单批约 90～93 ms，第 9 轮验证集损失 1.76、困惑度 5.84、bpc 2.545，被保存为最优权重；第 10 轮训练集前 1000 批的损失从 1.90 降至 1.82 后回升至 1.84。原料的诊断有三点值得保留：其一，日志打印的学习率为 30.0，与脚本设定的 1e-3 明显矛盾，可自证的一侧是脚本源码，结论为学习率调度器单位写错导致数值被错误放大，需按 1e-3 配合退火修复；其二，训练集损失反常地高于验证集最优损失，结合损失回升，属于过拟合苗头，处理方式是取第 9 轮检查点并早停；其三，生成的代码补全样例中大量出现 <code>&lt;UNK&gt;</code> 映射的占位符，根源指向词表过大叠加训练不充分。该实验印证了一个实操结论：<strong>门控结构与裁剪保证的是「能训得动」，最终质量还取决于学习率、词表规模与正则化设置</strong>。</p>
+<p>关于硬件：原料未逐项标注每次训练的显卡型号，但作者的常用训练环境为单卡 RTX 4060（8 GB 显存），上述全部实验配置都是这一显存规模下可完成的小型设置。</p>
+<h2>七、可复现的公开代码资源</h2>
+<p>以下地址逐一经访问核验为公开可访问的仓库或教程页（原料清单中若干子目录路径或仓库已失效，核验不通的一律不列）：</p>
+<ul><li>Karpathy 的 char-rnn，RNN/LSTM/GRU 字符生成开山工程：https://github.com/karpathy/char-rnn</li><li>纯 NumPy 手写 LSTM 全部门控与前向/反向传播，适合对照公式：https://github.com/CaptainE/RNN-LSTM-in-numpy</li><li>从零手写 RNNCell/LSTMCell/GRUCell，含梯度裁剪与完整 BPTT 训练流程：https://github.com/DingKe/pytorch_workplace/tree/master/rnn</li><li>动手学深度学习（d2l）官方教材代码库，循环网络章节含手写与高层 API 两种实现：https://github.com/d2l-ai/d2l-zh</li><li>TensorFlow 官方字符文本生成教程（Keras 下 SimpleRNN/LSTM 一键切换）：https://github.com/tensorflow/text/blob/master/docs/tutorials/text_generation.ipynb</li><li>TensorFlow 早期示例库（含 LSTM、GRU、双向 LSTM 全套 Notebook）：https://github.com/aymericdamien/TensorFlow-Examples</li><li>PyTorch 字符级文本生成模板：https://github.com/spro/practical-pytorch/tree/master/char-rnn-generation</li><li>IBM 的 Seq2Seq + Attention PyTorch 实现：https://github.com/IBM/pytorch-seq2seq</li><li>多步时序预测的 Seq2Seq 实现：https://github.com/JEddy92/TimeSeries_Seq2Seq</li><li>char-rnn 的 TensorFlow 社区复刻：https://github.com/sherjilozair/char-rnn-tensorflow</li><li>清华 Time-Series-Library，LSTM/GRU 等基线统一实现与标准基准：https://github.com/thuml/Time-Series-Library</li><li>LSTM 发明人团队的 xLSTM 架构官方仓库：https://github.com/NX-AI/xlstm 与其时序适配版 https://github.com/muslehal/xLSTMTime</li><li>经典 CNN+LSTM 多尺度时序预测工作 LSTNet：https://github.com/laiguokun/LSTNet</li><li>PY150 代码语料数据集官方下载页（该数据集无官方 GitHub，仅官网提供数据包）：https://www.sri.inf.ethz.ch/py150</li></ul>
+<h2>八、常见误区</h2>
+<ol><li><strong>把门当成 0/1 开关</strong>。sigmoid 输出的是连续放行比例，实际门值多为 0.3、0.7 一类中间值，门控是对记忆逐维度的精细比例控制，不存在「整条记忆全忘或全留」。</li><li><strong>认为遗忘门置 0 就退化为 RNN</strong>。方向恰好相反：$f_t=0$ 是完全丢弃旧细胞状态；且即便固定 $f_t$，LSTM 仍有输入门与输出门两次筛选和 $c$/$h$ 双状态，结构上不会变成无门控的 $h_t=\tanh(Wh_{t-1}+Ux_t+b)$。只有彻底移除门并合并状态才退化。</li><li><strong>以为权重固定意味着门的强度固定</strong>。固定的是筛选规则（权重），门控值每个时间步由当前输入与上步隐藏状态重新计算，是动态量。</li><li><strong>指望梯度裁剪治好梯度消失</strong>。裁剪只对爆炸有效；消失是连乘结构的问题，须靠细胞状态加法通路或更现代的结构解决，且裁剪阈值过小时训练同样会不稳定。</li><li><strong>把 GRU 理解为「砍掉两个门的 LSTM」</strong>。GRU 对遗忘/输入门做的是带约束的合并（比例和恒为 1），重置门的作用位置在候选状态计算而非状态更新，与 LSTM 的门并不一一对应。</li><li><strong>认为连续数值时序也要离散嵌入</strong>。整数 ID 的文本 token 必须查表嵌入；股票一类连续数值只需线性投影对齐维度并先做标准化，单变量数据可直接输入循环层。</li><li><strong>混淆架构与生成模式</strong>。RNN/LSTM 是循环架构，自回归是推理时以自身输出为输入的生成模式；教师强制训练与双向编码任务都不是自回归，二者不应混为一谈。</li></ol>
+<h2>九、总结要点</h2>
+<ol><li>LSTM 用拼接输入分四路算出 $f_t,i_t,\tilde{c}_t,o_t$，再以 $c_t=f_t\odot c_{t-1}+i_t\odot\tilde{c}_t$、$h_t=o_t\odot\tanh(c_t)$ 完成更新；$\odot$ 的逐元素性质决定了门控是逐维度的比例控制。</li><li>细胞状态的加法通路使梯度回传主要乘以遗忘门而非反复矩阵连乘，从结构上缓解梯度消失；朴素 RNN 的消失/爆炸分界取决于循环权重 $W$ 的特征值。</li><li>GRU 以更新门绑定新旧记忆、以重置门调节历史依赖、去掉输出门与独立细胞状态，参数约省 1/3，适合小数据快速基线，LSTM 在长窗口场景上限更高。</li><li>BPTT 的本质是共享权重下各时间步梯度的累加：$T=3$ 的例子里 $V$ 的梯度是三项直接贡献之和，$W$ 的梯度则含层层回传的三项，连乘次数随序列长度线性增长。</li><li><code>clip_grad_norm_</code> 按范数上限等比缩放梯度，只治爆炸不治消失；实操中需配合梯度范数监控、教师强制、dropout、早停与困惑度/bpc 评估。</li><li>实测日志说明结构层面的改进不自动等于好结果：学习率调度缺陷、过大词表与过拟合仍会使门控模型的实际产出严重劣化，训练记录的每个数值都应回看核对。</li></ol>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · RNN、GRU、LSTM经典代码GitHub地址</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

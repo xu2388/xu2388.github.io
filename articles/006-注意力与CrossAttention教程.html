@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>注意力和 Cross-Attention 到底在干什么：从"查表"到"条件怎么进 UNet"</title>
+  <title>注意力与 Cross-Attention 机制解析：从"软查表"到 UNet 的条件注入</title>
   <link rel="stylesheet" href="../assets/style.css" />
   <script id="meta" type="application/json">
   {
-    "title": "注意力和 Cross-Attention 到底在干什么：从\"查表\"到\"条件怎么进 UNet\"",
+    "title": "注意力与 Cross-Attention 机制解析：从\"软查表\"到 UNet 的条件注入",
     "date": "2026-10-24",
     "tags": ["教程", "注意力机制", "Cross-Attention", "Transformer", "条件注入", "学习笔记"],
-    "summary": "注意力是我啃过的第三块硬骨头（VAE、扩散/FM 之后）。这篇先把它还原成最朴素的一件事——'带着问题去查表'，讲清自注意力的 Q/K/V 和多头，再推到关键的分野：交叉注意力。正是它，让文本/结构条件能注入扩散 UNet，也正是 DeepSeek 给我'有色调无结构'开的药方。最后接回我的 HistDiST + Phikon 改造。",
+    "summary": "本文是继 VAE 与扩散/流匹配之后的第三篇基础机制笔记。文章先将注意力还原为其最朴素的形态——'带着查询去检索'，依次讲解自注意力的 Q/K/V 与多头设计，进而引出关键分野：交叉注意力。正是交叉注意力，使文本与结构条件得以注入扩散 UNet，也是针对虚拟染色'有色调、无结构'问题的对症机制。文末回到 HistDiST + Phikon 的改造实践。",
     "category": "学习笔记",
     "source_ids": ["065", "002", "137", "216", "060"]
   }
@@ -20,10 +20,26 @@
 <body>
   <header class="site-header">
     <div class="container">
-      <h1 class="site-title">科研与学习档案</h1>
+      <h1 class="site-title">我的个人博客</h1>
       <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
-      <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">8</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+      <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -32,27 +48,30 @@
   </header>
 
   <article class="article">
-    <h1>注意力和 Cross-Attention 到底在干什么：从"查表"到"条件怎么进 UNet"</h1>
+    <h1>注意力与 Cross-Attention 机制解析：从"软查表"到 UNet 的条件注入</h1>
     <div class="meta">
       写于 2026-10-24 · 教程篇 · 原始来源：DeepSeek 对话 [065][002][137][216][060]
     </div>
 
     <p class="lead">
-      我当初是把它当知识点啃的——Q、K、V、缩放点积、多头、SENet、CBAM，抄了代码还让 AI 逐行写注释。但说实话，啃完我只会"算"，不会"用"。真正让我开窍的是回到我自己的项目：我那个"生成的图有平均色调、但没有实际结构"的老大难，DeepSeek 给的诊断一句话点破——<strong>"结构在哪里被控制？在跨注意力层里，以空间潜变量作为条件查询。"</strong> 这时候我才明白，注意力不是什么可选模块，它是<strong>条件进入模型的唯一通道</strong>。这篇就从"查表"这个最朴素的本质讲起，一路推到交叉注意力，再落回我的染色任务。
+      学习注意力机制时，我最初将其作为孤立的知识点逐个攻克——Q、K、V、缩放点积、多头、SENet、CBAM，抄写代码并请 AI 逐行注释。但坦率地说，当时只会"算"，不会"用"。真正使问题豁然开朗的，是回到自己的研究：针对虚拟染色任务中"生成图像具有平均色调、却缺乏实际结构"这一长期难点，DeepSeek 给出的诊断一语中的——<strong>"结构在哪里被控制？在跨注意力层里，以空间潜变量作为条件查询。"</strong> 至此才明确：注意力并非可选模块，而是<strong>条件进入模型的唯一通道</strong>。本文从"查表"这一最朴素的本质出发，逐步推导至交叉注意力，最后落回虚拟染色任务。
     </p>
 
-    <h2>一、先忘掉公式：注意力就是"带着问题去查表"</h2>
+    <h2>一、注意力的本质：一次"带着查询的软查表"</h2>
     <p>
-      注意力机制核心目标是从一堆信息里，挑出对当前任务更关键的那些。它干的活，本质是<strong>一次"软查表"</strong>：拿着一个<strong> Query（我要查什么）</strong>，去和一堆 <strong>Key（每条信息的索引）</strong> 比对相关性，比对得越匹配，就越多地把对应的 <strong>Value（真正的内容）</strong>取过来，最后加权汇总。
+      注意力机制的核心目标，是从一组信息中挑出对当前任务更关键的部分。它所做的，本质上是一次<strong>"软查表"</strong>：持有一个<strong> Query（要查询什么）</strong>，与一组 <strong>Key（每条信息的索引）</strong>比对相关性；匹配程度越高，对应 <strong>Value（真正的内容）</strong>被取用的权重越大，最后加权汇总。
+    </p>
+
+    <p>
+      为便于理解，采用如下例子：将中文"我"翻译成英文。
     </p>
 
     <div class="record">
-      <span class="tag">让我想通的比喻 · 机器翻译里的 Q/K/V</span>
-      <p>把中文"我"翻成英文。这时候：</p>
-      <p>· <strong>Query</strong> = "我"——我当前要查询的目标；<br />
-         · <strong>Key</strong> = 每个英文词的重要特征——被查的索引；<br />
+      <span class="tag">示例 · 机器翻译中的 Q/K/V</span>
+      <p>· <strong>Query</strong> = "我"——当前待查询的目标；<br />
+         · <strong>Key</strong> = 每个英文词的关键特征——被检索的索引；<br />
          · <strong>Value</strong> = 每个英文词本身的内容。</p>
-      <p>拿"我"这个 Query 去和所有英文词的 Key 算相关性，发现和 "me" 的 Key 最匹配，注意力分数就最高；再按这个分数把所有 Value 加权求和，"me" 的内容占比最重，下游就懂了"我→me"。<strong>反证一下</strong>：如果不加注意力、直接把所有词一视同仁地喂下去，下游根本分不清哪个词和"我"相关——注意力就是来解决"谁重要"的。</p>
+      <p>以 Query 与所有英文词的 Key 计算相关性，结果显示其与 "me" 的 Key 最为匹配，注意力分数最高；再按该分数对所有 Value 加权求和，"me" 的内容占比最大，模型由此建立"我→me"的对应关系。<strong>反向验证</strong>：若不引入注意力、将所有词一视同仁地传递，下游无法区分哪个词与"我"相关——注意力正是为解决"谁更重要"这一问题而设计的。</p>
     </div>
 
     <p>
@@ -62,94 +81,94 @@
     <div class="record">
       <span class="tag">核心公式 · 缩放点积注意力</span>
       <p style="text-align:center;font-size:1.15em"><code>Attention(Q, K, V) = softmax( QKᵀ / √d ) · V</code></p>
-      <p>· <code>QKᵀ</code>：每个 Query 和每个 Key 点积，算出相关性矩阵；<br />
-         · <code>/ √d</code>：除以维度平方根——<strong>防止点积数值太大</strong>，太大 softmax 会饱和、梯度消失；<br />
-         · <code>softmax</code>：把相关性归一成加起来等于 1 的权重；<br />
-         · <code>· V</code>：按权重把 Value 加权求和，得到输出。</p>
+      <p>· <code>QKᵀ</code>：每个 Query 与每个 Key 做点积，得到相关性矩阵；<br />
+         · <code>/ √d</code>：除以维度的平方根——用于<strong>防止点积数值过大</strong>，数值过大时 softmax 会饱和、导致梯度消失；<br />
+         · <code>softmax</code>：将相关性归一化为总和为 1 的权重；<br />
+         · <code>· V</code>：按权重对 Value 加权求和，得到输出。</p>
     </div>
 
-    <h2>二、自注意力：序列里每个词，都和所有词对一遍暗号</h2>
+    <h2>二、自注意力：序列内部的全局相关性计算</h2>
     <p>
-      原始的注意力是"拿一个 Query 去查一堆 Key"（比如翻译时拿"我"去查英文词）。<strong>自注意力（Self-Attention）</strong>更进一步：Query、Key、Value <strong>全都来自同一串输入</strong>——让序列里每个元素，都和其他所有元素算一遍相关性。我当年是用"你好机车"这四个字搞懂的：
+      基础的注意力是"以一个 Query 检索一组 Key"（例如翻译中以"我"检索英文词）。<strong>自注意力（Self-Attention）</strong>更进一步：Query、Key、Value <strong>全部来自同一串输入</strong>——序列中每个元素都与其他所有元素计算一遍相关性。为便于理解，采用"你好机车"这句话作为例子：
     </p>
 
     <div class="record">
-      <span class="tag">自注意力在"你好机车"上怎么走</span>
-      <p>先把每个字 Embedding 成向量 <code>a¹,a²,a³,a⁴</code>，然后每个 <code>a</code> 都用<strong>同一套</strong>矩阵分别投影出 q、k、v：</p>
+      <span class="tag">示例 · "你好机车"上的自注意力计算流程</span>
+      <p>先将每个字 Embedding 为向量 <code>a¹,a²,a³,a⁴</code>，然后每个 <code>a</code> 都经<strong>同一套</strong>矩阵分别投影出 q、k、v：</p>
       <p style="text-align:center"><code>qⁱ = Wq·aⁱ ,  kⁱ = Wk·aⁱ ,  vⁱ = Wv·aⁱ</code></p>
-      <p>要算"你"（a¹）和整句话的关系，就用 <code>q¹</code> 去和 <code>k¹,k²,k³,k⁴</code> 点积：<code>α₁,ᵢ = q¹·kⁱ / √d</code>，softmax 归一成权重，再加权求和 <code>b¹ = Σ α̃₁,ᵢ · vⁱ</code>。于是"你"这个位置的输出，就按相关性融合了整句话的信息——哪个字跟它关系近，就多吸收谁。</p>
-      <p><strong>本质一句话</strong>：自注意力让每个位置都能"看到"全序列，并按相关性地 gather 信息，所以它天然捕捉长程依赖（卷积只会看邻居，自注意力一眼看全场）。</p>
+      <p>以计算"你"（a¹）与整句的关系为例：用 <code>q¹</code> 分别与 <code>k¹,k²,k³,k⁴</code> 做点积：<code>α₁,ᵢ = q¹·kⁱ / √d</code>，经 softmax 归一为权重，再加权求和 <code>b¹ = Σ α̃₁,ᵢ · vⁱ</code>。于是"你"位置的输出按相关性融合了整句信息——相关性越高的字，贡献越大。</p>
+      <p><strong>概括而言</strong>：自注意力使每个位置都能"看到"整个序列，并按相关性聚合信息，因而天然擅长捕捉长程依赖（卷积只能关注邻域，自注意力则覆盖全局）。</p>
     </div>
 
     <p>
-      还有一层我当年硬啃过的<strong>多头（Multi-head）</strong>，其实想法很直白：不要只用一组 Q/K/V（一个角度看相关性），而是并行用好幾组，每组关注不同的子空间，最后把各头的结果拼起来。就像看一张图，有人看轮廓、有人看颜色、有人看纹理，合起来信息更全。代码核心就是把 Q/K/V 按头数切开、各自算注意力、再拼回去（我当年还专门让 AI 给那段 <code>reshape→transpose→matmul→softmax→matmul→transpose→reshape</code> 逐行写了注释，图的就是把"切头—算分—加权—合头"这套形状变换看熟）。
+      另一项需要掌握的设计是<strong>多头（Multi-head）</strong>，其思路相当直接：不只用一组 Q/K/V（即仅从一个角度度量相关性），而是并行使用多组，每组关注不同的子空间，最后将各头的结果拼接起来。类比观察一张图像：有人关注轮廓、有人关注颜色、有人关注纹理，合并后信息更完整。代码的核心步骤是将 Q/K/V 按头数切分、分别计算注意力、再拼接还原（学习时我曾请 AI 为 <code>reshape→transpose→matmul→softmax→matmul→transpose→reshape</code> 这段形状变换逐行注释，目的正是熟悉"切头—算分—加权—合头"的完整流程）。
     </p>
 
-    <h2>三、关键分野：自注意力是"内部开会"，交叉注意力是"带着问题去查资料"</h2>
+    <h2>三、关键分野：自注意力面向序列内部，交叉注意力面向外部条件</h2>
     <p>
-      这是我当年啃代码时完全没打通、后来靠项目才想通的一层。自注意力和交叉注意力，差别只在<strong> Q、K、V 从哪来</strong>：
+      这一层在最初读代码时并未打通，后来靠项目实践才厘清。自注意力与交叉注意力的差别，仅在于<strong> Q、K、V 的来源</strong>：
     </p>
 
     <div class="record">
-      <span class="tag">一句话分清两者</span>
+      <span class="tag">自注意力与交叉注意力的区分</span>
       <table>
-        <tr><th></th><th>Q 来自</th><th>K / V 来自</th><th>在干什么</th></tr>
-        <tr><td><strong>自注意力</strong></td><td>序列自己</td><td>序列自己</td><td>内部开会：每个位置和其他所有位置交换信息</td></tr>
-        <tr><td><strong>交叉注意力</strong></td><td>序列 A（主体）</td><td>序列 B（条件）</td><td>查资料：A 带着自己的问题，去 B 里按相关性取信息</td></tr>
+        <tr><th></th><th>Q 来自</th><th>K / V 来自</th><th>作用</th></tr>
+        <tr><td><strong>自注意力</strong></td><td>序列自身</td><td>序列自身</td><td>序列内部通信：每个位置与所有其他位置交换信息</td></tr>
+        <tr><td><strong>交叉注意力</strong></td><td>序列 A（主体）</td><td>序列 B（条件）</td><td>外部检索：A 携带自身查询，按相关性从 B 中提取信息</td></tr>
       </table>
-      <p>公式一模一样（都是 <code>softmax(QKᵀ/√d)V</code>），但交叉注意力里 Q 和 K/V <strong>来自两个不同的东西</strong>——这就是"条件注入"的数学开关。</p>
+      <p>两者的公式完全相同（均为 <code>softmax(QKᵀ/√d)V</code>），但交叉注意力中 Q 与 K/V <strong>来自两个不同的来源</strong>——这正是"条件注入"的数学开关。</p>
     </div>
 
     <p>
-      想清楚这个，扩散模型里的一切都顺了：SD 的 UNet 每个 BasicTransformerBlock 里，其实是<strong>先自注意力、再交叉注意力</strong>——自注意力让图像特征内部先统一认知，交叉注意力再让图像特征去"查询"文本嵌入。<strong>文本/结构条件，就是从交叉注意力这一层灌进 UNet 的。</strong>
+      理清这一点后，扩散模型中的条件机制便可贯通：SD 的 UNet 在每个 BasicTransformerBlock 中，实际是<strong>先自注意力、再交叉注意力</strong>——自注意力让图像特征内部先形成统一表征，交叉注意力再让图像特征去"查询"文本嵌入。<strong>文本/结构条件，正是从交叉注意力这一层注入 UNet 的。</strong>
     </p>
 
-    <h2>四、交叉注意力：条件到底怎么"注入"进 UNet</h2>
+    <h2>四、交叉注意力：条件注入 UNet 的具体机制</h2>
     <p>
-      我当年读 StainExpert 时有个具体困惑："这个交叉注意力是在哪儿算的？VAE 刚刚压缩到 latent space 吗？" 答案是：<strong>不是压缩完那一下，而是在扩散 UNet 内部、每一个去噪步骤里都在算。</strong> 具体分工是这样：
+      阅读 StainExpert 时我有一个具体困惑："这个交叉注意力是在哪儿算的？VAE 刚刚压缩到 latent space 吗？" 答案是：<strong>不是压缩完成的那一步，而是在扩散 UNet 内部、每一个去噪步骤中都在计算。</strong> 具体分工如下：
     </p>
 
     <div class="record">
       <span class="tag">条件注入的机制 · Q 是图，K/V 是条件</span>
-      <p>· <strong>Q</strong> 来自<strong>图像特征</strong>（正在去噪的那张 latent 的中间特征）——"我现在这张图，哪里该问问题"；<br />
-         · <strong>K、V</strong> 来自<strong>条件</strong>——可以是文本 <code>z_text</code>（CLIP 编码）、结构潜变量 <code>z_s</code>（VAE 编码的 H&E）、或病理专用编码器（Phikon / UNI）提的特征。</p>
-      <p>于是在 UNet 的每个去噪步，图像特征都"带着自己的空间位置"去条件里查一遍：文本说"这里该是 MAS 染色的胶原"，结构潜变量说"这个位置对应源图的肾小球"，查回来的信息就加权融进图像特征。<strong>VAE 压缩只是把图搬进 latent 空间，交叉注意力才是把条件一勺一勺喂进去的勺子，且每一步去噪都喂一次。</strong></p>
+      <p>· <strong>Q</strong> 来自<strong>图像特征</strong>（正在去噪的那张 latent 的中间特征）——"当前图像的哪些位置需要查询"；<br />
+         · <strong>K、V</strong> 来自<strong>条件</strong>——可以是文本 <code>z_text</code>（CLIP 编码）、结构潜变量 <code>z_s</code>（VAE 编码的 H&amp;E）、或病理专用编码器（Phikon / UNI）提取的特征。</p>
+      <p>于是在 UNet 的每个去噪步，图像特征都"携带自身的空间位置"到条件中检索一遍：文本条件指出"该位置应为 MAS 染色的胶原"，结构潜变量指出"该位置对应源图的肾小球"，检索到的信息按权重融合进图像特征。<strong>VAE 压缩只是将图像搬入 latent 空间，交叉注意力才是把条件持续送入的通道，且每一步去噪都执行一次。</strong></p>
     </div>
 
     <p>
-      为什么必须"每一步都喂"？因为扩散是很多步慢慢去噪的，条件只在输入端拼一次（concat）的话，越到后面这张"小抄"就被淹没了；而交叉注意力让源结构/文本在<strong>整个去噪链条上持续可被查询</strong>，这才锁得住结构。这正是我 001 里那个老结论的机制版——结构保持不是靠一个损失函数"希望"它别崩，而是靠一条<strong>贯穿全程的条件注入通道</strong>。
+      为什么必须"每一步都注入"？因为扩散模型通过多步迭代逐渐去噪，若条件仅在输入端拼接一次（concat），随着去噪推进其影响会被逐渐稀释；而交叉注意力使源结构/文本在<strong>整个去噪链条上持续可被查询</strong>，结构因此得以锁定。这正是 001 中那个结论的机制层面解释——结构保持不是依赖某个损失函数的"期望"，而是依靠一条<strong>贯穿全程的条件注入通道</strong>。
     </p>
 
-    <h2>五、接回我的染色任务：为什么"有色调无结构"，注意力怎么救</h2>
+    <h2>五、回到虚拟染色任务："有色调、无结构"的成因与对策</h2>
     <p>
-      我那条主线的病根——"生成的图有个平均色调，但没有实际结构"——DeepSeek 的诊断现在我能用自己的话复述了：<strong>条件信号太弱、注入路径太间接。</strong> 如果我拿的是整张 H&E 的全局嵌入当条件，空间排列全丢了，模型只能学到"平均色调"；对症的药，就是把<strong>带空间维度的结构特征，通过交叉注意力当 K/V 注入</strong>，让去噪每一步都能按位置查到源图的结构。
+      主线问题——"生成的图有一个平均色调，但没有实际结构"——的成因，现在可以用 DeepSeek 的诊断复述为：<strong>条件信号太弱、注入路径太间接。</strong> 若以整张 H&amp;E 的全局嵌入作为条件，空间排列信息全部丢失，模型只能学到"平均色调"；对症的方案，是将<strong>带空间维度的结构特征通过交叉注意力作为 K/V 注入</strong>，使去噪每一步都能按位置检索到源图的结构。
     </p>
 
     <div class="record">
-      <span class="tag">我项目里的注意力 · 三条实证/路线</span>
-      <p><strong>① 我自己撞过的正反馈：</strong>我早期在 H&E 上加过注意力，发现"生成图像的 SSIM 会提升"——这很可能就是注意力让模型更聚焦到 H 通道主导的核结构上。但它不自动等于 IHC 的染色特异性也变好，指标和结构之间那道坎还在。</p>
-      <p><strong>② HistDiST 的做法（我的基线）：</strong>用预训练的病理模型 <strong>Phikon</strong> 提 H&E 的形态特征，通过 cross-attention 注入 U-Net；VAE 编码的 H&E 特征再和噪声 latent 拼接。这是"结构特征当条件"的标准姿势。</p>
-      <p><strong>③ HistDiT 的启发：</strong>它点破了一个权衡——现有 U-Net 扩散有"结构-染色权衡"，要么结构相关但糊、要么纹理真实但有伪影；它的解法是<strong>用 VAE 潜变量当空间约束、用 UNI 嵌入当语义引导，双双走多头跨注意力注入</strong>，在不同去噪阶段动态关注结构，防幻觉。这几乎就是给我"有色调无结构"开的方子。</p>
+      <span class="tag">本项目中的注意力 · 三条实证/路线</span>
+      <p><strong>① 实验中观察到的正反馈：</strong>早期在 H&amp;E 分支加入注意力后，观察到"生成图像的 SSIM 提升"——这很可能是因为注意力促使模型更聚焦于 H 通道主导的核结构。但它并不自动意味着 IHC 的染色特异性同样改善，指标与结构之间的差距仍然存在。</p>
+      <p><strong>② HistDiST 的做法（本项目基线）：</strong>用预训练的病理模型 <strong>Phikon</strong> 提取 H&amp;E 的形态特征，通过 cross-attention 注入 U-Net；VAE 编码的 H&amp;E 特征再与噪声 latent 拼接。这是"结构特征作条件"的标准范式。</p>
+      <p><strong>③ HistDiT 的启发：</strong>它揭示了一个权衡——现有 U-Net 扩散存在"结构-染色权衡"：要么结构相关但图像模糊，要么纹理真实但伴有伪影；其解法是<strong>以 VAE 潜变量作空间约束、以 UNI 嵌入作语义引导，二者均经多头跨注意力注入</strong>，并在不同去噪阶段动态关注结构以抑制幻觉。这几乎正是针对"有色调、无结构"问题的方案。</p>
     </div>
 
     <div class="note">
       <span class="tag">一个更精巧的变体 · PST-Diff 的不对称注意力</span>
-      我调研过的 PST-Diff 里有个 AAM（不对称注意力模块）让我印象很深：<strong>源到潜在用多头注意力（精细局部，"守护"源域结构），潜在到目标用全局注意力（宏观，"塑造"目标域风格）</strong>。翻译一下就是——用细注意力守住结构不跑偏，用粗注意力放开手脚换风格。这个"一细一粗、分工守护与塑造"的思路，比我一股脑全用交叉注意力要讲究，我记下了。
+      调研中，PST-Diff 的 AAM（不对称注意力模块）值得注意：<strong>源到潜在方向使用多头注意力（精细局部，用于守护源域结构），潜在到目标方向使用全局注意力（宏观，用于塑造目标域风格）</strong>。换言之——以细粒度注意力约束结构不偏移，以粗粒度注意力放开转换风格。这种"一细一粗、分别承担守护与塑造"的设计，优于对所有条件一律使用同一种交叉注意力，值得记录借鉴。
     </div>
 
     <div class="note">
       <span class="tag">当前结论</span>
-      注意力剥到最底，就是<strong>"带着 Query 去和一堆 Key 算相关性、再按相关性加权取 Value"</strong>——一次可微的软查表。自注意力让序列内部互通有无，多头让它从多个角度看，而<strong>交叉注意力（Q 来自图像、K/V 来自条件）是把文本/结构条件灌进扩散 UNet 的那道门</strong>。我的"有色调无结构"，本质是这道门太窄或太间接；把带空间的结构特征（VAE 潜变量 / Phikon / UNI）通过交叉注意力在每一步去噪里持续注入，就是主线层面最对症的解法。从"啃 QKV 代码"到"看懂条件怎么进模型"，是我这次真正想通的一跃。
+      注意力机制归结到最底层，就是<strong>"以 Query 与一组 Key 计算相关性、再按相关性加权提取 Value"</strong>——一次可微的软查表。自注意力实现序列内部的信息交换，多头使其从多个子空间观察，而<strong>交叉注意力（Q 来自图像、K/V 来自条件）是把文本/结构条件注入扩散 UNet 的通道</strong>。"有色调、无结构"问题的本质，是这条通道过窄或过于间接；将带空间信息的结构特征（VAE 潜变量 / Phikon / UNI）通过交叉注意力在每一步去噪中持续注入，是主线层面最对症的解法。从"逐行理解 QKV 代码"到"看懂条件如何进入模型"，是本次学习中最关键的一跃。
     </div>
 
     <div class="note">
       <span class="tag">未解决问题 / 待核实</span>
       <ul>
-        <li>"加了注意力/约束，肉眼可见图像更平滑、结构清晰度反而下降"——<strong>注入强度和结构保真之间的度</strong>我一直没调好，这是下一步要啃的。</li>
-        <li>HistDiST 现在翻译任务<strong>根本没用文本条件</strong>（只用 Phikon + VAE 结构）；我想把文本也融进去（cross-attn 注入），但得先构造 (H&amp;E, IHC, text) 三元组、文本还得病理专用编码器——没落地。</li>
-        <li>通道级条件注入（输 H 通道 RGB、E 通道当监督）只是我一个思路，<strong>未必可行</strong>，没验证。</li>
-        <li>数据没配准（MIST）时，注意力/NCE 监督可能"把 A 位置结构对齐到 B 位置特征"，是错的——配准和注意力的相互作用我没系统查。</li>
-        <li>这篇里 HistDiT / PST-Diff / StainExpert 的机制描述都来自对话引述，<strong>写进材料前回原论文核对</strong>。</li>
+        <li>"加入注意力/约束后，图像肉眼可见更平滑、结构清晰度反而下降"——<strong>注入强度与结构保真之间的平衡</strong>一直未调好，这是下一步需要解决的问题。</li>
+        <li>HistDiST 在翻译任务中<strong>完全未使用文本条件</strong>（只用 Phikon + VAE 结构）；我计划将文本也融入（cross-attn 注入），但需先构造 (H&amp;E, IHC, text) 三元组、文本还需病理专用编码器——尚未落地。</li>
+        <li>通道级条件注入（输 H 通道 RGB、E 通道作监督）只是一个设想，<strong>未必可行</strong>，尚未验证。</li>
+        <li>数据未配准（MIST）时，注意力/NCE 监督可能"把 A 位置结构对齐到 B 位置特征"，属于错误对齐——配准与注意力的相互作用尚未系统调研。</li>
+        <li>本文中 HistDiT / PST-Diff / StainExpert 的机制描述均来自对话引述，<strong>写入正式材料前应回原论文核对</strong>。</li>
       </ul>
     </div>
 

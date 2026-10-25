@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "H&E→IHC"],"category":"研究","summary":"解读 Star-Diffusion 如何针对复染（special stains）设计扩散框架，梳理其结构约束与染色控制策略，并评估其思路在浓度域路线中的可移植性。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <h1 class="site-title">我的个人博客</h1>
+    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+  </div>
+</header>
+<article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
+<h1>Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读</h1>
+<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<blockquote><strong>论文</strong>：<em>From Pixels to Pathology: Restoration Diffusion for Diagnostic-Consistent Virtual IHC</em> <strong>作者</strong>：Jingsong Liu, Xiaofeng Deng, Han Li, Azar Kazemi, Christian Grashei, Gesa Wilkens, Xin You, Tanja Groll, Nassir Navab, Carolin Mogler, Peter J. Schüffler*（慕尼黑工业大学病理研究所 / CAMP / MCML / MDSI 等） <strong>发表</strong>：arXiv:2508.02528v1 [eess.IV]，2025-08-04；Preprint submitted to Elsevier <strong>方法名</strong>：<strong>Star-Diff</strong>（<strong>St</strong>aining restoration <strong>Diff</strong>usion），配套指标 <strong>SFS</strong>（Semantic Fidelity Score） <strong>关键词</strong>：Virtual Staining, Breast Cancer, Diffusion Model, Staining Restoration</blockquote>
+<hr />
+<h2>0. 一句话概括</h2>
+<blockquote>前人的 H&amp;E→IHC 虚拟染色都把它当成<strong>图像翻译（translation）</strong>问题——只保留一条噪声路径，靠扩散的随机性去&quot;变&quot;出 IHC。Star-Diff 则把它重构成<strong>图像复原（restoration）</strong>问题：<strong>额外加一条确定性的&quot;复原路径&quot;</strong>，把 H&amp;E 直接推向 IHC 的结构，噪声路径只负责提供生物变异性。两条路径一确定一随机，<strong>结构与多样性之间的权衡第一次变得可调</strong>。  同时它指出：H&amp;E 和 IHC 是<strong>不同深度的连续切片</strong>，像素级本来就对不上，用 SSIM/PSNR 评价是在<strong>奖励错位</strong>。于是提出 <strong>SFS</strong>——一个基于&quot;AI 病理专家分类结果&quot;的指标，<strong>在错位和分类器偏置下都保持稳定</strong>。</blockquote>
+<p>一句话记住这篇的两个动作：<strong>给扩散加一条确定性路径</strong>（生成侧），<strong>用分类任务替代像素比较</strong>（评价侧）。</p>
+<hr />
+<h2>1. 命名澄清</h2>
+<p>先避免混淆。这篇论文里有两套名字，容易记串：</p>
+<table>
+<tr><th>名字</th><th>是什么</th><th>容易混淆的对象</th></tr>
+<tr><td><strong>Star-Diff</strong></td><td>本文的<strong>生成模型</strong>（双路径扩散）</td><td>与 <strong>RDDM</strong>（Residual Denoising Diffusion Models, CVPR 2024）关系密切——Star-Diff 的残差/复原思想源自 RDDM 框架，本文把它<strong>迁移并改造</strong>到染色任务上</td></tr>
+<tr><td><strong>SFS</strong></td><td>本文的<strong>评价指标</strong>（Semantic Fidelity Score）</td><td>与 <strong>SSIM</strong> 名字长得像但完全是两回事：SSIM 是像素级结构相似度，SFS 是<strong>诊断语义级</strong>指标</td></tr>
+<tr><td><strong>vIHC</strong></td><td>virtual IHC，虚拟生成的 IHC 图</td><td>不是数据集，是&quot;虚拟 IHC 图像&quot;的统称</td></tr>
+<tr><td><strong>BCI</strong></td><td>Breast Cancer Immunohistochemical 数据集</td><td>是<strong>数据集的缩写</strong>，不是方法</td></tr>
+</table>
+<p>另外提醒一点：这篇论文标题里写的是 <strong>&quot;Diagnostic-Consistent&quot;</strong>（诊断一致），不是 &quot;Diagnostic-Accurate&quot;。用词很克制——它主张的是<strong>生成结果与真实切片在诊断分级上一致</strong>，而不是断言生成图像在医学上完全正确。这个措辞值得注意。</p>
+<hr />
+<h2>2. 背景：为什么这件事值得做</h2>
+<ul><li><strong>H&amp;E 染色</strong>是临床诊断的金标准，能看清<strong>细胞形态与组织架构</strong>，但它<strong>看不见分子信息</strong>——HER2 表达水平、Ki67 增殖指数这些，在 H&amp;E 上人眼就是看不出来。</li><li><strong>IHC（免疫组化）</strong>用抗体特异性地把目标蛋白染出来，是 HER2 分级、靶向治疗决策的依据。但它<strong>贵、慢、耗组织</strong>，而且在资源有限或时间紧迫的场景（比如<strong>术中冰冻切片</strong>）里根本来不及做。</li><li>于是有了 <strong>虚拟染色</strong>：<strong>直接从常规 H&amp;E 推断出 IHC</strong>，零额外染色成本、秒级出图。</li></ul>
+<p>一个关键的合理性前提：已有研究证明 H&amp;E 的<strong>形态学特征与分子谱存在统计相关性</strong>——Farahmand 等人用 CNN 仅凭 H&amp;E 就能估计 HER2 分级，Akbarnejad 等人用 ViT 预测 ER/PR/Ki-67 的 AUC 接近 0.90。既然 H&amp;E 里&quot;藏着&quot;分子信息，用生成模型把它显式地画出来就是可行的。</p>
+<hr />
+<h2>3. 前人工作，以及它们各自卡在哪</h2>
+<p>作者把染色翻译分成<strong>三条技术路线</strong>，每一条都讲清了&quot;怎么做的&quot;和&quot;卡在哪&quot;：</p>
+<table>
+<tr><th>路线</th><th>代表方法</th><th>怎么做</th><th>卡在哪</th></tr>
+<tr><td><strong>① 颜色映射派</strong></td><td>Reinhard（LAB 空间均值/方差迁移）、Macenko（SVD 估染色矩阵）、Vahadane（NMF 分解染色）</td><td>把染色转换当作<strong>颜色空间的统计分布对齐</strong></td><td>只能处理<strong>线性可分的颜色差异</strong>。IHC 这种<strong>抗原特异性染色</strong>是非线性的——DAB 只在特定蛋白表达处出现，颜色映射<strong>根本无从下手</strong>，会漏掉或扭曲关键病理特征</td></tr>
+<tr><td><strong>② 非配对派</strong></td><td>CycleGAN 及其变体（PC-StainGAN 加结构相似约束、ROIGAN 做区域级监督、辅以分割网络）</td><td>用两个生成器 + 两个判别器学<strong>双向映射</strong>，靠 <strong>cycle consistency</strong> 保内容</td><td>继承 CycleGAN 的通病：<strong>训练不稳、模式坍塌、细节保持差</strong>。而且非配对本身就意味着<strong>没有像素级对齐约束</strong>，解剖一致性难以保证</td></tr>
+<tr><td><strong>③ 配对派</strong></td><td>Pix2Pix（条件 GAN）、Pix2Pix-Pyramid（多尺度金字塔损失）、BCI-Stainer（加 biomarker 分类辅助任务）、PST-Diff（扩散 + 病理/结构约束）</td><td>用配对数据做强监督，精度更高</td><td>依赖<strong>严格像素级监督</strong>——但 H&amp;E 和 IHC 是<strong>不同深度的连续切片</strong>，像素级根本对不准，强监督反而会<strong>惩罚正确的生成</strong></td></tr>
+</table>
+<h3>作者的判断：两条共同的空白</h3>
+<p>在梳理完这三条路线后，作者点出所有前人工作都有两个<strong>没被显式解决</strong>的问题：</p>
+<ol><li><strong>没有显式处理&quot;结构保持 vs 变异建模&quot;这对矛盾。</strong> 生成图要和 H&amp;E 空间对应（保结构），但过度强调结构保真又会<strong>抹掉生物标记的异质性</strong>（丢多样性）。前人的做法是把两者揉进一个损失里，<strong>没有把这对矛盾显式地参数化</strong>。</li><li><strong>评价方式不反映临床效用。</strong> SSIM、PSNR 这类<strong>像素级</strong>指标，在存在固有错位的情况下，<strong>衡量的是错位程度，而不是生成质量</strong>。</li></ol>
+<p>这两个空白，正好对应本文的两个贡献。</p>
+<hr />
+<h2>4. 本文要解决什么</h2>
+<blockquote>用<strong>双路径扩散</strong>（确定性复原 + 随机噪声）显式建模&quot;结构—多样性&quot;权衡；用<strong>基于分类任务的 SFS</strong> 替代像素级指标，在错位下依然稳定。</blockquote>
+<hr />
+<h2>5. 方法（重点，公式逐个拆）</h2>
+<h3>5.1 先看一张图，理解问题出在哪</h3>
+<p><img src="assets/012-StarDiff复原扩散精读/fig1.jpg" alt="图 1：染色翻译范式对比。(a) 标准 DDPM 把 H&amp;E→IHC 当作图像翻译，只依赖噪声路径——噪声带来生物多样性，但有丢失结构细节的风险；(b) 本文把问题重构为图像复原，直接把 H&amp;E 图块作为输入，通过引入一条从 H&amp;E 到 IHC 的复原路径，有效平衡了结构保持与生物多样性" loading="lazy" /></p>
+<p><em>图注中文翻译：染色翻译范式对比。左：标准 DDPM 只有噪声路径，在&quot;噪声域&quot;和&quot;IHC 域&quot;之间往返，噪声加了多样性却可能丢结构。右：Star-Diff 在 H&amp;E 域和 IHC 域之间<strong>多接了一条粗实线</strong>——复原路径，同时保留噪声路径，两者叠加。</em></p>
+<p><strong>这张图是全文的核心直觉，值得多看两眼。</strong> 左图的虚线（噪声路径）从 H&amp;E 域出发，先&quot;化成一团噪声&quot;再到 IHC 域——<strong>中间必须经过一个信息全毁的状态</strong>。右图的实线（复原路径）则<strong>直接从 H&amp;E 域指向 IHC 域</strong>，不经过噪声。作者的意思是：</p>
+<blockquote>既然 H&amp;E 和 IHC 是<strong>同一块组织</strong>的两种染色，那它们之间<strong>本来就存在一个确定性的结构对应关系</strong>。让模型从纯噪声里&quot;重新想象&quot;出这个结构，是在浪费已知信息。</blockquote>
+<h3>5.2 符号表</h3>
+<p>先统一符号，后面公式会反复用到：</p>
+<table>
+<tr><th>符号</th><th>含义</th></tr>
+<tr><td>$I_{he}$</td><td>输入的 H&amp;E 图像</td></tr>
+<tr><td>$I_{ihc}$</td><td>目标 IHC 图像</td></tr>
+<tr><td>$x_0$</td><td>目标图像（即 $x_0 \in I_{ihc}$）</td></tr>
+<tr><td>$x_T$</td><td>纯高斯噪声，$x_T \sim \mathcal{N}(0, I)$</td></tr>
+<tr><td>$t$</td><td>时间步，$t = 1, \dots, T$</td></tr>
+<tr><td>$\alpha_t$</td><td>预定义的<strong>噪声调度</strong>系数</td></tr>
+<tr><td>$\bar{\alpha}_t$</td><td>累积乘积，$\bar{\alpha}_t = \prod_{s=1}^{t} \alpha_s$</td></tr>
+<tr><td>$\epsilon$</td><td>标准高斯噪声，$\epsilon \sim \mathcal{N}(0, I)$</td></tr>
+<tr><td>$I_{res}$</td><td><strong>复原图</strong>（残差），$I_{ihc} - I_{he}$</td></tr>
+<tr><td>$\bar{\beta}_t$</td><td>预定义的<strong>复原调度</strong>（确定性结构引导的强度）</td></tr>
+<tr><td>$r_\theta$</td><td><strong>复原预测网络</strong>，估计 H&amp;E→IHC 的残差</td></tr>
+<tr><td>$\epsilon_\theta$</td><td><strong>噪声预测网络</strong>，建模生物标记变异性</td></tr>
+<tr><td>$\gamma_t$</td><td>确定性结构引导的<strong>平衡权重</strong></td></tr>
+<tr><td>$\eta_t$</td><td>噪声修正带来的变异性的<strong>平衡权重</strong></td></tr>
+<tr><td>$C$</td><td>biomarker 类别数</td></tr>
+<tr><td>$R_c^{real}, R_c^{gen}$</td><td>真实图 / 生成图在第 $c$ 类的<strong>召回率</strong></td></tr>
+</table>
+<h3>5.3 先复述标准扩散（式 1–2）</h3>
+<p>问题定义：学习映射 $f: \mathcal{X}_{he} \to \mathcal{X}_{ihc}$。在条件扩散框架下，这被解释为&quot;逆转一个加噪过程&quot;。前向过程是一个马尔可夫链：</p>
+<p>$$q(x_t \mid x_{t-1}) = \mathcal{N}\left(x_t;\ \sqrt{\alpha_t}\,x_{t-1},\ (1-\alpha_t)I\right) \tag{1}$$</p>
+<ul><li>$\alpha_t$ 是预定义的噪声调度</li><li><strong>说人话</strong>：每一步往图像里掺一点高斯噪声，掺 $T$ 步之后图像变成纯噪声</li></ul>
+<p>式 (1) 有闭式解，可以直接跳到任意 $t$：</p>
+<p>$$x_t = \sqrt{\bar{\alpha}_t}\,x_0 + \sqrt{1-\bar{\alpha}_t}\,\epsilon \tag{2}$$</p>
+<ul><li>$\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$ 是噪声调度系数的累积乘积</li><li>$\epsilon \sim \mathcal{N}(0, I)$ 是标准高斯噪声</li><li><strong>说人话</strong>：$t$ 时刻的图像 = <strong>原图乘一个衰减系数</strong> + <strong>噪声乘一个放大系数</strong>。$\bar{\alpha}_t$ 越小，原图信号越弱、噪声越强</li><li><strong>为什么要它</strong>：训练时不必真的跑 $t$ 步加噪，直接采样一个 $t$ 就能得到 $x_t$，这是扩散模型能训起来的关键</li></ul>
+<p>生成任务就变成学习<strong>以 H&amp;E 为条件</strong>的反向过程 $p_\theta(x_{t-1} \mid x_t, I_{he})$。</p>
+<p><strong>到这里为止，全是标准 DDPM。作者的改动从下一行开始。</strong></p>
+<h3>5.4 关键改动：加入复原路径（式 3–4）</h3>
+<p><strong>第一步，定义&quot;复原图&quot;（残差）：</strong></p>
+<p>$$I_{res} = I_{ihc} - I_{he} \tag{3}$$</p>
+<ul><li><strong>说人话</strong>：$I_{res}$ 就是&quot;从 H&amp;E 变成 IHC 需要补上的那部分差异&quot;</li><li><strong>为什么这么定义</strong>：这是整篇文章的支点。H&amp;E 和 IHC 共享同一块组织的结构，所以<strong>绝大部分内容是重合的</strong>，真正需要&quot;生成&quot;的只是染色差异那一小部分。把任务从&quot;从零生成 IHC&quot;改成&quot;预测这个差异&quot;，难度和方差都会大幅下降</li></ul>
+<p><strong>第二步，把复原项塞进加噪公式：</strong></p>
+<p>$$x_t = x_0 + \bar{\alpha}_t\,\epsilon + \bar{\beta}_t I_{res} \tag{4}$$</p>
+<p>对比式 (2)，这里有两个重要变化：</p>
+<table>
+<tr><th></th><th>标准 DDPM（式 2）</th><th>Star-Diff（式 4）</th></tr>
+<tr><td>原图项</td><td>$\sqrt{\bar{\alpha}_t}\,x_0$（<strong>会衰减</strong>）</td><td>$x_0$（<strong>不衰减，恒为 1</strong>）</td></tr>
+<tr><td>噪声项</td><td>$\sqrt{1-\bar{\alpha}_t}\,\epsilon$</td><td>$\bar{\alpha}_t\,\epsilon$</td></tr>
+<tr><td>额外项</td><td>无</td><td>$+\ \bar{\beta}_t I_{res}$ ← <strong>新增的复原路径</strong></td></tr>
+</table>
+<ul><li>$\bar{\beta}_t$ 是<strong>预定义的复原调度</strong>，控制&quot;确定性结构引导&quot;的强度</li><li><strong>说人话</strong>：$x_t$ 由三部分组成——<strong>原图（不衰减）</strong> + <strong>噪声（强度由 $\bar{\alpha}_t$ 控制）</strong> + <strong>复原残差（强度由 $\bar{\beta}_t$ 控制）</strong></li><li><strong>为什么原图项不再衰减</strong>：因为任务变了。标准扩散是&quot;从纯噪声造图&quot;，所以原图信息必须逐步销毁；Star-Diff 是&quot;从 H&amp;E 复原 IHC&quot;，<strong>原图信息必须始终保留</strong>——这正是&quot;复原&quot;和&quot;翻译&quot;的分水岭</li></ul>
+<p><strong>这一项 $\bar{\beta}_t I_{res}$ 就是全文的&quot;缺的那一项&quot;。</strong> 前人公式里没有它，所以模型只能靠噪声路径去&quot;猜&quot;结构；加上它之后，结构由确定性路径负责，噪声只负责变异。</p>
+<h3>5.5 两个网络并行训练</h3>
+<p>对应式 (4) 的两个非平凡成分，模型有<strong>两个并行训练的网络</strong>：</p>
+<ul><li>$r_\theta(x_t, t, I_{he})$ —— <strong>复原预测网络</strong>，估计残差 $\hat{I}_{res}$</li><li>$\epsilon_\theta(x_t, t, I_{he})$ —— <strong>噪声预测网络</strong>，建模 biomarker 变异性</li></ul>
+<p>反向采样分布定义为：</p>
+<p>$$p_\theta(x_{t-1} \mid x_t) := q_\sigma\left(x_{t-1} \mid x_t,\ \epsilon_\theta,\ r_\theta\right) \tag{5}$$</p>
+<ul><li>$q_\sigma$ 是<strong>结合了复原引导与噪声估计</strong>的转移概率</li><li><strong>说人话</strong>：反向过程同时听两个网络的建议，不是只听噪声网络</li></ul>
+<p>实际采样步骤：</p>
+<p>$$x_{t-1} = x_t - \gamma_t\,r_\theta - \eta_t\,\epsilon_\theta \tag{6}$$</p>
+<ul><li>$\gamma_t$：确定性结构引导（H&amp;E–IHC 复原）的<strong>平衡权重</strong></li><li>$\eta_t$：学习到的噪声修正带来的<strong>变异性权重</strong></li><li><strong>说人话</strong>：每一步从 $x_t$ 里<strong>减去</strong>两样东西——<strong>复原网络预测的残差</strong>（把图像往 IHC 结构上拉）和<strong>噪声网络预测的噪声</strong>（提供随机性）。$\gamma_t$ 和 $\eta_t$ 就是那两个&quot;旋钮&quot;</li><li><strong>为什么这是核心贡献</strong>：$\gamma_t$ 和 $\eta_t$ 让&quot;保结构&quot;和&quot;要多样性&quot;这对矛盾<strong>第一次变成了两个可独立调节的超参数</strong>。前人把两者揉在一个损失函数里，无法分开调</li></ul>
+<p><strong>一个漂亮的验证性设计：</strong></p>
+<blockquote>当 <strong>$\gamma_t = 0$</strong>（关掉复原引导）时，整个框架<strong>退化为标准 DDPM</strong>。</blockquote>
+<p>这句话很重要——它说明 Star-Diff 不是另起炉灶，而是<strong>标准扩散的一个严格超集</strong>。标准 DDPM 是它在 $\gamma_t=0$ 处的特例。这种&quot;包含关系&quot;是审稿人喜欢的性质，也让消融实验更干净。</p>
+<h3>5.6 评价侧：SFS（式 7–10）</h3>
+<p>作者的第二个贡献。逻辑是一个<strong>两阶段的&quot;AI 病理专家&quot;流程</strong>：</p>
+<p><strong>Stage 1</strong>：在<strong>真实 IHC</strong> 数据上训练一个分类器（ResNet 主干），让它学会从 IHC 图块预测 biomarker 表达 —— 这就是&quot;AI 专家&quot;。 <strong>Stage 2</strong>：把这个专家用到<strong>生成的 IHC</strong> 上，看它给出的标签和病理医生的标签<strong>差多少</strong>。</p>
+<p>形式化：对每个类别 $c$，分别算真实图与生成图上的召回率：</p>
+<p>$$R_c^{real} = \frac{TP_c^{real}}{N_c}, \qquad R_c^{gen} = \frac{TP_c^{gen}}{N_c} \tag{7,8}$$</p>
+<ul><li>$C$ 是 biomarker 类别数，$c \in \{1,\dots,C\}$</li><li>$TP_c$ 是被正确分类为 $c$ 的数量，$N_c$ 是真值为 $c$ 的样本总数</li><li><strong>说人话</strong>：在&quot;真值确实是 $c$ 类&quot;的样本里，分类器认对了多少</li></ul>
+<p><strong>平均语义退化</strong>（真实与生成之间掉多少）：</p>
+<p>$$\mathrm{AvgDeg} = \frac{1}{C}\sum_{c=1}^{C}\left(R_c^{real} - R_c^{gen}\right) \tag{9}$$</p>
+<ul><li><strong>说人话</strong>：<strong>逐类</strong>算召回率的落差，再平均。注意是<strong>逐类</strong>——这样某一类（比如罕见的 3+）崩了不会被其他类的良好表现掩盖</li></ul>
+<p><strong>最终指标：</strong></p>
+<p>$$\mathrm{SFS} = \frac{\mathrm{Acc}_{gen} + (1 - \mathrm{AvgDeg})}{2} \tag{10}$$</p>
+<ul><li>$\mathrm{Acc}_{gen}$ 是生成图上的整体分类准确率</li><li>取值 0–1，越高越好</li><li><strong>说人话</strong>：SFS 由两部分<strong>平均</strong>而成——<strong>整体准确率</strong>（生成图能不能被认对）+ <strong>1 减平均退化</strong>（相比真实图掉了多少）。前者衡量绝对水平，后者衡量相对损失</li><li><strong>为什么要两项</strong>：只看 $\mathrm{Acc}_{gen}$ 会被分类器本身的强弱带偏；只看 $\mathrm{AvgDeg}$ 又不知道绝对水平。平均起来既有绝对参考又有相对校准——<strong>这正是&quot;calibrated&quot;（校准）的含义</strong></li></ul>
+<p><strong>为什么 SFS 抗错位：</strong> 分类器看的是<strong>图块整体的语义内容</strong>，空间平移几个像素、转几度，只要细胞形态还在，分类结果就不变。而 SSIM 是逐像素比较，动一个像素就掉一大截。这是两种指标的根本区别。</p>
+<p><img src="assets/012-StarDiff复原扩散精读/fig2.jpg" alt="图 2：Star-Diff 框架与评估流程。左：去噪过程整合了复原预测与噪声预测，从受扰动的 H&amp;E 输入重建语义忠实的 IHC 图像。右：两阶段分类器评估策略——(1) 用病理医生标注在真实 IHC 上训练&quot;AI 专家&quot;；(2) 该专家预测虚拟 IHC 的标签。SFS 衡量 AI 与病理医生标签的一致性，同时校准分类器可靠性" loading="lazy" /></p>
+<p><em>图注中文翻译：左侧是扩散过程——$I_{HE}$ 与噪声 $\epsilon$ 分别经 Restoration Net 和 Denoise Net，按 $\beta * I_{res}$ 与 $\alpha * \epsilon$ 的权重相加得到 $x_t$，再反向去噪。右侧是评估流程——Stage 1 在 4870 个真实 IHC 图块上训练分类器，Stage 2 用它给 961 个生成图块打标签，通过 Accuracy Calibration 得到 SFS。右下角三句话总结了 SFS 的三个性质：抗图块对错位、与诊断相关性对齐、抗分类器偏置。</em></p>
+<hr />
+<h2>6. 实验</h2>
+<h3>6.1 实验设置</h3>
+<table>
+<tr><th>项目</th><th>内容</th></tr>
+<tr><td>数据集</td><td><strong>BCI Challenge Dataset</strong>（Breast Cancer Immunohistochemical）</td></tr>
+<tr><td>规模</td><td><strong>4,870 对</strong> H&amp;E / HER2 染色图块，来自 <strong>51 对 WSI</strong></td></tr>
+<tr><td>标签</td><td>HER2 表达分级 <strong>0, 1+, 2+, 3+</strong>（<strong>切片级</strong>标注——同一张切片内的图块标签可能有差异）</td></tr>
+<tr><td>划分</td><td>按 BCI 挑战赛协议；训练集再按 <strong>80% / 20%</strong> 分训练与验证</td></tr>
+<tr><td>对齐情况</td><td>H&amp;E 与 IHC 切片<strong>仅在切片级配准，未做像素级配准</strong> → 存在固有空间错位</td></tr>
+<tr><td>SFS 分类器</td><td>ResNet 主干，在 IHC 图块上训练，测试集准确率 <strong>&gt;86%</strong>；HER2 分级<strong>二值化</strong>为阳性（2+, 3+）/ 阴性（0, 1+）</td></tr>
+<tr><td>硬件</td><td>NVIDIA GeForce RTX 3090</td></tr>
+<tr><td>重复</td><td>扩散模型均做 <strong>3 次独立采样</strong>，报告 mean ± std</td></tr>
+</table>
+<h3>6.2 SOTA 横向对比（Table 1）</h3>
+<p><em>这是一个&quot;<strong>横向对比</strong>&quot;类型的实验：把所有主流路线拉到同一个数据集上比。</em></p>
+<table>
+<tr><th>方法</th><th>PSNR (dB) ↑</th><th>SSIM ↑</th><th>质量排名 ↓</th><th>Accuracy ↑</th><th>SFS ↑</th></tr>
+<tr><td><strong>颜色映射派</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Reinhard</td><td>15.34</td><td>0.44</td><td>8th</td><td>0.60</td><td>0.65</td></tr>
+<tr><td>Macenko</td><td>15.49</td><td>0.41</td><td>6th</td><td>0.57</td><td>0.63</td></tr>
+<tr><td>Vahadane</td><td>15.04</td><td>0.35</td><td>9th</td><td>0.59</td><td>0.67</td></tr>
+<tr><td><strong>非配对派</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>CycleGAN</td><td>16.20</td><td>0.37</td><td>7th</td><td>0.59</td><td>0.65</td></tr>
+<tr><td><strong>配对派</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Pix2Pix*</td><td>19.63</td><td>0.42</td><td>4th</td><td>0.60</td><td>0.67</td></tr>
+<tr><td>Pix2Pix-Pyramid*</td><td>21.61</td><td>0.48</td><td>2nd</td><td>0.61</td><td>0.69</td></tr>
+<tr><td>Palette</td><td>17.13 ± 0.53</td><td>0.53 ± 0.08</td><td>3rd</td><td>0.62 ± 0.05</td><td>0.69 ± 0.03</td></tr>
+<tr><td>PST-Diff†</td><td>16.75 ± 4.20</td><td>0.38 ± 0.11</td><td>5th</td><td>-</td><td>-</td></tr>
+<tr><td><strong>Star-Diff（本文）</strong></td><td><strong>21.30 ± 0.01</strong></td><td><strong>0.53 ± 0.00</strong></td><td><strong>1st</strong></td><td><strong>0.68 ± 0.02</strong></td><td><strong>0.74 ± 0.01</strong></td></tr>
+</table>
+<p>质量排名公式：<code>0.6 × SSIM 排名 + 0.4 × PSNR 排名</code>。表中带 * 的方法，指标取自 [20]；带 † 的取自 [10]。</p>
+<p><strong>结果解读（几个值得注意的点）：</strong></p>
+<ol><li><strong>诊断指标上的优势比图像指标更大。</strong> Star-Diff 的 PSNR 21.30 略低于 Pix2Pix-Pyramid 的 21.61，但 <strong>Accuracy（0.68 vs 0.61）和 SFS（0.74 vs 0.69）都明显领先</strong>——超过第二名 <strong>5% 以上</strong>。作者据此论证：<strong>图像质量指标高 ≠ 诊断价值高</strong>，这正是他们提出 SFS 的理由。</li></ol>
+<ol><li><strong>方差是另一个卖点。</strong> 看 PST-Diff 的 <code>16.75 ± 4.20</code>——<strong>标准差高达 4.2 dB</strong>，说明扩散模型在这个任务上极不稳定。而 Star-Diff 是 <code>21.30 ± 0.01</code>，<strong>方差几乎为零</strong>。作者把这一点归功于复原路径提供的确定性引导。<strong>对一个要上临床的方法来说，&quot;稳定&quot;比&quot;偶尔很好&quot;重要得多。</strong></li></ol>
+<ol><li><strong>扩散 &gt; GAN 的证据。</strong> Palette（扩散）在诊断指标上超过 Pix2Pix-Pyramid（GAN）：Acc 0.621 vs 0.610，SFS 0.688 vs 0.687。虽然差距很小，但方向一致。</li></ol>
+<ol><li><strong>颜色映射派垫底。</strong> 三个颜色映射方法 PSNR 全在 15 上下，排名 6–9 位——印证了 Related Work 里的判断：<strong>非线性染色关系不是颜色空间对齐能解决的</strong>。</li></ol>
+<h3>6.3 扰动鲁棒性分析（Table 2）</h3>
+<p><em>这是一个&quot;<strong>鲁棒性</strong>&quot;实验：人为给 IHC 图块施加空间扰动，看各指标掉多少。它同时验证了两件事——SFS 的抗错位性，以及&quot;像素指标在错位下不可用&quot;。</em></p>
+<p><strong>基线</strong>（未扰动的同一对 IHC）：SSIM 1.00、PSNR ∞、Accuracy 0.87、SFS 0.94</p>
+<table>
+<tr><th>扰动类型</th><th>SSIM</th><th>PSNR (dB)</th><th>Accuracy</th><th>SFS</th><th><strong>SSIM 跌幅</strong></th><th><strong>Accuracy 跌幅</strong></th><th><strong>SFS 跌幅</strong></th></tr>
+<tr><td>平移 5px</td><td>0.52</td><td>25.13</td><td>0.86</td><td>0.93</td><td><strong>47.9%</strong></td><td>1.1%</td><td>1.0%</td></tr>
+<tr><td>平移 10px</td><td>0.49</td><td>24.16</td><td>0.86</td><td>0.93</td><td><strong>51.0%</strong></td><td>1.1%</td><td>1.0%</td></tr>
+<tr><td>平移 15px</td><td>0.49</td><td>23.66</td><td>0.86</td><td>0.93</td><td><strong>51.4%</strong></td><td>1.1%</td><td>1.0%</td></tr>
+<tr><td>旋转 5°</td><td>0.49</td><td>23.13</td><td>0.86</td><td>0.93</td><td><strong>51.1%</strong></td><td>1.1%</td><td>1.0%</td></tr>
+<tr><td>旋转 10°</td><td>0.49</td><td>22.72</td><td>0.86</td><td>0.93</td><td><strong>51.4%</strong></td><td>1.1%</td><td>1.0%</td></tr>
+<tr><td>旋转 15°</td><td>0.48</td><td>22.53</td><td>0.86</td><td>0.94</td><td><strong>51.9%</strong></td><td>1.1%</td><td>0.0%</td></tr>
+<tr><td>弹性形变 低</td><td>0.82</td><td>31.05</td><td>0.85</td><td>0.93</td><td>18.0%</td><td>2.3%</td><td>1.0%</td></tr>
+<tr><td>弹性形变 中</td><td>0.67</td><td>27.64</td><td>0.85</td><td>0.93</td><td>33.5%</td><td>2.3%</td><td>1.3%</td></tr>
+<tr><td>弹性形变 高</td><td>0.59</td><td>26.25</td><td>0.84</td><td>0.92</td><td><strong>41.2%</strong></td><td><strong>3.4%</strong></td><td><strong>2.1%</strong></td></tr>
+</table>
+<p><strong>这是全文最有说服力的一组数字。</strong></p>
+<ul><li><strong>仅平移 5 个像素，SSIM 就掉了 47.9%</strong>——从 1.00 掉到 0.52。而现实中 H&amp;E 与 IHC 是不同深度的切片，错位<strong>远超 5 像素</strong>。这意味着：<strong>用 SSIM 评价虚拟染色，测的几乎全是错位，不是质量。</strong></li><li><strong>同一扰动下，SFS 只掉 1.0%。</strong> Accuracy 也只掉 1.1%。</li><li><strong>即使在高强度弹性形变下</strong>（SSIM 掉了 41.2%），Accuracy 只掉 <strong>3.4%</strong>、SFS 只掉 <strong>2.1%</strong>。</li></ul>
+<p>结论：<strong>像素级指标对空间错位极度敏感，语义级指标几乎免疫。</strong> 这不是修辞，是表里可查的数字。</p>
+<p><img src="assets/012-StarDiff复原扩散精读/fig5.jpg" alt="图 5：施加于 HER2 3+ 乳腺癌 IHC 图块的视觉扰动示例。第一列是原始图块，后三列分别展示平移 15px、旋转 15°、高强度弹性形变的效果。这些空间畸变明显改变了结构对齐，但对底层语义内容影响很小" loading="lazy" /></p>
+<p><em>图注中文翻译：红箭头标出同一处组织结构在四种条件下的位置。可以直观看到——图的&quot;结构对齐&quot;被破坏了（所以 SSIM 暴跌），但&quot;这是 HER2 3+ 的乳腺癌组织&quot;这个语义完全没变（所以 SFS 几乎不动）。这张图就是 Table 2 的视觉版。</em></p>
+<h3>6.4 消融实验（Table 3）</h3>
+<p><em>这是一个&quot;<strong>消融</strong>&quot;实验：分别关掉两条路径，看各自贡献。</em></p>
+<table>
+<tr><th>复原路径</th><th>去噪路径</th><th>SSIM</th><th>PSNR (dB)</th><th>Accuracy</th><th>SFS</th></tr>
+<tr><td>✓</td><td>✓</td><td><strong>0.53</strong></td><td><strong>21.30</strong></td><td><strong>0.68</strong></td><td><strong>0.74</strong></td></tr>
+<tr><td>✓</td><td>✗</td><td>0.30 (↓0.23)</td><td>17.46 (↓3.84)</td><td>0.62 (↓0.06)</td><td>0.68 (↓0.06)</td></tr>
+<tr><td>✗</td><td>✓</td><td>0.39 (↓0.14)</td><td>15.77 (↓5.53)</td><td>0.64 (↓0.04)</td><td>0.68 (↓0.06)</td></tr>
+</table>
+<p><strong>这张表是方法论的直接证据：</strong></p>
+<ul><li><strong>只用复原路径</strong>（关掉噪声）：SSIM 0.30、PSNR 17.46 —— 结构能对上一些，但<strong>整体质量很差</strong></li><li><strong>只用噪声路径</strong>（关掉复原，即退回标准 DDPM）：SSIM 0.39、PSNR 15.77 —— <strong>更差，而且 PSNR 掉得最狠（↓5.53）</strong></li><li><strong>两者都要</strong>：SSIM 0.53、PSNR 21.30 —— 全面最好</li></ul>
+<p><strong>两条路径是互补的，缺一不可。</strong> 值得注意的是：<strong>单用噪声路径（也就是所有前人扩散方法的做法）是三种配置里最差的</strong>。这直接支撑了论文的核心主张——<strong>前人少了复原这一项，不是小修小补，而是差了一个关键成分。</strong></p>
+<h3>6.5 可解释性分析（Figure 3）</h3>
+<p><em>这是一个&quot;<strong>定性可视化</strong>&quot;实验：用 RISE 显著性方法，看模型在生成过程中&quot;注意力&quot;落在哪里。</em></p>
+<p><img src="assets/012-StarDiff复原扩散精读/fig3.jpg" alt="图 3：使用 RISE 在去噪过程中做显著性可视化。两行分别是 HER2 0+ 与 HER2 2+ 的样本。每行从左到右：H&amp;E 输入图块 → Step 0 到 Step 10 的显著性热图（红=低、绿=高）→ 生成的 IHC" loading="lazy" /></p>
+<p><em>图注中文翻译：热图展示模型在不同去噪步关注的位置。注意 0+ 与 2+ 两行的热区分布<strong>明显不同</strong>——说明模型确实在根据 biomarker 状态调整关注区域，而不是对所有输入一视同仁。随着步数推进，高响应区逐渐收敛到腺体/细胞密集的诊断相关区域。</em></p>
+<p><strong>作者想说明的是：</strong> 模型不是在做简单的颜色映射，而是<strong>在生成过程中持续关注诊断相关的组织区域</strong>，且<strong>关注模式随 biomarker 分级变化</strong>。这为&quot;生成结果具有诊断意义&quot;提供了一个机制层面的旁证。</p>
+<h3>6.6 SFS 对分类器偏置的鲁棒性（Figure 4）</h3>
+<p><em>这是一个&quot;<strong>鲁棒性</strong>&quot;实验，针对 SFS 自身的一个软肋：如果&quot;AI 专家&quot;本身不靠谱，SFS 还可信吗？</em></p>
+<p>作者训练了三种状态的分类器（共 60 个 epoch）：</p>
+<ul><li><strong>欠拟合（Epoch 20）</strong>：训练集和测试集准确率都低</li><li><strong>恰当拟合（Epoch 40）</strong>：两者都高，泛化良好</li><li><strong>过拟合（Epoch 60）</strong>：训练集接近满分，测试集开始掉</li></ul>
+<p><img src="assets/012-StarDiff复原扩散精读/fig4.jpg" alt="图 4：SFS 对分类器偏置的鲁棒性。绿虚线为训练准确率，红虚线为测试准确率，黑线为生成 IHC 上的准确率（ACC），橙线为 SFS。横轴为 epoch，左轴为准确率（%），右轴为 SFS 分数（%）。三个标注点分别对应欠拟合（20）、恰当拟合（40）、过拟合（60）" loading="lazy" /></p>
+<p><em>图注中文翻译：随着训练推进，训练准确率一路爬升到接近 100%（过拟合信号），测试准确率在 epoch 40 达到峰值 86% 后开始下滑。<strong>关键在两条实线</strong>：ACC 随分类器质量同步起落（60 → 68 → 53），而 <strong>SFS 相对平稳（70 → 74 → 69）</strong>。</em></p>
+<p><strong>结果：</strong> Accuracy 会随分类器状态剧烈波动，而 <strong>SFS 保持相对稳定</strong>。</p>
+<p><strong>为什么这重要：</strong> 它说明 SFS 内置的 <code>(1 - AvgDeg)</code> 那一项起到了<strong>校准</strong>作用——当分类器变差时，真实图和生成图上的表现会<strong>同步下降</strong>，相减之后部分抵消。这就是论文反复强调的 &quot;calibrated with class-wise performance degradation&quot; 的实际含义。</p>
+<hr />
+<h2>7. 讨论与局限</h2>
+<h3>7.1 作者主张的临床价值</h3>
+<ul><li><strong>速度</strong>：生成 IHC <strong>只需数秒</strong>，而传统 IHC 染色要数小时。作者特别强调<strong>术中冰冻切片</strong>场景——传统 IHC 在术中根本来不及做，虚拟染色可以即时给出分子层面的参考。</li><li><strong>可扩展性</strong>：框架不限于 HER2，可扩展到其他染色目标（如 H&amp;E→CD10、H&amp;E→PAS）。</li><li><strong>可迁移性</strong>：作者认为 SFS 这种&quot;任务驱动评价&quot;的思路<strong>可推广到病理之外的医学图像生成</strong>（如放射影像合成、生物结构生成）。</li><li><strong>榜单成绩</strong>：Star-Diff 在 BCI 挑战赛榜单上<strong>排名第一</strong>。</li></ul>
+<h3>7.2 作者自己承认的局限（照实写）</h3>
+<ol><li><strong>SFS 依赖预训练分类器，且需要图块级标注。</strong> 这是一个<strong>循环依赖</strong>：用一个模型去评价另一个模型的输出，前者的偏差会传导。作者的应对是<strong>开源分类器权重</strong>，让社区不必重训；并计划未来用<strong>基础模型（foundation model）</strong>替代，以减少标注依赖、提升泛化性。</li><li><strong>只有一个公开配对数据集。</strong> 写作时公开的配对 H&amp;E–IHC 图块数据集<strong>只有 BCI 一个</strong>，因此泛化性验证受限。作者正在构建<strong>内部配对数据集</strong>来做进一步验证和横向对标。</li></ol>
+<h3>7.3 我读下来觉得还应该补充的几点</h3>
+<blockquote>以下是我自己的判断，不是论文原文。</blockquote>
+<ul><li><strong>&quot;诊断一致&quot;的验证强度有限。</strong> SFS 的核心是一个<strong>二值化的 HER2 分类器</strong>（阳性/阴性）。但临床 HER2 分级是 <strong>0/1+/2+/3+ 四档</strong>，其中 2+ 恰恰是最需要 FISH 复检的灰色地带。把四档压成两档，会<strong>掩盖中间档位的错误</strong>——模型把 1+ 生成成 2+，在二值化后都算&quot;阴性&quot;，SFS 看不出问题。</li><li><strong>切片级标签带来的隐患。</strong> 论文明确说明 HER2 标注是<strong>切片级</strong>的，而图块级标签&quot;可能存在切片内差异&quot;。这意味着 SFS 的 <code>N_c</code> 分母本身<strong>带有噪声</strong>。作者没有量化这个噪声的影响。</li><li><strong>没有与病理医生的盲评对照。</strong> SFS 用&quot;AI 专家&quot;代理病理医生，但论文没有给出 AI 分级与真实病理医生分级的一致性（如 Cohen&#x27;s κ）。这是&quot;AI 代理是否可信&quot;这个链条上缺失的一环。</li><li><strong>&quot;秒级推理&quot;缺少具体数字。</strong> 摘要和讨论都强调&quot;rapid inference&quot;&quot;within seconds&quot;，但正文没有给出<strong>单张图块的实测推理时间</strong>或与基线方法的效率对比。对术中场景而言，这个数字是关键卖点，理应有量化。</li></ul>
+<hr />
+<h2>8. 这篇论文对本课题的启示</h2>
+<blockquote>结合本课题「PSPStain baseline + 扩散化 + 解耦」这条线，以下列出几个直接相关的点。</blockquote>
+<p><strong>① 它是我此前推荐的第一复现对象，理由是&quot;结构—随机性解耦&quot;最干净。</strong> Star-Diff 把生成过程显式劈成<strong>确定性路径（结构）</strong>与<strong>随机路径（变异）</strong>，而且用 $\gamma_t, \eta_t$ 两个权重把权衡参数化。这与本课题想要的「structure ↔ stain-expression 解耦」<strong>方向一致但层次不同</strong>——它解耦的是&quot;结构 vs 随机性&quot;，不是&quot;结构 vs 蛋白表达&quot;。所以它是一个<strong>很好的起点</strong>，但不是终点：可以在这条确定性路径上，把 PSPStain 的 <strong>FOD/PCLS 作为额外约束挂上去</strong>。</p>
+<p><strong>② 它天然满足&quot;保留原有两个 loss&quot;的诉求。</strong> 因为 Star-Diff 是<strong>标准扩散的严格超集</strong>（$\gamma_t=0$ 即退回 DDPM），它的训练框架与调研档案中讨论的&quot;多损失共存&quot;问题<strong>是同一套结构</strong>：噪声预测损失 + 复原损失 + 后续新增的 PALS/PCLS。第 5.5 节的&quot;两个网络并行训练&quot;就是现成的多损失架构。</p>
+<p><strong>③ 它的消融表提供了一个重要警示。</strong> Table 3 显示：<strong>单用噪声路径（前人扩散的标准做法）是三种配置里最差的</strong>（PSNR 15.77）。若把 PSPStain 直接换成普通条件扩散而不加结构路径，很可能落在这个坑里。<strong>这说明&quot;给扩散加确定性结构引导&quot;不是可选项，而是必需的。</strong></p>
+<p><strong>④ 关于黑团问题，这篇提供了一条线索。</strong> 生成图上曾出现的 2–3 处黑团，其成因之一（见伪影报告）是<strong>残差路径数值冲突</strong>——而 Star-Diff 的 $I_{res} = I_{ihc} - I_{he}$ 正是这个机制的来源。<strong>在 H&amp;E 与 IHC 亮度差异极大的区域</strong>（密集深染细胞核区），$I_{res}$ 幅值会显著高于平均，若残差网络在该处失控就会局部崩塌。<strong>可验证的预测：黑团位置应与 H&amp;E 上细胞密度最高、染色最深的区域重合。</strong> 若正在使用或计划使用 Star-Diff 式残差路径，建议先检查 $\bar{\beta}_t I_{res}$ 这一项的数值范围。</p>
+<p><strong>⑤ SFS 值得直接拿来用，但要改造。</strong> SFS 的&quot;抗错位&quot;性质，恰好解决了评价体系里的一个痛点（H&amp;E 与 IHC 本就不对齐，PSNR 不可信）。但它有两个地方需要针对本任务调整：<strong>(a) 本课题关注的不是 HER2 二分类，而是 0/1+/2+/3+ 四档分级</strong>，甚至 Ki67 的连续表达比例——二值化会丢信息；<strong>(b) 建议补上 AI 分级与病理医生分级的 κ 一致性</strong>，否则&quot;AI 代理&quot;这个环节没有验证。这与调研档案 R2 报告中&quot;四层评价&quot;的第④层（临床效用）正好对接。</p>
+<hr />
+<h2>9. 附：公式速查表</h2>
+<table>
+<tr><th>式号</th><th>公式</th><th>作用</th></tr>
+<tr><td>(1)</td><td>$q(x_t \mid x_{t-1}) = \mathcal{N}(x_t; \sqrt{\alpha_t}x_{t-1}, (1-\alpha_t)I)$</td><td>标准前向加噪（马尔可夫链）</td></tr>
+<tr><td>(2)</td><td>$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$</td><td>前向过程闭式解，可跳步采样</td></tr>
+<tr><td>(3)</td><td>$I_{res} = I_{ihc} - I_{he}$</td><td><strong>复原图（残差）定义</strong></td></tr>
+<tr><td>(4)</td><td>$x_t = x_0 + \bar{\alpha}_t\epsilon + \bar{\beta}_t I_{res}$</td><td><strong>核心：加噪公式里多出复原项</strong></td></tr>
+<tr><td>(5)</td><td>$p_\theta(x_{t-1} \mid x_t) := q_\sigma(x_{t-1} \mid x_t, \epsilon_\theta, r_\theta)$</td><td>反向分布，同时用两个网络</td></tr>
+<tr><td>(6)</td><td>$x_{t-1} = x_t - \gamma_t r_\theta - \eta_t \epsilon_\theta$</td><td><strong>实际采样步：减残差 + 减噪声</strong></td></tr>
+<tr><td>(7)</td><td>$R_c^{real} = TP_c^{real}/N_c$</td><td>真实图逐类召回率</td></tr>
+<tr><td>(8)</td><td>$R_c^{gen} = TP_c^{gen}/N_c$</td><td>生成图逐类召回率</td></tr>
+<tr><td>(9)</td><td>$\mathrm{AvgDeg} = \frac{1}{C}\sum_c (R_c^{real} - R_c^{gen})$</td><td>平均语义退化</td></tr>
+<tr><td>(10)</td><td>$\mathrm{SFS} = \frac{\mathrm{Acc}_{gen} + (1-\mathrm{AvgDeg})}{2}$</td><td><strong>语义保真度评分</strong></td></tr>
+</table>
+<p><strong>最关键的两个公式：式 (4) 和式 (6)。</strong> 前者说明&quot;多了一项什么&quot;，后者说明&quot;这一项怎么用&quot;。其余都是标准扩散或指标定义。</p>
+<h2>10. 附：超参数与设置速查</h2>
+<table>
+<tr><th>项目</th><th>值</th></tr>
+<tr><td>时间步 $T$</td><td>论文正文未给出具体数值（需查代码）</td></tr>
+<tr><td>平衡权重 $\gamma_t, \eta_t$</td><td>论文未给出具体调度形式（<strong>复现时的关键未知量</strong>）</td></tr>
+<tr><td>复原调度 $\bar{\beta}_t$</td><td>论文未给出具体形式</td></tr>
+<tr><td>噪声调度 $\alpha_t$</td><td>沿用标准扩散调度</td></tr>
+<tr><td>硬件</td><td>NVIDIA GeForce RTX 3090</td></tr>
+<tr><td>采样重复次数</td><td>3 次独立采样，报告 mean ± std</td></tr>
+<tr><td>SFS 分类器</td><td>ResNet 主干，测试准确率 &gt;86%，HER2 二值化</td></tr>
+<tr><td>质量排名公式</td><td>0.6 × SSIM 排名 + 0.4 × PSNR 排名</td></tr>
+<tr><td>数据集</td><td>BCI：4,870 对图块，51 对 WSI，切片级 HER2 标注</td></tr>
+</table>
+<blockquote>⚠️ <strong>复现提醒</strong>：$\gamma_t$、$\eta_t$、$\bar{\beta}_t$ 这三个调度函数是方法的<strong>核心超参数</strong>，但正文只给了符号没给具体形式。这是复现时最大的不确定点——<strong>建议优先查阅官方/非官方代码实现</strong>（见下节）。</blockquote>
+<hr />
+<h2>11. 资源</h2>
+<ul><li><strong>论文（arXiv）</strong>：https://arxiv.org/abs/2508.02528 ｜ HTML 版：https://arxiv.org/html/2508.02528v1</li><li><strong>本地 PDF</strong>：<code>~/Desktop/Star-Diff.pdf</code></li><li><strong>数据集</strong>：BCI Challenge Dataset（Breast Cancer Immunohistochemical image generation），4,870 对图块 / 51 对 WSI</li><li><strong>代码</strong>：论文未在正文给出官方仓库地址。已知社区有独立复现实现（MIT 许可），提供训练/采样/评估命令与 BCI 配置，但<strong>非官方</strong>，且复现结果与论文存在差距（详见本系列 R5 报告）</li><li><strong>相关前作</strong>：</li><li><strong>RDDM</strong>（Residual Denoising Diffusion Models, CVPR 2024）—— Star-Diff 残差思想的来源</li><li><strong>PST-Diff</strong>（IEEE TMI 2024）—— 另一个扩散虚拟染色工作，本文的扩散基线</li><li><strong>Pix2Pix-Pyramid / BCI</strong>（CVPR 2022）—— BCI 数据集与金字塔 Pix2Pix 基线</li><li><strong>PSPStain</strong>（MICCAI 2024）—— 本课题的 baseline，同任务不同路线（非配对 + 病理语义约束）</li></ul>
+<hr />
+<p><em>本文是基于论文原文的深度解读，含作者观点与我的补充评论（第 7.3、8 节为我的判断，已明确标注）。原始论文版权归原作者所有（CC BY 4.0）。</em></p>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

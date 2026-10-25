@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PSP-Diffusion：浓度空间扩散方案（变量注释版）</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --border:#d8dee4;
+    --accent:#0b6bcb; --soft:#f6f8fa; --sym-bg:#eaf2fd; --sym-fg:#0b4f9e;
+    --sym-line:#8fb4dd; --note-bg:#fff8e6; --note-line:#d9a441;
+    --warn-bg:#fdeceb; --warn-line:#e24b4a; --ok-bg:#eaf6ef; --ok-line:#1d9e75;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; padding:0 20px 100px; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.85; font-size:16px;
+  }
+  .wrap{max-width:880px; margin:0 auto;}
+
+  h1{font-size:1.75rem; line-height:1.4; margin:52px 0 10px; letter-spacing:-.01em;}
+  .lead{color:var(--muted); font-size:15px; margin:0 0 26px;}
+
+  h2{font-size:1.28rem; margin:52px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--border);}
+  h3{font-size:1.05rem; margin:30px 0 10px; color:#111;}
+  p{margin:14px 0;}
+  ul,ol{padding-left:1.5em; margin:14px 0;}
+  li{margin:7px 0;}
+  hr{border:none; border-top:1px solid var(--border); margin:44px 0;}
+  a{color:var(--accent);}
+
+  /* ===== 变量标记 ===== */
+  .sym{
+    position:relative; display:inline-block;
+    padding:0 5px; margin:0 1px; border-radius:5px;
+    background:var(--sym-bg); color:var(--sym-fg);
+    border-bottom:1px dashed var(--sym-line);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.9em; line-height:1.6; cursor:help; white-space:nowrap;
+  }
+  .sym::after{
+    content:attr(data-tip);
+    position:absolute; left:50%; transform:translateX(-50%);
+    top:calc(100% + 7px);
+    background:#1f2328; color:#fff; text-align:left;
+    padding:8px 11px; border-radius:6px;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:12.5px; font-weight:400; line-height:1.55; letter-spacing:0;
+    width:max-content; max-width:290px; white-space:normal;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+    opacity:0; visibility:hidden; transition:opacity .12s ease; z-index:60;
+    pointer-events:none;
+  }
+  .sym:hover::after{opacity:1; visibility:visible;}
+
+  /* ===== 公式块 ===== */
+  .formula{
+    display:block; background:var(--soft); border-left:3px solid var(--accent);
+    padding:16px 20px; margin:16px 0; border-radius:0 8px 8px 0;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:14.5px; line-height:2; overflow-x:auto;
+  }
+  .formula .lbl{display:block; font-size:12.5px; color:var(--muted); font-family:inherit; margin-bottom:4px;}
+  .boxed{
+    display:inline-block; border:1.5px solid var(--accent); border-radius:6px;
+    padding:3px 10px; background:#f0f6ff;
+  }
+  code{
+    background:var(--soft); padding:.12em .4em; border-radius:5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.9em;
+  }
+
+  /* ===== 提示框 ===== */
+  .note, .warn, .ok{
+    padding:12px 16px; margin:14px 0; border-radius:0 8px 8px 0; font-size:14.5px;
+    line-height:1.75;
+  }
+  .note{background:var(--note-bg); border-left:3px solid var(--note-line);}
+  .warn{background:var(--warn-bg); border-left:3px solid var(--warn-line);}
+  .ok{background:var(--ok-bg); border-left:3px solid var(--ok-line);}
+  .note b, .warn b, .ok b{font-weight:600;}
+
+  /* ===== 表格 ===== */
+  table{border-collapse:collapse; width:100%; margin:18px 0; font-size:14px;}
+  th,td{border:1px solid var(--border); padding:8px 12px; text-align:left; vertical-align:top;}
+  th{background:#f2f5f8; font-weight:600;}
+  tr:nth-child(even) td{background:#fafbfc;}
+  td code{background:#eef1f4;}
+
+  /* ===== 工具条 ===== */
+  .toolbar{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:var(--soft); border:1px solid var(--border); border-radius:10px;
+    padding:12px 16px; margin:22px 0 30px; font-size:13.5px; color:var(--muted);
+  }
+  .toolbar button{
+    font:inherit; font-size:13.5px; cursor:pointer;
+    background:#fff; border:1px solid var(--border); border-radius:7px;
+    padding:6px 13px; color:var(--fg);
+  }
+  .toolbar button:hover{border-color:var(--accent); color:var(--accent);}
+
+  /* ===== 图 ===== */
+  .flow{
+    background:var(--soft); border:1px solid var(--border); border-radius:10px;
+    padding:20px 16px; margin:20px 0; overflow-x:auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13.5px; line-height:1.95; white-space:pre;
+  }
+
+  .inline-note{font-size:13.5px; color:var(--muted); margin:-6px 0 12px;}
+  body.hide-notes .inline-note{display:none;}
+
+  @media print{
+    body{font-size:12pt;}
+    .toolbar{display:none;}
+    .sym::after{display:none;}
+    h2{page-break-after:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>PSP-Diffusion：把扩散的生成空间换到染色浓度场</h1>
+<p class="lead">方案说明 · 变量注释版。文中每个彩色变量都可以鼠标悬停查看解释。</p>
+
+<div class="toolbar">
+  <button id="toggleBtn">隐藏变量解释</button>
+  <span>悬停在任意彩色变量上可查看它的含义；灰字说明可整体隐藏。</span>
+</div>
+
+<hr>
+
+<h2 id="glossary">符号速查表</h2>
+<p>先认全所有字母，后面看正文就不会卡住。</p>
+
+<table>
+  <thead>
+    <tr><th style="width:16%">符号</th><th style="width:16%">形状</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>H</code>、<code>W</code></td><td>标量</td><td>图像的高和宽（像素数）</td></tr>
+    <tr><td><code>N</code></td><td>标量</td><td>像素总数，<code>N = H × W</code></td></tr>
+    <tr><td><code>K</code></td><td>标量</td><td><b>染色数量</b>。H+DAB 时 <code>K = 2</code></td></tr>
+    <tr><td><code>X</code></td><td>3 × H × W</td><td>RGB 图像（真实 IHC 或输入图）</td></tr>
+    <tr><td><code>X̂</code></td><td>3 × H × W</td><td>模型渲染出的虚拟 IHC 图像（X hat）</td></tr>
+    <tr><td><code>X₀</code></td><td>3</td><td>空白参考：完全没染色时透过的光</td></tr>
+    <tr><td><code>Y</code></td><td>3 × N</td><td>光密度（OD），染色在这里线性相加</td></tr>
+    <tr><td><code>S</code></td><td>3 × K</td><td>染色矩阵，K 列 = K 种染色的颜色指纹</td></tr>
+    <tr><td><code>s_H</code></td><td>3</td><td>S 的第 1 列：苏木精的颜色方向</td></tr>
+    <tr><td><code>s_DAB</code></td><td>3</td><td>S 的第 2 列：DAB 的颜色方向</td></tr>
+    <tr><td><code>C</code></td><td>K × N</td><td>染色浓度图，每个像素的染料用量</td></tr>
+    <tr><td><code>Ĉ</code></td><td>K × N</td><td>模型预测的浓度（扩散的输出，C hat）</td></tr>
+    <tr><td><code>C_real</code></td><td>K × N</td><td>从真实 IHC 分解出的浓度，作训练目标</td></tr>
+    <tr><td><code>C_H</code>、<code>C_DAB</code></td><td>H × W</td><td>C 的两个通道：苏木精用量图、DAB 用量图</td></tr>
+    <tr><td><code>F_struct</code></td><td>D × h × w</td><td>结构编码器输出的特征（不是图像）</td></tr>
+    <tr><td><code>F_protein</code></td><td>D × h × w</td><td>染色/蛋白编码器输出的特征（不是图像）</td></tr>
+    <tr><td><code>C_t</code></td><td>K × N</td><td>扩散第 t 步的状态（带噪浓度）</td></tr>
+    <tr><td><code>C_0</code></td><td>K × N</td><td>扩散起点：干净的真实浓度</td></tr>
+    <tr><td><code>C_T</code></td><td>K × N</td><td>扩散终点：纯高斯噪声</td></tr>
+    <tr><td><code>ε</code></td><td>K × N</td><td>加进去的高斯噪声（epsilon）</td></tr>
+    <tr><td><code>v</code></td><td>K × N</td><td>v-prediction 的预测目标</td></tr>
+    <tr><td><code>ᾱ_t</code></td><td>标量</td><td>累积噪声系数（alpha bar t）</td></tr>
+    <tr><td><code>pinv(S)</code></td><td>K × 3</td><td>S 的伪逆，用来从 Y 反解 C</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>一条口诀：</b>凡是出现 <b>3</b> 的地方，都来自光的 RGB 三原色；
+  凡是出现 <b>K</b> 的地方，都来自染色数量。两者之间由 <span class="sym" data-tip="染色矩阵 S，形状 3×K。每一列是一种染色的颜色指纹，负责把 K 维浓度翻译成 3 维 RGB。">S</span> 搭桥。
+</div>
+
+<hr>
+
+<h2>一、Diffusion 到底生成什么</h2>
+
+<p>最核心的一点，先把它框起来：</p>
+
+<div class="formula">
+  <span class="lbl">核心设定</span>
+  Diffusion 生成 <span class="sym" data-tip="Ĉ（C hat）：模型预测出来的染色浓度图，形状 K×N。它是扩散网络真正输出的东西，不是 RGB 图像。">Ĉ</span>，而不是生成 RGB。
+</div>
+
+<p>这里的 <span class="sym" data-tip="Ĉ ∈ R^(K×H×W)：K 个通道、每个通道和原图一样大的浓度图。">Ĉ</span> 是一个张量：</p>
+
+<div class="formula">
+  Ĉ ∈ ℝ<sup>K × H × W</sup>
+</div>
+
+<p class="inline-note">
+  读作"C hat"。ℝ 表示实数，K 是染色数量，H、W 是图像的高和宽。
+</p>
+
+<p>对于普通的 H&amp;E → IHC 任务，如果最终 IHC 是<b>苏木精（Hematoxylin）+ DAB</b> 两种染色，那么：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="K：染色数量。H+DAB 场景下 K = 2。这个数字决定了浓度场有几个通道。">K</span> = 2
+  <br><br>
+  Ĉ = [ Ĉ<sub>H</sub> , Ĉ<sub>DAB</sub> ]
+</div>
+
+<p>也就是两个通道，分别对应两种染色：</p>
+
+<div class="flow">                  Diffusion
+                     │
+        ┌────────────┴────────────┐
+        ↓                         ↓
+  Hematoxylin 浓度            DAB 浓度
+      Ĉ_H                       Ĉ_DAB
+        │                         │
+        └────────────┬────────────┘
+                     ↓
+                     Ĉ</div>
+
+<p class="inline-note">
+  <span class="sym" data-tip="Ĉ_H：苏木精的浓度通道，形状 H×W。每个像素上一个数，表示那里用了多少苏木精。">Ĉ<sub>H</sub></span>
+  和 <span class="sym" data-tip="Ĉ_DAB：DAB 的浓度通道，形状 H×W。每个像素上一个数，表示那里用了多少 DAB（也就是蛋白表达强度）。">Ĉ<sub>DAB</sub></span>
+  都是单通道的灰度"用量图"，合起来才构成完整的 Ĉ。
+</p>
+
+<h3>为什么不让网络直接输出 RGB？</h3>
+
+<p>直接输出的话，网络吐出来的会是：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="X̂：生成的 RGB 图像，形状 3×H×W。三个通道是 R、G、B。">X̂</span> ∈ ℝ<sup>3 × H × W</sup>
+</div>
+
+<p>问题在于：<b>RGB 三个通道本身没有任何生物学解释</b>——"这个像素的 R 值是 210"这句话说明不了什么。
+而 <span class="sym" data-tip="Ĉ_DAB：DAB 浓度。这是有物理意义的量——它直接对应目标蛋白的表达强度。">Ĉ<sub>DAB</sub></span>
+是有明确物理含义的：它代表<b>目标蛋白的表达量</b>。</p>
+
+<p>Beer–Lambert 模型正好提供了这两者之间的桥梁——它把光密度表示成染色矩阵与染色浓度的乘积：</p>
+
+<div class="formula">
+  <span class="lbl">Beer–Lambert 的核心关系</span>
+  <span class="sym" data-tip="Y：光密度（Optical Density），形状 3×N。由 RGB 取负对数得到，在这个空间里不同染料的吸光度可以直接相加。">Y</span>
+  =
+  <span class="sym" data-tip="S：染色矩阵，形状 3×K。第 k 列是第 k 种染色的颜色指纹。">S</span>
+  <span class="sym" data-tip="C：染色浓度图，形状 K×N。每个像素每种染料各有多少。">C</span>
+</div>
+
+<div class="note">
+  <b>这就是整个方案的第一性原理：</b>让扩散在 <span class="sym" data-tip="C：染色浓度。在 OD 空间里 Y = S·C 是线性关系，所以浓度是可以直接相加的物理量。">C</span> 空间里生成，
+  再用一个显式的物理公式把它渲染成 <span class="sym" data-tip="X̂：最终渲染出来的 RGB IHC 图像。">X̂</span>。
+  生成过程因此被约束在"物理上可能出现的颜色"范围内。
+</div>
+
+<hr>
+
+<h2>二、整条生成链路</h2>
+
+<p>完整走一遍是这样：</p>
+
+<div class="formula">
+  H&amp;E → 解耦条件 → Diffusion → <span class="sym" data-tip="Ĉ：扩散生成的染色浓度场。">Ĉ</span> → Beer–Lambert → <span class="sym" data-tip="X̂_IHC：最终生成的虚拟 IHC 图像。">X̂<sub>IHC</sub></span>
+</div>
+
+<p>展开成图：</p>
+
+<div class="flow">                       H&E
+                        │
+             ┌──────────┴──────────┐
+             ↓                     ↓
+      Structure Encoder     Stain/Protein Encoder
+             │                     │
+             ↓                     ↓
+        F_struct              F_protein
+             │                     │
+             └──────────┬──────────┘
+                        ↓
+                Conditional U-Net
+                        ↑
+                        │
+                   noisy C_t
+                        │
+                        ↓
+                 Diffusion sampling
+                        │
+                        ↓
+                Ĉ = [ Ĉ_H , Ĉ_DAB ]
+                        │
+                        ↓
+                  Beer–Lambert
+                        │
+                        ↓
+                 Virtual IHC RGB</div>
+
+<p class="inline-note">
+  <span class="sym" data-tip="F_struct：结构编码器输出的特征图，形状 D×h×w。注意它不是图像，而是一堆抽象特征向量。">F<sub>struct</sub></span>
+  ——
+  <span class="sym" data-tip="F_protein：染色/蛋白编码器输出的特征图，形状 D×h×w。同样是抽象特征，不是图像。">F<sub>protein</sub></span>
+  ——
+  <span class="sym" data-tip="C_t：扩散过程第 t 步的中间状态，也就是加了噪声之后的浓度图。t 从 T（纯噪声）走到 0（干净结果）。">C<sub>t</sub></span>
+</p>
+
+<div class="ok">
+  <b>这里最关键的一句话：</b><br>
+  Diffusion 的<b>生成空间是浓度空间，而不是 RGB 空间</b>。
+</div>
+
+<hr>
+
+<h2>三、真实 IHC 怎么提供训练目标</h2>
+
+<p>训练的时候我们需要知道"正确答案"长什么样。答案要从真实 IHC 图像里反推出来。</p>
+
+<p>给定一张真实 IHC：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="X_IHC：真实拍摄的 IHC 染色图像，RGB 三通道。">X<sub>IHC</sub></span>
+</div>
+
+<p>第一步，转成光密度：</p>
+
+<div class="formula">
+  <span class="lbl">OD 变换</span>
+  <span class="sym" data-tip="Y_IHC：真实 IHC 图像的光密度表示，形状 3×N。">Y<sub>IHC</sub></span>
+  = −log( <span class="sym" data-tip="X_IHC：真实 IHC 的 RGB 值。">X<sub>IHC</sub></span> /
+  <span class="sym" data-tip="X₀：空白参考值，也就是完全没有染色时透过的光（通常取白色背景）。">X₀</span> )
+</div>
+
+<p>第二步，用染色矩阵把它分解开：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="Y_IHC：真实 IHC 的光密度。">Y<sub>IHC</sub></span> ≈
+  <span class="sym" data-tip="S：染色矩阵，形状 3×K。">S</span> ·
+  <span class="sym" data-tip="C_IHC：从真实 IHC 分解出来的染色浓度，就是我们要的训练目标。">C<sub>IHC</sub></span>
+</div>
+
+<p>于是我们就得到了训练目标：</p>
+
+<div class="formula">
+  <span class="boxed"><span class="sym" data-tip="C_IHC：训练时的目标浓度图，形状 K×N。扩散网络要学的就是把它从噪声里还原出来。">C<sub>IHC</sub></span></span>
+</div>
+
+<p>整条路径：</p>
+
+<div class="flow">Real IHC RGB
+     │
+     ↓
+  OD transform          （取负对数）
+     │
+     ↓
+Stain separation        （用 S 分解）
+     │
+     ↓
+  C_H , C_DAB
+     │
+     ↓
+Ground-truth concentration</div>
+
+<div class="warn">
+  <b>注意一个绕不开的问题（残差）：</b><br>
+  真实 IHC 里可能含有 <span class="sym" data-tip="S：染色矩阵，只有 K 列，所以它张成的空间只有 K 维。当 K=2 时，它只能覆盖 3 维 OD 空间里的一张二维平面。">S</span> 覆盖不到的成分。
+  记这部分为残差 r，那么 <code>Y_IHC = S·C_IHC + r</code>。<br>
+  结果是：<code>BL(C_IHC) ≠ X_IHC</code>——用目标浓度渲染出来的图，和真实 IHC 并不完全相同。<br>
+  <b>建议第一件事就是量化这个残差：</b>算 <code>‖r‖ / ‖Y‖</code>。小的话 K=2 完全够用；大的话需要考虑给 S 加第三列。
+</div>
+
+<hr>
+
+<h2>四、S 怎么设</h2>
+
+<p>这件事必须提前定下来。<b>第一版不要让 <span class="sym" data-tip="S：染色矩阵。它描述的是染料本身的物理化学性质，和具体图像无关，所以可以一次估计好、全程固定。">S</span> 和 diffusion 一起自由学习。</b></p>
+
+<div class="formula">
+  <span class="boxed">S = S<sub>real</sub></span>
+</div>
+
+<p>也就是说：从真实 IHC 数据里估计出一个稳定的染色矩阵，然后<b>固定下来</b>。</p>
+
+<div class="formula">
+  S =
+  ⎡ |     |  ⎤
+  ⎢ s<sub>H</sub>   s<sub>DAB</sub> ⎥   ∈ ℝ<sup>3 × 2</sup>
+  ⎣ |     |  ⎦
+</div>
+
+<p>其中两列分别是：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="s_H：S 的第一列，三维向量 [r_H, g_H, b_H]。它表示苏木精对 R、G、B 三个通道吸光度的贡献。苏木精吸红绿多、吸蓝少，所以显蓝紫色。">s<sub>H</sub></span>
+  = [ r<sub>H</sub> , g<sub>H</sub> , b<sub>H</sub> ]<sup>T</sup>
+
+  <span class="sym" data-tip="s_DAB：S 的第二列，三维向量 [r_D, g_D, b_D]。它表示 DAB 对 R、G、B 三个通道吸光度的贡献。DAB 吸蓝最多，所以显棕黄色。">s<sub>DAB</sub></span>
+  = [ r<sub>D</sub> , g<sub>D</sub> , b<sub>D</sub> ]<sup>T</sup>
+</div>
+
+<p class="inline-note">
+  两列都是长度为 3 的向量，因为光只有 R、G、B 三个通道。真实染色向量可以从真实 IHC 的光密度数据中估计出来。
+</p>
+
+<hr>
+
+<h2>五、为什么第一版反而不建议学 S</h2>
+
+<p>如果 <span class="sym" data-tip="S：染色矩阵。">S</span> 和
+<span class="sym" data-tip="C：染色浓度。">C</span> 同时自由变化，会出现一个明显的问题：</p>
+
+<div class="formula">
+  当 <span class="sym" data-tip="S：染色矩阵。">S</span> ·
+  <span class="sym" data-tip="C：染色浓度。">C</span> 保持不变时，
+  <span class="sym" data-tip="S：染色矩阵。">S</span> 和
+  <span class="sym" data-tip="C：染色浓度。">C</span> 可以互相补偿。
+</div>
+
+<div class="flow">S 偏了
+ ↓
+C 跟着偏
+ ↓
+S · C 还是能重构得很好</div>
+
+<p>最终 RGB 可能很好看，但是——</p>
+
+<div class="warn">
+  <b>你的 <span class="sym" data-tip="C_DAB：DAB 浓度通道，代表蛋白表达强度。这是整个方法里最有价值的物理量。">C<sub>DAB</sub></span> 已经不再具有那么明确的物理意义了。</b>
+</div>
+
+<p>而你现在恰恰想强调的就是"Diffusion 生成的是具有物理意义的浓度"。<b>所以第一版应该尽可能减少自由度。</b></p>
+
+<div class="ok">
+  <b>补充一个更准确的说法：</b><br>
+  当 <span class="sym" data-tip="K：染色数量。K=2 时 S 是 3×2 的矩阵。">K</span> = 2 时，
+  <code>Y = S·C</code> 是 <b>3 个方程解 2 个未知数（超定）</b>，最小二乘解唯一，
+  <span class="sym" data-tip="C：染色浓度。固定 S 之后，C 是可以被唯一确定的。">C</span> 天然<b>可辨识</b>。<br>
+  真正的"互相补偿"问题只在 <code>K ≥ 3</code> 时才会出现。所以固定 S 的意义是<b>保证 C 可辨识</b>。
+</div>
+
+<hr>
+
+<h2>六、Beer–Lambert 最后到底怎么算</h2>
+
+<p>假设我们已经有了预测的浓度：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="Ĉ(x)：位置 x 处预测的浓度向量，两维。">Ĉ</span>(x) = [ Ĉ<sub>H</sub>(x) , Ĉ<sub>DAB</sub>(x) ]<sup>T</sup>
+</div>
+
+<p>先得到三个 RGB 通道的光密度：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="Ŷ(x)：位置 x 处预测的光密度，三维。">Ŷ</span>(x) =
+  <span class="sym" data-tip="S：染色矩阵，固定不动。">S</span> ·
+  <span class="sym" data-tip="Ĉ(x)：位置 x 处预测的浓度向量。">Ĉ</span>(x)
+</div>
+
+<p>再通过指数关系回到 RGB：</p>
+
+<div class="formula">
+  <span class="boxed"><span class="sym" data-tip="X̂(x)：位置 x 处渲染出的 RGB 像素值。">X̂</span>(x) =
+  <span class="sym" data-tip="X₀：空白参考。">X₀</span> ⊙ exp( −
+  <span class="sym" data-tip="Ŷ(x)：预测的光密度。">Ŷ</span>(x) )</span>
+</div>
+
+<p>完整写就是：</p>
+
+<div class="formula">
+  <span class="boxed"><span class="sym" data-tip="X̂：最终生成的虚拟 IHC RGB 图像。">X̂</span> =
+  <span class="sym" data-tip="X₀：空白参考，逐像素相乘（⊙ 表示逐元素相乘）。">X₀</span> ⊙ exp( −
+  <span class="sym" data-tip="S：固定的染色矩阵。">S</span>
+  <span class="sym" data-tip="Ĉ：扩散预测出的染色浓度场。">Ĉ</span> )</span>
+</div>
+
+<p class="inline-note">
+  ⊙ 表示逐元素相乘（Hadamard 积）。exp 是指数函数。
+</p>
+
+<div class="warn">
+  <b>底数必须统一。</b>经典 Ruifrok–Johnston 方法用的是 <b>log₁₀</b>：
+  <code>X = X₀ · 10^(−Y)</code>；而如果用<b>自然对数</b>定义光密度，就要写成
+  <code>X = X₀ · e^(−Y)</code>。两者差一个因子 ln10 ≈ 2.303，会直接改变
+  <span class="sym" data-tip="C：染色浓度。C 的数值范围会随 log 底数的选择而整体缩放，进而影响扩散的噪声调度和损失权重。">C</span> 的数值范围。
+  <b>建议统一用 log₁₀，并在代码里写死。</b>
+</div>
+
+<hr>
+
+<h2>七、Diffusion 具体怎么生成 Ĉ</h2>
+
+<p>设真实的目标浓度（扩散的起点）为：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="C_0：扩散过程的起点，也就是干净的真实浓度图，等于 C_IHC。">C<sub>0</sub></span>
+</div>
+
+<p>对它做前向加噪：</p>
+
+<div class="formula">
+  <span class="lbl">前向过程</span>
+  q( <span class="sym" data-tip="C_t：第 t 步的状态。">C<sub>t</sub></span> |
+  <span class="sym" data-tip="C_0：干净的真实浓度。">C<sub>0</sub></span> ) =
+  𝒩( √<span class="sym" data-tip="ᾱ_t：累积噪声系数（alpha bar t）。它随时间 t 单调递减，控制到第 t 步为止保留了多少原始信号。">ᾱ<sub>t</sub></span> ·
+  <span class="sym" data-tip="C_0：干净的真实浓度。">C<sub>0</sub></span> ,
+  (1 − <span class="sym" data-tip="ᾱ_t：累积噪声系数。1 − ᾱ_t 就是累积加进去的噪声方差。">ᾱ<sub>t</sub></span>) I )
+</div>
+
+<p>等价地写成可以直接采样的形式：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="C_t：第 t 步的带噪浓度。">C<sub>t</sub></span> =
+  √<span class="sym" data-tip="ᾱ_t：累积噪声系数。">ᾱ<sub>t</sub></span> ·
+  <span class="sym" data-tip="C_0：干净的真实浓度。">C<sub>0</sub></span> +
+  √(1 − <span class="sym" data-tip="ᾱ_t：累积噪声系数。">ᾱ<sub>t</sub></span>) ·
+  <span class="sym" data-tip="ε：从标准正态分布采样出来的高斯噪声，形状和 C 一样是 K×N。">ε</span>
+</div>
+
+<p>然后 U-Net 接收四个输入：</p>
+
+<div class="formula">
+  ( <span class="sym" data-tip="C_t：当前带噪的浓度图。">C<sub>t</sub></span> ,
+  <span class="sym" data-tip="t：当前的时间步，是一个标量，告诉网络现在噪声有多大。">t</span> ,
+  <span class="sym" data-tip="F_struct：结构条件特征，由 H&E 编码得到。">F<sub>struct</sub></span> ,
+  <span class="sym" data-tip="F_protein：染色/蛋白条件特征。">F<sub>protein</sub></span> )
+</div>
+
+<p>预测下面两个目标之一：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="ε̂_θ：网络预测出来的噪声。θ 是网络参数。">ε̂<sub>θ</sub></span>
+  　或者　
+  <span class="sym" data-tip="v：v-prediction 的预测目标，是噪声和干净数据的某种线性组合，对数值范围大的数据更稳定。">v</span>
+</div>
+
+<div class="ok">
+  <b>训练范式完全不用改。</b>唯一的变化是：<br>
+  原来 diffusion 的 target 是 RGB，现在 target 是浓度图
+  <span class="sym" data-tip="C：染色浓度图。">C</span>。
+</div>
+
+<div class="warn">
+  <b>但有两件事必须处理：</b><br>
+  ① <span class="sym" data-tip="C：染色浓度。它的分布极度偏斜——背景处大量为 0，深染区是重尾分布。">C</span> 的分布和 RGB 完全不同，标准高斯扩散假设数据近似单位方差，
+  所以必须<b>逐通道做 robust 标准化</b>（比如按 99 分位数缩放），并保证训练和推理一致；<br>
+  ② 噪声调度 <span class="sym" data-tip="ᾱ_t：累积噪声系数。它的调度表需要针对浓度数据的取值范围重新设计，不能直接沿用 RGB 那一套。">ᾱ<sub>t</sub></span> 需要重新调。
+</div>
+
+<hr>
+
+<h2>八、推理阶段没有真实 IHC</h2>
+
+<p>真正生成的时候，没有 <span class="sym" data-tip="C_real：真实浓度，只有训练时才拿得到。推理时不存在这个量。">C<sub>real</sub></span>，只有 H&amp;E：</p>
+
+<div class="flow">                H&E
+                 │
+          structure / protein
+             condition
+                 │
+                 ↓
+            random noise
+                 │
+                 ↓
+        Conditional Diffusion
+                 │
+          C_T → ... → C_0
+                 │
+                 ↓
+           Ĉ_H , Ĉ_DAB
+                 │
+                 ↓
+          Beer–Lambert
+                 │
+                 ↓
+        Virtual IHC RGB</div>
+
+<p class="inline-note">
+  <span class="sym" data-tip="C_T：扩散的终点，也就是纯高斯噪声，是推理时的起点。">C<sub>T</sub></span>
+  —— 采样从这里开始，逐步去噪走到 <span class="sym" data-tip="C_0：扩散的起点（干净数据）。推理时它是我们最终到达的目标。">C<sub>0</sub></span>。
+</p>
+
+<h3>两个阶段的对比</h3>
+
+<table>
+  <thead><tr><th style="width:22%">阶段</th><th style="width:26%">手里有什么</th><th>做什么</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>训练</td>
+      <td>H&amp;E + <code>C_real</code></td>
+      <td>H&amp;E → <code>C_real</code>，训练 diffusion 学会去噪</td>
+    </tr>
+    <tr>
+      <td>推理</td>
+      <td>只有 H&amp;E</td>
+      <td>H&amp;E → Diffusion → <code>Ĉ</code> → BL → <code>X̂</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>九、物理约束到底挂在哪里</h2>
+
+<p>这里要特别小心。<b>不能这样写：</b></p>
+
+<div class="formula">
+  <span class="lbl">✗ 无意义的写法</span>
+  <span class="sym" data-tip="L_phys：物理损失项。">L<sub>phys</sub></span> =
+  ‖ <span class="sym" data-tip="BL(·)：Beer–Lambert 渲染函数，把浓度变成 RGB。">BL</span>(<span class="sym" data-tip="Ĉ：预测的浓度。">Ĉ</span>) −
+  <span class="sym" data-tip="X̂：渲染出来的图像。">X̂</span> ‖
+</div>
+
+<p>因为 <span class="sym" data-tip="X̂：渲染结果。">X̂</span> 本来就是
+<span class="sym" data-tip="BL：Beer–Lambert 渲染。">BL</span>(<span class="sym" data-tip="Ĉ：预测的浓度。">Ĉ</span>)，
+这相当于在验证自己等于自己，恒为 0，没有意义。</p>
+
+<p><b>应该约束的是 <span class="sym" data-tip="Ĉ：预测的浓度场。物理约束应该直接作用在它身上。">Ĉ</span> 本身。</b></p>
+
+<h3>① 非负性</h3>
+
+<div class="formula">
+  <span class="sym" data-tip="C_H：苏木精浓度。物理上不可能为负。">C<sub>H</sub></span> ≥ 0 ,　
+  <span class="sym" data-tip="C_DAB：DAB 浓度。物理上不可能为负。">C<sub>DAB</sub></span> ≥ 0
+</div>
+
+<p>实现上直接在网络输出后加一层：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="Ĉ：最终的非负浓度。">Ĉ</span> =
+  <span class="sym" data-tip="Softplus：一个把实数平滑地映射到正数的激活函数，Softplus(x) = ln(1 + e^x)。">Softplus</span>( <span class="sym" data-tip="C_raw：网络直接输出的原始值，可能为负。">C<sub>raw</sub></span> )
+</div>
+
+<p>这样连单独的 loss 都不用写。</p>
+
+<h3>② 真实 IHC 浓度分布</h3>
+
+<p>从真实 IHC 得到 <span class="sym" data-tip="C_real：从真实 IHC 分解出来的浓度。">C<sub>real</sub></span>，然后：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="L_dist：分布匹配损失。">L<sub>dist</sub></span> =
+  <span class="sym" data-tip="D(·,·)：任意一种分布距离度量，比如 KL 散度、MMD 或 Wasserstein 距离。">D</span>(
+  <span class="sym" data-tip="P(Ĉ)：预测浓度的分布。">P(Ĉ)</span> ,
+  <span class="sym" data-tip="P(C_real)：真实浓度的分布。">P(C<sub>real</sub>)</span> )
+</div>
+
+<div class="ok">
+  <b>关键在于：</b>
+  <span class="sym" data-tip="Ĉ_i：预测浓度里的第 i 个像素。">Ĉ<sub>i</sub></span> 和
+  <span class="sym" data-tip="C_real,j：真实浓度里的第 j 个像素。">C<sub>real,j</sub></span>
+  <b>不需要一一对应</b>——这里只比较<b>分布</b>，不要求像素配对。<br>
+  这正是无配对（unpaired）约束，也是唯一能吃到海量无配对 IHC 数据的通道。
+</div>
+
+<h3>③ DAB 专属约束</h3>
+
+<p>除了非负，还可以约束 <span class="sym" data-tip="C_DAB：DAB 浓度通道，直接对应蛋白表达。">C<sub>DAB</sub></span> 的局部统计量、直方图、分位数、空间分布等。
+这比单纯约束 RGB 直方图更接近你真正关心的蛋白表达。</p>
+
+<hr>
+
+<h2>十、两通道还是只预测 DAB？</h2>
+
+<p><b>第一版建议做两通道</b>，也就是：</p>
+
+<div class="formula">
+  <span class="sym" data-tip="C：完整的浓度向量，包含两个通道。">C</span> = [
+  <span class="sym" data-tip="C_H：苏木精浓度通道。">C<sub>H</sub></span> ,
+  <span class="sym" data-tip="C_DAB：DAB 浓度通道。">C<sub>DAB</sub></span> ]
+</div>
+
+<p>而不是只做 <code>C = C_DAB</code>。原因很简单——你的最终 IHC 是 <code>hematoxylin + DAB</code>。
+如果只生成 DAB，还得另外把 H&amp;E 的苏木精加回来，这个过程会混入额外的假设。
+两通道则由 <span class="sym" data-tip="S：染色矩阵，两列分别对应苏木精和 DAB。">S</span> = [s<sub>H</sub>, s<sub>DAB</sub>] 直接渲染，整个模型更闭合。</p>
+
+<div class="note">
+  当然，如果实验最终发现 <span class="sym" data-tip="C_H：苏木精通道。它可能很容易学，因为 H&E 里本来就有苏木精信息。">C<sub>H</sub></span>
+  基本可以直接从原始 H&amp;E 重建、真正困难的只有 DAB，那时可以再做一个消融：
+  <br>　两通道 <code>[C_H, C_DAB]</code> 　vs　单通道 <code>[C_DAB]</code> + H 固定。
+  <br>这个实验很有价值，但<b>不要一开始就把模型简化到只预测 DAB</b>。
+</div>
+
+<div class="warn">
+  <b>一个要留意的风险：</b>当两个染色向量接近共线时，
+  <span class="sym" data-tip="C_H：苏木精浓度通道。">C<sub>H</sub></span> 可能变成"垃圾桶"，
+  吸收本该属于 <span class="sym" data-tip="C_DAB：DAB 浓度通道。">C<sub>DAB</sub></span> 的误差。
+  H（蓝）和 DAB（棕）差异大，风险低；但换成相近颜色时这个问题会立刻出现。<br>
+  建议加一个诊断指标：<code>C_H</code> 与核分割掩膜的一致性。高说明它在干正事。
+</div>
+
+<hr>
+
+<h2>十一、整个模型的职责分工</h2>
+
+<table>
+  <thead><tr><th style="width:32%">模块 / 变量</th><th>它负责什么</th></tr></thead>
+  <tbody>
+    <tr><td>H&amp;E</td><td>提供组织形态信息</td></tr>
+    <tr><td>Structure encoder</td><td>提取组织 / 细胞结构</td></tr>
+    <tr><td>Protein / Stain encoder</td><td>提取与目标染色有关的条件</td></tr>
+    <tr><td>Diffusion U-Net</td><td><b>生成染色浓度场 <code>C</code></b></td></tr>
+    <tr><td><code>C_H</code>、<code>C_DAB</code></td><td>具有明确染色 / 浓度含义的中间状态</td></tr>
+    <tr><td><code>S</code></td><td>真实 IHC 的染色向量，固定不动</td></tr>
+    <tr><td>Beer–Lambert</td><td><b>把浓度转换为 RGB IHC</b></td></tr>
+    <tr><td>FOD</td><td>表达强度</td></tr>
+    <tr><td>PCLS</td><td>病理语义</td></tr>
+    <tr><td>Topology</td><td>空间 / 细胞关系</td></tr>
+    <tr><td>Real-IHC distribution</td><td>不配对的真实 IHC 分布约束</td></tr>
+    <tr><td>Physics constraint</td><td>对 <code>C</code>、<code>S</code> 的成像合理性约束</td></tr>
+  </tbody>
+</table>
+
+<p>这样以后别人问你"你的 diffusion 是干什么的"，你可以非常明确地回答：</p>
+
+<div class="ok">
+  <b>不是直接生成 RGB IHC，而是从 H&amp;E 条件中生成潜在的染色浓度场，
+  再通过显式 Beer–Lambert 前向模型完成 IHC 图像形成。</b>
+</div>
+
+<hr>
+
+<h2>十二、工程上最核心的一次改动</h2>
+
+<p>你现在 <code>/root/autodl-tmp/psp_diffusion</code> 那套模型如果原来是：</p>
+
+<div class="flow">target = RGB IHC
+diffusion → RGB</div>
+
+<p>那么现在需要改成：</p>
+
+<div class="flow">IHC RGB
+   ↓
+   OD
+   ↓
+stain deconvolution
+   ↓
+ C_H , C_DAB
+   ↓
+diffusion target</div>
+
+<p>也就是：</p>
+
+<div class="formula">
+  <span class="boxed"><span class="sym" data-tip="x₀^diffusion：扩散过程要拟合的起点。现在它不再是 RGB 图像，而是浓度图。">x₀<sup>diffusion</sup></span> = <span class="sym" data-tip="C_IHC：从真实 IHC 分解出的浓度图，形状 K×N。">C<sub>IHC</sub></span></span>
+</div>
+
+<p>而：</p>
+
+<div class="formula">
+  <span class="boxed"><span class="sym" data-tip="RGB_IHC：真实 IHC 的 RGB 图像。">RGB<sub>IHC</sub></span> =
+  <span class="sym" data-tip="BL：Beer–Lambert 渲染函数。">BL</span>(<span class="sym" data-tip="C_IHC：真实浓度。">C<sub>IHC</sub></span>,
+  <span class="sym" data-tip="S：固定的染色矩阵。">S</span>)</span>
+</div>
+
+<div class="note">
+  <b>这是这个新范式在工程上最核心的一次变化。</b>
+</div>
+
+<hr>
+
+<h2>十三、分阶段验证顺序</h2>
+
+<p>建议先不把所有东西一次加进去，按下面的顺序逐个验证：</p>
+
+<h3>Stage 0 —— 先验证分解本身成立（最便宜、最决定性）</h3>
+
+<p>在真实 IHC 上估计 <span class="sym" data-tip="S：染色矩阵。">S</span>，算残差
+<code>‖Y − S·pinv(S)·Y‖ / ‖Y‖</code>，看
+<span class="sym" data-tip="BL：Beer–Lambert 渲染。">BL</span>(<span class="sym" data-tip="C_real：从真实 IHC 分解出的浓度。">C<sub>real</sub></span>)
+与 <span class="sym" data-tip="X_real：真实 IHC 图像。">X<sub>real</sub></span> 差多少。</p>
+
+<div class="formula">
+  <span class="sym" data-tip="pinv(S)：S 的伪逆，形状 K×3，用来从光密度反解浓度。">pinv(S)</span> = ( S<sup>T</sup>S )<sup>−1</sup> S<sup>T</sup>
+</div>
+
+<p>残差小 → K=2 成立，继续；残差大 → 先解决 S 的问题，别急着训扩散。</p>
+
+<h3>Stage 1 —— 只加 RGB 重建损失</h3>
+
+<p>验证 <code>Diffusion → 2 通道 Ĉ → BL → RGB</code> 能不能稳定生成。
+重点看：有没有出现非物理颜色？<span class="sym" data-tip="Ĉ：预测的浓度场。">Ĉ</span> 是否非负且空间上合理？</p>
+
+<h3>Stage 2 —— 加浓度监督与非负约束</h3>
+
+<div class="formula">
+  <span class="sym" data-tip="L_RGB：像素级 RGB 重建损失，需要配对数据。">L<sub>RGB</sub></span> = ‖
+  <span class="sym" data-tip="X̂：渲染出的图像。">X̂</span> −
+  <span class="sym" data-tip="X_real：真实 IHC 图像。">X<sub>real</sub></span> ‖₁
+  <br><br>
+  <span class="sym" data-tip="L_C：浓度层面的监督损失，和 L_RGB 高度相关，但在高光密度区域更稳定。">L<sub>C</sub></span> = ‖
+  <span class="sym" data-tip="Ĉ：预测浓度。">Ĉ</span> −
+  <span class="sym" data-tip="C_real：真实浓度。">C<sub>real</sub></span> ‖
+</div>
+
+<p>验证浓度图本身的质量，而不只是渲染出来的 RGB 好看。</p>
+
+<h3>Stage 3 —— 加无配对分布约束</h3>
+
+<p>加入 <span class="sym" data-tip="L_dist：分布匹配损失。">L<sub>dist</sub></span>。
+这是把数据规模从"几十张配对"放大到"整个 IHC 库"的关键一步。</p>
+
+<h3>Stage 4 —— 加语义损失</h3>
+
+<p>依次加入 FOD、PCLS、Topology。每个模块单独加、单独消融，贡献才好解释。</p>
+
+<hr>
+
+<h2>附：损失项总览</h2>
+
+<table>
+  <thead><tr><th style="width:24%">损失项</th><th style="width:14%">作用对象</th><th style="width:12%">需配对？</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>L_RGB = ‖X̂ − X_real‖₁</code></td><td>RGB</td><td>是</td><td>像素级配对重建，主力损失</td></tr>
+    <tr><td><code>L_C = ‖Ĉ − C_real‖</code></td><td>C</td><td>是</td><td>与 L_RGB 高度相关，但在高光密度区更稳定，值得保留</td></tr>
+    <tr><td><code>L_dist = D(P(Ĉ), P(C_real))</code></td><td>C</td><td><b>否</b></td><td>唯一能吃到无配对真实 IHC 的通道</td></tr>
+    <tr><td><code>Ĉ = Softplus(C_raw)</code></td><td>C</td><td>—</td><td>非负性，架构级实现，不用单独写 loss</td></tr>
+    <tr><td>背景稀疏 / DAB 非表达区为 0</td><td>C</td><td>否</td><td>物理先验，不等于 RGB 稀疏</td></tr>
+    <tr><td><code>C_H</code> 与核密度一致</td><td>C</td><td>否</td><td>苏木精染核，是硬先验</td></tr>
+    <tr><td><code>L_phys = ‖BL(Ĉ) − X̂‖</code></td><td>—</td><td>—</td><td><b>恒为 0，删掉</b></td></tr>
+    <tr><td>FOD / PCLS / Topology</td><td>语义</td><td>视情况</td><td>属于任务损失，不是成像损失</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>一句话总结：</b>物理性靠<b>架构</b>保证（Beer–Lambert 解码器 + 固定 <code>S</code> + Softplus），
+  损失预算应该花在<b>配对重建 + 无配对分布 + 语义</b>上。
+</div>
+
+<hr>
+
+<h2>附：三个待确认的问题</h2>
+
+<ol>
+  <li>
+    <b><span class="sym" data-tip="F_protein：染色/蛋白编码器输出的特征。">F<sub>protein</sub></span> 到底从哪来？</b><br>
+    如果两个编码器的输入<b>都是 H&amp;E</b>，那么 <code>F_protein</code> 里的"蛋白信息"实际上是模型
+    <b>推断</b>出来的，而不是测出来的。建议改名为"表达潜变量"更准确。
+    如果另有输入（连续切片 IHC、或某个 biomarker 预测器的输出），需要明确说明。
+  </li>
+  <li>
+    <b>H&amp;E ↔ IHC 是否像素级配准？</b><br>
+    配对 → <code>L_RGB</code> / <code>L_C</code> 可用，<code>L_dist</code> 只是锦上添花；
+    不配对 → <code>L_dist</code> 变成<b>唯一</b>监督，整个训练范式要换成分布匹配那一套。
+  </li>
+  <li>
+    <b><span class="sym" data-tip="X₀：空白参考值。它的估计方式决定了 C 的绝对尺度。">X₀</span> 如何估计？</b><br>
+    全局白点 / 每张切片 / 逐像素。建议用每张切片的稳健背景估计，
+    逐像素估计会引入信息泄漏（网络可以靠 X₀ 作弊）。
+  </li>
+</ol>
+
+<hr>
+
+<p style="color:var(--muted); font-size:13.5px; margin-top:34px;">
+  本文档由 AI 整理，用于方案讨论。所有变量解释可通过顶部按钮隐藏。
+</p>
+
+</div>
+
+<script>
+  (function(){
+    var btn = document.getElementById('toggleBtn');
+    var on = true;
+    btn.addEventListener('click', function(){
+      on = !on;
+      document.body.classList.toggle('hide-notes', !on);
+      btn.textContent = on ? '隐藏变量解释' : '显示变量解释';
+    });
+  })();
+</script>
+
+</body>
+</html>

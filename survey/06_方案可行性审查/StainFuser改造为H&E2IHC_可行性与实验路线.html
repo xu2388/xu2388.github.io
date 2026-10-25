@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StainFuser 改造为 H&E→IHC：可行性与实验路线</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">方案可行性审查</div>
+  <div class="sub">StainFuser → H&E→IHC<br>代码级审查 + 表示设计 + 实验路线</div>
+  <a class="l1" href="#s0">0 · 先给结论</a>
+  <a class="l1" href="#s1">1 · StainFuser 本体（代码级）</a>
+  <a class="l2" href="#s11">1.1 真正的输入输出</a>
+  <a class="l2" href="#s12">1.2 condition injection 到底是什么</a>
+  <a class="l2" href="#s13">1.3 为什么它会带入颜色</a>
+  <a class="l2" href="#s14">1.4 为什么不直接适合 H&E→IHC</a>
+  <a class="l2" href="#s15">1.5 代码级修改点</a>
+  <a class="l2" href="#s16">1.6 代码勘误与陷阱</a>
+  <a class="l1" href="#s2">2 · 语义染色表示：先例</a>
+  <a class="l1" href="#s3">3 · 三通道到底该是什么</a>
+  <a class="l2" href="#s31">3.1 [H,DAB,H] 的严格否定</a>
+  <a class="l2" href="#s32">3.2 候选通道物理筛选</a>
+  <a class="l2" href="#s33">3.3 Top 3 方案</a>
+  <a class="l2" href="#s34">3.4 决策建议</a>
+  <a class="l1" href="#s4">4 · OD / stain matrix / Beer–Lambert</a>
+  <a class="l1" href="#s5">5 · RGB→Z→RGB 闭环可行性</a>
+  <a class="l1" href="#s6">6 · Channel Attention</a>
+  <a class="l1" href="#s7">7 · Protein Branch 复用</a>
+  <a class="l1" href="#s8">8 · 可直接执行的实验路线</a>
+  <a class="l1" href="#s9">9 · HistDiST 迁移清单</a>
+  <a class="l1" href="#s10">10 · 风险与不确定</a>
+  <a class="l1" href="#s11r">11 · 文献与代码</a>
+</nav>
+
+<main>
+
+<header class="doc">
+  <div class="kicker">Research Plan Feasibility Review</div>
+  <h1>StainFuser 改造为 H&E→IHC 虚拟染色：<br>方案可行性审查、表示设计与可执行实验路线</h1>
+  <p class="desc">对「StainFuser 作 backbone + 语义染色三通道 + 可微物理渲染 + channel attention + 复用 Protein Branch」这套方案的逐模块判定。所有关于 StainFuser 的结论均来自<b>实际克隆官方仓库、逐行读代码、并用 diffusers 0.26.3 实例化模型实测</b>，不依赖论文摘要。</p>
+  <div class="meta">
+    <span>审查日期 2026-10-05</span>
+    <span>优先级：可复现 &gt; 可解释 &gt; 改动小 &gt; 有公开代码 &gt; 有实验收益 &gt; 复杂度</span>
+    <span>已核对：arXiv / GitHub / HuggingFace / diffusers 0.26.3 源码 / 模型实例化实测</span>
+    <span>不把「条件控制」误称为「显式解耦」</span>
+  </div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key">
+<div class="bt">一句话判定</div>
+<p><b>方向成立，但当前形态有三处必须先改的结构性问题；而且最大的风险不在你列出的任何一个模块里，而在 StainFuser 的 condition 设计本身——它在 H&amp;E→IHC 上缺少可用的推理输入。</b></p>
+</div>
+
+<h3>分模块判定</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>模块</th><th class="c">判定</th><th>依据（一句话）</th><th class="c">改动成本</th></tr></thead>
+<tbody>
+<tr><td>以 StainFuser 为 diffusion backbone</td><td class="c"><span class="b medium">有条件成立</span></td><td>官方代码 + 权重齐全（难得），但推理必须给一张 IHC 参考图，H&amp;E→IHC 没有这个输入，必须自造机制</td><td class="c">中</td></tr>
+<tr><td>H&amp;E→IHC 生成（不换输出空间）</td><td class="c"><span class="b high">成立</span></td><td>结构对齐、非配对；把 target-latent 槽位换成可学习 token 即可，与你 HistDiST 的做法同构</td><td class="c">小</td></tr>
+<tr><td>三通道染色语义表示</td><td class="c"><span class="b high">成立</span></td><td>有直接先例：StainQuant（可微 BL + 可学习 stain matrix）、CCPL（H/DAB 双通道 + 逐通道 FOD）</td><td class="c">大</td></tr>
+<tr><td><code>[H, DAB, H]</code> 这个具体设计</td><td class="c"><span class="b bad">不成立</span></td><td>两个独立证明：rank-2 使重建结构性有损；channel attention 出现 1 维不可辨识的平坦方向</td><td class="c">—</td></tr>
+<tr><td>第三个通道换成分量</td><td class="c"><span class="b high">成立</span></td><td>候选已被物理筛选到唯一推荐：H、DAB、正交补（残差/背景）</td><td class="c">小</td></tr>
+<tr><td>可微 Beer–Lambert renderer</td><td class="c"><span class="b high">成立</span></td><td>Ruifrok 2001 线性性 + StainQuant 已验证可微 BL 解码器足够；但必须加三个约束</td><td class="c">中</td></tr>
+<tr><td>Channel attention</td><td class="c"><span class="b medium">成立但要收窄</span></td><td>「逐空间位置给不同染色分量不同权重」本轮<b>没有找到完全对口的先例</b>；必须先回答与「逐像素解混」的区别</td><td class="c">小</td></tr>
+<tr><td>复用旧 Protein Branch</td><td class="c"><span class="b high">成立且最划算</span></td><td>槽位与 StainFuser 的 cross-attn context <b>完全同构</b>，经验可直接迁移；但需加零初始化与幅度监控</td><td class="c">小</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>五个最关键的发现</h3>
+
+<div class="box stop">
+<div class="bt">发现 1（最重要）：StainFuser 有两条 condition 通道，两条都携带颜色，而且比你的观察更严重</div>
+<p>不是「可能会注入一部分颜色」，而是：<b>①</b> 原图以<b>原始 RGB 像素</b>进入 ControlNet 的卷积干（<code>Conv2d(3,16,3,1)</code>，实测确认）；<b>②</b> 目标图的 VAE latent 被拍平成 4096 个 token、每个只有 4 维，经一个 <code>Linear(4,1024)</code> 投成 cross-attention 的 K/V。<b>此处要修正一个容易误导的说法（含我初稿的措辞）：仿射映射是逐 token 施加的，而 4096 个 token 与 64×64 潜码网格一一对应，所以这条通道完整保留了空间结构，并不是把图像压成一个全局颜色向量。实际后果更宽——目标图的全部潜码内容（结构 + 颜色 + 一切）都被线性写进 attention 的 value。</b></p>
+<p>在 stain normalization 里，源图颜色<b>应该</b>被丢弃、目标图颜色<b>应该</b>被复制；在 H&amp;E→IHC 里，源图颜色应该被丢弃、目标图<b>根本不存在</b>。<b>同一个 condition 设计在两个任务上的正确性完全相反。</b></p>
+</div>
+
+<div class="box warn">
+<div class="bt">发现 2：把输出改成 <code>[H, DAB, X]</code> 不是「加个输出头」，而是换掉解码器</div>
+<p>StainFuser 的扩散 latent 是 <b>Stable Diffusion 2.1 VAE</b> 的 4 通道 latent（64×64），输出必须过 <code>AutoencoderKL.decode()</code> 才成 RGB。<code>train.py</code> 里 <code>vae.requires_grad_(False)</code>——<b>VAE 全程冻结</b>。所以「让三个输出通道具有染色语义」= 你必须自带一个渲染器，绕开（或替换）这个 VAE 解码器。这与 StainQuant 的做法一致，也说明<b>这一步的改动量被低估了</b>。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">发现 3：<code>[H, DAB, H]</code> 不是「值得商榷」，是数学上不成立</div>
+<p><b>(a) 秩亏</b>：渲染是 <code>OD = M·Z</code>，<code>M = [s_H, s_DAB, s_H]</code> 的第 1、3 列完全相同 → <code>rank(M) = 2</code> → 输出的 OD 只能落在 2 维子空间里，而真实 IHC 的 OD 不在这个子空间里（你自己实测的 <code>‖Render(Deconv(x))−x‖ = 0.023</code> 就是证据）。这个残差<b>与训练无关，不可修</b>。</p>
+<p><b>(b) attention 不可辨识</b>：若 attention 是逐通道乘性权重 <code>w</code>，则 <code>OD = s_H·H·(w₁+w₃) + s_DAB·Z₂·w₂</code>——<b>只有 <code>w₁+w₃</code> 可辨识</b>，两个权重之间可以任意重分配而不改变输出。损失沿这个方向是平的，梯度里这一维是纯噪声。<b>这比「冗余」更严重：是不可辨识。</b></p>
+</div>
+
+<div class="box good">
+<div class="bt">发现 4：RGB→Z→RGB 在数学上是恒等式，所以「重建差」只可能有两个来源</div>
+<p>只要 ① <code>M</code> 是满秩 3×3、② 不做非负截断，则 <code>I′ = I₀·10^(−M·M⁻¹·OD) = I</code>——<b>误差恒等于 0</b>。<b>注意 <code>I₀</code> 根本不需要已知：它在往返中精确抵消</b>（<code>I₀·(I/I₀) = I</code>）。</p>
+<p>所以「染色空间重建本身就很差」这个担心，<b>只归约到两个原因：M 秩亏、非负截断</b>。另外两个常被一起提到的（<code>I₀</code> 估计误差、uint8 量化）<b>在往返中不产生任何误差</b>，但它们分别影响「C 的可比性」和「C 目标的噪声底」，仍然是必须固定/记录的。见 §5.2 的实测数字。</p>
+</div>
+
+<div class="box key">
+<div class="bt">发现 5：StainFuser 全论文只有 8 次引用、0 次有影响力引用</div>
+<p>实测（Semantic Scholar，2026-10-05）：<code>citationCount = 8</code>，<code>influentialCitationCount = 0</code>。HuggingFace 权重仓库 20 downloads / 1 like。<b>本轮检索没有找到任何把 StainFuser 用于 H&amp;E→IHC 虚拟染色的工作。</b>这既是机会（没人做过），也是风险（没有社区验证、没人可以问、遇到坑只能自己填）。按你「有公开代码」的优先级它是加分项，但按「有实验收益」它是未知数。</p>
+</div>
+
+<h3>一句话路线图</h3>
+<div class="flow">
+<pre><code>阶段 0（1–3 天，零训练）   门禁实验：三通道重建上限 / 第三个通道是什么 / M 固定还是学习
+        │                   ▼ 只有全部通过才继续改架构
+        ├─ 通过 ─────────────────────────────────────────────────────┐
+        │                                                            │
+        └─ 不通过 → 换第三个通道设计 或 退回 RGB 空间生成（不丢人）    │
+                                                                     ▼
+阶段 1（1–2 周）   最小改动 baseline：只把 target-latent 槽位换成可学习 token
+                  输出空间保持 RGB latent 不动 → 先把「能不能做这件事」跑通
+                                                                     │
+                                                                     ▼
+阶段 2（2–4 周）   分两步改造表示：先只换渲染器 → 再换生成空间
+                  一次只引入一个新失败模式，保证可归因
+                                                                     │
+                                                                     ▼
+阶段 3   消融：attention 位置 B→D；Protein Branch 有无；Z 通道设计对比</code></pre>
+</div>
+
+<div class="box warn">
+<div class="bt">关于你自己的优先级排序（可复现 &gt; 可解释 &gt; 改动小 …）</div>
+<p>本方案在「可解释」上是<b>真正的加分项</b>（浓度图有物理量纲、渲染器可检验）；但在「改动小」上是<b>明确减分项</b>——换输出空间意味着放弃 SD VAE 预训练的解码先验，这是你上次审查 HistDiST 时已经得出的同一个结论。所以本报告推荐的路线是<b>把大改动拆成两个可独立验证的小改动</b>，而不是一次做完。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>StainFuser 本体（代码级审查）</h2>
+
+<p>本节所有结论来自 <code>git clone https://github.com/R-J96/stainFuser</code> 后的逐行阅读，以及用 <code>diffusers==0.26.3</code> 实际实例化模型得到的实测结果。凡标注「实测」的，都是我在这台机器上跑出来的，不是从论文抄的。</p>
+
+<h3 id="s11">1.1 真正的输入输出</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>项</th><th>代码事实</th><th>位置</th></tr></thead>
+<tbody>
+<tr><td>source image</td><td><b>原始 RGB 像素张量</b>，3 通道，<code>[0,1]</code>，512×512。<b>不是 latent</b>（变量名叫 <code>src_latents</code>，是误导）</td><td><code>recipe.py</code> L202；<code>dataset.py</code> L259</td></tr>
+<tr><td>target / condition</td><td><code>batch["Target Images"]</code> → VAE encode → <code>latent_dist.sample()</code> → ×0.18215 → reshape <code>(B, 4096, 4)</code></td><td><code>recipe.py</code> L198, L261–263</td></tr>
+<tr><td>diffusion latent</td><td>Stable Diffusion <b>2.1</b> VAE latent：4 通道，64×64（512/8）。<b>注意是 SD2.1 不是 SD1.5</b></td><td><code>sd21b_vae_config.json</code></td></tr>
+<tr><td>UNet 输入</td><td><code>noisy_tsf_latents</code>，<code>(B,4,64,64)</code>。<code>conv_in</code> 是 4 通道，无额外拼接</td><td><code>recipe.py</code> L274</td></tr>
+<tr><td>condition 入口 ①</td><td><code>controlnet_cond = src_latents</code>（原始 RGB）→ ControlNet 的 <code>controlnet_cond_embedding</code>，第一层实测 <code>Conv2d(3,16,3,1)</code>，末层 zero-conv</td><td><code>recipe.py</code> L269；<code>arch.py</code> L345–347</td></tr>
+<tr><td>condition 入口 ②</td><td><code>encoder_hidden_states = tgt_latents</code> <code>(B,4096,4)</code> → <code>encoder_projector = Linear(4,1024)</code>（实测）→ 两个网络的 cross-attn</td><td><code>arch.py</code> L76–80, L188–189</td></tr>
+<tr><td>输出</td><td><code>noise_predictor</code> 预测 ε，4 通道 latent</td><td><code>recipe.py</code> L274–280</td></tr>
+<tr><td>training target</td><td><b>ε（epsilon prediction）</b>：<code>target = noise</code></td><td><code>recipe.py</code> L164–165, L282–284</td></tr>
+<tr><td>loss</td><td><code>F.mse_loss(model_pred, noise)</code>——<b>纯 ε-MSE。无感知损失、无对抗、无 CFG、无条件 dropout</b></td><td><code>recipe.py</code> L285–291</td></tr>
+<tr><td>inference</td><td>从<b>纯噪声</b>起步 → PNDM 20 步 → <code>decode_first_stage</code> → VAE decode → RGB。<b>没有任何 guidance_scale</b></td><td><code>recipe.py</code> L365–425</td></tr>
+<tr><td>训练超参</td><td>AdamW lr 1e-5 / wd 1e-2 / 3 epochs / effective batch 32；SD2.1 backbone；81 小时 / 2×A100</td><td>论文 Appendix A1</td></tr>
+<tr><td>可训练集合</td><td>ControlNet 全部 + UNet <code>encoder_projector</code> + UNet <code>up_blocks/conv_norm_out/conv_act/conv_out</code>。<b>VAE 全冻；UNet 的 <code>conv_in/down_blocks/mid_block</code> 冻</b></td><td><code>train.py</code> L55, L76–82；<code>recipe.py</code> L55–74</td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>实测参数量（不是论文数字，是实例化出来的）</h4>
+<div class="scroll">
+<table>
+<thead><tr><th>组件</th><th class="c">参数量</th><th class="c">是否训练</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>VAE（SD2.1）</td><td class="c">83.65 M</td><td class="c"><span class="b low">冻结</span></td><td><code>requires_grad_(False)</code></td></tr>
+<tr><td><code>noise_predictor</code>（UNet）</td><td class="c">865.92 M</td><td class="c"><span class="b medium">部分</span></td><td>只训 up_blocks + 输出头（514.25 M）</td></tr>
+<tr><td><code>conditioner</code>（ControlNet）</td><td class="c">364.23 M</td><td class="c"><span class="b high">全部</span></td><td>完整可训练副本</td></tr>
+<tr><td><code>encoder_projector</code></td><td class="c">0.0051 M</td><td class="c"><span class="b high">全部</span></td><td><code>Linear(4→1024)</code>，真正的「适配层」</td></tr>
+<tr><td><b>总计</b></td><td class="c"><b>1313.80 M</b></td><td class="c"><b>878.49 M 可训</b></td><td>fp32 非激活显存 ≈ <b>14.1 GB</b>（参数 3.5 + 梯度 3.5 + AdamW 7.0）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">对你的 H20 96G 意味着什么</div>
+<p>878 M 可训练参数（对比你的 HistDiST 是 860 M 的 UNet），<b>量级相当</b>。非激活 fp32 显存 14.1 GB，加激活（512²、ControlNet + UNet 两条前向同时活着）后大概 40–60 GB 区间。论文原话是「the Stable Diffusion backbone is GPU memory intensive for training」。<b>你的 H20 96G 够用，但不要指望能同时开大 batch。</b>建议沿用你 v6 的 <code>--amp_dtype bf16</code>（你上次已经用实测证明 bf16 是必须的，不是可选项）。</p>
+</div>
+
+<h3 id="s12">1.2 condition injection 到底是什么</h3>
+
+<div class="box good">
+<div class="bt">结论：真的是 ControlNet，不是「行为上像」——但它是「ControlNet + 4 维 latent token cross-attention」的混合体</div>
+</div>
+
+<p><b>(a) ControlNet 部分是真的。</b><code>OveriddenControlNet</code> 直接继承 diffusers 的 <code>ControlNetModel</code>，并且把预训练 UNet 的 <code>conv_in / time_proj / time_embedding / down_blocks / mid_block</code> 逐层 <code>load_state_dict</code> 复制过来（<code>arch.py</code> L64–74）。zero-conv 的输出通过 <code>down_block_additional_residuals</code> / <code>mid_block_additional_residual</code> 加进 UNet（<code>recipe.py</code> L278–279）。这是教科书式的 ControlNet 结构，不是类比。</p>
+
+<p><b>(b) 但第二条通道才是关键。</b>论文里说「把 CLIP 文本编码器换成 VAE embedding」，代码实现是：目标图的 4 通道 latent 被拍平成 <b>4096 个 token、每个 token 只有 4 维</b>，经一个 <code>Linear(4,1024)</code> 投到 cross-attention 的 K/V。<b>也就是说，所谓「条件」在进入网络前是一个 4 维向量——它就是目标图的 VAE latent 本身。</b></p>
+
+<div class="box key">
+<div class="bt">如果要把「结构信息」与「蛋白表达信息」分别注入，改哪里</div>
+<ul>
+<li><b>结构 → 改 <code>controlnet_cond</code></b>（<code>recipe.py</code> L269 训练 / L343 推理）。这是唯一空间对齐、多尺度、zero-conv 保底的通路。当前喂的是<b>原始 RGB</b> → 见 §1.3 的颜色泄漏。<b>改成染色分解后的结构分量（H 浓度图或 OD 图）就是一个 tensor 的替换</b>，无需改任何网络结构。</li>
+<li><b>蛋白 / 染色 → 改 <code>encoder_hidden_states</code></b>（<code>recipe.py</code> L268 / L342）。把 <code>tgt_latents (B,4096,4)</code> 换成你的 Protein Branch 输出 <code>p_tok (B,256,768)</code>，并把 <code>encoder_projector</code> 从 <code>Linear(4,1024)</code> 改成 <code>Linear(768,1024)</code>。<b>这与你 HistDiST 里 <code>ProteinAdapter → 256 个 cross-attn token</code> 是同一个槽位，经验可以直接迁移。</b></li>
+<li><b>不要动的地方</b>：UNet 的 <code>conv_in</code>（4 通道）、<code>down_blocks</code>、<code>mid_block</code>。这些冻结且承载预训练先验；改 <code>conv_in</code> 的通道数（比如学你 HistDiST 的 8 通道拼接）= 放弃预训练权重，与「改动小」直接冲突。</li>
+</ul>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 换成 H 通道图之前必须先知道：这个槽位硬编码 3 通道</div>
+<p>把 <code>controlnet_cond</code> 的输入从原始 RGB 换成 H&amp;E 的 H 通道图，<b>方向是对的，但有三条硬约束必须先处理</b>——我全部实测过。</p>
+<ul>
+<li><b>约束 1：条件编码器第一层写死 3 通道。</b>实测 <code>conv_in = Conv2d(3, 16, 3, 1)</code>。喂 1 通道直接 <code>RuntimeError: expected input[1,1,512,512] to have 3 channels</code>。</li>
+<li><b>约束 2：<code>conditioning_embedding_in_channels</code> 是死参数，改它没用。</b><code>arch.py</code> L52–61 只把 <code>conditioning_embedding_out_channels</code> 传进 <code>super().__init__()</code>，输入通道数从未被使用。别在这上面浪费时间。</li>
+<li><b>约束 3：改通道数会让 checkpoint 加载报错。</b>实测：<code>load_state_dict(strict=False)</code> 只忽略「缺键 / 多键」，<b>不忽略尺寸不匹配</b>——会抛 <code>size mismatch for controlnet_cond_embedding.conv_in.weight</code>。所以不能改完通道数还想直接加载 StainFuser 的权重。</li>
+</ul>
+<p><b>⇒ 推荐做法（改动最小）：保持 3 通道，只换内容。</b>把 1 通道的 H 图沿通道维复制 3 份，或更好——喂 3 通道的染色分解结果（如 <code>[C_H, C_E, C_H+C_E]</code>）。这样：① 不改任何网络结构；② checkpoint 原样可加载；③ 「结构通路 vs 颜色泄漏」的对照实验依然成立。</p>
+<p><b>一个降低风险的好消息（已核对代码）</b>：<code>controlnet_cond_embedding</code> <b>不在从预训练 UNet 复制的那批层里</b>——<code>arch.py</code> 只复制 <code>conv_in / time_proj / time_embedding / class_embedding / down_blocks / mid_block</code>，条件编码器是新建的（且末层 <code>conv_out</code> 是 zero-conv）。<b>所以换输入内容并不会丢掉任何预训练先验</b>，只是让已训练好的条件编码器面对一个新输入分布。这是低风险操作。</p>
+</div>
+
+
+<div class="box warn">
+<div class="bt">实测纠正了我自己的一次误读（值得记录，因为它也会骗到你）</div>
+<p>我第一遍静态读代码时，看到 <code>model_utils.py</code> 里写着 <code>OveriddenControlNet(unet, cross_attention_dim=4, conditioning_embedding_in_channels=4)</code>，而 <code>ControlNetModel</code> 的 cross-attn 维度按 <code>cross_attention_dim</code> 构建，于是判断「4 与 <code>Linear(4,1024)</code> 冲突，是个 bug」。</p>
+<p><b>实测证明我错了。</b>跑起来的结果是：传入 <code>cross_attention_dim=4 / 8 / 1024</code>，ControlNet 的 <code>config.cross_attention_dim</code> <b>始终是 1024</b>，cross-attn 的 <code>to_k</code> 输入维度也始终是 1024。原因在 <code>arch.py</code> L52：传给 <code>super().__init__()</code> 的是 <code>cfg.cross_attention_dim</code>（=1024），<b>不是</b>那个局部参数。那个参数只被用来决定 <code>encoder_projector</code> 的输入维度。</p>
+<p><b>所以这里的教训是命名陷阱</b>：<code>OveriddenControlNet(cross_attention_dim=V)</code> 里的 <code>V</code> 的含义是「<b>进来的条件 token 有多少维</b>」，不是「网络的 cross-attn 有多宽」。任何人改这段代码都会误读一次。<b>你接 Protein Branch 时，这个参数应该填 768。</b></p>
+</div>
+
+<h3 id="s13">1.3 为什么 condition injection 会带入颜色</h3>
+
+<p>你的实验观察是「它可能会注入一部分颜色信息」。<b>代码上被证实，而且比预想的更严重：不是「一部分」，是两条通道都在漏。</b></p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">通道 A · 直接且更强</div>
+<p><code>controlnet_cond</code> = 原始 RGB 像素（3 通道，<code>[0,1]</code>）。</p>
+<p>ControlNet 的条件编码器第一层实测是 <code>Conv2d(3,16,3,padding=1)</code>——<b>直接吃 RGB 像素值</b>。</p>
+<p>zero-conv 只控制<b>初始幅度</b>（保证 step 0 恒等），<b>不阻止梯度学到颜色</b>。</p>
+</div>
+<div class="mini">
+<div class="mt">通道 B · 更隐蔽、更「合法」</div>
+<p><code>encoder_hidden_states</code> = 目标图 latent 拍平的 4096 token。</p>
+<p><code>Linear(4,1024)</code> 是<b>仿射映射</b>，K/V 与目标 latent 线性相关。<b>但注意：仿射是逐 token 施加的</b>（4096 个 token ↔ 64×64 潜码网格），<b>所以这条通道保留空间结构</b>，它携带的是目标图的<b>全部潜码内容</b>，不止颜色。</p>
+<p>→ <b>目标图的一切（结构 + 颜色）都被线性写进了 attention 的 value——比「漏颜色」更严重。</b></p>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">关键：同一个 condition 设计，在两个任务上的正确性完全相反</div>
+<div class="scroll">
+<table>
+<thead><tr><th>任务</th><th>源图（H&amp;E）的颜色</th><th>目标图的颜色</th><th>这个 condition 设计</th></tr></thead>
+<tbody>
+<tr><td>Stain normalization（原任务）</td><td><b>应该被丢弃</b></td><td><b>应该被复制</b>（这就是任务本身）</td><td class="c"><span class="b high">正确</span></td></tr>
+<tr><td>H&amp;E→IHC（你的任务）</td><td><b>应该被丢弃</b></td><td><b>推理时不存在</b></td><td class="c"><span class="b bad">错误</span></td></tr>
+</tbody>
+</table>
+</div>
+<p>在 stain normalization 里，「复制目标颜色」是<b>要学的东西</b>；在 H&amp;E→IHC 里，如果训练时把 GT IHC 的 latent 当条件喂进去，模型会走<b>捷径</b>——直接复制目标颜色，而不是学「蛋白表达 → 颜色」的映射。<b>这就是「condition 泄漏颜色」在你这个任务上的真实危害：它不是美学问题，是训练目标被短路。</b></p>
+</div>
+
+<p><b>文献依据</b>：这是条件扩散 / 图像翻译里的经典 <b>appearance leakage / style leakage</b> 问题，属于「结构条件与外观纠缠」这一族。你已有的资料库里，§4 的「结构/外观解耦」轴与这个问题是同一个。另外，StainQuant（§2）在讨论色一致性损失时也隐含承认了同一件事：生成器学到的「染色向量」未必落在物理 OD 锥里，所以才需要一个锚定项把它拉回初值。</p>
+
+<h3 id="s14">1.4 为什么它不直接适合 H&amp;E→IHC</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>结构性原因</th><th>证据</th><th class="c">能否绕过</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><b>推理必须给一张 IHC 参考图</b>。没有可学习染色 token、没有 prompt、没有 CFG</td><td><code>get_input_for_inference</code> 必须传 <code>Target Images</code>；<code>run_patch.py</code> 有 <code>--target_path</code>（默认 <code>output/h_target.png</code>）</td><td class="c"><span class="b medium">能，但要新造机制</span></td></tr>
+<tr><td class="c">2</td><td><b>任务是「同结构换色」</b>。训练数据是 NST 生成的 (source, target, transformed) 三元组，<code>transformed</code> 与 <code>source</code> <b>结构完全对齐</b></td><td><code>dataset.py</code> L244：<code>stylized_img_n = self.mmap[idx_pair[1]][source_idx]</code>——按同一个 source 索引取风格化图</td><td class="c"><span class="b medium">能，但语义变了</span></td></tr>
+<tr><td class="c">3</td><td><b>输出空间是 SD2.1 VAE 的 4 通道 latent</b>，不是染色语义通道</td><td><code>vae.requires_grad_(False)</code>；<code>decode_first_stage</code> 走 <code>AutoencoderKL.decode()</code></td><td class="c"><span class="b medium">能，但要自带渲染器</span></td></tr>
+<tr><td class="c">4</td><td><b>无 CFG、无条件 dropout</b>。condition 每步全强度注入，训练时没有任何机制强迫模型在条件缺失时也能生成</td><td>全仓库检索：<code>guidance_scale</code> 从未被使用</td><td class="c"><span class="b high">能，改动小</span></td></tr>
+<tr><td class="c">5</td><td><b>可复现性风险</b>：8 次引用 / 0 次有影响力引用；仓库本身有缺口</td><td>Semantic Scholar 实测；<code>conf/data/</code> 目录不存在而 <code>train.yaml</code> 里有 <code>data: train</code>；<code>requirements.txt</code> 不含 torch / diffusers / transformers</td><td class="c"><span class="b low">不能，只能自己填</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s15">1.5 代码级修改点（按你「改动小」的优先级排序）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">优先级</th><th>改什么</th><th>文件 / 行</th><th class="c">改动量</th><th class="c">可复现性</th><th>风险</th></tr></thead>
+<tbody>
+<tr><td class="c"><span class="b high">P0</span></td><td>把 <code>encoder_hidden_states</code> 从目标图 latent 换成可学习染色 token（或你的 <code>p_tok</code>）</td><td><code>recipe.py</code> L268 / L342；<code>arch.py</code> L76–80</td><td class="c">~20 行</td><td class="c"><span class="b high">高</span></td><td>低。槽位是现成的</td></tr>
+<tr><td class="c"><span class="b high">P0</span></td><td>把 <code>controlnet_cond</code> 从原始 RGB 换成染色分解后的结构分量（H 浓度 / OD）</td><td><code>recipe.py</code> L269 / L343；<code>dataset.py</code> 加一个变换</td><td class="c">~30 行</td><td class="c"><span class="b high">高</span></td><td>低。3 通道输入不变</td></tr>
+<tr><td class="c"><span class="b medium">P1</span></td><td>加条件 dropout（把 condition 置零的概率），为后续做 CFG 铺路</td><td><code>recipe.py</code> L265–280</td><td class="c">~10 行</td><td class="c"><span class="b high">高</span></td><td>低。但会改变收敛行为</td></tr>
+<tr><td class="c"><span class="b medium">P1</span></td><td>把 <code>prepare_latent</code> 的 <code>latent_dist.sample()</code> 改成 <code>.mode()</code></td><td><code>recipe.py</code> L188, L562</td><td class="c">2 行</td><td class="c"><span class="b high">高</span></td><td>低。你 HistDiST 已经这么做了，理由一致：训练与采样一致</td></tr>
+<tr><td class="c"><span class="b medium">P2</span></td><td>加 latent 钳位 + 记录被钳像素比例</td><td><code>recipe.py</code> L251</td><td class="c">~15 行</td><td class="c"><span class="b high">高</span></td><td>低。<b>但必须记录比例</b>，否则会把「可检测的失败」变成「不可检测的失败」（你上次的教训）</td></tr>
+<tr><td class="c"><span class="b bad">不要做</span></td><td>改 UNet <code>conv_in</code> 通道数（8 通道拼接）</td><td><code>arch.py</code> / <code>sd21b_unet_config.json</code></td><td class="c">大</td><td class="c"><span class="b bad">低</span></td><td><b>放弃 SD 预训练权重 = 等于从头训</b>，与「改动小」直接冲突</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s16">1.6 代码勘误与陷阱（构建前必须知道）</h3>
+
+<div class="box warn">
+<div class="bt">陷阱 1：<code>conditioning_embedding_in_channels=4</code> 是<b>死参数</b>（实测确认）</div>
+<p><code>arch.py</code> L35 定义了它，L61 只把 <code>conditioning_embedding_out_channels</code> 传给了 <code>super().__init__()</code>，<b><code>conditioning_embedding_in_channels</code> 从未被使用</b>。diffusers 0.26.3 的 <code>ControlNetConditioningEmbedding</code> 用 <code>conditioning_channels</code> 的默认值 3。</p>
+<p><b>实测</b>：<code>cond_embedding.conv_in = Conv2d(3, 16, 3, 1)</code>；喂 3 通道 RGB → 前向成功；喂 4 通道 → <code>RuntimeError: expected input[1,4,512,512] to have 3 channels</code>。</p>
+<p><b>含义</b>：source 必须是 3 通道。如果将来你想让 source 走 4 通道（比如 H 浓度 + RGB），<b>这个参数改不动它</b>，必须直接改 <code>conv_in</code>——或者更干净的做法：把结构分量塞进 3 通道（H 浓度、DAB 浓度、残差），正好 3 个。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">陷阱 2：<code>cross_attention_dim</code> 这个参数名会骗你一次（我自己就被骗了）</div>
+<p>见 §1.2 的实测纠正。这个参数的实际语义是「<b>进来的条件 token 维度</b>」。接 Protein Branch 时填 768，接 4 通道 latent token 时填 4。<b>如果你照字面理解成「网络 cross-attn 宽度」并改成 1024，projector 会变成 <code>None</code>，4 维 token 直接送进 1024 宽的层 → 报错。</b></p>
+</div>
+
+<div class="box stop">
+<div class="bt">陷阱 3：按 README 跑训练<b>跑不起来</b></div>
+<ul>
+<li><code>conf/train.yaml</code> 的 defaults 里有 <code>- data: train</code>，但 <code>conf/data/</code> 目录<b>在仓库里不存在</b>（已用 <code>git ls-tree</code> 全量列过文件）。</li>
+<li><code>configure_optimizers</code> 迭代 <code>self.optim_configs.param_dict</code>，而 <code>param_dict</code> 只在 <code>train.py</code> L76–82 里硬编码，<code>conf/model/diffusion.yaml</code> 里没有。</li>
+<li><code>requirements.txt</code> 里<b>没有 torch、没有 diffusers、没有 transformers</b>（只有 <code>huggingface-hub==0.21.3</code>、<code>pytorch_lightning==2.2.1</code> 等）。</li>
+<li><code>paths/default.yaml</code> 里 <code>unet_path: weights/sd21b_unet2dcontition.pth</code>——<b>拼写错误</b>（<code>contition</code>），而 HF 仓库里的文件名是 <code>sd21b_unet2dcondition.pth</code>。</li>
+</ul>
+<p><b>结论：训练入口需要你自己补一个 <code>conf/data/train.yaml</code>、把 <code>param_dict</code> 挪进配置、修掉路径拼写。</b>推理路径（<code>run_patch.py</code> + <code>load_stainFuser</code>）是完整可用的。这印证了「发布代码与训练代码不同步」。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">对你有利的一点：StainFuser 的依赖比你的 HistDiST 干净</div>
+<p>它是 <code>diffusers</code> 原生栈（<code>UNet2DConditionModel</code> / <code>ControlNetModel</code> / <code>AutoencoderKL</code> / <code>PNDMScheduler</code>），没有自己手写的物理模块和 EMA。你上次审查 HistDiST 时发现的那些结构性缺陷（aux 梯度对 UNet 无门控、1/x 梯度炸弹、日志缺字段）<b>在 StainFuser 里都不存在</b>——因为它的 loss 只有一个 ε-MSE，简单到不会出错。<b>这是一个真实的可复现性优势，值得记一笔。</b></p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>语义染色表示：有没有先例</h2>
+
+<div class="box good">
+<div class="bt">结论：有先例，而且不止一个。「先生成染色成分再重建 RGB」不是你的原创想法，但它有明确的空白位置</div>
+</div>
+
+<h3>2.1 先例总表</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th class="c">年</th><th>生成/操作的表示</th><th>怎么得到</th><th>怎么回到 RGB</th><th class="c">是扩散吗</th><th class="c">代码</th></tr></thead>
+<tbody>
+<tr><td><b>StainQuant</b><br><span class="small">Beer-Lambert Autoencoder</span><br><span class="small">arXiv 2601.11336</span></td><td class="c">2026</td><td><b>K 个非负浓度通道</b> + 可学习 stain matrix <code>S_φ ∈ ℝ⁺^(3×K)</code></td><td>紧凑 U-Net 编码器，末层 softplus 保证非负</td><td><b>可微 Beer–Lambert 前向</b>：<code>ô = S·c</code>, <code>x̂ = exp(−ô)</code></td><td class="c"><span class="b bad">否</span></td><td class="c"><a href="https://github.com/measty/StainQuant">measty/<br>StainQuant</a></td></tr>
+<tr><td><b>CCPL</b><br><span class="small">Cross-channel Perception Learning</span><br><span class="small">arXiv 2506.07559</span></td><td class="c">2025</td><td><b>把 HER2 IHC 分解成 H + DAB 两个通道</b>（核 / 膜）</td><td>HED 分解后把 DAB、Eosin 通道置零得到单通道图</td><td>不重建（是监督/评价，不是生成空间）</td><td class="c"><span class="b bad">否</span></td><td class="c">未找到</td></tr>
+<tr><td><b>MCCL</b><br><span class="small">Multi-channel Correlation Learning</span><br><span class="small">ICIC 2025</span></td><td class="c">2025</td><td>多通道相关性（<b>引入 H&amp;E 的 E 通道</b>）</td><td>通道分解</td><td>不重建</td><td class="c"><span class="b bad">否</span></td><td class="c">未找到</td></tr>
+<tr><td><b>PSPStain</b><br><span class="small">你的 baseline</span></td><td class="c">2024</td><td><b>FOD（focal optical density）</b>作蛋白表达一致性约束</td><td>RGB → OD</td><td>不重建（约束项）</td><td class="c"><span class="b bad">否</span></td><td class="c"><a href="https://github.com/ccitachi/PSPStain">ccitachi/<br>PSPStain</a></td></tr>
+<tr><td><b>PGVMS</b><br><span class="small">IEEE TMI 2026</span></td><td class="c">2026</td><td>prompt-guided，可学习染色 token</td><td>prompt 编码</td><td>RGB（普通解码）</td><td class="c"><span class="b high">是</span></td><td class="c"><a href="https://github.com/ccitachi/PGVMS">ccitachi/<br>PGVMS</a></td></tr>
+<tr><td><b>UNIStainNet</b><br><span class="small">arXiv 2603.12716</span></td><td class="c">2026</td><td>64-d FiLM 条件调制</td><td>foundation model 特征</td><td>RGB</td><td class="c"><span class="b high">是</span></td><td class="c">见论文</td></tr>
+<tr><td><b>HistDiST</b><br><span class="small">你的现有代码</span></td><td class="c">2026</td><td>RGB latent 保留，<b>解码后反演浓度</b>（scheme B）</td><td>颜色解卷积<b>倒推</b></td><td>不需要（生成在 RGB）</td><td class="c"><span class="b high">是</span></td><td class="c">你本地</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>2.2 三条技术路线对比（这是核心决策）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>路线</th><th>怎么做</th><th>代表工作</th><th class="c">可解释性</th><th class="c">改动成本</th><th class="c">主要风险</th></tr></thead>
+<tbody>
+<tr><td><b>A · 生成浓度，可微物理渲染</b></td><td>网络输出 <code>Z = [C_H, C_DAB, C_res]</code> → <code>OD = M·Z</code> → <code>I = I₀·10^(−OD)</code></td><td>StainQuant（但非扩散）</td><td class="c"><span class="b high">最高</span><br>有量纲、可检验</td><td class="c"><span class="b bad">最大</span><br>换输出空间 = 换解码器</td><td>放弃 SD VAE 解码先验；渲染器不完美会引入新的失败模式</td></tr>
+<tr><td><b>B · 生成 HED/RGB，用染色通道做监督</b></td><td>仍在 RGB 空间生成，但损失/条件建在 H、DAB 通道上</td><td><b>CCPL</b>、<b>MCCL</b>、PSPStain（FOD）</td><td class="c"><span class="b medium">中</span><br>可解释的是监督，不是生成</td><td class="c"><span class="b high">小</span><br>只加损失项</td><td>不解决「生成空间是 RGB」这件事；颜色捷径仍存在</td></tr>
+<tr><td><b>C · 生成 RGB，事后反演浓度</b></td><td>生成 RGB → 颜色解卷积倒推 C → 在浓度空间算损失</td><td><b>你的 HistDiST（scheme B）</b></td><td class="c"><span class="b bad">低</span><br>浓度是事后读出的</td><td class="c"><span class="b high">已实现</span></td><td><b>你上次审查已经证明这条路有结构性缺陷</b>（1/x 梯度炸弹、零空间盲区、负浓度被静默抹掉）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">本轮找到的关键空白（也是你真正的机会）</div>
+<p><b>没有任何工作把「可微物理渲染器」放进扩散模型的生成空间里。</b></p>
+<ul>
+<li>StainQuant 有可微 BL 渲染器，但它是<b>无监督自编码器，不是扩散</b>——它解决的是「解混」，不是「生成」。</li>
+<li>HistDiT / HistDiST / StainDiffuser 是扩散，但<b>都不换渲染器</b>——它们仍在 RGB 或 SD-VAE latent 空间生成。</li>
+<li>CCPL / MCCL 有染色通道，但那是<b>监督/评价侧</b>的通道，不是生成空间。</li>
+</ul>
+<p><b>所以「扩散生成空间 = 染色浓度 + 可微 Beer–Lambert 渲染」这个组合是空的。</b>而且它同时满足你「可解释」和「可复现」两条优先级——渲染器是纯公式、没有可学习参数（除了 stain matrix），任何人拿到你的代码都能复现出同一张图。<b>这是本报告认为你方案里最值得坚持的一点。</b></p>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">★ 补充（10-05 下午）：StainQuant 代码级复核 —— 已拿到源码，逐行读过</div><div class="v">来源：<code>/Users/hua/Documents/trae_projects/LEO/StainQuant-main/</code> · 本节的每一条都对着代码行核实</div></div><div><span class="b purple">代码级</span> <span class="b bad">论文≠代码</span></div></div>
+<div class="body">
+<p><b>本报告 §11.2 原本把「StainQuant 代码没能克隆成功、实现细节未核实」列为诚实清单的第 4 条。</b>现在源码拿到了，这条可以销掉——但复核结果推翻了论文的三处描述。以下全部是代码事实。</p>
+
+<p><b>一、论文 / 二手描述与代码不一致的三处</b></p>
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">论文 / 描述说</th><th style="width:34%">代码实际是</th><th>影响</th></tr></thead>
+<tbody>
+<tr><td><code>L_rec</code> 用 <b>VGG-19 layers 2/7/16/27 感知损失</b></td><td><code>losses/reconstruction.py</code> L12：<code>models.vgg19(<b>weights=None</b>)</code> ⇒ <b>随机初始化</b>，不是预训练权重。特征层是 <code>[2,7,16,25]</code>（不是 27）</td><td><b>这不是感知损失</b>，是「随机卷积特征的 L1」。它仍提供多尺度结构匹配，但论文描述的机制不成立。而且权重是 <code>2×</code>，等于给一个随机投影加了不小的权重。<b>照抄会把这个缺陷一起抄过来</b></td></tr>
+<tr><td>染色矩阵初值<b>来自 QuPath 人工检视的纯染色区</b>（测出的 OD 向量）</td><td><code>configs/default.yaml</code> L31-36：<code>init_rgb</code> 是<b>手挑的 5 个 RGB 三元组</b>（<code>[110,140,200]</code> 蓝、<code>[190,80,120]</code> 粉、<code>[240,230,80]</code> 黄…），<b>不是实测 OD</b></td><td>锚定项 <code>L_col</code> 锚的是「眼估颜色」，不是物理染色向量 ⇒ <b>basis 只能保证「颜色大致对」，不保证物理正确</b>。这直接限制了它的浓度可否用于绝对定量</td></tr>
+<tr><td>论文的 5 项损失</td><td><code>losses/</code> 下<b>实现了 11 项</b>（多出 sparsity / total_correlation / orthogonality / balance / spikiness / permutation-adversarial）；但 <code>default.yaml</code> 里<b>只有 5 项是开的</b>（<code>orth</code>、<code>tc</code>、<code>perm</code>、<code>balance</code>、<code>mask</code> 全为 0）</td><td>论文只描述了子集。且<b>配置的行内注释写的是论文默认值、实际权重不同</b>（如 <code>orth</code> 注释说 0.05，实际 0.0）⇒ <b>不能把这份 yaml 当可复现配方</b>（<code>max_epochs: 2</code>、<code>data_dir</code> 是 Windows 路径，是 demo 遗留）</td></tr>
+</tbody></table></div>
+
+<p><b>二、照抄会踩的三个坑</b></p>
+<div class="box stop"><div class="bt">三个坑（全部对照代码行）</div>
+<ul style="margin:0">
+<li><b>输出用 <code>nn.ReLU()</code></b>（<code>encoder.py</code> L249 / L260）——ReLU 在负半轴<b>梯度恒为 0</b>，与你自己 <code>physics.py</code> L79 的 <code>clamp(min=0)</code> 是<b>同一个病</b>。论文说用 softplus，<b>代码用的是 ReLU</b>。要用请换 <code>F.softplus</code>。</li>
+<li><b><code>StainBasis</code> 只做 L2 归一化，没有非负约束</b>（<code>stain_basis.py</code> L24 <code>F.normalize</code>）⇒ Λ 可为负 ⇒ OD 可为负 ⇒ <code>exp(-od) &gt; 1</code>，<b>输出可以超过 1</b>，而 loss 目标在 [0,1]。论文写 <code>S_φ ∈ ℝ⁺</code>，<b>代码没实现</b>。</li>
+<li><b><code>_check_huge_weights()</code> 定义了但被注释掉</b>（<code>trainer.py</code> L154 定义，L232 <code>#self._check_huge_weights()</code>）——与你项目里「纪律用在了死路上」是<b>同一个模式</b>。</li>
+</ul></div>
+
+<p><b>三、可以直接借用的三块</b></p>
+<div class="box good"><div class="bt">可直接借用</div>
+<ul style="margin:0">
+<li><b><code>decoder.py</code> 两行 = 你要的 <code>render_ihc</code></b>：<code>od = (C.unsqueeze(2)*B).sum(1)</code> → <code>rgb = torch.exp(-od)</code>。注意它<b>没有 I₀、没有 clamp</b>（I₀ 隐含为 1）——印证了本报告 §5 的结论：<b>正演方向结构上不可能有 1/x 梯度炸弹</b>。</li>
+<li><b><code>stain_basis.py</code> + <code>colour_consistency.py</code> = 现成的「可学习 M + 颜色锚定」</b>：<code>_basis = nn.Parameter(rgb_to_od(init_rgb/255))</code>、<code>forward()</code> 返回 <code>F.normalize</code>、<code>L_col</code> 是 basis 与 <code>normalize(od(init_rgb))</code> 的 L1。这正是本报告 §4.2 给渲染侧的建议。</li>
+<li><b><code>CrossStainAttentionV2</code> 是「低秩/共享门控」的现成模板</b>：它的 <code>spatial_attention</code> 分支产生的空间掩码是<b>单通道、所有染色共享</b>的 ⇒ 最终形式是 <code>w_c · s(x,y)</code>，<b>恰好就是本报告 §6.2 建议用来回答审稿人的那个低秩形式</b>。</li>
+</ul></div>
+
+<p><b>四、一个重要的反向验证（修正本报告 §4 的修法建议）</b></p>
+<div class="box warn"><div class="bt">「加 ε」不是正解，「别对逆算子求导」才是</div>
+<p style="margin:0">StainQuant 的 <code>transforms.py</code> L8-9 写的是 <code>img.clamp(min=1e-6); od = -torch.log(img)</code>——<b>与你 <code>physics.py</code> L49 的写法一模一样</b>（<code>d(od)/d(img) = -1/img</code>，在 <code>1e-6</code> 处放大 10⁶ 倍）。<b>但它从来没出问题</b>：全仓库 grep 后确认，<code>rgb_to_od</code> <b>只作用在常量上</b>（basis 初始化、Dataset 预处理、<code>init_rgb</code> buffer），<b>从未作用在需要梯度的张量上</b>。</p>
+<p style="margin:8px 0 0">⇒ <b>你那个 bug 的根本修法不是「把 1e-6 改成 1e-3」（那只是把 434,000 倍降成 434 倍），而是「不要对逆算子求导」。</b>你的 <code>render_ihc</code> 死代码（正演）就是正解。本报告 §4 里「选项 1：一行加 ε」应降级为临时止血，<b>「选项 2：用起 <code>render_ihc</code> 加 <code>L_phys</code>」才是根治</b>。</p>
+</div>
+
+<p><b>五、结论：它对你的帮助是什么</b></p>
+<p>· <b>有帮助的部分</b>：它是<b>路线 A（生成浓度 + 可微物理渲染）的一个可运行参照实现</b>——让你能把 E0.1 的闭环残差与一个第三方实现交叉对照。加上上面三块可直接借用的代码。</p>
+<p>· <b>不能用的部分</b>：① 它的训练配方（demo 配置）；② 它的浓度做 H-score——论文自己承认「只做相对分离、不做绝对定量」，而且 basis 是学出来的、锚定目标是眼估颜色，<b>C_DAB 没有绝对尺度</b>；③ <code>CrossStainAttention</code> 是<b>全局 SE</b>（<code>AdaptiveAvgPool2d(1)</code>，整个图一个权重/通道，docstring 自述 "Simple squeeze–excitation"），<b>不满足「逐空间位置给不同染色不同权重」</b>。</p>
+<p>· <b>最后一点反而是好消息</b>：StainQuant 作为最接近的先例都没做「逐空间染色通道注意力」⇒ <b>进一步确认这是真空白</b>，本报告 §6 的判断成立。</p>
+</div>
+</div>
+
+<h2 id="s3"><span class="num">3</span>三通道到底该是什么（核心论证）</h2>
+
+<h3 id="s31">3.1 <code>[H, DAB, H]</code> 的严格否定</h3>
+
+<p>你说「不允许直接接受这个设计」。正确的结论是：<b>它不只是「不够好」，它在数学上有两个独立的硬伤。</b></p>
+
+<h4>硬伤 (a)：秩亏 → 重建结构性有损，且不可修</h4>
+
+<p>渲染过程是 <code>OD = M·Z</code>，其中 <code>M = [s_H, s_DAB, s_H]</code>——第 1 列和第 3 列是同一个向量。</p>
+<pre><code>rank(M) = 2   ⇒   OD 只能落在 span{s_H, s_DAB} 这个 2 维子空间里</code></pre>
+
+<p>而真实 IHC 的 OD <b>不在</b>这个子空间里。证据就是你自己已经测过的那个数：</p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">你已有的实测（HistDiST 审查）</div>
+<p><code>‖Render(Deconv(x)) − x‖</code></p>
+<p>真实 IHC（棕色）: <b>0.023</b></p>
+<p>随机噪声: <b>0.636</b></p>
+<p class="small">你当时的解读是「崩坏时反演出的浓度是垃圾，损失却看不见」。那个解读是对的，但它还有第二层含义 ↓</p>
+</div>
+<div class="mini">
+<div class="mt">第二层含义：0.023 就是秩亏的签名</div>
+<p>你的 <code>STAIN_MAT_IHC = STAIN_MAT_FULL[:, [2,0]]</code> 形状是 <b>(3,2)</b>——只有 DAB 和 H 两列。</p>
+<p>伪逆解下 <code>Render(Deconv(x)) = P·OD</code>，<code>P</code> 是到 span{s_H, s_DAB} 的正交投影。</p>
+<p><b>所以 <code>‖(I−P)·OD‖ = 0.023</code> 精确地就是「H+DAB 解释不了的 OD 分量」的大小。</b></p>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">把 <code>[H, DAB, H]</code> 换成 <code>[H, DAB, ?]</code> 里的 <code>?</code> 用重复的 H，等于把那个 0.023 永久性地钉死</div>
+<p>因为第 3 列与第 1 列相同，矩阵仍然是 rank 2，<b>正交补方向依然不可达</b>。无论怎么训练，这个残差都不会下降。<b>这不是超参问题，不是训练问题，是表示能力问题。</b></p>
+</div>
+
+<h4>硬伤 (b)：channel attention 出现 1 维不可辨识的平坦方向</h4>
+
+<p>设 attention 是逐通道乘性权重 <code>w = (w₁, w₂, w₃)</code>，作用在 <code>Z</code> 上（这是 SE / ECA / 任何 channel gating 的最一般形式）。因为 <code>Z₁ = Z₃ = C_H</code>：</p>
+
+<pre><code>OD = M·(Z ⊙ w)
+   = s_H·(Z₁w₁) + s_DAB·(Z₂w₂) + s_H·(Z₃w₃)
+   = s_H·C_H·(w₁ + w₃) + s_DAB·C_DAB·w₂
+
+⇒ 只有 (w₁ + w₃) 可辨识。w₁ 与 w₃ 之间可以任意重分配，输出完全不变。</code></pre>
+
+<div class="box stop">
+<div class="bt">这不是「冗余」，是「不可辨识」——比冗余严重</div>
+<p>冗余只是浪费容量；<b>不可辨识意味着损失函数沿这个方向是平的</b>，梯度里这一维是纯噪声，attention 模块永远学不到稳定权重。任何基于 attention 权重图的可解释性论证，在这个设计下都是无效的（因为你无法说清「通道 1 的权重」到底是多少）。</p>
+<p>顺带：<code>[H, DAB, H]</code> 还把 1/3 的输出容量浪费掉——有效自由度只有 2。</p>
+</div>
+
+<h4>有没有论文这么做过？</h4>
+<div class="box warn">
+<div class="bt">本轮没有找到任何把同一染色通道重复两次的工作</div>
+<p>找到的第三个通道先例只有两个方向：<b>① E（eosin）</b>——MCCL 明确「引入 H&amp;E 的 E 通道」；<b>② residual / background</b>——Ruifrok 2001 的两染色约定里，第三个（正交残差）通道被当作「residual/background」。<b>你自己的 <code>IHC_scoring_literature_review.md</code> §1.2(e) 就已经记下了这一条</b>，只是当时没有和「生成空间设计」联系起来。</p>
+</div>
+
+<h3 id="s32">3.2 候选通道的物理筛选</h3>
+
+<p>筛选判据（5 条，缺一不可）：<b>① 是否与 <code>s_H</code>、<code>s_DAB</code> 线性无关</b>（否则矩阵降秩）；<b>② 是否有明确物理意义</b>；<b>③ 能否从真实 IHC 取到监督 target</b>；<b>④ 是否在所有样本上存在</b>（不能依赖某些片子才有的东西）；<b>⑤ 是否可微</b>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>候选</th><th class="c">线性无关?</th><th>物理意义</th><th class="c">能取 target?</th><th class="c">总存在?</th><th class="c">结论</th></tr></thead>
+<tbody>
+<tr><td><b>H（重复第 1 通道）</b></td><td class="c"><span class="b bad">否</span></td><td>无（与第 1 通道同一个量）</td><td class="c">—</td><td class="c">—</td><td class="c"><span class="b bad">排除</span><br>秩亏 + attention 不可辨识</td></tr>
+<tr><td><b>residual / background</b><br><span class="small">（<code>s_H × s_DAB</code> 正交补方向）</span></td><td class="c"><span class="b high">是</span></td><td>「既不是 H 也不是 DAB 的一切」：其他色原、伊红、未染色组织、光照残差、以及 M 估计误差</td><td class="c"><span class="b high">能</span><br>直接由 OD 投影算出</td><td class="c"><span class="b high">是</span><br>恒存在（可为 0）</td><td class="c"><span class="b high">推荐</span></td></tr>
+<tr><td><b>E（eosin）</b></td><td class="c"><span class="b high">是</span></td><td>细胞质伊红染色</td><td class="c"><span class="b high">能</span></td><td class="c"><span class="b medium">不一定</span><br>只有 IHC 片做了伊红复染才有</td><td class="c"><span class="b medium">备选</span><br>取决于你的数据</td></tr>
+<tr><td><b>OD 总量 / 透射率</b></td><td class="c"><span class="b bad">否</span></td><td>总吸光度</td><td class="c">能</td><td class="c">是</td><td class="c"><span class="b bad">排除</span><br>它是 <code>C_H, C_DAB, C_res</code> 的线性组合 → 换掉一个真分量就降秩</td></tr>
+<tr><td><b>structure / morphology</b><br><span class="small">（H&amp;E 的 H 通道）</span></td><td class="c"><span class="b medium">部分</span></td><td>形态结构</td><td class="c">能（来自配对 H&amp;E）</td><td class="c">是</td><td class="c"><span class="b medium">不推荐</span><br>与 IHC 的 H 高度相关但<b>不是同一个物理量</b>；混进输出空间会让「浓度」失去量纲意义</td></tr>
+<tr><td><b>illumination / I₀ 图</b></td><td class="c"><span class="b bad">否</span></td><td>入射光强</td><td class="c">能</td><td class="c">是</td><td class="c"><span class="b bad">排除</span><br>它是<b>乘性场</b>，不属于 OD 的线性空间；放进 <code>Z</code> 会破坏 Beer–Lambert 的可微前向</td></tr>
+<tr><td><b>第二个色原</b><br><span class="small">（如 Ki67 双标）</span></td><td class="c"><span class="b high">是</span></td><td>第二个标记物</td><td class="c">能</td><td class="c"><span class="b bad">否</span><br>本项目是单标</td><td class="c"><span class="b bad">排除</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">筛选结果：唯一无条件通过的候选是 <code>C_res</code>（正交补 / 残差）</div>
+<p>它唯一的问题是<b>语义不够「漂亮」</b>——它不是一个真实染色，而是「剩下的所有东西」。但请注意：<b>这个「不漂亮」恰恰是它的价值</b>。它是一个<b>免费的诊断通道</b>：<code>C_res</code> 的幅度逐像素地告诉你「H+DAB 模型在这里解释得有多差」。这在评价阶段可以直接用。</p>
+</div>
+
+<h3 id="s33">3.3 Top 3 方案（十项说明）</h3>
+
+<h4>方案 A（推荐）· <code>Z = [C_H, C_DAB, C_res]</code></h4>
+<div class="card">
+<div class="ch"><div><div class="title">方案 A · 两个真实染色 + 一个正交补残差</div><div class="v">基向量：<code>M₃ = [s_H, s_DAB, ŝ_res]</code>，其中 <code>ŝ_res = normalize(s_H × s_DAB)</code>，再对三者做 Gram–Schmidt 正交化</div></div><div><span class="b high">推荐</span></div></div>
+<div class="body">
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>问题</th><th>答案</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td>三个通道分别是什么</td><td><code>C_H</code>（苏木素浓度，核）、<code>C_DAB</code>（DAB 浓度，蛋白表达）、<code>C_res</code>（正交补残差）</td></tr>
+<tr><td class="c">2</td><td>每个通道的物理意义</td><td><code>C_H</code>、<code>C_DAB</code>：真实染色剂浓度，与 OD 线性，有量纲；<code>C_res</code>：H/DAB 解释不了的吸光成分（伊红、其他色原、未染色组织、I₀ 残差、M 误差）</td></tr>
+<tr><td class="c">3</td><td>如何从真实 IHC 取监督 target</td><td><code>OD = −log10(I/I₀)</code> → <code>C = M₃ᵀ·OD</code>（正交基下逆 = 转置）。<b>无需任何额外标注</b>，纯计算得到</td></tr>
+<tr><td class="c">4</td><td>如何从预测恢复 IHC</td><td><code>OD̂ = M₃·Ẑ</code> → <code>Î = I₀·10^(−OD̂)</code>。两步都是纯矩阵乘 + 逐元素幂，<b>完全可微</b></td></tr>
+<tr><td class="c">5</td><td>是否可逆</td><td><b>精确可逆</b>。因为 <code>M₃</code> 是 3×3 正交矩阵，<code>M₃ᵀM₃ = I</code>，所以 <code>M₃(M₃ᵀ OD) = OD</code> 恒成立（§5 有完整证明）</td></tr>
+<tr><td class="c">6</td><td>是否需要 stain matrix</td><td>需要，但只需要 <b>s_H 和 s_DAB 两个向量</b>；第三个由叉积自动生成。<b>这是本方案最省事的地方</b></td></tr>
+<tr><td class="c">7</td><td>是否容易训练</td><td>容易。<code>C_H, C_DAB</code> 用 softplus 保证非负（物理约束）；<code>C_res</code> <b>必须允许取负值</b>（见下方警告）</td></tr>
+<tr><td class="c">8</td><td>与 StainFuser 对接成本</td><td>中等。需要自带一个渲染器绕开冻结的 SD2.1 VAE 解码器（§1.4 原因 3）</td></tr>
+<tr><td class="c">9</td><td>对 protein-expression modeling 的优势</td><td><b>最大</b>。<code>C_DAB</code> 就是「DAB 浓度」这个物理量本身，与 H-score 的 DAB-OD 阈值直接同源；可以在浓度空间直接做 PSPStain 的 FOD 约束，不需要再反演</td></tr>
+<tr><td class="c">10</td><td>对 channel attention 是否有意义</td><td><b>有意义</b>。<code>C_H</code>、<code>C_DAB</code>、<code>C_res</code> 三者互相独立（正交基）→ attention 权重<b>完全可辨识</b>，且可以用物理量检验（DAB 通道的 attention 权重图应当与阳性区域重合）</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">方案 A 必须注意的实现细节：<code>C_res</code> 不能加非负约束</div>
+<p>直觉上「浓度不能是负的」，但那只对<b>真实染色</b>成立。<code>C_res</code> 是沿正交补方向的<b>投影</b>，真实 IHC 的 OD 完全可能落在正交补的负侧（因为物理可实现的 OD 锥 ≠ 这个正交基张成的锥）。</p>
+<p><b>如果你对 <code>C_res</code> 也加 softplus 或 <code>clamp(min=0)</code>，就会重演你上次在 <code>physics.py</code> L79 犯的错：静默抹掉负分量并归零其梯度。</b>正确做法：<code>C_H, C_DAB → softplus</code>；<code>C_res → 线性输出，不约束</code>。</p>
+</div>
+
+<h4>方案 B · <code>Z = [C_H, C_DAB, C_E]</code></h4>
+<div class="card">
+<div class="ch"><div><div class="title">方案 B · 三个真实染色（H / DAB / Eosin）</div><div class="v">先例：MCCL（ICIC 2025）明确「引入 H&amp;E 的 E 通道」</div></div><div><span class="b medium">备选</span></div></div>
+<div class="body">
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>问题</th><th>答案</th></tr></thead>
+<tbody>
+<tr><td class="c">1–2</td><td>三通道与物理意义</td><td><code>C_H</code> 核、<code>C_DAB</code> 蛋白、<code>C_E</code> 细胞质。<b>三个都是真实染色剂，语义最「漂亮」</b></td></tr>
+<tr><td class="c">3</td><td>取 target</td><td>用 3 染色矩阵（H/E/DAB）解卷积——<b>你 <code>physics.py</code> 里的 <code>STAIN_MAT_FULL</code> 正好就是这三个</b></td></tr>
+<tr><td class="c">4–5</td><td>恢复 IHC / 可逆性</td><td>同样 <code>OD = M·Z</code> → <code>I = I₀·10^(−OD)</code>；只要 M 可逆就精确可逆</td></tr>
+<tr><td class="c">6</td><td>stain matrix</td><td>需要 3 个向量。可以直接用 Ruifrok 的标准 H/E/DAB 向量，或用 Macenko/Vahadane 从数据估</td></tr>
+<tr><td class="c">7</td><td>易训练性</td><td>容易。三个通道都可以用 softplus 保非负（都是真实染色）→ <b>物理约束更干净</b></td></tr>
+<tr><td class="c">8</td><td>与 StainFuser 对接</td><td>同方案 A</td></tr>
+<tr><td class="c">9</td><td>对 protein modeling</td><td>与方案 A 相当</td></tr>
+<tr><td class="c">10</td><td>对 attention</td><td>完全可辨识，且三个通道都是物理量，可解释性最强</td></tr>
+</tbody>
+</table>
+</div>
+<div class="box warn">
+<div class="bt">方案 B 的唯一但致命的前提：你的 IHC 片子到底有没有伊红复染？</div>
+<p>HER2 / Ki67 / ER / PR 的标准 IHC 流程通常是 <b>DAB + 苏木素复染</b>，<b>不加伊红</b>（伊红会把细胞质染成粉色，干扰 DAB 判读）。如果 BCI / MIST 的 IHC 片没有伊红，那么 <code>C_E</code> 会退化成一个「其实装的是背景噪声」的通道——<b>表面上仍是满秩矩阵，但第三个通道没有可学的语义</b>，等于变相退化成方案 A 但少了一个可解释的出口。</p>
+<p><b>这不是可以靠推理确定的，必须实测</b>（§8 的 E0.2）。</p>
+</div>
+</div>
+</div>
+
+<h4>方案 C（明确不推荐）· 用 <code>[C_H, C_DAB, OD_total]</code></h4>
+<div class="card">
+<div class="ch"><div><div class="title">方案 C · 把「总吸光度」当第三通道</div><div class="v">看起来直观，实际上降秩</div></div><div><span class="b bad">不推荐</span></div></div>
+<div class="body">
+<p><code>OD_total = OD_r + OD_g + OD_b = (1,1,1)·OD</code>。而 <code>OD = s_H C_H + s_DAB C_DAB + s_res C_res</code>，所以</p>
+<pre><code>OD_total = (1·s_H)C_H + (1·s_DAB)C_DAB + (1·s_res)C_res</code></pre>
+<p>它是 <code>C_H, C_DAB, C_res</code> 的<b>线性组合</b>。如果 <code>Z = [C_H, C_DAB, OD_total]</code>，那么 <code>C_res</code> 被丢掉了，而 <code>OD_total</code> 无法独立地表达 <code>C_res</code> 的信息——<b>你只是换了个方式又回到了 rank 2</b>。</p>
+<p><b>判据总结：任何「真实通道的线性组合」都不能当第三通道。</b>第三通道必须与已有的两个通道线性无关。</p>
+</div>
+</div>
+
+<h3 id="s34">3.4 决策建议</h3>
+
+<div class="box key">
+<div class="bt">直接建议</div>
+<ol>
+<li><b>默认做方案 A</b>（<code>[C_H, C_DAB, C_res]</code>）。理由：唯一保证满秩、物理含义清晰、且<b>不需要对数据做任何额外假设</b>。</li>
+<li><b>先花半天做 E0.2</b>（测你的 IHC 片有没有伊红）。如果有，且 <code>C_E</code> 分解出来有清晰的细胞质结构 → 升级到方案 B（语义更好、非负约束更干净）。如果没有 → 留在方案 A。</li>
+<li><b>两个方案在代码上是同一个东西</b>——只差 <code>M₃</code> 的第三列是叉积还是伊红向量。所以<b>不要纠结，先按 A 写，把 <code>M₃</code> 做成配置项</b>。</li>
+<li><b>把 <code>C_res</code> 的幅度当指标记录下来。</b>它逐像素地量化「H+DAB 模型在哪里失败」，是免费的诊断信号。你上次的教训是「日志缺字段 = 信号消失」，这次不要再犯。</li>
+</ol>
+</div>
+
+<h2 id="s4"><span class="num">4</span>OD / stain matrix / Beer–Lambert</h2>
+
+<h3>4.1 全链与四个量的严格区分</h3>
+
+<pre><code>I  ──(−log10(I/I₀))──▶  OD  ──(M⁻¹)──▶  C  ──(M)──▶  OD′  ──(I₀·10^(−OD′))──▶  I′
+RGB 透射强度            光密度         染色浓度        光密度          重建 RGB</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>量</th><th>定义</th><th>维度</th><th>线性于浓度?</th><th>常见误用</th></tr></thead>
+<tbody>
+<tr><td>RGB <code>I</code></td><td>相机读出的透射强度</td><td>3（R,G,B）</td><td class="c"><span class="b bad">否</span><br>指数关系</td><td>直接对 RGB 做「染色浓度」的定量陈述</td></tr>
+<tr><td>OD</td><td><code>−log10(I/I₀)</code></td><td>3</td><td class="c"><span class="b high">是</span></td><td>忘记 I₀ 是<b>逐通道</b>的 3 维量，当成标量</td></tr>
+<tr><td>stain vector <code>s_k</code></td><td>单位化的纯染色 OD 方向</td><td>3（每个染色一个）</td><td class="c">—</td><td>把未归一化的 OD 值当方向用</td></tr>
+<tr><td>stain matrix <code>M</code></td><td>把 stain vector 按列堆起来</td><td>3×K</td><td class="c">—</td><td><b>转置搞错</b>（你 <code>physics.py</code> 里特意写了注释「不要再 .T」，说明踩过）</td></tr>
+<tr><td>浓度 <code>C</code></td><td><code>M⁻¹·OD</code></td><td>K</td><td class="c"><span class="b high">是</span><br>OD 对它是线性的</td><td>对反演出的浓度做非负 clamp → 静默丢信息</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>4.2 stain matrix：固定 vs 数据驱动</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>方式</th><th>代表</th><th>优点</th><th>缺点</th><th class="c">适用侧</th></tr></thead>
+<tbody>
+<tr><td><b>固定（文献默认）</b></td><td>Ruifrok H/DAB 向量 <code>(0.65,0.70,0.29)</code> / <code>(0.27,0.57,0.78)</code></td><td>跨样本可比、完全可复现、无需数据</td><td>「stain matrix problem」：与你的染色/扫描仪不匹配 → 系统偏差直接线性传播到浓度</td><td class="c"><span class="b high">监督 target 侧</span></td></tr>
+<tr><td><b>数据驱动（逐图）</b></td><td>Macenko、Vahadane（SNMF）、NMF/SVD、BCD-net（深度盲解卷积）</td><td>适配本队列的染色，解混更干净</td><td><b>每张图有自己的 M → 「浓度」带上每张图的自由度 → H-score 不可比</b></td><td class="c"><span class="b bad">不适合</span></td></tr>
+<tr><td><b>数据驱动（队列级）</b></td><td>在训练集上估一次，全局固定</td><td>兼顾适配性与可比性</td><td>需要一次性投入；对域外样本可能不适用</td><td class="c"><span class="b medium">可用</span></td></tr>
+<tr><td><b>可学习</b></td><td>StainQuant 的 <code>S_φ</code>，用 <code>L_col</code> 锚定到固定初值（<b>代码复核：初值是手挑的 RGB 三元组，不是实测 OD</b>，见 §2 补充）</td><td>渲染端可以自适应；锚定项防止身份漂移</td><td>引入可学习参数；需保证不漂移</td><td class="c"><span class="b high">渲染侧</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">本报告的具体建议：两侧用不同的 M</div>
+<ul>
+<li><b>监督 target 侧（真实 IHC → C）→ 用固定的、队列级的 M。</b>理由：你需要一个<b>跨样本可比</b>的浓度定义。<b>如果逐图估 M，H-score 在不同样本间不可比</b>——因为「浓度」会吸收每张图的染色差异，而那个差异正是 H-score 想保留的信号。</li>
+<li><b>渲染侧（C → RGB）→ 用可学习 M，并用 L_col 锚定到固定初值。</b>理由：生成器学到的「染色」未必落在物理 OD 锥里（这一点 StainQuant 已经承认并专门设计了锚定项）。允许小幅学习能提升重建质量。</li>
+<li><b>这个「两侧不同」是本报告的一个具体设计建议</b>，而不是文献里的现成做法。它的代价是：<code>C_pred</code> 与 <code>C_target</code> 不在同一个 M 下 → 损失函数里必须在<b>同一个 M</b> 下比较（建议：在 OD 空间比较，或在固定 M 下比较）。</li>
+</ul>
+</div>
+
+<h3>4.3 stain matrix 如何影响 H-score（量化）</h3>
+
+<div class="box warn">
+<div class="bt">机制：M 的变化直接线性移动 H-score 的阈值切分位置</div>
+<p>H-score = <code>Σ_{i∈{1+,2+,3+}} i × (% cells at intensity i)</code>。档位由 <b>DAB-OD 阈值</b>切分。而</p>
+<pre><code>C_DAB = (M⁻¹ 的第 2 行) · OD</code></pre>
+<p>M 变化 → 这一行的系数变化（<b>含负系数</b>）→ 同一个 OD 像素算出不同的 <code>C_DAB</code> → <b>阈值切分的位置整体移动 → 细胞落进不同的强度档 → H-score 变</b>。</p>
+<p><b>Ruifrok 2001 自己给了这个效应的量化上界</b>：DAB 饱和时，误分出来的「苏木素」信号可以达到实测苏木素 IOD 的 <b>65%</b>。也就是说 stain matrix 选错时，<b>两个通道之间可以互相污染到 65%</b>——这足以把 2+ 和 3+ 的分界彻底打乱。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">对你的直接后果：先固定 M，再谈 H-score</div>
+<p>你上次的结论是「没有 H-score 无法严格证明 Protein Branch 的贡献」。现在要补一句：<b>如果在没有固定 M 的情况下引入 H-score，得到的是一个不可比、不可复现的数——比没有更糟。</b>顺序必须是：固定 M → 定义浓度 → 验证 RGB→Z→RGB 闭环 → 再接 H-score。</p>
+</div>
+
+<h3>4.4 Beer–Lambert 够不够（第一版可微 renderer 的判断）</h3>
+
+<div class="box good">
+<div class="bt">结论：够。第一版就用最简的 <code>OD = M·C</code> + <code>I = I₀·10^(−OD)</code>，但必须加三个约束</div>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>约束</th><th>为什么必须</th><th>怎么实现</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><b>浓度非负（只对真实染色）</b></td><td>物理约束，且能把解约束在物理锥内</td><td><code>C_H, C_DAB → softplus</code>。<b><code>C_res</code> 必须保持有符号</b>（§3.3 警告）。<b>绝对不要用静默的 <code>clamp(min=0)</code></b>——你在 <code>physics.py</code> L79 已经犯过这个错</td></tr>
+<tr><td class="c">2</td><td><b>I₀ 固定或队列共享</b></td><td>逐图估 I₀ 会让「浓度」吸收 I₀ 的估计误差 → <b>解耦指标被污染</b></td><td>训练时用全局常数或 dataset-level 的 I₀。<b>你 <code>swap_eval_dbdce.py</code> L125 正是「逐单张图各自估 i₀」，已经踩过这个坑</b></td></tr>
+<tr><td class="c">3</td><td><b>I₀ 必须是 3 维（逐通道）</b></td><td>白场在 R/G/B 上不同，用标量 I₀ 会引入系统性色偏</td><td>确认 <code>estimate_background</code> 返回的是 3 通道而不是标量</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">第一版不需要做的事（避免过度工程）</div>
+<ul>
+<li><b>不需要</b> scanner-specific effects 建模。</li>
+<li><b>不需要</b> 透射率的非线性响应曲线。</li>
+<li><b>不需要</b> 逐像素 I₀ 图（那是乘性场，会破坏线性）。</li>
+<li><b>不需要</b> 光照不均匀校正（先用队列级 I₀ 顶着）。</li>
+</ul>
+<p>理由：这些都是二阶效应，而且每一个都引入不可辨识的参数。Ruifrok 2001 的线性性假设已经被几十年的 IHC 定量工作验证过；StainQuant 用最简的可微 BL 前向就达到了「excellent RGB reconstruction」。<b>先把一阶做对，一阶做不对的话二阶也没意义。</b></p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>RGB→Z→RGB 闭环可行性（前置门禁）</h2>
+
+<div class="box key">
+<div class="bt">这一节是「扩散是否值得改到染色空间」的门禁。必须先做完再动架构。</div>
+</div>
+
+<h3>5.1 严格可逆性分析</h3>
+
+<div class="box good">
+<div class="bt">结论：在三个条件下，RGB→Z→RGB 是代数恒等式，误差恒等于 0</div>
+<p>条件：<b>①</b> <code>M</code> 是满秩的 3×3 矩阵；<b>②</b> 不做非负截断；<b>③</b> <code>I₀</code> 已知。</p>
+</div>
+
+<p><b>证明</b>（四步，全是恒等变形）：</p>
+<pre><code>OD  = −log10(I / I₀)                    …… 定义
+C   = M⁻¹ · OD                          …… 解混
+OD′ = M · C = M · M⁻¹ · OD = OD         …… 渲染，M 满秩
+I′  = I₀ · 10^(−OD′) = I₀ · 10^(−OD) = I₀ · (I/I₀) = I    ∎</code></pre>
+
+<div class="box stop">
+<div class="bt">这个结论极其重要：它意味着「染色空间重建本身就很差」不是一个合理的担心，而是一个可归约的问题</div>
+<p>误差<b>不可能</b>来自「方法本身的极限」。它只可能来自下面四个具体原因，每一个都能单独测、单独修：</p>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>原因</th><th>何时发生</th><th class="c">可修?</th><th>怎么测</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><b>M 降秩</b>（如你的 3×2 IHC 矩阵）</td><td>只用了 H、DAB 两个向量</td><td class="c"><span class="b high">可修</span><br>加第三个正交分量</td><td>比较 3×2 vs 3×3 的 <code>‖I′−I‖</code></td></tr>
+<tr><td class="c">2</td><td><b>非负截断</b></td><td>真实 C 有负分量（M 不准时必然发生）</td><td class="c"><span class="b high">可修</span><br>去掉 clamp / 换成有符号</td><td>统计被截断的像素比例与幅度</td></tr>
+<tr><td class="c">3</td><td><b>I₀ 估计误差</b></td><td>逐图估 I₀、或 I₀ 是标量</td><td class="c"><span class="b medium">不造成往返误差</span><br>但影响 C 的可比性</td><td><b>实测：I₀ 在往返中精确抵消。</b>用 <code>I₀=1.0</code> 与 <code>I₀=0.87</code> 各跑一遍，往返 MAE 都是 <code>~7e-17</code>。<b>它不伤重建，但伤 H-score</b>——C 的数值随 I₀ 变，所以仍必须固定队列级 I₀</td></tr>
+<tr><td class="c">4</td><td><b>uint8 量化</b></td><td>暗像素（I 小）处 <code>log</code> 放大</td><td class="c"><span class="b medium">不造成往返误差</span><br>但是 C 目标的噪声底</td><td><b>往返本身是精确的</b>（输入是 uint8、还原还是同一个 uint8）。它真正的作用是<b>给 C 目标加噪声</b>：<code>dC/dI = 1/(I·ln10)·M⁻¹</code>，<code>I≈0.1</code> 时 <code>ΔOD≈0.017</code>，<code>I≈0.04</code> 时 <code>ΔOD≈0.043</code>。<b>这才是监督浓度的精度上限</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">★ 一个可以直接用你已有数据检验的推论</div>
+<p>你已经测过 <code>‖Render(Deconv(x)) − x‖ = 0.023</code>（真实 IHC）。根据上面的分析，<b>这个 0.023 应当 ≈ 原因 1 的贡献</b>——因为你的 <code>STAIN_MAT_IHC</code> 是 3×2，伪逆解下 <code>Render∘Deconv</code> 就是一个到 <code>span{s_H, s_DAB}</code> 的正交投影，残差就是那个正交补分量。</p>
+<p><b>可证伪的预测：把 M 从 3×2 换成 3×3（第三个分量取叉积方向）后重测，0.023 应当显著下降。</b></p>
+<ul>
+<li>如果掉到 ~1e-3 量级 → <b>原因 1 是主导</b>，方案 A 的三通道设计成立，且这是你报告里一个漂亮的量化论据。</li>
+<li>如果几乎不变 → <b>是原因 2 或 3</b>（非负截断 / I₀），需要先修那两个。</li>
+<li>如果变大了 → M 的 H、DAB 向量本身就不适合你的数据，需要队列级重估。</li>
+</ul>
+<p class="small">这是一个纯 CPU、几十行代码、几分钟就能跑完的实验。见 §8 的 E0.1。</p>
+</div>
+
+<h3>5.2 如何评价（分层，禁止单指标）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">层</th><th>指标</th><th>看什么</th><th>注意</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td>PSNR / SSIM</td><td>整体重建保真</td><td><b>分布级，看不见实例级失败</b>。你黑团的教训：FID/PSNR 对整块失败是瞎的</td></tr>
+<tr><td class="c">2</td><td>ΔE（CIELAB 色差）</td><td>颜色偏差，比 PSNR 更贴近人眼与病理判读</td><td>建议同时报 mean 与 <b>95 分位</b>——极端值才是问题所在</td></tr>
+<tr><td class="c">3</td><td>逐通道浓度误差</td><td><code>|C_H−Ĉ_H|</code>、<code>|C_DAB−Ĉ_DAB|</code>、<code>|C_res|</code></td><td><b>分通道报</b>。C_DAB 的误差直接决定 H-score 可信度</td></tr>
+<tr><td class="c">4</td><td><b>被截断像素比例</b></td><td>有多少像素的 C 被非负约束改过</td><td><b>必须报</b>。这是「隐藏失败」的计数器——你上次的教训是把「可检测的失败」变成了「不可检测的失败」</td></tr>
+<tr><td class="c">5</td><td>I₀ 敏感性</td><td>改变 I₀ 估计法时 <b>C 数值</b>的散布（<b>不是</b> <code>‖I′−I‖</code>——那个不受 I₀ 影响）</td><td>量化「C 的可比性」——直接影响 H-score 阈值的位置</td></tr>
+<tr><td class="c">6</td><td>下游一致性</td><td>DAB-OD 直方图的 KL 散度 / H-score 相关性</td><td><b>这一层才真正决定 H-score 能不能用</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>5.3 如果重建差，诊断决策树</h3>
+<div class="flow">
+<pre><code>‖I′ − I‖ 很大?
+├─ 第 1 步：看被截断像素比例
+│   ├─ 高（&gt;1%）→ 原因 2。去掉 clamp / 换有符号，重测
+│   └─ 低 → 继续
+├─ 第 2 步：看 M 的秩
+│   ├─ 3×2 → 原因 1（主因）。加到 3×3，重测
+│   └─ 3×3 且几乎不变 → M 的向量本身不对 → 用 Macenko/Vahadane 在**你的数据**上重估
+└─ 第 3 步：都排除了 → 不该再有任何误差（只剩浮点精度）
+    └─ 若仍有 → 检查是不是在某处偷偷 clamp 了（这是本项目最常犯的错）
+
+注意：I₀ 与 uint8 不在这棵树里——它们不造成往返误差。
+     它们的测法不同（测 C 的散布，不是测 ‖I′−I‖），见 §5.2 表格。</code></pre>
+</div>
+
+<h3>5.4 今天就能做的验证（零训练，几十行）</h3>
+<pre><code># 伪代码：闭环可逆性分层测试
+for each real IHC patch x (uint8 RGB):
+    OD   = -log10(clip(x/255, eps, 1) / I0)        # I0: 3-vector, 队列级
+    C    = M3.T @ OD                                # 3x3 正交基 → 逆=转置
+    OD_  = M3 @ C
+    x_   = I0 * 10**(-OD_) * 255
+    report:
+        psnr(x, x_), ssim(x, x_), deltaE_Lab(x, x_)
+        fraction of pixels where C &lt; 0   # 截断计数器
+        |C_res| 的分布                    # 诊断通道
+    # 对照：用 3x2 的 [s_H, s_DAB] 伪逆版本重跑一遍 → 差值 = 原因 1 的贡献</code></pre>
+
+<div class="box good">
+<div class="bt">这一步的产出直接决定后面的路线</div>
+<ul>
+<li><b>闭环误差小（比如 PSNR &gt; 40 dB）</b> → 染色空间生成值得做，继续 §8 阶段 2。</li>
+<li><b>闭环误差大且定位到原因 1</b> → 先改三通道设计（方案 A/B），再继续。</li>
+<li><b>闭环误差大且定位到原因 2/3</b> → 先修 renderer 的约束，再继续。</li>
+<li><b>所有原因都排除但误差仍大</b> → 说明你的 M 与数据不匹配，<b>这时候「染色空间生成」的前提就不成立</b>，应当退回 RGB 空间生成 + 通道监督（§2.2 路线 B）。<b>退回去不丢人，这是止损。</b></li>
+</ul>
+</div>
+
+<h2 id="s6"><span class="num">6</span>Channel Attention</h2>
+
+<h3>6.1 两种 channel attention 的严格区分</h3>
+
+<p>你说得很准：「channel 不应该只是泛泛的 RGB channel attention」。这个区分不是修辞，它有严格的数学后果。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>Feature-channel attention</th><th>Semantic stain-channel attention</th></tr></thead>
+<tbody>
+<tr><td>channel 指什么</td><td>特征图的第 <code>i</code> 个 feature map</td><td><code>H</code> / <code>DAB</code> / <code>第三分量</code></td></tr>
+<tr><td>语义来源</td><td><b>学出来的</b>，无先验</td><td><b>物理给定的</b>，有先验</td></tr>
+<tr><td>是否可置换</td><td class="c"><span class="b high">可以</span>（第 3 和第 7 个 feature map 换位置不影响任何东西）</td><td class="c"><span class="b bad">不可以</span>（H 和 DAB 换了位置就是错的）</td></tr>
+<tr><td>有量纲吗</td><td class="c"><span class="b bad">没有</span></td><td class="c"><span class="b high">有</span>（浓度）</td></tr>
+<tr><td>权重图可被物理检验吗</td><td class="c"><span class="b bad">不能</span></td><td class="c"><span class="b high">能</span>——DAB 通道的权重图应当与阳性区域重合</td></tr>
+<tr><td>代表方法</td><td>SE、ECA、CBAM、GC、SKNet</td><td>CCPL（通道间相关性）、MCCL（引入 E 通道）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">这个区分的实际后果</div>
+<p><b>Feature-channel attention 有一个 semantic stain-channel attention 没有的性质：后者的权重可以被物理量证伪。</b>这既是它的价值（可解释），也是它的验证方式（可做消融论证）。<b>如果你做的是前者，你无法论证「attention 学到了染色分量的重要性」——你只能说「attention 有用」。</b></p>
+</div>
+
+<h3>6.2 语义染色 channel attention 的先例</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">CCPL · arXiv 2506.07559</div>
+<p>把 HER2 IHC 分解成 <b>H（核）+ DAB（膜）</b>两个通道。</p>
+<p>用 Gigapath Tile Encoder 从生成图与真实图提双通道特征，<b>度量核与膜之间的跨通道相关性</b>。</p>
+<p>外加特征蒸馏损失 + <b>逐单通道 FOD（focal optical density）统计一致性</b>。</p>
+<p class="small">这是「语义染色通道 + 通道间关系 + 光密度监督」三件事的最直接组合。</p>
+</div>
+<div class="mini">
+<div class="mt">MCCL · ICIC 2025</div>
+<p>Multi-channel Correlation Learning。</p>
+<p>摘要明确：「introduces the <b>E channel from H&amp;E</b>」——把伊红通道引入 IHC 生成的多通道相关性学习。</p>
+<p class="small">这是 §3.2 里「第三个通道可以是 E」的直接先例。</p>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 关键区分：本轮<b>没有找到</b>「逐空间位置给不同染色分量不同权重」的工作</div>
+<p>CCPL 和 MCCL 做的都是<b>通道之间</b>的关系（global channel correlation），<b>不是</b>「在图像的这个区域 H 更重要、在那个区域 DAB 更重要」。</p>
+<p>所以你想做的东西确实是空白。但空白不大，而且<b>有一个必须回答的质疑</b>：</p>
+<div class="box warn" style="margin-top:10px">
+<div class="bt">审稿人一定会问：你的 attention 与「逐像素解混」的区别是什么？</div>
+<p>最一般的「每像素对 H/DAB/第三分量给不同权重」就是<b>一个逐像素的 3×3 混合矩阵</b>——那等于在每个位置重新做一次颜色解混，而这个自由度本来就已经在 <code>M</code> 里了（只是 M 被约束成全局共享）。</p>
+<p><b>建议的出路：把 attention 设计成「低秩 / 共享」的形式</b>——例如「一组全局通道权重 × 一个空间 mask」，参数量的量级远小于逐像素 3×3（后者是 <code>9×H×W</code> 个自由度），这样才与逐像素解混有<b>本质</b>区别，也才能被解释成「不同染色分量在不同区域的重要性不同」。</p>
+<p class="small">如果你做成逐像素的稠密 3×3，那它不是 attention，是「每像素重新解混」，而且会与 <code>M</code> 的可辨识性打架。</p>
+</div>
+</div>
+
+<h3>6.3 四个插入位置比较</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>方案</th><th>位置</th><th>理论意义</th><th class="c">与扩散兼容</th><th class="c">参数量</th><th class="c">稳定性</th><th class="c">对预训练权重</th><th class="c">颜色泄漏风险</th><th class="c">消融难度</th><th class="c">改动成本</th></tr></thead>
+<tbody>
+<tr>
+<td><b>A</b></td><td>输入 <code>Z → CA(Z) →</code> 扩散</td>
+<td>在生成前重加权染色分量</td><td class="c"><span class="b medium">中</span></td><td class="c">小</td><td class="c">好</td><td class="c"><span class="b high">不影响</span></td><td class="c"><span class="b medium">中</span></td><td class="c">易</td><td class="c">小</td>
+</tr>
+<tr>
+<td><b>B</b></td><td>condition feature 上<br><code>F_cond → CA(F) →</code> UNet</td>
+<td>让条件本身携带「哪些染色分量在此处重要」的信息；<b>这是 StainFuser 唯一为「可替换条件」预留的槽位</b></td><td class="c"><span class="b high">高</span></td><td class="c"><span class="b high">最小</span></td><td class="c"><span class="b high">好</span></td><td class="c"><span class="b high">不影响</span></td><td class="c"><span class="b medium">中</span><br>取决于条件来源</td><td class="c"><span class="b high">最易</span><br>去掉 = 恒等</td><td class="c"><span class="b high">小</span></td>
+</tr>
+<tr>
+<td><b>C</b></td><td>UNet 中间 feature 上<br><code>F_UNet → CA(F_UNet)</code></td>
+<td>在生成过程中调制</td><td class="c"><span class="b high">高</span></td><td class="c"><span class="b bad">最大</span></td><td class="c"><span class="b medium">中</span><br>需要重新收敛</td><td class="c"><span class="b bad">大</span><br>要动预训练层</td><td class="c"><span class="b bad">最高</span></td><td class="c"><span class="b bad">最难</span></td><td class="c"><span class="b bad">大</span></td>
+</tr>
+<tr>
+<td><b>D</b></td><td>输出 <code>Z_pred → CA(Z_pred) →</code> 物理渲染</td>
+<td>在浓度空间重加权；<b>权重图可被物理检验</b></td><td class="c"><span class="b high">高</span><br>不影响扩散过程</td><td class="c">小</td><td class="c"><span class="b high">最好</span></td><td class="c"><span class="b high">不影响</span></td><td class="c"><span class="b high">低</span></td><td class="c"><span class="b high">易</span></td><td class="c"><span class="b high">小</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">推荐：主位置 B，第二位置 D</div>
+<ul>
+<li><b>B（condition feature 上）——推荐主位置。</b>理由：① StainFuser 里 <code>encoder_hidden_states</code> <b>本来就是为「可替换条件」设计的槽位</b>（论文原话是把 CLIP 换成 VAE embedding），你在这里加东西不需要动任何预训练权重；② 参数量最小（就是 <code>p_tok</code> 那一层的事）；③ 消融最容易（去掉 attention 就是恒等，可以直接对比）；④ <b>能直接复用你 Protein Branch 的 <code>p_tok</code></b>。<br><span class="small">注意：条件目前是 256 个 token（<code>16×16</code> 的 grid），要做空间 attention 需要 reshape 回 <code>(B, 256, 768)</code> → <code>(B, 16, 16, 768)</code>。这是个小工程细节，不是障碍。</span></li>
+<li><b>D（输出 Z_pred 上）——推荐第二位置。</b>理由：① 完全不影响扩散过程（只在渲染前加一步），<b>稳定性最好</b>；② 权重图作用在<b>浓度</b>上，可以直接与 DAB 阳性区域比对，<b>物理上可检验</b>；③ 消融成本极低。缺点是表达力最弱（不能影响生成）。</li>
+<li><b>A（输入 Z 后）——不推荐。</b>染色分解本身已经是线性变换，再加一层线性重加权与 <code>M</code> 的自由度重叠，收益不明。</li>
+<li><b>C（UNet 中间）——不推荐。</b>要动 UNet 的预训练层（<code>down_blocks</code>/<code>mid_block</code> 现在是冻结的），参数量最大，颜色泄漏风险最高，消融成本最高。<b>与你「改动小」的优先级直接冲突。</b></li>
+</ul>
+</div>
+
+<div class="box key">
+<div class="bt">补一个更干净的判据：只有两个位置上的「通道」才真的是染色通道</div>
+<p>上面那张表按「插在哪一层」来排，但漏掉了一个更本质的划分维度：<b>那个张量在通道维上到底是什么。</b></p>
+<ul>
+<li><b>输入侧（<code>controlnet_cond</code>，3 通道）</b>：若按 §1.5 换成染色分解结果，这 3 个通道<b>就是</b> <code>[C_H, C_E, …]</code>，通道维有染色语义 ⇒ 在这里做注意力 = 语义染色通道注意力。</li>
+<li><b>输出侧（<code>Z_pred</code>，3 通道）</b>：这 3 个通道<b>就是</b> <code>[C_H, C_DAB, C_res]</code> ⇒ 同上。</li>
+<li><b>UNet 内部（320 / 640 / 1280 通道）</b>：这些是<b>特征维</b>，没有染色语义、可以任意置换 ⇒ 在 C 位置做注意力，<b>无论怎么设计都只能是「特征通道注意力」</b>，永远无法支持「不同染色成分获得不同权重」这个论断。</li>
+</ul>
+<p><b>⇒ 位置问题因此塌缩成一个二元问题：主干之前，还是主干之后。</b>这比四选一的表更干净，也是「明确不推荐 C」的更强理由——<b>不是 C 不好，而是 C 上根本不存在「染色通道」这个对象。</b></p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>Protein Branch 复用</h2>
+
+<h3>7.1 先例：这条路有支撑</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>做法</th><th>与你的关系</th></tr></thead>
+<tbody>
+<tr><td><b>PSPStain · PALS</b><br><span class="small">你的 baseline</span></td><td>Protein-Aware Learning Strategy，用 <b>FOD（focal optical density）</b>保持蛋白表达水平一致性</td><td><b>你的旧 Protein Branch 约束属于这一族。</b>这也是你「必须保留的两个 loss」之一</td></tr>
+<tr><td><b>CCPL</b></td><td>逐单通道 FOD 统计一致性（分别在 H 通道和 DAB 通道上）</td><td>把 PALS 的 FOD 思路<b>细化到单个染色通道</b>——这正好是你在染色空间生成后能做的事</td></tr>
+<tr><td><b>PGVMS</b><br><span class="small">TMI 2026</span></td><td>prompt-guided，可学习染色 token</td><td>解决「推理时没有目标图」这个 StainFuser 的硬伤</td></tr>
+<tr><td><b>UNIStainNet</b></td><td>64-d FiLM 条件调制</td><td>另一条「可学习染色条件」的路</td></tr>
+<tr><td><b>StainDiffuser / DiffVS</b></td><td>marker-wise 条件（每个 marker 一个条件）</td><td>多 marker 场景；你是单 marker，参考价值有限</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">结论：「旧 Protein Branch + projection → 接进扩散」这条路有先例、成本低、且你的经验可直接迁移</div>
+<p>而且不是「类似」——是<b>同构</b>：你 HistDiST 里已经是 <code>DBDCE.prot_branch → ProteinAdapter → p_tok (B,256,768) → cross-attention K/V</code>；StainFuser 的槽位是 <code>tgt_latents (B,4096,4) → encoder_projector → cross-attention K/V</code>。<b>同一个位置、同一种机制，只是 token 数与维度不同。</b></p>
+</div>
+
+<h3>7.2 代码级对接（以及两个必须改的地方）</h3>
+
+<pre><code># 原（recipe.py L265-271 / L339-345）
+tgt_latents = tgt_latents.reshape(B, 4, -1).permute(0, 2, 1)      # (B, 4096, 4)
+down, mid = self.arch.conditioner(noisy, t,
+              encoder_hidden_states=tgt_latents, controlnet_cond=src_latents, ...)
+model_pred = self.arch.noise_predictor(noisy, t,
+              encoder_hidden_states=tgt_latents,
+              down_block_additional_residuals=down, mid_block_additional_residual=mid)
+
+# 改后
+_, _, fp = dbdce(cond_img)          # 复用你的 prot_branch
+p_tok = protein_adapter(fp)          # (B, 256, 768)
+down, mid = self.arch.conditioner(noisy, t,
+              encoder_hidden_states=p_tok, controlnet_cond=struct_cond, ...)
+model_pred = self.arch.noise_predictor(noisy, t,
+              encoder_hidden_states=p_tok,
+              down_block_additional_residuals=down, mid_block_additional_residual=mid)
+
+# 同时把两个 projector 的输入维度改成 768：
+#   OveriddenUnet2D(unet, encoder_hid_dim=768)
+#   OveriddenControlNet(unet, cross_attention_dim=768)   ← 这个参数的语义见 §1.2 陷阱</code></pre>
+
+<div class="box warn">
+<div class="bt">必须改的两点（来自你上次对 HistDiST 的审查结论）</div>
+<ol>
+<li><b>零初始化，不是随机初始化。</b>你的 <code>ProteinAdapter</code> 是零初始化（<code>nn.init.zeros_</code>），这保证了 step 0 与 baseline 数值一致（InstructPix2Pix recipe），也让「有没有效果」有一个干净的零点。<b>但 StainFuser 的 <code>encoder_projector</code> 是 <code>nn.Linear</code> 默认随机初始化</b>——你换维度后要显式零初始化，否则失去这个性质。</li>
+<li><b>加幅度监控。</b>你上次审查的核心发现之一是：<b>真正在用的 <code>ProteinAdapter</code> 无界、无监控，而没人用的 <code>StructAdapter</code> 反而带着完整的幅度控制（RES_SCALE / RMS 归一化 / ±3σ clamp / raw_max 监控）——「纪律用在了死路上」。</b>这次不要再犯：<code>p_tok</code> 的 RMS、max、以及每个 step 的变化量都要进日志。</li>
+</ol>
+</div>
+
+<div class="box key">
+<div class="bt">一个额外的好消息：StainFuser 没有你上次那三个 P0</div>
+<p>你 HistDiST 的三个 P0 结构性缺陷——① aux 梯度对 UNet 无门控却被全局裁剪；② <code>clamp</code> 限值不限梯度导致的 1/x 梯度炸弹；③ aux 用 ±6 而主通路用数据箱。这些<b>在 StainFuser 里都不存在</b>，因为它只有一个 ε-MSE 损失、没有辅助损失、没有 GradSurgery、没有自定义物理模块。<b>把 Protein Branch 接进来的时候，注意不要把这三个 P0 一起搬过来</b>——具体见 §9 的迁移清单。</p>
+</div>
+
+<h3>7.3 评价：没有 H-score 怎么证明 Protein Branch 的贡献</h3>
+
+<p>你已经有非常完整的资料：<code>04_IHC评价与分级/</code> 下的三份报告（<code>IHC_scoring_literature_review.md</code>、<code>IHC蛋白表达分级与虚拟染色评价_系统调研报告.md</code>、<code>virtual_staining_evaluation_review.md</code>）。这里只给<b>最小可执行方案</b>和<b>一个姿态上的提醒</b>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>层</th><th>指标</th><th>怎么算</th><th>判据</th></tr></thead>
+<tbody>
+<tr><td>主指标</td><td><b>per-cell H-score</b>（在 DAB-OD 空间）</td><td>固定 M → C_DAB → OD 阈值分档（可用 IHC Profiler 的四档，或用负对照校准）→ <code>Σ i×%</code></td><td>与真实 IHC 的 H-score 做<b>配对</b>相关</td></tr>
+<tr><td>消融判据</td><td><code>ΔH-score(有 Protein Branch) − ΔH-score(无)</code></td><td>在<b>实例级</b>上算差值的分布，做配对检验</td><td><b>报分布，不要只报均值。</b>均值变好而分布尾部变差是典型的「把失败藏起来」</td></tr>
+<tr><td>必须同时报</td><td>分布级（FID/PSNR）+ 实例级（H-score 一致性、伪影率）</td><td>—</td><td>你的黑团教训已经证明分布级指标看不见实例级失败</td></tr>
+<tr><td>浓度空间</td><td><code>C_DAB</code> 的 FOD 一致性（PALS 原意）</td><td>生成图与真实图的 DAB 通道 FOD 直方图距离</td><td>这是 PSPStain 原生指标，可与 baseline 直接比</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">姿态提醒：这一节的正确姿势是「设计一个能证伪它的实验」，不是「论证它有效」</div>
+<p>你自己的实验观察是：<b>Protein-related constraint 有一定效果；Structure Branch 贡献较小；但没有 H-score，无法严格证明 Protein Branch 对蛋白表达的贡献。</b></p>
+<p>所以诚实的表述是：<b>「Protein Branch 有效」这个结论目前<b>没有</b>你的实验支持。</b>把这一点写进方案里（而不是回避），有三个好处：① 你的消融实验有了明确的目标；② 如果最后证明它无效，你也有一个干净、有价值的负结果；③ 审稿人最讨厌的是「我们加了 A 所以更好」式的循环论证，而「我们设计了能证伪 A 的实验」是加分项。</p>
+</div>
+
+<h2 id="s8"><span class="num">8</span>可直接执行的实验路线</h2>
+
+<h3>8.0 总体决策树</h3>
+<div class="flow">
+<pre><code>阶段 0 · 门禁（1–3 天，零训练）
+│  E0.1 三通道重建上限       ──┐
+│  E0.2 你的 IHC 有没有伊红   ├─ 全部通过 → 阶段 1
+│  E0.3 stain matrix 敏感性   │
+│  E0.4 StainFuser 能否跑通   ┘  任一失败 → 按 §5.3 / §3.4 转向，不要硬上
+│
+▼
+阶段 1 · 最小改动 baseline（1–2 周）
+│  只换 condition：target-latent 槽位 → 可学习染色 token
+│  输出空间**保持 RGB latent 不动**
+│  目的：把「StainFuser 能不能做这件事」与「染色空间改造有没有用」分开
+│
+▼
+阶段 2 · 表示改造（2–4 周，分两步）
+│  2a 只换渲染器：保留 4 通道 latent，加一个 head 输出 Z + 可微 BL 渲染
+│  2b 再换生成空间：让扩散直接在 Z 空间
+│  一次只引入一个新失败模式 → 保证可归因
+│
+▼
+阶段 3 · 模块消融
+   3a channel attention 位置 B → D
+   3b Protein Branch 有无
+   3c Z 通道设计对比（A vs B vs [H,DAB,H] 反面教材）</code></pre>
+</div>
+
+<h3>8.1 阶段 0：门禁实验（必须先做完）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">E0.1 · 三通道重建上限测试</div><div class="v">零训练 · 几十行 · 几十分钟</div></div><div><span class="b high">最高优先级</span></div></div>
+<div class="body">
+<p><b>目的</b>：验证 §5.1 的可逆性分析，并量化「原因 1（秩亏）」的贡献。</p>
+<p><b>步骤</b>：取 50–100 张真实 IHC patch（覆盖不同 HER2/Ki67 表达强度）。对每张：</p>
+<ol>
+<li>用 <b>3×2</b> 的 <code>[s_DAB, s_H]</code>（你现在 <code>physics.py</code> 里的 <code>STAIN_MAT_IHC</code>）做伪逆解混 → 渲染 → 算 <code>‖I′−I‖</code>。预期复现 ~0.023。</li>
+<li>用 <b>3×3</b> 正交基 <code>[s_H, s_DAB, normalize(s_H×s_DAB)]</code> 重做一遍。</li>
+<li>同时统计：被截断（<code>C&lt;0</code>）像素比例、<code>|C_res|</code> 的分布、PSNR/SSIM/ΔE。</li>
+</ol>
+<p><b>判据</b>：</p>
+<ul>
+<li>3×3 的误差显著下降（比如 0.023 → &lt;0.005，PSNR &gt; 40 dB）→ <b>通过</b>，三通道设计成立。</li>
+<li>误差几乎不变 → 是原因 2/3，先修 renderer 约束（去掉 clamp、固定 I₀）。</li>
+<li>误差变大 → M 的向量不适合你的数据，用 Macenko/Vahadane 重估。</li>
+</ul>
+<p class="small"><b>产出</b>：一个可以直接写进论文的数字（「RGB→Z→RGB 的重建上限是 X dB，因此染色空间生成的前置条件成立/不成立」）。<b>这个数字本身就是有价值的负结果或正结果。</b></p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E0.2 · 你的 IHC 片子到底有没有伊红复染？</div><div class="v">零训练 · 几十分钟</div></div><div><span class="b medium">决定第三通道</span></div></div>
+<div class="body">
+<p><b>目的</b>：决定方案 A（residual）还是方案 B（eosin）。</p>
+<p><b>步骤</b>：对真实 IHC patch 用 3 染色矩阵（H/E/DAB，你 <code>STAIN_MAT_FULL</code> 正好是这三个）解卷积，<b>把 E 通道单独可视化</b>。</p>
+<p><b>判据</b>：</p>
+<ul>
+<li>E 通道呈现<b>清晰的细胞质结构</b>（弥散的粉色区域、与腺体/间质形态对应）→ 有伊红复染 → 方案 B 可用，语义更好。</li>
+<li>E 通道是<b>弥散的、与组织结构弱相关</b>的噪声 → 没有伊红，E 通道在装背景 → 用方案 A。</li>
+</ul>
+<p class="small">补充：也可以直接查数据来源的染色协议（BCI / MIST 的论文或数据集说明）。但<b>以实测为准</b>——协议与实际批次可能不一致。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E0.3 · stain matrix 敏感性</div><div class="v">零训练 · 半天</div></div><div><span class="b medium">决定 M 固定还是学习</span></div></div>
+<div class="body">
+<p><b>目的</b>：量化「M 选错对 H-score 的影响」，为 §4.2 的「两侧用不同 M」提供依据。</p>
+<p><b>步骤</b>：固定同一批真实 IHC patch，用 4 个不同的 M（Ruifrok 默认 / Macenko 逐图 / Macenko 队列级 / Vahadane 队列级）分别算 <code>C_DAB</code>，然后在同一套 OD 阈值下算 per-cell H-score。</p>
+<p><b>判据</b>：报 H-score 的<b>组内相关（ICC）与 95% 一致性界限</b>。</p>
+<ul>
+<li>逐图 Macenko 的 ICC 明显低于队列级 → <b>证实「逐图估 M 会让 H-score 不可比」</b>，这条设计决策就有了数据支撑。</li>
+<li>全部接近 1.0 → M 的选择不敏感，可以用最简单的固定矩阵（好消息，改动更小）。</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">E0.4 · StainFuser 能否在你的环境跑通</div><div class="v">1 天（含依赖）</div></div><div><span class="b high">决定 §1.6 的坑要不要填</span></div></div>
+<div class="body">
+<p><b>步骤</b>：</p>
+<pre><code>git clone https://github.com/R-J96/stainFuser
+pip install "diffusers==0.26.3" "transformers==4.38.2" "huggingface_hub==0.21.3"
+# 从 HF 下 R-J/StainFuser 的 checkpoint.safetensors + training/sd21b_*.pth
+# 修 conf/paths/default.yaml 的拼写：sd21b_unet2dcontition.pth → sd21b_unet2dcondition.pth
+# 补 conf/data/train.yaml，把 param_dict 从 train.py 挪进配置
+python run_patch.py --source_path &lt;你的 H&E 或任意病理图&gt; \
+                    --target_path &lt;一张真实 IHC&gt; --output_dir out --save_fmt png</code></pre>
+<p><b>判据</b>：能出图（stain normalization 意义上的）。</p>
+<p class="small"><b>我在这台机器上已经验证了架构层是通的</b>：用 <code>diffusers==0.26.3</code> 实例化 <code>OveriddenUnet2D</code> + <code>OveriddenControlNet</code> 成功，用 3 通道 <code>controlnet_cond</code> 前向成功，参数量 1313.80 M / 可训 878.49 M 实测得到。<b>唯一注意：<code>transformers</code> 必须降到 4.38 系，新版会因 <code>cached_download</code> 被移除而 import 失败。</b></p>
+</div>
+</div>
+
+<h3>8.2 阶段 1：最小改动 baseline（1–2 周）</h3>
+
+<div class="box key">
+<div class="bt">目标：把「StainFuser 能不能做 H&amp;E→IHC」与「染色空间改造有没有用」<b>分开</b></div>
+<p>这一步<b>不改输出空间</b>（仍是 SD2.1 VAE 的 4 通道 latent，仍走 VAE 解码）。只做两件事：</p>
+<ol>
+<li><b>把 <code>encoder_hidden_states</code> 从目标图 latent 换成可学习染色 token。</b>最简版：一个 <code>nn.Parameter(B=1, 256, 768)</code>，零初始化，<code>encoder_projector</code> 改成 <code>Linear(768,1024)</code>。</li>
+<li><b>把 <code>controlnet_cond</code> 从原始 RGB 换成 H 浓度图（3 通道复制）或 HED 三通道。</b>这一步直接验证 §1.3 的颜色泄漏是否被抑制。</li>
+</ol>
+<p><b>为什么必须先做这一步</b>：这与你上次在 HistDiST 上得出的结论是同一个纪律——<b>先修 scheme B 拿一个稳定的 baseline，再谈架构层面的改造</b>。如果你同时换输出空间，一旦出问题，你无法区分是「StainFuser 不适合这个任务」还是「染色空间渲染有问题」。</p>
+</div>
+
+<p><b>判据</b>：</p>
+<ul>
+<li>生成图是 IHC 样的（棕 + 蓝），不是 H&amp;E 样的（粉 + 紫）。</li>
+<li>H-score（用 E0.3 定下来的 M）与真实 IHC 有<b>正相关</b>，哪怕很弱（Spearman &gt; 0.2 就算「有信号」）。</li>
+<li><b>反例判据</b>：如果生成的图只是「H&amp;E 变暗了」或者「整片均匀棕色」，说明可学习 token 没有携带信息 → 检查 <code>p_tok</code> 的 RMS 是否塌缩到 0（这正是零初始化 + 无监控的典型失败）。</li>
+</ul>
+
+<h3>8.3 阶段 2：表示改造（分两步，不要合并）</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">2a · 只换渲染器</div>
+<p>保留 4 通道 latent 生成不动，在 VAE 解码之外<b>加一个 head</b>：<code>latent → Conv → Z (3ch) → 可微 BL → RGB</code>。</p>
+<p>损失：<code>L_diff (原 ε-MSE) + L_rec (Z→RGB 与真值 RGB) + L_conc (Z 与真值浓度的 L1)</code>。</p>
+<p class="small">只引入一个失败模式：渲染器是否工作。</p>
+</div>
+<div class="mini">
+<div class="mt">2b · 再换生成空间</div>
+<p>让扩散直接在 <code>Z</code> 空间做（把 VAE 换成你的 <code>Z</code> 编码，或直接像素空间对 <code>Z</code> 扩散）。</p>
+<p class="small">这时才真正放弃 SD VAE 的解码先验——<b>这是改动最大的一步，必须单独验证</b>。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">2b 的止损判据（写下来，到时候照做）</div>
+<p>如果 2b 之后 FID / 视觉质量明显劣于 2a，且训练损失正常收敛 → <b>说明 SD VAE 的解码先验是不可替代的</b>。这时候正确的选择是<b>停在 2a</b>（生成在 latent，渲染在 Z 空间），并在论文里明确写「我们保留了预训练解码器以维持保真度，代价是生成空间不是纯物理的」。<b>这是一个诚实且有价值的结论，比硬撑 2b 好。</b></p>
+</div>
+
+<h3>8.4 阶段 3：消融清单</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">#</th><th>消融</th><th>对比</th><th>判据</th><th class="c">成本</th></tr></thead>
+<tbody>
+<tr><td class="c">3a</td><td>channel attention 位置</td><td>无 / B / D / B+D</td><td>H-score 配对差值 + attention 权重图与 DAB 阳性区域的重合度（IoU 或 Dice）</td><td class="c">中</td></tr>
+<tr><td class="c">3b</td><td>Protein Branch</td><td>有 / 无（<code>p_tok</code> 置零）/ 只有可学习 token 无 branch</td><td>per-cell H-score 的实例级分布（§7.3）</td><td class="c">中</td></tr>
+<tr><td class="c">3c</td><td>Z 通道设计</td><td>A（H/DAB/res）/ B（H/DAB/E）/ <b>[H,DAB,H] 反面教材</b></td><td>重建 PSNR + H-score + <code>C_res</code> 幅度。<b>把 [H,DAB,H] 作为消融项跑一次，用数据证实 §3.1 的论证</b></td><td class="c">小</td></tr>
+<tr><td class="c">3d</td><td>structure 条件来源</td><td>原始 RGB / H 浓度图 / HED</td><td>颜色泄漏的量化指标（生成图与源 H&amp;E 的色相相关性）</td><td class="c">小</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>8.5 失败判据与止损</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>症状</th><th>最可能的诊断</th><th>止损动作</th></tr></thead>
+<tbody>
+<tr><td>E0.1 的 3×3 重建仍很差</td><td>M 与数据不匹配</td><td>退回 RGB 空间生成 + 通道监督（路线 B），<b>不要继续改架构</b></td></tr>
+<tr><td>阶段 1 生成的图是「H&amp;E 变暗」</td><td>可学习 token 塌缩到 0</td><td>检查 <code>p_tok</code> RMS 日志；确认零初始化后梯度确实传到了 token</td></tr>
+<tr><td>阶段 1 生成的图整片均匀棕色</td><td>condition 只学到了「全局染色」，没有空间结构</td><td>检查 structure 通路（<code>controlnet_cond</code>）是否被正确喂入</td></tr>
+<tr><td>阶段 2a 的 Z 全零 / 全常数</td><td>浓度头梯度消失（softplus 饱和）</td><td>检查 softplus 的输入尺度；加浓度值域约束</td></tr>
+<tr><td>阶段 2b 视觉质量崩</td><td>SD VAE 解码先验不可替代</td><td><b>停在 2a</b>，并在论文里明确写这个边界</td></tr>
+<tr><td>出现局部黑团/异常块</td><td>潜码离流形（你已诊断过的 A1/A2）</td><td>按你已有的 Tier 0–4 阶梯处理；<b>注意这次的黑团可能来自新的 Z 空间，需要重做诊断</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s9"><span class="num">9</span>HistDiST 迁移清单</h2>
+
+<p>你问「后续很可能直接复用已有 Protein Branch，只增加一个 projection/adaptor」。这一节把 HistDiST/DB-DCE 里的东西分成三类：<b>可直接迁移 / 需修改后迁移 / 不要迁移</b>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>组件</th><th class="c">判定</th><th>说明</th><th class="c">迁移成本</th></tr></thead>
+<tbody>
+<tr><td><code>DBDCE.prot_branch</code></td><td class="c"><span class="b high">直接可用</span></td><td>带 dilation 的多尺度蛋白特征提取，结构上没问题</td><td class="c">小</td></tr>
+<tr><td><code>ProteinAdapter</code></td><td class="c"><span class="b medium">改后用</span></td><td>零初始化是对的，但<b>无界、无监控</b>。加 RMS / max / 每步变化量日志</td><td class="c">小</td></tr>
+<tr><td><code>DBDCE.struct_branch</code></td><td class="c"><span class="b bad">不要迁移</span></td><td>在你 HistDiST 里它<b>已经是死代码</b>（<code>training_dbdce.py</code> L543 输出被丢弃），因为它的信号只有 H&amp;E latent 的约 1/20、梯度是噪声。<b>StainFuser 里结构走 ControlNet，不需要这个分支</b></td><td class="c">—</td></tr>
+<tr><td><code>physics.py</code> 的反演（scheme B）</td><td class="c"><span class="b bad">不要迁移</span></td><td>它的三个问题（1/x 梯度炸弹、零空间盲区、负浓度被静默抹掉）你已经完整诊断过。换成正演 + 可微 renderer</td><td class="c">—</td></tr>
+<tr><td><code>physics.py</code> 的 <code>render_ihc</code></td><td class="c"><span class="b high">复活它</span></td><td><b>它是死代码，但恰好是你现在需要的那个函数</b>（正演 C→RGB）。改成 3×3 矩阵、<code>C_res</code> 不加非负约束</td><td class="c">小</td></tr>
+<tr><td><code>STAIN_MAT_FULL / STAIN_MAT_IHC</code></td><td class="c"><span class="b medium">改后用</span></td><td><code>STAIN_MAT_IHC</code> 是 <b>3×2</b>（rank 2），必须升级成 3×3。用 <code>STAIN_MAT_FULL</code> 的 H/E/DAB 列 + 正交化，或直接用叉积</td><td class="c">小</td></tr>
+<tr><td><code>GradSurgery</code>（PCGrad 门控）</td><td class="c"><span class="b bad">不要迁移</span></td><td>你上次审查的 P0-1：<code>gate_params</code> 只覆盖 condition 分支，但 <code>aux.backward()</code> 把梯度直接累加进 UNet 860M 参数，随后 <code>clip_grad_norm_(trainables, 1.0)</code> 按<b>全体总范数</b>裁剪 → <b>aux 梯度一大，主损失梯度被同比例压小</b>。<b>StainFuser 只有一个损失，不需要它。</b>如果将来要加 aux，正确做法是：aux 梯度<b>不裁剪</b>，门控只作用在 condition 分支，主损失用独立的 clip 系数</td><td class="c">—</td></tr>
+<tr><td><code>freq_structure_loss</code></td><td class="c"><span class="b medium">改后用</span></td><td>它不具尺度不变性（两个谱各自独立估背景 i₀，整体尺度差经 <code>.abs()</code> 不抵消）→ 最小值 1.51、从不接近 0。<b>修法：两谱各自按总能量归一化后再取 log</b></td><td class="c">小</td></tr>
+<tr><td><code>l_prot</code>（FOD 蛋白约束）</td><td class="c"><span class="b high">迁移并升级</span></td><td>这是 PSPStain 的 PALS，你「必须保留的两个 loss」之一。<b>换到染色空间后，它可以在 <code>C_DAB</code> 上直接算，不需要再反演</b> —— 这正是改造的收益之一</td><td class="c">中</td></tr>
+<tr><td><code>swap_eval_dbdce.py</code></td><td class="c"><span class="b bad">重写</span></td><td>四处不一致：fp16 vs 训练 bf16 · <code>s_lat</code> 不钳位 · 终潜码完全不钳位 · <b>逐单张图各自估 i₀</b>（污染解耦指标）。<b>不要复用，直接重写</b></td><td class="c">小</td></tr>
+<tr><td>日志体系（<code>log.csv</code> / <code>log.txt</code>）</td><td class="c"><span class="b medium">改造后用</span></td><td>你上次的核心教训：<b>日志缺字段 = 信号消失</b>。特别是「<code>gate=off</code> 把 dropout 与非有限解码记成同一个值」导致崩溃前夜唯一的预警消失。<b>StainFuser 侧至少要记：<code>p_tok</code> RMS、latent 分位数、被钳像素比例</b></td><td class="c">小</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">迁移的净收益：从 HistDiST 带过来的是「哪些坑不要踩」，不是「哪些模块可以搬」</div>
+<p>这一点值得说清楚：<b>你上次审查 HistDiST 得到的最大资产是一份缺陷清单，而不是可复用模块。</b>能直接搬的只有 <code>prot_branch</code> + <code>ProteinAdapter</code> + <code>l_prot</code> 三样，其余全部是「不要这样做」。</p>
+</div>
+
+<h2 id="s10"><span class="num">10</span>风险清单与诚实标注的不确定</h2>
+
+<h3>10.1 风险清单</h3>
+<div class="scroll">
+<table>
+<thead><tr><th class="c">等级</th><th>风险</th><th>影响</th><th>缓解</th></tr></thead>
+<tbody>
+<tr><td class="c"><span class="b bad">高</span></td><td><b>StainFuser 推理必须给 IHC 参考图</b>，H&amp;E→IHC 没有</td><td>不改就无法推理</td><td>阶段 1 用可学习 token 替换；参考 PGVMS / UNIStainNet</td></tr>
+<tr><td class="c"><span class="b bad">高</span></td><td><b>换输出空间 = 放弃 SD VAE 解码先验</b></td><td>可能 FID 显著变差</td><td>分两步（2a → 2b），设好止损判据</td></tr>
+<tr><td class="c"><span class="b medium">中</span></td><td>StainFuser 只有 8 次引用、0 有影响力引用、HF 20 downloads</td><td>遇到坑只能自己填，没有社区可问</td><td>接受；但这也是「没人做过」的机会</td></tr>
+<tr><td class="c"><span class="b medium">中</span></td><td>仓库缺 <code>conf/data/</code>、<code>param_dict</code> 硬编码、路径拼写错</td><td>训练入口跑不起来</td><td>E0.4 先跑通推理；训练入口自己补（约半天）</td></tr>
+<tr><td class="c"><span class="b medium">中</span></td><td>878 M 可训练参数的训练成本</td><td>H20 96G 够用但慢</td><td>bf16（你已实测必须）+ 梯度检查点（StainFuser 没有，需自己加）</td></tr>
+<tr><td class="c"><span class="b medium">中</span></td><td>「逐空间位置染色 attention」与「逐像素解混」的区别不清</td><td>审稿人会质疑创新性</td><td>设计成低秩/共享形式（§6.2）</td></tr>
+<tr><td class="c"><span class="b low">低</span></td><td>第三个通道的物理身份不确定（伊红 vs 残差）</td><td>影响可解释性的表述</td><td>E0.2 实测；两方案代码同构，可配置切换</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>10.2 本轮没有找到 / 不确定的地方（明确标注）</h3>
+
+<div class="box warn">
+<div class="bt">诚实清单</div>
+<ul>
+<li><b>没有找到任何把 StainFuser 用于 H&amp;E→IHC 的工作。</b>本轮检索（arXiv / Semantic Scholar / GitHub / 关键词组合）只返回原论文、原仓库、HF 权重页。<b>这可能是「没人做过」，也可能是「有人做过但没发表」——无法区分。</b></li>
+<li><b>没有找到「逐空间位置给不同染色分量不同权重」的工作。</b>CCPL/MCCL 都是通道间的全局关系。所以 §6.3 的推荐是基于<b>工程判断</b>（改动成本、可消融性），不是基于先例。</li>
+<li><b>StainQuant 的具体 PSNR/SSIM 数值没拿到</b>——论文正文只说「excellent RGB reconstruction」，量化指标在 Figure 1 panel D 里，正文未列举。<b>所以「可微 BL 解码器足够好」这个判断有文献支持，但没有可引用的具体数字。</b></li>
+<li><b>StainQuant 的代码原先没克隆成功，现已拿到源码并逐行核实</b>（<code>/Users/hua/Documents/trae_projects/LEO/StainQuant-main/</code>，10-05 下午补）。<b>复核结果推翻了论文的三处描述</b>（VGG 是 <code>weights=None</code> 随机初始化、染色矩阵初值是手挑 RGB 而非实测 OD、实现的损失有 11 项而非 5 项）——<b>详见 §2 末尾的「StainQuant 代码级复核」卡片</b>。仍存在的不确定：<b>论文里的具体训练配置（真正的 loss 权重与 epoch 数）没有随代码提交</b>，仓库里的 <code>default.yaml</code> 是 demo 遗留，所以「论文的数字怎么复现」仍然无法核实。</li>
+<li><b>我没有在你的真实 IHC 数据上跑过任何实验。</b>§5.1 里关于「0.023 是秩亏签名」的推断是<b>基于你已报告的实测数字做的理论分析</b>，它是高置信度假设，但<b>必须由 E0.1 证伪</b>。可证伪的预测已经写在 §5.1 里。</li>
+<li><b>「878.49 M 可训练参数」是按 <code>train.py</code> L76–82 的 <code>param_dict</code> 逻辑推出来的</b>，实测的是参数量本身；但训练时的实际显存我没测（需要真实数据与 A100/H20）。</li>
+<li><b>MCCL 的完整方法没读到</b>（Springer 页面被 Cloudflare 拦截，ACM 页面是付费墙）。我只拿到摘要级信息「introduces the E channel from H&amp;E」。<b>所以「E 作第三通道」这个先例的强度是「摘要级」。</b></li>
+</ul>
+</div>
+
+<h2 id="s11r"><span class="num">11</span>文献与代码链接</h2>
+
+<h3>11.1 核心（本报告直接依赖）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>标识</th><th>链接</th><th>本报告用到它的哪一点</th></tr></thead>
+<tbody>
+<tr><td><b>StainFuser</b></td><td>arXiv 2403.09302</td><td><a href="https://arxiv.org/abs/2403.09302">arXiv</a> · <a href="https://github.com/R-J96/stainFuser">GitHub</a> · <a href="https://huggingface.co/R-J/StainFuser">HF 权重</a> · <a href="https://huggingface.co/datasets/R-J/SPI-2M">SPI-2M 数据</a></td><td>§1 全部；架构、condition、训练/推理路径</td></tr>
+<tr><td><b>StainQuant</b><br><span class="small">Beer-Lambert Autoencoder</span></td><td>arXiv 2601.11336<br><span class="small">Eastwood, McKee, Hu, Tejpar, Minhas</span></td><td><a href="https://arxiv.org/abs/2601.11336">arXiv</a> · <a href="https://github.com/measty/StainQuant">GitHub</a></td><td>§2.1 / §4.4：可微 BL 渲染器 + 可学习 stain matrix + 5 项无监督损失；「绝对定量」的限制</td></tr>
+<tr><td><b>CCPL</b><br><span class="small">Cross-channel Perception Learning</span></td><td>arXiv 2506.07559</td><td><a href="https://arxiv.org/abs/2506.07559">arXiv</a></td><td>§2.1 / §6.2：H+DAB 双通道分解、跨通道相关性、逐单通道 FOD</td></tr>
+<tr><td><b>Ruifrok &amp; Johnston 2001</b></td><td>Anal Quant Cytol Histol 23(4):291–299<br>PMID 11531144</td><td><a href="https://europepmc.org/abstract/MED/11531144">Europe PMC</a></td><td>§4：OD 线性性、stain matrix、残差/背景通道约定、DAB 饱和导致 65% 互污染</td></tr>
+<tr><td><b>PSPStain</b></td><td>MICCAI 2024<br>arXiv 2407.03655</td><td><a href="https://github.com/ccitachi/PSPStain">GitHub</a></td><td>§7.1：PALS / FOD 蛋白感知学习；你的 task baseline</td></tr>
+<tr><td><b>PGVMS</b></td><td>IEEE TMI 2026<br>arXiv 2602.23292</td><td><a href="https://arxiv.org/abs/2602.23292">arXiv</a> · <a href="https://github.com/ccitachi/PGVMS">GitHub</a></td><td>§7.1：prompt-guided 可学习染色 token（解决「推理无参考图」）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>11.2 参考（次要引用）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>工作</th><th>标识</th><th>用处</th></tr></thead>
+<tbody>
+<tr><td>MCCL · Multi-channel Correlation Learning</td><td>ICIC 2025, Springer<br>DOI 10.1007/978-981-96-9863-9_32</td><td>§3.2：「引入 H&amp;E 的 E 通道」作第三通道的先例</td></tr>
+<tr><td>HistDiT</td><td>arXiv 2604.08305</td><td>§2.2：扩散但不换渲染器的对照</td></tr>
+<tr><td>HistDiST</td><td>arXiv 2505.06793</td><td>§2.2 / §9：你的现有代码base</td></tr>
+<tr><td>StainDiffuser</td><td>arXiv 2403.11340</td><td>§7.1：marker-wise 条件</td></tr>
+<tr><td>UNIStainNet</td><td>arXiv 2603.12716</td><td>§7.1：64-d FiLM 条件调制</td></tr>
+<tr><td>Macenko 2009</td><td>IEEE ISBI 2009, DOI 10.1109/ISBI.2009.5193250</td><td>§4.2：数据驱动 stain matrix（逐图 vs 队列级）</td></tr>
+<tr><td>Vahadane 2016</td><td>IEEE TMI 35(8):1962–1971</td><td>§4.2：SNMF 稀疏染色分离</td></tr>
+<tr><td>IHC Profiler</td><td>PLoS ONE 2014;9(5):e96801</td><td>§7.3：DAB-OD 四档阈值（0/1+/2+/3+）</td></tr>
+<tr><td>BCD-net · 深度盲颜色解卷积</td><td>2023</td><td>§4.2：深度解混作为数据驱动 M 的选项</td></tr>
+<tr><td>AdvLIF</td><td>J Imaging Inform Med 2026<br>DOI 10.1007/s10278-026-02320-4</td><td>§10：一个<b>反面提醒</b>——它自称「physics-inspired」但用的是 reaction–diffusion / Poisson 算子，<b>不是</b> Beer–Lambert 光学模型。「physics-inspired」这个词在文献里被滥用了，引用时要看清指的是哪种物理</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>11.3 本地相关报告（已有，不要重复做）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>文件</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr><td><code>04_IHC评价与分级/IHC_scoring_literature_review.md</code></td><td>§4 的 colour deconvolution / OD / stain matrix 数学已完整覆盖；§1.2(e) 已经记录了「残差/背景通道」这个约定</td></tr>
+<tr><td><code>04_IHC评价与分级/IHC蛋白表达分级与虚拟染色评价_系统调研报告.md</code></td><td>§7.3 的 H-score 定义、0/1+/2+/3+ 的逐 biomarker 定义、Part 6「已有虚拟染色论文如何评价蛋白表达」</td></tr>
+<tr><td><code>04_IHC评价与分级/virtual_staining_evaluation_review.md</code></td><td>§7.3 的「哪些论文真的评价了蛋白表达」Tier A/B/C 清单</td></tr>
+<tr><td><code>05_伪影与失败模式/HistDiST_DBDCE_代码审查_实现缺陷与崩溃归因.html</code></td><td>§9 迁移清单的全部依据（三个 P0、scheme B 的四个后果、日志缺字段）</td></tr>
+<tr><td><code>05_伪影与失败模式/扩散模型黑团伪影_成因诊断与解决方案.html</code></td><td>§8.5 的「出现局部黑团」一行；以及「clamp 把可检测的失败变成不可检测的失败」这个反复出现的模式</td></tr>
+<tr><td><code>01_调研报告/HE2IHC_Diffusion_Research/HE2IHC_Reproducible_Diffusion_Virtual_Staining_Recommendation.html</code></td><td>§1.4 原因 5 的对照：那份报告里 Star-Diff 排第一、HistDiST 排第三。<b>本报告把 StainFuser 作为新候选引入，它不在那份报告的评估范围内</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<hr>
+
+<div class="box key">
+<div class="bt">最后：三句话总结</div>
+<ol>
+<li><b>你的方案里最有价值的是「生成空间 = 染色浓度 + 可微物理渲染」这一条</b>——它有先例（StainQuant）、有物理依据（Beer–Lambert 线性性）、有明确空白（没人把它放进扩散），且完全可复现。</li>
+<li><b>最需要立刻改的是 <code>[H, DAB, H]</code> 和 StainFuser 的 condition 设计</b>——前者数学上不成立（rank 2 + attention 不可辨识），后者在 H&amp;E→IHC 上缺少推理输入，而且两条 condition 通道都在泄漏颜色。</li>
+<li><b>最该先做的是 E0.1 那个几十行的闭环测试</b>——它用一个纯 CPU 的实验，就能决定「染色空间生成」这条路值不值得走。在你已有的 0.023 这个数字上，它有一个明确的可证伪预测。</li>
+</ol>
+</div>
+
+
+
+</main>
+</div>
+</body>
+</html>

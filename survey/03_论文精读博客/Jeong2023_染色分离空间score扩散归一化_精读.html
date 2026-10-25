@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeong 2023 精读 · 染色分离空间 score 扩散归一化</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Paper Deep-Read · 01/03</div>
+<div class="sub">染色分离空间 + score 扩散<br>H&amp;E→H&amp;E 归一化 · 2026-10-11</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 论文事实卡片（含题录更正）</a>
+<a class="l1" href="#s2">2 · 它到底在解决什么问题</a>
+<a class="l1" href="#s3">3 · 核心方法逐件拆解</a>
+<a class="l2" href="#s3-1">3.1 三段式管线</a>
+<a class="l2" href="#s3-2">3.2 mistransfer 为什么会发生</a>
+<a class="l2" href="#s3-3">3.3 SNMF 为什么能修好它</a>
+<a class="l2" href="#s3-4">3.4 overlapped moving window</a>
+<a class="l1" href="#s4">4 · 实验与消融（本轮无法报告）</a>
+<a class="l1" href="#s5">5 · 与你项目的关系</a>
+<a class="l1" href="#s6">6 · 引用策略：怎么引、别怎么引</a>
+<a class="l1" href="#s7">7 · 证据边界与未核实清单</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">论文精读 · 01/03 · 扩散在染色分量空间的先例</div>
+<h1>Jeong et al. 2023 —— 在染色分离后的分量空间做 score 扩散归一化<br><span class="small">Stain normalization using score-based diffusion model through stain separation and overlapped moving window patch strategies</span></h1>
+<p class="desc">对象：你 related work 里准备引的第一篇「扩散在染色分离空间操作」的先例。本报告逐段核对了它的题录与摘要，并把「mistransfer 为什么会发生、SNMF 为什么能修」这两个机制讲透；<b>但全文在付费墙后，本轮未获取，因此方法细节与消融实验无法报告</b>——这一项我在第 4 节和第 7 节显式标为空白，并给出你拿到 PDF 后的核对清单。</p>
+<div class="meta"><span>Comput. Biol. Medicine 2023</span><span>vol.152 p.106335</span><span>DOI 10.1016/j.compbiomed.2022.106335</span><span>PMID 36473344</span><span class="b bad">全文未获取</span><span class="b medium">摘要级精读</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key">
+<div class="bt">一句话：它的价值是「架构先例」，不是「任务先例」——而且你引它时必须把这两件事分清</div>
+<p>这篇做的是 <b>H&amp;E → H&amp;E 的染色归一化</b>（同染料、跨中心风格对齐），<b>不是 H&amp;E→IHC 生成</b>。任务不同、输出空间不同、监督目标不同，它<b>不能</b>被当成「虚拟 IHC 生成的先例」。</p>
+<p>它真正的价值只有一条，但这条很硬：<b>它建立了「先把染色解混成分量，再在分量空间里跑扩散」这个骨架</b>——而这恰好是你浓度域方案的同构前身。你引它的正确姿势是「扩散在染色分量空间操作」的最早先例之一，而不是「已有工作做过 H&amp;E→IHC」。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">本轮最重要的一条诚实标注：这篇我读不到全文</div>
+<p>Elsevier 付费墙，Unpaywall 查询 <code>is_oa</code> 为空、无任何 OA 存放点（作者自存、机构库、预印本都没有）。因此：</p>
+<ul>
+<li><b>能核实的</b>：完整题录（Crossref + PubMed 双源一致）、摘要（逐字）、Highlights（搜索快照片段）、以及它在文献中的位置。</li>
+<li><b>不能核实的</b>：扩散的具体形式（NCSN 还是 DDPM？连续时间还是离散步？）、backbone、SNMF 的稀疏正则与超参、moving window 的 overlap 比例与 inpainting 调度、数据集、全部数字、以及<b>你要的消融实验</b>。</li>
+<li><b>本报告第 3 节的机制解释</b>是我从摘要与领域常识推导的<b>机制层解释</b>，不是从原文抄的公式。凡属推断我都标了「推断」。</li>
+</ul>
+</div>
+
+<div class="scroll"><table>
+<thead><tr><th>问题</th><th>判定</th><th>依据</th></tr></thead>
+<tbody>
+<tr><td>它做了 H&amp;E→IHC 生成吗</td><td><span class="b bad">没有</span></td><td>标题与摘要逐字：stain normalization，同染料归一化；输入输出都是 H&amp;E</td></tr>
+<tr><td>它在「染色分量空间」跑扩散吗</td><td><span class="b high">是</span></td><td>摘要逐字：SNMF 分解成 H 与 E，再 normalize each stain component</td></tr>
+<tr><td>它是「扩散 + 染色分离」的最早先例之一吗</td><td><span class="b high">是</span></td><td>2022-11 上线、2023 年 vol.152，早于 TT-SaD(2024) 与 SAStainDiff(2025)</td></tr>
+<tr><td>它需要 reference patch/slide 吗</td><td><span class="b medium">摘要暗示不需要</span></td><td>摘要把「必须依赖 reference patch/slide」列为<b>传统方法的缺点</b>，暗示本方法不依赖</td></tr>
+<tr><td>它的消融实验是什么</td><td><span class="b bad">本轮无法报告</span></td><td>全文未获取</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s1"><span class="num">1</span>论文事实卡片（含题录更正）</h2>
+
+<div class="card">
+<div class="ch"><div><div class="title">Stain normalization using score-based diffusion model through stain separation and overlapped moving window patch strategies</div><div class="v">Computers in Biology and Medicine, vol. 152, p. 106335, 2023 年 1 月</div></div><div><span class="b high">题录已核实</span> <span class="b low">全文未核实</span></div></div>
+<div class="body">
+<table style="min-width:520px">
+<tbody>
+<tr><td style="width:150px"><b>期刊</b></td><td>Computers in Biology and Medicine（Elsevier）</td></tr>
+<tr><td><b>卷 / 页</b></td><td>vol. 152, 106335（Crossref 与 PubMed 一致）</td></tr>
+<tr><td><b>DOI</b></td><td><code>10.1016/j.compbiomed.2022.106335</code></td></tr>
+<tr><td><b>PMID</b></td><td>36473344</td></tr>
+<tr><td><b>上线</b></td><td>2022 年 11 月（ResearchGate 标注）；正式卷期 2023-01</td></tr>
+<tr><td><b>作者</b></td><td>Jiheon Jeong, Ki Duk Kim, Yujin Nam, Cristina Eunbee Cho, Heounjeong Go, Namkug Kim</td></tr>
+<tr><td><b>开放获取</b></td><td><span class="b bad">无</span>（Unpaywall 无 OA 存放点）</td></tr>
+<tr><td><b>代码</b></td><td>未提及</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 题录更正：你给的作者名有 4 处与官方记录不符</div>
+<p>我用 Crossref API 与 PubMed 双源交叉核对（两者逐字一致），与你的版本对比如下。<b>引用前请务必改掉</b>——作者名写错在 related work 里是最容易被审稿人抓的低级错误：</p>
+<div class="scroll"><table>
+<thead><tr><th>你写的</th><th>官方记录</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>Jiheon Jeong</td><td>Jiheon Jeong</td><td><span class="b high">正确</span></td></tr>
+<tr><td>Kyoung Duck Kim</td><td><b>Ki Duk Kim</b></td><td><span class="b bad">需更正</span></td></tr>
+<tr><td>Yoonho Nam</td><td><b>Yujin Nam</b></td><td><span class="b bad">需更正</span></td></tr>
+<tr><td>Chang Eun Cho</td><td><b>Cristina Eunbee Cho</b></td><td><span class="b bad">需更正</span></td></tr>
+<tr><td>Hyunsook Go</td><td><b>Heounjeong Go</b></td><td><span class="b bad">需更正</span></td></tr>
+<tr><td>Namkug Kim</td><td>Namkug Kim</td><td><span class="b high">正确</span></td></tr>
+</tbody>
+</table></div>
+<p class="small">核对依据：Crossref <code>api.crossref.org/works/10.1016/j.compbiomed.2022.106335</code> 与 NCBI E-utilities <code>efetch db=pubmed id=36473344</code>，两者给出的姓氏与名完全一致。</p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>它到底在解决什么问题</h2>
+
+<p>先把问题背景拆成四层，这样你才能判断它和你的任务到底差多远。</p>
+
+<h3>2.1 问题：H&amp;E 染色没有标准</h3>
+<p>摘要逐字给了三条现实约束：</p>
+<ul>
+<li>H&amp;E 里苏木素与伊红的<b>配比没有标准化</b>（"the dosage ratio of hematoxylin to eosin in H&amp;E staining has not been standardized yet"）；</li>
+<li>切片会以不同速度<b>褪色</b>（"H&amp;E stains fade out at various speeds"）；</li>
+<li>因此在<b>长期研究</b>与<b>多中心研究</b>中，染色归一化是训练 DL 模型的关键预处理步骤。</li>
+</ul>
+<p>注意这里的动机是「<b>为下游分类/检测模型做预处理</b>」——不是「生成一张能替代染色的图」。这个动机差异决定了后面所有技术选择。</p>
+
+<h3>2.2 既有方法的三类缺陷（摘要逐条给出）</h3>
+<div class="scroll"><table>
+<thead><tr><th>方法族</th><th>摘要里的原话缺陷</th><th>中文</th></tr></thead>
+<tbody>
+<tr><td>传统归一化</td><td>"collapsing in the structure and/or texture of tissue"；"must require a reference patch or slide"</td><td>组织结构与纹理崩塌；且必须有一张参考 patch/slide</td></tr>
+<tr><td>DL 方法</td><td>"a risk of overfitting and/or grid artifacts"</td><td>过拟合风险 + 网格伪影</td></tr>
+<tr><td>score-based 扩散（他们自己的第一步）</td><td>"mistransfer, in which the model confuses hematoxylin with eosin"</td><td>误迁移：把苏木素和伊红搞混</td></tr>
+</tbody>
+</table></div>
+
+<div class="box teal">
+<div class="bt">这一节对你最重要的信息：他们踩到的坑和你可能踩的坑是同一个</div>
+<p>他们先做了纯扩散，然后发现<b>扩散的高多样性反而成了负担</b>——模型会在「把这块染成 H」和「把这块染成 E」之间摇摆。这和你做 DAB 生成时的风险是同一类：<b>生成模型的多样性 vs 物理量的唯一性</b>。他们在分量空间解决它，你在浓度域 + 物理渲染解决它。这是你叙事台阶的第一级。</p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>核心方法逐件拆解</h2>
+
+<div class="box warn">
+<div class="bt">阅读本节的正确方式</div>
+<p>下面的公式与实现细节，凡我没有从原文读到的，一律标「<b>推断</b>」。摘要能确定的只有三件事：<b>SNMF 分离</b>、<b>分量空间做 score 扩散归一化</b>、<b>overlapped moving window 拼 WSI</b>。我在这里做的是「把这三个词翻译成机制」，帮你判断它到底能不能撑起你要引的那句话。</p>
+</div>
+
+<h3 id="s3-1">3.1 三段式管线（摘要可确定）</h3>
+<pre><code>H&amp;E RGB patch
+   │
+   ├─[1] SNMF 染色分离 ──► 分量 A（≈H 苏木素密度）
+   │                      └► 分量 B（≈E 伊红密度）
+   │
+   ├─[2] 在【每个分量上分别】跑 score-based 扩散归一化
+   │       A ──► score diffusion ──► Â_norm
+   │       B ──► score diffusion ──► B̂_norm
+   │
+   ├─[3] 分量重组 ──► 归一化后的 H&amp;E patch
+   │
+   └─[4] WSI 级：overlapped moving window patch 拼接
+           （用 inpainting 把重叠窗口缝合，避免网格伪影）</code></pre>
+<p>三段里，<b>[2] 是「扩散」，[1] 是「让扩散不犯错的条件」，[4] 是「让 WSI 级结果不出伪影的工程」</b>。你在 related work 里要引的是 [1]+[2] 的组合，不是 [4]。</p>
+
+<h3 id="s3-2">3.2 mistransfer 为什么会发生（机制解释，推断）</h3>
+<p>摘要把原因归给扩散的 "high diversity nature"。翻译成机制：</p>
+<div class="formula">score-based 扩散学的是 p(x) 的 score ∇<sub>x</sub>log p(x)，而 p(x) 是<b>多模态</b>的</div>
+<p>在 RGB 空间里，「深紫色区域」既可以是<b>强 H 弱 E</b>，也可以是<b>强 E 弱 H 的某种组合</b>——它们在 RGB 上的观感可以很接近，但染色成分完全不同。于是：</p>
+<ul>
+<li>归一化的目标应该是<b>逐染料的</b>（H 归到 H 的参考分布、E 归到 E 的参考分布）；</li>
+<li>但在 RGB 空间训练时，模型只看到「一个 RGB 像素」，它无法区分这两种解释；</li>
+<li>当参考目标像素与输入像素在 RGB 上接近、在成分上不同时，扩散就会<b>把 E 的成分搬到 H 上</b>——这就是 mistransfer。</li>
+</ul>
+<div class="box key">
+<div class="bt">一句话总结这个病根：RGB 是一个「多对一」的投影，丢失了成分标签</div>
+<p>Beer–Lambert 的混合是 <code>v = w·h</code>（w 是 3×r 的染色矩阵，h 是 r 维密度）。从 <code>(w, h)</code> 到 RGB 是<b>多对一</b>的：不同的 (w,h) 组合可以渲染出几乎相同的 RGB。在一个已经丢失了成分信息的空间里要求模型「保持成分正确」，本质上是要求它解一个欠定问题。</p>
+</div>
+
+<h3 id="s3-3">3.3 SNMF 为什么能修好它（机制解释，推断）</h3>
+<p>SNMF = <b>Sparse</b> Non-negative Matrix Factorization，稀疏非负矩阵分解。它做的事情是：</p>
+<div class="formula">OD = M · C &nbsp;&nbsp;→&nbsp;&nbsp; 解出 C = [c<sub>H</sub>, c<sub>E</sub>]（非负、稀疏）</div>
+<p>「稀疏」这一项是关键：它假设<b>每个像素主要由少数几种染料贡献</b>（一个像素要么主要是核（H），要么主要是胞质（E），很少是两者等量）。这个先验把欠定问题变成了可解问题。</p>
+<p>然后关键动作是：<b>把「归一化」这个任务，从 RGB 空间搬到分量空间</b>。于是：</p>
+<div class="scroll"><table>
+<thead><tr><th></th><th>在 RGB 空间归一化</th><th>在分量空间归一化</th></tr></thead>
+<tbody>
+<tr><td>模型要回答的问题</td><td>「这个像素该是什么颜色」</td><td>「H 密度该是多少、E 密度该是多少」</td></tr>
+<tr><td>条件是否充分</td><td>不充分（多对一，成分不可辨）</td><td><b>充分</b>（分量标签已由 SNMF 给定）</td></tr>
+<tr><td>mistransfer 是否可能</td><td>可能（H/E 可互换）</td><td><b>被结构性排除</b>（两个分量分别处理，不共享参数通道）</td></tr>
+<tr><td>是否需要 reference</td><td>——</td><td>不需要（目标是分量分布，不是某张参考图）</td></tr>
+</tbody>
+</table></div>
+<div class="box good">
+<div class="bt">这就是你要引的那句话的准确形式</div>
+<p>不要说「Jeong 用扩散做了染色归一化，所以扩散也能做虚拟染色」。要说：</p>
+<p><b>「Jeong et al. 指出 score 扩散的高多样性会导致染料误迁移，并证明把生成过程约束在染色分离后的分量空间可以结构性消除该问题——这为『在物理/成分空间而非 RGB 空间做生成』提供了最早的扩散侧证据。」</b></p>
+<p>这句话是可核实的（摘要逐字支持），而且正好是你叙事台阶的第一级。</p>
+</div>
+
+<h3 id="s3-4">3.4 overlapped moving window 与 grid artifact（机制解释，推断）</h3>
+<p>WSI 太大，必须切 patch 推理。两种做法：</p>
+<ul>
+<li><b>独立 patch 推理</b>：每个 patch 单独归一化再拼。问题：相邻 patch 的归一化结果在边界上不一致 → 拼出来是<b>棋盘状网格伪影</b>。这就是摘要里 DL 方法的 "grid artifacts"。</li>
+<li><b>overlapped moving window + inpainting</b>：窗口之间有重叠，用 inpainting 让新窗口的内容与已固定的重叠区<b>一致</b>，从而缝合边界。</li>
+</ul>
+<p>为什么用 inpainting：因为扩散模型天然就能做 inpainting（把重叠区当作「已知区域」条件化，只生成非重叠区）。这样既保证了全局一致性，又不需要额外的后处理融合。这是「用扩散的固有能力顺手解决工程问题」的一个漂亮例子。</p>
+<div class="box teal">
+<div class="bt">这一条对你的直接启示</div>
+<p>如果你未来要在 WSI 级部署浓度域扩散，你会遇到<b>完全相同</b>的问题：每个 patch 的 DAB 生成可能在边界上不连续。这篇提供了一个已验证的解法骨架（重叠 + 把已生成区域当条件）。库内《浓度域OD域虚拟染色》报告讨论的是「表示空间」，没有覆盖 WSI 级拼接这一层——这是它给你补的一块。</p>
+</div>
+
+<h2 id="s4"><span class="num">4</span>实验与消融（本轮无法报告）</h2>
+
+<div class="box stop">
+<div class="bt">诚实声明：这一节是空的，不是我漏了，是我拿不到</div>
+<p>你专门要的「消融实验」，这篇我<b>无法报告</b>。全文在 Elsevier 付费墙后，Unpaywall 显示<b>不存在任何开放获取版本</b>。搜索能拿到的只有摘要与 Highlights 片段，不足以还原实验设计。我不会根据同组其他论文去推测它的消融——那是编造。</p>
+</div>
+
+<h3>4.1 拿到全文后，请优先核对这 8 个问题</h3>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>要核对的问题</th><th>为什么它对你的论文重要</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>扩散是 <b>NCSN</b>（连续时间 score matching）还是 <b>DDPM</b>？</td><td>决定你在 related work 里怎么描述它的「score-based」——这两个词在 2022 年的语境下含义不同</td></tr>
+<tr><td>2</td><td>归一化的<b>参考目标</b>从哪来？（固定参考图？还是源域分布统计？）</td><td>决定它是否真的「不需要 reference」——摘要暗示不需要，需要原文确认</td></tr>
+<tr><td>3</td><td>SNMF 的<b>稀疏正则</b>形式与 λ 取值</td><td>这是它「分量空间」成立的前提；如果你的浓度域解混用了别的正则，需要说明差异</td></tr>
+<tr><td>4</td><td>两个分量是<b>共享一套扩散网络</b>还是<b>各自一套</b>？</td><td>决定「结构性排除 mistransfer」这个论断到底有多强</td></tr>
+<tr><td>5</td><td>moving window 的 <b>overlap 比例</b>与 inpainting 调度</td><td>你未来 WSI 部署的直接参数参考</td></tr>
+<tr><td>6</td><td><b>消融表</b>：有没有做「RGB 空间 vs 分量空间」的受控对照？</td><td>★ 这是最关键的一条。如果有，它就是你的直接前例；如果没有，说明「分量空间更好」在这篇里<b>没有被受控证明</b>，你的空白更大</td></tr>
+<tr><td>7</td><td>数据集与评价指标（PSNR/SSIM 之外还有什么）</td><td>判断它的数字能否和你后续要引的 SAStainDiff 直接对比</td></tr>
+<tr><td>8</td><td>有没有 <b>mistransfer 的定量度量</b></td><td>如果有，是你评价体系里可以借用的一个指标</td></tr>
+</tbody>
+</table></div>
+<p class="small">获取路径建议：机构订阅 / 图书馆文献传递 / 直接邮件问通讯作者 Namkug Kim（首尔峨山医疗中心 &amp; 蔚山大学医学院，该组有公开通讯习惯）。</p>
+
+<h2 id="s5"><span class="num">5</span>与你项目的关系</h2>
+
+<div class="grid2">
+<div class="mini"><div class="mt">同构的地方（可以借）</div>
+<p>① <b>「先分离、再在分量空间生成」的骨架</b>——它的 SNMF 分量 ≈ 你的浓度域 C。</p>
+<p>② <b>对扩散多样性的警惕</b>——它用结构约束消除，你用物理渲染闭环消除。</p>
+<p>③ <b>WSI 级拼接</b>——重叠 + 条件生成，你可以直接复用。</p>
+</div>
+<div class="mini"><div class="mt">不同构的地方（不能借）</div>
+<p>① 任务是 <b>H&amp;E→H&amp;E</b>，输出仍是 H&amp;E；你是 H&amp;E→IHC。</p>
+<p>② 它是 <b>归一化</b>（有明确目标风格），你是<b>生成</b>（无配对真值）。</p>
+<p>③ 它没有 <b>物理渲染闭环</b>（不保证 RGB→C→RGB 恒等）。</p>
+<p>④ 它没有<b>表达量控制</b>，也没有 marker-specific 的概念。</p>
+</div>
+</div>
+
+<div class="box key">
+<div class="bt">可迁移性判定：可迁移「骨架」，不可迁移「目标」</div>
+<div class="scroll"><table>
+<thead><tr><th>模块</th><th>判定</th><th>理由</th><th>改动成本</th><th>可复现性</th></tr></thead>
+<tbody>
+<tr><td>染色解混成分量</td><td><span class="b high">已在你方案内</span></td><td>你的浓度域方案本来就做这一步（Ruifrok / Macenko / Vahadane 工具箱）</td><td>—</td><td><span class="b high">高</span></td></tr>
+<tr><td>分量空间做生成</td><td><span class="b high">成立</span></td><td>这是你方案的核心，且此篇提供了扩散侧先例</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>用 SNMF 的稀疏先验</td><td><span class="b medium">可选</span></td><td>你的 DAB 通道本身稀疏（阳性区域局部），稀疏先验可能有帮助；但会与你的非负参数化设计耦合，需单独验证</td><td>中</td><td><span class="b medium">中</span></td></tr>
+<tr><td>overlapped moving window</td><td><span class="b high">后置可迁移</span></td><td>只在 WSI 级部署时需要；patch 级实验用不到</td><td>中</td><td><span class="b high">高</span></td></tr>
+<tr><td>它的归一化目标函数</td><td><span class="b bad">不要搬</span></td><td>归一化目标 ≠ 生成目标；搬过来会让你的模型退化成「往参考风格靠」而不是「生成正确的表达分布」</td><td>—</td><td>—</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<h2 id="s6"><span class="num">6</span>引用策略：怎么引、别怎么引</h2>
+
+<div class="grid2">
+<div class="mini"><div class="mt" style="color:var(--green)">✓ 可以这么引</div>
+<p>「Score-based 扩散在染色归一化中已显示出结构保持能力，但 Jeong et al. 同时指出其高多样性会导致染料误迁移（mistransfer），并需借助染色分离将生成约束在分量空间 [Jeong 2023]。这提示在虚拟染色中，将生成过程锚定在物理可解释的分量空间（如光学密度 / 浓度域）是必要的而非可选的。」</p>
+</div>
+<div class="mini"><div class="mt" style="color:var(--red)">✗ 不要这么引</div>
+<p>「已有工作 [Jeong 2023] 将扩散模型用于虚拟染色 / H&amp;E→IHC 生成」——<b>事实错误</b>，它做的是同染料归一化。</p>
+<p>「[Jeong 2023] 证明在分量空间做扩散优于 RGB 空间」——<b>在拿到全文、确认它有这个受控消融之前，不能说</b>。</p>
+</div>
+</div>
+
+<h3>6.1 同一路线的后续：SAStainDiff（已核实存在）</h3>
+<div class="card">
+<div class="ch"><div><div class="title">SAStainDiff: Self-supervised stain normalization by stain augmentation using denoising diffusion probabilistic models</div><div class="v">Huaishui Yang 等 · Biomedical Signal Processing and Control (BSPC), 2025</div></div><div><span class="b high">存在性已核实</span> <span class="b low">内容未精读</span></div></div>
+<div class="body"><p>你提到的「Yang et al. 的 SAStainDiff（自监督 DDPM 归一化）」确认存在，且<b>有官方代码</b>：<code>github.com/yhuaishui/SAStainDiff</code>。它明确用 DDPM + stain augmentation + rescheduled sampling。建议在引 Jeong 时并列提及，构成「染色分离 + 扩散」这条线的时间纵深。</p></div>
+</div>
+
+<h2 id="s7"><span class="num">7</span>证据边界与未核实清单</h2>
+
+<div class="scroll"><table>
+<thead><tr><th>条目</th><th>状态</th><th>来源 / 依据</th></tr></thead>
+<tbody>
+<tr><td>标题、期刊、卷、页、年</td><td><span class="b high">已核实</span></td><td>Crossref API + PubMed E-utilities，双源一致</td></tr>
+<tr><td>DOI / PMID</td><td><span class="b high">已核实</span></td><td>同上</td></tr>
+<tr><td>作者姓名（6 人）</td><td><span class="b high">已核实</span></td><td>Crossref + PubMed 双源一致；<b>与你给的版本有 4 处不符</b></td></tr>
+<tr><td>摘要全文</td><td><span class="b high">已核实</span></td><td>PubMed XML 与 Semantic Scholar API 逐字一致</td></tr>
+<tr><td>SNMF 分离 + 分量空间归一化 + moving window 三段结构</td><td><span class="b high">已核实</span></td><td>摘要逐字</td></tr>
+<tr><td>扩散的具体形式（NCSN / DDPM / 连续时间）</td><td><span class="b bad">未核实</span></td><td>全文未获取</td></tr>
+<tr><td>backbone、训练细节、超参</td><td><span class="b bad">未核实</span></td><td>全文未获取</td></tr>
+<tr><td>数据集、评价指标、全部数字</td><td><span class="b bad">未核实</span></td><td>全文未获取</td></tr>
+<tr><td><b>消融实验</b></td><td><span class="b bad">未核实（本轮无法报告）</span></td><td>全文未获取</td></tr>
+<tr><td>「不需要 reference」这一条</td><td><span class="b medium">摘要暗示</span></td><td>摘要把「必须依赖 reference」列为传统方法的缺点，属间接证据，非直接陈述</td></tr>
+<tr><td>第 3 节的机制解释（mistransfer 成因、SNMF 如何消除）</td><td><span class="b medium">领域推断</span></td><td><b>不是</b>原文的公式或论证，是基于摘要与 Beer–Lambert 线性代数的机制层解释。引用时请勿当作原文主张</td></tr>
+<tr><td>SAStainDiff 的存在与代码库</td><td><span class="b high">已核实</span></td><td>Elsevier BSPC 2025 + GitHub 官方仓库</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+<div class="bt">给下一次对账的人的说明</div>
+<p>本报告是<b>摘要级精读</b>，不构成对 Jeong 2023 方法细节或消融的引用依据。拿到 PDF 后请回填第 4 节的 8 个问题，并把本节「未核实」项逐条升级为「已核实」——<b>不要静默删除</b>，保留纠错痕迹。</p>
+</div>
+
+<div class="foot">
+<p><b>Jeong et al. 2023 精读</b> · 三篇精读之一 · 生成于 2026-10-11 · 资料库分类：03_论文精读博客</p>
+<p>核实工具：Crossref REST API、NCBI E-utilities (PubMed)、Semantic Scholar Graph API、Unpaywall API。全文获取状态：<b>失败（Elsevier 付费墙，无 OA 存放点）</b>。</p>
+<p>相关报告：《浓度域OD域虚拟染色 —— 方法级文献地图与 Beer–Lambert 渲染桥》（本报告在「表示空间」这一层与它衔接）、《扩散主损失与辅助损失的梯度冲突 —— 机制分析》。</p>
+</div>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>学术英语 · 论文英译中的方法与时态句式要点</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"学术英语 · 论文英译中的方法与时态句式要点","date":"2026-10-24","tags":["学习笔记","英语/雅思"],"category":"学习笔记","summary":"英文标题按「中心名词—of 限定—via 手段—for 目的」定位后逆向展开，中文把手段与目的整体前置，方法名缩写原形保留、首现补全称；时态约定是：领域长期状态用现在完成时，他人具体研究用过去时、方法共性用一般现在时，本文方法与图表描述一律一般现在时，结论段回到现在完成时；病理描述中 `is observed` 不译「被观察到」，而按中文报告体写成「未见明显炎性细胞浸润」；另附染色与形态术语中英对应、被纠正过的搭配错误清单与可复用句式模板。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>学术英语 · 论文英译中的方法与时态句式要点</h1>
+<div class="meta">学习笔记 · 英语/雅思 · 整理自豆包对话 豆包对话 · 论文标题与引言英译中、病理描述翻译、学术与竞赛写作批改整理</div>
+<h1>学术英语 · 论文英译中的方法与时态句式要点</h1>
+<h2>一、概述</h2>
+<p>本笔记只做一件事：<strong>把英文学术论文读成通顺的中文，再把中文思路还原成符合英语界惯例的句子</strong>，不重复已单独成篇的备考计划、词汇清单与刷题内容。材料来自四类场景：论文标题与摘要的逐句翻译、引言（Introduction）与相关工作（Related Work）的论证段落、肾组织切片病理图像描述的英译中，以及写作稿被逐条批改时暴露的搭配与时态问题。翻译与写作在同一条链上：翻译时看清「谁在什么时候做了什么、语气多强」，写作时才知道该用哪个时态、哪一层限定。原文例证一律控制在单句或半句以内并注明出处；原料中的个人往来语句、机构与人名不入本笔记，题号与分数已剥除。</p>
+<h2>二、标题与摘要：名词化短语的还原顺序</h2>
+<h3>2.1 先定位中心名词，再逆向展开</h3>
+<p>英文学术标题几乎都是一个<strong>超长名词短语</strong>，没有谓语动词。中文是「限定成分在前、中心词在后」，英文恰好相反：中心词在最前，限定成分一路往后堆。所以译标题的第一步不是逐词对译，而是<strong>找到中心名词，再把它后面的介词短语整体搬到前面</strong>。</p>
+<table>
+<tr><th>成分</th><th>在标题中的作用</th><th>原文示例</th><th>中文处理</th></tr>
+<tr><td>中心名词</td><td>任务本体</td><td>Segmentation、Pre-training</td><td>落在中文句末，作「分割」「预训练」</td></tr>
+<tr><td>前置复合修饰</td><td>任务的多个属性</td><td>Multi-Stained Multi-Tissue</td><td>拆成并列定语「多染色多组织」</td></tr>
+<tr><td><code>of</code> 短语</td><td>对象与所属</td><td>of Kidney Histology Images</td><td>译为「肾脏组织学图像的」，置于任务前</td></tr>
+<tr><td><code>via</code> 短语</td><td>手段与框架</td><td>via Generative Self-Supervised Meta-Learning Framework</td><td>从 <code>via</code> 处切断，整块前置为「基于……框架的」</td></tr>
+<tr><td><code>for</code> 短语</td><td>目的与服务领域</td><td>for Language Understanding</td><td>前移为「用于语言理解的」</td></tr>
+<tr><td>冒号前缩写</td><td>方法名</td><td>BERT、MSMTSeg</td><td>原形保留，不译</td></tr>
+</table>
+<p>两例对照（均为完整标题，非正文）：</p>
+<table>
+<tr><th>英文标题</th><th>中文译文</th></tr>
+<tr><td>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding（Devlin 等，2019）</td><td>BERT：用于语言理解的深度双向 Transformer 预训练</td></tr>
+<tr><td>MSMTSeg: Multi-Stained Multi-Tissue Segmentation of Kidney Histology Images via Generative Self-Supervised Meta-Learning Framework</td><td>MSMTSeg：基于生成式自监督元学习框架的肾脏组织学图像多染色多组织分割</td></tr>
+</table>
+<p>第一例的关键是 <code>for</code> 目的短语整体前移，让 <code>Pre-training</code> 回到中文的尾焦点位置；第二例的关键是从 <code>via</code> 一刀切断，把手段成分提到最前、对象短语居中，最终形成「基于 X 的 Y 中的 Z」。此外要压缩「的」字数量，连续三个「的」必须改用「以」「基于」「面向」分担。</p>
+<h3>2.2 <code>based on</code>、<code>via</code>、<code>for</code>、<code>with</code> 怎么断句</h3>
+<p>介词决定句子的逻辑层次，断错一处整句崩塌。五类常见结构的断句位置如下。</p>
+<table>
+<tr><th>结构</th><th>语义关系</th><th>中文引导词</th><th>断句要点</th></tr>
+<tr><td><code>X via Y</code></td><td>以 Y 为手段完成 X</td><td>借助 Y / 基于 Y</td><td>在 <code>via</code> 前切断，Y 整块前置</td></tr>
+<tr><td><code>X based on Y</code>（或 <code>Y-based X</code>）</td><td>X 依托 Y</td><td>以 Y 为基础的 X</td><td><code>based on</code> 与其宾语绝不拆开，视为一个复合形容词</td></tr>
+<tr><td><code>X for Y</code></td><td>X 服务于 Y</td><td>面向 Y 的 X / 用于 Y</td><td>英文尾置、中文前移，避免「分割用于……」</td></tr>
+<tr><td><code>X with Y</code></td><td>X 具备属性 Y</td><td>带 Y 的 X / 具有 Y</td><td>常译为动宾小句，如「具有稳健性」</td></tr>
+<tr><td><code>X in / under Y</code></td><td>场景与条件</td><td>在 Y 条件下的 X</td><td>条件成分可提前成小句，如「在不同染色条件下」</td></tr>
+</table>
+<p>摘要里的「尾重」结构处理同理。例如 <code>we introduce MSMTSeg, a generative self-supervised meta-learning framework for multi-stained multi-tissue segmentation in renal biopsy whole slide images (WSIs)</code>，逗号之后整块是同位语，中文要按「框架—面向什么任务—在什么数据上」重排并拆成两个分句，不能硬塞成一个五十余字的定语。</p>
+<h3>2.3 方法名缩写与专名的三条处理规则</h3>
+<ul><li><strong>方法名缩写一律保留原形</strong>：<code>BERT</code>、<code>MSMTSeg</code>、<code>MAML</code>、<code>CycleGAN</code>、<code>U-Net</code> 不译、不意译，必要时其后补「框架」「网络」等类别词。</li><li><strong>首现展开，复现只留缩写</strong>：<code>whole slide image (WSI)</code> 首次给「全切片图像（WSI）」，之后直接写 WSI；<code>ROI</code> 同此。</li><li><strong>指标与染色名不动</strong>：<code>mDSC</code>、<code>mIoU</code>、<code>PSNR</code>、<code>SSIM</code>、<code>H&amp;E</code>、<code>IHC</code>、<code>DAB</code>、<code>PAS</code>、<code>PASM</code> 保持英文缩写；染色术语写成「Masson 三色染色」「过碘酸六胺银（PASM）」，人名前不加「的」。</li></ul>
+<p>术语记忆也可借力派生后缀：<code>-ize</code>（使动）加 <code>-er</code>（施动者）即「使……的东西」，与 <code>standardize</code>、<code>normalize</code> 同构。</p>
+<h3>2.4 被动转主动，名词化还原为动词</h3>
+<p>摘要与引言里被动句密度极高，中文若逐句保留被动会非常别扭。</p>
+<table>
+<tr><th>英文原句（单句）</th><th>直译会得到的坏译文</th><th>建议译文</th></tr>
+<tr><td>An initial attempt to explore the efficacy of meta-learning on data from two modalities is made by Li et al.</td><td>一个探索元学习在两种模态数据上有效性的初次尝试被由 Li 等人做出</td><td>Li 等人首次尝试探索元学习在两种模态数据上的有效性</td></tr>
+<tr><td>Optimization-based meta-learning techniques gain popularity for their capacity to encode prior knowledge.</td><td>基于优化的元学习技术因它们编码先验知识的能力而获得流行</td><td>这类技术能够编码先验知识，因而受到关注</td></tr>
+<tr><td>The learning rate is set to 10⁻³.</td><td>学习率被设置为 10⁻³</td><td>学习率设置为 10⁻³（中文实验段落惯用无主语句）</td></tr>
+</table>
+<p>三条通用操作：<code>by</code> 短语是真正的施事，提到句首作主语；<code>an attempt to do</code>、<code>the capacity to do</code> 这类名词化结构还原成动词「尝试探索」「能够编码」；英文用被动回避施事时，中文改用无主语句而不是「被」。摘要翻译还有个可复制的<strong>校对方法</strong>：先整段译，再要求「一句英语一句汉语」逐行对齐，能立刻暴露指代不明、连接词漏译与断句失败三类问题。</p>
+<h2>三、引言的论证骨架与指代链</h2>
+<h3>3.1 七步骨架：地位、痛点、谱系、缺口、方案、贡献、展望</h3>
+<p>两篇论文的引言（一面向虚拟染色，一面向多染色多组织分割）段落顺序高度一致，可当写作模板。</p>
+<table>
+<tr><th>骨架环节</th><th>英文信号写法</th><th>中文对应行文</th><th>常用时态</th></tr>
+<tr><td>领域地位</td><td>X serves as the gold standard for…, playing a crucial role in…</td><td>X 是……的金标准，在……中发挥关键作用</td><td>一般现在时</td></tr>
+<tr><td>现实痛点</td><td>a process that is time-consuming and labor-intensive</td><td>这一过程既耗时又费力</td><td>一般现在时</td></tr>
+<tr><td>技术可能性</td><td>This advancement opens up possibilities for…</td><td>这一进展为……开辟了可能</td><td>一般现在时</td></tr>
+<tr><td>既有工作谱系</td><td>Early studies… / Subsequent algorithms… / Later, …</td><td>早期研究……／后续算法……／再之后……</td><td>过去时与现在时并用</td></tr>
+<tr><td>缺口</td><td>However, existing studies…, and often overlook… ；Notably, … have not been exploited</td><td>然而现有研究……，常常忽视……；值得注意的是，……尚未被利用</td><td>一般现在时、现在完成时</td></tr>
+<tr><td>本文方案</td><td>To address these challenges, we introduce X, a … framework for…</td><td>为解决这些挑战，本文提出框架 X，用于……</td><td>一般现在时</td></tr>
+<tr><td>贡献清单</td><td>The main contributions are summarized as follows</td><td>主要贡献总结如下</td><td>一般现在时</td></tr>
+<tr><td>展望</td><td>… presents a promising avenue for further research</td><td>…是进一步研究颇有前景的方向</td><td>一般现在时（<code>presents</code> 陈述本文结论的属性）；真正写「下一步要做」才用将来时或 <code>we plan to</code></td></tr>
+</table>
+<p>缺口环节最值得模仿。英文批评他人工作几乎不写「错了」，而是「关注点偏窄 + 忽略某事 + 仍需某资源」的三段式，中文照搬为「主要关注……，忽视了……，仍需要……」，既有力度又留有余地。</p>
+<h3>3.2 中英文段落的逻辑差异</h3>
+<p>英文段落靠<strong>显式衔接词</strong>和<strong>指代</strong>把句子焊成链条：<code>However</code>、<code>Moreover</code>、<code>Hence</code>、<code>In contrast</code>、<code>Notably</code> 各司其职，读者不必猜句子间关系；中文段落偏<strong>意合</strong>，连接词可省，但省得过狠就会「读着断线」。实操取中间值，把这五个词的译法固定下来，即为中文段落的逻辑节点：「然而」「此外」「因此」「相比之下」「值得注意的是」。</p>
+<p>另一处差异是<strong>信息重量位置</strong>。英文把判断放句首、修饰与证据后置，中文先铺条件再落结论，所以 <code>…a segmentation model grounded in a meta-learning paradigm</code> 这类后置修饰必须提前，否则会出现「构建了一个分割模型，基于元学习范式」这种翻译腔。中文学术行文还偏爱四字格，<code>labor-intensive and time-consuming</code> 写成「劳动密集、耗时耗力」远胜过「费人力且费时间」。</p>
+<h3>3.3 指代链：this、these、such、that 到底指什么</h3>
+<p>指代译错等于逻辑译反。英文的 <code>this</code> 常指<strong>上一整句所描述的事件</strong>，而非某个名词；<code>these</code> 必须能落到一个复数名词上。</p>
+<table>
+<tr><th>指代形式</th><th>出现语境</th><th>实际所指</th><th>翻译处理</th></tr>
+<tr><td>This advancement</td><td>数字病理把切片扫描成 WSI 之后一句</td><td>「扫描成高分辨率全切片图像」这件事</td><td>补出内涵，写成「这一进展」</td></tr>
+<tr><td>a process that is time-consuming</td><td>摘要首句末尾</td><td>「评估多种组织结构」这一过程</td><td>另起分句「这一过程既耗时又费力」</td></tr>
+<tr><td>these CNN-based methods</td><td>列举多项基于 CNN 的工作之后</td><td>上句列举的全部方法</td><td>保留「这些基于 CNN 的方法」，不可简化成「它们」</td></tr>
+<tr><td>such color-processing methods</td><td>前文点名颜色增强、颜色迁移、灰度转换</td><td>三项技术构成的集合</td><td>译作「诸如……等颜色处理方法」</td></tr>
+<tr><td>在这种无监督信息上训练的模型</td><td>前句列举组织形态、颜色风格、上下文内容</td><td>三项固有信息</td><td>指代跨度大时中文重复关键词</td></tr>
+<tr><td>that of education</td><td>倍数表达 four times that of…</td><td>前文的不可数名词 expense</td><td>用 <code>that</code> 替代重复名词，中文可省略</td></tr>
+</table>
+<p><code>this</code> 与 <code>these</code> 的差别也提醒写作纪律：中文写「这一」「这些」时后面必须紧跟一个明确名词，单一个「这」字极易造成指代悬空。</p>
+<h2>四、时态与语态的领域约定</h2>
+<h3>4.1 描述既有工作：过去时、现在完成时、一般现在时的分工</h3>
+<table>
+<tr><th>写作场景</th><th>英文选择</th><th>实例</th><th>中文对应</th></tr>
+<tr><td>领域长期存续的研究状态</td><td>现在完成时</td><td>Learning widely applicable representations of words has been an active area of research for decades.（BERT 一文引言）</td><td><code>has been</code> 译「一直是」，中文补出「已有数十年」的时间跨度</td></tr>
+<tr><td>某团队做过的具体实验</td><td>一般过去时</td><td>译文中「Hermsen 等人使用……训练网络」</td><td>中文不靠动词变形，靠「了」与时间词体现</td></tr>
+<tr><td>既有方法的共性特征</td><td>一般现在时</td><td>existing studies predominantly utilize data from the same modality</td><td>现有研究主要利用同一模态数据</td></tr>
+<tr><td>尚未被填补的缺口</td><td>现在完成时（否定式）</td><td>「尚未利用未标注的、易获取的高分辨率全切片图像来提高分割性能」</td><td>「尚未……」对应 <code>have not been exploited</code></td></tr>
+<tr><td>至今仍成立的结论</td><td>一般现在时</td><td>Color-processing methods are insufficient to make CNNs stain-agnostic.</td><td>颜色处理方法不足以使网络具备染色无关性</td></tr>
+</table>
+<p>分工一句话：<strong>一次性动作归过去时，方法与结论的长期属性归一般现在时，「从过去持续到现在」的领域状态与「至今未完成」的缺口归现在完成时。</strong>被批为「时态逻辑错误」的句子，多数是把这三类混用，例如用现在完成时表达将来的推测。</p>
+<h3>4.2 本文方法、图表与实现细节：一般现在时</h3>
+<ul><li>本文动作一律现在时：<code>we introduce MSMTSeg</code>、<code>Experimental results demonstrate that…</code>。中文写「本文提出」「实验结果表明」，不能加「了」变成完成态。</li><li>参数与设置用一般现在时的被动或无主语句：<code>The learning rate is set to…</code>、<code>SGD is used as an optimizer with a momentum of 0.9</code>。中文取「设置为」「采用……优化器」。</li><li>图表指引用现在时：<code>As shown in Table II, segmentation performance is significantly improved by avoiding…</code>、「见图 1」。表图永远「正在显示」，不写「已显示过」。</li><li>消融与比较动词取强陈述：<code>Our ablation study confirms the effectiveness of each component</code>，用 confirm、demonstrate、outperform，不用含糊的 show。</li></ul>
+<h3>4.3 结果段与讨论段的语气差别</h3>
+<p>结果段陈述事实，讨论段限定判断，英文靠情态词与限定副词区分，中文必须等量传达，不可加码或减码。</p>
+<table>
+<tr><th>语气强度</th><th>英文写法</th><th>中文写法</th></tr>
+<tr><td>强（结果）</td><td>achieve superior and robust performance；confirms the effectiveness</td><td>取得优异且稳健的性能；证实了有效性</td></tr>
+<tr><td>中（讨论）</td><td>not always strictly correlated with…；is expected to improve efficiency</td><td>并不总是与……严格正相关；有望提升效率</td></tr>
+<tr><td>弱（让步与推测）</td><td>remains a continuous challenge；may fail to capture…；it is difficult to</td><td>仍是持续挑战；可能无法捕捉；难以</td></tr>
+<tr><td>批评他人</td><td>mainly focus on…；overlook…；still require…</td><td>主要关注……；忽视了……；仍需要……</td></tr>
+</table>
+<p>两条纪律：其一，<code>significant</code> 译「显著」或「明显」，不译「巨大」，且只在有量化支撑时使用；其二，中文的「证明」要克制，原料里高频出现的是「表明」「凸显」「证实有效性」，其中「凸显」对应 <code>highlight the limitations of…</code>，语气比「说明」强、比「证明」稳。结论段还有一处切换：整篇工作完成后回看用现在完成时，例如 <code>In this study, we have demonstrated the efficacy of using virtual data…</code>；重述方法本身时回到一般现在时，中文可靠「已验证」「本研究提出的」体现这层差别。</p>
+<h3>4.4 语态选择与全文一致性</h3>
+<p>英文方法描述偏被动，好处是把读者注意力钉在对象上；但一段内被动堆叠过密，中文读者就找不到施事。要点明谁做的，用 <code>by</code> 短语前置转主动；不必点明的，用无主语句。</p>
+<p>一致性是硬要求：图表描述统一用一般现在时或一般过去时，不得混用；<code>not only… but also…</code> 两侧动词形式必须一致；<code>deserve</code> 一类主动形、被动义的动词不能造被动式。段落内时态漂移会被视为语言问题，与科学内容无关。</p>
+<h2>五、病理与影像领域的专用表述</h2>
+<p>这组原料的价值在于给出的不是通用词汇，而是一套<strong>报告体</strong>表达：句式短、主语隐、程度词精确。</p>
+<h3>5.1 染色与颜色的中英对应</h3>
+<table>
+<tr><th>英文表述</th><th>中文规范写法</th><th>注意点</th></tr>
+<tr><td>Masson&#x27;s trichrome staining</td><td>Masson 三色染色</td><td>人名保留，不加「的」；PAS、PASM 同理</td></tr>
+<tr><td>highlights fibrosis areas and collagen fiber distribution</td><td>清晰显示纤维化区域及胶原纤维分布</td><td>highlight 在此取「显示」，不译「突出」</td></tr>
+<tr><td>The blue-stained collagen fibers are clearly visible against red-stained cytoplasm and blue-black nuclei</td><td>胶原纤维呈蓝色，在红色胞质与蓝黑色细胞核对比下清晰可见</td><td>复合形容词 <code>blue-stained</code> 拆成主谓结构「呈蓝色」</td></tr>
+<tr><td>DAB chromogen, brown staining</td><td>DAB 显色剂，棕褐色显色</td><td>免疫组化常用显色剂，缩写不译</td></tr>
+<tr><td>protein expression level</td><td>蛋白表达水平</td><td>「表达」不与「表示」混用</td></tr>
+<tr><td>tumor-positive region；strong positivity；3+ grading</td><td>肿瘤阳性区域；强阳性；3+ 分级</td><td>阳性写作 positive，阴性写作 negative</td></tr>
+<tr><td>fibrous structure layers are distinct</td><td>纤维结构层次分明</td><td>报告体偏好四字格</td></tr>
+</table>
+<h3>5.2 形态与区域描述</h3>
+<p>切片描述的标准句式是「<strong>可见 / 未见 + 名词短语</strong>」，对应英文的 <code>showing…</code> 与 <code>No … is observed / seen</code>。</p>
+<table>
+<tr><th>英文原句（半句以内）</th><th>中文报告体写法</th></tr>
+<tr><td>Renal tissue section showing normal glomerular structure with neatly arranged renal tubules</td><td>肾组织切片，肾小球结构正常，肾小管排列整齐</td></tr>
+<tr><td>No significant inflammatory cell infiltration is observed</td><td>未见明显炎性细胞浸润</td></tr>
+<tr><td>no fibrosis is seen in the interstitium</td><td>肾间质无纤维化</td></tr>
+<tr><td>The tissue morphology is complete, with clear cellular structures visible</td><td>组织形态完整，细胞结构清晰可见</td></tr>
+<tr><td>glomeruli, sclerosed glomeruli, tubules, and vessels</td><td>肾小球、硬化肾小球、肾小管、血管</td></tr>
+<tr><td>regions of interest (ROI)；background stromal region</td><td>感兴趣区域（ROI）；背景间质区域</td></tr>
+<tr><td>whole slide image (WSI)；patch；sliding window</td><td>全切片图像（WSI）；图像块；滑动窗口</td></tr>
+</table>
+<p>专业名词如 <code>interstitium</code>（间质）、<code>infiltration</code>（浸润）不可随意近义替换，误译成「间隙」「渗透」会立刻暴露译文外行。</p>
+<h3>5.3 定量指标与领域概念</h3>
+<ul><li>光密度体系：<code>optical density (OD)</code> 光密度、<code>integrated optical density (IOD)</code> 积分光密度、<code>mean IOD (mIOD)</code> 平均积分光密度，用于量化染色强度与蛋白表达量；生造名词如 FOD map 可译「焦点光密度图」，首现括注英文原名。</li><li>分割指标：<code>mDSC</code> 写作「平均 Dice 相似系数」、<code>mIoU</code> 写作「平均交并比」，<code>PSNR</code>、<code>SSIM</code> 保留缩写。</li><li>跨域体系：<code>stain-agnostic</code> 染色无关性、<code>domain-invariant feature representation</code> 域不变特征表示、<code>domain shift</code> 域偏移。</li><li>一条重要的领域判断句：「PSNR、SSIM 这类指标并不总是和高质量虚拟染色结果严格正相关」。「并不总是」的限定必须保留，它决定后文引入病理指标的必要性；译成「无法反映质量」就把相关性说成了不存在。</li></ul>
+<h2>六、常见中式英语与搭配错误</h2>
+<p>下表错误均来自写作稿的逐条批改记录，题目与分数已剥离，只留语言点。</p>
+<h3>6.1 词汇与搭配层面</h3>
+<table>
+<tr><th>误译或误用</th><th>原因</th><th>建议写法</th></tr>
+<tr><td>the speed of science and technologies are upgrading</td><td>主语 speed 为单数却用复数谓语；「科技发展速度」属逐字直译</td><td>the rapid pace of technological progress</td></tr>
+<tr><td>information exploring society</td><td>名词短语内部修饰关系错置</td><td>information-driven society</td></tr>
+<tr><td>a large partner of people</td><td>形近词误用，partner 是「伙伴」</td><td>a large number of people（或 a large proportion of people）；改完还要注意 <code>a large part of people</code> 本身仍是中式搭配，<code>part</code> 一般接整体（a large part of the population），不能直接缀复数名词</td></tr>
+<tr><td>elevative</td><td>生造词，无此拼法</td><td>obsolete 或 outdated</td></tr>
+<tr><td>emergency emerging</td><td>词性混淆，emergency 是「紧急情况」</td><td>the continuous emergence of</td></tr>
+<tr><td>attaching importance on the upgrading of competitive</td><td>介词搭配错、词性错</td><td>attach great importance to the improvement of competitiveness</td></tr>
+<tr><td>they are failed to make the applications</td><td>主动动词被强加被动，且搭配累赘</td><td>they fail to apply them</td></tr>
+<tr><td>take up for 2 persents</td><td><code>take up</code> 后不加 <code>for</code>；percent 单复数同形</td><td>account for merely 2 percent</td></tr>
+<tr><td>a heated discussion has been embarked on</td><td><code>embark on</code> 的主语必须是人</td><td>a heated discussion has arisen</td></tr>
+<tr><td>make much of our capabilities</td><td>短语义误解，<code>make much of</code> 意为「重视」</td><td>make the most of our capabilities</td></tr>
+<tr><td>are deserved to be put emphasis on</td><td><code>deserve</code> 主动形表被动，无被动式；<code>put emphasis on</code> 与 <code>deserve</code> 叠加冗余</td><td>deserve to be emphasized</td></tr>
+<tr><td>句中混入中文词（如 a 崇高 thing）</td><td>中英夹杂，直接扣分</td><td>a lofty pursuit</td></tr>
+</table>
+<p>动词 <code>impose</code> 是方法论文的高频词，正确用法是 <code>impose a constraint / restriction on something</code>，例如「对生成图像施加蛋白表达层面的约束」可写 <code>impose a protein-expression constraint on the generated images</code>。其主语通常是方法、损失或条件而非人；<code>impose on someone</code>（打扰、强加于人）属日常义，学术写作中宜少用。</p>
+<h3>6.2 句子结构与逻辑层面</h3>
+<table>
+<tr><th>误译或误用</th><th>原因</th><th>建议写法</th></tr>
+<tr><td>illustrates clearly that how the chart shows…</td><td>宾语从句引导词冗余，<code>that</code> 与 <code>how</code> 重复</td><td>illustrates clearly how…</td></tr>
+<tr><td>which reaches nearly four times of the expense of education</td><td>倍数句式冗余</td><td>which is nearly four times that of education</td></tr>
+<tr><td>the savings only takes up 2 percent, the smallest part.</td><td>逗号拼接两个独立分句，或同位语悬空</td><td>savings account for merely 2 percent, the smallest share of all</td></tr>
+<tr><td>It is clear that people could hardly save too much money</td><td><code>hardly… too much</code> 意为「再怎么也不为过」，与想表达的意思相反</td><td>It is clear that people can barely save much money</td></tr>
+<tr><td>What ranks besides the rent is X and Transport comes the next</td><td>双谓语冲突，<code>besides</code> 误用表「第二」</td><td>What ranks second only to rent is X, followed by transport</td></tr>
+<tr><td>has brought economy boom</td><td>名词作定语应用形容词，且缺冠词</td><td>has brought an economic boom</td></tr>
+<tr><td>not only defend… but also improved…</td><td>平行结构两侧动词形式与时态不一致</td><td>not only defend… but also improve…</td></tr>
+<tr><td>Seeking adventures exposed us to risks（全文用现在时）</td><td>时态漂移，与全文基调不一致</td><td>Seeking adventures exposes us to risks</td></tr>
+<tr><td>As was risky the course, though</td><td>让步倒装语序错，正确结构是「形容词 + as + 主语 + 谓语」</td><td>Risky as the journey is</td></tr>
+<tr><td>working for ourselves offer us more freedom</td><td>动名词短语作主语，谓语用单数</td><td>working for ourselves offers us…</td></tr>
+<tr><td>Which more and more people began to realize that…</td><td>从句套从句导致主干断裂</td><td>As more and more people have realized this</td></tr>
+</table>
+<p>自查四步：先看<strong>时态与主谓一致</strong>（最高频扣分点），再看<strong>搭配与介词</strong>，再看<strong>平行结构与引导词冗余</strong>，最后才看句式是否够「高级」；顺序倒过来，漂亮的倒装句里可能藏着三处拼写错。</p>
+<h2>七、学术写作可复用的句式模板</h2>
+<p>以下句子均来自原料中真实出现过的表述，按功能归类，可直接套用。</p>
+<h3>7.1 立论、缺口与本文方案</h3>
+<table>
+<tr><th>功能</th><th>英文模板</th><th>中文对应</th></tr>
+<tr><td>领域地位</td><td>X serves as the gold standard for…, playing a crucial role in…</td><td>X 是……的金标准，在……中发挥关键作用</td></tr>
+<tr><td>普遍性与必要性</td><td>Pre-trained word embeddings are an integral part of modern NLP systems, offering significant improvements over…</td><td>预训练词嵌入是现代 NLP 系统不可或缺的一部分，相较……带来显著提升</td></tr>
+<tr><td>现实困难</td><td>…, a process that is time-consuming and labor-intensive</td><td>这一过程既耗时又费力</td></tr>
+<tr><td>挑战归因</td><td>… faces significant challenges due to the limited availability of… and the strong domain shift compared with…</td><td>受限于……稀缺以及与……相比的显著域偏移，……面临挑战</td></tr>
+<tr><td>缺口</td><td>However, existing studies predominantly…, and often overlook…</td><td>然而现有研究主要……，且常常忽视……</td></tr>
+<tr><td>缺口（未做之事）</td><td>Notably, … have not been exploited to improve segmentation performance</td><td>值得注意的是，……尚未被用于提升分割性能</td></tr>
+<tr><td>迫切需求</td><td>Hence, there is an urgent necessity to develop an automatic approach for…</td><td>因此迫切需要开发一种自动方法以……</td></tr>
+<tr><td>本文提出</td><td>To address these challenges, we introduce X, a … framework for…</td><td>为解决这些挑战，本文提出框架 X，用于……</td></tr>
+<tr><td>组件并列</td><td>X incorporates A for…, B for…, and a strategy that leverages… to…, thereby enhancing…</td><td>X 包含用于……的 A、用于……的 B，以及借助……的机制，从而提升……</td></tr>
+<tr><td>差异化声明</td><td>Notably, unlike previous studies that…, our framework exploits… only during…</td><td>与先前……的研究不同，本文框架仅在……阶段利用……</td></tr>
+<tr><td>首创性限定</td><td>To the best of our knowledge, we are the first to utilize…</td><td>囿于已知工作，本文首次把……用于……</td></tr>
+</table>
+<h3>7.2 结果、局限与展望</h3>
+<table>
+<tr><th>功能</th><th>英文模板</th><th>中文对应</th></tr>
+<tr><td>结果陈述</td><td>Experimental results demonstrate that X achieves superior and robust performance, with mDSC of… and mIoU of…</td><td>实验表明 X 取得优异且稳健的性能，mDSC 与 mIoU 分别达……</td></tr>
+<tr><td>消融支撑</td><td>Our ablation study confirms the effectiveness of each component</td><td>消融实验证实各组件的有效性</td></tr>
+<tr><td>图表指引</td><td>As shown in Table II, performance is significantly improved by avoiding…</td><td>如表 II 所示，通过避免……，性能显著提升</td></tr>
+<tr><td>归因与必要性</td><td>This highlights the limitation of training directly with mixed samples from different stain domains</td><td>这凸显了直接以不同染色域混合样本训练的局限性</td></tr>
+<tr><td>代价式批评</td><td>These methods mainly focus on…, overlooking…, and still require…</td><td>这些方法主要关注……，忽视了……，且仍需……</td></tr>
+<tr><td>承认不足</td><td>… are insufficient to make the network stain-agnostic, and developing such a model remains a continuous challenge</td><td>……不足以使网络具备染色无关性，相关模型仍是持续挑战</td></tr>
+<tr><td>展望</td><td>The identification of lesions within the tissue presents a promising avenue for further research</td><td>组织内病灶的识别是进一步研究颇有前景的方向</td></tr>
+<tr><td>未来工作</td><td>Our future work will focus on exploring the potential of…, followed by…</td><td>后续工作将聚焦……，继而……</td></tr>
+<tr><td>收尾价值</td><td>X offers a feasible and cost-effective solution for…, providing convenient assistance to…</td><td>X 为……提供可行且经济高效的方案，为……提供便捷辅助</td></tr>
+</table>
+<h3>7.3 学术汇报场合的用词</h3>
+<p>口头与书面的阶段汇报标题并不通用，选错会让汇报显得像项目管理文档。</p>
+<table>
+<tr><th>场合</th><th>推荐说法</th><th>侧重</th></tr>
+<tr><td>PPT 封面（阶段性进展）</td><td>Research Progress Report</td><td>做了多少、发现了什么</td></tr>
+<tr><td>中期考核</td><td>Project Midterm Report / Interim Research Report</td><td><code>Interim</code> 专指最终报告之前的阶段性报告</td></tr>
+<tr><td>组会口头汇报</td><td>Lab Meeting Presentation / a brief update on research progress</td><td>轻量、定期</td></tr>
+<tr><td>邮件与文档提交</td><td>Phase Report</td><td>按节点归档</td></tr>
+<tr><td>强调成果与发现</td><td>Research Findings and Progress</td><td>暗示有数据与结论</td></tr>
+</table>
+<p>开场可先用 <code>I would like to…</code> 这类委婉句式提出请求：<code>I would like to give a brief update on my research progress.</code>；若要用现在完成时交代「过去一学期做到哪一步」，句子得真的落在完成时上，例如 <code>I have completed the data preparation and the baseline training over the past semester.</code>。时态名与例句必须同向，否则这条纪律等于没写。 幻灯片条目宜把复合长句拆成独立要点，一行只承载一个动作与一个结果。</p>
+<h2>八、竞赛与应试作文：评价标准与修改方向</h2>
+<p>原料对应试作文的处理以批改意见为主，故本节只提炼<strong>评价维度与修改优先级</strong>，不搬作文全文。</p>
+<table>
+<tr><th>评价维度</th><th>常见扣分点</th><th>修改方向</th></tr>
+<tr><td>内容</td><td>图表题臆断图外原因、数据覆盖不全、缺类别对比</td><td>只描述给定数据，先穷举极值与次要项，再做两两对比</td></tr>
+<tr><td>语言</td><td>搭配错误、名词单复数与冠词、拼写硬伤</td><td>以词块为单位记忆，不记单词裸义</td></tr>
+<tr><td>结构</td><td>开头未按题目要求、分论点无例证、结尾缺升华</td><td>按题干指令句开头；分论点补一两句例证；结尾呼应并升华</td></tr>
+<tr><td>语法</td><td>时态混用、平行结构不一致、逗号拼接、倒装语序错、被动误加</td><td>先统一时态基调，再查 <code>not only… but also</code> 两侧形式，最后消灭逗号拼接</td></tr>
+<tr><td>辩证性</td><td>只陈述己方观点，未回应反方</td><td>补一段「让步 + 反驳」，用 <code>Risky as the journey is</code> 承接</td></tr>
+<tr><td>连贯性</td><td>同一组衔接词与同一短语反复出现</td><td>换用 <code>From a technological perspective…</code> 一类过渡句</td></tr>
+<tr><td>简洁性</td><td>修饰堆砌导致句子过长、逻辑断层、字数超标</td><td>先用主谓宾写清判断，再补一个从句</td></tr>
+</table>
+<p>改稿顺序同样重要：批改意见反复强调<strong>高级句式的前提是语法零错误</strong>，倒装语序错、独立主格非谓语用反反而扣分。所以先清语法硬伤（拼写、主谓一致、时态、搭配），再补内容完整性（数据、例证、让步），最后才做句式升级（主语从句、非谓语作状语、倍数表达、同位语收束）。</p>
+<h2>九、小结</h2>
+<p>把各节压成一套流程：译标题先定位中心名词，按 <code>of</code>、<code>via</code>、<code>for</code> 逆向重排；读引言按七步骨架找位置，遇 <code>this</code>、<code>these</code>、<code>such</code> 先确认指代对象；判断时态先问「一次性动作、方法属性，还是持续到现在的状态或缺口」，本文方法与图表一律一般现在时，结论段回到现在完成时；病理描述按报告体处理，<code>is observed</code> 写成「未见」；输出英文时套用第七节模板，按「时态—搭配—结构—修辞」自查。</p>
+<p>学术英语的门槛不在生词量，而在<strong>结构与限定的精确度</strong>：名词化能否还原、被动要不要转主动、指代有无落点、<code>significant</code> 与 <code>may</code> 的语气有没有走样——这四处决定译文质量，也决定英文像不像本领域的人写的。方法章节的公式化表述与审稿意见英译中，本次原料未涉及，不在此展开。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 论文标题与引言英译中、病理描述翻译、学术与竞赛写作批改整理</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

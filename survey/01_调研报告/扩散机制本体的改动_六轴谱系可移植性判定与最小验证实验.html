@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散模型机制本体的改动 · 六轴谱系、可移植性判定与最小验证实验</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+.box .scroll,.card .body .scroll{border:none;border-radius:0;margin:10px 0 0}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.quote{border-left:3px solid var(--blue);background:var(--blueSoft);padding:12px 16px;margin:14px 0;border-radius:0 8px 8px 0;font-size:13.5px}
+.quote .en{font-family:var(--mono);font-size:12.3px;color:#2a3340;line-height:1.7}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.pipe{display:flex;align-items:center;justify-content:space-between;gap:3px;overflow-x:auto;padding:2px 0}
+.pcell{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
+.ptag{font-size:10.5px;line-height:1.25;white-space:nowrap;min-height:15px;text-align:center;color:var(--muted);font-weight:600}
+.ptag.t-blue{color:var(--blue)}.ptag.t-purple{color:var(--purple)}.ptag.t-green{color:var(--green)}
+.ptag.t-teal{color:var(--teal)}.ptag.t-red{color:var(--red)}.ptag.t-amber{color:var(--amber)}
+.pbox{border:1px solid var(--strong);border-radius:8px;background:#fff;padding:7px 11px;font-size:12px;font-weight:650;text-align:center;white-space:nowrap;font-family:var(--mono);color:var(--text)}
+.pbox.out{background:var(--greenSoft);border-color:#b7e0c7}
+.pbox.phys{background:var(--redSoft);border-color:#f4cfcc}
+.pbox.soft{background:var(--amberSoft);border-color:#f0dcb4}
+.psub{font-size:10px;font-weight:400;color:var(--muted);margin-top:1px;font-family:var(--sans)}
+.parrow{flex:0 0 auto;color:var(--muted);font-size:13px;font-weight:700;align-self:center;padding-bottom:0}
+.pnote{margin-top:12px;padding-top:11px;border-top:1px dashed var(--strong);font-size:12.5px;color:var(--text2);text-align:center}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+.eq{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:12px 0;font-family:var(--mono);font-size:13px;line-height:1.9;overflow-x:auto}
+@media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+ol.ref{padding-left:24px;font-size:13.5px;line-height:1.85}ol.ref li{margin-bottom:7px}
+main a{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(37,99,235,.28)}main a:hover{border-bottom-color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Mechanism-Level Map</div>
+<div class="sub">扩散机制本体的改动<br>六轴谱系 · 可移植性 · 最小实验<br>（排除条件注入与约束引导）</div>
+<a class="l1" href="#s0">0 执行摘要</a>
+<a class="l2" href="#s0-1">0.1 六轴一览</a>
+<a class="l2" href="#s0-2">0.2 五条改变决策的结论</a>
+<a class="l2" href="#s0-3">0.3 与另两份报告的分工</a>
+<a class="l1" href="#s1">1 边界：为什么这是第三层</a>
+<a class="l2" href="#s1-1">1.1 三个家族</a>
+<a class="l2" href="#s1-2">1.2 四个「固定件」</a>
+<a class="l2" href="#s1-3">1.3 六轴的正式定义</a>
+<a class="l2" href="#s1-4">1.4 收录标准与证据分级</a>
+<a class="l1" href="#s2">2 轴 A · 前向退化算子</a>
+<a class="l2" href="#s2-1">2.1 一般化：把 D 打开</a>
+<a class="l2" href="#s2-2">2.2 谱系表</a>
+<a class="l2" href="#s2-3">2.3 Cold Diffusion 深挖</a>
+<a class="l2" href="#s2-4">2.4 Soft Diffusion 与 RDDM</a>
+<a class="l2" href="#s2-5">2.5 非高斯噪声三支</a>
+<a class="l2" href="#s2-6">2.6 空间变化噪声</a>
+<a class="l2" href="#s2-7">2.7 可移植性判定</a>
+<a class="l1" href="#s3">3 轴 B · 初始状态与起点 ★</a>
+<a class="l2" href="#s3-1">3.1 三个可独立改的量</a>
+<a class="l2" href="#s3-2">3.2 谱系表</a>
+<a class="l2" href="#s3-3">3.3 输入派生初始态</a>
+<a class="l2" href="#s3-4">3.4 截断前向</a>
+<a class="l2" href="#s3-5">3.5 桥过程</a>
+<a class="l2" href="#s3-6">3.6 可移植性判定</a>
+<a class="l1" href="#s4">4 轴 C · 训练目标与参数化</a>
+<a class="l2" href="#s4-1">4.1 参数化：ε / x₀ / v</a>
+<a class="l2" href="#s4-2">4.2 时间步加权</a>
+<a class="l2" href="#s4-3">4.3 方差学习</a>
+<a class="l2" href="#s4-4">4.4 训练期时间步采样</a>
+<a class="l2" href="#s4-5">4.5 自监督信号构造</a>
+<a class="l2" href="#s4-6">4.6 可移植性判定</a>
+<a class="l1" href="#s5">5 轴 D · 时间步与采样轨迹</a>
+<a class="l2" href="#s5-1">5.1 离散化与重排</a>
+<a class="l2" href="#s5-2">5.2 求解器</a>
+<a class="l2" href="#s5-3">5.3 蒸馏与一致性</a>
+<a class="l2" href="#s5-4">5.4 可移植性判定</a>
+<a class="l1" href="#s6">6 轴 E · 状态空间</a>
+<a class="l2" href="#s6-1">6.1 像素 / 潜空间 / 离散</a>
+<a class="l2" href="#s6-2">6.2 与你手上的通道问题</a>
+<a class="l2" href="#s6-3">6.3 可移植性判定</a>
+<a class="l1" href="#s7">7 轴 F · 先验与桥</a>
+<a class="l2" href="#s7-1">7.1 先验为什么是承重结构</a>
+<a class="l2" href="#s7-2">7.2 数据自适应先验</a>
+<a class="l2" href="#s7-3">7.3 学习先验</a>
+<a class="l2" href="#s7-4">7.4 非高斯先验与均值回归</a>
+<a class="l2" href="#s7-5">7.5 可移植性判定</a>
+<a class="l1" href="#s8">8 六轴汇总矩阵</a>
+<a class="l1" href="#s9">9 三条跨轴结论</a>
+<a class="l1" href="#s10">10 可移植性总判定</a>
+<a class="l1" href="#s11">11 最小验证实验</a>
+<a class="l2" href="#s11-1">11.1 E1：起点与初始态</a>
+<a class="l2" href="#s11-2">11.2 E2：乘性 vs 加性</a>
+<a class="l2" href="#s11-3">11.3 E3：单步微调</a>
+<a class="l1" href="#s12">12 证据边界与未核实清单</a>
+<a class="l1" href="#s13">13 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">机制层调研 · 第三层</div>
+<h1>扩散模型「机制本体」的改动 —— 六轴谱系、可移植性判定与最小验证实验</h1>
+<p class="desc">不是条件注入，也不是约束引导：本报告只收录那些<strong>直接改动生成机制本身</strong>的工作——退化算子、初始状态与起点、训练目标与参数化、时间步与采样轨迹、状态空间、先验与桥。</p>
+<div class="meta">
+<span>6 条轴 · 43 篇一手文献</span>
+<span>全部结论标注证据强度</span>
+<span>含 3 个最小验证实验</span>
+<span>2026-10-11</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>执行摘要</h2>
+
+<p>你前面已经调研过两层：<strong>条件注入</strong>（条件怎么进网络）和<strong>约束 / 引导</strong>（输出怎么被约束）。本报告处理第三层——<strong>把生成机制本身改掉</strong>。判定标准是一条排除法：<em>如果一个改动既不是"多给模型一个输入"，也不是"给输出加一个惩罚"，而是在改扩散过程自己的数学结构，它就在这一层。</em></p>
+
+<h3 id="s0-1">0.1 六轴一览</h3>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th style="width:5%">轴</th><th style="width:15%">改的是什么</th><th style="width:22%">代表工作（按时间）</th><th style="width:9%">证据强度</th><th style="width:26%">核心机制改动点</th><th style="width:23%">对你的可移植性</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="c"><strong>A</strong></td>
+<td><strong>前向退化算子</strong><br><span class="small">D 不再是加性高斯</span></td>
+<td>Cold Diffusion <span class="small">(2022)</span> · Soft Diffusion <span class="small">(2022)</span> · D3PM <span class="small">(2021)</span> · IR-SDE <span class="small">(ICML'23)</span> · Blue noise <span class="small">(SIGGRAPH'24)</span> · RDDM <span class="small">(CVPR'24)</span> · NEED <span class="small">(MedIA'25)</span> · 乘性扩散 <span class="small">(ICLR'26)</span></td>
+<td class="c"><span class="b high">代码级<br>+ 正文</span></td>
+<td><code>x_t = D(x_0, t)</code> 里的 <code>D</code> 从「加噪」换成模糊 / 掩码 / 下采样 / 泊松 / <strong>乘性</strong> / 相关噪声；需满足 <code>D(x_0,0)=x_0</code> 且输出分布随 t 连续变化</td>
+<td><span class="b medium">部分可用</span><br>乘性噪声与你的 OD / 浓度域<strong>直接对应</strong>；冷扩散（确定性退化）反而<strong>丢掉可采样先验</strong>，是陷阱</td>
+</tr>
+<tr>
+<td class="c"><strong>B</strong></td>
+<td><strong>初始状态与起点</strong><br><span class="small">从哪一步开始、起始张量是什么</span></td>
+<td>SDEdit <span class="small">(ICLR'22)</span> · TDPM <span class="small">(ICLR'23)</span> · BBDM <span class="small">(CVPR'23)</span> · I²SB <span class="small">(ICML'23)</span> · PartDiff <span class="small">(2023)</span> · SVNR <span class="small">(2023)</span> · DDBM <span class="small">(2023)</span> · SAStainDiff <span class="small">(BSPC'25)</span></td>
+<td class="c"><span class="b high">代码级<br>+ 正文</span></td>
+<td>把 <code>x_T ~ N(0,I)</code> 换成 <code>x_{t_start} = q(x_input, t_start)</code>，并让 <code>t_start &lt; T</code>。起点、初始态、步数是<strong>三个可独立调节的旋钮</strong></td>
+<td><span class="b high">最易摘的果子</span><br>零训练可改；SAStainDiff 已在你同域证明有效；PartDiff 还给了「latent alignment」这种补偿手段</td>
+</tr>
+<tr>
+<td class="c"><strong>C</strong></td>
+<td><strong>训练目标与参数化</strong><br><span class="small">网络学什么、loss 怎么加权</span></td>
+<td>Improved DDPM <span class="small">(2021)</span> · Progressive Distillation <span class="small">(ICLR'22)</span> · Min-SNR-γ <span class="small">(ICCV'23)</span> · Consistency <span class="small">(ICML'23)</span> · 自适应非均匀采样 <span class="small">(CVPR'25)</span> · DiffVS <span class="small">(AAAI'26)</span></td>
+<td class="c"><span class="b high">正文逐字</span></td>
+<td>ε-pred → x₀-pred / v-pred；均匀加权 → clamped-SNR 加权；学习方差；<strong>固定 t=T 且 ε=0 ⇒ 迭代去噪退化为单步映射</strong></td>
+<td><span class="b high">高价值</span><br>Min-SNR 与自适应采样是「零架构改动」的收敛加速；DiffVS 的单步微调与你「想砍推理成本」的诉求直接对齐</td>
+</tr>
+<tr>
+<td class="c"><strong>D</strong></td>
+<td><strong>时间步与采样轨迹</strong><br><span class="small">用哪些 t、怎么解 ODE</span></td>
+<td>DDIM <span class="small">(ICLR'21)</span> · DPM-Solver <span class="small">(NeurIPS'22)</span> · 渐进蒸馏 <span class="small">(ICLR'22)</span> · guided-diffusion <code>respace.py</code></td>
+<td class="c"><span class="b high">代码级</span></td>
+<td>非马尔可夫前向构造（训练目标不变、反向可加速）；解析求解 ODE 的线性部分；把步数从 8192 蒸馏到 4</td>
+<td><span class="b high">已在你手上</span><br>你已经在用 <code>space_timesteps</code>；本报告把它的<strong>真实语义</strong>算清楚了（见 §5.1）</td>
+</tr>
+<tr>
+<td class="c"><strong>E</strong></td>
+<td><strong>状态空间</strong><br><span class="small">在什么空间里加噪</span></td>
+<td>LDM <span class="small">(CVPR'22)</span> · D3PM <span class="small">(2021)</span> · MaskGIT <span class="small">(CVPR'22)</span></td>
+<td class="c"><span class="b high">正文逐字</span></td>
+<td>像素 → 预训练自编码器潜空间；连续 → 离散（转移矩阵可为均匀 / 最近邻 / <strong>吸收态</strong>）</td>
+<td><span class="b medium">你已在路上</span><br>你之前专门问过「潜空间训练下通道 / 浓度对不上」，那正是这一轴的代价清单</td>
+</tr>
+<tr>
+<td class="c"><strong>F</strong></td>
+<td><strong>先验与桥</strong><br><span class="small">前向终点是什么分布</span></td>
+<td>PriorGrad <span class="small">(ICLR'22)</span> · TDPM <span class="small">(ICLR'23)</span> · BBDM / I²SB / DDBM · IR-SDE <span class="small">(ICML'23)</span> · 乘性扩散 <span class="small">(ICLR'26)</span></td>
+<td class="c"><span class="b medium">正文<br>+ 摘要</span></td>
+<td><code>N(0,I)</code> → 数据自适应先验 / 可学习隐先验 / 非高斯（范数守恒）/ 均值回归终点 / <strong>两端锚定的桥</strong></td>
+<td><span class="b medium">中期目标</span><br>桥过程要求配对数据；你的串行切片不是像素级配对，<strong>先别碰</strong>（见 §3.6）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s0-2">0.2 五条改变决策的结论</h3>
+
+<div class="box key">
+<div class="bt">结论 1 · 这一层的共同结构：四个「固定件」被逐个打开</div>
+<p>标准扩散把四件事写死了：<strong>退化算子 D</strong>（加性高斯）、<strong>终点先验</strong>（<code>N(0,I)</code>）、<strong>时间步集合</strong>（<code>1..T</code> 均匀）、<strong>训练目标</strong>（ε-pred + 均匀加权）。你问的这一族，<strong>全部可以写成"把其中某一个固定件变成可设计的对象"</strong>。这句话不是修辞——它是本报告的分类依据，也是你判断"某个新工作算不算这一层"的判据。</p>
+</div>
+
+<div class="box good">
+<div class="bt">结论 2 · 轴 B 是投入产出比最高的一轴，而且已被同域验证</div>
+<p>起点 <code>t_start</code> 和初始态 <code>x_{t_start}</code> 是<strong>纯推理期旋钮，零训练成本</strong>。SAStainDiff 在染色归一化任务上就是这么做的（<code>--timestep_step 900</code> + <code>q_sample(输入, T−1)</code>），你已经在上一份报告里看到它的代码级证据。PartDiff 更进一步：它发现「低分与高分图像的中间潜态会逐渐收敛、变得难以区分」，于是直接把低分图的加噪结果当作初始态，并加了 <strong>latent alignment</strong> 来补偿近似误差。</p>
+</div>
+
+<div class="box key">
+<div class="bt">结论 3 · ★ 乘性噪声这一轴与你的浓度域问题直接对应（本报告最重要的发现）</div>
+<p>ICLR 2026 的 <em>Multiplicative Diffusion Models</em> 用<strong>斜对称乘性噪声</strong>替代加性高斯：噪声只让数据点绕原点做随机旋转，<strong>严格保持范数不变</strong>，于是隐分布自动继承数据的范数分布（含重尾）。它给出的关键不等式是——<strong>隐分布到数据的 KL 散度始终 ≤ 标准扩散；对重尾数据，标准扩散是无穷大而它是有限</strong>。</p>
+<p>为什么这对你重要：你的目标域是 <strong>OD / 浓度域</strong>，而 Beer–Lambert 定律 <code>I = I₀·exp(−M·C)</code> 是<strong>乘性</strong>结构，<code>C = M⁻¹·OD</code> 也是乘性反演。主流扩散假设加性高斯噪声，这与你物理上要建模的噪声几何<strong>不同构</strong>。这条线索把「浓度域生成」从一个直觉提升成了一个<strong>有理论支撑的设计选择</strong>。</p>
+</div>
+
+<div class="box good">
+<div class="bt">结论 4 · 「多步一定更好」在病理域被反证了</div>
+<p>AAAI 2026 的 DiffVS（虚拟多重染色）第二阶段做的事很反直觉：<strong>固定 <code>t=T</code>、把随机噪声置零 <code>ε=0</code></strong>，用像素级 L1+L2 损失微调 U-Net。效果是迭代去噪退化成<strong>单步确定性映射</strong>。它的消融表写着：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>配置</th><th class="c">SSIM</th><th class="c">PSNR</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>无微调 · 50 步 + 10× ensemble</td><td class="c">0.673</td><td class="c">30.21</td><td>多步反而最差</td></tr>
+<tr><td>无微调 · 单步推理</td><td class="c">0.757</td><td class="c">29.38</td><td>单步已优于多步</td></tr>
+<tr><td><strong>单步 + 像素级微调</strong></td><td class="c"><strong>0.836</strong></td><td class="c"><strong>30.60</strong></td><td>最优；推理 117 s → 0.13 s（900×）</td></tr>
+</tbody>
+</table>
+</div>
+<p>作者给的解释是：病理染色图的像素分布<strong>极度偏斜</strong>（大量区域是暗背景 / 无信号），多步去噪在这种分布上反而引入更多伪影。<strong>注意这是"改训练目标"取得的收益，不是"改条件"也不是"加约束"</strong>——正好落在你要的这一层。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">结论 5 · 冷扩散（任意退化）有一个隐藏的致命代价，别被"任意"两个字骗了</div>
+<p>Cold Diffusion 的卖点是"退化算子可以是任意的、甚至完全确定性（模糊 / 掩码 / 像素化 / 下雪）"。但论文自己写了代价，原文：</p>
+<div class="quote"><div class="en">"The forward diffusion process in noise-based diffusion models has the advantage that the degraded image distribution at the final step <em>T</em> is simply an isotropic Gaussian. One can therefore perform (unconditional) generation by first drawing a sample from the isotropic Gaussian, and sequentially denoising it with backward diffusion. When using blur as a degradation, the fully degraded images do not form a nice closed-form distribution that we can sample from."</div></div>
+<p>换句话说：<strong>把 D 换掉的同时，你往往把"能从先验采样"这个能力也换掉了</strong>。这正是轴 A 与轴 F 强耦合的原因——改 D 的代价通常要用改先验来偿还（§7.1 展开）。</p>
+</div>
+
+<h3 id="s0-3">0.3 与另两份报告的分工</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">报告</th><th style="width:30%">管什么</th><th style="width:26%">不管什么</th><th style="width:22%">本报告如何衔接</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>《噪声调度 / 时间步分配》</strong><br><span class="small">（前一份）</span></td>
+<td>时间步上的<strong>概率分布</strong> <code>p(t)</code> 与<strong>损失权重</strong> <code>w(t)</code>；改调度 ⇔ 改 <code>p(t)</code>；<code>p(λ)</code> 优于 <code>w(λ)</code></td>
+<td>退化算子长什么样、起点在哪、初始态是什么、状态空间在哪</td>
+<td>轴 C（加权）与轴 D（时间步集合）与它<strong>相邻但不同</strong>：它管"每个 t 被抽到多少次、权重多大"，本报告管"t 的取值范围和求解方式"</td>
+</tr>
+<tr>
+<td><strong>《方法级创新地图》</strong><br><span class="small">（前一份）</span></td>
+<td>SAStainDiff 的<strong>四个零件</strong>能否搬运；像素级对齐这个前提问题</td>
+<td>这四个零件的<strong>上游谱系</strong>与更广的机制改动族</td>
+<td>本报告把 SAStainDiff 的 B（起点前移）与 C（输入派生初始态）<strong>回溯到 TDPM / PartDiff / SDEdit 的完整谱系</strong>，并补上 A（退化算子）这一支它没覆盖的</td>
+</tr>
+<tr>
+<td><strong>本报告</strong></td>
+<td>机制本体的六条轴：改哪个数学对象、谁做过、证据多硬、能不能搬</td>
+<td>条件注入、约束 / 引导（已调研）；纯架构替换（换 U-Net 为 DiT）</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s1"><span class="num">1</span>边界：为什么这是第三层</h2>
+
+<h3 id="s1-1">1.1 三个家族</h3>
+
+<p>把一篇扩散论文的"创新点"拆开，几乎所有改动都落在下面三个家族之一：</p>
+
+<div class="flow">
+<div class="pipe">
+<div class="pcell"><div class="ptag t-blue">家族 ①</div><div class="pbox">条件注入</div><div class="psub">条件怎么进网络</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag">&nbsp;</div><div class="pbox soft">cross-attn / 拼接<br>SPADE / 双分支</div><div class="psub">你已调研</div></div>
+</div>
+<div class="pipe" style="margin-top:14px">
+<div class="pcell"><div class="ptag t-amber">家族 ②</div><div class="pbox">约束 / 引导</div><div class="psub">输出怎么被约束</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag">&nbsp;</div><div class="pbox soft">硬投影 / 梯度引导<br>CFG / 反演锚定</div><div class="psub">你已调研</div></div>
+</div>
+<div class="pipe" style="margin-top:14px">
+<div class="pcell"><div class="ptag t-purple">家族 ③ ★</div><div class="pbox phys">机制本体</div><div class="psub">生成过程自己的数学结构</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag">&nbsp;</div><div class="pbox">D · 初始态 · 目标<br>时间步 · 状态空间 · 先验</div><div class="psub">本报告</div></div>
+</div>
+<div class="pnote">三个家族的判据：① 多给模型一个输入；② 给输出加一项惩罚 / 投影；③ <strong>以上都不是，改的是过程本身</strong></div>
+</div>
+
+<p>这个划分不是为了分类而分类。它的实际用途是：<strong>当你看一篇新论文时，先问"它改的是哪个家族的哪个量"，就能立刻判断它和你的冲突点在哪</strong>。比如 SAStainDiff 的染色增强自监督，表面上像"数据增强"，实际改的是<strong>训练信号是怎么造出来的</strong>——属于家族 ③ 的轴 C，而不是家族 ①。</p>
+
+<h3 id="s1-2">1.2 四个「固定件」：一个可操作的判据</h3>
+
+<p>标准 DDPM 的四个组件可以写成下面这四行。它们的共同点是<strong>全部被写死了</strong>，而六轴就是逐个打开它们：</p>
+
+<div class="eq">
+<strong>(1) 退化算子</strong>&nbsp;&nbsp; x<sub>t</sub> = D(x<sub>0</sub>, t) = √ᾱ<sub>t</sub> · x<sub>0</sub> + √(1−ᾱ<sub>t</sub>) · ε,&nbsp;&nbsp; ε ~ N(0, I)&nbsp;&nbsp;<span class="small">← 固定为「加性高斯」</span><br>
+<strong>(2) 终点先验</strong>&nbsp;&nbsp; x<sub>T</sub> ~ N(0, I)&nbsp;&nbsp;<span class="small">← 固定为「标准高斯」，且必须能采样</span><br>
+<strong>(3) 时间步集合</strong>&nbsp;&nbsp; t ∈ {1, 2, …, T}，训练时 t ~ U(1, T)&nbsp;&nbsp;<span class="small">← 固定为「均匀离散」</span><br>
+<strong>(4) 训练目标</strong>&nbsp;&nbsp; L = E<sub>t,x₀,ε</sub> ‖ε − ε<sub>θ</sub>(x<sub>t</sub>, t)‖²&nbsp;&nbsp;<span class="small">← 固定为「ε-pred + 均匀加权」</span>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:12%">轴</th><th style="width:20%">打开了哪个固定件</th><th style="width:34%">打开之后新增的设计自由度</th><th style="width:34%">立刻可问的问题</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>A</strong></td><td>第 (1) 行的 <code>D</code></td><td>D 可以是模糊 / 掩码 / 下采样 / 泊松 / 乘性 / 空间相关</td><td>我的域里"真实退化"是什么分布？加性高斯是不是错的？</td></tr>
+<tr><td class="c"><strong>B</strong></td><td>第 (2) 行的采样起点</td><td>不从 <code>T</code> 开始、不从纯噪声开始</td><td>我能不能从输入图的加噪版本起步？起点取多少？</td></tr>
+<tr><td class="c"><strong>C</strong></td><td>第 (4) 行的参数化与加权</td><td>ε / x₀ / v；clamped-SNR 加权；固定 t 与 ε 的单步微调</td><td>我现在的均匀加权是不是在浪费收敛速度？</td></tr>
+<tr><td class="c"><strong>D</strong></td><td>第 (3) 行的集合与求解</td><td>子序列重排、非均匀离散、高阶求解器、蒸馏</td><td>我用的 <code>space_timesteps</code> 语义到底是什么？</td></tr>
+<tr><td class="c"><strong>E</strong></td><td>第 (1) 行的<strong>定义域</strong></td><td>像素 / 潜空间 / 离散 token</td><td>潜空间编码器是不是把我要的浓度信息丢了？</td></tr>
+<tr><td class="c"><strong>F</strong></td><td>第 (2) 行的<strong>分布形态</strong></td><td>数据自适应先验、学习先验、非高斯、均值回归、两端锚定的桥</td><td>纯高斯先验和我的数据分布差多远？</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">这条判据的一个直接用途</div>
+<p>下次你读到一篇声称"改进了扩散模型"的论文，把它塞进上面四行里：<strong>它改了哪一行？</strong>如果四行都没改，那它的贡献一定在家族 ① 或 ②（条件 / 约束），或者在纯架构。<strong>四行都改了 = 它不是扩散模型了</strong>（比如流匹配把 (1) 换成线性插值、(2) 换成另一端的数据分布）。</p>
+</div>
+
+<h3 id="s1-3">1.3 六轴的正式定义</h3>
+
+<p>为了让后面的谱系表可核对，这里给出每一条轴的<strong>可操作定义</strong>（即"怎样才算落在这条轴上"）：</p>
+
+<div class="grid2">
+<div class="mini"><div class="mt">轴 A · 前向退化算子</div><p>改变 <code>x_t = D(x_0,t)</code> 中 <code>D</code> 的<strong>函数形式或噪声分布</strong>。收：冷扩散、一般线性退化、残差扩散、泊松 / 乘性 / 相关噪声、空间变化噪声。<strong>不收</strong>：只改 ᾱ 曲线（那是调度，属前一份报告）。</p></div>
+<div class="mini"><div class="mt">轴 B · 初始状态与起点</div><p>改变<strong>反向过程的起算位置</strong>。收：输入派生初始态、截断前向（少加噪）、桥过程（两端锚定）、反演初始化。<strong>不收</strong>：只减少推理步数（那是轴 D）。</p></div>
+<div class="mini"><div class="mt">轴 C · 训练目标与参数化</div><p>改变<strong>网络被要求预测什么</strong>。收：ε/x₀/v 参数化、方差学习、时间步加权、训练期时间步采样、自监督信号构造、单步微调。<strong>不收</strong>：改 loss 里加一项物理约束（那是家族 ②）。</p></div>
+<div class="mini"><div class="mt">轴 D · 时间步与采样轨迹</div><p>改变<strong>用哪些 t 以及怎么沿轨迹走</strong>。收：子序列重排、非均匀离散、高阶 ODE 求解器、轨迹蒸馏。<strong>不收</strong>：改每步的噪声注入量（那是调度）。</p></div>
+<div class="mini"><div class="mt">轴 E · 状态空间</div><p>改变<strong>加噪发生在哪个空间</strong>。收：像素 / 潜空间 / 离散 token / 多分辨率。<strong>不收</strong>：只换 U-Net 结构（那是纯架构）。</p></div>
+<div class="mini"><div class="mt">轴 F · 先验与桥</div><p>改变<strong>前向过程终点的分布形态</strong>。收：数据自适应先验、可学习先验、非高斯先验、均值回归终点、桥过程。<strong>不收</strong>：只改起点（那是轴 B）。</p></div>
+</div>
+
+<div class="box warn">
+<div class="bt">轴 B 与轴 F 是同一枚硬币的两面</div>
+<p>「起点从哪开始」和「终点是什么分布」是<strong>同一段轨迹的两个端点</strong>。你动了一个，另一个的定义域就变了。所以 §3 和 §7 必须连着读：<strong>把起点前移（轴 B）实际上是在把终点先验"缩进"到数据附近</strong>，这也是 TDPM 把截断前向解释成"可学习隐先验"的原因。</p>
+</div>
+
+<h3 id="s1-4">1.4 收录标准与证据分级</h3>
+
+<p>本报告对每条结论标注证据强度，四档：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:14%">级别</th><th style="width:26%">含义</th><th style="width:60%">本报告中的判定方式</th></tr></thead>
+<tbody>
+<tr><td class="c"><span class="b high">代码级</span></td><td>读过官方仓库源码，结论可由代码行号复核</td><td>如 SAStainDiff 的 <code>space_timesteps</code> 语义、<code>q_sample</code> 初始态——本报告重算过数值</td></tr>
+<tr><td class="c"><span class="b high">正文逐字</span></td><td>从论文正文 / 摘要取到<strong>逐字引文</strong>，不是转述</td><td>如 Cold Diffusion 关于"终点分布不再是各向同性高斯"的那段、Improved DDPM 的方差插值公式</td></tr>
+<tr><td class="c"><span class="b medium">摘要级</span></td><td>只拿到摘要，机制细节未核实到正文</td><td>如 RDDM 的系数变换细节、I²SB 的解析边际推导——<strong>引用其结论但标注未核</strong></td></tr>
+<tr><td class="c"><span class="b low">二手转述</span></td><td>来自第三方解读页，未拿到原文</td><td>如 TDiffDe 的 <code>T_cut=35</code>——<strong>只作线索，不作依据</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">三条主动排除</div>
+<ol>
+<li><strong>条件注入类</strong>（cross-attention、SPADE、条件拼接的变体）——已在《结构保持机制》报告中处理。</li>
+<li><strong>约束 / 引导类</strong>（硬投影、梯度引导、CFG、DDIM inversion 锚定）——同上。</li>
+<li><strong>纯架构替换</strong>（U-Net → DiT、加入 Mamba / 状态空间模块）——它改的是<strong>网络</strong>不是<strong>过程</strong>，且你此前已确认本领域没有为 U-ViT / DiT 论证的先例。<em>例外</em>：当架构改动<strong>与过程耦合</strong>时才收（如 LDM 的潜空间，因为它改变了加噪的定义域）。</li>
+</ol>
+</div>
+
+<h2 id="s2"><span class="num">2</span>轴 A · 前向退化算子</h2>
+
+<h3 id="s2-1">2.1 一般化：把 D 打开</h3>
+
+<p>标准 DDPM 的前向过程只有一种形态：往图像里加各向同性高斯噪声，方差由 ᾱ<sub>t</sub> 控制。轴 A 的所有工作共享同一个一般化写法，Cold Diffusion 给得最清楚：</p>
+
+<div class="eq">
+x<sub>t</sub> = D(x<sub>0</sub>, t)&nbsp;&nbsp;&nbsp;<span class="small">约束两条：</span>(i) D(x<sub>0</sub>, 0) = x<sub>0</sub>&nbsp;&nbsp;·&nbsp;&nbsp;(ii) D(x<sub>0</sub>, t) 的输出分布随 t <strong>连续变化</strong>
+</div>
+
+<p>原文逐字：</p>
+<div class="quote"><div class="en">"Given an image x<sub>0</sub> ∈ ℝ<sup>N</sup>, consider the degradation of x<sub>0</sub> by operator D with severity t, denoted x<sub>t</sub> = D(x<sub>0</sub>, t). The output distribution D(x<sub>0</sub>, t) of the degradation should vary continuously in t, and the operator should satisfy D(x<sub>0</sub>, 0) = x<sub>0</sub>. In the standard diffusion framework, D adds Gaussian noise with variance proportional to t. In our generalized formulation, we choose D to perform various other transformations such as blurring, masking out pixels, downsampling, and more, with severity that depends on t."</div></div>
+
+<p>这两条约束看起来很宽松，实际上<strong>第二条（连续变化）才是承重的</strong>——它保证了"逐步退化"这条路径存在，从而使反向过程可以逐步恢复。而<strong>第一条保证了 t=0 时能对上真值</strong>，训练目标才有意义。</p>
+
+<h3 id="s2-2">2.2 谱系表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th style="width:16%">工作</th><th style="width:8%">年份</th><th style="width:20%">D 是什么</th><th style="width:26%">机制改动点（可核对的）</th><th style="width:9%">证据</th><th style="width:21%">对你的意义</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>D3PM</strong><br><span class="small">Structured Denoising Diffusion in Discrete State-Spaces</span></td>
+<td class="c">2021</td>
+<td>离散<strong>转移矩阵</strong> Q<sub>t</sub></td>
+<td>把"加噪"推广成三类转移矩阵：模仿连续高斯的核、基于<strong>嵌入空间最近邻</strong>的核、引入<strong>吸收态</strong>的核。原文："<em>the choice of transition matrix is an important design decision that leads to improved results</em>"</td>
+<td class="c"><span class="b medium">摘要</span></td>
+<td>你的 H / DAB 若离散化为分级（如 IHC 分级 0/1/2/3），吸收态转移矩阵是现成工具</td>
+</tr>
+<tr>
+<td><strong>Cold Diffusion</strong></td>
+<td class="c">2022</td>
+<td>模糊 / 掩码 / 下采样 / 像素化 / 下雪 / 动画化</td>
+<td>完全<strong>确定性</strong>退化也能生成；但需要换采样规则（见 §2.3）；代价是终点分布失去闭式</td>
+<td class="c"><span class="b high">正文</span></td>
+<td><span class="b bad">慎用</span>先验不可采样；但它的"改进采样规则"本身可单独借用</td>
+</tr>
+<tr>
+<td><strong>Soft Diffusion</strong><br><span class="small">Score Matching for General Corruptions</span></td>
+<td class="c">2022</td>
+<td>任意<strong>线性</strong>退化（高斯模糊、掩码）</td>
+<td>提出 <strong>Soft Score Matching</strong>，证明可对<em>任意线性退化过程</em>学出得分；把退化过程<strong>嵌进网络</strong>；给出<strong>退化级选择</strong>的原则性方法 + <strong>Momentum Sampler</strong>。CelebA-64 FID <strong>1.85</strong></td>
+<td class="c"><span class="b medium">摘要</span></td>
+<td>"把退化算子嵌进网络"这一条对你直接有用——若你把 D 改成乘性，网络必须知道 D 是什么</td>
+</tr>
+<tr>
+<td><strong>IR-SDE</strong><br><span class="small">Image Restoration with Mean-Reverting SDE</span></td>
+<td class="c">2023<br><span class="small">ICML</span></td>
+<td><strong>均值回归</strong> SDE</td>
+<td>前向过程把高清图变成<strong>"退化图 + 固定高斯噪声"的均值态</strong>，而不是纯噪声；有闭式解 ⇒ 可直接算 ground-truth 得分；再加<strong>最大似然目标</strong>去学最优反向轨迹</td>
+<td class="c"><span class="b medium">摘要</span></td>
+<td><span class="b high">高相关</span>它的终点是"退化图"而非纯噪声——这正是非配对染色任务的天然形态</td>
+</tr>
+<tr>
+<td><strong>Blue noise for diffusion models</strong></td>
+<td class="c">2024<br><span class="small">SIGGRAPH</span></td>
+<td><strong>相关（有色）噪声</strong></td>
+<td>不再用白噪声，而是用<strong>图内与图间都相关</strong>的噪声；提出<strong>时变噪声模型</strong>把相关噪声纳入训练；还允许同一 mini-batch 内跨图相关以改善梯度流</td>
+<td class="c"><span class="b medium">摘要</span></td>
+<td>如果你怀疑"白噪声的频谱结构与病理纹理不匹配"，这是唯一的现成入口</td>
+</tr>
+<tr>
+<td><strong>RDDM</strong><br><span class="small">Residual Denoising Diffusion Models</span></td>
+<td class="c">2024<br><span class="small">CVPR</span></td>
+<td><strong>双扩散</strong>：残差 + 噪声</td>
+<td>把单一去噪过程<strong>解耦成两个</strong>：残差扩散 = 从目标图指向退化输入图的<strong>方向性</strong>扩散；噪声扩散 = 随机扰动。原文："<em>The residual prioritizes certainty, while the noise emphasizes diversity</em>"；并证明采样过程通过<strong>系数变换</strong>与 DDPM / DDIM 一致</td>
+<td class="c"><span class="b medium">摘要</span></td>
+<td><span class="b high">高相关</span>「确定性成分 vs 多样性成分」的显式分离，与你要的"结构保持 vs 表达生成"是同一个矛盾</td>
+</tr>
+<tr>
+<td><strong>NEED</strong><br><span class="small">Noise-Inspired Diffusion for Generalizable LDCT</span></td>
+<td class="c">2025<br><span class="small">MedIA</span></td>
+<td><strong>移位泊松</strong>噪声</td>
+<td>因为 CT 投影域噪声<strong>偏离高斯</strong>，所以设计 <strong>shifted Poisson diffusion</strong>，让前向过程<strong>与成像物理的噪声模型对齐</strong>；再加"时间步匹配"策略泛化到未见剂量</td>
+<td class="c"><span class="b high">正文</span></td>
+<td><span class="b high">方法学模板</span>它的论证链条正是你需要的：<em>先证明噪声分布偏离高斯 → 再据此改 D</em></td>
+</tr>
+<tr>
+<td><strong>乘性扩散 (MSGM)</strong><br><span class="small">Multiplicative Diffusion Models: Beyond Gaussian Latents</span></td>
+<td class="c">2026<br><span class="small">ICLR</span></td>
+<td><strong>斜对称乘性噪声</strong></td>
+<td>噪声只做<strong>绕原点的随机旋转</strong>，严格保持 <code>‖x_s‖ = ‖x_0‖</code>；隐分布 = <em>数据范数分布 × 球面均匀方向</em>；证明 <strong>KL(隐‖数据) ≤ 标准扩散</strong>，重尾数据下标准扩散为 ∞ 而它有限</td>
+<td class="c"><span class="b medium">正文<br>（解读页）</span></td>
+<td><span class="b high">★ 最关键</span>与你的 OD / 浓度域乘性结构同构；但工程上尚不成熟（见 §2.5）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s2-3">2.3 Cold Diffusion 深挖：两个算法与一个致命代价</h3>
+
+<p>Cold Diffusion 值得单独讲，因为它是这一轴的<strong>理论基础</strong>，而且它暴露了改 D 的<strong>真实代价</strong>。论文给了两个采样算法，区别只在更新式：</p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">算法 1 · 朴素采样（会崩）</div>
+<p><code>x̂₀ ← R(x_s, s)</code></p>
+<p><code>x_{s−1} = D(x̂₀, s−1)</code></p>
+<p class="small">当复原算子 R 完美时精确；但 R 一旦有误差，迭代会<strong>"wander away"</strong>（原文用词），在平滑 / 可微退化上产生<strong>累积伪影</strong>，直接失败。</p>
+</div>
+<div class="mini">
+<div class="mt">算法 2 · 改进采样（可用）</div>
+<p><code>x̂₀ ← R(x_s, s)</code></p>
+<p><code>x_{s−1} = x_s − D(x̂₀, s) + D(x̂₀, s−1)</code></p>
+<p class="small">不再<strong>替换</strong>而是<strong>增量修正</strong>：只把 D 在两个时刻的差量加上去。原文："<em>for a class of linear degradation operations, it can be shown to produce exact reconstruction even when the restoration operator R fails to perfectly invert D</em>"</p>
+</div>
+</div>
+
+<p>为什么算法 2 能容忍误差？论文给了一个漂亮的 Taylor 论证：任何光滑退化在 <code>x = x₀, s = 0</code> 附近的展开都是</p>
+
+<div class="eq">
+D(x, s) ≈ x + s · e + HOT&nbsp;&nbsp;&nbsp;<span class="small">（常数项为零，因为已假设 D(x,0) = x）</span>
+</div>
+
+<p>在这个形式下，算法 2 的更新式<strong>把 x_s 中的误差项整体抵消掉了</strong>，误差不再进入下一步。这是一个<strong>只依赖"退化可微"的稳定性保证</strong>，与噪声类型无关——所以它比"必须用高斯噪声"的直觉更普适。</p>
+
+<div class="box stop">
+<div class="bt">代价：改 D 会打破"从先验采样"这条路</div>
+<p>论文逐字承认：噪声型扩散的优势在于<strong>第 T 步的分布就是各向同性高斯</strong>，所以可以"先采一个高斯样本，再逐步去噪"来无条件生成。而用模糊作为退化时，<strong>完全退化的图像不再构成一个可以采样的漂亮闭式分布</strong>。论文还补了一刀：模糊退化下，任何图在 T 大时都会变成<strong>常数图，且该常数恰好等于原图的通道均值</strong>。</p>
+<p><strong>对你的直接含义</strong>：如果你为了"物理更真实"把 D 换成某种染色退化，你必须同时回答"那第 T 步我从哪儿采样"。这不是可以事后补的问题——它是设计的一部分。这也是 §7（先验与桥）存在的理由。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">一个容易被忽略的附赠结论</div>
+<p>论文附录证明了算法 2 与 DDIM 的确定性采样<strong>结构同源</strong>：给定估计的 <code>x̂₀</code> 与 <code>x_t</code>，可以反解出噪声 <code>ẑ(x_t,t) = (x_t − √ᾱ_t·x̂₀)/√(1−ᾱ_t)</code>，代入后算法 2 的更新式就退化成 DDIM 的形式。也就是说——<strong>"冷扩散的改进采样"和"DDIM 的确定性采样"是同一个东西的两种写法</strong>。这解释了为什么少步采样（轴 D）与退化算子（轴 A）在实践中总是纠缠在一起。</p>
+</div>
+
+<h3 id="s2-4">2.4 Soft Diffusion 与 RDDM：两条中间路线</h3>
+
+<h4>Soft Diffusion —— 把"任意线性退化"做成一个可训练框架</h4>
+<p>它的贡献可以概括成三件，其中第三件最实用：</p>
+<ol>
+<li><strong>更宽的退化族</strong>：把已知扩散模型全部收编为特例，允许任意<strong>线性</strong>退化（高斯模糊、掩码）。</li>
+<li><strong>Soft Score Matching</strong>：原文说它"<em>provably learns the score function for any linear corruption process</em>"（可证明地对任意线性退化过程学出得分函数），并证明在适当的正则条件下该目标学的就是似然的梯度。</li>
+<li><strong>退化级怎么选</strong>：原文"<em>We further develop a principled way to select the corruption levels for general diffusion processes</em>"——注意，这解决的正是"把 D 换掉以后，那些超参该怎么定"的问题。这个问题的答案<strong>不能从高斯情形照搬</strong>。</li>
+</ol>
+<p>它的实验口径是 CelebA-64 上 FID <strong>1.85</strong>，并称"outperforming all previous linear diffusion models"。<span class="b medium">摘要级</span>——具体对比表未核。</p>
+
+<h4>RDDM —— 把"确定性"和"多样性"拆成两个过程</h4>
+<p>RDDM 的诊断是：传统的<strong>单一</strong>去噪扩散过程对图像复原任务"<em>initially uninterpretable</em>"（一开始就无法解释），因为它把"要恢复的方向"和"要注入的随机性"混在一个过程里。它的解法是解耦：</p>
+
+<div class="flow">
+<div class="pipe">
+<div class="pcell"><div class="ptag t-blue">残差扩散</div><div class="pbox">目标图 → 退化输入图</div><div class="psub">方向性 · 优先确定性</div></div>
+<div class="parrow">+</div>
+<div class="pcell"><div class="ptag t-purple">噪声扩散</div><div class="pbox">随机扰动</div><div class="psub">优先多样性</div></div>
+<div class="parrow">=</div>
+<div class="pcell"><div class="ptag t-green">统一模型</div><div class="pbox">生成 + 复原</div><div class="psub">按任务调两者配比</div></div>
+</div>
+<div class="pnote">原文："The residual prioritizes certainty, while the noise emphasizes diversity, enabling RDDM to effectively unify tasks with varying certainty or diversity requirements"</div>
+</div>
+
+<p>两个对你有用的细节：</p>
+<ul>
+<li><strong>训练门槛极低</strong>：原文称"<em>a generic UNet, trained with only an L1 loss and a batch size of 1, to compete with state-of-the-art image restoration methods</em>"——一个通用 U-Net + 纯 L1 + batch size 1 就能打。这对你 4060 的算力是个真实信号。</li>
+<li><strong>与既有采样器兼容</strong>：原文称"<em>our sampling process is consistent with that of DDPM and DDIM through coefficient transformation</em>"——意味着你现有的少步采样代码不用重写。</li>
+</ul>
+<p><span class="b medium">摘要级</span>——系数变换的具体形式与实验表未核。</p>
+
+<h3 id="s2-5">2.5 非高斯噪声三支：相关 / 乘性 / 泊松</h3>
+
+<p>把 D 从"各向同性高斯"换成"其他分布的噪声"，目前有三条独立的技术路线。它们解决的问题完全不同，别混在一起看：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:13%">路线</th><th style="width:20%">噪声长什么样</th><th style="width:30%">解决什么问题</th><th style="width:16%">代价 / 局限</th><th style="width:21%">对你的可用性</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>相关噪声</strong><br><span class="small">Blue noise</span><br><span class="small">SIGGRAPH 2024</span></td>
+<td>噪声<strong>在空间上相关</strong>（不再是逐像素独立），且可跨图相关</td>
+<td>白噪声的频谱是平的，而网络要重建的频段并不平；用相关噪声让<strong>训练噪声的频谱与目标频段匹配</strong>，原文称改善 FID</td>
+<td>基于<strong>确定性</strong>扩散模型；需要快速生成相关噪声掩码；跨图相关会改变批内梯度的统计</td>
+<td><span class="b medium">可试</span>若你怀疑"病理纹理被白噪声抹平"，这是唯一现成入口</td>
+</tr>
+<tr>
+<td><strong>乘性噪声</strong><br><span class="small">MSGM</span><br><span class="small">ICLR 2026</span></td>
+<td>斜对称算子驱动的噪声，只做<strong>随机旋转</strong>；范数守恒</td>
+<td>标准高斯隐空间与数据分布差太远：重尾数据下 KL 散度为<strong>无穷</strong>。乘性噪声让隐分布<strong>自动继承数据的范数分布</strong>，KL 恒 ≤ 标准扩散</td>
+<td><strong>无解析得分</strong>（不能用去噪得分匹配，只能用滑动得分匹配）；实验用稠密三阶张量 <code>G</code>，参数量 <code>d³</code>，高维内存爆炸；论文自己说高维结果"属初步探索"</td>
+<td><span class="b medium">思想可用<br>实现暂不可用</span>概念上完美对应你的乘性浓度域，但当前工程形态搬不动</td>
+</tr>
+<tr>
+<td><strong>泊松噪声</strong><br><span class="small">NEED</span><br><span class="small">MedIA 2025</span><br><span class="small">+ SPECT 泊松扩散</span><br><span class="small">Med Phys 2025</span></td>
+<td>移位泊松分布（光子计数统计）</td>
+<td>医学成像的投影域噪声<strong>物理上就是泊松</strong>，用高斯近似会失真。原文：设计"<em>a forward process that progressively adds shifted Poisson noise to align with the noise model</em>"</td>
+<td>需要知道成像物理的噪声模型；主要验证在 CT 投影域，图像域仍退回高斯 + 引导</td>
+<td><span class="b high">方法学模板</span>它的<strong>论证链条</strong>可整体搬到你的场景：先测你域的噪声分布 → 再改 D</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">NEED 的论证链条：这是本报告最想让你抄的一段方法学</div>
+<p>NEED 的逻辑是：<strong>(i)</strong> CT 图像噪声偏离高斯分布 → 所以标准扩散"<em>may produce unrealistic structures</em>"；<strong>(ii)</strong> 因此把前向过程改成<strong>与 pre-log 投影数据的噪声模型对齐</strong>的移位泊松扩散；<strong>(iii)</strong> 图像域噪声复杂未知，就退回高斯但加双重引导；<strong>(iv)</strong> 加"时间步匹配"策略泛化到未见剂量。</p>
+<p>把这段翻译成你的场景：<strong>先量化你的目标域（IHC 的 OD / 浓度）的噪声统计到底是加性还是乘性、是否随信号强度变化，再决定 D 该长什么样。</strong>这是一个可以先做、且不依赖任何新模型架构的测量实验——本报告 §11 的 E2 就按这个思路设计。</p>
+</div>
+
+<h3 id="s2-6">2.6 空间变化噪声：SVNR</h3>
+
+<p>SVNR 提出的是一个更激进的改动：<strong>噪声水平不再是全局标量，而是逐像素的时间图</strong>。</p>
+
+<div class="quote"><div class="en">"we present SVNR, a novel formulation of denoising diffusion that assumes a more realistic, spatially-variant noise model. SVNR enables using the noisy input image as the starting point for the denoising diffusion process, in addition to conditioning the process on it. To this end, we adapt the diffusion process to allow each pixel to have its own time embedding, and propose training and inference schemes that support spatially-varying time maps. Our formulation also accounts for the correlation that exists between the condition image and the samples along the modified diffusion process."</div></div>
+
+<p>三个要点：</p>
+<ol>
+<li><strong>每个像素有自己的时间嵌入</strong>——这直接把时间步从一个标量变成了一张图。这是轴 D 与轴 B 的交叉改动。</li>
+<li><strong>输入图既是起点又是条件</strong>——原文说得很直白（"<em>in addition to conditioning the process on it</em>"），即轴 B 的改动<strong>不排斥</strong>条件注入，两者可以叠加。</li>
+<li><strong>显式处理条件与采样路径的相关性</strong>——这一点最容易被忽略：一旦你把输入图当起点，条件与 <code>x_t</code> 就不再独立，标准扩散里那些"条件与样本独立"的推导<strong>不再成立</strong>。SVNR 明确把这条写进了公式。</li>
+</ol>
+
+<div class="box warn">
+<div class="bt">第 3 点对你的直接提醒</div>
+<p>你之前调研过的很多"条件注入"结论（包括 SAStainDiff 里"条件已加噪、x₀ 是原片"的推导），都隐含假设<strong>条件与 x_t 在给定 x₀ 时独立</strong>。一旦你采用轴 B 的输入派生初始态，<strong>条件与起点就来自同一张图</strong>，这个假设会被削弱。这不是致命问题，但它意味着：<strong>你不能把"条件注入"的旧结论无条件搬到"输入派生起点"的设定下</strong>。SVNR 是目前唯一把这条显式写进公式的工作。</p>
+</div>
+
+<h3 id="s2-7">2.7 轴 A 可移植性判定</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">候选改动</th><th style="width:13%">判定</th><th style="width:33%">理由</th><th style="width:32%">若要试，最小动作是什么</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>NEED 式「先测噪声分布再改 D」</strong></td>
+<td class="c"><span class="b high">立即可做</span></td>
+<td>不需要新模型，只需要统计测量；且它回答的是"你到底该不该改 D"这个前置问题</td>
+<td>在 IHC 的 OD / 浓度图上，按信号强度分箱，检验残差方差是否随均值变化（加性 ⇒ 方差恒定；乘性 / 泊松 ⇒ 方差随均值增长）</td>
+</tr>
+<tr>
+<td><strong>Soft Diffusion 的「退化算子嵌进网络」</strong></td>
+<td class="c"><span class="b high">可直接用</span></td>
+<td>纯工程改动：既然 D 变了，网络必须知道 D 是什么，否则学的是错的目标</td>
+<td>把 D 的标识（或 D 的输出）作为额外通道喂给 U-Net——与 SAStainDiff 的 6 通道拼接是同一个位置</td>
+</tr>
+<tr>
+<td><strong>Cold Diffusion 的改进采样式</strong><br><code>x_{s−1} = x_s − D(x̂₀,s) + D(x̂₀,s−1)</code></td>
+<td class="c"><span class="b medium">可借用</span></td>
+<td>稳定性保证只依赖"退化可微"，与噪声类型无关；且被证明与 DDIM 确定性采样同源</td>
+<td>仅当你的 D 是<strong>平滑确定性</strong>退化时才需要；若仍用高斯加噪，DDIM 已经等价</td>
+</tr>
+<tr>
+<td><strong>相关噪声（Blue noise）</strong></td>
+<td class="c"><span class="b medium">可试</span></td>
+<td>改善的是"训练噪声频谱与目标频段匹配"，属调优而非必需</td>
+<td>先用一维代理实验验证：把白噪声换成低频相关噪声，看重建高频细节是否变好</td>
+</tr>
+<tr>
+<td><strong>乘性噪声（MSGM）</strong></td>
+<td class="c"><span class="b bad">思想可用<br>实现搬不动</span></td>
+<td>概念与你的 OD 域完美对应，但：无解析得分 ⇒ 只能用 SSM；稠密张量 <code>d³</code> 内存不可承受；论文自认高维结果初步</td>
+<td>不要复现。把它当作<strong>理论依据</strong>：证明"你的域用乘性建模是有原则的"，然后退一步做工程近似（见 §11 E2）</td>
+</tr>
+<tr>
+<td><strong>残差扩散（RDDM）</strong></td>
+<td class="c"><span class="b high">高相关<br>值得读全文</span></td>
+<td>它把"确定性方向 + 随机多样性"显式解耦，正好对应你的"结构保持 vs 表达生成"矛盾；且 L1 + batch 1 就能打</td>
+<td>先读全文核对系数变换（当前仅摘要级）；若成立，它可能同时解决你的结构锚定与训练成本两个问题</td>
+</tr>
+<tr>
+<td><strong>空间变化噪声（SVNR）</strong></td>
+<td class="c"><span class="b medium">暂不</span></td>
+<td>需要逐像素时间嵌入 ⇒ 网络输入与训练流程都要改；且它解决的问题（真实相机噪声空间不均）与你的主矛盾不同</td>
+<td>只取它的<strong>警告</strong>：输入派生起点会破坏"条件与样本独立"，别把旧推导无条件搬过来</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s3"><span class="num">3</span>轴 B · 初始状态与起点 ★</h2>
+
+<div class="box key">
+<div class="bt">为什么这条轴打星号</div>
+<p>因为它同时满足三条：<strong>(i) 零训练成本</strong>（纯推理期改动）、<strong>(ii) 已被同域验证</strong>（SAStainDiff 在染色任务上就是这么做的）、<strong>(iii) 有完整的上游谱系可借鉴</strong>（SDEdit → TDPM → PartDiff → 桥过程）。这是本报告认为你最该先动的一轴。</p>
+</div>
+
+<h3 id="s3-1">3.1 三个可独立改的量</h3>
+
+<p>把标准采样写出来，就能看清这条轴上有<strong>三个互相独立的旋钮</strong>——很多人把它们混成一个"少加噪"，这是错误的：</p>
+
+<div class="eq">
+标准：&nbsp; x<sub>T</sub> ~ N(0, I)，然后 for t = T, …, 1: x<sub>t−1</sub> = step(x<sub>t</sub>, t)<br><br>
+<strong>旋钮 ① 起点</strong>&nbsp; 把循环从 <code>t = T</code> 改成 <code>t = t_start</code>&nbsp;&nbsp;<span class="small">← 决定"少走多少步"</span><br>
+<strong>旋钮 ② 初始态</strong>&nbsp; 把 <code>x_T ~ N(0,I)</code> 换成 <code>x_{t_start} = q(x_input, t_start)</code>&nbsp;&nbsp;<span class="small">← 决定"起点张量里有没有输入信息"</span><br>
+<strong>旋钮 ③ 步长集合</strong>&nbsp; 用哪些 t（等距 / 非等距 / 重排）&nbsp;&nbsp;<span class="small">← 属轴 D，但必须与 ① ② 联动</span>
+</div>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:16%">组合</th><th style="width:20%">起点</th><th style="width:24%">初始态</th><th style="width:40%">结果</th></tr></thead>
+<tbody>
+<tr><td><strong>标准扩散</strong></td><td><code>t = T</code></td><td>纯噪声 <code>N(0,I)</code></td><td>生成能力最强，但与输入无关；条件只能靠注入</td></tr>
+<tr><td><strong>只改旋钮 ②</strong></td><td><code>t = T</code></td><td><code>q(x_input, T)</code></td><td>起点几乎无信息（ᾱ<sub>T</sub>≈0），等于把输入当噪声丢掉 ⇒ <strong>无效</strong></td></tr>
+<tr><td><strong>只改旋钮 ①</strong></td><td><code>t = t_start</code></td><td>纯噪声</td><td>步数少了，但起点仍是噪声 ⇒ <strong>只是省算力，不引入输入信息</strong></td></tr>
+<tr><td><strong>①② 同时改</strong></td><td><code>t = t_start</code></td><td><code>q(x_input, t_start)</code></td><td><span class="b high">有效</span>起点张量保留输入信号，且只需走 <code>t_start</code> 步 ⇒ <strong>SDEdit / SAStainDiff 的做法</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">这个表格解释了你之前那个疑问</div>
+<p>你此前问过"SAStainDiff 是不是只加噪到 70%"。答案在这个表里：<strong>它同时动了旋钮 ① 和 ②</strong>。起点 <code>t_start = 720</code>（<span class="small">在 900 + ddim5 下，ᾱ=0.00515、σ=0.9974</span>），初始态是 <code>q_sample(输入, T−1)</code>，即 <strong><code>0.0718·x_input + 0.9974·ε</code>，保留了约 7.2% 的输入信号</strong>。所以"只加噪到 72%"这个描述是对的，但<strong>它的收益不只来自"少加噪"，还来自"起点里留了输入信息"</strong>——这两件事必须分开看，否则你调参时不知道该调哪个。</p>
+</div>
+
+<h3 id="s3-2">3.2 谱系表</h3>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th style="width:15%">工作</th><th style="width:7%">年份</th><th style="width:16%">改动</th><th style="width:30%">机制（可核对的）</th><th style="width:9%">证据</th><th style="width:23%">对你的意义</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>SDEdit</strong></td><td class="c">2021<br><span class="small">ICLR'22</span></td>
+<td>①②</td>
+<td>"<em>Given an input image with user guide of any type, SDEdit first adds noise to the input, then subsequently denoises the resulting image through the SDE prior to increase its realism.</em>" 并强调"<em>does not require task-specific training or inversions</em>"</td>
+<td class="c"><span class="b high">摘要</span></td>
+<td><strong>原始出处</strong>。它证明了一件事：<em>不改训练、不加条件，只改起点与初始态，就能在"保真 vs 真实"之间连续调节</em></td>
+</tr>
+<tr>
+<td><strong>TDPM</strong><br><span class="small">Truncated Diffusion Probabilistic Models</span></td><td class="c">2022<br><span class="small">ICLR'23</span></td>
+<td>① + F</td>
+<td>"<em>adds noise not until the data become pure random noise, but until they reach a hidden noisy data distribution that we can confidently learn</em>"；并且"<em>can be cast as an adversarial auto-encoder empowered by both the diffusion process and a learnable implicit prior</em>"</td>
+<td class="c"><span class="b high">摘要</span></td>
+<td><span class="b high">理论支柱</span>它把"截断前向"<strong>正式解释成"可学习的隐先验"</strong>——这是你向审稿人解释"为什么可以少加噪"时最有力的一句话</td>
+</tr>
+<tr>
+<td><strong>BBDM</strong></td><td class="c">2023<br><span class="small">CVPR</span></td>
+<td>② + F</td>
+<td>"<em>models image-to-image translation as a stochastic Brownian Bridge process, and learns the translation between two domains directly through the bidirectional diffusion process rather than a conditional generation process</em>"；自称"<em>the first work that proposes Brownian Bridge diffusion process for image-to-image translation</em>"</td>
+<td class="c"><span class="b high">摘要</span></td>
+<td>两端锚定的最简形式。<strong>但它要求配对</strong>——对你的串行切片是前提问题（§3.6）</td>
+</tr>
+<tr>
+<td><strong>I²SB</strong></td><td class="c">2023<br><span class="small">ICML</span></td>
+<td>② + F</td>
+<td>"<em>directly learn the nonlinear diffusion processes between two given distributions</em>"；理由是"<em>the degraded images are structurally informative priors for reconstructing the clean images</em>"；属于可解析的 SB 类，<strong>给定边界对时边际分布可解析计算</strong>，因此是 simulation-free</td>
+<td class="c"><span class="b medium">摘要</span></td>
+<td>它给出了"<strong>为什么退化图是好起点</strong>"的正式理由：结构信息本身就是先验</td>
+</tr>
+<tr>
+<td><strong>PartDiff</strong></td><td class="c">2023</td>
+<td>①②</td>
+<td>发现"<em>the intermediate latent states gradually converge and become indistinguishable when diffusing a pair of low- and high-resolution images</em>"；于是把低分图的加噪结果当作初始态；并引入 <strong>latent alignment</strong> 补偿近似误差</td>
+<td class="c"><span class="b high">摘要</span></td>
+<td><span class="b high">最值得细读</span>它的"<strong>两图中间潜态会收敛</strong>"这一观察，可能正是你串行切片可用性的理论依据</td>
+</tr>
+<tr>
+<td><strong>SVNR</strong></td><td class="c">2023</td>
+<td>② (+条件)</td>
+<td>逐像素时间嵌入；"<em>enables using the noisy input image as the starting point for the denoising diffusion process, in addition to conditioning the process on it</em>"</td>
+<td class="c"><span class="b high">摘要</span></td>
+<td>提醒你起点改动<strong>不排斥</strong>条件注入，但会破坏"条件与样本独立"</td>
+</tr>
+<tr>
+<td><strong>DDBM</strong></td><td class="c">2023</td>
+<td>② + F</td>
+<td>诊断很直接："<em>for many applications such as image editing, the model input comes from a distribution that is not random noise. As such, diffusion models must rely on cumbersome methods like guidance or projected sampling to incorporate this information</em>" ⇒ 用桥替代</td>
+<td class="c"><span class="b high">摘要</span></td>
+<td><span class="b high">与你直接相关</span>这句话等于说：<strong>你的"条件注入 / 约束引导"两层工作，本质是在补"起点不是噪声"这个缺</strong></td>
+</tr>
+<tr>
+<td><strong>SAStainDiff</strong></td><td class="c">2025<br><span class="small">BSPC</span></td>
+<td>①②③</td>
+<td>代码级核实：<code>space_timesteps(900,"ddim5")</code> ⇒ 起点 <code>t=720</code>；初始态 <code>q_sample(输入, T−1)</code>；5 步 DDIM</td>
+<td class="c"><span class="b high">代码级</span></td>
+<td><strong>同域验证</strong>。证明这一轴在染色任务上真的有效，且不需要重训</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s3-3">3.3 输入派生初始态：三条实现路线</h3>
+
+<p>"把输入图变成起点"有三种做法，复杂度递增：</p>
+
+<div class="card">
+<div class="ch"><div><div class="title">路线 1 · 直接加噪（SDEdit / SAStainDiff）</div><div class="v">改动量：一行</div></div><div><span class="b high">零训练</span></div></div>
+<div class="body">
+<div class="eq">x<sub>t_start</sub> = √ᾱ<sub>t_start</sub> · x_input + √(1−ᾱ<sub>t_start</sub>) · ε</div>
+<p>就是 <code>q_sample</code>。SAStainDiff 用的是 <code>t_start = T−1</code>（在它重排后的序列里等价于 t=720）。<strong>关键问题</strong>：<code>t_start</code> 决定保留多少输入信号（√ᾱ<sub>t_start</sub>）。这是一个<strong>必须实验确定的超参</strong>，不能照抄——SAStainDiff 的 720 是配它的 900 + ddim5 算出来的，你换了 <code>T</code> 或 ddim 数，这个数就不对了。</p>
+<div class="box warn"><div class="bt">容易犯的错</div><p>直接抄 <code>--timestep_step 900</code>。这个参数<strong>不是起点</strong>——它经过 <code>space_timesteps</code> 重排后才成为起点，语义见 §5.1。照抄参数名而不追调用点，会得到一个你以为是 90%、实际是 72% 的起点。</p></div>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">路线 2 · 加噪 + 对齐补偿（PartDiff 的 latent alignment）</div><div class="v">改动量：训练目标加一项</div></div><div><span class="b medium">需短训练</span></div></div>
+<div class="body">
+<p>PartDiff 的洞察是：当两张图（它那里是低分与高分）分别加噪到同一个 t 时，<strong>中间潜态会逐渐收敛、变得难以区分</strong>。所以用低分图的加噪结果近似高分图的加噪结果<strong>是可接受的</strong>。但它承认存在近似误差，于是加了一项 <strong>latent alignment</strong>：在训练时对齐两者的潜态。</p>
+<p><strong>翻译到你的场景</strong>：你的 H&amp;E 与 IHC 是<strong>相邻切片</strong>（有 7.1–16.0 µm 的残差），不是同一张图。PartDiff 的思路恰好是"用 A 的加噪结果近似 B 的加噪结果"——<strong>这与你"用 H&amp;E 当起点生成 IHC"在结构上完全一致</strong>。它的 latent alignment 就是你要找的"配准误差补偿机制"的候选。</p>
+<div class="box teal"><div class="bt">为什么这条路线值得优先读全文</div><p>因为它是目前唯一<strong>明确承认"起点是近似"并给出补偿手段</strong>的工作。你的核心障碍（串行切片不是像素级配对）在 PartDiff 的框架里被显式建模了，而不是被回避。</p></div>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">路线 3 · 学习一个隐先验（TDPM）</div><div class="v">改动量：新增一个先验网络</div></div><div><span class="b bad">需完整训练</span></div></div>
+<div class="body">
+<p>TDPM 把"截断到某个中间分布"这件事做到了极致：它<strong>不再假设</strong>中间分布长什么样，而是<strong>学一个隐先验</strong>去拟合它。原文说这个模型"<em>can be cast as an adversarial auto-encoder empowered by both the diffusion process and a learnable implicit prior</em>"——即它变成了"扩散 + 对抗自编码器"的混合体。</p>
+<p><strong>代价与收益</strong>：代价是新增一个需要训练的组件（对抗训练，不稳定）；收益是"用更少的反向步数就能生成"，且原文称在无条件与文本引导生成上"<em>consistent improvements over the non-truncated ones</em>"。</p>
+<p><strong>对你的判断</strong>：这是轴 B 的<strong>终点形态</strong>，不是起点。你现在应该先做路线 1（零成本），有信号后再考虑路线 2；路线 3 属于"如果这个方向被证明有效、且你要发方法论文"时的事。</p>
+</div>
+</div>
+
+<h3 id="s3-4">3.4 截断前向：不是省算力，是换先验</h3>
+
+<p>很多综述把"截断前向"讲成"少走几步省算力"，这是<strong>误读</strong>。TDPM 的摘要一句话就把本质说清了：</p>
+
+<div class="quote"><div class="en">"We propose a faster and cheaper approach that adds noise not until the data become pure random noise, but until they reach a hidden noisy data distribution that we can confidently learn. Then, we use fewer reverse steps to generate data by starting from this hidden distribution that is made similar to the noisy data."</div></div>
+
+<p>拆开看，这句话里有两个独立的断言：</p>
+<ol>
+<li><strong>少加噪 ⇒ 终点分布从 <code>N(0,I)</code> 变成一个"更靠近数据的隐分布"</strong>。这是<strong>分布层面的改动</strong>（轴 F），不是算力层面的。</li>
+<li><strong>少走步 ⇒ 更快</strong>。这是算力层面的，是 (1) 的副产品，不是目的。</li>
+</ol>
+
+<p>所以"截断前向"的正确理解是：<strong>你在用"更少的生成多样性"换"更近的先验"</strong>。当你的任务是<strong>翻译</strong>而不是<strong>生成</strong>时，这笔交易通常是赚的——因为翻译任务本来就不需要从零生成多样本，它需要的是"在输入附近找到对应的目标"。</p>
+
+<div class="box good">
+<div class="bt">这句话可以直接用在你的论文动机里</div>
+<p>你的任务是 H&amp;E → IHC 的<strong>确定性翻译</strong>，不是无条件生成。标准扩散从 <code>N(0,I)</code> 出发，意味着它要<strong>先忘掉输入、再重新生成</strong>；而你的输入（H&amp;E 的组织形态）恰恰是<strong>最可靠的先验</strong>。TDPM 的框架给了你一个正式说法：<em>对于翻译任务，把前向过程截断在数据附近，等价于把"数据分布"本身当作先验，从而把生成问题降级为"在已知结构附近求解表达"的问题。</em></p>
+</div>
+
+<h3 id="s3-5">3.5 桥过程：把两端都锚定</h3>
+
+<p>桥过程（Brownian bridge / Schrödinger bridge）是轴 B 的<strong>极端形式</strong>：它不只是把起点从噪声换成输入，而是<strong>要求整条路径同时锚定在源分布和目标分布上</strong>。</p>
+
+<div class="flow">
+<div class="pipe">
+<div class="pcell"><div class="ptag t-blue">标准扩散</div><div class="pbox">N(0,I)</div><div class="psub">起点无信息</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag">…</div><div class="pbox">x_t</div><div class="psub">中间态</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag t-green">x_0</div><div class="pbox">目标数据</div><div class="psub">终点锚定</div></div>
+</div>
+<div class="pipe" style="margin-top:14px">
+<div class="pcell"><div class="ptag t-blue">桥过程</div><div class="pbox">x_1 = 源图</div><div class="psub"><strong>起点也锚定</strong></div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag">…</div><div class="pbox">x_t</div><div class="psub">插值</div></div>
+<div class="parrow">→</div>
+<div class="pcell"><div class="ptag t-green">x_0 = 目标图</div><div class="pbox">终点锚定</div><div class="psub">两端都给</div></div>
+</div>
+<div class="pnote">BBDM："<em>learns the translation between two domains directly through the bidirectional diffusion process rather than a conditional generation process</em>"</div>
+</div>
+
+<p>三个工作的分工：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:12%">工作</th><th style="width:24%">桥的构造</th><th style="width:32%">理论上的优势</th><th style="width:32%">对你的前提要求</th></tr></thead>
+<tbody>
+<tr><td><strong>BBDM</strong><br><span class="small">CVPR 2023</span></td><td>随机布朗桥；两个域之间的双向扩散</td><td>不再把 I2I 当条件生成 ⇒ 绕开"域间 gap"</td><td><strong>需要配对</strong>（<code>x_1</code> 与 <code>x_0</code> 必须是同一内容的两种表现）</td></tr>
+<tr><td><strong>I²SB</strong><br><span class="small">ICML 2023</span></td><td>可解析的 SB 类；<strong>给定边界对时边际分布可解析</strong></td><td>simulation-free（不必模拟整条 SDE）；"退化图是结构性先验"被正式化</td><td>同样需要边界对；但它的"退化图"设定<strong>比 BBDM 宽松</strong>——退化图可以是低质版本而非严格配对</td></tr>
+<tr><td><strong>DDBM</strong><br><span class="small">2023</span></td><td>在两个<strong>配对分布</strong>之间插值</td><td>统一了 score-based 扩散与 OT-Flow-Matching；像素与潜空间都验证过</td><td>需要配对分布；但它明确说自己的动机是<strong>替代"guidance / projected sampling"</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s3-6">3.6 轴 B 可移植性判定</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:24%">候选改动</th><th style="width:14%">判定</th><th style="width:34%">理由</th><th style="width:28%">前提 / 风险</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>起点前移 + 输入派生初始态</strong><br><span class="small">（旋钮 ① + ②）</span></td>
+<td class="c"><span class="b high">首选<br>零训练</span></td>
+<td>同域已有验证（SAStainDiff）；纯推理期改动，可随时回退；SDEdit 已证明"不改训练也能调保真 / 真实"</td>
+<td>必须<strong>先算清 <code>space_timesteps</code> 的真实语义</strong>再定 <code>t_start</code>；不能照抄 900</td>
+</tr>
+<tr>
+<td><strong>latent alignment</strong><br><span class="small">（PartDiff 式对齐补偿）</span></td>
+<td class="c"><span class="b high">优先读全文</span></td>
+<td>它是唯一<strong>显式承认起点是近似并给出补偿</strong>的工作；而你的串行切片正是"近似起点"</td>
+<td>需短训练；要确认它的 alignment 是在潜空间还是在像素空间做的</td>
+</tr>
+<tr>
+<td><strong>截断前向的「换先验」解释</strong><br><span class="small">（TDPM 框架）</span></td>
+<td class="c"><span class="b high">立即可用<br>（作为论证）</span></td>
+<td>给你一个正式说法：翻译任务下，截断 = 把数据分布当先验，把生成降级为求解</td>
+<td>无需实现；写进动机即可</td>
+</tr>
+<tr>
+<td><strong>学习隐先验</strong><br><span class="small">（TDPM 完整版）</span></td>
+<td class="c"><span class="b bad">暂不</span></td>
+<td>需新增对抗训练组件；你当前的瓶颈不是先验精度</td>
+<td>等路线 1 / 2 出信号后再评估</td>
+</tr>
+<tr>
+<td><strong>桥过程</strong><br><span class="small">（BBDM / I²SB / DDBM）</span></td>
+<td class="c"><span class="b bad">先别碰</span></td>
+<td><strong>它要求配对</strong>。你的 H&amp;E 与 IHC 是相邻切片（残差 7.1–16.0 µm ≈ 核直径），不是像素级配对 ⇒ 桥的两端锚定<strong>锚不到同一个内容</strong></td>
+<td><span class="b high">但如果</span>你后续能拿到同一张切片的连续成像（如多路复用），桥过程立刻变成最有竞争力的框架</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">一个必须提前说清的陷阱：输入派生起点会改变"条件"的语义</div>
+<p>SAStainDiff 的设定是 <code>x₀ = 规范染色原片</code>、<code>condition = 染色增强片</code>，两者<strong>几何完全相同、只差颜色</strong>——它的起点因此是"目标内容的近似"，非常准。而你的条件是 <strong>H&amp;E</strong>，起点若也用 H&amp;E 的加噪版本，那么：</p>
+<ul>
+<li>起点与条件<strong>来自同一张图</strong> ⇒ SVNR 警告的"条件与样本不再独立"成立；</li>
+<li>而你要生成的是 IHC，<strong>不是 H&amp;E 的颜色变换</strong> ⇒ 起点与目标之间多了一个"未配准 + 不同染色机制"的双重 gap。</li>
+</ul>
+<p><strong>所以你不能把 SAStainDiff 的 <code>t_start=720</code> 直接搬过来</strong>——它的 7.2% 保留量是在"起点≈目标"的前提下调出来的。你的起点离目标更远，需要的保留量<strong>应该更低</strong>（让模型有更多自由度去生成 DAB），或者干脆改用"低保留 + 更强条件"的组合。这是 §11 E1 要扫的东西。</p>
+</div>
+
+<h2 id="s4"><span class="num">4</span>轴 C · 训练目标与参数化</h2>
+
+<p>这条轴改的是<strong>"网络被要求预测什么"</strong>。它有一个很好的性质：<strong>大多不需要改架构</strong>，只改 loss 和输出通道的语义——对算力受限的场景最友好。</p>
+
+<h3 id="s4-1">4.1 参数化：ε / x₀ / v 三种预测目标</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:10%">参数化</th><th style="width:26%">网络预测什么</th><th style="width:32%">在哪些 t 上更稳</th><th style="width:32%">出处与现状</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>ε-pred</strong></td><td>噪声本身</td><td>中低噪声区（ᾱ 较大）稳定；高噪声区误差被放大</td><td>DDPM 原始选择。SAStainDiff 与 HistDiST 都是这个（<code>predict_xstart=False</code>）</td></tr>
+<tr><td class="c"><strong>x₀-pred</strong></td><td>干净图本身</td><td>高噪声区稳定；低噪声区权重失衡</td><td>guided-diffusion 里是 <code>predict_xstart</code> 开关，SAStainDiff 默认关闭</td></tr>
+<tr><td class="c"><strong>v-pred</strong></td><td><code>v = √ᾱ·ε − √(1−ᾱ)·x₀</code></td><td><strong>两端都稳</strong>；在少步采样下尤其重要</td><td>由 <em>Progressive Distillation</em> 提出，原文称"<em>new parameterizations of diffusion models that provide increased stability when using few sampling steps</em>"。DiffVS（AAAI'26）用的就是 v-pred</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">为什么这条对你特别重要</div>
+<p>你的两条主线（HistDiST 修复 / StainFuser 改造）都在用 ε-pred。但你现在要做的恰恰是<strong>少步采样</strong>（5–10 步），而 v-pred 的提出动机就是"少步下更稳"。这是一个<strong>不需要改架构、只需要改一行 loss 目标</strong>的候选改动。注意：它不是"一定更好"，而是"在少步区间更稳"——所以它应该和你的步数实验绑定在一起测。</p>
+</div>
+
+<h3 id="s4-2">4.2 时间步加权：Min-SNR-γ</h3>
+
+<p>这是本报告认为<strong>最划算的单点改动</strong>。它的诊断很具体：</p>
+
+<div class="quote"><div class="en">"we discovered that the slow convergence is partly due to conflicting optimization directions between timesteps. To address this issue, we treat the diffusion training as a multi-task learning problem, and introduce a simple yet effective approach referred to as Min-SNR-γ. This method adapts loss weights of timesteps based on clamped signal-to-noise ratios, which effectively balances the conflicts among timesteps."</div></div>
+
+<p>关键数字：</p>
+<ul>
+<li><strong>收敛速度 3.4×</strong>：原文"<em>a significant improvement in converging speed, 3.4× faster than previous weighting strategies</em>"</li>
+<li><strong>效果也更好</strong>：ImageNet 256×256 上 FID <strong>2.06</strong>，且"<em>using smaller architectures than that employed in previous state-of-the-art</em>"</li>
+<li>实现方式是 <code>w(t) = min(SNR(t), γ) / SNR(t)</code> 形式（clamped SNR），即<strong>在高 SNR 端把权重压平，避免低噪声步主导梯度</strong></li>
+</ul>
+
+<div class="box good">
+<div class="bt">与你已有认知的衔接</div>
+<p>前一份报告已经确认：SAStainDiff 与 HistDiST 都是<strong>均匀采样 <code>p(t)</code> 且 <code>w(t)</code> 为空</strong>（HistDiST 的 <code>snr_gamma=None</code>）。Min-SNR-γ 正好补上这个空位，而且它是<strong>改权重</strong>而不是改采样分布——意味着它<strong>不会动你已有的 DDIM 反演网格</strong>，风险比改 <code>p(t)</code> 更低。建议把它和改 <code>p(t)</code> 作为两个<strong>可分离</strong>的实验，别一起上。</p>
+</div>
+
+<h3 id="s4-3">4.3 方差学习：一个被忽视的少步收益</h3>
+
+<p>Improved DDPM 的贡献里，最容易被忽略的一条是：<strong>学会反向过程的方差，本身就能大幅减少所需步数</strong>。原文：</p>
+
+<div class="quote"><div class="en">"After incorporating learned variances into our model, we surprisingly discovered that we could sample in fewer steps from our models with very little change in sample quality. While DDPM requires hundreds of forward passes to produce good samples, we can achieve good samples with as few as 50 forward passes, thus speeding up sampling for use in practical applications."</div></div>
+
+<p>它的实现细节值得抄：不直接预测方差，而是<strong>在对数域做插值</strong>：</p>
+
+<div class="eq">
+Σ<sub>θ</sub>(x<sub>t</sub>, t) = exp( v · log β<sub>t</sub> + (1 − v) · log β̃<sub>t</sub> )
+</div>
+
+<p>原文解释为什么这样参数化："<em>Since Figure 1 shows that the reasonable range for Σ<sub>θ</sub> is very small, it would be hard for a neural network to predict Σ<sub>θ</sub> directly, even in the log domain... Instead, we found it better to parameterize the variance as an interpolation between β<sub>t</sub> and β̃<sub>t</sub> in the log domain.</em>"——即<strong>用网络输出 <code>v</code> 作为两端的插值系数，而不是直接回归方差</strong>。</p>
+
+<p>同一个工作还改了噪声调度：它发现"<em>while the linear noise schedule used in Ho et al. (2020) worked well for high resolution images, it was sub-optimal for images of resolution 64×64 and 32×32. In particular, the end of the forward noising process is too noisy</em>"，于是提出 <strong>cosine schedule</strong>。SAStainDiff 与 HistDiST 用的都是 <code>linear</code>——这是一个可以对照实验的点。</p>
+
+<h3 id="s4-4">4.4 训练期时间步采样：把"哪些 t 该多练"变成可学习</h3>
+
+<p>这一条与"改 <code>p(t)</code>"相邻但有区别：前一份报告讲的 <code>p(t)</code> 是<strong>你手工设计一个分布</strong>；而这里讲的是<strong>让算法自己决定</strong>。</p>
+
+<div class="quote"><div class="en">"While diffusion models are typically trained using uniform timestep sampling, our research shows that the variance in stochastic gradients varies significantly across timesteps, with high-variance timesteps becoming bottlenecks that hinder faster convergence. To address this issue, we introduce a non-uniform timestep sampling method that prioritizes these more critical timesteps. Our method tracks the impact of gradient updates on the objective for each timestep, adaptively selecting those most likely to minimize the objective effectively."</div></div>
+
+<p>两个要点：</p>
+<ul>
+<li><strong>诊断与 Min-SNR 一致但机制不同</strong>：Min-SNR 说"不同 t 的优化方向冲突"，这一篇说"不同 t 的<strong>梯度方差</strong>差异大，高方差 t 是瓶颈"。两者都指向同一个结论——<strong>均匀采样 <code>p(t)</code> 是次优的</strong>，但修正手段一个是改权重、一个是改采样频率。</li>
+<li><strong>它明确声称自己是训练期而非推理期</strong>：中文解读把它与"推理期减步数"明确区分开——"<em>这篇论文做的不是推理阶段减少采样步数，而是训练阶段决定应该训练哪个时间步</em>"。</li>
+<li>原文还强调鲁棒性："<em>our method shows robust performance across various datasets, scheduling strategies, and diffusion architectures, outperforming previously proposed timestep sampling and weighting heuristics that lack this degree of robustness</em>"——即它在多种调度与架构下都成立，这对你换框架是个好信号。</li>
+</ul>
+
+<h3 id="s4-5">4.5 自监督信号构造：这一类最"非扩散"、也最容易被忽略</h3>
+
+<p>这一小节的共同特征是：<strong>它们不改前向、不改反向、不改采样，只改"训练对是怎么造出来的"</strong>。SAStainDiff 的组件 A 就属于这一类。</p>
+
+<div class="card">
+<div class="ch"><div><div class="title">SAStainDiff 的染色增强自监督（组件 A）</div><div class="v">代码级 · 前提不成立（对你的场景）</div></div><div><span class="b bad">搬不动</span></div></div>
+<div class="body">
+<p>它的做法是：<code>x₀</code> = 规范染色原片，<code>condition</code> = 染色增强片，而<strong>增强是在已经做过几何变换的同一张图上做的</strong>（<code>image_datasets.py:298-308</code>：先裁剪并施加 <code>imgaug_transform</code>，再从变换后的 <code>image_arr</code> 派生 <code>aug_arr</code>）。结果是训练对<strong>几何完全相同、只差颜色 ⇒ 像素级完美对齐</strong>。</p>
+<p>而且增强本身是 Beer–Lambert 三步走：<code>OD = −log((I+1)/I₀)</code> → <code>C = lstsq(HE, OD)</code> → <code>I′ = I₀·exp(−HE_ref·C)</code>，即<strong>在浓度空间换混合矩阵</strong>。这意味着它构造出的"监督信号"在物理上是自洽的——这是它值得学的地方。</p>
+<p><strong>对你的判断</strong>：你的串行切片不是像素级对齐，所以<strong>这套配对构造的前提不成立</strong>。但它的<strong>构造哲学</strong>可以借：<em>与其找配对数据，不如从单张图上"造"出一个只差染色、几何不变的第二视图</em>。如果你的目标是"染色归一化"而非"IHC 生成"，这套思路可以直接用。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">DiffVS 的单步微调：固定 t=T 且 ε=0</div><div class="v">正文逐字 · AAAI 2026</div></div><div><span class="b high">高价值</span></div></div>
+<div class="body">
+<p>这是本报告认为<strong>最反直觉、也最可能对你立刻有用</strong>的一条。它的做法：</p>
+<div class="eq">
+固定 t = T，令随机噪声 ε = 0&nbsp;&nbsp;⇒&nbsp;&nbsp;迭代去噪退化为<strong>单步确定性映射</strong><br>
+然后用<strong>像素级</strong>组合损失微调：L<sub>FT</sub> = (1−λ)·‖I* − Î‖<sub>1</sub> + λ·‖I* − Î‖<sub>2</sub>
+</div>
+<p>它的消融表（HEMIT 数据集，SSIM / PSNR）：</p>
+<div class="scroll">
+<table>
+<thead><tr><th>配置</th><th class="c">SSIM</th><th class="c">PSNR</th></tr></thead>
+<tbody>
+<tr><td>无微调 · 50 步 + 10× ensemble</td><td class="c">0.673</td><td class="c">30.21</td></tr>
+<tr><td>无微调 · 单步推理</td><td class="c">0.757</td><td class="c">29.38</td></tr>
+<tr><td><strong>单步 + 像素级微调</strong></td><td class="c"><strong>0.836</strong></td><td class="c"><strong>30.60</strong></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>三点值得注意</strong>：</p>
+<ol>
+<li><strong>单步竟然优于 50 步 + ensemble</strong>（0.757 vs 0.673）。作者的解释是病理染色图<strong>像素分布极度偏斜</strong>（大量暗背景 / 无信号区域），多步去噪在这种分布上引入更多伪影。</li>
+<li><strong>像素级微调带来最大增量</strong>（0.757 → 0.836），且它同时解决了"颜色保真"与"假阳性"（原文提到消除了错误的 panCK 信号）。</li>
+<li><strong>速度</strong>：117 s/样本 → 0.13 s/样本（<strong>900×</strong>）。</li>
+</ol>
+<p><span class="b medium">注意边界</span>：这篇的骨架是 <strong>Stable Diffusion v2 + 冻结 VAE</strong>，且它是在<strong>潜空间</strong>训练后、在<strong>像素空间</strong>微调。它的"单步更好"结论是否可迁移到像素空间的小 U-Net，<strong>本报告未找到直接证据</strong>——这正是 §11 E3 要验证的。</p>
+</div>
+</div>
+
+<h4>另一个小但实用的改动：DUST 的动态双输出头</h4>
+<p>同一领域内（北大团队，肾脏 H&amp;E / MT / PAS / PASM 四染色统一框架）有一个改动值得记一笔：它提出"<em>a dynamic dual-output head to address the unstable intensity issue encountered with conventional DDPM implementations</em>"——即<strong>把输出头从单头改成动态双头，专门解决常规 DDPM 实现中的强度不稳定问题</strong>。<span class="b low">二手 / 摘要级</span>，机制细节未核，但"DDPM 在染色任务上有强度不稳定问题"这个观察本身与你相关（你的 DAB 强度分布正是评价指标之一）。</p>
+
+<h3 id="s4-6">4.6 轴 C 可移植性判定</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:24%">候选改动</th><th style="width:13%">判定</th><th style="width:33%">理由</th><th style="width:30%">最小动作</th></tr></thead>
+<tbody>
+<tr><td><strong>Min-SNR-γ 加权</strong></td><td class="c"><span class="b high">首选<br>零架构改动</span></td><td>3.4× 收敛加速 + FID 2.06；只改 loss 权重；<strong>不动 DDIM 反演网格</strong>，风险最低</td><td>在 loss 上加 <code>w(t)=min(SNR(t),γ)/SNR(t)</code>，γ 从 {1,5,20} 扫</td></tr>
+<tr><td><strong>v-pred 参数化</strong></td><td class="c"><span class="b high">优先与少步绑定</span></td><td>提出动机就是"少步下更稳"，而你正要做少步</td><td>改 loss 目标（guided-diffusion 里加 <code>predict_v</code> 分支），与步数实验配对测</td></tr>
+<tr><td><strong>学习方差</strong></td><td class="c"><span class="b medium">可试</span></td><td>原文称学方差后 50 步即可；但需 <code>learn_sigma=True</code>（输出通道翻倍）+ VLB 混合目标</td><td>打开 <code>learn_sigma</code>，用 log 域插值参数化，加 stop-gradient</td></tr>
+<tr><td><strong>自适应非均匀时间步采样</strong></td><td class="c"><span class="b medium">第二步</span></td><td>需要跟踪"每步梯度对目标的影响"，实现比 Min-SNR 重；但原文称跨调度 / 架构鲁棒</td><td>先做 Min-SNR（更简单），若收敛仍慢再上这个</td></tr>
+<tr><td><strong>DiffVS 单步微调</strong></td><td class="c"><span class="b high">值得单独立实验</span></td><td>收益最大（SSIM 0.673→0.836）+ 900× 加速；但证据在潜空间 SD 骨架上，迁移性未证</td><td>在现有 checkpoint 上做一次短微调：固定 t=T、ε=0、像素级 L1+L2</td></tr>
+<tr><td><strong>染色增强自监督（SAStainDiff A）</strong></td><td class="c"><span class="b bad">前提不成立</span></td><td>需要像素级完美对齐的配对；你的串行切片不满足</td><td>只借"造第二视图"的哲学；若做染色归一化则可直接用</td></tr>
+<tr><td><strong>cosine 噪声调度</strong></td><td class="c"><span class="b medium">对照实验</span></td><td>Improved DDPM 发现 linear 在低分辨率下"末端过噪"；你的 patch 是 256×256</td><td>换 <code>noise_schedule</code> 即可，与 <code>p(t)</code> / <code>w(t)</code> 实验分离</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s5"><span class="num">5</span>轴 D · 时间步与采样轨迹</h2>
+
+<h3 id="s5-1">5.1 离散化与重排：`space_timesteps` 的真实语义</h3>
+
+<p>这一节要纠正一个非常容易犯、而且你已经踩过的坑。先看 SAStainDiff 的实际代码：</p>
+
+<pre><code># script_util.py — create_gaussian_diffusion(...)
+betas = gd.get_named_beta_schedule(noise_schedule, steps)          # ← steps = diffusion_steps = 1000
+...
+return SpacedDiffusion(
+    use_timesteps=space_timesteps(timestep_step if not is_train else steps, timestep_respacing),  # ← 这里才用 timestep_step
+    ...
+)
+
+# respace.py — space_timesteps 的语义（ddim 分支）
+# 找到最小的整数 stride，使得 len(range(0, num_timesteps, stride)) == N
+# 注意 range 的上界是 num_timesteps，所以「最大保留索引是 num_timesteps − stride，不是 num_timesteps」</code></pre>
+
+<p>把 <code>timestep_step=900, timestep_respacing="ddim5"</code> 代进去：</p>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th>配置</th><th class="c">stride</th><th class="c">保留索引</th><th class="c">实际起点</th><th class="c">ᾱ<sub>t</sub></th><th class="c">σ<sub>t</sub></th><th class="c">SNR</th><th class="c">初始态保留的输入信号</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>timestep_step=900</code> + <code>ddim5</code><br><span class="small">（test.sh 的实际取值）</span></td>
+<td class="c">180</td><td class="c">{0, 180, 360, 540, <strong>720</strong>}</td><td class="c"><strong>t = 720</strong><br><span class="small">= 72% of 1000</span></td>
+<td class="c"><strong>0.00523</strong></td><td class="c">0.9974</td><td class="c">0.00526</td>
+<td class="c"><strong>7.23%</strong></td>
+</tr>
+<tr>
+<td><code>timestep_step=1000</code> + <code>ddim5</code><br><span class="small">（代码默认值）</span></td>
+<td class="c">200</td><td class="c">{0, 200, 400, 600, <strong>800</strong>}</td><td class="c"><strong>t = 800</strong><br><span class="small">= 80% of 1000</span></td>
+<td class="c">0.00153</td><td class="c">0.9992</td><td class="c">0.00153</td>
+<td class="c">3.91%</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p class="small">数值为本次重算（1000 步 linear 调度，β 从 1e−4 到 0.02；<code>SpacedDiffusion</code> 的 <code>new_betas = 1 − ᾱ<sub>i</sub>/ᾱ<sub>last</sub></code> 使重排后的累计乘积等于原调度在保留索引处的 ᾱ，因此上表直接可用原调度的 ᾱ）。</p>
+
+<div class="box stop">
+<div class="bt">三个必须记住的结论</div>
+<ol>
+<li><strong><code>--timestep_step 900</code> 不是起点。</strong>它只是喂给 <code>space_timesteps</code> 的<strong>上界</strong>，真正的起点是 <code>900 − stride = 720</code>。README 写"The initial sampling point. Default is 900"，<strong>这个描述是错的</strong>。</li>
+<li><strong>betas 与 indices 来自两个不同的数。</strong><code>betas</code> 用 <code>diffusion_steps</code>（1000）构建，而保留索引用 <code>timestep_step</code>（900）决定。<strong>两者混用时，你得到的起点既不是 90% 也不是"900 步调度下的 80%"，而是"1000 步调度下的 72%"</strong>。这是最容易算错的地方。</li>
+<li><strong>初始态取的是重排后的最后一个索引。</strong><code>test.py</code> 里是 <code>diffusion.q_sample(HE_input, len(diffusion.betas)-1)</code>。因为 <code>SpacedDiffusion</code> 把 <code>self.betas</code> 换成了长度为 5 的新数组，所以 <code>len(betas)-1 = 4</code> ⇒ <strong>重排坐标 4 = 原坐标 720</strong>。因此初始态是
+<div class="eq">x<sub>720</sub> = 0.0723 · x<sub>input</sub> + 0.9974 · ε&nbsp;&nbsp;⇒&nbsp;&nbsp;<strong>保留 7.2% 的输入信号</strong></div>
+</li>
+</ol>
+</div>
+
+<div class="box good">
+<div class="bt">这解释了 1.85× 这个数</div>
+<p>从默认的 <code>timestep_step=1000</code>（起点 800，保留 3.91%）换到 <code>900</code>（起点 720，保留 7.23%），<strong>输入信号保留量提升 7.23 / 3.91 = 1.85 倍</strong>。所以这个参数的作用不是"省一步"，而是<strong>把起点往数据侧挪了 8 个百分点的噪声预算</strong>。你要复现或调参时，<strong>应该直接指定你想要的 √ᾱ 保留量，再反推 <code>timestep_step</code></strong>，而不是照抄 900。</p>
+</div>
+
+<h3 id="s5-2">5.2 求解器：把 ODE 的线性部分解析解出来</h3>
+
+<p>DPM-Solver 的核心洞察只有一句，但很关键：</p>
+
+<div class="quote"><div class="en">"In this work, we propose an exact formulation of the solution of diffusion ODEs. The formulation analytically computes the linear part of the solution, rather than leaving all terms to black-box ODE solvers as adopted in previous works. By applying change-of-variable, the solution can be equivalently simplified to an exponentially weighted integral of the neural network."</div></div>
+
+<p>换句话说：扩散 ODE 里有<strong>一部分是线性的、有闭式解的</strong>（就是 ᾱ、σ 那些系数项），而之前的通用 ODE 求解器（如 RK45）把它和神经网络项一起当黑箱积分，浪费了精度。把线性部分解析解掉之后，剩下的只是一个<strong>指数加权积分</strong>，于是高阶求解器可以用很少的步数达到高精度。</p>
+
+<p>数字：<strong>10–20 次函数评估</strong>即可，CIFAR-10 上 10 步 FID <strong>4.70</strong>、20 步 FID <strong>2.87</strong>，相比此前 SOTA 采样器有 <strong>4–16× 加速</strong>。而且原文强调"<em>without any further training</em>"——<strong>训练免费</strong>。</p>
+
+<div class="box warn">
+<div class="bt">但对你有一个前提</div>
+<p>DPM-Solver 求解的是<strong>扩散 ODE</strong>（确定性轨迹）。你的场景里如果用了 <strong>DDIM inversion</strong> 做结构锚定（HistDiST 的做法），那已经是 ODE 轨迹了，两者可以叠加；但如果你用的是祖先采样（随机），换 DPM-Solver 会<strong>改变轨迹的随机性</strong>，可能与你已有的结构保持结论冲突。这一点前一份报告也提示过：<strong>改推理轨迹与改 <code>p(t)</code> 是两个不同的旋钮</strong>。</p>
+</div>
+
+<h3 id="s5-3">5.3 蒸馏与一致性：把步数压到个位数</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:20%">方法</th><th style="width:26%">机制</th><th style="width:26%">关键数字</th><th style="width:28%">对你的成本</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>渐进蒸馏</strong><br><span class="small">ICLR 2022</span></td>
+<td>把"多步确定性采样器"蒸馏成"步数减半"的新模型，反复施加</td>
+<td>从 8192 步蒸馏到 <strong>4 步</strong>，CIFAR-10 上 4 步 FID <strong>3.0</strong>；原文称整个蒸馏过程"<em>does not take more time than it takes to train the original model</em>"</td>
+<td><span class="b bad">成本高</span>相当于再训一遍模型</td>
+</tr>
+<tr>
+<td><strong>一致性模型</strong><br><span class="small">ICML 2023</span></td>
+<td>直接学"噪声 → 数据"的一步映射，同时支持多步以换取质量</td>
+<td>一步生成 CIFAR-10 FID <strong>3.55</strong>、ImageNet 64 FID 6.20；可蒸馏也可独立训练；支持零样本编辑（inpainting / 上色 / 超分）</td>
+<td><span class="b medium">中等</span>需新训练目标（自一致性），但不需要对抗训练</td>
+</tr>
+<tr>
+<td><strong>DiffVS 单步微调</strong><br><span class="small">AAAI 2026</span></td>
+<td>不蒸馏，直接把 <code>t=T, ε=0</code> 固定，用像素级损失微调</td>
+<td>SSIM 0.673 → <strong>0.836</strong>；117 s → 0.13 s（<strong>900×</strong>）</td>
+<td><span class="b high">最低</span>只需短微调，不动架构</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">这三条路线的成本排序很重要</div>
+<p>如果你的目标只是"把 5 步压到 1 步"，那么<strong>按成本从低到高是：DiffVS 式单步微调 &lt; 一致性模型 &lt; 渐进蒸馏</strong>。而 SAStainDiff 的 <code>ddim5</code> 已经把你带到 5 步——<strong>从 5 步到 1 步的边际收益可能远小于从 50 步到 5 步</strong>。先确认你的实际延迟瓶颈在哪，再决定要不要付这个成本。</p>
+</div>
+
+<h3 id="s5-4">5.4 轴 D 可移植性判定</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:24%">候选改动</th><th style="width:13%">判定</th><th style="width:33%">理由</th><th style="width:30%">最小动作</th></tr></thead>
+<tbody>
+<tr><td><strong>按 √ᾱ 反推 <code>timestep_step</code></strong></td><td class="c"><span class="b high">立即可做</span></td><td>避免照抄 900 的陷阱；把"起点"从参数名还原成物理量</td><td>写个小脚本：给定目标 √ᾱ ∈ {0.03, 0.07, 0.15}，反解 <code>timestep_step</code> 与 <code>ddimN</code></td></tr>
+<tr><td><strong>DPM-Solver 式高阶求解器</strong></td><td class="c"><span class="b medium">可试</span></td><td>训练免费、4–16× 加速；但会改变轨迹随机性</td><td>先确认你当前是否在用祖先采样；若是，先切到确定性轨迹再加求解器</td></tr>
+<tr><td><strong>一致性模型</strong></td><td class="c"><span class="b medium">中期</span></td><td>一步生成 + 零样本编辑；但需新训练目标</td><td>等 5 步方案跑通、确认瓶颈后再评估</td></tr>
+<tr><td><strong>渐进蒸馏</strong></td><td class="c"><span class="b bad">暂不</span></td><td>成本约等于重训一次模型</td><td>—</td></tr>
+<tr><td><strong>DiffVS 式单步微调</strong></td><td class="c"><span class="b high">优先试</span></td><td>成本最低、收益最大；但证据在潜空间 SD 骨架上</td><td>见 §11 E3</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s6"><span class="num">6</span>轴 E · 状态空间</h2>
+
+<h3 id="s6-1">6.1 像素 / 潜空间 / 离散</h3>
+
+<p>这条轴改的是<strong>加噪发生在哪个空间</strong>。LDM 的论证很直接：</p>
+
+<div class="quote"><div class="en">"since these models typically operate directly in pixel space, optimization of powerful DMs often consumes hundreds of GPU days and inference is expensive due to sequential evaluations. To enable DM training on limited computational resources while retaining their quality and flexibility, we apply them in the latent space of powerful pretrained autoencoders. In contrast to previous work, training diffusion models on such a representation allows for the first time to reach a near-optimal point between complexity reduction and detail preservation, greatly boosting visual fidelity."</div></div>
+
+<p>注意最后半句："<strong>near-optimal point between complexity reduction and detail preservation</strong>"——它承认这是一个<strong>折中</strong>，不是免费午餐。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:16%">空间</th><th style="width:28%">加噪的对象</th><th style="width:28%">优势</th><th style="width:28%">代价</th></tr></thead>
+<tbody>
+<tr><td><strong>像素空间</strong></td><td>原始 RGB / OD 张量</td><td>无编码损失；物理量可直接监督</td><td>算力贵；SAStainDiff 在 256² 上 batch 16、<code>mpiexec -n 2</code></td></tr>
+<tr><td><strong>潜空间</strong></td><td>预训练自编码器的潜码</td><td>算力大幅下降；可复用大规模预训练先验（DiffVS 用 SD v2）</td><td><strong>编码器可能丢掉你要的物理量</strong>；通道数对不上（你之前专门调研过）</td></tr>
+<tr><td><strong>离散 token</strong></td><td>量化后的 token 序列</td><td>可用掩码 / 吸收态等结构化转移矩阵；迭代解码可并行</td><td>量化损失；与连续浓度量的对应需要额外设计</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>D3PM 的贡献是把"离散"这条路系统化，原文："<em>This includes corruption with transition matrices that mimic Gaussian kernels in continuous space, matrices based on nearest neighbors in embedding space, and matrices that introduce absorbing states. The third allows us to draw a connection between diffusion models and autoregressive and mask-based generative models.</em>" 而 MaskGIT 走的是另一条路——用<strong>双向 Transformer 预测随机掩码的 token</strong>，原文称它"<em>accelerates autoregressive decoding by up to 64x</em>"。</p>
+
+<h3 id="s6-2">6.2 与你手上的通道 / 浓度问题</h3>
+
+<p>这一轴是你已经付过学费的地方。此前那份《潜空间训练下的通道与浓度问题》报告的核心结论是：<strong>"维度对不上"其实是 7 层错配折叠成的一个词</strong>，而其中只有 3 层真的是通道数问题（VAE 输入 / UNet 条件 / 潜通道 d）。放到本报告的框架里，这些都属于<strong>轴 E 的代价清单</strong>：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26%">你已确认的结论</th><th style="width:20%">在本报告中的归属</th><th style="width:54%">对本次调研的含义</th></tr></thead>
+<tbody>
+<tr><td><code>K=3</code> 时浓度 ↔ RGB 是<strong>固定可逆映射</strong></td><td>轴 E（定义域）</td><td>意味着"在哪个空间加噪"在 K=3 下不是本质问题，<strong>真正的差别在噪声几何</strong>（轴 A）</td></tr>
+<tr><td>RGB 是加性噪声、OD 是<strong>乘性</strong></td><td><strong>轴 A</strong></td><td>这条把轴 E 的问题转化成了轴 A 的问题——本报告 §2.5 的乘性噪声正是它的对应解法</td></tr>
+<tr><td><code>conv_in.weight</code> 随机初始化 ⇒ 不微调则模型返回噪声</td><td>轴 E（工程细节）</td><td>换状态空间必须做输入通道适配（diffusers 的 <code>adapt_a_model</code>）</td></tr>
+<tr><td>BL（Beer–Lambert）<strong>不能在 1/8 潜空间算</strong></td><td>轴 E × 轴 A 交叉</td><td>这是潜空间路线与浓度域路线的<strong>真实冲突点</strong>：物理算子需要在全分辨率上作用</td></tr>
+<tr><td>首选 = <strong>解码器重定向</strong>（冻结编码器，输出换 <code>[C_H, C_DAB, C_res]</code>）</td><td>轴 E</td><td>这条路线的合理性在本报告里得到加强：它保留了"在浓度域加噪"的可能性</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">一个跨轴的综合判断</div>
+<p>把轴 E 与轴 A 合起来看，你之前那个"潜空间训练 vs 浓度域物理量"的两难，<strong>其实有一个更清晰的表述</strong>：</p>
+<ul>
+<li>如果你在<strong>潜空间</strong>加噪，那加的是<strong>潜码上的加性高斯</strong>——它与 OD 的乘性结构无关，物理可解释性丢失（轴 E 的代价）。</li>
+<li>如果你在<strong>浓度 / OD 空间</strong>加噪，那你应该考虑<strong>乘性噪声</strong>而不是加性（轴 A 的选择）。</li>
+<li>而 Beer–Lambert 不能在 1/8 潜空间算，意味着<strong>你无法同时享受"潜空间省算力"和"浓度域物理可解释"</strong>——除非把渲染器放在解码器之后（这正是你已确认的"解码器重定向"路线）。</li>
+</ul>
+<p>换句话说：<strong>轴 E 的取舍决定了轴 A 能不能用</strong>。这是本报告认为最有价值的一条跨轴结论。</p>
+</div>
+
+<h3 id="s6-3">6.3 轴 E 可移植性判定</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26%">候选</th><th style="width:13%">判定</th><th style="width:61%">理由</th></tr></thead>
+<tbody>
+<tr><td><strong>继续像素空间 + 浓度域生成</strong></td><td class="c"><span class="b high">与你已有结论一致</span></td><td>你已确认"解码器重定向"为首选；本报告补强了它的理由：只有在全分辨率上，Beer–Lambert 与乘性噪声才有意义</td></tr>
+<tr><td><strong>潜空间 + 冻结 VAE（DiffVS 式）</strong></td><td class="c"><span class="b medium">可做对照</span></td><td>DiffVS 证明了这条路能出结果（18 种标记物、900× 加速），但它是<strong>在像素空间做最终微调</strong>的——等于承认潜空间不足</td></tr>
+<tr><td><strong>离散 / 掩码扩散</strong></td><td class="c"><span class="b bad">暂不</span></td><td>你的输出是连续的浓度 / 强度场，不是 token；离散化会引入额外量化损失，且 D3PM 的验证主要在文本与 CIFAR</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s7"><span class="num">7</span>轴 F · 先验与桥</h2>
+
+<h3 id="s7-1">7.1 先验为什么是承重结构</h3>
+
+<p>先验（前向过程的终点分布）看起来是个"默认就是 <code>N(0,I)</code>"的细节，实际上它承担着<strong>无条件生成的入口</strong>。Cold Diffusion 的那段逐字承认（§2.3 已引）就是这个意思：<strong>只有终点分布可采样，"从噪声生成"才成立</strong>。</p>
+
+<p>而一旦你走了轴 B（起点前移），你就已经在<strong>事实上改了先验</strong>——只是没有改定义。TDPM 把这件事说破了：截断到的那个"隐噪声分布"，本质是一个<strong>可学习的隐先验</strong>。所以轴 B 与轴 F 是同一件事的两种表述：</p>
+
+<div class="grid2">
+<div class="mini"><div class="mt">说法一（轴 B 视角）</div><p>"我把起点从 <code>T</code> 挪到 <code>t_start</code>，少走几步。"</p><p class="small">这是工程视角，关注的是步数与初始态。</p></div>
+<div class="mini"><div class="mt">说法二（轴 F 视角）</div><p>"我把先验从 <code>N(0,I)</code> 换成了一个更靠近数据、可学习的隐分布。"</p><p class="small">这是理论视角，关注的是分布与可采样性。<strong>写论文时用这个说法更站得住。</strong></p></div>
+</div>
+
+<h3 id="s7-2">7.2 数据自适应先验：PriorGrad</h3>
+
+<p>PriorGrad 的问题陈述非常清楚，而且<strong>与你的处境高度相似</strong>：</p>
+
+<div class="quote"><div class="en">"The framework defines the prior noise as a standard Gaussian distribution, whereas the corresponding data distribution may be more complicated than the standard Gaussian distribution, which potentially introduces inefficiency in denoising the prior noise into the data sample because of the discrepancy between the data and the prior. In this paper, we propose PriorGrad to improve the efficiency of the conditional diffusion model for speech synthesis by applying an adaptive prior derived from the data statistics based on the conditional information."</div></div>
+
+<p>它的做法是：<strong>让先验的方差来自数据统计（以条件信息为条件）</strong>，而不是固定为 1。效果是"<em>faster convergence and inference with superior performance, leading to an improved perceptual quality and robustness to a smaller network capacity</em>"。</p>
+
+<div class="box good">
+<div class="bt">"robustness to a smaller network capacity" 这句话对你很重要</div>
+<p>你的算力受限（4060）。PriorGrad 声称数据自适应先验能带来<strong>对小网络容量的鲁棒性</strong>——这意味着它可能让一个更小的 U-Net 达到同等效果。这是一个<strong>直接指向你的约束</strong>的收益，而且它的实现只是"改先验的方差"，不需要改架构。</p>
+<p>翻译到你的场景：IHC 的浓度分布显然不是标准高斯（大量背景接近零、阳性区有长尾）。<strong>如果先验的方差按"条件（H&amp;E 的形态 / 染色强度）"来定，起点就落在一个更合理的位置</strong>——这与轴 B 的"输入派生初始态"在目标上是一致的，只是实现路径不同（一个是改先验分布，一个是改起点张量）。</p>
+</div>
+
+<h3 id="s7-3">7.3 学习先验：TDPM 的对抗自编码器视角</h3>
+
+<p>已在 §3.3 路线 3 详述。这里只补一个理论上的定位：TDPM 的价值在于它<strong>把"截断扩散"和"对抗自编码器"等价起来</strong>——原文"<em>can be cast as an adversarial auto-encoder empowered by both the diffusion process and a learnable implicit prior</em>"。这句话的含义是：</p>
+<ul>
+<li><strong>截断的前向过程</strong> ≈ 编码器（把数据映射到隐分布）；</li>
+<li><strong>反向过程</strong> ≈ 解码器（从隐分布重建数据）；</li>
+<li><strong>隐先验</strong> ≈ AAE 里的聚合后验。</li>
+</ul>
+<p>所以"截断扩散"在理论上并不是扩散模型的一个补丁，而是<strong>扩散与自编码器两个框架的交集</strong>。这个视角对你有一个实际好处：<strong>你可以借用自编码器那一整套关于"隐空间该多大、先验该怎么聚合"的成熟结论</strong>，而不必从扩散的框架里重新推导。</p>
+
+<h3 id="s7-4">7.4 非高斯先验与均值回归终点</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:20%">路线</th><th style="width:26%">终点分布是什么</th><th style="width:28%">理论收益</th><th style="width:26%">对你的可用性</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>乘性扩散</strong><br><span class="small">MSGM · ICLR 2026</span></td>
+<td>范数保持的球面分布：<code>p∞(x) = p|·|(‖x‖) · ‖x‖^(1−d)/|S^(d−1)|</code>，即<strong>数据范数分布 × 球面均匀方向</strong></td>
+<td>隐分布<strong>继承数据的重尾</strong>；KL(隐‖数据) 恒 ≤ 标准扩散，重尾下从 ∞ 变有限；采样可降为"一维范数（eCDF）× 球面方向"</td>
+<td><span class="b medium">理论可用</span>概念对应你的 OD 域；但无解析得分、稠密张量 <code>d³</code> 不可扩展</td>
+</tr>
+<tr>
+<td><strong>均值回归</strong><br><span class="small">IR-SDE · ICML 2023</span></td>
+<td><strong>"退化图 + 固定高斯噪声"的均值态</strong>，而不是纯噪声</td>
+<td>有闭式解 ⇒ ground-truth 得分可直接计算；最大似然目标可学最优反向轨迹</td>
+<td><span class="b high">高相关</span>你的非配对设定下，"终点 = 退化图"正是天然形态；且它有闭式解，训练更稳</td>
+</tr>
+<tr>
+<td><strong>桥过程</strong><br><span class="small">BBDM / I²SB / DDBM</span></td>
+<td>两端锚定，<strong>没有"纯噪声先验"</strong></td>
+<td>I²SB 的边际分布在给定边界对时可解析 ⇒ simulation-free；DDBM 统一了扩散与 OT-Flow-Matching</td>
+<td><span class="b bad">前提不满足</span>需要配对；你的串行切片不满足</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s7-5">7.5 轴 F 可移植性判定</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:26%">候选</th><th style="width:14%">判定</th><th style="width:60%">理由</th></tr></thead>
+<tbody>
+<tr><td><strong>把"截断"正式表述为"换先验"</strong></td><td class="c"><span class="b high">立即可用<br>（论证层）</span></td><td>零成本；让轴 B 的工程改动在理论上有归属。写进论文动机与审稿回复</td></tr>
+<tr><td><strong>PriorGrad 式数据自适应先验</strong></td><td class="c"><span class="b high">可试</span></td><td>只改先验方差；声称对小网络容量鲁棒——直接指向你的算力约束</td></tr>
+<tr><td><strong>IR-SDE 式均值回归终点</strong></td><td class="c"><span class="b high">值得读全文</span></td><td>"终点 = 退化图"与你的非配对设定天然契合，且有闭式解。当前仅摘要级，需核正文</td></tr>
+<tr><td><strong>乘性先验（MSGM）</strong></td><td class="c"><span class="b medium">理论依据</span></td><td>用它证明"你的域用乘性建模有原则"，但不要复现它的实现</td></tr>
+<tr><td><strong>学习隐先验（TDPM）</strong></td><td class="c"><span class="b bad">暂不</span></td><td>需对抗训练；收益（更少反向步）你已能从轴 B 免费拿到一部分</td></tr>
+<tr><td><strong>桥过程</strong></td><td class="c"><span class="b bad">先别碰</span></td><td>需要配对；除非你拿到同一张切片的连续成像</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s8"><span class="num">8</span>六轴汇总矩阵</h2>
+
+<p>把六条轴横向摊开，按"改动成本 / 收益确定性 / 对你的前提要求"三个维度统一排序。这张表是本报告的<strong>决策主表</strong>：</p>
+
+<div class="scroll">
+<table>
+<thead><tr>
+<th style="width:5%">轴</th><th style="width:16%">具体改动</th><th style="width:8%">成本</th><th style="width:11%">收益确定性</th><th style="width:24%">前提 / 风险</th><th style="width:36%">证据</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="c" rowspan="3"><strong>B</strong></td>
+<td>起点前移 + 输入派生初始态</td>
+<td class="c"><span class="b high">零</span></td><td class="c"><span class="b high">高<br>（同域已验）</span></td>
+<td>需先算清 <code>space_timesteps</code>；起点离目标越远，保留量应越低</td>
+<td>SAStainDiff 代码级；SDEdit 摘要；<strong>本报告 §5.1 重算过数值</strong></td>
+</tr>
+<tr>
+<td>latent alignment（近似起点补偿）</td>
+<td class="c"><span class="b medium">短训</span></td><td class="c"><span class="b medium">中</span></td>
+<td>需确认它对齐的是潜空间还是像素空间</td>
+<td>PartDiff 摘要级</td>
+</tr>
+<tr>
+<td>"截断 = 换先验"的表述</td>
+<td class="c"><span class="b high">零</span></td><td class="c"><span class="b high">确定</span></td>
+<td>无——纯论证层</td>
+<td>TDPM 摘要级（逐字）</td>
+</tr>
+<tr>
+<td class="c" rowspan="3"><strong>C</strong></td>
+<td>Min-SNR-γ 时间步加权</td>
+<td class="c"><span class="b high">极低</span></td><td class="c"><span class="b high">高</span></td>
+<td>需与改 <code>p(t)</code> 的实验分离，否则归因不清</td>
+<td>Min-SNR 摘要级；3.4× 收敛加速 + FID 2.06</td>
+</tr>
+<tr>
+<td>v-pred 参数化</td>
+<td class="c"><span class="b high">低</span></td><td class="c"><span class="b medium">中</span></td>
+<td>只在少步区间有优势；应与步数实验绑定</td>
+<td>Progressive Distillation 摘要级（逐字）</td>
+</tr>
+<tr>
+<td>DiffVS 单步微调（t=T, ε=0）</td>
+<td class="c"><span class="b medium">短训</span></td><td class="c"><span class="b high">高<br>（但其骨架不同）</span></td>
+<td>证据在潜空间 SD v2 上；像素空间小 U-Net 未验证</td>
+<td>DiffVS 正文级；SSIM 0.673→0.836，900×</td>
+</tr>
+<tr>
+<td class="c" rowspan="2"><strong>D</strong></td>
+<td>按 √ᾱ 反推 <code>timestep_step</code></td>
+<td class="c"><span class="b high">零</span></td><td class="c"><span class="b high">确定</span></td>
+<td>无</td>
+<td><strong>本报告代码级重算</strong>（§5.1）</td>
+</tr>
+<tr>
+<td>DPM-Solver 高阶求解器</td>
+<td class="c"><span class="b high">低</span></td><td class="c"><span class="b medium">中</span></td>
+<td>会改变轨迹随机性；若在用祖先采样需先切换</td>
+<td>DPM-Solver 摘要级；10 步 FID 4.70，4–16×</td>
+</tr>
+<tr>
+<td class="c" rowspan="2"><strong>A</strong></td>
+<td>先测噪声分布再决定是否改 D</td>
+<td class="c"><span class="b high">零<br>（纯测量）</span></td><td class="c"><span class="b high">高<br>（前置判断）</span></td>
+<td>无</td>
+<td>NEED 正文级（方法学链条）</td>
+</tr>
+<tr>
+<td>乘性噪声</td>
+<td class="c"><span class="b bad">极高</span></td><td class="c"><span class="b medium">理论强<br>工程弱</span></td>
+<td>无解析得分；稠密张量 <code>d³</code> 不可扩展</td>
+<td>MSGM 解读页（ICLR 2026）；<strong>建议只作理论依据</strong></td>
+</tr>
+<tr>
+<td class="c" rowspan="2"><strong>F</strong></td>
+<td>数据自适应先验（PriorGrad 式）</td>
+<td class="c"><span class="b medium">低–中</span></td><td class="c"><span class="b medium">中</span></td>
+<td>需从条件统计先验方差；声称对小网络鲁棒</td>
+<td>PriorGrad 摘要级</td>
+</tr>
+<tr>
+<td>均值回归终点（IR-SDE 式）</td>
+<td class="c"><span class="b bad">高</span></td><td class="c"><span class="b medium">中<br>（需核正文）</span></td>
+<td>需重构前向 SDE；但有闭式解是明显优势</td>
+<td>IR-SDE 摘要级</td>
+</tr>
+<tr>
+<td class="c" rowspan="2"><strong>E</strong></td>
+<td>继续像素空间 + 浓度域</td>
+<td class="c"><span class="b high">零<br>（已是现状）</span></td><td class="c"><span class="b high">确定</span></td>
+<td>算力贵；但物理可解释性保得住</td>
+<td>你此前 7 层错配报告 + 本报告 §6.2 综合</td>
+</tr>
+<tr>
+<td>潜空间 + 冻结 VAE</td>
+<td class="c"><span class="b bad">高</span></td><td class="c"><span class="b medium">中</span></td>
+<td>编码器可能丢物理量；Beer–Lambert 不能在 1/8 分辨率算</td>
+<td>LDM 摘要级；DiffVS 用此法但<strong>最终回到像素空间微调</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s9"><span class="num">9</span>三条跨轴结论</h2>
+
+<div class="box key">
+<div class="bt">跨轴结论 1 · 轴 E 的取舍决定了轴 A 能不能用</div>
+<p>你之前在"潜空间省算力"和"浓度域物理可解释"之间两难。放到六轴框架里，这个两难的<strong>真正形式</strong>是：</p>
+<ul>
+<li>潜空间加噪 ⇒ 加的是<strong>潜码上的加性高斯</strong> ⇒ 与 OD 的乘性结构无关 ⇒ <strong>轴 A 的乘性噪声无法使用</strong>。</li>
+<li>浓度 / OD 空间加噪 ⇒ 可以用乘性噪声（轴 A）⇒ 但 Beer–Lambert <strong>不能在 1/8 分辨率上算</strong> ⇒ 潜空间的算力优势丧失。</li>
+</ul>
+<p>所以"解码器重定向"（冻结编码器、输出换 <code>[C_H, C_DAB, C_res]</code>、渲染器放在解码器之后）之所以是你此前确认的首选，不是因为它折中，而是因为<strong>它是唯一同时保住轴 A 可用性与算力的结构</strong>。本报告为这个结论补上了理论理由。</p>
+</div>
+
+<div class="box key">
+<div class="bt">跨轴结论 2 · 轴 B 与轴 F 是同一件事，说法决定它是否站得住</div>
+<p>把起点从 <code>T</code> 挪到 <code>t_start</code>，工程上叫"少加噪 / 少走步"，理论上叫"把先验从 <code>N(0,I)</code> 换成一个更靠近数据的隐分布"。<strong>TDPM 的贡献就是把这个等价关系说破了</strong>（并且进一步把它等价成对抗自编码器）。</p>
+<p>对你的实际影响是：<strong>同样一个改动，用后一种说法写进论文，就从"调参"变成了"方法"</strong>。而且后一种说法有现成的理论支撑（TDPM 的 ICLR 2023 + 可学习隐先验），不需要你自己论证。</p>
+</div>
+
+<div class="box key">
+<div class="bt">跨轴结论 3 · 这一层的改动普遍"便宜"，但便宜的原因是它们不解决核心矛盾</div>
+<p>把 §8 的成本列扫一遍会发现一个规律：<strong>轴 B / C / D 的改动大多是零成本或极低成本，而它们都不触及你的核心矛盾（弱配准下的表达保真）</strong>。真正触及核心的（轴 A 的乘性、轴 F 的桥、轴 E 的潜空间重构）<strong>成本都很高</strong>。</p>
+<p>这不是巧合。原因是：<strong>低成本改动之所以便宜，是因为它们只动"过程的参数化"，不动"过程建模的是什么"</strong>。而你的核心矛盾恰恰是"过程建模的对象错了"——你想让过程在<strong>浓度域</strong>（乘性）工作，而标准扩散在<strong>像素域</strong>（加性）工作。</p>
+<p><strong>所以本报告的实践建议是分两步</strong>：<strong>第一步</strong>用低成本改动（轴 B + C + D）把现有框架的潜力榨干，同时积累"到底差在哪"的定量证据；<strong>第二步</strong>只有当第一步明确指向"噪声几何错了"或"先验错了"时，才付高成本去动轴 A / F / E。这个顺序与你此前"先找一个有证据支撑的假设，再通过最小实验判断它是否成立"的判断一致。</p>
+</div>
+
+<h2 id="s10"><span class="num">10</span>可移植性总判定</h2>
+
+<p>把 §8 的所有候选按"要不要付训练成本"重新分成三档。<strong>建议严格按档位顺序推进，不要跨档并行。</strong></p>
+
+<div class="card">
+<div class="ch"><div><div class="title">第 1 档 · 零训练（今天就能跑）</div><div class="v">不重训、不改架构；只改推理参数或 loss 权重</div></div><div><span class="b high">4 项</span></div></div>
+<div class="body">
+<ol>
+<li><strong>按 √ᾱ 反推 <code>timestep_step</code> 与 <code>ddimN</code></strong>：把"起点"从参数名还原成物理量（§5.1）。</li>
+<li><strong>起点 + 初始态的 2×3 网格扫描</strong>：见 §11 E1。这是本报告的第一优先实验。</li>
+<li><strong>Min-SNR-γ 加权</strong>：只改 loss 权重，且<strong>不动 DDIM 反演网格</strong>（§4.2）。</li>
+<li><strong>v-pred 参数化</strong>：需短训，但归到本档是因为它<strong>只改 loss 目标</strong>、不改架构（§4.1）。</li>
+</ol>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">第 2 档 · 短训练 / 纯测量（一周量级）</div><div class="v">需要一次针对性实验，但不重建框架</div></div><div><span class="b medium">3 项</span></div></div>
+<div class="body">
+<ol>
+<li><strong>噪声几何测量</strong>：在 IHC 的 OD / 浓度图上按信号强度分箱，判断噪声是加性还是乘性（§11 E2 的前半）。<strong>这一项没有任何训练，但需要先做数据统计</strong>。</li>
+<li><strong>DiffVS 式单步微调</strong>：固定 <code>t=T, ε=0</code> + 像素级 L1+L2（§11 E3）。</li>
+<li><strong>latent alignment</strong>：若 E1 显示"起点是近似"确实是瓶颈，则引入 PartDiff 式对齐补偿。需先读 PartDiff 全文确认实现层面。</li>
+</ol>
+</div>
+</div>
+
+<div class="card">
+<div class="ch"><div><div class="title">第 3 档 · 重构（中期目标，需先有证据）</div><div class="v">改前向 SDE、改先验、改状态空间</div></div><div><span class="b bad">3 项</span></div></div>
+<div class="body">
+<ol>
+<li><strong>乘性噪声前向过程</strong>：<span class="b bad">不要复现 MSGM</span>。若第 2 档的测量确认噪声是乘性的，再考虑做一个<strong>工程近似</strong>（如在对数域加噪，使噪声在 OD 上表现为乘性），而不是照搬斜对称张量。</li>
+<li><strong>数据自适应先验（PriorGrad 式）</strong>：改先验方差，不动架构。放在第 3 档是因为它需要先知道"你的数据分布离高斯多远"。</li>
+<li><strong>均值回归终点（IR-SDE 式）</strong>：需重构前向 SDE，但有闭式解。若第 2 档显示"终点先验是瓶颈"，这是首选重构方向。</li>
+</ol>
+</div>
+</div>
+
+<div class="box stop">
+<div class="bt">明确不建议做的三件事</div>
+<ol>
+<li><strong>桥过程（BBDM / I²SB / DDBM）</strong>：需要配对。你的串行切片残差 7.1–16.0 µm ≈ 核直径，桥的两端锚不到同一个内容。</li>
+<li><strong>学习隐先验（TDPM 完整版）</strong>：需对抗训练，收益你已能从轴 B 免费拿到一部分。</li>
+<li><strong>离散 / 掩码扩散</strong>：你的输出是连续浓度场，不是 token。</li>
+</ol>
+</div>
+
+<h2 id="s11"><span class="num">11</span>最小验证实验</h2>
+
+<p>三个实验，按"成本从低到高、依赖从弱到强"排序。<strong>每个实验都设了止损条件，并且都要求两个 seed</strong>——因为这一层的改动大多影响的是分布而非单张图的相似度，单 seed 的结果不可信。</p>
+
+<div class="box teal">
+<div class="bt">所有实验共用的评价口径</div>
+<p>沿用你既有的五层评价规范，但针对本报告的主题<strong>加一列</strong>：</p>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:16%">类别</th><th style="width:40%">指标</th><th style="width:44%">为什么这个实验需要它</th></tr></thead>
+<tbody>
+<tr><td><strong>分布类</strong></td><td>FID / KID</td><td>轴 B 的改动本质上改的是"起点分布"，必须用分布指标看</td></tr>
+<tr><td><strong>浓度类</strong></td><td>DAB / FOD 的均值 · std · 高分位数</td><td>轴 A / C 的改动会改变强度分布；<strong>这一列是本报告新增的必报项</strong></td></tr>
+<tr><td><strong>结构类</strong></td><td>核掩膜 Dice（用 H 通道阈值生成）</td><td>轴 B 的起点保留量直接决定结构保真</td></tr>
+<tr><td><strong>逐像素类</strong></td><td>PSNR / SSIM</td><td><span class="b bad">仅作辅助</span>：在配准误差下会被系统性低估</td></tr>
+<tr><td><strong>配准敏感度</strong></td><td>人工劣化配准 0 / 2 / 5 / 10 px 下的指标曲线</td><td><strong>本报告新增</strong>：直接测量"起点是近似"这一前提的代价</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h3 id="s11-1">11.1 E1 · 起点与初始态（2×3 网格，零训练）</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">E1 · 目标：分离"起点位置"与"初始态来源"两个旋钮的贡献</div><div class="v">§3.1 的表格是本实验的假设来源</div></div><div><span class="b high">零训练</span></div></div>
+<div class="body">
+<p><strong>设计</strong>（冻结现有 checkpoint，只改推理）：</p>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:22%">格</th><th style="width:22%">起点 <code>t_start</code></th><th style="width:26%">初始态</th><th style="width:30%">预期读到的信号</th></tr></thead>
+<tbody>
+<tr><td><strong>E1-a</strong>（基线）</td><td>默认（<code>timestep_step=1000</code> → t=800，√ᾱ=0.039）</td><td>纯高斯 <code>N(0,I)</code></td><td>现有 baseline 行为</td></tr>
+<tr><td><strong>E1-b</strong></td><td>t=800（√ᾱ=0.039）</td><td><code>q_sample(输入, t)</code></td><td>与 a 对比 ⇒ <strong>初始态来源的净效应</strong></td></tr>
+<tr><td><strong>E1-c</strong></td><td>t=720（√ᾱ=0.072）</td><td>纯高斯</td><td>与 a 对比 ⇒ <strong>起点位置的净效应</strong></td></tr>
+<tr><td><strong>E1-d</strong></td><td>t=720（√ᾱ=0.072）</td><td><code>q_sample(输入, t)</code></td><td>复现 SAStainDiff 的组合</td></tr>
+<tr><td><strong>E1-e</strong></td><td>t≈650（√ᾱ≈0.15）</td><td><code>q_sample(输入, t)</code></td><td>更高保留量 ⇒ 更保结构、更少表达自由度</td></tr>
+<tr><td><strong>E1-f</strong></td><td>t≈870（√ᾱ≈0.02）</td><td><code>q_sample(输入, t)</code></td><td>更低保留量 ⇒ 更多表达自由度</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>注意</strong>：e / f 两格的 <code>t_start</code> 要<strong>按 √ᾱ 反推</strong>，不要照抄整数。<code>timestep_step</code> 与 <code>ddimN</code> 的组合需要先算清（§5.1 的方法）。</p>
+<p><strong>必做对照</strong>：</p>
+<ul>
+<li><strong>两个 seed</strong>：这一层的改动影响的是分布，单 seed 不可信。</li>
+<li><strong>人工劣化配准 0 / 2 / 5 / 10 px</strong>：这是本实验的核心。如果初始态来源（b vs a）的收益<strong>随配准误差迅速消失</strong>，那就直接证明"输入派生起点"的前提在你的数据上不成立——这是一个<strong>极有价值的阴性结论</strong>。</li>
+</ul>
+<p><strong>止损条件</strong>：若 E1-b 在 0 px 下相对 E1-a 无显著提升，说明<strong>初始态来源本身没带来收益</strong>，那么整条轴 B 在你这里的价值就只剩"省步数"，可以停止投入。</p>
+</div>
+</div>
+
+<h3 id="s11-2">11.2 E2 · 噪声几何：先测量，再决定要不要改 D</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">E2 · 目标：判断你的目标域到底该用加性还是乘性噪声</div><div class="v">方法论来自 NEED（§2.5），理论依据来自 MSGM（§2.5）</div></div><div><span class="b high">零训练<br>（纯统计）</span></div></div>
+<div class="body">
+<p><strong>第一半 · 测量（不需要任何模型）</strong>：</p>
+<ol>
+<li>取 IHC 的浓度图（<code>C = M⁻¹·OD</code>）或直接用 OD 图。</li>
+<li>按信号强度（如 OD 或 DAB 通道均值）<strong>分箱</strong>。</li>
+<li>在每个箱内计算局部残差（例如与同箱平滑结果的差）的<strong>方差</strong>。</li>
+<li><strong>判据</strong>：
+<ul>
+<li>方差<strong>与均值无关</strong> ⇒ 加性噪声 ⇒ 标准高斯扩散是对的。</li>
+<li>方差<strong>随均值增长</strong>（近似线性 ⇒ 乘性；近似等于均值 ⇒ 泊松） ⇒ <strong>标准扩散的噪声几何是错的</strong>。</li>
+</ul>
+</li>
+</ol>
+<p><strong>第二半 · 代理实验（若第一半判定为乘性）</strong>：</p>
+<p>不要复现 MSGM。做一个<strong>最小工程近似</strong>：</p>
+<div class="eq">
+把加噪改到<strong>对数域</strong>：<code>log(x)</code> 上加高斯噪声 ⇒ 在原始域上表现为<strong>乘性</strong><br>
+即 <code>x_t = x · exp(σε)</code> 形式，而不是 <code>x_t = √ᾱ·x + √(1−ᾱ)·ε</code>
+</div>
+<p>这样做的好处是：<strong>它保留了"终点可采样"这一性质</strong>（对数域的高斯仍然是可采样的高斯），从而<strong>绕开了 Cold Diffusion 的致命代价</strong>（§2.3）。</p>
+<p><strong>止损条件</strong>：若第一半的测量显示噪声<strong>就是加性的</strong>，那么整条轴 A 的高成本路线（乘性 / 泊松 / 冷扩散）全部关闭，只需保留"退化算子嵌进网络"这个零成本工程改动。</p>
+</div>
+</div>
+
+<h3 id="s11-3">11.3 E3 · 单步微调：验证 DiffVS 的结论能否迁移</h3>
+
+<div class="card">
+<div class="ch"><div><div class="title">E3 · 目标：验证"固定 t=T、ε=0 + 像素级微调"在像素空间小 U-Net 上是否也成立</div><div class="v">证据来源：DiffVS（AAAI 2026），但其骨架是 SD v2 + 冻结 VAE</div></div><div><span class="b medium">短训练</span></div></div>
+<div class="body">
+<p><strong>为什么必须验证</strong>：DiffVS 的"单步优于 50 步 + ensemble"（0.757 vs 0.673）是一个<strong>反直觉且高价值</strong>的结论，但它的成立条件可能依赖于：</p>
+<ul>
+<li>它在<strong>潜空间</strong>训练、在<strong>像素空间</strong>微调；</li>
+<li>它用的是<strong>大规模预训练先验</strong>（SD v2）；</li>
+<li>它面对的像素分布偏斜（大量暗背景）在它的数据上特别极端。</li>
+</ul>
+<p>你的场景是<strong>像素空间的小 U-Net、从零训练</strong>——三个条件都不同。<strong>这个结论可能成立也可能不成立，不能假设。</strong></p>
+<p><strong>设计</strong>：</p>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:20%">配置</th><th style="width:26%">推理</th><th style="width:26%">微调</th><th style="width:28%">对照目的</th></tr></thead>
+<tbody>
+<tr><td>E3-a</td><td>50 步</td><td>无</td><td>多步基线</td></tr>
+<tr><td>E3-b</td><td>5 步</td><td>无</td><td>SAStainDiff 式少步</td></tr>
+<tr><td>E3-c</td><td>1 步（<code>t=T, ε=0</code>）</td><td>无</td><td>验证"单步是否已优于多步"</td></tr>
+<tr><td>E3-d</td><td>1 步（<code>t=T, ε=0</code>）</td><td>像素级 L1+L2</td><td><strong>验证微调的增量</strong></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>注意</strong>：E3-c 与 E3-d 里的 <code>t=T</code> 需要按你自己的调度解释——在重排后的坐标里，"T"是重排序列的起点索引。<strong>不要直接写 <code>T=1000</code></strong>。</p>
+<p><strong>止损条件</strong>：若 E3-c 明显差于 E3-b，说明"单步更好"依赖大规模预训练先验，你的小 U-Net 不适用；此时只保留 E3-d 的"像素级微调"部分（它对颜色保真仍有独立价值）。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">三个实验的执行顺序建议</div>
+<p><strong>E2 第一半（纯统计）→ E1（零训练）→ E3（短训）→ E2 第二半（仅当测量判定为乘性）</strong>。理由：E2 第一半零成本且决定后续方向；E1 零成本且是轴 B 的前提检验；E3 需要一次微调；E2 第二半最贵，只有在前置判定成立时才值得做。</p>
+</div>
+
+<h2 id="s12"><span class="num">12</span>证据边界与未核实清单</h2>
+
+<h3>12.1 本报告读过全文的工作</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:24%">工作</th><th style="width:20%">读取深度</th><th style="width:56%">据此作出的关键结论</th></tr></thead>
+<tbody>
+<tr><td><strong>Cold Diffusion</strong></td><td>arXiv HTML 全文（59,230 字）</td><td>两个采样算法的更新式；Taylor 稳定性论证；"终点分布不再是各向同性高斯"的逐字承认；算法 2 与 DDIM 同源</td></tr>
+<tr><td><strong>NEED</strong></td><td>arXiv HTML 全文（105,363 字）</td><td>移位泊松扩散的动机链条；"与 pre-log 投影噪声模型对齐"的逐字表述；时间步匹配策略</td></tr>
+<tr><td><strong>Improved DDPM</strong></td><td>arXiv HTML 全文（61,344 字）</td><td>方差的对数域插值参数化；"50 次前向即可"的逐字表述；linear 在低分辨率下"末端过噪"</td></tr>
+<tr><td><strong>SAStainDiff</strong></td><td>官方源码（12 个文件）</td><td><code>space_timesteps</code> 语义；<code>betas</code> 与 <code>use_timesteps</code> 用不同数；初始态索引；<strong>§5.1 的数值为本次重算</strong></td></tr>
+<tr><td><strong>DiffVS / 虚拟多重染色</strong></td><td>arXiv 摘要 + 第三方详细解读</td><td>两阶段训练；固定 t=T 且 ε=0；消融表数值；900× 加速</td></tr>
+<tr><td><strong>DUST</strong></td><td>论文 PDF（5 页，23,850 字）</td><td>动态双输出头针对"DDPM 强度不稳定"；双编码策略</td></tr>
+<tr><td><strong>DDCA</strong>（谱系背景）</td><td>PMC 全文</td><td>前一份报告使用，本报告仅作背景</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>12.2 未核实清单（引用其结论前请自行核对）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:4%">#</th><th style="width:30%">条目</th><th style="width:14%">当前证据级别</th><th style="width:52%">需要核实什么</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td>Soft Diffusion 的对比表与 Momentum Sampler</td><td><span class="b medium">摘要级</span></td><td>FID 1.85 的对比对象；退化级选择的具体算法；"把退化嵌进网络"的实现方式</td></tr>
+<tr><td class="c">2</td><td>RDDM 的系数变换形式</td><td><span class="b medium">摘要级</span></td><td>"与 DDPM / DDIM 通过系数变换一致"的具体公式；L1 + batch 1 的实验配置</td></tr>
+<tr><td class="c">3</td><td>IR-SDE 的均值回归终点</td><td><span class="b medium">摘要级</span></td><td>前向 SDE 的具体形式；"最大似然目标"如何学最优反向轨迹；<strong>在非配对 I2I 上是否验证过</strong></td></tr>
+<tr><td class="c">4</td><td>I²SB 的解析边际推导</td><td><span class="b medium">摘要级</span></td><td>"给定边界对时边际分布可解析计算"的适用条件；是否严格要求配对</td></tr>
+<tr><td class="c">5</td><td>DDBM 的图像翻译数值</td><td><span class="b medium">摘要级</span></td><td>"significant improvement over baseline"的具体数字与任务</td></tr>
+<tr><td class="c">6</td><td>PartDiff 的 latent alignment</td><td><span class="b medium">摘要级</span></td><td><strong>在潜空间还是像素空间对齐</strong>；MRI 上的具体收益；"中间潜态收敛"的定量判据</td></tr>
+<tr><td class="c">7</td><td>BBDM 的 benchmark 数值</td><td><span class="b medium">摘要级</span></td><td>它相对条件生成基线的具体增益</td></tr>
+<tr><td class="c">8</td><td>乘性扩散（MSGM）</td><td><span class="b medium">解读页<br>未读原文</span></td><td>OpenReview 原文的定理条件（A1 / A2）；<code>d=1024</code> 图像结果的细节；稀疏张量的可行性</td></tr>
+<tr><td class="c">9</td><td>TDiffDe 的 <code>T_cut=35</code> 与 mPSNR 33.03</td><td><span class="b low">二手转述</span></td><td>仅作线索。若要用"截断前向"的数值先例，请核 arXiv:2311.13622 原文</td></tr>
+<tr><td class="c">10</td><td>DUST 的动态双输出头</td><td><span class="b low">摘要级</span></td><td>"强度不稳定"的具体表现；双头的结构设计</td></tr>
+<tr><td class="c">11</td><td>DiffVS 在像素空间小 U-Net 上的可迁移性</td><td><span class="b bad">无证据</span></td><td><strong>本报告明确标注为未验证</strong>；这正是 §11 E3 的目的</td></tr>
+<tr><td class="c">12</td><td>SPECT 泊松扩散（Med Phys 2025）</td><td><span class="b low">搜索级</span></td><td>仅知存在与标题；未取到摘要</td></tr>
+<tr><td class="c">13</td><td>EBDM（ECCV 2024）与 Uni-CDiff</td><td><span class="b low">搜索级</span></td><td>仅作"该方向有后续工作"的证据，未取机制细节</td></tr>
+<tr><td class="c">14</td><td>D3PM 在图像上的具体增益</td><td><span class="b medium">摘要级</span></td><td>"approach the sample quality of continuous-space DDPM" 的具体数值</td></tr>
+<tr><td class="c">15</td><td>Blue noise 的 FID 增益幅度</td><td><span class="b medium">摘要级</span></td><td>"improvements on different tasks"的具体数字</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">两条必须声明的边界</div>
+<ol>
+<li><strong>本报告不提供任何"某改动在你的数据上一定有效"的结论。</strong>所有可移植性判定都是<strong>基于前提匹配度的推断</strong>，不是实验结论。三个最小实验就是用来把推断变成证据的。</li>
+<li><strong>SAStainDiff 是闭源论文</strong>（OpenAlex <code>oa_status: "closed"</code>），本报告关于它的所有机制结论<strong>全部来自官方源码</strong>（比正文更可靠），但<strong>性能数字一个都没有引用</strong>。若你需要它的实验数据，请按前一份报告的 §2.6 清单从 PDF 核实。</li>
+</ol>
+</div>
+
+<h2 id="s13"><span class="num">13</span>参考文献</h2>
+
+<h4>轴 A · 前向退化算子</h4>
+<ol class="ref">
+<li>Bansal, A., Borgnia, E., Chu, H.-M., Li, J. S., Kazemi, H., Huang, F., Goldblum, M., Geiping, J., Goldstein, T. <strong>Cold Diffusion: Inverting Arbitrary Image Transforms Without Noise.</strong> arXiv:<a href="https://arxiv.org/abs/2208.09392">2208.09392</a>（2022-08-19）· 代码：<a href="https://github.com/arpitbansal297/Cold-Diffusion-Models">arpitbansal297/Cold-Diffusion-Models</a></li>
+<li>Daras, G., Delbracio, M., Talebi, H., Dimakis, A. G., Milanfar, P. <strong>Soft Diffusion: Score Matching for General Corruptions.</strong> arXiv:<a href="https://arxiv.org/abs/2209.05442">2209.05442</a>（2022-09-12）</li>
+<li>Austin, J., Johnson, D. D., Ho, J., Tarlow, D., van den Berg, R. <strong>Structured Denoising Diffusion Models in Discrete State-Spaces (D3PM).</strong> arXiv:<a href="https://arxiv.org/abs/2107.03006">2107.03006</a>（2021-07-07）</li>
+<li>Luo, Z., Gustafsson, F. K., Zhao, Z., Sjölund, J., Schön, T. B. <strong>Image Restoration with Mean-Reverting Stochastic Differential Equations (IR-SDE).</strong> ICML 2023. arXiv:<a href="https://arxiv.org/abs/2301.11699">2301.11699</a></li>
+<li>Huang, X., Salaün, C., Vasconcelos, C., Theobalt, C., Öztireli, C., Singh, G. <strong>Blue noise for diffusion models.</strong> SIGGRAPH 2024. arXiv:<a href="https://arxiv.org/abs/2402.04930">2402.04930</a></li>
+<li>Liu, J., Wang, Q., Fan, H., Wang, Y., Tang, Y., Qu, L. <strong>Residual Denoising Diffusion Models (RDDM).</strong> CVPR 2024. arXiv:<a href="https://arxiv.org/abs/2308.13712">2308.13712</a> · 代码：<a href="https://github.com/nachifur/RDDM">nachifur/RDDM</a></li>
+<li>Gao, Q., Chen, Z., Zeng, D., Zhang, J., Ma, J., Shan, H. <strong>Noise-Inspired Diffusion Model for Generalizable Low-Dose CT Reconstruction (NEED).</strong> Medical Image Analysis (2025). arXiv:<a href="https://arxiv.org/abs/2506.22012">2506.22012</a></li>
+<li><strong>Multiplicative Diffusion Models: Beyond Gaussian Latents.</strong> ICLR 2026. OpenReview:<a href="https://openreview.net/forum?id=F6w8LcJJFA">F6w8LcJJFA</a></li>
+<li>Pearl, N., Brodsky, Y., Berman, D., Zomet, A., Rav Acha, A., Cohen-Or, D., Lischinski, D. <strong>SVNR: Spatially-variant Noise Removal with Denoising Diffusion.</strong> arXiv:<a href="https://arxiv.org/abs/2306.16052">2306.16052</a></li>
+<li>He, J., Li, Y., Li, J., Yuan, Q. <strong>TDiffDe: A Truncated Diffusion Model for Remote Sensing Hyperspectral Image Denoising.</strong> arXiv:<a href="https://arxiv.org/abs/2311.13622">2311.13622</a>（<span class="small">仅二手转述，未核原文</span>）</li>
+<li>Gao 等 <strong>Poisson diffusion probabilistic model for low-dose SPECT.</strong> Medical Physics (2025). DOI:<a href="https://doi.org/10.1002/mp.17760">10.1002/mp.17760</a>（<span class="small">仅搜索级</span>）</li>
+</ol>
+
+<h4>轴 B · 初始状态与起点</h4>
+<ol class="ref" start="12">
+<li>Meng, C., He, Y., Song, Y., Song, J., Wu, J., Zhu, J.-Y., Ermon, S. <strong>SDEdit: Guided Image Synthesis and Editing with Stochastic Differential Equations.</strong> ICLR 2022. arXiv:<a href="https://arxiv.org/abs/2108.01073">2108.01073</a></li>
+<li>Zheng, H., He, P., Chen, W., Zhou, M. <strong>Truncated Diffusion Probabilistic Models and Diffusion-based Adversarial Auto-Encoders (TDPM).</strong> ICLR 2023. arXiv:<a href="https://arxiv.org/abs/2202.09671">2202.09671</a></li>
+<li>Li, B., Xue, K., Liu, B., Lai, Y.-K. <strong>BBDM: Image-to-Image Translation with Brownian Bridge Diffusion Models.</strong> CVPR 2023, pp. 1952–1961. arXiv:<a href="https://arxiv.org/abs/2205.07680">2205.07680</a></li>
+<li>Liu, G.-H., Vahdat, A., Huang, D.-A., Theodorou, E. A., Nie, W., Anandkumar, A. <strong>I²SB: Image-to-Image Schrödinger Bridge.</strong> ICML 2023. arXiv:<a href="https://arxiv.org/abs/2302.05872">2302.05872</a></li>
+<li>Zhao, K., Hung, A. L. Y., Pang, K., Zheng, H., Sung, K. <strong>PartDiff: Image Super-resolution with Partial Diffusion Models.</strong> arXiv:<a href="https://arxiv.org/abs/2307.11926">2307.11926</a></li>
+<li>Zhou, L., Lou, A., Khanna, S., Ermon, S. <strong>Denoising Diffusion Bridge Models (DDBM).</strong> arXiv:<a href="https://arxiv.org/abs/2309.16948">2309.16948</a> · 代码：<a href="https://github.com/alexzhou907/DDBM/">alexzhou907/DDBM</a></li>
+<li>Yang, 等 <strong>SAStainDiff: Self-supervised stain normalization by stain augmentation using denoising diffusion probabilistic models.</strong> Biomedical Signal Processing and Control 107:107861 (2025).</li>
+</ol>
+
+<h4>轴 C · 训练目标与参数化</h4>
+<ol class="ref" start="19">
+<li>Nichol, A., Dhariwal, P. <strong>Improved Denoising Diffusion Probabilistic Models.</strong> arXiv:<a href="https://arxiv.org/abs/2102.09672">2102.09672</a> · 代码：<a href="https://github.com/openai/improved-diffusion">openai/improved-diffusion</a></li>
+<li>Salimans, T., Ho, J. <strong>Progressive Distillation for Fast Sampling of Diffusion Models.</strong> ICLR 2022. arXiv:<a href="https://arxiv.org/abs/2202.00512">2202.00512</a>（<span class="small">v-pred 参数化的出处</span>）</li>
+<li>Hang, T., Gu, S., Li, C., Bao, J., Chen, D., Hu, H., Geng, X., Guo, B. <strong>Efficient Diffusion Training via Min-SNR Weighting Strategy.</strong> ICCV 2023. arXiv:<a href="https://arxiv.org/abs/2303.09556">2303.09556</a></li>
+<li>Song, Y., Dhariwal, P., Chen, M., Sutskever, I. <strong>Consistency Models.</strong> ICML 2023. arXiv:<a href="https://arxiv.org/abs/2303.01469">2303.01469</a></li>
+<li>Kim, M., Ki, D., Shim, S.-W., Lee, B.-J. <strong>Adaptive Non-uniform Timestep Sampling for Accelerating Diffusion Model Training.</strong> CVPR 2025. arXiv:<a href="https://arxiv.org/abs/2411.09998">2411.09998</a></li>
+<li>Oh, H.-J., Kim, J., Shi, Z., Wu, Y., Chen, Y.-A., Sorger, P. K., Pfister, H., Jeong, W.-K. <strong>Virtual Multiplex Staining for Histological Images using a Marker-wise Conditioned Diffusion Model (DiffVS).</strong> AAAI 2026. arXiv:<a href="https://arxiv.org/abs/2508.14681">2508.14681</a> · 代码：<a href="https://github.com/hvcl/DiffVS">hvcl/DiffVS</a></li>
+<li>Yan, X., Yuan, M., Lu, Y., Zhang, Y., Chen, Z., Bao, P., Li, Z., Dong, B., Yang, L., Zhang, L., Zhou, F. <strong>Versatile Stain Transfer in Histopathology Using a Unified Diffusion Framework (DUST).</strong> 北京大学 / 北大第一医院</li>
+</ol>
+
+<h4>轴 D · 时间步与采样轨迹</h4>
+<ol class="ref" start="26">
+<li>Song, J., Meng, C., Ermon, S. <strong>Denoising Diffusion Implicit Models (DDIM).</strong> ICLR 2021. arXiv:<a href="https://arxiv.org/abs/2010.02502">2010.02502</a>（<span class="small">非马尔可夫前向构造；<code>space_timesteps</code> 的思想来源</span>）</li>
+<li>Lu, C., Zhou, Y., Bao, F., Chen, J., Li, C., Zhu, J. <strong>DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps.</strong> NeurIPS 2022. arXiv:<a href="https://arxiv.org/abs/2206.00927">2206.00927</a></li>
+<li>Dhariwal, P., Nichol, A. <strong>Diffusion Models Beat GANs on Image Synthesis.</strong> NeurIPS 2021. arXiv:<a href="https://arxiv.org/abs/2105.05233">2105.05233</a>（<span class="small"><code>openai/guided-diffusion</code>，SAStainDiff 的代码基座；<code>respace.py</code> 所在仓库</span>）</li>
+</ol>
+
+<h4>轴 E · 状态空间</h4>
+<ol class="ref" start="29">
+<li>Rombach, R., Blattmann, A., Lorenz, D., Esser, P., Ommer, B. <strong>High-Resolution Image Synthesis with Latent Diffusion Models (LDM).</strong> CVPR 2022. arXiv:<a href="https://arxiv.org/abs/2112.10752">2112.10752</a></li>
+<li>Chang, H., Zhang, H., Jiang, L., Liu, C., Freeman, W. T. <strong>MaskGIT: Masked Generative Image Transformer.</strong> CVPR 2022. arXiv:<a href="https://arxiv.org/abs/2202.04200">2202.04200</a></li>
+<li>Liu, X., Gong, C., Liu, Q. <strong>Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow.</strong> arXiv:<a href="https://arxiv.org/abs/2209.03003">2209.03003</a></li>
+</ol>
+
+<h4>轴 F · 先验与桥</h4>
+<ol class="ref" start="32">
+<li>Lee, S.-g., Kim, H., Shin, C., Tan, X., Liu, C., Meng, Q., Qin, T., Chen, W., Yoon, S., Liu, T.-Y. <strong>PriorGrad: Improving Conditional Denoising Diffusion Models with Data-Dependent Adaptive Prior.</strong> ICLR 2022. arXiv:<a href="https://arxiv.org/abs/2106.06406">2106.06406</a></li>
+<li>Liu, G.-H., Vahdat, A., Huang, D.-A., Theodorou, E. A., Nie, W., Anandkumar, A. <strong>I²SB</strong>（见 §轴 B 第 15 条）· Zhou, L. 等 <strong>DDBM</strong>（见 §轴 B 第 17 条）· Li, B. 等 <strong>BBDM</strong>（见 §轴 B 第 14 条）</li>
+</ol>
+
+<h4>病理 / 虚拟染色域的相关工作（本报告引用的同域证据）</h4>
+<ol class="ref" start="34">
+<li>Kataria, T., Knudsen, B., Elhabian, S. <strong>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining.</strong> arXiv:<a href="https://arxiv.org/abs/2403.11340">2403.11340</a>（<span class="small">步数消融 500→4000，FID 54.09→23.46；配准精度敏感性的空白</span>）</li>
+<li><strong>HistDiST: Histopathological Diffusion-based Stain Transfer.</strong> arXiv:<a href="https://arxiv.org/abs/2505.06793">2505.06793</a> · 代码：<a href="https://github.com/ErikGro/HistDiST">ErikGro/HistDiST</a>（<span class="small">本报告引用其调度层与 <code>snr_gamma</code> 设置</span>）</li>
+<li>Shen, 与 Ke. <strong>StainDiff.</strong> MICCAI 2023, LNCS 549–559. DOI:<a href="https://doi.org/10.1007/978-3-031-43987-2_53">10.1007/978-3-031-43987-2_53</a>（<span class="small">首个用于组织学染色风格迁移的扩散概率模型；<strong>闭源，摘要被出版社清空</strong></span>）</li>
+<li>Wang 等 <strong>StainLUT.</strong> npj Digital Medicine 9(1):1–12 (2025). DOI:<a href="https://doi.org/10.1038/s41746-025-02196-8">10.1038/s41746-025-02196-8</a> · 代码：<a href="https://github.com/XuLabZJU/StainLUT">XuLabZJU/StainLUT</a>（<span class="small">非扩散；监督假设为"结构近似一致"</span>）</li>
+<li>Yang, S., Wei, D., Hu, Y., Peng, Q., Liu, H., Huang, Y., Wu, X., Zheng, Y., Wang, L. <strong>D-VST: Diffusion Transformer for Pathology-Correct Tone-Controllable Cross-Dye Virtual Staining of Whole Slide Images.</strong> NeurIPS 2025. DOI:<a href="https://doi.org/10.52202/085713-0108">10.52202/085713-0108</a></li>
+<li>Macenko, M., Niethammer, M., Marron, J. S., Borland, D., Woosley, J. T., Guan, X., Schmitt, C., Thomas, N. E. <strong>A method for normalizing histology slides for quantitative analysis.</strong> ISBI 2009.（<span class="small">SAStainDiff 的 <code>normalizeStaining</code> 所实现的方法</span>）</li>
+<li>Marini, N., Atzori, M., Otálora, S., Marchand-Maillet, S., Müller, H. <strong>H&amp;E stain augmentation with DDCA.</strong> Journal of Pathology Informatics 14:100183 (2023). PMC:<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9852546/">PMC9852546</a>（<span class="small">SAStainDiff 的 <code>(R, N)</code> 门控谱系来源</span>）</li>
+</ol>
+
+<hr>
+
+<div class="box key">
+<div class="bt">本报告一句话结论</div>
+<p><strong>扩散模型的"机制本体改动"可以完整地拆成六条轴，而其中只有轴 B（起点与初始态）、轴 C（目标与参数化）、轴 D（时间步与轨迹）是零到低成本且立刻可做的；真正触及你核心矛盾的轴 A（乘性噪声）与轴 E（浓度域 vs 潜空间）成本很高，且两者强耦合——<em>轴 E 的取舍决定了轴 A 能不能用</em>。建议先用 E2 的纯统计测量判断"你的噪声到底是加性还是乘性"，这一个零成本实验的结果将决定后面一半的投入方向。</strong></p>
+</div>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TT-SaD 精读 · OD 空间测试时染色适应</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">Paper Deep-Read · 02/03</div>
+<div class="sub">OD 空间 + 扩散求解器<br>测试时染色适应 · 2026-10-11</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 论文事实卡片</a>
+<a class="l1" href="#s2">2 · 问题设定：它到底在做什么任务</a>
+<a class="l1" href="#s3">3 · 核心方法逐件拆解</a>
+<a class="l2" href="#s3-1">3.1 染色分离与 Beer–Lambert</a>
+<a class="l2" href="#s3-2">3.2 把染色偏移写成逆问题</a>
+<a class="l2" href="#s3-3">3.3 ★ 转 OD 空间使问题线性化</a>
+<a class="l2" href="#s3-4">3.4 ★ DDNM 式一致性约束</a>
+<a class="l2" href="#s3-5">3.5 domain center 怎么选</a>
+<a class="l2" href="#s3-6">3.6 完整采样流程</a>
+<a class="l1" href="#s4">4 · 实验与消融（重点）</a>
+<a class="l2" href="#s4-1">4.1 数据与设置</a>
+<a class="l2" href="#s4-2">4.2 主结果（表 2–6）</a>
+<a class="l2" href="#s4-3">4.3 消融清点：有什么、缺什么</a>
+<a class="l2" href="#s4-4">4.4 论文没强调的两个反向结果</a>
+<a class="l1" href="#s5">5 · 与你项目的关系</a>
+<a class="l1" href="#s6">6 · 引用策略</a>
+<a class="l1" href="#s7">7 · 证据边界与未核实清单</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">论文精读 · 02/03 · OD 空间作为求解空间的可行性证据</div>
+<h1>Tsai, Chen &amp; Lu (ECCV 2024) —— 把染色偏移写成逆问题，在 OD 空间用扩散求解<br><span class="small">Test-Time Stain Adaptation with Diffusion Models for Histopathology Image Classification</span></h1>
+<p class="desc">对象：你要用来论证「OD 空间作为生成/求解空间物理上更合理」的那篇。本报告基于 <b>ECVA 开放 PDF 全文（18 页）逐段精读</b>，把它的核心机制（OD 空间线性化 + DDNM 式一致性约束）完整还原，并清点它到底做了哪些消融、缺了哪些——其中「缺的那一项」恰好是你最需要小心的地方。</p>
+<div class="meta"><span>ECCV 2024</span><span>LNCS 15093 · pp.257–275</span><span>DOI 10.1007/978-3-031-72761-0_15</span><span class="b high">全文已核实</span><span class="b high">有官方代码</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+
+<div class="box key">
+<div class="bt">一句话：它把「染色偏移」写成了一个线性逆问题，而让它变线性的那一步，是「转到 OD 空间」——这是全文最有价值的技术点，也是你能引的那句话的唯一依据</div>
+<p>任务完全不同：它做的是 <b>patch 级肿瘤分类的测试时染色适应</b>（输出是 label，不是图）。所以它<b>不能</b>被当成「OD 空间扩散能生成虚拟 IHC」的先例。</p>
+<p>但它证明了一件对你很有用的事：<b>染色偏移在 OD 空间里是一个显式的、线性的、可微的算子</b>（<code>A = w<sub>t</sub>w<sub>s</sub><sup>†</sup></code>），因此在 OD 空间里可以对扩散采样逐步施加硬一致性约束。<b>这是一个「OD 空间物理上更合理」的机制级论据，而不是一句空泛的直觉。</b></p>
+</div>
+
+<div class="box good">
+<div class="bt">三件对你直接有用的东西（按可用度排序）</div>
+<ol>
+<li><b>OD 空间线性化的论证</b>：原文逐字说了「在 OD 空间而不是 RGB 空间施加约束」，可以直接作为你「浓度域/OD 域生成」的合法性依据。你的引用是站得住的。</li>
+<li><b>range–nullspace 分解这个工具</b>：<code>A<sup>†</sup>(·) + (I − A<sup>†</sup>A)(·)</code> 是把「染色必须对」和「结构必须保」拆成两个正交子空间的标准做法。如果你的采样过程要强制「染色分量守恒」，这是现成的机制。</li>
+<li><b>domain center 的构造方式</b>：选<b>离均值最近的真实染色矩阵</b>，而不是用平均矩阵。★ 这一条对你「S 怎么设」有直接价值——平均染色矩阵可能不是一个合法的染色矩阵。</li>
+</ol>
+</div>
+
+<div class="box warn">
+<div class="bt">一条你必须知道的边界：它没有做「OD 空间 vs RGB 空间」的受控消融</div>
+<p>论文用<b>理论论证</b>说明必须在 OD 空间（因为只有在那里逆问题才是线性的），但<b>没有做</b>「同样的算法在 RGB 空间跑一遍」的对照实验。所以：<b>「OD 空间更好」在这篇里是被论证的，不是被实验证明的。</b> 你引它的时候必须把这句话说准（见第 6 节）。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>论文事实卡片</h2>
+
+<div class="card">
+<div class="ch"><div><div class="title">Test-Time Stain Adaptation with Diffusion Models for Histopathology Image Classification</div><div class="v">European Conference on Computer Vision (ECCV) 2024 · LNCS 15093, pp. 257–275</div></div><div><span class="b high">题录已核实</span> <span class="b high">全文已核实</span></div></div>
+<div class="body">
+<table style="min-width:560px">
+<tbody>
+<tr><td style="width:160px"><b>作者</b></td><td>Cheng-Chang Tsai, Yuan-Chih Chen, Chun-Shien Lu</td></tr>
+<tr><td><b>单位</b></td><td>Research Center for Info. Technology Innovation &amp; Institute of Information Science, Academia Sinica（中国台湾 · 中央研究院）</td></tr>
+<tr><td><b>会议 / 卷页</b></td><td>ECCV 2024，LNCS 15093, pp. 257–275（Springer）</td></tr>
+<tr><td><b>DOI</b></td><td><code>10.1007/978-3-031-72761-0_15</code></td></tr>
+<tr><td><b>开放全文</b></td><td><a href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/05175.pdf">ECVA 官方 PDF</a>（18 页，含参考文献）</td></tr>
+<tr><td><b>代码</b></td><td><a href="https://github.com/cctsai831/TT-SaD">github.com/cctsai831/TT-SaD</a>（基于 OpenAI guided-diffusion / improved-diffusion 修改）</td></tr>
+<tr><td><b>arXiv 版本</b></td><td><span class="b bad">无</span>——只能通过 ECVA 或 Springer 获取</td></tr>
+<tr><td><b>关键词</b></td><td>Stain Adaptation · Inverse Problem · Diffusion Model</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<p class="small">你的题录是对的：作者、会议、LNCS 卷号、页码、DOI 全部一致，无需更正。这是三篇里题录最准确的一篇。</p>
+
+<h2 id="s2"><span class="num">2</span>问题设定：它到底在做什么任务</h2>
+
+<p>这一节很重要，因为任务类型决定了它的结论能迁移到什么程度。</p>
+
+<h3>2.1 任务：patch 级分类的测试时染色适应</h3>
+<ul>
+<li><b>目标</b>：一个在 source domain（某家医院）训练好的分类器，面对 target domain（新医院 / 新染色协议）的图像时不要掉点。</li>
+<li><b>约束</b>：训练时<b>只能看到 source domain</b>，target domain 的数据在训练时不可见（unseen target domain）。这正是它的卖点——医院不必为每批新数据重训模型。</li>
+<li><b>输出</b>：分类 label。染色适应只是手段，<b>不是目的</b>。</li>
+<li><b>与 stain normalization 的关键区别</b>（原文 1.2 节逐字）：它不是「target→source 的映射」，而是「<b>把数据推向 source 分布</b>」（"a model pushing data toward the source domain"）。</li>
+</ul>
+
+<h3>2.2 它明确区分的两条技术路线</h3>
+<div class="scroll"><table>
+<thead><tr><th>路线</th><th>代表方法</th><th>为什么它选择不做</th></tr></thead>
+<tbody>
+<tr><td>training-time 染色增广</td><td>Stain Mixup, RandStainNA, TTSA</td><td>对 <b>unseen stain</b> 无效——增广空间里没见过的染色覆盖不到</td></tr>
+<tr><td>test-time 染色归一化</td><td>Macenko, Vahadane</td><td>需要 reference；且是「映射」而非「推向分布」</td></tr>
+<tr><td><b>test-time 扩散适应（本文）</b></td><td><b>TT-SaD</b></td><td>用扩散的采样过程 + 显式逆问题约束，把输入推向 source 染色</td></tr>
+</tbody>
+</table></div>
+
+<div class="box teal">
+<div class="bt">一个漂亮的对比：DDA / DiffPure 与 TT-SaD 的差别</div>
+<p>DDA（Back to the Source）也用扩散做测试时适应，但它的结构保持手段是 <b>low-pass filter</b>。原文逐字否定了这一手段：</p>
+<p style="font-family:var(--mono);font-size:12.3px;background:#f8f9fb;border-left:3px solid var(--teal);padding:10px 14px;border-radius:6px">"according to our observations, employing a low-pass filter is insufficient to guarantee that the outputs of a diffusion model closely replicate the structure of their input images to a significant degree"</p>
+<p>于是它换成了<b>显式逆问题约束</b>。这个「从启发式滤波 → 显式算子约束」的替换，就是全文的方法论核心。</p>
+</div>
+
+<h2 id="s3"><span class="num">3</span>核心方法逐件拆解</h2>
+
+<h3 id="s3-1">3.1 染色分离与 Beer–Lambert（原文 3.2 节，Eq 1–3）</h3>
+<div class="formula">v = BL(x) := −log( x / I<sub>0</sub> ) &nbsp;&nbsp;&nbsp; v = w h &nbsp;&nbsp;&nbsp; x = BL<sup>−1</sup>(v) := I<sub>0</sub> exp(−v)</div>
+<ul>
+<li><code>I<sub>0</sub></code> = 255（8-bit 图像的照明光强）；<code>x ∈ R<sup>3×n</sup></code> 是 RGB 图像。</li>
+<li><code>v</code> = 相对光学密度（relative optical density）；<code>w ∈ R<sup>3×r</sup></code> 是<b>染色矩阵</b>；<code>h ∈ R<sup>r×n</sup></code> 是<b>染色密度图</b>。</li>
+<li>本文只用 H&amp;E，所以 <code>r = 2</code>。</li>
+</ul>
+<p>注意这里的用词：他们用的是 <code>w·h</code>（<b>染色矩阵 × 密度</b>）的记法，与 Ruifrok/Vahadane 一脉相承。你的浓度域方案里 <code>M</code> 与 <code>C</code> 是同一套东西——<b>这篇和你的渲染桥是同一套线性代数</b>。</p>
+
+<h3 id="s3-2">3.2 把染色偏移写成逆问题（原文 4.1 节，Eq 9–11）</h3>
+<p>设 <code>w<sub>s</sub></code> 是<b>期望的</b>（source）染色矩阵，<code>w<sub>t</sub></code> 是输入图像的染色矩阵。定义 <b>染色偏移矩阵</b> <code>A ∈ R<sup>3×3</sup></code>：</p>
+<div class="formula">w<sub>t</sub> = A w<sub>s</sub> &nbsp;&nbsp;⇒&nbsp;&nbsp; A = w<sub>t</sub> w<sub>s</sub><sup>†</sup> &nbsp;&nbsp;（<sup>†</sup> 为伪逆）</div>
+<p>于是染色适应等价于求解逆问题：</p>
+<div class="formula">x<sub>t</sub> = BL<sup>−1</sup>( A ( BL(x̂) ) ) &nbsp;&nbsp;&nbsp;&nbsp;<span class="small">（Eq 11）</span></div>
+<p>其中 <code>x̂</code> 是「具有期望染色」的图像。原文明确指出：<b>Eq 11 是非线性的</b>（因为 BL 与 BL⁻¹ 夹在外面），因此不能直接套 DDNM 那套线性逆问题理论。</p>
+
+<div class="box stop">
+<div class="bt">★ 全文最关键的一步：转到 OD 空间，让问题变线性（Eq 14）</div>
+<p>原文 4.2 节逐字：</p>
+<p style="font-family:var(--mono);font-size:12.3px;background:#f8f9fb;border-left:3px solid var(--red);padding:10px 14px;border-radius:6px">"Although the whole inverse problem is nonlinear, we find there is still a linear function inside Eq. (11). To reach this linearity, we first propose to transform from the RGB color space to the optical density space."</p>
+<p>变换之后：</p>
+<div class="formula">V = A ( BL(x̂) ) &nbsp;&nbsp;&nbsp;&nbsp;<span class="small">（Eq 14）</span></div>
+<p>其中 <code>V</code> 是输入图像的相对光学密度。原文紧接着给出结论句：</p>
+<p style="font-family:var(--mono);font-size:12.3px;background:#f8f9fb;border-left:3px solid var(--red);padding:10px 14px;border-radius:6px">"Eq. (14) suggests that we can impose the consistency constraint in the optical density space instead of the RGB color space."</p>
+<p><b>这就是你要引的那句话的原文依据。</b> 它的逻辑链是完整的：非线性 → 找到内层的线性算子 → 换到使算子显式线性的空间 → 施加约束。</p>
+</div>
+
+<h3 id="s3-3">3.3 为什么必须转 OD 空间——一句物理直觉</h3>
+<p>RGB 空间里，Beer–Lambert 是<b>指数混合</b>（<code>x = I<sub>0</sub>exp(−w h)</code>），算子 A 无法用矩阵表示。OD 空间里，混合是<b>线性叠加</b>（<code>v = w h</code>），于是「染色偏移」就是一个干净的 3×3 线性算子 A。</p>
+<div class="scroll"><table>
+<thead><tr><th>空间</th><th>混合形式</th><th>染色偏移算子</th><th>能否用 range–nullspace 分解</th></tr></thead>
+<tbody>
+<tr><td>RGB</td><td>指数混合 <code>x = I₀exp(−wh)</code></td><td>非线性，无显式矩阵形式</td><td><span class="b bad">不能</span></td></tr>
+<tr><td><b>OD / 浓度</b></td><td><b>线性叠加 <code>v = wh</code></b></td><td><b>显式 3×3 矩阵 <code>A</code></b></td><td><span class="b high">能</span></td></tr>
+</tbody>
+</table></div>
+<p>这就是「OD 空间物理上更合理」的机制级理由——<b>不是因为 OD 空间「更物理」，而是因为物理量在 OD 空间里满足线性叠加原理</b>，从而让物理约束可以用线性代数严格表达。</p>
+
+<h3 id="s3-4">3.4 DDNM 式一致性约束（原文 4.2 节，Eq 15–16）</h3>
+<p>作者借鉴 DDNM（Zero-shot Image Restoration using Denoising Diffusion Null-space Model），在<b>反向过程的每一步</b>施加一致性约束。具体做法：</p>
+<h4>Step 1 — 得到当前步的预测输出 x<sub>0;t</sub></h4>
+<div class="formula">x<sub>0;t</sub> = ( x<sub>t</sub> − √(1−ᾱ<sub>t</sub>) · ε<sub>θ</sub>(x<sub>t</sub>, t) ) / √ᾱ<sub>t</sub> &nbsp;&nbsp;&nbsp;<span class="small">（Eq 15）</span></div>
+<h4>Step 2 — 施加一致性约束</h4>
+<div class="formula">x̂<sub>0;t</sub> = BL<sup>−1</sup>( A<sup>†</sup>(BL(x)) + (I − A<sup>†</sup>A) BL(x<sub>0;t</sub>) ) &nbsp;&nbsp;&nbsp;<span class="small">（Eq 16）</span></div>
+<h4>怎么读这个公式——两项的物理含义完全不同</h4>
+<div class="scroll"><table>
+<thead><tr><th>项</th><th>数学地位</th><th>物理含义</th></tr></thead>
+<tbody>
+<tr><td><code>A<sup>†</sup>(BL(x))</code></td><td>range space 分量（值域投影）</td><td><b>把输入图像的染色搬过来</b>——强制输出的染色与输入（经 A 变换后）一致</td></tr>
+<tr><td><code>(I − A<sup>†</sup>A) BL(x<sub>0;t</sub>)</code></td><td>null space 分量（零空间投影）</td><td><b>保留扩散预测的结构</b>——这部分不受染色约束影响，完全来自模型</td></tr>
+</tbody>
+</table></div>
+<p>原文对这个公式的解读（逐字）：</p>
+<p style="font-family:var(--mono);font-size:12.3px;background:#f8f9fb;border-left:3px solid var(--blue);padding:10px 14px;border-radius:6px">"Eq. (16) can be regarded as a step that only shifts the stains because both x and x<sub>0;t</sub> are transformed by A<sup>†</sup> and I−A<sup>†</sup>A, respectively, after conversion to the optical density space."</p>
+
+<div class="box key">
+<div class="bt">为什么必须作用在 x<sub>0;t</sub> 而不是 latent x<sub>t</sub>（原文一个常被忽略的细节）</div>
+<p>原文明确说：<b>不能</b>把约束施加在所有 latent 上，因为 latent 是「输出在不同噪声水平下的带噪版本」，对它施加一致性约束没有意义。正确做法是<b>每步只对预测的输出 x<sub>0;t</sub> 施加</b>，然后再用 DDIM 公式（Eq 8）走到下一步。</p>
+<p>这个细节在你做浓度域扩散时同样适用：<b>物理约束应该挂在 x̂₀（预测端点）上，不是挂在 x<sub>t</sub> 上。</b> 这与库内《扩散主损失与辅助损失的梯度冲突》里「挂载点决定梯度回传路径」的结论是同一件事的采样侧版本。</p>
+</div>
+
+<h3 id="s3-5">3.5 domain center 怎么选（原文 4.2 节，Eq 12–13）</h3>
+<p>约束需要 <code>w<sub>s</sub></code>（期望染色）。它从 source domain 训练集里推断，做法是：</p>
+<pre><code>1. 用 stain separation 提取 source 集里每张图的染色矩阵  W_1 ... W_S
+2. 求均值：            W̄ = (1/S) Σ W_i                      (Eq 12)
+3. 选「离均值最近的那张真实图的染色矩阵」：
+       W_j* = argmin_{W_j ∈ {W_1..W_S}} || W_j − W̄ ||        (Eq 13)</code></pre>
+<div class="box good">
+<div class="bt">★ 为什么是「选最近的」而不是「用均值」——这一条对你极有价值</div>
+<p>因为<b>染色矩阵的均值不一定是合法的染色矩阵</b>。均值会让每个分量都向中间收缩，得到的矩阵可能不再对应任何一种真实的染色外观（类似「平均两张人脸得到一张不像人的脸」）。</p>
+<p>原文还进一步区分了两种候选集：</p>
+<ul>
+<li><b>domain overall center（DOC）</b>：从<b>全部</b> source 数据里选。</li>
+<li><b>domain tumor center（DTC）</b>：只从 <b>tumor 类</b>的图像里选。</li>
+</ul>
+<p>理由（原文 4.2 节 + Fig 3）：肿瘤分类数据极度类别不平衡，如果从全部数据选，得到的 center 会被大量正常（非肿瘤）图像拉走，导致「肿瘤类图像的染色在适应后被冲淡」。所以它主张选 DTC。</p>
+<p><b>对你的迁移</b>：如果你要定义一个「代表性浓度基 S」，同样应该<b>选一个真实样本的 S</b>，而不是对 S 求平均；而且要考虑「阳性区域」与「全图」是否应该用不同的代表。</p>
+</div>
+
+<h3 id="s3-6">3.6 完整采样流程（原文 4.2 节末）</h3>
+<pre><code>输入：target 图像 x（未知染色）
+      source 训练好的扩散 ε_θ
+      domain center 对应的 w_s，输入图的 w_t
+      A = w_t · w_s†
+
+[1] 前向加噪 N 步（N &lt; T，本文 N = T/2）
+        x ──加噪──► x_N            （用 Eq 5 的闭式，不是逐步）
+
+[2] 反向去噪 N 步，每步插入一致性约束：
+        for t = N ... 1:
+            ① 用 Eq 15 从 x_t 预测 x_{0;t}
+            ② 用 Eq 16 施加 OD 空间一致性约束 ──► x̂_{0;t}
+            ③ 用 Eq 8 (DDIM) 从 x̂_{0;t} 走到 x_{t-1}
+        输出 x̂ = x_0     ← 染色已推向 source 的图像
+
+[3] 送入 source 上训练好的分类器 ──► label</code></pre>
+<p><b>为什么取 N = T/2</b>：原文引 DDA 的观察——<b>前向步数 N 存在「类别信息保留 vs 域迁移」的权衡</b>。N 太小，染色没被破坏够，推不过去；N 太大，图像内容被破坏，结构保不住。取 T/2 是他们的折中（<b>注意：这个折中值本身没有做消融，见 4.3</b>）。</p>
+
+<h2 id="s4"><span class="num">4</span>实验与消融（重点）</h2>
+
+<h3 id="s4-1">4.1 数据与设置</h3>
+<div class="scroll"><table>
+<thead><tr><th>项</th><th>设置</th></tr></thead>
+<tbody>
+<tr><td>数据集</td><td><b>MitosAtypia14</b>（2 台扫描仪：Aperio、Hamamatsu）；<b>CAMELYON17</b>（5 家医院：Hospital 1–5）</td></tr>
+<tr><td>图像</td><td>256×256 patch，40× 放大</td></tr>
+<tr><td>分类器</td><td>ResNet-50，AdamW，lr = 0.001</td></tr>
+<tr><td>扩散模型</td><td>source domain 上训练（improved-diffusion）</td></tr>
+<tr><td>步数</td><td>T = 10 与 T = 100 两种；TT-SaD 的 N = T/2</td></tr>
+<tr><td>对照（test-time）</td><td>DiffPure、DDA（用同一个扩散模型）</td></tr>
+<tr><td>对照（training-time）</td><td>Stain Mixup、RandStainNA</td></tr>
+<tr><td>适应质量指标</td><td>SSIM、FID、KID、WD</td></tr>
+<tr><td>分类指标</td><td>ACC、AUROC、AUPRC</td></tr>
+</tbody>
+</table></div>
+
+<h3 id="s4-2">4.2 主结果</h3>
+
+<h4>表 2 · MitosAtypia14 适应质量（SSIM↑ / FID↓ / KID↓ / WD↓）</h4>
+<div class="scroll"><table>
+<thead><tr><th>方法</th><th>Aperio→Hamamatsu SSIM</th><th>FID</th><th>KID</th><th>Hamamatsu→Aperio SSIM</th><th>FID</th><th>KID</th></tr></thead>
+<tbody>
+<tr><td>DiffPure (T=10)</td><td>0.1790</td><td>223.5</td><td>0.2774</td><td>0.1492</td><td>208.2</td><td>0.2735</td></tr>
+<tr><td>DDA (T=10)</td><td>0.0560</td><td>279.5</td><td>0.3603</td><td>0.0572</td><td>265.5</td><td>0.3568</td></tr>
+<tr><td><b>TT-SaD (T=10)</b></td><td><b>0.9223</b></td><td><b>43.9</b></td><td><b>0.0470</b></td><td><b>0.8971</b></td><td><b>21.4</b></td><td><b>0.0194</b></td></tr>
+<tr><td>DiffPure (T=100)</td><td>0.5950</td><td>52.8</td><td>0.0553</td><td>0.5714</td><td>48.2</td><td>0.0602</td></tr>
+<tr><td>DDA (T=100)</td><td>0.5940</td><td>51.7</td><td>0.0536</td><td>0.5866</td><td>43.1</td><td>0.0482</td></tr>
+<tr><td><b>TT-SaD (T=100)</b></td><td><b>0.9622</b></td><td><b>29.5</b></td><td><b>0.0303</b></td><td><b>0.9568</b></td><td><b>24.6</b></td><td><b>0.0239</b></td></tr>
+</tbody>
+</table></div>
+<p><b>读法</b>：SSIM 从 0.18 级（DiffPure T=10）提到 0.92 级，这是<b>数量级差异</b>，不是边际改进。说明「显式逆问题约束」相对「low-pass filter」确实是质变。</p>
+
+<h4>表 3 · CAMELYON17 适应质量（TT-SaD 为 T=10；对比 DiffPure/DDA）</h4>
+<div class="scroll"><table>
+<thead><tr><th>目标域</th><th>指标</th><th>DiffPure (T=10)</th><th>DDA (T=10)</th><th>DiffPure (T=100)</th><th>DDA (T=100)</th><th>TT-SaD (T=10)</th></tr></thead>
+<tbody>
+<tr><td rowspan="2">Hospital 1</td><td>SSIM↑</td><td>0.1748</td><td>0.0813</td><td>0.6262</td><td>0.6622</td><td><b>0.9128</b></td></tr>
+<tr><td>FID↓</td><td>261.0</td><td>349.3</td><td>74.7</td><td>85.6</td><td><b>55.8</b></td></tr>
+<tr><td rowspan="2">Hospital 3</td><td>SSIM↑</td><td>0.1825</td><td>0.0869</td><td>0.6299</td><td>0.6828</td><td><b>0.9055</b></td></tr>
+<tr><td>FID↓</td><td>250.1</td><td>289.8</td><td>120.8</td><td>139.1</td><td><b>107.9</b></td></tr>
+<tr><td rowspan="2">Hospital 5</td><td>SSIM↑</td><td>0.1965</td><td>0.0952</td><td>0.6441</td><td>0.6851</td><td><b>0.9259</b></td></tr>
+<tr><td>FID↓</td><td>222.3</td><td>286.1</td><td>100.6</td><td>109.0</td><td><b>78.1</b></td></tr>
+</tbody>
+</table></div>
+<p class="small">Hospital 2、4 趋势一致（TT-SaD SSIM 0.9223 / 0.9210，FID 60.8 / 53.1），为节省篇幅略去。</p>
+
+<h4>表 4 · vs training-time 染色增广（source = Hospital 1，测试在全部 5 家）</h4>
+<div class="scroll"><table>
+<thead><tr><th>方法</th><th>用到的训练医院</th><th>ACC</th><th>AUROC</th><th>AUPRC</th></tr></thead>
+<tbody>
+<tr><td>w/o 任何增广</td><td>H1–H4</td><td>58.71</td><td>77.93</td><td>38.70</td></tr>
+<tr><td>Stain Mix-Up</td><td>H1–H5</td><td>73.47</td><td>77.87</td><td>43.89</td></tr>
+<tr><td>RandStainNA</td><td>H1–H5</td><td>75.23</td><td><b>15.86</b></td><td><b>2.94</b></td></tr>
+<tr><td><b>TT-SaD（DTC）</b></td><td><b>H1–H4</b>（更少）</td><td><b>81.54</b></td><td><b>89.89</b></td><td><b>44.20</b></td></tr>
+</tbody>
+</table></div>
+<p class="small">★ 注意 RandStainNA 的 AUROC 15.86 / AUPRC 2.94 —— 这明显异常（低于随机 50 的 AUROC）。原文未解释。引用这个数字前建议谨慎，它更像是一个实验设置问题的信号，而不是方法真实水平。</p>
+
+<h4>表 5 · vs test-time 方法（source = Hospital 1，逐医院）</h4>
+<div class="scroll"><table>
+<thead><tr><th>目标域</th><th>指标</th><th>w/o 适应</th><th>DiffPure T=10</th><th>DDA T=10</th><th>DiffPure T=100</th><th>DDA T=100</th><th>TT-SaD DOC</th><th>TT-SaD DTC</th></tr></thead>
+<tbody>
+<tr><td>H2</td><td>ACC</td><td>74.13</td><td>73.81</td><td>75.86</td><td>81.04</td><td>75.35</td><td>98.04</td><td><b>98.84</b></td></tr>
+<tr><td>H3</td><td>ACC</td><td><b>71.26</b></td><td>72.56</td><td>67.24</td><td>54.89</td><td>69.05</td><td>57.84</td><td>58.12</td></tr>
+<tr><td>H4</td><td>ACC</td><td>97.89</td><td>96.52</td><td>87.57</td><td>98.02</td><td>97.87</td><td>99.12</td><td><b>99.35</b></td></tr>
+<tr><td>H5</td><td>ACC</td><td><b>6.99</b></td><td>6.93</td><td>6.68</td><td>10.97</td><td>7.51</td><td>85.77</td><td><b>87.16</b></td></tr>
+<tr style="background:var(--blueSoft)"><td><b>平均</b></td><td><b>ACC</b></td><td>62.57</td><td>62.46</td><td>59.34</td><td>61.23</td><td>62.45</td><td>85.19</td><td><b>85.87</b></td></tr>
+<tr style="background:var(--blueSoft)"><td><b>平均</b></td><td><b>AUROC</b></td><td>81.92</td><td>79.36</td><td>78.66</td><td>82.60</td><td>82.33</td><td>90.41</td><td><b>90.73</b></td></tr>
+</tbody>
+</table></div>
+
+<h4>表 6 · 轮流把每家医院当 source（更严格的平均）</h4>
+<div class="scroll"><table>
+<thead><tr><th>方法</th><th>ACC</th><th>AUROC</th><th>AUPRC</th></tr></thead>
+<tbody>
+<tr><td>DiffPure</td><td>65.54</td><td>71.13</td><td>20.17</td></tr>
+<tr><td>DDA</td><td>64.75</td><td>69.35</td><td>16.52</td></tr>
+<tr><td>TT-SaD（DOC）</td><td>71.55</td><td><b>75.05</b></td><td><b>26.91</b></td></tr>
+<tr><td>TT-SaD（DTC）</td><td><b>72.06</b></td><td>74.01</td><td>26.82</td></tr>
+</tbody>
+</table></div>
+
+<h3 id="s4-3">4.3 消融清点：有什么、缺什么</h3>
+
+<div class="box warn">
+<div class="bt">诚实结论：这篇没有独立的消融章节，只有三组「可以当消融读」的对照</div>
+</div>
+
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>对照项</th><th>在哪</th><th>结果</th><th>强度判定</th></tr></thead>
+<tbody>
+<tr><td>A1</td><td><b>domain center 选择</b>：DOC（全部数据）vs DTC（只用肿瘤类）</td><td>表 5、表 6</td><td>表 5 平均 ACC：85.87 (DTC) vs 85.19 (DOC)；表 6：72.06 (DTC) vs 71.55 (DOC)。<b>差异都在 1 个百分点内</b>，原文自述「comparable」</td><td><span class="b medium">有效但结论弱</span>：说明 DTC 不是关键，但也无害</td></tr>
+<tr><td>A2</td><td><b>timestep T</b>：10 vs 100</td><td>表 2、表 3</td><td>适应质量上 T=100 明显更好（SSIM 0.962 vs 0.922）；但<b>主分类实验全部用 T=10</b></td><td><span class="b medium">部分有效</span>：只对「适应质量」做了 T 对照，没做「分类 ACC 随 T 的变化」</td></tr>
+<tr><td>A3</td><td><b>一致性约束 vs low-pass filter</b></td><td>表 2/3 + Fig 2</td><td>TT-SaD 大幅优于用 low-pass 的 DiffPure/DDA</td><td><span class="b high">这是最强的证据</span>，但它同时换了两个变量（约束方式 + 是否用逆问题），<b>不是单变量对照</b></td></tr>
+<tr><td>A4</td><td>w/o adaptation 基线</td><td>表 5、表 6</td><td>见 4.4 的两个反向结果</td><td><span class="b high">有效</span></td></tr>
+</tbody>
+</table></div>
+
+<div class="box stop">
+<div class="bt">★ 缺失的消融——这一项你必须知道</div>
+<div class="scroll"><table>
+<thead><tr><th>缺失项</th><th>为什么它重要</th></tr></thead>
+<tbody>
+<tr><td><b>OD 空间 vs RGB 空间的对照</b></td><td>论文用理论论证「必须转 OD」，但<b>没有跑一遍「在 RGB 空间直接施加约束」</b>作为对照。所以「OD 空间更好」是<b>被论证的</b>，不是<b>被实验证明的</b>。你引它时不能说「已证明 OD 空间优于 RGB」</td></tr>
+<tr><td><b>前向步数 N 的消融</b></td><td>N = T/2 是核心超参（决定类别信息 vs 域迁移的权衡），但只有「取 T/2」一个设置，没有扫 N</td></tr>
+<tr><td><b>染色矩阵估计方式的消融</b></td><td>A = w_t w_s† 依赖 stain separation 的精度（本文用 Vahadane 一脉）。估计不准时约束会不会失效？没有回答</td></tr>
+<tr><td><b>A 的秩/条件数分析</b></td><td>A† 与 (I − A†A) 的数值行为在 A 病态时会怎样？没有分析</td></tr>
+<tr><td><b>约束施加位置</b>：x̂₀ vs x_t</td><td>论文在正文解释了为什么选 x̂₀（latent 是带噪版本），但没有做「施加在 x_t 上」的对照来量化这个选择的收益</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<h3 id="s4-4">4.4 论文没强调的两个反向结果（诚实标注）</h3>
+<div class="grid2">
+<div class="mini"><div class="mt" style="color:var(--amber)">Hospital 3：TT-SaD 的 ACC 反而更差</div>
+<p>w/o 适应 = <b>71.26</b>，TT-SaD (DTC) = <b>58.12</b>。ACC 掉了 13 个百分点。（AUROC 反而从 82.50 升到 86.58。）</p>
+<p>原文只说「mostly obtain the best results」——这个 "mostly" 掩盖的就是这一类失败案例。<b>说明该方法并非在所有域上安全。</b></p>
+</div>
+<div class="mini"><div class="mt" style="color:var(--green)">Hospital 5：从「完全失效」被救回</div>
+<p>w/o 适应 ACC = <b>6.99</b>（AUROC 52.47，几乎等于随机），TT-SaD (DTC) = <b>87.16</b>。</p>
+<p>这是全文收益最大的单点。它说明 <b>stain shift 可以极端到让分类器彻底失效</b>，而该方法的收益本质是「恢复」而非「提升」。</p>
+</div>
+</div>
+<div class="box teal">
+<div class="bt">对你写论文的含义</div>
+<p>你引这篇时，「染色偏移严重到足以让模型完全失效」是一个有力的事实（Hospital 5: 6.99% ACC）。但同时要记住它<b>也有让结果变差的域</b>（Hospital 3）。把两者都写进 related work，比只写「它大幅提升」更可信。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>与你项目的关系</h2>
+
+<div class="grid2">
+<div class="mini"><div class="mt">相同的地方</div>
+<p>① 都在 <b>OD / 浓度空间</b>里操作，而不是 RGB。</p>
+<p>② 都用一个<b>显式的染色矩阵</b>（它的 A 是 3×3；你的 M 是 3×3）。</p>
+<p>③ 都做 <b>Beer–Lambert 往返</b>（BL → 空间内操作 → BL⁻¹）。</p>
+<p>④ 都关心<b>结构保持</b>（它怕染色变了结构也变了）。</p>
+</div>
+<div class="mini"><div class="mt">不同的地方</div>
+<p>① 它输出 <b>label</b>；你输出<b>图像</b>。</p>
+<p>② 它的 A 是<b>全局线性 3×3</b>；你的渲染涉及<b>空间变化的浓度场</b>。</p>
+<p>③ 它没有<b>生成模型的条件注入</b>（无 H&amp;E 条件）。</p>
+<p>④ 它没有 <b>DAB / 表达量</b>的概念（只用 H&amp;E 两染料，r=2）。</p>
+<p>⑤ 它是<b>逆问题求解</b>（目标明确、有测量值）；你是<b>条件生成</b>（目标分布、无配对真值）。</p>
+</div>
+</div>
+
+<div class="box key">
+<div class="bt">可迁移性判定：三件可搬，三件不要搬</div>
+<div class="scroll"><table>
+<thead><tr><th>项</th><th>判定</th><th>理由</th><th>改动成本</th><th>可复现性</th></tr></thead>
+<tbody>
+<tr><td>OD 空间线性化的论证</td><td><span class="b high">直接可引</span></td><td>原文逐字支持，无需自己论证</td><td>—</td><td><span class="b high">高</span></td></tr>
+<tr><td>range–nullspace 分解作为采样期约束</td><td><span class="b high">可迁移</span></td><td>若你要强制「染色分量守恒」或「已知通道不变」，这是现成机制；只需把 A 换成你的算子</td><td>中</td><td><span class="b medium">中</span>（需处理 A 病态）</td></tr>
+<tr><td>domain center = 离均值最近的真实样本</td><td><span class="b high">直接可用</span></td><td>★ 对你「S 怎么设」直接有用：不要对染色矩阵求平均，要选真实代表</td><td>低</td><td><span class="b high">高</span></td></tr>
+<tr><td>它的 A（全局 3×3 线性算子）</td><td><span class="b bad">不要搬</span></td><td>它无法表达 DAB 的<b>空间分布</b>——A 只描述「染料怎么变色」，不描述「哪里阳性」。你的核心恰恰是空间分布</td><td>—</td><td>—</td></tr>
+<tr><td>它的目标（分类鲁棒性）</td><td><span class="b bad">不要搬</span></td><td>分类任务允许「只要把染色推过去就行」；生成任务要求「分布正确 + 表达正确」，目标严格得多</td><td>—</td><td>—</td></tr>
+<tr><td>N = T/2 的取值</td><td><span class="b medium">参考，不照抄</span></td><td>它没有消融支持这个值；你的任务目标不同（生成 vs 适应），最优 N 大概率不同</td><td>—</td><td>—</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<h3>5.1 一个可执行的迁移实验（如果你想验证）</h3>
+<pre><code>假设：你当前的失败模式是「染色风格对了，但 DAB 空间分布错」。
+
+实验：把 TT-SaD 的一致性约束套到你的 DAB 通道上，作为采样期的硬约束。
+  - 定义算子 A_DAB：把「H 通道」当作测量值（已知不变），DAB 当作待求解
+  - 在每步对 x̂₀ 施加：x̂₀ ← A†(y) + (I − A†A) x̂₀
+  - 对照：不加约束 / 加在 x_t 上 / 加在 x̂₀ 上
+
+止损条件：若加约束后 FID 与 FOD 分布指标同时变差，说明约束与生成目标冲突，
+          应退回软引导（小权重 score guidance）而不是硬投影。
+</code></pre>
+<p class="small">★ 注意：这个实验的<b>假设前提</b>（你的失败模式是空间分布错）必须先用你自己的数据确认。如果实际失败模式是「染色整体偏色」，那 A 型约束不解决问题。</p>
+
+<h2 id="s6"><span class="num">6</span>引用策略</h2>
+
+<div class="grid2">
+<div class="mini"><div class="mt" style="color:var(--green)">✓ 可以这么引</div>
+<p>「在染色适应中，Tsai et al. 将染色偏移建模为显式算子 <code>A = w<sub>t</sub>w<sub>s</sub><sup>†</sup></code>，并指出只有转换到光学密度空间后该算子才是线性的，从而可在扩散采样的每一步施加严格的一致性约束 [TT-SaD 2024]。这说明 OD / 浓度空间不仅是物理上更自然的表示，也是让物理约束可被<b>线性代数严格表达</b>的必要条件。」</p>
+</div>
+<div class="mini"><div class="mt" style="color:var(--red)">✗ 不要这么引</div>
+<p>「已有工作证明在 OD 空间做扩散优于在 RGB 空间做扩散」——<b>它没做这个对照实验</b>，只有理论论证。</p>
+<p>「TT-SaD 在 OD 空间生成了虚拟染色图像」——<b>事实错误</b>，它输出分类 label，不做生成。</p>
+<p>「TT-SaD 证明了 OD 空间扩散在所有域上都有效」——<b>错误</b>，Hospital 3 上它的 ACC 比不做好。</p>
+</div>
+</div>
+
+<div class="box good">
+<div class="bt">你在叙事台阶上的正确位置</div>
+<p>你的三篇链条是：<b>Jeong（分离空间 + 扩散，归一化）→ TT-SaD（OD 空间，逆问题）→ Kang（OD 空间，H&amp;E→IHC）→ 你（浓度域 + 扩散生成 + 物理渲染 + 无配准先验引导 + 定量表达控制）</b>。</p>
+<p>TT-SaD 这一级提供的正是「<b>OD 空间作为求解空间已被验证在数学上更合适</b>」——注意措辞：是「数学上更合适」，不是「实验上更好」。这个区别很重要，因为审稿人如果去读原文，会发现它确实没做那个对照实验；而你如果夸大了，就会被抓。</p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>证据边界与未核实清单</h2>
+
+<div class="scroll"><table>
+<thead><tr><th>条目</th><th>状态</th><th>来源 / 依据</th></tr></thead>
+<tbody>
+<tr><td>题录（作者、会议、LNCS 15093、pp.257–275、DOI）</td><td><span class="b high">已核实</span></td><td>ECVA 官方 PDF 首页 + GitHub 官方仓库引用块，两者一致</td></tr>
+<tr><td>Beer–Lambert 与染色分离公式（Eq 1–3）</td><td><span class="b high">已核实</span></td><td>ECVA PDF 第 5 页逐字</td></tr>
+<tr><td>染色偏移算子 A = w<sub>t</sub>w<sub>s</sub><sup>†</sup>（Eq 10）</td><td><span class="b high">已核实</span></td><td>ECVA PDF 第 7 页逐字</td></tr>
+<tr><td>「在 OD 空间而非 RGB 空间施加约束」</td><td><span class="b high">已核实</span></td><td>ECVA PDF 第 10 页逐字：<i>"impose the consistency constraint in the optical density space instead of the RGB color space"</i></td></tr>
+<tr><td>一致性约束公式（Eq 15–16）与 range–nullspace 结构</td><td><span class="b high">已核实</span></td><td>ECVA PDF 第 10 页逐字</td></tr>
+<tr><td>domain center 的构造（Eq 12–13）与 DOC/DTC 之分</td><td><span class="b high">已核实</span></td><td>ECVA PDF 第 9–10 页逐字</td></tr>
+<tr><td>表 2–表 6 全部数字</td><td><span class="b high">已核实</span></td><td>ECVA PDF 第 12–14 页逐字转录</td></tr>
+<tr><td>数据集、patch 尺寸、分类器、优化器</td><td><span class="b high">已核实</span></td><td>ECVA PDF 第 11 页</td></tr>
+<tr><td>代码库基于 guided-diffusion / improved-diffusion</td><td><span class="b high">已核实</span></td><td>GitHub README 逐字</td></tr>
+<tr><td><b>附录 A.1–A.5</b>（染色泛化可视化、TT-SaD 的第二种解释与伪代码、样本数表、更多分类场景、染色矩阵分布图）</td><td><span class="b bad">未获取</span></td><td>正文多处引用 "Sec. A.x of Appendix"，但附录<b>不在</b> ECVA 的 18 页 PDF 内，需 Springer 补充材料</td></tr>
+<tr><td>「OD 空间优于 RGB 空间」的受控实验</td><td><span class="b bad">不存在（不是我没找到）</span></td><td>全文无此对照；论文只有理论论证</td></tr>
+<tr><td>RandStainNA 的 AUROC 15.86 / AUPRC 2.94 异常</td><td><span class="b medium">已核实数字，原因未解释</span></td><td>表 4 逐字；论文未讨论。引用前建议谨慎</td></tr>
+<tr><td>Hospital 3 上 TT-SaD 的 ACC 低于 w/o 适应</td><td><span class="b high">已核实</span></td><td>表 5 逐字（71.26 vs 58.12）；论文用 "mostly" 一笔带过</td></tr>
+</tbody>
+</table></div>
+
+<div class="box warn">
+<div class="bt">给下一次对账的人的说明</div>
+<p>本报告基于 ECVA 公开 PDF 全文，正文（含全部表格数字）已逐字核实。<b>唯一未获取的是 Springer 补充材料的附录 A</b>。若后续拿到附录，请回填「TT-SaD 的第二种解释与伪代码」以及「更多分类场景（表 8）」两处。</p>
+</div>
+
+<div class="foot">
+<p><b>TT-SaD (ECCV 2024) 精读</b> · 三篇精读之二 · 生成于 2026-10-11 · 资料库分类：03_论文精读博客</p>
+<p>核实工具：ECVA 官方开放 PDF（18 页全文）、GitHub 官方仓库。全文获取状态：<b>成功</b>。</p>
+<p>相关报告：《浓度域OD域虚拟染色 —— 方法级文献地图与 Beer–Lambert 渲染桥》（该报告 §4.6 已预留「OD 只作损失 / 引导 / 评价」这一类，本报告填的就是这一格）、《扩散主损失与辅助损失的梯度冲突 —— 机制分析》（约束挂载点的采样侧对应）。</p>
+</div>
+</main>
+</div>
+</body>
+</html>

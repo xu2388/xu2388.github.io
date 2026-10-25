@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VAE 到底在干什么：从"这个采样我不懂"到"SD 里的 VAE 只是个翻译官"</title>
+  <title>VAE 教程：潜变量的形态、采样的含义与 Stable Diffusion 中的角色</title>
   <link rel="stylesheet" href="../assets/style.css" />
   <script id="meta" type="application/json">
   {
-    "title": "VAE 到底在干什么：从\"这个采样我不懂\"到\"SD 里的 VAE 只是个翻译官\"",
+    "title": "VAE 教程：潜变量的形态、采样的含义与 Stable Diffusion 中的角色",
     "date": "2026-10-24",
     "tags": ["教程", "VAE", "变分自编码器", "潜空间", "Stable Diffusion", "学习笔记"],
-    "summary": "我从两个特别具体的困惑学起 VAE：一是以为'潜变量是个四维向量'（其实是一张 4 通道小图），二是死活想不通'这个采样到底在采什么'。这篇就从自编码器一步步搭到 VAE，讲清那个采样为什么是 VAE 的灵魂，再接到 Stable Diffusion——原来 SD 里的 VAE 根本不负责生成，它只是个'翻译官'。最后落到我的染色任务上。",
+    "summary": "本文从两个具体问题入手讲解 VAE：其一，潜变量并非四维向量，而是 4 通道的空间特征图（SD1.5 中为 [4, 64, 64]）；其二，VAE 编码器输出的不是一个点而是一个分布，\"采样\"正是 VAE 与普通自编码器的全部差别所在。文章从自编码器出发，依次讲清采样与重参数化、KL 规整、SD VAE 的完整损失，及其在 Stable Diffusion 中\"翻译官\"式的角色，最后落到虚拟染色任务中冻结 VAE 的容量瓶颈与\"灰雾\"问题。",
     "category": "学习笔记",
     "source_ids": ["060", "082", "157", "184", "066"]
   }
@@ -20,10 +20,26 @@
 <body>
   <header class="site-header">
     <div class="container">
-      <h1 class="site-title">科研与学习档案</h1>
+      <h1 class="site-title">我的个人博客</h1>
       <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 一年多来的问题与踩坑记录</p>
-      <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">8</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+      <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -32,26 +48,26 @@
   </header>
 
   <article class="article">
-    <h1>VAE 到底在干什么：从"这个采样我不懂"到"SD 里的 VAE 只是个翻译官"</h1>
+    <h1>VAE 教程：潜变量的形态、采样的含义与 Stable Diffusion 中的角色</h1>
     <div class="meta">
       写于 2026-10-24 · 教程篇 · 原始来源：DeepSeek 对话 [060][082][157][184][066]
     </div>
 
     <p class="lead">
-      这篇是我学 VAE（变分自编码器）的记录，和上一篇 Flow Matching 一样，从我自己真实的困惑出发，不从公式出发。我卡过两个特别具体的地方：一是我一直以为"VAE 最后把图压成一个四维向量"，二是我盯着"从分布里采样"这句话，怎么都不懂——"我一直不太懂，这个采样的含义究竟是什么啊。" 后来我才明白，第二个困惑恰恰是 VAE 和普通自编码器全部差别的所在。这篇就顺着我搞懂的顺序，从自编码器一路讲到 Stable Diffusion 里的 VAE，你会看到那个"采样"是怎么从"莫名其妙的一步"变成"整个模型的灵魂"的。
+      本文是笔者学习 VAE（变分自编码器）的整理记录，与上一篇 Flow Matching 教程一样，从真实的困惑出发而非从公式出发。学习过程中卡住的是两个具体问题：一是长期误以为"VAE 最后把图压成一个四维向量"，二是始终想不通"从分布里采样"的含义——"我一直不太懂，这个采样的含义究竟是什么啊。" 后来才意识到，第二个困惑恰恰对应 VAE 与普通自编码器的全部差别。本文按概念的逻辑顺序，从自编码器一路讲到 Stable Diffusion 中的 VAE，说明"采样"如何从看似多余的一步，成为整个模型的灵魂。
     </p>
 
-    <h2>一、先有自编码器：把图压小，再尽量还原</h2>
+    <h2>一、自编码器：压缩与重建</h2>
     <p>
-      在碰 VAE 之前，得先有自编码器（Autoencoder，AE）打底，因为 VAE 就是在它上面改一步。AE 的想法特别直觉：一个<strong>编码器</strong>把一张大图（比如 512×512×3）压成一个很小的中间表示（latent，潜变量），一个<strong>解码器</strong>再把这个小表示尽量还原成原图。训练目标就一件事——<strong>还原得越像越好</strong>（重建损失）。压得狠、还原得还像，说明这个中间表示抓住了图里最关键的信息，AE 就成了一个"压缩器"。
+      在讨论 VAE 之前，先以自编码器（Autoencoder，AE）为基准，因为 VAE 是在它基础上修改一步得到的。AE 的结构十分直观：一个<strong>编码器</strong>把一张大图（例如 512×512×3）压缩成一个很小的中间表示（latent，潜变量），一个<strong>解码器</strong>再把这个表示尽量还原为原图。训练目标只有一项——<strong>还原得尽可能相似</strong>（重建损失）。压缩率高且还原效果好，说明这个中间表示抓住了图像中最关键的信息，AE 的角色相当于一个"压缩器"。
     </p>
     <p>
-      到这儿都没问题。VAE 的全部花活，都是在这个"中间表示"上做文章。
+      以上是 AE 的全部内容。VAE 的全部改动，都集中在这个"中间表示"上。
     </p>
 
-    <h2>二、先纠正我第一个误会：潜变量不是"四维向量"</h2>
+    <h2>二、先澄清一个误解：潜变量不是"四维向量"</h2>
     <p>
-      我当初一个根深蒂固的误解，是以为 VAE 把图"压成一个四维的 vector"——就四个数字。我在 HistDiST 那条对话里还正经问过："这个 VAE 最后压缩成一个四维的 vector，那么最后这个特征的维度是如何的？" 答案是：<strong>我搞混了"通道数"和"维度"。</strong>
+      一个根深蒂固的误解，是以为 VAE 把图"压成一个四维的 vector"——即只剩四个数字。笔者在 HistDiST 相关的讨论中曾专门提问："这个 VAE 最后压缩成一个四维的 vector，那么最后这个特征的维度是如何的？" 问题出在：<strong>混淆了"通道数"和"维度"。</strong>
     </p>
 
     <div class="record">
@@ -63,12 +79,12 @@
     </div>
 
     <p>
-      这个纠正很重要，因为它一下子解释了很多事：为什么 SD 的 U-Net 第一层是 <code>Conv_in(4, 320)</code> 吃 4 个通道而不是 3 个——因为喂给 U-Net 的不是 RGB 图，是 VAE 压出来的 4 通道 latent。<strong>先记住这个 <code>[4, H/8, W/8]</code>，后面全用它。</strong>
+      这一澄清很重要，它直接解释了若干现象：为什么 SD 的 U-Net 第一层是 <code>Conv_in(4, 320)</code>，输入 4 个通道而非 3 个——因为送入 U-Net 的不是 RGB 图像，而是 VAE 压缩出的 4 通道 latent。<strong>请先记住 <code>[4, H/8, W/8]</code> 这一形状，后文将反复使用。</strong>
     </p>
 
-    <h2>三、VAE 的灵魂，也是我最卡的一问：那个"采样"到底在采什么</h2>
+    <h2>三、核心问题：VAE 的"采样"到底在采什么</h2>
     <p>
-      现在回到我最卡的那个问题。普通 AE 的编码器，对每张图输出一个<strong>固定的 latent 点</strong>；而 VAE 的编码器输出的<strong>不是一个点，是一团"云"</strong>——具体说，是每个位置输出两个东西：均值 <code>μ</code> 和对数方差 <code>log σ²</code>。真正喂给解码器的 latent，是从这团云里<strong>采样</strong>出来的一个点。我当时就是卡在这个"采样"上，直到看见下面这个比喻。
+      现在回到最关键的问题。普通 AE 的编码器，对每张图输出一个<strong>固定的 latent 点</strong>；而 VAE 的编码器输出的<strong>不是一个点，是一团"云"</strong>——具体地说，每个位置输出两个量：均值 <code>μ</code> 和对数方差 <code>log σ²</code>。真正送入解码器的 latent，是从这团云中<strong>采样</strong>得到的一个点。为便于理解"固定点"与"概率云"的区别，采用如下类比：
     </p>
 
     <div class="record">
@@ -78,16 +94,16 @@
     </div>
 
     <p>
-      想通这个之后，我立刻冒出下一个问题，而这个问题是理解 VAE 的钥匙：<strong>那为什么不直接用中心 μ 呢？反正云心最有代表性。</strong>
+      理解这一区别后，一个更深的问题是理解 VAE 的钥匙：<strong>为什么不直接使用云的中心 μ？云心看起来最具代表性。</strong>
     </p>
 
     <div class="note">
-      <span class="tag">关键洞察 · 为什么非得采样，不能用 μ</span>
-      如果你每次都直接拿 μ 去重建，那 VAE 就<strong>退化成了普通 AE</strong>——又变回"每类图只认一个死板的点"。<strong>采样这一下，是 VAE 能"生成"的根本原因</strong>：因为每张图对应的是一小片区域而不是一个点，区域之间会互相重叠、覆盖，于是解过"训练时没见过的那片区域"也能画出一只合理的猫。换句话说，AE 是"记答案"，VAE 因为肯在云里随机抓点，才学会了"举一反三"。
+      <span class="tag">关键洞察 · 为什么必须采样而不能只用 μ</span>
+      如果每次都直接用 μ 去重建，VAE 将<strong>退化为普通 AE</strong>——回到"每类图像只对应一个固定点"的状态。<strong>采样这一步，是 VAE 具备生成能力的根本原因</strong>：每张图对应的是一小片区域而非一个点，区域之间彼此重叠、覆盖，于是"训练时未见过的区域"也能解码出一张合理的猫。换言之，AE 是"记住答案"，VAE 因为在云中随机取点，才获得了对未见输入的泛化能力。
     </div>
 
     <p>
-      可这里有个工程上的死结：<strong>随机采样这步，反向传播求不了导</strong>——你没法对"随机抓一个点"算梯度。解决办法叫<strong>重参数化（reparameterization trick）</strong>，是 VAE 能训练起来的关键一招：
+      但这里存在一个工程上的障碍：<strong>随机采样这一步无法求导</strong>——无法对"随机取一个点"计算梯度。解决办法是<strong>重参数化（reparameterization trick）</strong>，这是 VAE 能够训练起来的关键一步：
     </p>
 
     <div class="record">
@@ -96,23 +112,23 @@
       <p>把"从云里随机抓一个点"拆成两部分：<strong>随机性全塞到 ε 里</strong>（ε 是标准正态的随机数，跟网络参数无关），网络的 μ 和 σ 只负责"云在哪、多大"。这样梯度能顺着 μ 和 σ 正常回传，随机性又不打断训练。就这么一个小改动，让"带随机采样的模型"变得可训练了。</p>
     </div>
 
-    <h2>四、KL 项：把每朵云揉成标准正态，才能"凭空造"</h2>
+    <h2>四、KL 散度项：把每团分布规整到标准正态，才能"凭空生成"</h2>
     <p>
-      采样解决了"能举一反三"，但还有个问题：如果每张图的云爱长在哪长哪、有大有小，潜空间就会变得乱七八糟，云和云之间留下一大片空白——从空白里采样，解出来的就是垃圾。所以 VAE 在重建损失之外，加了一项 <strong>KL 散度损失</strong>：<strong>逼着编码器输出的每一团云，都尽量往标准正态 N(0,1) 靠拢</strong>。云被规整到同一个大本营周围、彼此重叠，潜空间才变得连续、没有死角。
+      采样解决了泛化问题，但还有新的问题：如果各样本对应的云位置任意、大小不一，潜空间会变得杂乱，云与云之间留下一大片空白——从空白处采样，解码结果将是无意义的输出。因此 VAE 在重建损失之外，增加一项 <strong>KL 散度损失</strong>：<strong>约束编码器输出的每一团分布，都尽量向标准正态 N(0,1) 靠拢</strong>。各分布被规整到同一基准附近、彼此重叠之后，潜空间才变得连续、没有死角。
     </p>
 
     <div class="note">
-      <span class="tag">最好玩的结果 · 只喂猫的 VAE，能造出不存在的猫</span>
-      拿一个只在猫上训练过的 VAE，训练好之后<strong>把编码器扔了</strong>，直接从 N(0,1) 采一个点喂给解码器——它"居然凭空生成了一张看起来非常像猫、但在这世界上根本不存在的猫"。这就是 VAE 名字里"生成模型"的由来：规整后的潜空间里随便抓个点，都能解出一只合理的猫。这也是我上一篇讲 Flow Matching 时说的"从简单分布采样、变换成复杂数据"的最朴素版本——<strong>VAE 的解码器，就是那个"从正态云变换成猫"的变换器</strong>。
+      <span class="tag">关键结果 · 只训练猫的 VAE，能生成不存在的猫</span>
+      以一个只在猫图像上训练过的 VAE 为例，训练完成后<strong>舍弃编码器</strong>，直接从 N(0,1) 采样一个点送入解码器——它会"生成一张看起来非常像猫、但在这世界上并不存在的猫"。这就是 VAE 名字中"生成模型"的由来：规整后的潜空间中任意一点，都能解码出一只合理的猫。这也是上一篇 Flow Matching 中"从简单分布采样、变换为复杂数据"的最朴素版本——<strong>VAE 的解码器，就是那个"从正态分布变换到猫图像"的变换器</strong>。
     </div>
 
     <p>
-      所以 VAE 训练时，损失是<strong>重建</strong>和<strong>KL 规整</strong>两股力在拔河：重建项要求"还原得准"，KL 项要求"云别太散、都挤到正态大本营去"。两者平衡，潜空间才既有信息、又连续好采样。
+      因此 VAE 训练时，损失是<strong>重建</strong>与<strong>KL 规整</strong>两种力量的平衡：重建项要求"还原准确"，KL 项要求"分布不发散、都向标准正态靠拢"。两者平衡，潜空间才能既保有信息、又连续且易于采样。
     </p>
 
-    <h2>五、SD 的 VAE 损失不止重建：还有 LPIPS 和 GAN</h2>
+    <h2>五、Stable Diffusion 的 VAE 损失：重建之外还有 LPIPS 与 GAN</h2>
     <p>
-      如果只看教科书，VAE 损失 = 重建 + KL 就完了。但 Stable Diffusion 用的这个 VAE（学名 <code>AutoencoderKL</code>）训练得要狠得多，这也是我扒 SD1.5 VAE 架构时搞清的。它的损失是四部分拼的：
+      教科书中的 VAE 损失到"重建 + KL"为止。但 Stable Diffusion 使用的 VAE（学名 <code>AutoencoderKL</code>）训练目标复杂得多，这一点在查阅 SD1.5 VAE 架构时可以确认。它的损失由四部分组成：
     </p>
 
     <div class="record">
@@ -127,20 +143,20 @@
       <p>光有 L1/L2 重建，图会偏糊、偏"平均"；<strong>加一个判别器跟解码器对抗（GAN），细节才被逼得锐利清晰。</strong> 官方后来放的 <code>sd-vae-ft-mse</code> 微调版，就是用 <code>MSE + 0.1×LPIPS</code> 在 16 块 A100 上练了 28 万步、主要微调解码器得到的（就是社区里俗称的"840k VAE"）。</p>
     </div>
 
-    <h2>六、在 Stable Diffusion 里，VAE 只是个"翻译官"</h2>
+    <h2>六、Stable Diffusion 中的 VAE：只承担"翻译"职能</h2>
     <p>
-      这部分是我打通"VAE"和"扩散模型"关系的关键，也直接接上我一篇讲 Flow Matching 的教程。我一度以为 SD 里的 VAE 也负责"造图"，其实大错特错——
+      这一部分澄清 VAE 与扩散模型的关系，也是衔接上一篇 Flow Matching 教程的关键。一个常见的误解是认为 SD 中的 VAE 也负责"生成图像"，事实并非如此——
     </p>
 
     <div class="note">
-      <span class="tag">想通的一击 · VAE 是翻译官，UNet 才是造物的</span>
-      <p>在 SD 里，VAE 扮演的是<strong>"数据格式转换器/翻译官"</strong>：把 RGB 图像翻译成 4 通道 latent（编码），再把 latent 翻译回图像（解码）。<strong>真正"凭空创造"图像的，是中间那个巨大的 U-Net</strong>——它在 latent 空间里一步步去噪（就是我上一篇讲的扩散/Flow Matching）。</p>
-      <p>一个反证特别有意思：如果你<strong>直接拿一个标准正态噪声喂给 SD 的 VAE 解码器</strong>，指望它像上面那只"不存在的猫"一样吐张图——得到的是一张<strong>糊图，颜色偏暗淡、像蒙着一层灰雾</strong>。因为 SD 的 VAE 解码器是在"真实 latent"上训练的，你喂它的却是个跟真实 latent 分布对不上的纯噪声。<strong>造图的活在 U-Net 那，VAE 只负责翻译。</strong></p>
+      <span class="tag">关键结论 · VAE 是翻译官，U-Net 才负责生成</span>
+      <p>在 SD 中，VAE 扮演的是<strong>"数据格式转换器/翻译官"</strong>：把 RGB 图像转换为 4 通道 latent（编码），再把 latent 转换回图像（解码）。<strong>真正"凭空生成"图像的，是中间那个庞大的 U-Net</strong>——它在 latent 空间里逐步去噪（即上一篇所讲的扩散/Flow Matching）。</p>
+      <p>一个反证可以说明这一点：若<strong>直接把一个标准正态噪声送入 SD 的 VAE 解码器</strong>，期望它像前文"不存在的猫"那样生成图像——得到的将是一张<strong>糊图，颜色暗淡、像蒙着一层灰雾</strong>。因为 SD 的 VAE 解码器是在"真实 latent"上训练的，而送入的纯噪声与真实 latent 分布并不匹配。<strong>生成图像的工作由 U-Net 承担，VAE 只负责翻译。</strong></p>
     </div>
 
-    <h2>七、那团"潜在分布"，到底是什么的分布</h2>
+    <h2>七、"潜在分布"究竟是什么的分布</h2>
     <p>
-      我还纠结过一个很"哲学"的问题："这个潜在的分布指的是什么，结构的分布？色彩的分布？频域的分布？" 后来想通了，答案是——<strong>别拆那么细，它是一团综合的点云。</strong>
+      另一个值得澄清的问题是："这个潜在的分布指的是什么，结构的分布？色彩的分布？频域的分布？" 答案是——<strong>不必按这些维度拆分，它是一团综合的点云。</strong>
     </p>
 
     <div class="record">
@@ -149,7 +165,7 @@
     </div>
 
     <p>
-      这也顺带回答了我另一个疑问："本质都是 latent space，如果用别的架构做这个压缩，可以吗？" 可以，而且选择不少——
+      这也顺带回答了另一个问题："本质都是 latent space，如果用别的架构做这个压缩，可以吗？" 可以，且有多种替代方案——
     </p>
 
     <div class="record">
@@ -162,9 +178,9 @@
       怎么选取决于你要什么：重结构保留→SD-VAE 够用；重语义→RAE/专用编码器。这正是我染色任务要面对的取舍，下面一节说。
     </div>
 
-    <h2>八、接到我的染色任务：冻结的 VAE，和一层"灰雾"</h2>
+    <h2>八、与虚拟染色任务的衔接：冻结的 VAE 与"灰雾"问题</h2>
     <p>
-      学 VAE 归根到底是为了我的 H&amp;E→IHC / 多染色迁移。我的基线 HistDiST 就是拿 SD1.5 当底座，而它的 VAE 是<strong>冻结的</strong>——论文原话 "VAE remains frozen"，下采样 8 倍、4 通道不动，只微调中间的 U-Net（把输入从 4 通道拼成 8 通道，条件从 CLIP 换成病理专用的 Phikon）。这套能跑，但我在自己数据上撞上了一堵墙。
+      学习 VAE 的最终目的，仍是服务于 H&amp;E→IHC / 多染色迁移。基线方法 HistDiST 以 SD1.5 为底座，其 VAE 是<strong>冻结的</strong>——论文原话 "VAE remains frozen"，下采样 8 倍、4 通道不变，仅微调中间的 U-Net（把输入从 4 通道拼接为 8 通道，条件从 CLIP 换为病理专用的 Phikon）。该方案可以运行，但在笔者自己的数据上遇到了明显障碍。
     </p>
 
     <div class="record">
@@ -175,7 +191,7 @@
     </div>
 
     <p>
-      所以我当时琢磨了一个"肾小球专用 VAE"的计划，思路是把上面的知识全用上：
+      由此笔者制定了"肾小球专用 VAE"的改进计划，思路是把前文的知识全部用上：
     </p>
 
     <div class="record">
@@ -186,23 +202,23 @@
     </div>
 
     <div class="note">
-      <span class="tag">一个警告 · latent 的通道 ≠ 像素的频率</span>
-      我本来想直接改 VAE 的 latent 来做频域那套（相位=结构、幅度=风格，见上一篇）。但有人提醒我一个坑：<strong>latent 空间每个通道并不直接对应像素空间的频率</strong>，强行在 latent 上混频率会导致色彩偏移。想做频域，更稳的做法是<strong>回到预测出的原图空间做相位混合，再编码回去</strong>。这一条直接修正了我频域方案的落点。
+      <span class="tag">注意事项 · latent 的通道 ≠ 像素的频率</span>
+      笔者原计划直接在 VAE 的 latent 上实施频域方案（相位=结构、幅度=风格，见上一篇）。但需要注意一个陷阱：<strong>latent 空间的每个通道并不直接对应像素空间的频率</strong>，强行在 latent 上混合频率会导致色彩偏移。若要做频域处理，更稳妥的做法是<strong>回到预测出的原图空间做相位混合，再编码回去</strong>。这一点修正了频域方案的落点。
     </div>
 
     <div class="note">
       <span class="tag">当前结论</span>
-      VAE 的本质，是<strong>用一个带"采样"和"KL 规整"的编码器-解码器，把数据压成一片连续、规整的潜空间</strong>，让"从正态噪声里抓个点就能解出合理数据"成为可能——它是"从简单分布变换成复杂数据"最朴素的实现。而在 Stable Diffusion 里，VAE 退居二线，只是个管压缩/还原的"翻译官"，造图的活是 U-Net 干的。对我的项目来说，VAE 现在是个<strong>被冻结、但卡脖子的上游</strong>：它 4 通道的容量和"灰雾"，正限制着我最在乎的肾小球细节，这也是我想动"肾小球专用 VAE"的全部动机。
+      VAE 的本质，是<strong>用一个带"采样"和"KL 规整"的编码器-解码器，把数据压缩成一片连续、规整的潜空间</strong>，使"从正态噪声中取一个点即可解码出合理数据"成为可能——它是"从简单分布变换成复杂数据"最朴素的实现。而在 Stable Diffusion 中，VAE 不承担生成职责，只是负责压缩/还原的"翻译官"，生成图像的工作由 U-Net 完成。对笔者项目而言，VAE 目前是一个<strong>被冻结却构成瓶颈的上游组件</strong>：其 4 通道的容量与"灰雾"问题，正限制着最关键的肾小球细节，这也是提出"肾小球专用 VAE"的全部动机。
     </div>
 
     <div class="note">
       <span class="tag">未解决问题 / 待核实</span>
       <ul>
-        <li>"肾小球专用 VAE"还停在构想和超参数建议，<strong>没真训</strong>——灰雾能不能压下去、潜空间会不会漂移，是待验证的。</li>
-        <li>608 的输入到底有没有被偷偷 resize 成 512，我只停留在"感觉被 resize 了"，<strong>没打印 shape 实证</strong>（这直接影响肾小球细节，得查）。</li>
-        <li>是否要把 HistDiST 从像素空间扩散切到潜空间扩散 + PathLDM 的病理微调 VAE（kl-f8），我还没定。</li>
-        <li>RAE / Phikon 这类替代编码器对病理值不值，成本账没算清。</li>
-        <li>这篇里 SD-VAE 的架构参数、损失权重、"840k VAE" 训练细节都是对话引述，<strong>动手前回原始论文/配置核实</strong>。</li>
+        <li>"肾小球专用 VAE"仍停留在构想与超参数建议阶段，<strong>尚未实际训练</strong>——灰雾能否压下去、潜空间会不会漂移，均待验证。</li>
+        <li>608 的输入是否被静默 resize 成 512，目前仍停留在"感觉被 resize 了"的猜测，<strong>尚未打印 shape 实证</strong>（这直接影响肾小球细节，需要查证）。</li>
+        <li>是否要把 HistDiST 从像素空间扩散切换到潜空间扩散 + PathLDM 的病理微调 VAE（kl-f8），尚未决定。</li>
+        <li>RAE / Phikon 这类替代编码器对病理任务是否划算，成本收益尚未评估。</li>
+        <li>本文中 SD-VAE 的架构参数、损失权重、"840k VAE" 训练细节均为对话引述，<strong>动手前请回原始论文/配置核实</strong>。</li>
       </ul>
     </div>
 

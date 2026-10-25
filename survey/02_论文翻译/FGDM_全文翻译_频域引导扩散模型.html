@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FGDM 全文翻译 · Zero-shot Medical Image Translation via Frequency-Guided Diffusion Models</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#fff; --panel-2:#fbfcfd;
+  --ink:#16202c; --ink-2:#3d4c5c; --ink-3:#6b7a8c;
+  --line:#e3e8ee; --line-2:#eef2f6;
+  --accent:#0f6f8f; --accent-2:#0d5a75; --accent-soft:#e8f3f7;
+  --eq:#f2f6f9; --eqline:#c9dae3;
+  --note:#7c3aed; --note-bg:#f4efff;
+  --warn:#b91c1c; --warn-bg:#fdeeee;
+  --ok:#047857; --ok-bg:#e9f7f1;
+  --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Songti SC","Source Han Serif SC","Noto Serif CJK SC",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-font-smoothing:antialiased;}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1520px;margin:0 auto}
+nav.toc{position:sticky;top:0;height:100vh;overflow-y:auto;padding:28px 16px 60px 28px;border-right:1px solid var(--line);background:var(--panel)}
+nav.toc .brand{font-size:15px;font-weight:800;line-height:1.4;margin-bottom:6px}
+nav.toc .brand small{display:block;font-weight:500;font-size:11.5px;color:var(--ink-3);margin-top:6px;line-height:1.5}
+nav.toc h4{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:20px 0 7px;font-weight:700}
+nav.toc h4:first-of-type{margin-top:22px}
+nav.toc a{display:block;font-size:13px;color:var(--ink-2);padding:3.5px 8px;border-radius:6px;line-height:1.5}
+nav.toc a:hover{background:var(--accent-soft);color:var(--accent-2);text-decoration:none}
+nav.toc a.sub{padding-left:20px;font-size:12.5px;color:var(--ink-3)}
+main{padding:34px 52px 120px;max-width:940px;min-width:0}
+
+header.hero{background:linear-gradient(135deg,#0d5a75 0%,#0f6f8f 45%,#158a9c 100%);color:#fff;border-radius:14px;padding:32px 36px;margin-bottom:30px;box-shadow:0 10px 30px rgba(13,90,117,.16)}
+header.hero .kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.85;font-weight:700}
+header.hero h1{margin:10px 0 6px;font-size:25px;line-height:1.4;font-weight:800}
+header.hero h1 .en{display:block;font-size:15px;font-weight:500;opacity:.9;margin-top:8px;font-style:italic}
+header.hero .authors{margin:16px 0 0;font-size:13.5px;opacity:.93;line-height:1.7}
+header.hero .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:600}
+
+h2{font-size:20px;font-weight:800;margin:52px 0 8px;padding-bottom:9px;border-bottom:2px solid var(--ink);scroll-margin-top:20px}
+h2 .num{color:var(--accent);font-family:var(--mono);font-size:15px;margin-right:10px;font-weight:700}
+h2 .en{font-size:12.5px;color:var(--ink-3);font-weight:500;display:block;margin-top:5px;letter-spacing:.02em}
+h3{font-size:16.5px;font-weight:750;margin:32px 0 8px;scroll-margin-top:20px}
+h3 .num{color:var(--accent);font-family:var(--mono);font-size:13.5px;margin-right:8px}
+h3 .en{font-size:12px;color:var(--ink-3);font-weight:500;margin-left:8px}
+h4{font-size:14.5px;font-weight:700;margin:22px 0 6px;color:var(--ink-2)}
+h4 .num{color:var(--ink-3);font-family:var(--mono);font-size:12.5px;margin-right:6px}
+p{margin:11px 0;text-align:justify}
+ul,ol{margin:11px 0;padding-left:24px}
+li{margin:5px 0;text-align:justify}
+strong{font-weight:700}
+.term{font-family:var(--mono);font-size:.88em;background:#eef2f6;padding:1px 5px;border-radius:4px;color:#0b3b4d;white-space:nowrap}
+em.en{font-style:italic;color:var(--ink-2)}
+
+.eq{background:var(--eq);border:1px solid var(--eqline);border-radius:8px;padding:14px 18px;margin:14px 0;position:relative;overflow-x:auto}
+.eq .body{font-family:var(--serif);font-size:16px;line-height:2.1;text-align:center;white-space:nowrap}
+.eq .no{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--ink-3);font-weight:600}
+.eq.inline-note{background:#f8fafb}
+
+.callout{border-radius:var(--radius);padding:15px 18px;margin:16px 0;border-left:4px solid;font-size:14.5px}
+.callout .t{font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;display:block}
+.callout.note{background:var(--note-bg);border-color:var(--note)}
+.callout.note .t{color:var(--note)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn)}
+.callout.warn .t{color:var(--warn)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok)}
+.callout.ok .t{color:var(--ok)}
+.callout.key{background:var(--accent-soft);border-color:var(--accent)}
+.callout.key .t{color:var(--accent-2)}
+
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:12.5px;line-height:1.55}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line-2);vertical-align:top}
+th{background:#f2f5f8;font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+tbody tr:hover{background:#fafcfd}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap}
+td.ctr{text-align:center}
+tr.best{background:#e9f7f1}
+tr.best td{font-weight:700}
+caption{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-3);padding:12px 14px 4px;font-weight:700}
+.tbl-note{font-size:12px;color:var(--ink-3);margin:-6px 0 20px}
+
+.figbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:16px 0}
+.figbox .ft{font-size:12.5px;color:var(--ink-2);line-height:1.7}
+.figbox .ft strong{color:var(--accent-2)}
+
+.gloss{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel);margin:16px 0}
+.gloss div{padding:7px 14px;font-size:13px;border-bottom:1px solid var(--line-2)}
+.gloss div:nth-child(4n+1),.gloss div:nth-child(4n+2){background:#fbfcfd}
+.gloss .k{font-family:var(--mono);font-size:12px;color:#0b3b4d}
+@media(max-width:1180px){.gloss{grid-template-columns:1fr}}
+
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#eef2f6;color:var(--ink-2);margin:0 4px 4px 0}
+.toplink{font-size:12px;color:var(--ink-3);margin-top:26px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-3)}
+hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+.small{font-size:12.5px;color:var(--ink-3)}
+@media(max-width:1000px){
+  .wrap{grid-template-columns:1fr}
+  nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:20px}
+  main{padding:24px 20px 80px}
+  .eq .body{white-space:normal}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">FGDM 全文翻译<small>Zero-shot Medical Image Translation via Frequency-Guided Diffusion Models<br>IEEE TMI 2023 · arXiv:2304.02742</small></div>
+  <h4>前置</h4>
+  <a href="#gloss">术语对照表</a>
+  <a href="#abstract">摘要 · Abstract</a>
+  <h4>正文</h4>
+  <a href="#s1">I · 引言</a>
+  <a href="#s2">II · 相关工作</a>
+  <a href="#s2a" class="sub">II-A 医学图像翻译</a>
+  <a href="#s2b" class="sub">II-B 图像翻译的扩散模型</a>
+  <a href="#s3">III · 方法</a>
+  <a href="#s3a" class="sub">III-A 扩散模型</a>
+  <a href="#s3b" class="sub">III-B 低通滤波器</a>
+  <a href="#s3c" class="sub">III-C 高通滤波器</a>
+  <a href="#s3d" class="sub">III-D 模型训练</a>
+  <a href="#s3e" class="sub">III-E 零样本图像翻译</a>
+  <a href="#s4">IV · 实验与讨论</a>
+  <a href="#s4a" class="sub">IV-A 数据集与预处理</a>
+  <a href="#s4b" class="sub">IV-B 实现细节</a>
+  <a href="#s4c" class="sub">IV-C 评价指标与方法</a>
+  <a href="#s4d" class="sub">IV-D 头颈部数据集</a>
+  <a href="#s4e" class="sub">IV-E 肺数据集（OOD）</a>
+  <a href="#s4f" class="sub">IV-F OARs 数据集（OOD）</a>
+  <a href="#s4g" class="sub">IV-G 头部 MR T1 数据集</a>
+  <a href="#s4h" class="sub">IV-H 消融研究</a>
+  <a href="#s5">V · 局限性</a>
+  <a href="#s6">VI · 结论</a>
+  <h4>附录</h4>
+  <a href="#figs">图表说明汇总</a>
+  <a href="#algo">算法 1 伪代码</a>
+  <a href="#translator">译者注 · 与你的课题的关系</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <div class="kicker">全文中文翻译 · Full Chinese Translation</div>
+  <h1>基于频域引导扩散模型的零样本医学图像翻译
+    <span class="en">Zero-shot Medical Image Translation via Frequency-Guided Diffusion Models</span>
+  </h1>
+  <div class="authors">
+    李云翔（Yunxiang Li）、邵华杰（Hua-Chieh Shao）、梁潇（Xiao Liang）、陈丽媛（Liyuan Chen）、李瑞琪（Ruiqi Li）、Steve Jiang、王静（Jing Wang）、张佑（You Zhang）<br>
+    美国德克萨斯大学西南医学中心（UT Southwestern Medical Center）放射肿瘤学系 · 医学人工智能与自动化实验室（MAIA Lab）
+  </div>
+  <div class="meta">
+    <span>IEEE TMI 2023</span>
+    <span>arXiv:2304.02742</span>
+    <span>DOI 10.1109/TMI.2023.3325703</span>
+    <span>代码 github.com/Kent0n-Li/FGDM</span>
+  </div>
+</header>
+
+<div class="callout key">
+  <span class="t">翻译说明</span>
+  本文按原文章节顺序<strong>逐节全文翻译</strong>，公式保留原始编号（式 1–30），表格与图注完整译出并保留全部原始数值。专业术语首次出现时以 <span class="term">English</span> 标注原文。<strong>原文中以方括号编号引用的文献 [1]–[40] 保留原编号</strong>，便于你回查原文。文末「译者注」是我基于你 H&amp;E→IHC 课题所做的关联分析，不属于原文内容，已明确分隔。
+</div>
+
+<!-- ============ GLOSSARY ============ -->
+<h2 id="gloss">术语对照表<span class="en">Terminology</span></h2>
+<div class="gloss">
+  <div class="k">FGDM</div><div>频域引导扩散模型（Frequency-Guided Diffusion Model）</div>
+  <div class="k">CBCT</div><div>锥形束 CT（Cone-Beam Computed Tomography）</div>
+  <div class="k">OOD</div><div>分布外（Out-of-Distribution）</div>
+  <div class="k">zero-shot</div><div>零样本：训练时完全不见源域数据，直接用于源→目标翻译</div>
+  <div class="k">forward diffusion</div><div>前向扩散过程：逐步加高斯白噪声</div>
+  <div class="k">reverse diffusion</div><div>反向扩散（去噪）过程</div>
+  <div class="k">LPF / HPF</div><div>低通滤波器 / 高通滤波器</div>
+  <div class="k">PSD</div><div>功率谱密度（Power Spectral Density）</div>
+  <div class="k">SNR</div><div>信噪比（Signal-to-Noise Ratio）</div>
+  <div class="k">SRKL</div><div>软化反向 KL 散度（softened reverse Kullback–Leibler divergence）</div>
+  <div class="k">faithfulness</div><div>忠实度：与源图像结构的一致性（本文译作"忠实度/保真度"）</div>
+  <div class="k">realism</div><div>真实感：生成图像的逼真程度</div>
+  <div class="k">domain-invariant</div><div>域不变（跨域共享、不随成像模态改变的信息）</div>
+  <div class="k">T̃ (T-tilde)</div><div>测试阶段前向扩散步数，控制保留多少低频</div>
+  <div class="k">η (eta)</div><div>Sobel 高通滤波的梯度阈值，控制保留多少高频</div>
+  <div class="k">Frequency MSE</div><div>频域均方误差（生成图与目标图在空间频率域的 MSE）</div>
+</div>
+
+<!-- ============ ABSTRACT ============ -->
+<h2 id="abstract">摘要<span class="en">Abstract</span></h2>
+
+<p>近来，扩散模型（diffusion model）已成为一类优越的生成模型，能够生成高质量、逼真的图像。然而在医学图像翻译任务中，现有扩散模型难以准确保留结构信息——因为源域图像的结构细节在前向扩散过程中被破坏，且无法通过学习到的反向扩散被完整恢复；而解剖结构的完整性在医学图像中极其重要。例如，图像翻译中的误差可能使结构或肿瘤发生形变、位移甚至消失，从而导致误诊与治疗不足。</p>
+
+<p>使用解剖结构相匹配的成对源图像与目标图像来训练和条件化扩散模型可以缓解该问题。然而，此类成对数据极难获取且代价高昂，同时还可能降低所训练模型对分布外（out-of-distribution）测试数据的鲁棒性。</p>
+
+<p>我们提出了<strong>频域引导扩散模型（FGDM）</strong>，它使用频域滤波器来引导扩散模型，实现<strong>结构保持</strong>的图像翻译。基于这一设计，FGDM 支持<strong>零样本学习</strong>：它可以仅使用目标域数据训练，并直接用于源域到目标域的翻译，训练过程中<strong>完全不接触源域数据</strong>。我们在三个不同解剖部位的 CBCT→CT 翻译任务，以及一个跨机构 MR 成像翻译任务上进行了评估。FGDM 在 FID（Fréchet Inception Distance）、PSNR（峰值信噪比）、SSIM（结构相似性指数）三项指标上均优于现有最先进方法（基于 GAN、基于 VAE、基于扩散模型的方法），展示了其在零样本医学图像翻译中的显著优势。</p>
+
+<p><strong>关键词：</strong>医学图像翻译、扩散模型、锥形束计算机断层扫描（CBCT）</p>
+
+<!-- ============ I INTRODUCTION ============ -->
+<h2 id="s1"><span class="num">I</span>引言<span class="en">Introduction</span></h2>
+
+<p>医学图像到图像的翻译（medical image-to-image translation）旨在将一个域的图像迁移到另一个域，同时<strong>保持结构完整性</strong>。其应用之一是基于 CBCT→CT 翻译 [1]，这对放射治疗至关重要，包括图像去噪、剂量计算与累积、以及治疗计划自适应等。目前，大多数图像翻译方法基于生成对抗网络（GAN）[2] 或变分自编码器（VAE）[3]。</p>
+
+<p><strong>CycleGAN [4]</strong> 在医学图像翻译任务中被广泛使用，它通过两个神经网络相互对抗来学习，间接捕捉信息，从而给出关于源域与目标域分布的<strong>隐式表示</strong>。然而，此类隐式表示容易学到偏差，包括判别器过早收敛（premature convergence）与模式崩塌（pattern collapse），从而影响合成图像的质量。</p>
+
+<p>近年来，扩散模型作为一类新型生成式 AI 方法被提出，能够生成质量极高、FID 表现优异的图像 [5, 6, 7, 8, 9]。其中一个代表性扩散模型是<strong>去噪扩散概率模型（DDPM）[10]</strong>，其训练目标是去除被不同程度高斯噪声破坏的样本中的噪声。这些被噪声破坏的样本由一种称为<strong>前向扩散</strong>的马尔可夫链蒙特卡洛（MCMC）过程生成：用逐渐增强的高斯白噪声逐步破坏图像。随后，DDPM 基于这些被破坏的图像，通过学习<strong>逆转前向扩散过程（反向扩散）</strong>，并基于朗之万动力学（Langevin dynamics），逐步去噪，把噪声转化为有意义的、高质量的图像。前向与反向扩散过程帮助 DDPM 学习图像的潜在空间与分布，并从学到的分布中生成新图像。</p>
+
+<p>考虑到扩散模型在真实感与质量上全面超越基于 GAN 的模型，将其应用于医学图像翻译的兴趣持续增长。借助 DDPM，我们原则上可以对源图像域执行前向扩散，再用学到的反向扩散把被噪声破坏的图像转换为目标图像域，从而实现<strong>直接的域翻译</strong>。这一策略在自然图像翻译中已获成功，例如"猫→狗"的图像翻译，这类任务只需要保留部分域无关特征（姿态、颜色等），如 [11, 12] 所示。</p>
+
+<p>然而，扩散模型在医学图像翻译任务中的应用目前仍受限，因为<strong>在源图像上执行前向扩散会导致结构细节丢失，且这些细节无法在反向去噪过程中被完全恢复</strong>。对于手术规划与放射治疗等医学应用而言，翻译（合成）图像的几何与结构完整性尤为关键——医学图像富含精确的解剖细节，对这两类流程都至关重要：它们指导外科医生规划手术流程，并帮助为癌症治疗制定精确的放疗剂量。解剖准确性的妥协可能导致严重后果，包括潜在伤害患者或对疾病治疗不充分。</p>
+
+<p>为保持结构信息，一些工作 [13] 使用成对图像来训练扩散模型，将源图像作为条件馈入反向扩散过程，以约束目标域图像的求解。然而，此类方法需要经过筛选、解剖结构匹配的源-目标图像对，而在医学成像中，由于扫描间的解剖运动、成像成本、辐射剂量等原因，这类成对数据<strong>稀缺且难以获取</strong>。同时，使用源图像本身作为条件会引入<strong>域特定信息</strong>，可能使扩散模型的鲁棒性下降。例如，若源图像的解剖部位发生变化，或源图像采用了不同的成像协议，则分布外的源图像可能降低扩散模型在测试阶段的推理准确性。</p>
+
+<p>对扩散模型而言，<strong>前向扩散过程可以被视为一个低通滤波器</strong>（见第 III-A 节）。相反，医学图像中的解剖结构轮廓主要以<strong>高频信息</strong>的形式存在，而这些高频信息在前向扩散过程中被滤除。对于同一解剖结构，<strong>若两个图像域/批次之间的差异主要集中在傅里叶域的中间频率</strong>，我们就有可能从源图像域提取高频信息作为结构先验，去条件化目标域图像的生成；再用一个仅由目标域图像训练的扩散模型来<strong>填补中间频率的空缺</strong>。</p>
+
+<p>对于 CBCT→CT 翻译问题（放射治疗中的一项重要任务），我们从频域角度定量、统计地分析了 CBCT 与 CT 图像之间的差异，发现<strong>二者的主要差异位于中间频率</strong>，如图 2 所示。基于这一频域观察，我们设计了一个由<strong>高通滤波器与低通滤波器（受控的前向扩散过程）联合引导</strong>的图像翻译扩散模型：其中低通滤波器捕捉强度与整体语义信息，高通滤波器捕捉解剖细节。由此得到的<strong>频域引导扩散模型（FGDM）</strong>以高频信息与低频信息为条件，生成用于医学图像翻译的中间频率信息。</p>
+
+<p>与 GAN 或 VAE 相比，FGDM 还有一个额外优势：它<strong>仅使用目标域数据</strong>训练扩散模型来学习中间频率处的分布。只要源域图像在两个频率端（低频端与高频端）与目标域图像共享相似信息（图 2），所得模型就可以<strong>无需任何微调</strong>地用于来自不同源域的图像翻译。对源域的这种宽松限制使得<strong>自然的零样本翻译</strong> [14] 成为可能——模型可以应用于其他域或分布的源图像，而无需迁移学习或测试时重训练。</p>
+
+<div class="figbox">
+  <div class="ft"><strong>图 1（Fig. 1）：</strong>来自不同数据集的三对 CBCT 与 CT 图像的强度域与空间频率域可视化示例。</div>
+</div>
+
+<div class="figbox">
+  <div class="ft"><strong>图 2（Fig. 2）：</strong>本图展示了三个不同数据集的频域中，成对 CBCT 与 CT 之间频率幅值的<strong>均方误差（MSE）</strong>随空间频率变化的统计数据。其中<strong>第一行</strong>是整个数据集的平均 MSE 分布。为进一步证明成对 CBCT 与 CT 之间的差异主要集中于中间频率，我们在<strong>第二行</strong>给出了整个数据集中"MSE 最大峰值所对应频率"分布的箱线图。</div>
+</div>
+
+<div class="figbox">
+  <div class="ft"><strong>图 3（Fig. 3）：</strong>基于频域引导扩散模型（FGDM）的 CBCT→CT 翻译流程。CBCT 的<strong>低频信息</strong>与<strong>高频信息</strong>被用作扩散条件，<strong>中间频率</strong>的信息则通过反向扩散过程逐步生成，最终得到 CT 域的翻译图像。</div>
+</div>
+
+<p>据我们所知，我们是<strong>首个在解剖层面实现零样本医学图像翻译的扩散模型工作</strong>。本文的主要贡献总结如下：</p>
+
+<ul>
+  <li>我们提出了一个<strong>频域引导扩散模型</strong>，通过同时利用低频与高频信息来引导中间频率信号的生成，从而实现准确保留解剖信息的医学图像翻译。</li>
+  <li>我们设计并优化了高通与低通滤波器，以提取<strong>域不变信息</strong>。具体而言，我们的两个滤波器的滤波阈值在<strong>测试阶段可自由调节</strong>，以应对不同类型的医学图像翻译任务中源域与目标域在傅里叶空间里<strong>不同的域不变区域</strong>。</li>
+  <li>我们的模型在 CBCT→CT 翻译任务上取得了最佳性能，超越了所有其他最先进（SOTA）基准模型，包括基于 GAN、基于 VAE 与基于扩散模型的方法。</li>
+</ul>
+
+<!-- ============ II RELATED WORKS ============ -->
+<h2 id="s2"><span class="num">II</span>相关工作<span class="en">Related Works</span></h2>
+
+<h3 id="s2a"><span class="num">II-A</span>医学图像翻译<span class="en">Medical Image Translation</span></h3>
+
+<p>图像到图像的翻译在医学中有广泛应用，包括肿瘤与器官分割、跨模态图像配准、低剂量 CT 成像、快速 MR 成像、金属伪影去除以及治疗计划。例如，Yang 等人 [15] 利用 MRI 跨模态翻译把 T1 MR 图像转换为 T2 MR 图像以提升分割性能；他们发现翻译后的 T2 MR 图像与原始 T1 MR 图像通过多通道网络结合后，能进一步提升脑肿瘤分割精度。在配准方面，Fu 等人 [16] 将 MR 头颈部图像翻译为合成 CT 图像，作为 MRI-CT 配准的替代物，与直接进行 MRI-CT 配准相比显示出更低的目标配准误差。医学图像翻译还被用于低剂量 CT 成像去噪 [17]，即把低剂量 CT 翻译为图像质量等效于高剂量 CT 的图像——这类方法有助于减少受检者的辐射暴露，同时降低原始低剂量 CT 图像中可能不利影响疾病诊断的噪声与伪影。MR 成像为疾病诊断与定位提供了丰富信息，但 MR 成像通常相当耗时且医疗成本高；Liu 等人 [18] 使用医学图像翻译，从超快采集得到的粗糙图像生成超分辨率图像，以节省成像时间。Liao 等人 [19] 使用深度学习网络把受金属伪影影响的 CT 图像翻译为无金属伪影图像，显著提升了 CT 图像质量以便后续分析。在图像引导放射治疗（IGRT）中，图像翻译常被应用于放疗计划。例如，在医用直线加速器上采集的 CBCT 图像，由于硬件与扫描模式的限制，图像质量通常退化，需要被翻译为类似扇形束 CT 的图像，以便进行准确的放疗计划剂量计算 [20]。MR 成像在放疗计划中被广泛使用，但 MR 计划图像也需要被翻译为 CT 图像，以提供准确电子密度信息用于剂量计算与治疗计划 [21]。总体而言，图像到图像翻译是医学中的普遍需求：它有助于引入多模态信息以辅助疾病诊断/定位（分割），协调不同图像模态以便对齐（配准），提升现有图像的质量（低剂量 CT 去噪、快速 MR 成像、金属伪影去除），并利用这些改善后的信息辅助诸如放疗计划等治疗规划。</p>
+
+<p>从医学图像翻译的原理看，图像到图像翻译任务背后的核心思想是<strong>在两个不同域的图像之间建立映射</strong>。在医学图像翻译中，两个域之间的主要联系在于<strong>底层的解剖结构信息</strong>。在翻译过程中保持该解剖结构至关重要，因为任何偏差或丢失都会极大地损害所得图像的可靠性。为达到这一目的，以往的医学图像翻译工作主要基于 GAN [2] 与 VAE [3]。</p>
+
+<p>最具代表性的基于 GAN 的方法之一是 <strong>CycleGAN [4]</strong>，它使用循环一致性损失（cyclic consistency loss）把整个模型约束为两个生成网络，可以把源域图像翻译到目标域，反之亦然。另一个代表性工作是<strong>几何一致性生成对抗网络（GCGAN）[22]</strong>，它提供单向无监督映射：GCGAN 把原图像映射到两个不同的预定义几何变换，并在相应的几何一致性约束下在新域中生成两幅图像。此外，<strong>RegGAN [23]</strong> 基于"损失修正（loss-correction）"理论被提出，作为一种新的无监督医学图像翻译方法：它训练一个带附加配准网络的生成器来拟合未对齐的噪声分布，力求同时优化图像翻译与配准两个任务。然而，基于 GAN 的模型存在一些固有缺陷，因为它们由两个网络（生成器与判别器）相互对抗来训练，这可能使训练困难且不稳定。</p>
+
+<p>对于基于 VAE 的方法，无配对图像翻译中最具代表性的工作之一是 <strong>UNIT [24]</strong>，它假设两个域共享一个公共潜在空间，且两个域中的对应图像被映射到相同的潜在编码。在此基础上进一步提出了 <strong>MUNIT [25]</strong>，它把内容编码（content code）与从目标域风格空间中采样的随机风格编码（style code）重新组合。然而，VAE 的普遍缺点是生成图像往往质量退化，尤其是模糊。</p>
+
+<h3 id="s2b"><span class="num">II-B</span>图像翻译的扩散模型<span class="en">Diffusion Models for Image Translation</span></h3>
+
+<p>近来，基于扩散模型的最新生成网络在生成高质量、极具真实感的图像方面取得了优越性能。与 GAN 和 VAE 相比，扩散模型还具备实现<strong>零样本图像翻译</strong>的能力，这源于其对分布外（OOD）数据更强的鲁棒性。这类方法之一是 <strong>SDEdit [11]</strong>，它通过随机微分方程（SDE）的迭代去噪机制来翻译图像：SDEdit 首先对源图像加噪，随后通过 SDE 对生成的图像去噪以实现图像翻译。另一个基于扩散模型的翻译网络是<strong>能量引导随机微分方程（EGSDE）[12]</strong>，它使用源域与目标域中预训练的能量特征来引导无配对图像翻译，在真实感与忠实度之间取得平衡。基于两个特征提取器，EGSDE 设计能量函数以促进保留域无关特征、丢弃域特定特征。</p>
+
+<p>在扩散建模应用于医学图像翻译方面，<strong>SynDiff [26]</strong> 被提出作为一种新颖的对抗扩散方法以增强医学图像翻译。它使用条件扩散过程进行精确图像采样，并具备循环一致性结构，用于无配对数据集中的双向模态翻译。然而，<strong>SynDiff 依赖 CycleGAN 的翻译结果来训练扩散模型</strong>，其性能会受到 CycleGAN 的限制。相反，<strong>FGDM 不依赖 CycleGAN，是一个新的零样本翻译框架</strong>。FGDM 的训练只需要目标域图像，而 SynDiff 的训练需要源域与目标域的输入。</p>
+
+<p>当这些方法应用于医学图像翻译时，基于 GAN 与基于 VAE 的方法往往比扩散模型能更好地保持解剖结构（更高的忠实度）；扩散模型可以获得更高的图像质量，即更高的真实感，但忠实度降低 [27]。因此，提升扩散模型对原始图像的忠实度以实现更准确的医学图像翻译，是当务之急。受这些挑战启发，我们开发了 FGDM 框架，在保留扩散模型高真实感的同时进一步提升相应的忠实度。</p>
+
+<!-- ============ III METHODS ============ -->
+<h2 id="s3"><span class="num">III</span>方法<span class="en">Methods</span></h2>
+
+<p>我们模型的总体概览如图 4 所示。FGDM 可以把未见过的源域数据（CBCT）翻译为目标域数据（CT）[20]。对 CBCT 执行低通滤波与高通滤波，分别获得<strong>低频信息</strong>与<strong>高频信息</strong>作为扩散条件，中间频率的信息则通过反向扩散过程逐步生成，最终得到 CT 图像。</p>
+
+<h3 id="s3a"><span class="num">III-A</span>扩散模型<span class="en">Diffusion Models</span></h3>
+
+<p>在扩散模型 [28, 10, 9] 中，存在一个前向扩散过程 <span class="term">q(·)</span>，它在 <span class="term">T</span> 步内把方差恒为 <span class="term">σ²</span> 的高斯白噪声逐步加到原始数据 <span class="term">s₀</span> 上：</p>
+
+<div class="eq"><div class="body">q(s<sub>1:T</sub> | s<sub>0</sub>) = ∏<sub>t=1</sub><sup>T</sup> q(s<sub>t</sub> | s<sub>t−1</sub>)</div><div class="no">(1)</div></div>
+
+<div class="eq"><div class="body">q(s<sub>t</sub> | s<sub>t−1</sub>) = 𝒩( s<sub>t</sub> ; √(α<sub>t</sub>/α<sub>t−1</sub>) · s<sub>t−1</sub> , (1 − α<sub>t</sub>/α<sub>t−1</sub>) σ² )</div><div class="no">(2)</div></div>
+
+<p>其中 <span class="term">α<sub>1:t</sub> ∈ (0,1]<sup>T</sup></span> 是一个递减序列。反向去噪过程 <span class="term">p<sub>θ</sub>(·)</span> 定义为：</p>
+
+<div class="eq"><div class="body">p<sub>θ</sub>(s<sub>0:T</sub>) = p(s<sub>T</sub>) ∏<sub>t=1</sub><sup>T</sup> p<sub>θ</sub>(s<sub>t−1</sub> | s<sub>t</sub>)</div><div class="no">(3)</div></div>
+
+<div class="eq"><div class="body">p<sub>θ</sub>(s<sub>t−1</sub> | s<sub>t</sub>) = 𝒩( s<sub>t−1</sub> ; <strong>μ</strong><sub>θ</sub>(s<sub>t</sub>, t) , Σ<sub>θ</sub>(s<sub>t</sub>, t) )</div><div class="no">(4)</div></div>
+
+<p>其中 <span class="term"><strong>μ</strong><sub>θ</sub>(s<sub>t</sub>,t)</span> 与 <span class="term">Σ<sub>θ</sub>(s<sub>t</sub>,t)</span> 分别是去噪模型的均值与方差，<span class="term">θ</span> 表示其参数。如式所示，前向扩散过程用引入的噪声逐步破坏图像，导致<strong>常规扩散模型无法恢复的结构细节丢失</strong>。</p>
+
+<h3 id="s3b"><span class="num">III-B</span>低通滤波器<span class="en">Low Pass Filter</span></h3>
+
+<p>本节我们将说明，<strong>前向扩散过程可以被视为一个低通滤波器（LPF）</strong>。首先，我们设 <span class="term">s<sub>t</sub>(x,y)</span>、<span class="term">i(x,y)</span>、<span class="term">z(x,y)</span> 分别为退化图像（第 t 步）、原始图像与高斯白噪声。遵循 Ho 等人 [10]，我们可以把前向扩散过程视为一个由递减序列 <span class="term">α<sub>1:t</sub> ∈ (0,1]<sup>T</sup></span> 参数化的、具有高斯转移的马尔可夫链。<span class="term">α<sub>t</sub></span> 与 <span class="term">t</span> 的详细公式可参见 [29, 30]；由式 2 可导出前向过程的一个特殊性质：</p>
+
+<div class="eq"><div class="body">q(s<sub>t</sub> | s<sub>0</sub>) = ∫ q(s<sub>1:t</sub> | s<sub>0</sub>) ds<sub>1:(t−1)</sub> = 𝒩( s<sub>t</sub> ; √α<sub>t</sub> s<sub>0</sub> , (1 − α<sub>t</sub>)σ² )</div><div class="no">(5)</div></div>
+
+<p>相应地，我们可以把 <span class="term">s<sub>t</sub></span> 表示为 <span class="term">s<sub>0</sub></span> 与噪声变量 <span class="term">z</span> 的线性组合：</p>
+
+<div class="eq"><div class="body">s<sub>t</sub> = √α<sub>t</sub> s<sub>0</sub> + √(1 − α<sub>t</sub>) z ,&nbsp;&nbsp; 其中 z ∼ 𝒩(0, σ²)</div><div class="no">(6)</div></div>
+
+<p>当 <span class="term">t = 0</span> 时，<span class="term">s<sub>0</sub> = i</span>：</p>
+
+<div class="eq"><div class="body">s<sub>t</sub> = √α<sub>t</sub> i + √(1 − α<sub>t</sub>) z</div><div class="no">(7)</div></div>
+
+<p>在频域中，它可以表示为：</p>
+
+<div class="eq"><div class="body">S<sub>t</sub>(u,v) = ℱ[ s<sub>t</sub>(x,y) ]</div><div class="no">(8)</div></div>
+<div class="eq"><div class="body">I(u,v) = ℱ[ i(x,y) ]</div><div class="no">(9)</div></div>
+<div class="eq"><div class="body">Z(u,v) = ℱ[ z(x,y) ]</div><div class="no">(10)</div></div>
+<div class="eq"><div class="body">S<sub>t</sub> = √α<sub>t</sub> I + √(1 − α<sub>t</sub>) Z</div><div class="no">(11)</div></div>
+
+<p>其中 <span class="term">S<sub>t</sub>(u,v)</span>、<span class="term">I(u,v)</span>、<span class="term">Z(u,v)</span> 分别是 <span class="term">s<sub>t</sub>(x,y)</span>、<span class="term">i(x,y)</span>、<span class="term">z(x,y)</span> 的傅里叶变换。高斯白噪声的自相关函数（ACF）可定义为 [31]：</p>
+
+<div class="eq"><div class="body">R<sub>N</sub>(τ<sub>1</sub>, τ<sub>2</sub>) = ∫ Z(u,v) Z(u − τ<sub>1</sub>, v − τ<sub>2</sub>) du dv</div><div class="no">(12)</div></div>
+
+<p>其中 <span class="term">τ<sub>1</sub></span>、<span class="term">τ<sub>2</sub></span> 表示滞后（lag）。</p>
+
+<p>对于高斯白噪声，信号 <span class="term">Z(u,v)</span> 是均值为零、方差恒为 <span class="term">σ²</span> 的随机变量：</p>
+
+<div class="eq"><div class="body">E[ Z(u,v) ] = 0</div><div class="no">(13)</div></div>
+<div class="eq"><div class="body">Var[ Z(u,v) ] = σ²</div><div class="no">(14)</div></div>
+
+<p>因此，高斯白噪声的自相关函数为：</p>
+
+<div class="eq"><div class="body">R<sub>N</sub>(τ<sub>1</sub>, τ<sub>2</sub>) = ∫ σ² δ(τ<sub>1</sub>, τ<sub>2</sub>) du dv = σ² δ(τ<sub>1</sub>, τ<sub>2</sub>)</div><div class="no">(15)</div></div>
+
+<p>其中 <span class="term">δ(τ<sub>1</sub>,τ<sub>2</sub>)</span> 是狄拉克 δ 函数。因此，<strong>高斯白噪声的功率在所有频率上是相同的</strong>：</p>
+
+<div class="eq"><div class="body">PSD(u,v)<sub>Z</sub> = σ²&nbsp;&nbsp; 对任意 (u,v)</div><div class="no">(16)</div></div>
+
+<p>在一般图像中，功率谱密度（PSD）与空间频率的关系如下 [32, 33]：</p>
+
+<div class="eq"><div class="body">PSD(u,v)<sub>I</sub> = k / ‖(u,v)‖<sup>a</sup>&nbsp;&nbsp;&nbsp;(k &gt; 0, a &gt; 1)</div><div class="no">(17)</div></div>
+
+<p>其中 <span class="term">k</span> 与 <span class="term">a</span> 是缩放/修正因子，这表明 <span class="term">PSD(u,v)<sub>I</sub> ∝ 1/‖(u,v)‖</span>。当把高斯白噪声加到图像上时，噪声的 PSD 与图像的 PSD 相加。若 <span class="term">PSD<sub>I</sub></span> 是原始图像的功率，<span class="term">PSD<sub>Z</sub></span> 是所加高斯白噪声的功率，则第 t 步的信噪比（SNR）可定义为：</p>
+
+<div class="eq"><div class="body">SNR<sub>t</sub> = ( √α<sub>t</sub> · PSD<sub>I</sub> ) / ( √(1 − α<sub>t</sub>) · PSD<sub>Z</sub> )</div><div class="no">(18)</div></div>
+
+<div class="eq"><div class="body">SNR<sub>t</sub> = ( √α<sub>t</sub> · k ) / ( √(1 − α<sub>t</sub>) · ‖(u,v)‖<sup>a</sup> · σ² )&nbsp;&nbsp;&nbsp;(k &gt; 0, a &gt; 1)</div><div class="no">(19)</div></div>
+
+<p>由式 19，<span class="term">SNR<sub>t</sub></span> 随 <span class="term">α<sub>t</sub></span> 增大而增大。由于 <span class="term">α<sub>t</sub></span> 是递减序列（<span class="term">α<sub>t</sub> ∝ 1/t</span>），<span class="term">SNR<sub>t</sub></span> 与 <span class="term">t</span> 的关系可建立为：</p>
+
+<div class="eq"><div class="body">SNR<sub>t</sub> ∝ 1 / t</div><div class="no">(20)</div></div>
+
+<p>由式 19，任意频率 <span class="term">‖(u,v)‖</span> 处的 <span class="term">SNR<sub>t</sub></span> 也与该频率处原始信号的功率成正比，并<strong>随频率升高而递减</strong>。因此，随着前向扩散步数 <span class="term">t</span> 增加，<span class="term">SNR<sub>t</sub></span> 下降，<strong>更高频率的信号更早受到影响</strong>。</p>
+
+<p>设 <span class="term">φ</span> 为"低于该值信息即被完全破坏"的 SNR 阈值，并根据我们低通滤波器期望的频率阈值 <span class="term">ψ</span>，存在一个适当的步数 <span class="term">t</span>，超过该步数后所有非低频信息都会丢失：</p>
+
+<div class="eq"><div class="body">SNR<sub>t</sub> &lt; φ&nbsp;&nbsp;当 ‖(u,v)‖ &gt; ψ&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; SNR<sub>t</sub> ≥ φ&nbsp;&nbsp;当 ‖(u,v)‖ ≤ ψ</div><div class="no">(21)</div></div>
+
+<p>如果我们把这个步数 <span class="term">t</span> 记为 <span class="term">T̃</span>，那么前向扩散就等价于低通滤波：</p>
+
+<div class="eq"><div class="body">L<sub>T̃</sub> = LPF<sub>T̃</sub>( i(x,y) ) = q( s<sub>T̃</sub> | s<sub>0</sub> )</div><div class="no">(22)</div></div>
+
+<div class="callout key">
+  <span class="t">III-B 的核心结论（译者提炼）</span>
+  这一段是整篇论文的理论基石，推导链条是：<strong>白噪声 PSD 平坦（式 16）</strong> → <strong>自然图像 PSD 随频率幂律衰减（式 17）</strong> → <strong>两者相除得 SNR ∝ 1/(t·‖(u,v)‖<sup>a</sup>)（式 19）</strong> → <strong>高频的 SNR 更低、更早跌破阈值 φ（式 21）</strong> → <strong>截断到第 T̃ 步的前向扩散 = 一个频率阈值为 ψ 的低通滤波器（式 22）</strong>。
+  <br><br>因此"前向扩散=低通滤波"不是类比，而是有定量推导支撑的结论。这同时解释了为什么<strong>扩散模型在医学图像翻译上忠实度差</strong>：解剖轮廓恰恰是高频，而高频正是前向扩散最先破坏的部分。
+</div>
+
+<h3 id="s3c"><span class="num">III-C</span>高通滤波器<span class="en">High Pass Filter</span></h3>
+
+<p>我们使用 <strong>Sobel 算子 [34]</strong> 作为高通滤波器（HPF）。Sobel 算子严格来说是一个离散微分算子，通过计算图像强度函数的梯度来获得高频信息。具体地，我们先用水平与垂直的 Sobel 滤波核 <span class="term">K<sub>x</sub></span> 与 <span class="term">K<sub>y</sub></span> 分别与图像卷积，得到滤波图像 <span class="term">G<sub>x</sub></span> 与 <span class="term">G<sub>y</sub></span>。在图像中的每一点，所得的梯度近似可以按下式组合成梯度幅值：</p>
+
+<div class="eq"><div class="body">G<sub>x</sub> = K<sub>x</sub> ⊛ i ,&nbsp;&nbsp; G<sub>y</sub> = K<sub>y</sub> ⊛ i</div><div class="no">(23)</div></div>
+
+<div class="eq"><div class="body">i<sub>mag</sub> = √( G<sub>x</sub>² + G<sub>y</sub>² )</div><div class="no">(24)</div></div>
+
+<p>高频信息 <span class="term">H</span> 随后通过阈值 <span class="term">η</span> 获得：</p>
+
+<div class="eq"><div class="body">H<sub>η</sub> = HPF<sub>η</sub>( i(x,y) ) =&nbsp;&nbsp; i<sub>mag</sub>(x,y)&nbsp;&nbsp;若 i<sub>mag</sub>(x,y) ≥ η&nbsp;&nbsp;|&nbsp;&nbsp; 0&nbsp;&nbsp;若 i<sub>mag</sub>(x,y) &lt; η</div><div class="no">(25)</div></div>
+
+<div class="callout note">
+  <span class="t">译者注：两个滤波器的实现方式不对称</span>
+  论文用<strong>傅里叶域推导</strong>论证了"前向扩散 = 低通滤波"（式 1–22），但<strong>实际实现的两个滤波器是</strong>：<strong>低通 = 截断步数的前向扩散过程本身</strong>（不是频域掩码），<strong>高通 = 空间域的 Sobel 算子 + 阈值</strong>（不是频域掩码）。也就是说，理论分析在傅里叶域，工程实现一在扩散域、一在空间域。这一点在阅读时容易混淆，但很重要——它意味着论文<strong>并没有真正实现"频域掩码"式的滤波器</strong>。
+</div>
+
+<h3 id="s3d"><span class="num">III-D</span>模型训练<span class="en">Model Training</span></h3>
+
+<p>在我们的模型中，我们选择一种混合扩散模型——<strong>去噪扩散 GAN（denoising diffusion GAN）[29]</strong> 作为骨干网络，它采用一种特殊的 f-散度实例，称为<strong>软化反向 KL 散度（SRKL）[35]</strong>。它能够在<strong>少于 8 步</strong>内采样图像，大幅加速推理速度，而原始 DDPM 需要 1000 步以上；它能在比原始 DDPM 快数百倍的推理速度下达到接近原始 DDPM 的性能 [29]。</p>
+
+<p>训练通过匹配条件去噪模型 <span class="term">p<sub>θ</sub>(s<sub>t−1</sub> | s<sub>t</sub>, H<sub>η</sub>)</span> 与 <span class="term">q(s<sub>t−1</sub> | s<sub>t</sub>)</span> 来形式化，使用一个对抗损失，在<strong>每个去噪步</strong>上最小化散度 <span class="term">D<sub>adv</sub></span>：</p>
+
+<div class="eq"><div class="body">min<sub>θ</sub> Σ<sub>t≥1</sub> 𝔼<sub>q(x<sub>t</sub>)</sub> [ D<sub>adv</sub>( q(s<sub>t−1</sub>|s<sub>t</sub>) ‖ p<sub>θ</sub>(s<sub>t−1</sub>|s<sub>t</sub>, H<sub>η</sub>) ) ]</div><div class="no">(26)</div></div>
+
+<p>SRKL 是一个<strong>时间相关的判别器</strong>，通过下式训练：</p>
+
+<div class="eq"><div class="body">min<sub>ρ</sub> Σ<sub>t≥1</sub> 𝔼<sub>q(s<sub>t</sub>)</sub> [ 𝔼<sub>q(s<sub>t−1</sub>|s<sub>t</sub>)</sub>[ −log( SRKL<sub>ρ</sub>(s<sub>t−1</sub>, s<sub>t</sub>, t) ) ] + 𝔼<sub>p<sub>θ</sub>(s<sub>t−1</sub>|s<sub>t</sub>,H<sub>η</sub>)</sub>[ −log( 1 − SRKL<sub>ρ</sub>(s<sub>t−1</sub>, s<sub>t</sub>, H<sub>η</sub>, t) ) ] ]</div><div class="no">(27)</div></div>
+
+<p>给定 SRKL，我们通过下式训练条件去噪扩散模型：</p>
+
+<div class="eq"><div class="body">max<sub>θ</sub> Σ<sub>t≥1</sub> 𝔼<sub>q(s<sub>t</sub>)</sub> 𝔼<sub>p<sub>θ</sub>(s<sub>t−1</sub>|s<sub>t</sub>,H<sub>η</sub>)</sub> [ log( SRKL<sub>ρ</sub>(s<sub>t−1</sub>, s<sub>t</sub>, H<sub>η</sub>, t) ) ]</div><div class="no">(28)</div></div>
+
+<h3 id="s3e"><span class="num">III-E</span>零样本图像翻译<span class="en">Zero-Shot Image Translation</span></h3>
+
+<p>在零样本图像翻译中，模型在训练时<strong>只使用目标域数据</strong>训练，因为训练期间源域图像不可得。模型需要直接响应那些在训练中未观察到的域的样本。零样本方法通常通过某种形式的辅助信息把已观察类与未观察类关联起来；而在 CBCT→CT 图像翻译任务中，我们发现它们的<strong>低频信息与高频信息大致相同，主要差异集中在中间频率的信息上</strong>。</p>
+
+<p>两个模态/域之间的图像翻译任务因此可以描述为式 29、式 30 与算法 1：</p>
+
+<div class="eq"><div class="body">q( s<sub>T̃</sub> | c<sub>0</sub> ) = q( c<sub>T̃</sub> | c<sub>0</sub> ) = 𝒩( s<sub>T̃</sub> ; √α<sub>T̃</sub> c<sub>0</sub> , (1 − α<sub>T̃</sub>)σ² )</div><div class="no">(29)</div></div>
+
+<div class="eq"><div class="body">p<sub>θ</sub>( s<sub>0</sub> | s<sub>t</sub> ) = ∏<sub>t=1</sub><sup>T̃</sup> p<sub>θ</sub>( s<sub>t−1</sub> | s<sub>t</sub> , HPF<sub>η</sub>(c<sub>0</sub>) )</div><div class="no">(30)</div></div>
+
+<div class="callout key">
+  <span class="t">III-E 的关键：零样本为什么能成立</span>
+  式 29 表达的是：<strong>源图 c<sub>0</sub> 经过 T̃ 步前向扩散后得到的 s<sub>T̃</sub>，等价于目标域图像 c<sub>0</sub> 的 T̃ 步扩散结果</strong>——因为在这个步数上，两者的低频信息已被假设为相同。式 30 表达的是：<strong>反向过程只用源图的高频 <span class="term">HPF<sub>η</sub>(c<sub>0</sub>)</span> 作为条件</strong>。
+  <br><br>于是整个翻译变成了：<strong>取源图的低频（前向扩散得到） + 取源图的高频（Sobel 得到） + 用只在目标域上训练的模型填补中间频率</strong>。这就是"零样本"能成立的全部机制。
+</div>
+
+<h4 id="algo">算法 1：频域引导零样本翻译<span class="en">Frequency Guided Zero-Shot Translation</span></h4>
+
+<div class="tbl-wrap">
+<table>
+<tbody>
+<tr><td style="width:110px"><strong>输入</strong></td><td>源图像 <span class="term">c₀</span>；预训练去噪扩散模型 <span class="term">p<sub>θ</sub></span>；前向扩散步数 <span class="term">T̃</span>；低通滤波器 <span class="term">LPF(·)</span>；高通滤波器 <span class="term">HPF(·)</span>；恒定方差 <span class="term">σ²</span>；递减序列 <span class="term">α<sub>1:t</sub> ∈ (0,1]<sup>T</sup></span></td></tr>
+<tr><td><strong>输出</strong></td><td>生成的高忠实度翻译图像 <span class="term">s₀</span></td></tr>
+<tr><td colspan="2" style="background:#fbfcfd">
+<ol style="margin:6px 0 6px 0">
+<li>初始化所有参数与变量；</li>
+<li><span class="term">z ∼ 𝒩(0, σ²)</span></li>
+<li><span class="term">L<sub>T̃</sub> ← LPF<sub>T̃</sub>(c₀) = √α<sub>T̃</sub> c₀ + √(1 − α<sub>T̃</sub>) z</span></li>
+<li><span class="term">H<sub>η</sub> ← HPF<sub>η</sub>(c₀)</span></li>
+<li><span class="term">s<sub>t</sub> ← L<sub>T̃</sub></span></li>
+<li><strong>for</strong> <span class="term">t = T̃</span> <strong>到</strong> <span class="term">1</span> <strong>do</strong>
+  <ul style="margin:4px 0"><li><span class="term">s<sub>t−1</sub> ← p<sub>θ</sub>(s<sub>t−1</sub> | s<sub>t</sub>, H<sub>η</sub>)</span></li>
+  <li><span class="term">s<sub>t</sub> ← s<sub>t−1</sub></span></li></ul>
+</li>
+<li><strong>end for</strong></li>
+<li><span class="term">s₀ ← s<sub>t</sub></span></li>
+<li><strong>return</strong> <span class="term">s₀</span></li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figbox">
+  <div class="ft"><strong>图 4（Fig. 4）：</strong>频域引导扩散模型（FGDM）的结构示意图。该模型<strong>仅在目标图像域（CT）上训练</strong>，以低频与高频 CT 信息为条件，生成中间频率的信息。用于零样本 CBCT→CT 翻译时，改为使用 CBCT（源）的低频与高频信息作为条件，生成相应的 CT 图像。在<strong>训练阶段</strong>，噪声被加到第 <span class="term">T</span> 步；而在<strong>零样本翻译阶段</strong>，噪声只加到第 <span class="term">T̃</span> 步（<span class="term">T̃ ≤ T</span>）。训练阶段使用较大的 <span class="term">T</span>，是出于我们期望模型能够熟练处理<strong>一系列不同的低频信息阈值</strong>；在零样本翻译阶段使用与 <span class="term">T</span> 不同的 <span class="term">T̃</span>，则允许我们根据源域与目标域之间的具体差异来<strong>定制低频信息阈值</strong>。</div>
+</div>
+
+<p class="toplink"><a href="#gloss">↑ 返回顶部</a></p>
+
+<!-- ============ IV EXPERIMENTS ============ -->
+<h2 id="s4"><span class="num">IV</span>实验与讨论<span class="en">Experiments and Discussions</span></h2>
+
+<h3 id="s4a"><span class="num">IV-A</span>数据集与预处理<span class="en">Datasets and Pre-processing</span></h3>
+
+<h4><span class="num">IV-A1</span>头颈部数据集<span class="en">Head and Neck Dataset</span></h4>
+<p>我们在头颈部数据集上训练与测试 FGDM。该数据集包含患者特异的 CT 与 CBCT 图像，划分为 <strong>70 例训练 / 9 例验证 / 20 例测试</strong>，验证数据用于选择性能最佳的检查点（checkpoint）。CBCT 图像的体素间距为 <strong>0.51 × 0.51 × 1.99 mm³</strong>，CT 图像的体素间距为 <strong>1.17 × 1.17 × 3.00 mm³</strong>。所有图像的 HU 值被截断到 <strong>[−1000, 1000]</strong>，并线性归一化到 [0,1]。我们使用 2D 切片作为输入，所有切片被缩放到 <strong>192 × 192</strong>。测试时，使用一个开源可变形图像配准工具箱 [36] 把 CT 对齐到 CBCT，配准后的 CT 图像被用作评估图像翻译性能的参考。</p>
+
+<h4><span class="num">IV-A2</span>肺数据集<span class="en">Lung Dataset</span></h4>
+<p>为进一步测试模型的零样本能力，我们<strong>把在头颈部 CT 上训练的模型直接应用于肺部的 CBCT→CT 翻译任务</strong>。我们共收集了 18 例患者的肺部 CBCT 与 CT 图像，经过了与头颈部数据相同的预处理步骤，包括 HU 值截断、线性归一化与切片缩放。与头颈部数据集类似，每例患者的肺部 CT 也被可变形配准到相应的 CBCT 上，作为评估参考。</p>
+
+<h4><span class="num">IV-A3</span>危及器官（OARs）数据集<span class="en">Organs at Risk (OARs) Dataset</span></h4>
+<p>为在具有挑战性且多样化的条件下严格评估性能，我们使用了来自美国医学物理学家协会（AAPM）胸部自动分割大挑战 [37, 38] 的<strong>危及器官（OARs）数据集</strong>。该数据集来自 24 例患者，包含食管、脊髓、心脏与肺等解剖结构的成对 CBCT 与 CT。OARs 数据集的预处理方式与头颈部、肺数据集类似：把 HU 值截断到 [−1000, 1000]，随后线性归一化到 [0,1]。使用 2D 切片作为输入，所有切片缩放到 192 × 192。把该数据集纳入评估，有助于进一步评估 FGDM 在数据分布变化更大的场景下的鲁棒性与通用性。</p>
+
+<h4><span class="num">IV-A4</span>头部 MR T1 数据集<span class="en">Head MR T1 Dataset</span></h4>
+<p>我们评估中使用的另一个数据集由来自两个不同仓库（中心）的头部 MR T1 图像构成：<strong>NFBS</strong>（Neurofeedback Skull-stripped，去颅骨预处理）仓库，以及 <strong>MICCAI 2020 挑战赛 ABCs</strong>（Anatomical Brain Barrier to Cancer Spread，解剖性脑屏障与癌症扩散）仓库。选择该数据集是为了反映<strong>跨中心图像翻译</strong>的真实需求——来自不同机构的数据可能因成像协议不同而变化，需要被协调（harmonize）以便联合分析。NFBS 数据集包含 125 名参与者的结构性 T1 加权与匿名化（去面部）图像，作为 FGDM 训练的<strong>源域数据</strong>。ABCs 数据集包含 60 例确诊为胶质母细胞瘤与低级别胶质瘤的患者，作为测试的<strong>目标域数据</strong>。预处理方面，我们把图像强度截断到第 0 与第 99 百分位数之间以去除离群值并标准化图像的动态范围；随后把图像归一化到 [0,1]，并把所有切片缩放到 <strong>256 × 256</strong>。</p>
+
+<h3 id="s4b"><span class="num">IV-B</span>实现细节<span class="en">Implementation Details</span></h3>
+
+<p>我们使用标准 Adam 优化器训练模型，初始学习率 <strong>10⁻⁴</strong>，采用<strong>余弦退火（Cosine Annealing）</strong>学习率调度器，最小学习率设为 <strong>10⁻⁵</strong>。批大小设为 <strong>8</strong>，训练 <strong>200 个 epoch</strong>。</p>
+
+<p>在我们的模型中，低频与高频的信号提取分别由前向扩散步数 <span class="term">T̃</span> 与 Sobel 滤波阈值 <span class="term">η</span> 控制（式 25）。为训练一个对"源图与目标图在频率空间中域不变区域变化"具有鲁棒性的模型，我们在训练期间把 <span class="term">η</span> <strong>在 1–25 之间随机化</strong>，以提取不同层级的高频信号用于条件化。对于低频信号，这种变化已经内建于逐步的前向扩散过程中，我们可以在测试时直接通过改变测试源域图像上的前向扩散步数来进行评估。</p>
+
+<p>在本研究中，经过消融研究部分对两个参数的参数化研究后，我们在测试集上选择 <span class="term">η = 10</span> 与 <span class="term">T̃ = 4</span>。我们想指出，由于 FGDM 的独特设计，这种参数化研究<strong>直接在测试阶段进行</strong>——它高度自适应、可调节，能够应对不同的数据输入，而<strong>无需任何模型重训练</strong>。</p>
+
+<p>所有网络均使用 PyTorch 库实现，实验在 <strong>NVIDIA Tesla V100 GPU</strong> 上运行。所有用于对比的方法均使用其官方开源代码 [4, 22, 24, 25, 12, 11]，其中 SDEdit 与 EGSDE 从步数 200 开始。</p>
+
+<p>我们的代码公开于：<span class="term">https://github.com/Kent0n-Li/FGDM</span></p>
+
+<h3 id="s4c"><span class="num">IV-C</span>评价指标与方法<span class="en">Comparison Metrics and Methods</span></h3>
+
+<p>为比较不同模型的图像翻译性能，我们同时测量翻译图像的<strong>真实感（realism）</strong>与<strong>忠实度（faithfulness）</strong>。</p>
+
+<p>对于真实感，我们报告翻译图像与目标参考图像之间广泛使用的 <strong>FID（Fréchet Inception Distance）[5]</strong>。</p>
+
+<p>考虑到我们的目标参考图像是通过可变形配准获得的、并非精确的真值（ground truth）图像——因为存在非形变引起的变化以及可变形配准误差——我们通过<strong>同时与源 CBCT 图像和参考形变 CT 图像进行比较</strong>来评估忠实度。这样做的原因是：评估<strong>从源 CBCT 图像保留结构的忠实度</strong>至关重要。这种策略已被许多没有真值图像可用来计算忠实度的工作所采用 [39, 12, 11]。对于忠实度，我们报告生成图像与源图像、以及生成图像与目标图像的 <strong>PSNR（峰值信噪比）</strong> 与 <strong>SSIM（结构相似性指数）[40]</strong>。</p>
+
+<p>此外，为进一步验证 FGDM 的性能，我们还计算了生成图像与目标图像之间在<strong>空间频率域的 MSE（均方误差）</strong>。</p>
+
+<p>为与其他图像翻译方法进行全面比较，我们评估了共<strong>三类</strong>广泛使用的图像翻译方法（基于 GAN、基于 VAE、基于扩散模型）。其中，基于 GAN 与基于 VAE 的方法需要源域与目标域图像共同训练，而基于扩散模型的方法可以实现零样本，例如 SDEdit。</p>
+
+<h3 id="s4d"><span class="num">IV-D</span>头颈部数据集上的性能<span class="en">Performance on the Head and Neck Dataset</span></h3>
+
+<p>基于 GAN 的图像翻译方法中广泛使用的框架包括 CycleGAN 与 GCGAN，两者在训练时都需要把源域与目标域图像馈入网络。从表 I 的结果看，CycleGAN 与 GCGAN 在 SSIM 上取得了相对较好的分数，但在 FID 上表现不佳。总体而言，CycleGAN 与 GCGAN 都是通过添加额外损失函数来强制结构保持，然而这反过来损害了图像质量，导致 FID 更低。至于 RegGAN，虽然其 FID 表现略优于 CycleGAN，但相应的 SSIM 与 PSNR 表现更差。</p>
+
+<p>UNIT 与 MUNIT 是基于 VAE 的图像翻译方法，它们对齐源域与目标域的潜在空间，使其共享同一潜在空间。UNIT 在 FID 上优于 GAN，但在 SSIM 上表现不佳，很可能是因为 UNIT 与 MUNIT 在潜在空间映射过程中丢失了结构细节。</p>
+
+<p>SDEdit 与 EGSDE 都是基于扩散模型的图像翻译方法，SDEdit 在 FID 上取得了仅次于 FGDM 的表现，这展示了扩散模型在生成高质量、极具真实感图像方面的潜力。然而，SDEdit 与 EGSDE 都在前向扩散中丢失了大量解剖细节，导致 PSNR、SSIM 等指标显示出的忠实度较差。SynDiff 作为另一个基于扩散模型的方法，表现不佳，FID 为 49.0，尽管它在与源图像的 SSIM 上取得了第二高值 0.902。</p>
+
+<p>至于推理时间，FGDM 所使用的扩散 GAN 翻译单张图像约需 <strong>0.2 秒</strong>，而 SDEdit 约需 <strong>9 秒</strong>。</p>
+
+<p>总体而言，FGDM 在所有指标上都优于其他方法：它不仅继承了扩散模型生成高质量、真实感图像的能力，还通过频域引导保留了解剖细节。此外，FGDM 在降低频域 MSE 方面表现最好。由于不同域之间的频率差异并非完全位于中频范围，而是也覆盖了高频与低频范围（图 2），FGDM 不仅修正了中频范围的失配，在一定程度上也修正了低频与高频范围的失配——在某些案例中体现为<strong>去除了高频条纹伪影</strong>。</p>
+
+<div class="tbl-wrap">
+<table>
+<caption>表 I：头颈部数据集（分布内，in-distribution）上基于 GAN、VAE 与扩散模型的 CBCT→CT 翻译方法的定量比较</caption>
+<thead><tr>
+  <th rowspan="2">模型</th><th rowspan="2" class="num">FID ↓</th>
+  <th colspan="2" class="ctr">与源图比较</th><th colspan="2" class="ctr">与目标图比较</th>
+  <th rowspan="2" class="num">频域 MSE ↓</th>
+</tr>
+<tr><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th></tr>
+</thead>
+<tbody>
+<tr><td>CycleGAN</td><td class="num">47.6</td><td class="num">22.5</td><td class="num">0.844</td><td class="num">22.6</td><td class="num">0.867</td><td class="num">440</td></tr>
+<tr><td>GCGAN</td><td class="num">42.3</td><td class="num">23.6</td><td class="num">0.863</td><td class="num">23.7</td><td class="num">0.886</td><td class="num">415</td></tr>
+<tr><td>RegGAN</td><td class="num">40.5</td><td class="num">19.9</td><td class="num">0.765</td><td class="num">20.6</td><td class="num">0.793</td><td class="num">442</td></tr>
+<tr><td>UNIT</td><td class="num">36.6</td><td class="num">22.2</td><td class="num">0.821</td><td class="num">22.8</td><td class="num">0.854</td><td class="num">436</td></tr>
+<tr><td>MUNIT</td><td class="num">44.5</td><td class="num">21.2</td><td class="num">0.811</td><td class="num">21.9</td><td class="num">0.856</td><td class="num">457</td></tr>
+<tr><td>SynDiff</td><td class="num">49.0</td><td class="num">26.0</td><td class="num">0.902</td><td class="num">22.9</td><td class="num">0.862</td><td class="num">502</td></tr>
+<tr><td>EGSDE</td><td class="num">41.9</td><td class="num">22.6</td><td class="num">0.800</td><td class="num">23.4</td><td class="num">0.837</td><td class="num">461</td></tr>
+<tr><td>SDEdit</td><td class="num">33.2</td><td class="num">24.8</td><td class="num">0.830</td><td class="num">25.0</td><td class="num">0.857</td><td class="num">422</td></tr>
+<tr class="best"><td>FGDM（本文）</td><td class="num">24.0</td><td class="num">27.8</td><td class="num">0.908</td><td class="num">26.4</td><td class="num">0.904</td><td class="num">400</td></tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">表中所有指标均为测试集上的均值；箭头指向精度改善的方向。</p>
+
+<div class="figbox">
+  <div class="ft"><strong>图 5（Fig. 5）：</strong>头颈部数据集（分布内）上，基于 GAN、VAE 与扩散模型的 CBCT→CT 翻译方法的视觉比较。显示窗为 [−1000, 1000] HU。</div>
+</div>
+
+<p>通过图 5 的视觉比较可以看到：SDEdit 与 EGSDE 的图像在粗尺度上总体尚可接受；但当放大到结构细节时——例如<strong>鼻腔与牙齿区域</strong>——两种方法都能清楚看到结构丢失与形变。至于图 5 中基于 VAE 方法的结果，解剖细节同样没有得到很好保留：VAE 类方法先用编码器把图像转换到潜在空间，随后用解码器从潜在空间生成翻译图像，结构信息往往在编码过程中丢失，导致 VAE 类方法图像模糊。相对而言，GCGAN 生成的图像更好地保留了解剖细节，在真实感与忠实度之间更为平衡，但仍不如 FGDM。</p>
+
+<p>放大图像显示，与其他方法相比，FGDM 有效保留了解剖结构细节，且生成图像中的这些细节最接近源图像。尽管 FGDM 已是所有方法中表现最好的，但仍可观察到一些来自源图像的微小结构失配，这值得未来进一步开发与优化。</p>
+
+<h3 id="s4e"><span class="num">IV-E</span>肺数据集上的性能<span class="en">Performance on the Lung Dataset</span></h3>
+
+<p>一个高性能的零样本模型应当在分布外数据上展现出优异的鲁棒性与泛化能力。因此，我们<strong>把在头颈部数据集上训练的模型直接应用于肺数据集</strong>，测试其 CBCT→CT 翻译性能。如表 II 与图 6 所示，大多数基准模型在该任务上表现不佳，说明测试数据分布偏移带来的影响。大多数方法在分布偏移后、未微调的情况下，出现结构细节丢失与结构幻觉；而 FGDM 仍保持了<strong>解剖结构的准确性</strong>，实现了鲁棒的零样本图像翻译。</p>
+
+<div class="tbl-wrap">
+<table>
+<caption>表 II：肺数据集（分布外，out-of-distribution）上的定量比较</caption>
+<thead><tr>
+  <th rowspan="2">模型</th><th rowspan="2" class="num">FID ↓</th>
+  <th colspan="2" class="ctr">与源图比较</th><th colspan="2" class="ctr">与目标图比较</th>
+  <th rowspan="2" class="num">频域 MSE ↓</th>
+</tr>
+<tr><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th></tr>
+</thead>
+<tbody>
+<tr><td>CycleGAN</td><td class="num">62.5</td><td class="num">21.8</td><td class="num">0.838</td><td class="num">22.1</td><td class="num">0.838</td><td class="num">454</td></tr>
+<tr><td>GCGAN</td><td class="num">59.6</td><td class="num">23.5</td><td class="num">0.876</td><td class="num">23.4</td><td class="num">0.868</td><td class="num">426</td></tr>
+<tr><td>RegGAN</td><td class="num">86.1</td><td class="num">16.9</td><td class="num">0.660</td><td class="num">17.2</td><td class="num">0.670</td><td class="num">503</td></tr>
+<tr><td>UNIT</td><td class="num">69.7</td><td class="num">21.6</td><td class="num">0.776</td><td class="num">21.7</td><td class="num">0.785</td><td class="num">461</td></tr>
+<tr><td>MUNIT</td><td class="num">90.8</td><td class="num">20.3</td><td class="num">0.759</td><td class="num">20.5</td><td class="num">0.771</td><td class="num">501</td></tr>
+<tr><td>SynDiff</td><td class="num">60.8</td><td class="num">24.2</td><td class="num">0.872</td><td class="num">23.1</td><td class="num">0.839</td><td class="num">514</td></tr>
+<tr><td>EGSDE</td><td class="num">101.0</td><td class="num">23.6</td><td class="num">0.799</td><td class="num">23.2</td><td class="num">0.812</td><td class="num">505</td></tr>
+<tr><td>SDEdit</td><td class="num">81.5</td><td class="num">25.7</td><td class="num">0.826</td><td class="num">25.0</td><td class="num">0.836</td><td class="num">460</td></tr>
+<tr class="best"><td>FGDM（本文）</td><td class="num">42.4</td><td class="num">28.4</td><td class="num">0.906</td><td class="num">27.4</td><td class="num">0.901</td><td class="num">413</td></tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">注意：模型仅在头颈部 CT 上训练，未做任何微调即用于肺 CBCT→CT。<strong>FGDM 的 OOD 结果（FID 42.4 / SSIM 0.906）甚至优于其在分布内头颈部的对应指标（FID 24.0 但 SSIM 0.908 相当）</strong>，这是本文最值得关注的现象之一。</p>
+
+<div class="figbox">
+  <div class="ft"><strong>图 6（Fig. 6）：</strong>肺数据集（分布外）上的视觉比较。显示窗为 [−1000, 1000] HU。</div>
+</div>
+
+<h3 id="s4f"><span class="num">IV-F</span>OARs 数据集上的性能<span class="en">Performance on the Organs at Risk (OARs) Dataset</span></h3>
+
+<p>图像翻译模型的鲁棒性与泛化能力在一个更具挑战性的数据集——危及器官（OARs）数据集上被进一步评估。用于训练 FGDM 的头颈部图像通常被<strong>暗色背景（空气）</strong>包围，而 OARs 数据集中的大多数图像则不是。因此，数据分布的显著差异有助于测试不同模型的鲁棒性与泛化能力。</p>
+
+<p>如表 III 与图 7 所示，大多数基准模型在该数据集上的性能明显受损，说明它们在面对测试数据分布的实质性偏移时难以泛化。相比之下，FGDM 在所有指标上都展现出显著更为鲁棒的表现：它成功保留了扩散模型生成高质量、真实感图像的能力，同时通过频域引导保留了解剖细节。尽管 OARs 数据集与头颈部数据集差异显著，FGDM 仍展现出对数据分布实质性偏移进行泛化与适应的鲁棒性。</p>
+
+<div class="tbl-wrap">
+<table>
+<caption>表 III：OARs 数据集（分布外）上的定量比较</caption>
+<thead><tr>
+  <th rowspan="2">模型</th><th rowspan="2" class="num">FID ↓</th>
+  <th colspan="2" class="ctr">与源图比较</th><th colspan="2" class="ctr">与目标图比较</th>
+  <th rowspan="2" class="num">频域 MSE ↓</th>
+</tr>
+<tr><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th></tr>
+</thead>
+<tbody>
+<tr><td>CycleGAN</td><td class="num">118.0</td><td class="num">14.5</td><td class="num">0.554</td><td class="num">14.8</td><td class="num">0.573</td><td class="num">294</td></tr>
+<tr><td>GCGAN</td><td class="num">142.0</td><td class="num">17.5</td><td class="num">0.724</td><td class="num">17.6</td><td class="num">0.751</td><td class="num">216</td></tr>
+<tr><td>RegGAN</td><td class="num">271.0</td><td class="num">12.4</td><td class="num">0.412</td><td class="num">13.1</td><td class="num">0.459</td><td class="num">316</td></tr>
+<tr><td>UNIT</td><td class="num">158.0</td><td class="num">14.4</td><td class="num">0.562</td><td class="num">15.0</td><td class="num">0.612</td><td class="num">274</td></tr>
+<tr><td>MUNIT</td><td class="num">204.0</td><td class="num">16.6</td><td class="num">0.616</td><td class="num">17.3</td><td class="num">0.653</td><td class="num">282</td></tr>
+<tr><td>SynDiff</td><td class="num">184.0</td><td class="num">15.6</td><td class="num">0.589</td><td class="num">15.5</td><td class="num">0.558</td><td class="num">520</td></tr>
+<tr><td>EGSDE</td><td class="num">198.0</td><td class="num">21.1</td><td class="num">0.816</td><td class="num">21.4</td><td class="num">0.835</td><td class="num">306</td></tr>
+<tr><td>SDEdit</td><td class="num">191.0</td><td class="num">20.2</td><td class="num">0.790</td><td class="num">21.0</td><td class="num">0.832</td><td class="num">301</td></tr>
+<tr class="best"><td>FGDM（本文）</td><td class="num">94.8</td><td class="num">24.0</td><td class="num">0.857</td><td class="num">23.0</td><td class="num">0.889</td><td class="num">176</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figbox">
+  <div class="ft"><strong>图 7（Fig. 7）：</strong>OARs 数据集（分布外）上的视觉比较。显示窗为 [−1000, 1000] HU。</div>
+</div>
+
+<h3 id="s4g"><span class="num">IV-G</span>头部 MR T1 数据集上的性能<span class="en">Performance on the Head MR T1 Dataset</span></h3>
+
+<p>翻译模型的最终评估在一个由来自两个不同中心的头部 MR T1 图像构成的数据集上进行：<strong>NFBS 与 ABCs</strong>。该评估服务于图像翻译/协调（harmonization）的需求，适用于来自不同机构的图像在成像协议与机器条件上可能存在差异的场景。我们为所有方法训练了从 NFBS 到 ABCs 的翻译模型，并基于 FID、SSIM 与 PSNR 指标评估其性能。由于 NFBS 与 ABCs 并非成对数据，我们<strong>只测试翻译图像与目标数据集之间的 FID 来评估真实感</strong>，并测试<strong>翻译图像与源图像之间的 PSNR 与 SSIM 来评估忠实度</strong>。定量结果见表 IV，视觉比较见图 8。FGDM 在所有指标上一致地展现出优越性能：它不仅生成了高质量、真实感的图像，还有效保留了解剖细节，展示了通过零样本框架在两个数据集之间进行鲁棒图像翻译的能力。</p>
+
+<div class="tbl-wrap">
+<table>
+<caption>表 IV：头部 T1 MR 数据集上的定量比较（仅报告与源图比较的指标，因 NFBS 与 ABCs 非成对数据）</caption>
+<thead><tr>
+  <th>模型</th><th class="num">FID ↓</th><th class="num">PSNR ↑（与源图）</th><th class="num">SSIM ↑（与源图）</th>
+</tr></thead>
+<tbody>
+<tr><td>CycleGAN</td><td class="num">86.4</td><td class="num">16.1</td><td class="num">0.664</td></tr>
+<tr><td>GCGAN</td><td class="num">61.2</td><td class="num">16.6</td><td class="num">0.706</td></tr>
+<tr><td>RegGAN</td><td class="num">76.4</td><td class="num">14.7</td><td class="num">0.616</td></tr>
+<tr><td>UNIT</td><td class="num">66.0</td><td class="num">14.0</td><td class="num">0.569</td></tr>
+<tr><td>MUNIT</td><td class="num">66.6</td><td class="num">17.0</td><td class="num">0.708</td></tr>
+<tr><td>SynDiff</td><td class="num">104.0</td><td class="num">16.7</td><td class="num">0.693</td></tr>
+<tr><td>EGSDE</td><td class="num">69.1</td><td class="num">19.8</td><td class="num">0.687</td></tr>
+<tr><td>SDEdit</td><td class="num">61.5</td><td class="num">20.0</td><td class="num">0.656</td></tr>
+<tr class="best"><td>FGDM（本文）</td><td class="num">59.3</td><td class="num">21.2</td><td class="num">0.805</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figbox">
+  <div class="ft"><strong>图 8（Fig. 8）：</strong>头部 MRI 数据集上，基于 GAN、VAE 与扩散模型的头部 MR T1 翻译方法的视觉比较。</div>
+</div>
+
+<h3 id="s4h"><span class="num">IV-H</span>消融研究<span class="en">Ablation Study</span></h3>
+
+<h4><span class="num">IV-H1</span>高频与低频条件化的有效性<span class="en">Effectiveness of high-frequency and low-frequency conditioning</span></h4>
+<p>所提出的 FGDM 框架使用高通与低通滤波器获得域不变信息，作为扩散模型的条件输入。为测试它们的相对贡献，我们在头颈部数据集上进行了消融研究。结果见表 V：可以看到，<strong>移除高频或低频信息后，模型性能都显著下降</strong>。特别地，<strong>移除高频引导后，模型的 SSIM 大幅下降</strong>。</p>
+
+<div class="tbl-wrap">
+<table>
+<caption>表 V：低频与高频信息的消融研究</caption>
+<thead><tr>
+  <th rowspan="2">配置</th><th rowspan="2" class="num">FID ↓</th>
+  <th colspan="2" class="ctr">与源图比较</th><th colspan="2" class="ctr">与目标图比较</th>
+</tr>
+<tr><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th></tr>
+</thead>
+<tbody>
+<tr><td>FGDM 去掉<strong>低频</strong>信息引导</td><td class="num">30.2</td><td class="num">24.3</td><td class="num">0.890</td><td class="num">23.8</td><td class="num">0.889</td></tr>
+<tr><td>FGDM 去掉<strong>高频</strong>信息引导</td><td class="num">38.2</td><td class="num">21.5</td><td class="num"><strong>0.748</strong></td><td class="num">21.8</td><td class="num">0.778</td></tr>
+<tr class="best"><td>FGDM（本文，完整）</td><td class="num">24.0</td><td class="num">27.8</td><td class="num">0.908</td><td class="num">26.4</td><td class="num">0.904</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">表 V 是全文最重要的一张表（译者解读）</span>
+  <ul style="margin-bottom:0">
+    <li><strong>去掉低频</strong>：FID 30.2（+6.2）、SSIM 与源图 0.890（−0.018）→ 主要影响 <strong>FID</strong>，结构损失相对温和。</li>
+    <li><strong>去掉高频</strong>：FID 38.2（+14.2）、<strong>SSIM 与源图从 0.908 崩到 0.748（−0.160）</strong> → <strong>高频条件是结构保持的承重构件</strong>。</li>
+    <li>因此：<strong>低频条件主要管"像不像 CT"（真实感/强度），高频条件主要管"结构对不对"（忠实度）</strong>。这个分工非常干净，是你做条件设计时最该记住的一条。</li>
+  </ul>
+</div>
+
+<h4><span class="num">IV-H2</span>高频比例参数 <span class="term">η</span> 的影响<span class="en">Impact of the high-frequency ratio parameter η</span></h4>
+<p>对 FGDM 而言，高通滤波器有一个可调的 <span class="term">η</span> 参数，可以在测试时即时定制，以适配不同的图像翻译任务。由于不同图像翻译任务中源域与目标域的数据在频率空间存在差异，保留恰当的高频信息既能滤除不想要的信息（例如 CBCT 中的伪影），又能保留解剖结构。</p>
+
+<p>如表 VI 所示，<strong>当 <span class="term">η</span> 等于 10 时模型达到最优性能</strong>。当 <span class="term">η</span> 进一步增大，高通滤波器滤除的信息更多，导致结构保留所需的高频引导不足，见图 9(II)。当 <span class="term">η</span> 小于 10 时，高频信息包含更多伪影，导致模型性能退化，见图 9(I)。</p>
+
+<p>在测试期间，用户可以自由调整 <span class="term">η</span>，为每个病例选择最优值。</p>
+
+<div class="tbl-wrap">
+<table>
+<caption>表 VI：高频比例参数 η 的影响</caption>
+<thead><tr>
+  <th rowspan="2" class="num">高频比例 (η)</th><th rowspan="2" class="num">FID ↓</th>
+  <th colspan="2" class="ctr">与源图比较</th><th colspan="2" class="ctr">与目标图比较</th>
+</tr>
+<tr><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th></tr>
+</thead>
+<tbody>
+<tr><td class="num">5</td><td class="num">26.9</td><td class="num">26.7</td><td class="num">0.892</td><td class="num">25.5</td><td class="num">0.881</td></tr>
+<tr class="best"><td class="num">10</td><td class="num">24.0</td><td class="num">27.8</td><td class="num">0.908</td><td class="num">26.4</td><td class="num">0.904</td></tr>
+<tr><td class="num">15</td><td class="num">25.1</td><td class="num">27.7</td><td class="num">0.902</td><td class="num">26.4</td><td class="num">0.903</td></tr>
+<tr><td class="num">20</td><td class="num">30.1</td><td class="num">26.8</td><td class="num">0.881</td><td class="num">26.2</td><td class="num">0.890</td></tr>
+<tr><td class="num">25</td><td class="num">34.6</td><td class="num">26.4</td><td class="num">0.869</td><td class="num">25.9</td><td class="num">0.880</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figbox">
+  <div class="ft"><strong>图 9（Fig. 9）：</strong>头颈部数据集上，使用不同高频比例参数 <span class="term">η</span> 生成图像的视觉比较。显示窗为 [−1000, 1000] HU。</div>
+</div>
+
+<h4><span class="num">IV-H3</span>低频比例参数 <span class="term">T̃</span> 的影响<span class="en">Impact of the low-frequency ratio parameter T̃</span></h4>
+<p>类似地，FGDM 可以通过执行不同的前向扩散步数来调整保留低频信息的程度。与高频部分类似，低频信息也可以根据图像翻译任务进行定制与优化。</p>
+
+<p>如表 VII 所示，当步数 <span class="term">T̃</span> 减小时（即保留更多低频信息），翻译图像与<strong>源图像</strong>的 PSNR 与 SSIM 更高——这是符合预期的，因为使用更少的扩散步数使滤波后图像更接近原始 CBCT 域。然而，<strong>FID 上升（变差），且与参考 CT 相比的 PSNR 与 SSIM 也下降</strong>，说明图像没有很好地被翻译到匹配目标域。</p>
+
+<p>图 10 显示：当 <span class="term">T̃</span> 更小时，翻译图像更接近原图像，但原图像中更多的条纹伪影也被保留了下来。当 <span class="term">T</span> 等于 5 时，图像强度偏离参考 CT 图像。<strong>在"与 CBCT 域的结构相似性"和"与 CT 域的强度相似性"之间权衡，我们认为步数 <span class="term">T̃ = 4</span> 是最优的。</strong></p>
+
+<p>基于这些观察，高频与低频的保留因子可以被恰当选择，以平衡翻译图像的忠实度与真实感，并可以在推理阶段即时优化，而只需付出极小的计算开销。</p>
+
+<div class="tbl-wrap">
+<table>
+<caption>表 VII：低频比例参数 T̃ 的影响</caption>
+<thead><tr>
+  <th rowspan="2" class="num">低频比例（步数 T̃）</th><th rowspan="2" class="num">FID ↓</th>
+  <th colspan="2" class="ctr">与源图比较</th><th colspan="2" class="ctr">与目标图比较</th>
+</tr>
+<tr><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th><th class="num">PSNR ↑</th><th class="num">SSIM ↑</th></tr>
+</thead>
+<tbody>
+<tr><td class="num">1</td><td class="num">26.1</td><td class="num">30.2</td><td class="num">0.922</td><td class="num">26.4</td><td class="num">0.903</td></tr>
+<tr><td class="num">2</td><td class="num">26.0</td><td class="num">29.1</td><td class="num">0.915</td><td class="num">26.4</td><td class="num">0.903</td></tr>
+<tr><td class="num">3</td><td class="num">25.0</td><td class="num">28.4</td><td class="num">0.911</td><td class="num">26.4</td><td class="num">0.904</td></tr>
+<tr class="best"><td class="num">4</td><td class="num">24.0</td><td class="num">27.8</td><td class="num">0.908</td><td class="num">26.4</td><td class="num">0.904</td></tr>
+<tr><td class="num">5</td><td class="num">26.7</td><td class="num">27.2</td><td class="num">0.888</td><td class="num">25.8</td><td class="num">0.881</td></tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">注意一个反直觉现象：<span class="term">T̃=1</span> 时"与源图的 PSNR"最高（30.2），但 FID 与"与目标图的 PSNR"都不是最优——这正是<strong>忠实度与真实感的权衡</strong>：保留越多源图低频，越像 CBCT（忠实度高），但越不像 CT（真实感差）。</p>
+
+<div class="figbox">
+  <div class="ft"><strong>图 10（Fig. 10）：</strong>头颈部数据集上，使用不同低频比例（步数 <span class="term">T̃</span>）的视觉比较。显示窗为 [−1000, 1000] HU。</div>
+</div>
+
+<!-- ============ V LIMITATION ============ -->
+<h2 id="s5"><span class="num">V</span>局限性<span class="en">Limitation</span></h2>
+
+<p>FGDM 基于这样一个前提：<strong>源域与目标域之间的差异主要集中于中间频率，而低频信息与高频信息应当是相似的</strong>。因此，我们的模型目前<strong>只适用于相似模态之间的翻译任务</strong>，例如 CBCT 与 CT，或同一模态但采集中心、机器或协议不同的医学图像。</p>
+
+<div class="callout warn">
+  <span class="t">原文最重要的一段自我限定（务必原文引用）</span>
+  <em class="en">"For tasks such as MR-to-CT translation, where the differences between low-frequency and high-frequency information are substantial, our model may not perform well. In future work, we will develop methods to convert the low-frequency and high-frequency information between modalities like CT and MR first, before filling in the intermediate frequencies using the developed FGDM framework."</em>
+  <br><br><strong>译文：</strong>"对于诸如 MR→CT 翻译这类低频与高频信息差异巨大的任务，我们的模型可能表现不佳。在未来工作中，我们将先开发在 CT 与 MR 等模态之间<strong>转换低频与高频信息</strong>的方法，然后再使用所开发的 FGDM 框架来<strong>填补中间频率</strong>。"
+</div>
+
+<p>此外，我们选择扩散 GAN 作为骨干网络，是因为我们希望在计算速度与图像质量之间取得平衡，因为 CBCT→CT 的转换效率对<strong>在线自适应放射治疗</strong>至关重要。在未来工作中，也可以评估使用原始 DDPM 骨干时的频域引导，考察其在推理速度不是关键因素时生成更精确图像的潜力。</p>
+
+<p>另一个方面是，我们的研究<strong>只关注整体框架的设计</strong>，并未致力于优化模型结构，也没有为图像翻译任务设计更贴合的损失函数——而这些本可以帮助进一步提升翻译结果。未来工作可以聚焦于改进损失函数，以针对每个具体翻译任务强调重要的解剖结构；以及优化模型结构，引入潜在的注意力机制以提升图像翻译的准确性与效率。</p>
+
+<!-- ============ VI CONCLUSION ============ -->
+<h2 id="s6"><span class="num">VI</span>结论<span class="en">Conclusion</span></h2>
+
+<p>本文提出了一个用于医学图像翻译的频域引导扩散模型。基于频域中的观察，我们通过高通与低通滤波器提取域不变信息。<strong>高频信息的加入极大地提升了扩散模型在医学图像翻译任务中对解剖结构的保持能力。</strong>此外，我们的两个频率滤波器的阈值可以在测试期间自由调整，以应对不同类型的医学图像翻译任务，而无需重训练模型。</p>
+
+<p>FGDM 不仅在所有指标上优于其他模型，而且<strong>可以仅使用目标域图像训练，并直接应用于源域图像以实现零样本图像翻译</strong>。我们把在头颈部图像数据集上训练的 FGDM 模型应用于肺部图像数据集与 OARs 图像数据集，未做任何微调，进一步证明了模型在零样本图像翻译与分布外数据上的鲁棒性。</p>
+
+<p class="toplink"><a href="#gloss">↑ 返回顶部</a></p>
+
+<!-- ============ APPENDIX ============ -->
+<h2 id="figs">图表说明汇总<span class="en">Figure Captions</span></h2>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:70px">图</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><strong>图 1</strong></td><td>来自不同数据集的三对 CBCT 与 CT 图像的强度域与空间频率域可视化示例。</td></tr>
+<tr><td><strong>图 2</strong></td><td>三个不同数据集的频域中，成对 CBCT 与 CT 之间频率幅值 MSE 随空间频率变化的统计数据。第一行是整数据集的平均 MSE 分布；第二行是"MSE 最大峰值对应频率"分布的箱线图，用以证明差异主要集中于中间频率。</td></tr>
+<tr><td><strong>图 3</strong></td><td>FGDM 的 CBCT→CT 翻译流程：CBCT 的低频与高频信息作为扩散条件，中间频率信息通过反向扩散逐步生成。</td></tr>
+<tr><td><strong>图 4</strong></td><td>FGDM 结构示意图。仅在目标域（CT）上训练；训练时加噪到第 T 步，零样本翻译时加噪到第 T̃ 步（T̃ ≤ T）。</td></tr>
+<tr><td><strong>图 5</strong></td><td>头颈部数据集（分布内）三类方法的视觉比较。窗 [−1000, 1000] HU。</td></tr>
+<tr><td><strong>图 6</strong></td><td>肺数据集（分布外）三类方法的视觉比较。窗 [−1000, 1000] HU。</td></tr>
+<tr><td><strong>图 7</strong></td><td>OARs 数据集（分布外）三类方法的视觉比较。窗 [−1000, 1000] HU。</td></tr>
+<tr><td><strong>图 8</strong></td><td>头部 MR T1 数据集上三类方法的视觉比较。</td></tr>
+<tr><td><strong>图 9</strong></td><td>不同高频比例参数 η 生成图像的视觉比较（(I) η 过小 → 伪影增多；(II) η 过大 → 高频引导不足）。</td></tr>
+<tr><td><strong>图 10</strong></td><td>不同低频比例（步数 T̃）的视觉比较。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>关键超参数汇总</h3>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>项目</th><th>取值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>骨干网络</td><td>去噪扩散 GAN（DDGAN, ICLR'22）</td><td>采样 &lt; 8 步；单图推理约 0.2 s（SDEdit 约 9 s）</td></tr>
+<tr><td>散度</td><td>SRKL（软化反向 KL）</td><td>时间相关判别器</td></tr>
+<tr><td>优化器 / 学习率</td><td>Adam，10⁻⁴ → 10⁻⁵</td><td>余弦退火调度</td></tr>
+<tr><td>批大小 / 训练轮数</td><td>8 / 200 epochs</td><td>NVIDIA Tesla V100</td></tr>
+<tr><td>训练时 η 随机化范围</td><td>1 – 25</td><td>使模型适应不同的域不变区域</td></tr>
+<tr><td>测试最优 η</td><td><strong>10</strong></td><td>过大→高频引导不足；过小→伪影混入</td></tr>
+<tr><td>测试最优 T̃</td><td><strong>4</strong></td><td>过大→强度偏离 CT；过小→保留 CBCT 条纹伪影</td></tr>
+<tr><td>输入尺寸</td><td>192×192（CBCT/CT）；256×256（MR）</td><td>2D 切片</td></tr>
+<tr><td>HU 截断 / 归一化</td><td>[−1000, 1000] → [0,1]</td><td>MR 用 0–99 百分位截断</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout ok">
+  <span class="t">零样本效果速览（可直接引用的对照数字）</span>
+  <div class="tbl-wrap" style="margin:10px 0 0">
+  <table>
+    <thead><tr><th>任务</th><th class="num">FGDM FID</th><th class="num">次优 FID</th><th class="num">FGDM SSIM(源)</th><th class="num">次优 SSIM(源)</th></tr></thead>
+    <tbody>
+      <tr><td>头颈部（分布内）</td><td class="num">24.0</td><td class="num">33.2 (SDEdit)</td><td class="num">0.908</td><td class="num">0.902 (SynDiff)</td></tr>
+      <tr><td>肺（分布外，零样本）</td><td class="num">42.4</td><td class="num">59.6 (GCGAN)</td><td class="num">0.906</td><td class="num">0.876 (GCGAN)</td></tr>
+      <tr><td>OARs（分布外，零样本）</td><td class="num">94.8</td><td class="num">118.0 (CycleGAN)</td><td class="num">0.857</td><td class="num">0.816 (EGSDE)</td></tr>
+      <tr><td>头部 MR（跨机构）</td><td class="num">59.3</td><td class="num">61.2 (GCGAN)</td><td class="num">0.805</td><td class="num">0.708 (MUNIT)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ============ TRANSLATOR NOTE ============ -->
+<h2 id="translator">译者注 · 这篇论文与你的 H&amp;E→IHC 课题的关系</h2>
+
+<div class="callout note">
+  <span class="t">以下内容不属于原文，是我的分析</span>
+  基于你 PSPStain / BCI H&amp;E→IHC 项目的具体设置（4×64×64 latent、32px/16px 注入、无严格配准）。
+</div>
+
+<h3>1. 最需要警惕的一点：你的任务正好落在作者自述会失败的那一类</h3>
+<p>作者在 Limitations 里点名了 <strong>MR→CT</strong> 作为失败场景，理由是"低频与高频信息差异巨大"。<strong>H&amp;E → HER2-DAB 属于同一类，甚至更严重</strong>：</p>
+<ul>
+  <li>H&amp;E 的低频 = 伊红胞质 + 苏木素细胞核 + 组织密度分布</li>
+  <li>DAB 的低频 = 白色透明背景 + 棕色膜性信号</li>
+  <li>两者低频<strong>完全不匹配</strong>（不是 CT 家族那种"强度映射不同但组织布局一致"）</li>
+</ul>
+<p>因此：<strong>不能照搬"复用源图低频 + 复用源图高频 + 生成中间频率"这个三分法</strong>。作者自己给的补救方案是"先在模态间转换低频与高频，再用 FGDM 填补中间频率"——这等于承认原框架需要外挂一个跨模态频带转换器。</p>
+
+<h3>2. 可以直接复用的三个东西</h3>
+<ol>
+  <li><strong>表 V 的分工结论</strong>：高频条件管结构（去掉后 SSIM 0.908→0.748），低频条件管强度/真实感（去掉后 FID 24.0→30.2）。<strong>这为你 F1-ab 的假设提供了直接的先验</strong>：如果 HH 子带真的对应"高频"，那么去掉它应该主要伤结构指标（DAB corr、block corr），而不是 FID。这是一个可检验的预测。</li>
+  <li><strong>η 与 T̃ 的扫描方法论</strong>：两个参数都在测试期调、都不需要重训练、都做 5 点扫描找最优点。你的 F1 可以直接借用这个协议——<strong>用"保留多少频带"替代 η，用"是否做二级 DWT"替代 T̃</strong>。</li>
+  <li><strong>推理开销的参照</strong>：FGDM 用 DDGAN 骨干，0.2 s/图 vs SDEdit 9 s/图（约 45×）。这提醒你：<strong>频域条件本身不增加推理成本</strong>，成本差异来自骨干网络的选择。</li>
+</ol>
+
+<h3>3. 一个容易忽略的实现细节</h3>
+<p>论文的理论部分（式 1–22）在<strong>傅里叶域</strong>论证"前向扩散=低通滤波"，但实际实现的低通是<strong>截断步数的扩散过程</strong>、高通是<strong>空间域的 Sobel 算子</strong>。也就是说，<strong>论文并没有真正实现频域掩码</strong>。如果你在 related work 里说"FGDM 用傅里叶滤波做条件"，严格来说不准确——更准确的说法是"FGDM 用前向扩散的截断实现低通、用 Sobel 边缘实现高通，并在傅里叶域完成了理论论证"。</p>
+
+<h3>4. 你可以在论文里怎么用这篇工作</h3>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">用途</th><th>具体写法</th></tr></thead>
+<tbody>
+<tr><td><strong>作为动机</strong></td><td>FGDM 证明了"扩散模型在医学翻译中忠实度差"这一痛点（SDEdit/EGSDE 在前向扩散中丢失解剖细节），并证明<strong>高频结构先验是承重构件</strong>（表 V）。你的 H&amp;E→IHC 有同样的痛点，且更严重。</td></tr>
+<tr><td><strong>作为方法差异</strong></td><td>FGDM 用 <strong>Sobel 空间高通 + 扩散截断低通</strong>；你用 <strong>DWT 多尺度子带</strong>。差异点：① 你的条件是多尺度且带方向性（LH/HL/HH）；② 你作用在 <strong>latent</strong> 而非图像域；③ 你注入 UNet 内部 hidden stream 而非作为输入条件。</td></tr>
+<tr><td><strong>作为必须处理的反对意见</strong></td><td>FGDM 的 Limitations 明确说"低频与高频差异巨大的任务不适用"。<strong>你必须在方法部分正面说明：你采用的是非对称设计（只用源图高频做结构先验，目标低频由模型生成），从而绕开了这个限制。</strong>不写这一段，审稿人一定会问。</td></tr>
+<tr><td><strong>作为 baseline</strong></td><td>如果你的任务允许（模态差异不是特别大），可以把 FGDM 作为对比方法之一。但要注意它是 <strong>2D 图像域、非 latent</strong>，迁移到你的设置需要改造。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>5. 数字对照提醒</h3>
+<p>FGDM 的 FID 口径（CBCT/CT，192×192，inception 特征）与你 BCI H&amp;E→IHC 的 FID 口径完全不同，<strong>不可跨论文比较</strong>。可比较的是<strong>同一论文内部的方法间排序</strong>与<strong>消融的相对变化幅度</strong>——例如"去掉高频条件 SSIM 掉 0.16"这类<strong>相对量</strong>才是可迁移的知识。</p>
+
+<footer>
+  <p><strong>翻译说明：</strong>本文为 <em class="en">Yunxiang Li, Hua-Chieh Shao, Xiao Liang, Liyuan Chen, Ruiqi Li, Steve Jiang, Jing Wang, You Zhang, "Zero-shot Medical Image Translation via Frequency-Guided Diffusion Models," IEEE Transactions on Medical Imaging, 2023</em>（arXiv:2304.02742）的中文全文翻译，按原文章节顺序逐节译出，公式与表格编号保留原文，全部数值未经改动。</p>
+  <p><strong>原始资源：</strong>论文 <a href="https://arxiv.org/abs/2304.02742" target="_blank" rel="noopener">arXiv:2304.02742</a> · DOI <a href="https://doi.org/10.1109/TMI.2023.3325703" target="_blank" rel="noopener">10.1109/TMI.2023.3325703</a> · 代码 <a href="https://github.com/Kent0n-Li/FGDM" target="_blank" rel="noopener">github.com/Kent0n-Li/FGDM</a></p>
+  <p><strong>版权归属：</strong>原文版权归原作者及 IEEE 所有。本译文仅供个人学术阅读与研究参考使用，请勿用于商业用途或公开传播；引用时请引用英文原文。</p>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

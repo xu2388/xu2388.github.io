@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Java Swing 实战 · 一个简易浏览器的设计与实现</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"Java Swing 实战 · 一个简易浏览器的设计与实现","date":"2026-10-24","tags":["课程笔记","JavaWeb"],"category":"课程笔记","summary":"以一个 Java Swing 简易浏览器为线索，串起 GUI、网络编程与项目组织这条实战线。核心结论有三条：其一，界面装配用 BorderLayout 分东南西北中，同一区域重复 add 只会保留最后一个；其二，只有事件分发线程（EDT）能改 UI，所有网络与文件耗时操作放进 SwingWorker 的 doInBackground，在 done 里回 EDT 更新；其三，JEditorPane 只支持 HTML 3.2，不执行 JS、不认 CSS3，大量现代网页渲染不出来是能力边界而非代码缺陷。此外还整理了 HttpURLConnection 的超时与字符集处理、前进后退的双栈与索引两种实现，以及中文乱码、构造期空引用等真实踩坑。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>Java Swing 实战 · 一个简易浏览器的设计与实现</h1>
+<div class="meta">课程笔记 · JavaWeb · 整理自豆包对话 豆包对话 · Java Swing 简易浏览器实现与课设汇报</div>
+<h1>Java Swing 实战 · 一个简易浏览器的设计与实现</h1>
+<h2>一、为什么值得单独记一篇</h2>
+<p>Java 桌面程序在课程里常被拆成三块互不相干的知识：IO 流、网络编程、GUI。但一个「在地址栏输入网址、能显示网页、能前进后退、能另存为」的简易浏览器，恰好把三块拧成一股绳——GUI 负责交互，网络负责取页，IO 负责落盘，再加一条线程纪律把它们粘起来。</p>
+<p>这篇笔记只做 GUI + 网络 + 项目组织这条实战线。至于字节流与字符流的分层装配、<code>Thread</code>/<code>Runnable</code>/<code>synchronized</code> 这些流与线程 API 的细节，前面《Java IO 流与多线程》笔记已经系统讲过，这里只在项目实际用到时简述并回指；继承、多态、集合与泛型的系统性讲解则属于《Java 面向对象》那篇，不重复。</p>
+<p>原料是一次从零到能跑通、再到答辩复盘的完整过程，代码、报错、能力边界的吐槽都出自真实实现，笔记按实现顺序重排。</p>
+<hr />
+<h2>二、需求拆解与整体结构</h2>
+<h3>2.1 功能需求</h3>
+<p>浏览器要做的事情说穿了就一句：把 URL 变成一个能看、能存、能回退的页面。拆细一点：</p>
+<ul><li>地址栏（<code>JTextField</code>）输入 URL，回车或点「转向」按钮加载；</li><li>网页显示区是一块带滚动条的 <code>JEditorPane</code>；</li><li>一个菜单栏（文件 / 编辑 / 视图）加两个工具栏（功能按钮 + 地址栏）；</li><li>核心功能：加载、前进、后退、刷新、另存为、查看源代码、全屏、退出。</li></ul>
+<p>菜单栏里每个菜单项都配了热键（<code>Alt+字母</code>）与快捷键（<code>Ctrl+字母</code>），例如「另存为」热键 A、快捷键 <code>Ctrl+S</code>，「查看源代码」热键 C、快捷键 <code>Ctrl+C</code>。这些只是事件绑定的不同入口，背后的处理方法是同一套。</p>
+<h3>2.2 分层结构</h3>
+<p>最初的版本是「一个 <code>SimpleBrowser</code> 类包打天下」，所有字段、组件、方法都堆在同一个 <code>extends JFrame</code> 的类里。功能一多就暴露出耦合问题，于是复盘时按职责重新划成「纵向四层 + 横向支撑」的组织方式。落到这个浏览器项目，可以抽象成四类角色：</p>
+<table>
+<tr><th>层次</th><th>职责</th><th>项目里的具体落点</th></tr>
+<tr><td>界面层</td><td>窗口、菜单、工具栏、显示区，只做渲染和接收点击</td><td><code>ui</code> 包：主窗口类 + 源码查看弹窗类</td></tr>
+<tr><td>控制 / 业务层</td><td>流程编排：导航、历史、插件调度</td><td>导航服务、<code>HistoryManager</code> 历史管理</td></tr>
+<tr><td>网络 / 解析层</td><td>取网页、解析资源链接、路径重写</td><td><code>URLConnection</code> 读取、正则提取 CSS/JS/图片</td></tr>
+<tr><td>工具 / 持久层</td><td>公共能力与存取</td><td><code>util</code> 包的 <code>PageSaver</code>（IO 流另存）、配置存储</td></tr>
+</table>
+<p>分层目的原料里讲得很直白：<strong>代码解耦，改界面不用动保存逻辑，改保存不用动数据存取</strong>。调用上遵循单向依赖——界面层调用业务层，业务层再往下走，界面不直接碰文件或网络。</p>
+<p>目录结构也随分层收敛成几个包：</p>
+<pre><code>src/com/browser/
+├── Main.java             # 程序入口，启动主窗口
+├── ui/                   # 核心 UI 层（主窗口 + 源码弹窗）
+├── history/              # 前进后退双栈历史管理
+├── util/                 # PageSaver 等工具类（IO 流另存）
+└── ...                   # 拓展的 db / model / service 包</code></pre>
+<p>对课程级的最小实现，其实只要保留 <code>ui</code> + <code>history</code> + <code>util</code> 三块，数据库和业务层都是后加的拓展。</p>
+<hr />
+<h2>三、Swing 组件树与容器</h2>
+<p>一个 Swing 桌面程序本质是一棵「容器套组件」的树。浏览器的树形如：<code>JFrame</code>（顶层窗口）里挂着 <code>JMenuBar</code>（菜单条），内容面板 <code>JPanel</code> 里再挂两块工具栏和一块滚动面板，滚动面板 <code>JScrollPane</code> 里包着真正显示网页的 <code>JEditorPane</code>。</p>
+<table>
+<tr><th>组件</th><th>类型</th><th>在浏览器里干什么</th></tr>
+<tr><td><code>JFrame</code></td><td>顶层窗口</td><td>程序主壳，<code>setTitle</code>/<code>setSize</code>/<code>setDefaultCloseOperation</code></td></tr>
+<tr><td><code>JMenuBar</code> + <code>JMenu</code> + <code>JMenuItem</code></td><td>菜单</td><td>文件 / 编辑 / 视图三级菜单，绑快捷键</td></tr>
+<tr><td><code>JToolBar</code></td><td>工具栏</td><td>功能按钮栏 + 地址栏两个</td></tr>
+<tr><td><code>JTextField</code></td><td>单行文本框</td><td>地址栏输入 URL</td></tr>
+<tr><td><code>JButton</code></td><td>按钮</td><td>转向、后退、前进、另存为等</td></tr>
+<tr><td><code>JEditorPane</code></td><td>富文本组件</td><td>渲染网页 HTML</td></tr>
+<tr><td><code>JScrollPane</code></td><td>滚动容器</td><td>包住 <code>JEditorPane</code> 提供滚动条</td></tr>
+<tr><td><code>JTextArea</code></td><td>纯文本组件</td><td>源码查看窗口里显示 HTML 原文</td></tr>
+</table>
+<p>组装窗口的关键几行：</p>
+<pre><code>editorPane = new JEditorPane();
+editorPane.setEditable(false); // 只读，禁止用户编辑网页内容
+JScrollPane scrollPane = new JScrollPane(editorPane);
+
+JPanel mainPanel = new JPanel(new BorderLayout());
+mainPanel.add(toolBar1, BorderLayout.NORTH);
+mainPanel.add(toolBar2, BorderLayout.NORTH);
+mainPanel.add(scrollPane, BorderLayout.CENTER);
+add(mainPanel);</code></pre>
+<p>源码查看另开一个子窗口，中部放 <code>JScrollPane</code> 包 <code>JTextArea</code>，底部放按钮面板：</p>
+<pre><code>JFrame sourceFrame = new JFrame(&quot;网页源代码&quot;);
+JTextArea textArea = new JTextArea(source.toString());
+textArea.setFont(new Font(&quot;Consolas&quot;, Font.PLAIN, 14));
+JScrollPane sp = new JScrollPane(textArea);
+sourceFrame.add(sp, BorderLayout.CENTER);
+sourceFrame.add(panel, BorderLayout.SOUTH); // panel 是默认的按钮面板
+sourceFrame.setVisible(true);</code></pre>
+<p>这里有个容易被忽略的细节：新建的子窗口一定用 <code>dispose()</code> 关闭而不是 <code>System.exit(0)</code>，否则关掉源码窗口的同时整个程序都没了。原料里退出按钮和关闭窗口按钮就是刻意分开的：<code>sourceFrame.dispose()</code> 只关子窗，<code>System.exit(0)</code> 才结束进程。</p>
+<hr />
+<h2>四、布局管理器的实际取舍</h2>
+<p>Swing 不让你在容器里写死像素坐标，而是把摆放交给布局管理器。这个浏览器主要用到三种，它们的实际差异值得对比：</p>
+<table>
+<tr><th>布局管理器</th><th>空间划分方式</th><th>本项目用它做什么</th><th>典型副作用</th></tr>
+<tr><td><code>BorderLayout</code></td><td>东 / 西 / 南 / 北 / 中五个区</td><td>主窗口骨架：工具栏居北、网页区居中、按钮栏居南</td><td>同一区放两个组件只会保留最后加的那个；中间区会吃掉全部剩余空间</td></tr>
+<tr><td><code>FlowLayout</code></td><td>从左到右一行排，排满换行</td><td><code>new JPanel()</code> 不给布局时的默认值，用来横排几个按钮</td><td>窗口缩放时会换行，不做拉伸</td></tr>
+<tr><td><code>GridLayout</code></td><td>等宽等高的行列网格</td><td>适合九宫格这类整齐格子</td><td>所有格子一样大，一个组件撑不开</td></tr>
+</table>
+<p>原料实际选的是 <code>BorderLayout</code> 作骨架，「灵活好用、Swing 自带」。这里踩到一个真实的坑值得单独讲：上面组装代码里 <code>toolBar1</code> 和 <code>toolBar2</code> 都 <code>add</code> 到了 <code>BorderLayout.NORTH</code>。按 <code>BorderLayout</code> 语义，同一个约束位重复放组件只会保留最后一次加入的那个，所以直接这样写，功能按钮栏会被地址栏覆盖掉。正确做法要么把一个放 <code>NORTH</code>、另一个放 <code>SOUTH</code>，要么把两条工具栏装进一个纵向堆叠的子面板再整体放 <code>NORTH</code>。</p>
+<p>顺带说一句 <code>BoxLayout</code>：它按水平或垂直一条线排列组件，比 <code>FlowLayout</code> 可控（不会乱换行），比 <code>GridLayout</code> 灵活（组件可以有不同尺寸），当工具栏要纵向排时是比硬塞进同一个 <code>NORTH</code> 区更合适的选择——不过原料最终没走到这一步，这里只作选型对照。</p>
+<hr />
+<h2>五、事件监听模型</h2>
+<p>Swing 是「事件源—事件对象—监听器」三件套的委托事件模型。以地址栏为例，事件源是 <code>JTextField</code> 和「转向」<code>JButton</code>，用户操作产生一个 <code>ActionEvent</code> 对象，注册在源上的 <code>ActionListener</code> 回调收到它并做出反应。</p>
+<pre><code>private JToolBar createAddressToolBar() {
+    JToolBar bar = new JToolBar();
+    JLabel label = new JLabel(&quot;地址：&quot;);
+    urlField = new JTextField(30);
+    JButton goBtn = new JButton(&quot;转向&quot;);
+
+    // 点击转向 或 回车，都走同一个加载逻辑
+    goBtn.addActionListener(e -&gt; loadPage(urlField.getText().trim()));
+    urlField.addActionListener(e -&gt; loadPage(urlField.getText().trim()));
+
+    bar.add(label);
+    bar.add(urlField);
+    bar.add(goBtn);
+    return bar;
+}</code></pre>
+<p>几个要点：</p>
+<ul><li><strong>Lambda 写法</strong>。<code>addActionListener(e -&gt; loadPage(...))</code> 是函数式接口的简写，<code>e</code> 就是那个 <code>ActionEvent</code>。菜单项、按钮、文本框回车的监听都是同一形状，可读性比匿名内部类好很多。</li><li><strong>同一逻辑多入口</strong>。快捷键 <code>Ctrl+S</code>、菜单项、工具栏按钮指向的都是同一个 <code>savePage()</code>，只是绑定在不同组件上，避免功能重复实现。</li><li><strong>超链接点击是另一类事件</strong>。<code>JEditorPane</code> 里的链接点击不是 <code>ActionEvent</code>，而是 <code>HyperlinkListener</code>，要判断事件类型再处理：</li></ul>
+<pre><code>editorPane.addHyperlinkListener(e -&gt; {
+    if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+        loadPage(e.getURL().toString());
+    }
+});</code></pre>
+<p><code>EventType</code> 有 <code>ENTERED</code>（鼠标移入）、<code>EXITED</code>（移出）、<code>ACTIVATED</code>（点击）三种，只在 <code>ACTIVATED</code> 时跳转，否则鼠标一划过就刷新页面。</p>
+<h3>构造顺序的隐患</h3>
+<p>监听器常在构造期注册，而监听回调里引用的字段可能还没初始化。原料把初始化拆成了明确的先后顺序来规避这个问题：</p>
+<pre><code>public MiniBrowser() {
+    initWindow();     // 窗口基础属性
+    initFields();     // 先建 backStack / forwardStack / currentUrl 等成员变量
+    initComponents(); // 再建 Swing 组件并注册监听
+    initListeners();  // 统一绑定事件
+    loadUrl(&quot;https://www.baidu.com&quot;); // 最后才加载，此时字段都就绪
+}</code></pre>
+<p>关键纪律：<code>initFields</code> 必须早于 <code>initComponents</code>。如果在栈对象还没 <code>new</code> 出来之前就注册了一个会读写该栈的监听器，一旦提前触发（比如加载首页就触发了历史入栈），拿到的会是 <code>null</code>，抛 <code>NullPointerException</code>。最小版 <code>SimpleBrowser</code> 把 <code>historyList</code> 和 <code>currentIndex</code> 放在构造第一行初始化，也是同一考虑的另一种写法。</p>
+<hr />
+<h2>六、网络取页与字符集处理</h2>
+<p>浏览器的心脏是「把 URL 变成内容」。原料里有两条网络路径，分工不同：</p>
+<table>
+<tr><th>用途</th><th>用到的 API</th><th>读法</th><th>为什么这样选</th></tr>
+<tr><td>显示网页</td><td><code>JEditorPane.setPage(url)</code></td><td>组件内部自己连接、下载、渲染</td><td>一步到位，但要受组件能力限制（见第七节）</td></tr>
+<tr><td>另存为原文件</td><td><code>new URL(str).openStream()</code></td><td>字节流 <code>InputStream</code> 转存</td><td>保真，不做编码转换，存下来和服务器一致</td></tr>
+<tr><td>查看源码</td><td><code>URLConnection</code> / <code>HttpURLConnection</code></td><td>字符流 <code>BufferedReader</code> 按行读</td><td>要转成字符串显示，必须处理字符集</td></tr>
+</table>
+<h3>6.1 建立连接、伪装 UA、设超时</h3>
+<p>查看源码时用的是 <code>HttpURLConnection</code>，它比 <code>openStream()</code> 多几层控制：</p>
+<pre><code>HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+conn.setRequestProperty(&quot;User-Agent&quot;, &quot;Mozilla/5.0...&quot;);
+conn.setConnectTimeout(10000);
+conn.setReadTimeout(10000);
+BufferedReader reader = new BufferedReader(
+    new InputStreamReader(conn.getInputStream(), &quot;UTF-8&quot;)
+);
+StringBuilder sb = new StringBuilder();
+String line;
+while ((line = reader.readLine()) != null) {
+    sb.append(line).append(&quot;\n&quot;);
+}</code></pre>
+<ul><li><code>setRequestProperty(&quot;User-Agent&quot;, ...)</code>：把 Java 程序伪装成浏览器。部分网站会拒绝无 UA 的请求，不设这行会直接拿到错误页。</li><li><code>setConnectTimeout</code> / <code>setReadTimeout</code>：分别限制「建立连接」和「等待数据」的毫秒数。不设时，遇到连不上的服务器，请求会长时间挂着——如果这段跑在界面上，就是灾难（见第八节）。</li></ul>
+<h3>6.2 中文乱码的成因与修复</h3>
+<p><code>InputStreamReader</code> 把字节解码成字符，靠的是字符集。如果解码用的字符集和网页实际编码不一致，中文就成了乱码。而网页编码既可能是 UTF-8 也可能是 GBK，硬写死 <code>&quot;UTF-8&quot;</code> 并不保险。原料给出的稳妥做法是从响应的 <code>Content-Type</code> 里把 charset 抠出来：</p>
+<pre><code>URLConnection conn = new URL(url).openConnection();
+conn.setRequestProperty(&quot;User-Agent&quot;, &quot;Mozilla/5.0&quot;);
+
+String contentType = conn.getContentType();
+String charset = &quot;UTF-8&quot;; // 兜底默认
+if (contentType != null &amp;&amp; contentType.contains(&quot;charset=&quot;)) {
+    charset = contentType.substring(contentType.indexOf(&quot;charset=&quot;) + 8);
+}
+
+try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(conn.getInputStream(), charset))) {
+    // 逐行读取源码
+}</code></pre>
+<p>逻辑是：<code>getContentType()</code> 通常形如 <code>text/html; charset=UTF-8</code>，从 <code>charset=</code> 之后截出字符集名（<code>charset=</code> 本身长 8 个字符，所以偏移取 <code>+ 8</code>），再用这个字符集去构造 <code>InputStreamReader</code>。这也印证了《Java IO 流与多线程》里那条：<strong>转换流是解决中文乱码的关键手段</strong>，在这里就是 <code>InputStreamReader</code> 显式带上 charset。</p>
+<p>顺带一条真实的辨析经验：原料里有这样一个文件，用浏览器打开能看到满满中文，可在文本编辑器里几乎看不到几个汉字。一开始怀疑是编码问题，细查后发现它是 Typora 导出的 HTML，正文里只有样式和结构、中文极少，浏览器上看到的中文内容其实是<strong>脚本动态注入</strong>进去的。这条对浏览器项目是双重提醒：一是乱码不一定是 charset 的锅，得先分清是「解码错」还是「内容本就不在源码里」；二是这类靠 JS 填进去的内容，<code>JEditorPane</code> 同样抓不到，因为它的源码读取只拿到静态 HTML。</p>
+<hr />
+<h2>七、HTML 展示的能力边界</h2>
+<p>原料里反复出现一句大实话：<strong>很多现代网页显示不出来</strong>。这不是代码写错，而是 <code>JEditorPane</code> 本身的天花板。</p>
+<ul><li><code>JEditorPane</code> 只支持很老的 <strong>HTML 3.2</strong> 标准，对现代 CSS、<code>&lt;div&gt;</code> 布局、以及 JavaScript 基本无能为力；</li><li>它不执行脚本，所以靠 JS 动态渲染内容的页面（如上一条那种），在浏览器里能看、在这里只能看到空壳或样式错乱。</li></ul>
+<p>原料的应对不是硬啃渲染，而是<strong>工程上的取舍 + 用户提示</strong>：把 <code>setPage</code> 能显示的基础页面作为满足需求的主路径，同时给兼容性差的页面「增加用户提示」，明确告诉用户某些现代网页无法正常渲染。选型阶段还设想过「智能双引擎」——检测到现代网页就切到能跑 JS/CSS3 的第三方内核，但最后收敛成了<strong>只用内置引擎</strong>的单一路线，代码更稳、无第三方依赖：</p>
+<pre><code>private void loadWebPage(String url) {
+    try {
+        if (!url.startsWith(&quot;http&quot;)) {
+            url = &quot;http://&quot; + url; // 协议自动补全，用户常漏写
+        }
+        mainEditorPane.setPage(url); // 唯一引擎：内置 JEditorPane
+        addressBar.setText(url);
+    } catch (Exception e) {
+        // 加载失败时给一个可见的错误页，而不是崩溃
+        mainEditorPane.setText(&quot;&lt;html&gt;&lt;body&gt;&lt;h3&gt;网页加载失败&lt;/h3&gt;&lt;p&gt;错误信息：&quot;
+                + e.getMessage() + &quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;&quot;);
+    }
+}</code></pre>
+<p>复盘时对「技术沉淀」做过一次逐项核实，坦诚地把没真正落地的说法（比如某些声称的性能技巧）划掉，只保留有代码支撑的部分。这种「说了的要能对上代码」的自查，本身比堆功能更有价值，也是这条实战线最实在的一课。</p>
+<hr />
+<h2>八、前进 / 后退：两种数据结构</h2>
+<p>浏览器要有历史。原料先后给了两种实现，正好对比。</p>
+<p><strong>方案 A：列表 + 游标。</strong> 用一个 <code>List&lt;String&gt;</code> 存全部访问记录，一个 <code>currentIndex</code> 指向当前页。加载新页时，先把游标之后的记录全删掉（因为这些「未来页」在新分支下失效了），再追加、游标右移：</p>
+<pre><code>// 清除当前位置之后的历史
+while (historyList.size() &gt; currentIndex + 1) {
+    historyList.remove(historyList.size() - 1);
+}
+historyList.add(url);
+currentIndex++;</code></pre>
+<p>后退是 <code>currentIndex--</code>，前进是 <code>currentIndex++</code>，判界看 <code>&gt; 0</code> 与 <code>&lt; size()-1</code>。</p>
+<p><strong>方案 B：双栈。</strong> 一个后退栈 <code>backStack</code>、一个前进栈 <code>forwardStack</code>，加一个 <code>currentUrl</code>。访问新页时把当前页压入后退栈、清空前进栈；后退时把当前页压入前进栈、从后退栈弹出作为当前页；前进反之：</p>
+<pre><code>public void navigateTo(String newUrl) {
+    backStack.add(currentUrl);
+    forwardStack.clear();
+    currentUrl = newUrl;
+}
+
+public void goBack() {
+    if (!backStack.isEmpty()) {
+        forwardStack.push(currentUrl);
+        currentUrl = backStack.pop();
+        loadUrl(currentUrl);
+        updateNavigationButtons();
+    }
+}</code></pre>
+<table>
+<tr><th>维度</th><th>列表 + 游标</th><th>双栈</th></tr>
+<tr><td>结构</td><td>一个 <code>List</code> + 一个下标</td><td>两个 <code>Stack</code> + 当前 URL</td></tr>
+<tr><td>开新分支</td><td>手动删除游标之后的元素</td><td><code>forwardStack.clear()</code> 一步清</td></tr>
+<tr><td>前进后退</td><td>移动下标</td><td>两栈之间进出弹出</td></tr>
+<tr><td>边界判断</td><td>下标比较</td><td><code>isEmpty()</code></td></tr>
+</table>
+<p>两者的语义一致，双栈把「丢弃未来分支」这件事收敛成一次 <code>clear</code>，写起来更贴合「前进后退」这个动作直觉。配套还有一条状态联动：<strong>栈空时对应按钮置灰</strong>——<code>backStack</code> 为空就禁用后退按钮，由 <code>updateNavigationButtons()</code> / <code>updateButtonStates()</code> 统一维护。</p>
+<hr />
+<h2>九、后台线程与 EDT 纪律</h2>
+<p>这一节是整个项目最容易翻车的地方，也是最值得记的一条纪律：<strong>只有事件分发线程（EDT）能改 UI</strong>。Swing 的组件不是线程安全的，从别的线程直接动组件会出问题；反过来，耗时操作绝不能放在 EDT 上做，否则界面直接卡死。</p>
+<p>于是分工很清楚：</p>
+<table>
+<tr><th>线程</th><th>该做什么</th><th>不该做什么</th></tr>
+<tr><td>EDT（事件分发线程）</td><td>建界面、响应点击、更新组件文字/状态</td><td>发网络请求、读写大文件</td></tr>
+<tr><td>后台工作线程</td><td>下载网页、保存文件、递归抓资源等耗时活</td><td>直接调用组件的 setter 改界面</td></tr>
+</table>
+<p><code>SwingWorker</code> 正好把这两半缝起来：<code>doInBackground()</code> 在子线程跑耗时活，<code>done()</code> 完成后<strong>回到 EDT 执行</strong>，界面更新放这里就安全：</p>
+<pre><code>new SwingWorker&lt;Void, Void&gt;() {
+    @Override
+    protected Void doInBackground() {
+        loadWebPage(url);   // 网络请求在后台线程
+        return null;
+    }
+    @Override
+    protected void done() {
+        updateUI();         // UI 更新回到 EDT 线程
+    }
+}.execute();</code></pre>
+<p>这个骨架对，但要和第五节那个 <code>loadWebPage</code> 对读才能落地：该方法的体内直接写着 <code>mainEditorPane.setPage(url)</code> 与 <code>addressBar.setText(url)</code>，若原封不动地把它塞进 <code>doInBackground</code>，等于<strong>把 UI 更新搬到了后台线程</strong>，恰好违反本节立的纪律。正确的切法是把两件事拆开——<code>doInBackground</code> 只负责连接、读取，把 HTML 文本或 <code>Document</code> 存进字段（或用 <code>SwingWorker&lt;String, Void&gt;</code> 的返回值 / <code>publish</code> 传出来），<code>done()</code> 里才调用 <code>setPage</code>、<code>setText</code> 刷界面；另一条路是让 <code>setPage</code> 在 EDT 上发起、靠它自身的异步加载与 <code>propertyChange</code> 监听回报状态，界面代码全程不离开 EDT。原料当时的写法正是「搬了线程、没拆方法体」的中间状态，本文按纪律补上这一步。</p>
+<p>另存为这种写文件的活也照样包进 <code>SwingWorker</code>，避免「保存大页面时界面冻住」：</p>
+<pre><code>SwingWorker&lt;Void, Void&gt; worker = new SwingWorker&lt;Void, Void&gt;() {
+    @Override
+    protected Void doInBackground() throws Exception {
+        String content = editorPane.getText();
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(content);
+        }
+        return null;
+    }
+};
+worker.execute();</code></pre>
+<p>顺带一个编译层面的坑：匿名内部类后面那对尖括号必须写全类型实参。<code>new SwingWorker&lt;&gt;() {}</code> 这种「匿名类用菱形」要 JDK 9 起才允许，在 JDK 8 上直接编译不过；本例统一写成 <code>new SwingWorker&lt;Void, Void&gt;() {}</code>，八、九、十节的版本口径都能过。</p>
+<p>程序入口也有对应的纪律：整个 GUI 的创建要放进 <code>invokeLater</code>，让它跑在 EDT 上。这是所有 Swing 程序的起手式：</p>
+<pre><code>public static void main(String[] args) {
+    // Swing 组件必须在事件调度线程运行
+    SwingUtilities.invokeLater(() -&gt; {
+        new SimpleBrowser().setVisible(true);
+    });
+}</code></pre>
+<p>原料里对「IO / 网络操作阻塞 Swing 主线程导致界面卡死」这条风险是点名处理的，解法就是上面这套：耗时进子线程、更新回 EDT。至于 <code>wait</code>/<code>notify</code>、线程池调度这些线程 API 的原理，回看《Java IO 流与多线程》，此处不展开。</p>
+<hr />
+<h2>十、异常处理与资源释放</h2>
+<p>浏览器要对外部世界（网络、磁盘）频繁打交道，异常和流资源必须收尾好。</p>
+<ul><li><strong>流一律用 try-with-resources 自动关闭</strong>。另存为把网络输入流和本地输出流一起放进括号，读完自动释放：</li></ul>
+<pre><code>try (InputStream in = new URL(urlStr).openStream();
+     FileOutputStream out = new FileOutputStream(file)) {
+    byte[] buffer = new byte[1024];
+    int len;
+    while ((len = in.read(buffer)) != -1) {
+        out.write(buffer, 0, len);
+    }
+    JOptionPane.showMessageDialog(this, &quot;保存成功！&quot;);
+} catch (Exception ex) {
+    JOptionPane.showMessageDialog(this, &quot;保存失败：&quot; + ex.getMessage());
+}</code></pre>
+<ul><li><strong>异常兜住并可见</strong>。<code>loadPage</code> / <code>setPage</code> 失败时用 <code>JOptionPane.showMessageDialog</code> 弹提示，而不是让异常冲到控制台；加载失败还会渲染一个「网页加载失败」的提示页（见第七节代码）。</li><li><strong>资源边界</strong>。另存为用 <code>JFileChooser</code> 让用户选路径，取消就直接返回不写文件；文件名没带 <code>.html</code>/<code>.htm</code> 时自动补后缀。</li></ul>
+<p>关于「查看源码用的是输入流还是输出流」这个答辩高频追问，原料答得干净：显示源码<strong>用输入流</strong>（把网页内容从网络读进程序），保存源码<strong>用输出流</strong>（把内存里的字符串写到本地文件），一进一出配合；读取用 <code>BufferedReader</code> 包输入流提速，写出用 try-with-resources 自动关流。</p>
+<hr />
+<h2>十一、踩坑实录</h2>
+<p>把散落在开发过程中的真实问题归拢成一张对照表：</p>
+<table>
+<tr><th>现象</th><th>根因</th><th>处理</th></tr>
+<tr><td>两条工具栏只显示一条</td><td><code>BorderLayout</code> 同一区（都放 <code>NORTH</code>）后加的覆盖先加的</td><td>分开约束位，或用一个子面板纵向堆叠后再放</td></tr>
+<tr><td>中文网页显示成乱码</td><td><code>InputStreamReader</code> 解码字符集与网页实际编码不符</td><td>从 <code>getContentType()</code> 解析 charset，兜底 UTF-8</td></tr>
+<tr><td>「浏览器有中文、编辑器没有」</td><td>内容靠 JS 动态注入，静态源码本就少</td><td>认清这不是编码问题；<code>JEditorPane</code> 也拿不到这类内容</td></tr>
+<tr><td>现代网页空白 / 样式错乱</td><td><code>JEditorPane</code> 只支持 HTML 3.2，不跑 JS/CSS3</td><td>内置引擎能力边界，做用户提示；不谎称渲染成功</td></tr>
+<tr><td>点「转向」后界面卡死</td><td>网络请求跑在 EDT 上</td><td>放进 <code>SwingWorker.doInBackground</code>，<code>done</code> 回 EDT 更新</td></tr>
+<tr><td>启动即 <code>NullPointerException</code></td><td>监听器提前触发时成员变量还没建</td><td><code>initFields</code> 先于 <code>initComponents</code>，字段先于监听就绪</td></tr>
+<tr><td>关掉源码窗口整个程序退出</td><td>子窗关闭误用了 <code>System.exit(0)</code></td><td>子窗用 <code>dispose()</code>，主窗退出才用 <code>System.exit(0)</code></td></tr>
+<tr><td>某些网站返回错误页</td><td>无 <code>User-Agent</code> 被服务器拒绝</td><td><code>conn.setRequestProperty(&quot;User-Agent&quot;, ...)</code> 伪装浏览器</td></tr>
+</table>
+<hr />
+<h2>十二、工程化收尾</h2>
+<p><strong>打包与运行。</strong> 纯 Swing 项目对外无运行时依赖，打成 <code>.jar</code> 即可交付，别人下载即用。开发期 JDK 版本按原料建议选兼容性好的版本即可（原料提的是 JDK 1.8 / 11 / 17 一线，实测能跑就行）。源码读取里的 <code>Collectors.joining</code>、try-with-resources 这些语法要求较新的 JDK，注意别让运行环境低于编译环境。</p>
+<p><strong>目录与命名。</strong> 保持第 2.2 节的分包：<code>ui</code> 放界面、<code>history</code> 放双栈历史、<code>util</code> 放 <code>PageSaver</code>，一个类一个职责，答辩时能顺着一个功能讲出它经过哪几层。</p>
+<p><strong>演示与答辩要点。</strong> 原料整理出一套应对追问的口径，值得提炼成方法论：</p>
+<ul><li>讲加载：地址栏拿 URL → 补全 <code>http://</code> → 交给 <code>JEditorPane.setPage()</code> 渲染；</li><li>讲前进后退：双栈，出栈入栈配对，栈空置灰按钮；</li><li>讲另存为：<code>JFileChooser</code> 选路径 → <code>editorPane.getText()</code> 取内容 → <code>FileWriter</code> 写 → <code>SwingWorker</code> 后台跑防卡界面；</li><li>讲查看源码：<code>HttpURLConnection</code> + UA + 超时 → 字符集识别 → <code>BufferedReader</code> 逐行读 → 新窗口 <code>JTextArea</code> 显示 → 输出流保存。</li></ul>
+<p>被问到没做扎实的地方，与其含糊，不如像第十一节那样先承认边界（<code>JEditorPane</code> 就是渲染不了现代网页），再讲清楚做了哪些兜底与提示——诚实的能力边界陈述，比夸大更站得住。</p>
+<hr />
+<h2>十三、小结</h2>
+<p>一个简易浏览器，把 GUI 组件树、布局取舍、事件模型、网络连接、字符集、历史数据结构、线程纪律、资源收尾这八件事拧成了一根线。可以带走的核心结论：</p>
+<ol><li><strong>界面装配用 <code>BorderLayout</code> 分五区</strong>，记住同一区重复 <code>add</code> 只保留最后一个；</li><li><strong>事件模型是「源—事件—监听器」三件套</strong>，Lambda 只是注册糖，字段要在监听触发前就绪；</li><li><strong>网络取页三条路</strong>：显示走 <code>setPage</code>、保真走 <code>URL.openStream()</code> 字节流、源码走 <code>HttpURLConnection</code> 字符流并显式处理 charset；</li><li><strong><code>JEditorPane</code> 只认 HTML 3.2</strong>，现代网页渲染不出来是能力边界，用提示兜底而非谎称成功；</li><li><strong>只有 EDT 能改 UI</strong>：耗时进 <code>SwingWorker.doInBackground</code>，更新在 <code>done</code> 回 EDT，入口用 <code>SwingUtilities.invokeLater</code>；</li><li><strong>流用 try-with-resources、异常给可见提示、子窗用 <code>dispose</code></strong>。</li></ol>
+<p>流与线程的 API 细节见《Java IO 流与多线程》；若要走向真正的网页浏览，把内置渲染换成成熟内核是自然的下一步。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Java Swing 简易浏览器实现与课设汇报</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

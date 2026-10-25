@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAN 虚拟染色：方法路线、独特问题与浓度域先例</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:720px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);font-size:14px;background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:8px;padding:14px 18px;margin:14px 0;overflow-x:auto}.tagline{font-size:16px;color:var(--text2);border-left:3px solid var(--blue);padding-left:13px;margin:16px 0}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr}}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">H&amp;E→IHC · GAN research</div>
+<div class="sub">方法路线 · GAN 独特风险 · 浓度域先例<br>截至 2026-10-12 · 一手证据优先</div>
+<a class="l1" href="#s0">0 · 先给结论</a>
+<a class="l1" href="#s1">1 · 与既有资料库的分工</a>
+<a class="l1" href="#s2">2 · GAN 虚拟染色的主流路线</a>
+<a class="l2" href="#s21">2.1 配对 Pix2Pix</a>
+<a class="l2" href="#s22">2.2 非配对 CycleGAN / CUT</a>
+<a class="l2" href="#s23">2.3 弱配对 / 抗错位 RegGAN</a>
+<a class="l2" href="#s24">2.4 病理感知 GAN</a>
+<a class="l1" href="#s3">3 · 直接先例总表</a>
+<a class="l1" href="#s4">4 · 一条典型 GAN 训练路线</a>
+<a class="l1" href="#s5">5 · GAN 的独特问题</a>
+<a class="l2" href="#s51">5.1 对抗训练不稳定</a>
+<a class="l2" href="#s52">5.2 局部真实不等于病理真实</a>
+<a class="l2" href="#s53">5.3 Cycle loophole</a>
+<a class="l2" href="#s54">5.4 错位与错误监督</a>
+<a class="l2" href="#s55">5.5 模式崩溃与表达量偏置</a>
+<a class="l1" href="#s6">6 · 你的浓度域思路：GAN 中有没有</a>
+<a class="l2" href="#s61">6.1 已经有人做的部分</a>
+<a class="l2" href="#s62">6.2 仍然空着的部分</a>
+<a class="l2" href="#s63">6.3 三种接入方式</a>
+<a class="l1" href="#s7">7 · 可行性判定与推荐顺序</a>
+<a class="l1" href="#s8">8 · 可执行实验路线</a>
+<a class="l1" href="#s9">9 · 评价体系与失败判据</a>
+<a class="l1" href="#s10">10 · 证据边界与未核实清单</a>
+<a class="l1" href="#s11">11 · 参考文献与代码</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Research report · GAN virtual staining</div>
+<h1>GAN 模型做 H&amp;E→IHC 虚拟染色：方法路线、独特问题与浓度域先例</h1>
+<p class="desc">本报告回答三个问题：GAN 在 H&amp;E→IHC 里通常怎么做；GAN 相比扩散/确定性网络有哪些真正独特的风险；你提出的“在浓度域生成、再用 Beer–Lambert 渲染”的思路，在 GAN 中有没有先例、最稳妥的落点是什么。结论优先，逐条区分 [VERIFIED] 与 [UNVERIFIED]。</p>
+<div class="meta"><span>对象：H&amp;E→IHC / HER2 / 多 marker</span><span>生成框架：Pix2Pix · CycleGAN · CUT · RegGAN · pathology-aware GAN</span><span>浓度域：OD / DAB / Beer–Lambert</span><span>报告日期：2026-10-12</span><span>优先级：可复现 &gt; 可解释 &gt; 改动小</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论</h2>
+<div class="box key"><div class="bt">一句话总判定</div><p><b>GAN 仍然是 H&amp;E→IHC 中最强、最成熟、最容易做成 baseline 的生成家族；但它的强项是“快速拟合目标染色分布”，不是自动保证蛋白表达和细胞结构正确。</b> 你的浓度域思路在 GAN 中已经有“半套先例”：<b>RGB GAN + OD/FOD/DAB 浓度损失</b>已经被 PSPStain、CCPL、ProgASP 等采用；但“GAN 直接输出非负浓度图 + 可微 Beer–Lambert 解码器端到端训练”这一整套组合，本轮没有找到被一手论文和官方代码共同核实的传统 image GAN 先例。</p></div>
+<div class="box stop"><div class="bt">最重要的边界：不要把三件事混成一件事</div><ol><li><b>浓度作为损失：</b>RGB 输出后再做颜色解卷积/OD/DAB 提取，用于约束生成图。GAN 里已有，且最容易复用。</li><li><b>浓度作为生成空间：</b>网络直接预测 <code>C_H,C_DAB</code> 或更多浓度图。CFM-HES（flow matching）和 StainQuant/BL-AE（autoencoder）是相邻先例；传统 GAN 先例未核实。</li><li><b>浓度 + 可微物理渲染器：</b><code>C → Beer–Lambert → RGB</code>，再把 RGB 送进判别器。物理上成立、工程上可做，但需要重新处理可辨识性、错位监督和数值范围。</li></ol></div>
+<h3>逐模块判定</h3>
+<div class="scroll"><table><thead><tr><th>模块</th><th class="c">判定</th><th>依据</th><th class="c">改动成本</th><th class="c">可复现性</th></tr></thead><tbody>
+<tr><td>GAN 作为 H&amp;E→IHC 主干</td><td class="c"><span class="b high">成立</span></td><td>PSPStain、CCPL、PGVMS、UNIStainNet 等均有直接先例；HER2match 中 GAN 整体强于多数被比较的 diffusion 实现。</td><td class="c"><span class="b low">低–中</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td>Pix2Pix / Pyramid Pix2Pix</td><td class="c"><span class="b medium">有条件成立</span></td><td>需要可靠配对；错位增加后 pixel L1 会惩罚正确输出。RegGAN 的受控错位实验支持这一风险。</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td>CycleGAN / CUT 非配对翻译</td><td class="c"><span class="b medium">有条件成立</span></td><td>不依赖像素配对，但只靠边缘分布/循环或 patch 对比不能恢复 H&amp;E 中不存在的 marker 信息。</td><td class="c"><span class="b low">低</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td>病理语义/蛋白表达损失</td><td class="c"><span class="b high">成立</span></td><td>PSPStain PALS/PCLS、CCPL DCP/FD/NMCC、PGVMS PALS/PCLS 均提供直接路径；但损失能约束，不等于提供可辨识真值。</td><td class="c"><span class="b medium">中</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td>RGB GAN + DAB/OD/FOD loss</td><td class="c"><span class="b high">成立</span></td><td>本轮找到多个直接先例；这是当前最成熟的“浓度域进入 GAN”的方式。</td><td class="c"><span class="b low">低–中</span></td><td class="c"><span class="b high">高</span></td></tr>
+<tr><td>GAN 直接生成浓度图</td><td class="c"><span class="b medium">成立但要收窄</span></td><td>物理结构成立；相邻 flow/autoencoder 已做，但传统 image GAN 直接生成浓度的核实先例未找到。</td><td class="c"><span class="b medium">中–高</span></td><td class="c"><span class="b medium">中</span></td></tr>
+<tr><td>浓度图经可微 BL 解码器再进 RGB 判别器</td><td class="c"><span class="b medium">成立但要收窄</span></td><td>StainQuant/BL-AE 证明 decoder 可实现；CFM-HES 证明浓度生成 + BL 重建；但不能把它们写成 GAN 先例。</td><td class="c"><span class="b medium">中–高</span></td><td class="c"><span class="b medium">中–高</span></td></tr>
+<tr><td>用浓度域自动解决错位</td><td class="c"><span class="b bad">不成立</span></td><td>浓度变换改变表示，不会消除连续切片的空间错位；必须另用分布/块级/原型/形态约束。</td><td class="c"><span class="b low">—</span></td><td class="c"><span class="b high">高</span></td></tr>
+</tbody></table></div>
+<div class="box teal"><div class="bt">推荐路线</div><p><b>先做 RGB GAN + DAB/FOD 约束作为可复现 baseline；再做“RGB 输出 vs 浓度输出 + BL renderer”的单因素消融。</b> 不要第一步就把整个 GAN 改成物理浓度生成器。论文叙事应从“GAN 加浓度域所以更好”收窄成：“比较浓度监督与浓度生成两种位置，并测出它们对表达保真、结构保持和 hallucination 的不同影响”。</p></div>
+
+<h2 id="s1"><span class="num">1</span>与既有资料库的分工</h2>
+<p>资料库已经有浓度域/OD 域、PSPStain、蛋白表达约束、弱配准评价和扩散路线的报告。本报告不重做已有公式，而把问题切换为：<b>如果生成框架换成 GAN，哪些结论不变，哪些风险会改变，浓度思路在 GAN 流水线里放在哪一格。</b></p>
+<div class="scroll"><table><thead><tr><th>既有文档</th><th>它已经回答的问题</th><th>本报告的增量</th></tr></thead><tbody>
+<tr><td><code>浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</code></td><td>浓度/OD 在生成、损失、评价中的方法级位置；CFM-HES、StainQuant、可微 BL renderer。</td><td>把“浓度域”重新放回 GAN 流水线，区分 RGB GAN + OD loss 与浓度 GAN + BL renderer。</td></tr>
+<tr><td><code>扩散模型发展谱系_DDPM到2026_三次分水岭与四条支线.html</code></td><td>扩散/flow 的发展与 H&amp;E→IHC 上 GAN 的竞争位置。</td><td>不再把 diffusion 当默认主线，补齐 GAN 的直接先例与独特失败通道。</td></tr>
+<tr><td><code>扩散虚拟染色_结构保持机制_Condition注入与约束引导的机制比较.html</code></td><td>结构保持是条件、硬投影还是软约束；不同位置的保证边界。</td><td>把同一张位置地图映射到 GAN：判别器、cycle、PatchNCE、结构 loss、物理 loss 各自管什么。</td></tr>
+<tr><td><code>弱配准下蛋白表达保真_评价与训练路线调研.html</code></td><td>弱配准/非配对时的分布级、形态级和关系级评价。</td><td>给出 GAN 最小对照：Pix2Pix、CycleGAN、CUT、RegGAN，配准误差扫描和 marker-level 失败判据。</td></tr>
+<tr><td><code>Kang2025_渐进式HE2IHC_OD空间DAB浓度损失_精读.html</code></td><td>ProgASP 是 RGB GAN/PatchNCE 体系，OD/DAB 只在 loss 中出现。</td><td>把它作为“GAN 中浓度思路已被采用”的直接证据，同时明确它不是浓度域生成。</td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>GAN 虚拟染色的主流路线</h2>
+<p>最有用的组织方式不是按论文名字列清单，而是按<b>监督强度、生成器约束和损失挂载位置</b>分成四条路线。它们的输入输出看起来都像“HE→IHC”，但实际解决的问题不同。</p>
+<div class="flow"><pre><code>数据关系先分派
+│
+├─ 同片/高质量配对 ──► Pix2Pix / Pyramid Pix2Pix
+│                         pixel L1 + conditional PatchGAN
+│
+├─ 连续切片、弱配对 ──► Pyramid loss / ASP / RegGAN / pathology-aware GAN
+│                         分布 + 结构 + DAB/蛋白 + 弱对应
+│
+└─ 非配对 ───────────► CycleGAN / CUT / UNIT
+                          cycle 或 PatchNCE + 目标域判别
+
+然后决定浓度放哪一格
+│
+├─ 生成后提取 OD/DAB ─► 最成熟，改动小
+├─ 额外浓度 head ─────► 低风险中间方案
+└─ 直接生成 C + BL ───► 物理最干净，改动最大</code></pre></div>
+
+<h3 id="s21">2.1 配对 Pix2Pix：最简单，但最吃配准</h3>
+<div class="card"><div class="ch"><div><div class="title">Pix2Pix / Pyramid Pix2Pix</div><div class="v">Conditional GAN；PatchGAN 判别器；Pyramid Pix2Pix 是 BCI/H&amp;E→IHC 的经典 baseline</div></div><span class="b blue">paired</span></div><div class="body"><p><b>典型目标：</b><code>G(x_HE) → y_IHC</code>，判别器看 <code>(x_HE,y)</code> 或 <code>(x_HE,G(x))</code>；生成器同时优化 adversarial loss 与配对重建损失。</p><p><b>优点：</b>路线短、训练和评价简单；如果有同片重染或高质量配准，容易得到锐利、颜色真实的输出。HER2match 的比较中，Pyramid pix2pix、ASP、BCIstainer 等 GAN 作为强基线。</p><p><b>致命前提：</b>pixel-wise GT 必须代表相同位置。如果输入 HE 与 IHC 来自连续切片，细胞层面的偏移会把“正确输出”变成高 L1 损失。</p></div></div>
+<div class="box warn"><div class="bt">对你的任务的判定</div><p>如果你的数据是连续切片/弱配准，Pix2Pix 不能作为唯一主模型；它应作为“错位敏感的下限/对照组”。若人工恶化配准后它快速退化，而 RegGAN/CUT/PSPStain更稳，这个对照本身很有信息量。</p></div>
+
+<h3 id="s22">2.2 非配对 CycleGAN / CUT：绕开配对，但对应关系更不确定</h3>
+<div class="card"><div class="ch"><div><div class="title">CycleGAN / CUT / UNIT</div><div class="v">边缘分布对齐 + cycle consistency 或 PatchNCE</div></div><span class="b purple">unpaired</span></div><div class="body"><p><b>CycleGAN：</b>两个方向的生成器与两个判别器，配合 <code>F(G(x))≈x</code> 的循环一致性。它不需要配对，但目标是匹配边缘分布，不会自动决定某一张 HE 应该对应哪一张 IHC。</p><p><b>CUT：</b>用同一图像空间位置的 PatchNCE 替代反向生成器；更轻、更快，但 patch-level 保持并不等于 marker-level 保持。原始 CUT 实验中，最后一层-only 或外部 negative 的消融会明显恶化，说明该约束对实现细节敏感。</p><p><b>UNIT：</b>假设两个域共享 latent content。对 H&amp;E→IHC 而言，H&amp;E 中没有的 marker-specific information 不可能靠 shared latent 自动恢复。</p></div></div>
+<div class="box stop"><div class="bt">不能把 Cycle consistency 当成生物学真值</div><p>H&amp;E→IHC 不是天然双射：H&amp;E 里没有 HER2/DAB 的全部信息，IHC 也不包含 H&amp;E 的全部色素信息。强制近似可逆，可能导致网络通过微不可见的纹理/噪声隐藏信息，或者保留并改变不应保留的内容。CycleGAN 解决的是域分布与可逆性约束，不是“每个细胞的蛋白表达可辨识性”。</p></div>
+
+<h3 id="s23">2.3 弱配对 / 抗错位：RegGAN 与结构修正路线</h3>
+<div class="card"><div class="ch"><div><div class="title">RegGAN / loss correction</div><div class="v">把 misaligned target 当 noisy label；额外学习 deformation field</div></div><span class="b tealb">weakly paired</span></div><div class="body"><p>RegGAN 在生成器后增加 registration network，估计形变场，把生成结果 warp 后再与 noisy target 比较；同时用 deformation smoothness 和 adversarial loss 约束。它直接针对“目标图有错位”这个问题。</p><p>在原论文的合成 MRI 错位扫描中，Pix2Pix 的 NMAE 从 Noise.0 的 0.075 增到 Noise.5 的 0.181，而 RegGAN 为 0.071→0.072；Pix2Pix SSIM 0.85→0.74，RegGAN 0.86→0.85。<b>这组数字是 MRI，不是 H&amp;E→IHC，不能直接当成病理效果。</b></p><p>更重要的是，RegGAN 论文的 unpaired 结果被作者明确写成“不推荐”，所以它是弱配对修正器，不是非配对万能解。</p></div></div>
+
+<h3 id="s24">2.4 病理感知 GAN：把“像不像”拆成结构、表达和语义</h3>
+<div class="scroll"><table><thead><tr><th>工作</th><th>主干</th><th>核心额外机制</th><th>浓度/OD位置</th><th>本任务可迁移性</th></tr></thead><tbody>
+<tr><td><b>PSPStain</b><br>MICCAI 2024<br><a href="https://arxiv.org/abs/2407.03655">arXiv:2407.03655</a></td><td>CUT/ResNet-6 + PatchGAN</td><td>PALS：DAB FOD 的 global/block/histogram；PCLS：跨图像肿瘤 prototype</td><td>RGB 输出后，训练 loss + ImageJ OD 评价</td><td><span class="b high">直接相关</span>；当前最重要的 pathology-aware GAN baseline</td></tr>
+<tr><td><b>ProgASP</b><br>arXiv 2511.01698</td><td>GAN + PatchNCE 的渐进式管线</td><td>结构生成 → DAB 色彩增强 → cell-boundary refinement</td><td>RGB 输出后提取 DAB concentration；DAB-CF loss</td><td><span class="b high">直接相关</span>；浓度只在监督侧</td></tr>
+<tr><td><b>CCPL</b><br>arXiv 2506.07559</td><td>CUT/ResNet-6 + PatchGAN</td><td>DCP、Gigapath FD、NMCC 核–膜跨通道相关性</td><td>HED 解卷积 → H/D → OD/FOD 统计</td><td><span class="b medium">可迁移</span>；需复查论文表格内矛盾</td></tr>
+<tr><td><b>PGVMS</b><br>IEEE TMI 2026</td><td>CUT 派生 GAN + CONCH prompt</td><td>uniplex → unified multi-marker；PALS/PCLS；pathology foundation feature</td><td>DAB OD/FOD、IOD、Pearson-R；mostly uniplex supervision</td><td><span class="b high">多 marker 直接相关</span></td></tr>
+<tr><td><b>UNIStainNet</b><br>ACM BCB 2026</td><td>SPADE-UNet + UNI spatial tokens + multi-scale PatchGAN</td><td>edge/Sobel、foundation spatial features、marker embedding、feature matching</td><td>DAB intensity / p90 / KL；不是浓度生成器</td><td><span class="b high">现代强 baseline</span></td></tr>
+</tbody></table></div>
+
+<h2 id="s3"><span class="num">3</span>直接先例总表</h2>
+<p>下面只写本轮能从论文/官方代码中核实的内容。<b>“生成空间”与“损失空间”分开写</b>，这是判断你的浓度域思路有没有被做过的关键。</p>
+<div class="scroll"><table><thead><tr><th>工作</th><th>任务/数据</th><th>生成器与判别器</th><th>生成空间</th><th>浓度/OD/BL挂载位置</th><th>配对边界</th><th class="c">核实</th></tr></thead><tbody>
+<tr><td>PSPStain<br>MICCAI 2024<br><a href="https://github.com/ccitachi/PSPStain">code</a></td><td>H&amp;E→HER2；BCI/MIST-HER2</td><td>CUT-style ResNet-6 + PatchGAN</td><td>RGB IHC</td><td>DAB FOD：平均、block、histogram；PCLS prototype；OD evaluation</td><td>相关组织但非完美 pixel alignment</td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td>ProgASP<br>arXiv:2511.01698</td><td>H&amp;E→IHC；相邻切片</td><td>GAN + PatchNCE；渐进式三阶段</td><td>RGB IHC</td><td>DAB concentration / OD loss；无已核实 BL decoder</td><td>weak paired</td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td>CCPL<br>arXiv:2506.07559<br><a href="https://github.com/Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining">code</a></td><td>H&amp;E→HER2；BCI/MIST-HER2</td><td>CUT/ResNet-6 + PatchGAN</td><td>RGB IHC</td><td>HED→H/D→FOD；DCP/FD/NMCC</td><td>paired benchmark，但非 same-section</td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td>PGVMS<br>IEEE TMI 2026<br><a href="https://github.com/ccitachi/PGVMS">code</a></td><td>H&amp;E→HER2/ER/PR/Ki67；MIST/IHC4BC</td><td>CUT-derived GAN + PatchGAN + CONCH prompt</td><td>RGB IHC</td><td>DAB OD/FOD、IOD、Pearson-R；PALS/PCLS</td><td>mostly uniplex supervision；unified multi-marker inference</td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td>UNIStainNet<br>ACM BCB 2026<br><a href="https://github.com/facevoid/UNIStainNet">code</a></td><td>H&amp;E→4 marker；BCI/MIST</td><td>SPADE-UNet + UNI tokens + multi-scale PatchGAN</td><td>RGB IHC</td><td>DAB intensity/p90/KL；edge、feature matching、adversarial</td><td>consecutive-section benchmarks</td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td>HER2match<br>arXiv:2506.18484<br><a href="https://arxiv.org/abs/2506.18484">paper</a></td><td>H&amp;E→HER2；BCI/BCI-clean/HER2match</td><td>3 GAN vs 3 diffusion</td><td>RGB</td><td>主比较以 PSNR/SSIM/LPIPS/FID/KID 为主；未把 OD/FOD 作为中心指标</td><td>HER2match 是 same-section restain；BCI 是 consecutive-section</td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td>CFM-HES<br><a href="https://github.com/MedSalimBenOmrane/CFM-HES">code</a></td><td>H&amp;E→HES；生成缺失 saffron</td><td>conditional flow matching + U-Net</td><td><b>浓度域</b>：生成 S concentration</td><td>Beer–Lambert reconstruction；官方训练路径中重建函数用于可视化，带 no_grad</td><td>filename-paired HE/HES</td><td class="c"><span class="b high">V</span></td></tr>
+<tr><td>StainQuant / BL-AE<br>arXiv:2601.11336</td><td>多重 IHC 解混</td><td>autoencoder；含 channel-drop adversary，但非 conventional image GAN</td><td><b>浓度域</b>：非负 C</td><td><b>可微 Beer–Lambert decoder</b>：C→OD→RGB</td><td>single-image unsupervised</td><td class="c"><span class="b high">V</span></td></tr>
+</tbody></table></div>
+<div class="box good"><div class="bt">最精确的文献回答</div><p>“GAN + 浓度域”不能简单回答成“没有”。准确答案是：<b>GAN 中已经大量采用浓度/OD 作为 loss 和评价；但传统 image GAN 直接生成浓度图、再由可微 Beer–Lambert renderer 生成 RGB 的完整闭环，本轮没有找到已核实先例。</b> 这使你的方向有空间，但创新点不能只写“用了浓度”，而要写清楚是<strong>浓度挂在生成空间还是监督空间</strong>。</p></div>
+
+<h2 id="s4"><span class="num">4</span>一条典型 GAN 训练路线</h2>
+<h3>4.1 如果按当前最稳的 RGB GAN 路线</h3>
+<div class="flow"><pre><code>H&amp;E RGB x
+  │
+  ├─ optional: H/E color deconvolution, edge, nuclei/structure features
+  │
+  ▼
+Generator G(x) ───────────────► fake IHC RGB ŷ
+  │                                  │
+  │                                  ├─ Discriminator D(ŷ) / D(x,ŷ)
+  │                                  │      └─ adversarial realism
+  │                                  │
+  │                                  ├─ RGB / perceptual / SSIM / pyramid loss
+  │                                  │
+  │                                  ├─ RGB → OD → DAB → FOD
+  │                                  │      └─ protein-expression distribution loss
+  │                                  │
+  │                                  ├─ frozen pathology encoder / segmentation U-Net
+  │                                  │      └─ prototype / semantic / feature loss
+  │                                  │
+  │                                  └─ H&amp;E edge ↔ fake IHC edge
+  │                                         └─ structure-preserving loss
+  ▼
+L_total = L_adv + λ_rgb L_rgb + λ_DAB L_DAB
+        + λ_struct L_struct + λ_sem L_sem
+
+注意：这些 loss 都作用在 fake RGB 或其派生量上；这还不是“浓度域生成”。</code></pre></div>
+<h3>4.2 如果按你的物理生成路线</h3>
+<div class="flow"><pre><code>H&amp;E RGB x
+  │
+  ▼
+G_C(x) ─────► nonnegative concentration maps C_H, C_DAB
+  │                         │
+  │                         ▼
+  │                  OD = M_IHC · C
+  │                         │
+  │                         ▼
+  │                  ŷ = I₀ · exp(-OD)
+  │                         │
+  ├──────────────► RGB discriminator D(ŷ)
+  ├──────────────► RGB/perceptual loss (若配对可信)
+  ├──────────────► DAB concentration / expression loss
+  ├──────────────► concentration sparsity/range/consistency
+  └──────────────► H concentration / structure anchor
+
+这是“浓度域生成 + RGB 域判别”。
+它的优势是表示可解释；它的风险是 C 与 M 的可辨识性、错位监督和 OD 数值范围。</code></pre></div>
+<h3>4.3 GAN 判别器到底在管什么</h3>
+<div class="scroll"><table><thead><tr><th>组件</th><th>它能约束的东西</th><th>它不能保证的东西</th><th>本任务风险</th></tr></thead><tbody>
+<tr><td>PatchGAN</td><td>局部染色纹理、局部颜色统计、patch realism</td><td>每个细胞是否应该阳性、全局 marker 分布是否正确</td><td>局部“棕色看起来对”可能覆盖错误的细胞位置</td></tr>
+<tr><td>Conditional D(x,y)</td><td>条件与输出的局部联合分布</td><td>连续切片像素是否真的对应</td><td>错位 pair 会被当作监督真值</td></tr>
+<tr><td>Multi-scale D</td><td>同时关注局部和较大尺度</td><td>生物学身份、临床表达等级</td><td>尺度增加不等于表达可辨识</td></tr>
+<tr><td>Cycle loss</td><td>近似可逆、输入信息不完全丢失</td><td>H&amp;E 中缺失的 DAB 信息</td><td>可能通过隐蔽纹理携带信息、制造假可逆性</td></tr>
+<tr><td>PatchNCE</td><td>同位置局部特征的一致性</td><td>marker-level 的长程/细胞级真实性</td><td>容易把“纹理对应”误当作“蛋白对应”</td></tr>
+<tr><td>OD/FOD loss</td><td>染色强度/分布代理、DAB 统计</td><td>真正的 assay-calibrated protein concentration</td><td>矩阵误差、配准误差、FOD 设计会改变梯度</td></tr>
+</tbody></table></div>
+
+<h2 id="s5"><span class="num">5</span>GAN 的独特问题</h2>
+<p>需要区分两类问题：<b>GAN 特有的优化/判别器问题</b>，以及所有 H&amp;E→IHC 生成模型都共有的“信息不可辨识、错位、幻觉”问题。把后者都归咎于 GAN，会让问题诊断失真。</p>
+<h3 id="s51">5.1 对抗训练不稳定：判别器可能先赢，生成器可能学 shortcut</h3>
+<div class="box warn"><div class="bt">GAN 特有的因果链</div><p><code>D</code> 先学会区分真实/生成 → <code>G</code> 收到的梯度变得稀疏或极端 → 训练依赖学习率、归一化、D/G 更新比、Patch 尺寸、loss 权重 → 不同 epoch 的图像可能都“看起来像”，但 marker-level 统计差异很大。</p><p>“Seeing is Believing” 对染色转移的受控结果显示，仅更换 normalization layer，就可能让下游分割 F1 从 <b>0.684 降到 0.002</b>；这不是 H&amp;E→IHC 的直接结果，但直接说明“视觉合理”与“下游病理正确”可脱钩。</p></div>
+<ul><li><b>模式崩溃：</b>生成器只覆盖目标染色分布中的少数典型模式，强阳性/弱阳性/阴性区域被压向均值。</li><li><b>判别器 shortcut：</b>判别器利用 scanner、背景、边缘、patch 采样差异，而不是染色真实性；训练损失下降但跨医院失效。</li><li><b>局部判别偏置：</b>PatchGAN 对局部纹理很敏感，却没有细胞级 marker 语义。</li><li><b>损失竞争：</b>DAB loss 推动颜色/表达，adversarial loss 推动目标域真实，pixel/structure loss 又可能推动平滑；最终哪一项占主导取决于梯度尺度。</li></ul>
+<h3 id="s52">5.2 局部真实不等于病理真实</h3>
+<p>PatchGAN 的判别单位是局部 patch。它可以识别“这个区域的棕色纹理像 IHC”，但不一定知道：</p>
+<div class="grid2"><div class="mini"><div class="mt">它可能做对的</div><p>膜染色的局部色调、核/胞浆纹理、DAB 的局部对比度、目标域的 patch 统计。</p></div><div class="mini"><div class="mt">它可能做错的</div><p>哪一个细胞应该阳性、阳性是否位于膜而不是胞浆、HER2 强度等级、空间共定位和稀有结构。</p></div></div>
+<p>AQuA 的结果进一步说明：真实感强的生成图可以出现缺失细胞、幻觉细胞或错误染色，而 MSE、PCC、PSNR 等常规指标可能无法分离好坏样本。<b>因此判别器不是 hallucination detector。</b></p>
+<h3 id="s53">5.3 Cycle loophole：循环一致性可能制造“隐式通道”</h3>
+<p>CycleGAN 的循环约束是 <code>F(G(x))≈x</code>。当 H&amp;E→IHC 不是双射时，模型有三种可能：</p>
+<ol><li>保留真实组织结构，同时接受 marker 信息不可完全确定；</li><li>在输出中藏入人眼难见的高频/颜色信息，让反向网络恢复输入；</li><li>改变/编造局部结构，使映射更容易可逆。</li></ol>
+<p>前两种在普通视觉指标上未必明显，第三种对细胞级虚拟染色是危险的。RegGAN 的错位消融还发现，Cycle consistency 在其设定下可能起负作用；不能默认“加 cycle 就更稳”。</p>
+<h3 id="s54">5.4 错位与错误监督：GAN 不会自动识别 GT 是坏的</h3>
+<div class="formula">weakly misregistered pair → pixel loss sees wrong correspondence → generator receives wrong local gradient → output blur / shift / average / wrong-cell staining</div>
+<p>这个问题不是 GAN 专属，但 Pix2Pix 的配对 L1 会把它放大。RegGAN 的 registration network 可以减轻它，却带来新的风险：形变网络可能把生成器错误“藏”在 warp 里。必须限制位移场范围、加 smoothness、记录形变统计，并用独立结构指标检查“生成前”而不是只检查“配准后”。</p>
+<h3 id="s55">5.5 模式崩溃与表达量偏置</h3>
+<p>H&amp;E→IHC 的目标分布通常有阴性、弱阳性、中阳性、强阳性和不同组织背景。GAN 可能更容易覆盖“对判别器最有利”的主流颜色分布，表现为：</p>
+<div class="scroll"><table><thead><tr><th>现象</th><th>表面表现</th><th>应测的真正指标</th></tr></thead><tbody>
+<tr><td>强度均值回归</td><td>图片很稳定、颜色平均、PSNR 可能不错</td><td>按样本/病例的 IOD、DAB p90、Pearson-R、表达等级混淆矩阵</td></tr>
+<tr><td>阳性率偏置</td><td>整体 FID 变好</td><td>marker-positive cell precision/recall、false-positive / false-negative cell rate</td></tr>
+<tr><td>小结构消失</td><td>局部纹理平滑、SSIM 甚至提高</td><td>nuclei/membrane instance preservation、cell centroid displacement</td></tr>
+<tr><td>少数组织失败</td><td>全图平均不错</td><td>按 tumor / adipose / necrosis / background 分层，报告最差分位数</td></tr>
+</tbody></table></div>
+
+<h2 id="s6"><span class="num">6</span>你的浓度域思路：GAN 中有没有</h2>
+<h3 id="s61">6.1 已经有人做的部分：浓度/OD 作为监督</h3>
+<div class="box good"><div class="bt">已被直接占用的格子</div><p><b>RGB GAN 输出 → HED/OD/DAB 提取 → 浓度或 FOD loss。</b></p><ul><li><b>PSPStain：</b>生成 RGB IHC，再通过 DAB FOD 的 global/block/histogram 约束蛋白表达分布；PCLS 用跨图像 prototype 避开像素级对应。</li><li><b>CCPL：</b>RGB GAN/CUT 输出经 HED 分解，计算 H/D 的 FOD 统计；再加入 foundation feature distillation 与 nucleus–membrane correlation。</li><li><b>ProgASP：</b>RGB 生成后提取 DAB concentration，在 DAB-CF loss 中比较真实/生成 DAB；它明确把 DAB 当作目标蛋白表达代理，但生成空间仍是 RGB。</li><li><b>PGVMS：</b>RGB GAN + PALS/PCLS，扩展到 HER2/ER/PR/Ki67 unified inference；mostly uniplex supervision，不应写成 fully multiplex ground truth。</li><li><b>UNIStainNet：</b>RGB adversarial model，加入 DAB intensity/p90/KL 与结构/feature losses；仍不是浓度生成器。</li></ul></div>
+<h3 id="s62">6.2 仍然空着的部分：浓度作为生成变量</h3>
+<p>本轮能核实的相邻先例是：</p>
+<div class="scroll"><table><thead><tr><th>先例</th><th>它真的做了什么</th><th>为什么不是 GAN 先例</th><th>对你的价值</th></tr></thead><tbody>
+<tr><td><b>CFM-HES</b></td><td>颜色解混 → H/E/S concentration；conditional flow matching 生成 saffron concentration；Beer–Lambert 重建 HES。</td><td>生成框架是 flow matching，不是 conventional image GAN；官方训练路径中 renderer 主要用于可视化。</td><td>最接近“生成浓度再渲染”的任务级先例；可用于论证物理路线成立。</td></tr>
+<tr><td><b>StainQuant / BL-AE</b></td><td>encoder 输出非负浓度图；decoder 做 <code>OD=ΣC_kB_k</code>、<code>RGB=exp(-OD)</code>；端到端可微。</td><td>核心是 autoencoder；含 channel-drop adversary，但不是标准 real/fake image discriminator。</td><td>最直接的 BL decoder 工程参考；不应写成 GAN 已做。</td></tr>
+<tr><td><b>GAN + RGB→OD</b></td><td>生成器仍输出 RGB，OD/DAB 只在 loss/evaluation 侧出现。</td><td>浓度不是 generator state，也不是物理 renderer 的输入。</td><td>最稳妥的第一阶段 baseline；可以直接复用。</td></tr>
+</tbody></table></div>
+<div class="box stop"><div class="bt">不能写成的强结论</div><p>不能写：“已有 GAN 在浓度域生成 IHC，并用 Beer–Lambert 反演回 RGB。”本轮证据不支持这句话。准确写法是：“已有 GAN 将 DAB/OD/FOD 作为 RGB 生成的辅助监督；浓度域生成 + Beer–Lambert 重建已有 flow matching 和 autoencoder 先例，但传统 image GAN 的完整闭环尚未被本轮核实。”</p></div>
+<h3 id="s63">6.3 三种接入方式</h3>
+<div class="grid3"><div class="mini"><div class="mt">方案 A · RGB GAN + DAB/FOD loss</div><p><b>优先级：1</b></p><p>保持现有生成器，只在输出端加入固定矩阵的 DAB/FOD；成本最低、直接对应 PSPStain/CCPL/ProgASP。</p><p>短板：浓度只是派生量，物理解释弱；若解卷积矩阵不准，梯度也不准。</p></div><div class="mini"><div class="mt">方案 B · RGB + concentration auxiliary head</div><p><b>优先级：2</b></p><p><code>G(x)→RGB, C_DAB</code> 双头；加 <code>C_pred≈Deconv(RGB)</code> 一致性和非负/稀疏约束。</p><p>短板：C 可能只是 feature map，需要验证是否可重建、是否跨样本稳定。</p></div><div class="mini"><div class="mt">方案 C · concentration GAN + BL renderer</div><p><b>优先级：3</b></p><p><code>G_C(x)→C≥0→BL→RGB</code>；判别器看渲染 RGB，表达 loss 看 C/DAB。</p><p>短板：改动最大；要处理 M、I₀、错位、C 与 basis 的可辨识性以及浓度范围。</p></div></div>
+<div class="box teal"><div class="bt">我对你的思路的最终判断</div><p><b>“浓度域作为 GAN 的生成空间”是成立但要收窄；“浓度域作为 GAN 的监督空间”已经成立且容易复现。</b> 如果你的目标是尽快得到能跑、能比较、能定位问题的结果，先从 A 做；如果你的目标是形成物理方法学创新，再把 C 做成严格的第二阶段，并以 A 作为同主干、同数据、同评价的对照。</p></div>
+
+<h2 id="s7"><span class="num">7</span>可行性判定与推荐顺序</h2>
+<h3>7.1 推荐的 baseline 梯度</h3>
+<div class="scroll"><table><thead><tr><th>阶段</th><th>模型</th><th>只改变什么</th><th>主要回答的问题</th><th>改动成本</th><th>可复现性</th></tr></thead><tbody>
+<tr><td>G0</td><td>Pyramid Pix2Pix</td><td>不加物理 loss</td><td>配对监督与错位的基础敏感性</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>G1</td><td>CycleGAN / CUT</td><td>配对 → 非配对机制</td><td>去掉 pixel GT 后，结构和表达如何变化</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>G2</td><td>PSPStain-like</td><td>加入 DAB/FOD + prototype</td><td>蛋白表达监督是否优于单纯图像 realism</td><td><span class="b medium">中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>G3</td><td>G2 + concentration auxiliary head</td><td>增加可解释 C 分支，不改 RGB 主输出</td><td>浓度表示能否在低风险下稳定学习</td><td><span class="b medium">中</span></td><td><span class="b medium">中–高</span></td></tr>
+<tr><td>G4</td><td>Concentration GAN + BL</td><td>RGB generator → C generator + renderer</td><td>“浓度生成”是否比“浓度监督”更有收益</td><td><span class="b bad">高</span></td><td><span class="b medium">中</span></td></tr>
+</tbody></table></div>
+<h3>7.2 不建议现在做的三件事</h3><div class="box stop"><ol><li><b>不要直接把 GAN 改成“浓度图输出”后就宣称物理可解释。</b> 先验证 C 的闭环重建、矩阵列序、负值比例和跨病例稳定性。</li><li><b>不要同时更换 generator、loss、数据配对范式和评价指标。</b> 否则即使效果变好，也不知道收益来自 GAN、浓度、配准还是评价偏差。</li><li><b>不要用 PSNR/SSIM/FID 单独决定路线。</b> HER2match、PSPStain、CCPL 与病理评价都显示不同指标会给出不同排序；蛋白/细胞级指标必须进入主表。</li></ol></div>
+
+<h2 id="s8"><span class="num">8</span>可执行实验路线</h2>
+<h3>8.1 Stage 0：零训练门禁</h3>
+<div class="scroll"><table><thead><tr><th>检查</th><th>操作</th><th>通过标准</th><th>不通过的行动</th></tr></thead><tbody>
+<tr><td>矩阵与通道顺序</td><td>分别确认 HE 的 [H,E]、IHC 的 [H,DAB] 列顺序；用合成浓度生成 RGB，再解混回去。</td><td>闭环 MAE 接近机器精度；2 列矩阵不被错误补成 3 列。</td><td>停止训练；先修矩阵/transpose/归一化。</td></tr>
+<tr><td>浓度范围</td><td>统计真实 IHC 的 C_H/C_DAB、OD、背景和极端分位数。</td><td>训练 clamp 覆盖真实 0.1–99.9% 分位，且被 clamp 像素比例可解释。</td><td>改数据变换/输出参数化，不要盲目放大 clamp。</td></tr>
+<tr><td>错位签名</td><td>计算块级、像素级、edge cross-correlation；人工平移 0–24 px。</td><td>确认哪些指标对错位敏感，哪些可用于主监督。</td><td>减少 pixel L1 权重，转向 block/prototype/distribution。</td></tr>
+<tr><td>表达可辨识性</td><td>按病例测真实/预测 DAB IOD、p90、阳性率和分级。</td><td>至少能证明模型不是输出数据集均值。</td><td>加入样本级 ranking/distribution loss；检查 condition 泄漏。</td></tr>
+</tbody></table></div>
+<h3>8.2 Stage 1：GAN 单因素对照</h3>
+<div class="flow"><pre><code>同一数据、同一 crop、同一 split、同一训练预算、3 个 seed
+
+A  Pyramid Pix2Pix      + pixel L1 + PatchGAN
+B  CUT / CycleGAN       + PatchNCE / cycle
+C  RegGAN                + learned registration correction
+D  PSPStain-like         + DAB/FOD + prototype
+
+主指标：
+1. marker cell precision / recall / F1
+2. false-positive / false-negative cell rate
+3. DAB IOD / p90 / Pearson-R / rank correlation
+4. structure preservation / centroid displacement
+5. FID / LPIPS / SSIM / PSNR（只作辅表）
+6. AQuA-style hallucination flag / artifact reject rate</code></pre></div>
+<h3>8.3 Stage 2：浓度放置位置消融</h3>
+<div class="scroll"><table><thead><tr><th>实验</th><th>生成器</th><th>浓度位置</th><th>必须保持不变</th><th>验证问题</th></tr></thead><tbody>
+<tr><td>C0</td><td>RGB GAN</td><td>无</td><td>数据/判别器/训练预算</td><td>纯 GAN 基线</td></tr>
+<tr><td>C1</td><td>RGB GAN</td><td>DAB/FOD loss</td><td>同 C0</td><td>浓度监督是否有效</td></tr>
+<tr><td>C2</td><td>RGB GAN</td><td>DAB/FOD + prototype</td><td>同 C0</td><td>表达与错位是否同时改善</td></tr>
+<tr><td>C3</td><td>双头 RGB+C</td><td>C 一致性 + DAB loss</td><td>RGB 主头和 D 固定</td><td>可解释 C 是否稳定</td></tr>
+<tr><td>C4</td><td>Concentration GAN</td><td>C → BL → RGB</td><td>数据/评价/判别器尽量同 C3</td><td>生成空间变化本身是否有收益</td></tr>
+</tbody></table></div>
+<h3>8.4 失败判据与止损</h3>
+<ul><li>若 C4 的 RGB realism 提高但 cell-level false-positive 增加：<b>浓度 renderer 没有带来生物学正确性，退回 C3。</b></li><li>若 C4 的 C 只在训练集可重建、跨病例失效：<b>basis/C 不可辨识，暂不写“物理浓度解释”。</b></li><li>若加入 DAB loss 后 Pearson-R 变好但生成结果趋向全局平均：<b>检查样本级排序与阳性率，禁止只报均值。</b></li><li>若 Pix2Pix 在人工错位后快速退化、CUT/PSPStain 稳定：<b>结论写成“监督位置比 GAN 名字更关键”，不是简单写“GAN 不行”。</b></li><li>若不同 seed/epoch 的病理指标波动大：<b>增加 checkpoint-level 评估并记录最佳/最差分位数，不只报最后一个 epoch。</b></li></ul>
+
+<h2 id="s9"><span class="num">9</span>评价体系与失败判据</h2>
+<div class="box key"><div class="bt">评价金字塔</div><p><b>第一层：分布真实</b>（FID/KID/LPIPS）；<b>第二层：颜色/浓度</b>（DAB IOD、mIOD、p90、FOD histogram、Pearson-R）；<b>第三层：结构/细胞</b>（nuclei/membrane preservation、centroid displacement、edge correlation）；<b>第四层：生物学/临床</b>（marker-positive cell precision/recall、病理分级一致、下游真实 IHC 任务）；<b>第五层：安全</b>（hallucinated-positive、missing-positive、AQuA-style reject）。单一指标不能跨层替代。</p></div>
+<div class="scroll"><table><thead><tr><th>评价维度</th><th>推荐指标</th><th>不能替代什么</th><th>必须分层</th></tr></thead><tbody>
+<tr><td>视觉分布</td><td>FID/KID/LPIPS、病理 foundation feature distance</td><td>不能替代细胞位置和蛋白表达</td><td>marker、组织类型、site</td></tr>
+<tr><td>蛋白表达</td><td>IOD/mIOD、DAB p90、FOD histogram、Pearson-R、rank correlation</td><td>不能替代细胞级定位</td><td>病例、强度等级、阳性/阴性</td></tr>
+<tr><td>结构</td><td>edge correlation、nuclei/membrane DICE、centroid displacement、cell count bias</td><td>不能证明 marker 真值</td><td>tumor / adipose / necrosis / background</td></tr>
+<tr><td>临床语义</td><td>HER2 0/1+/2+/3+ 或 biomarker-specific score；下游 classifier 在真实 IHC 上测试</td><td>不能只用 raw accuracy；标签存在病理医师不一致</td><td>assay、clone、癌种、指南版本</td></tr>
+<tr><td>安全</td><td>hallucination/missing cell rate、AQuA-like detection、reject coverage</td><td>不能被 PSNR/FID 替代</td><td>难例、稀有结构、外部 site</td></tr>
+</tbody></table></div>
+<p class="tagline">最小可接受结论不是“图像更像”，而是：在外部病例/组织类型上，生成图没有增加假阳性/假阴性 marker 细胞，并且 DAB 表达排序和结构指标不低于 RGB GAN baseline。</p>
+
+<h2 id="s10"><span class="num">10</span>证据边界与未核实清单</h2>
+<div class="box warn"><div class="bt">本轮已核实的范围</div><ul><li>PSPStain、CCPL、ProgASP、PGVMS、UNIStainNet 的 GAN/RGB/OD-FOD 关系，来自论文/官方代码或库内已核实报告。</li><li>HER2match 的 GAN-vs-diffusion 比较边界：GAN 在该比较中整体强，但不能外推为整个领域的普遍定律。</li><li>RegGAN 的错位机制与受控数字来自原论文；数字对应 MRI，不是 H&amp;E→IHC。</li><li>CFM-HES 的浓度生成 + Beer–Lambert 重建来自官方仓库；它不是 GAN。</li><li>StainQuant/BL-AE 的浓度 encoder + 可微 BL decoder 来自官方仓库；它不是 conventional image GAN。</li></ul></div>
+<div class="box stop"><div class="bt">不要当作已证事实引用的事项</div><ul><li><b>“传统 GAN 已经在浓度域直接生成 IHC。”</b> 本轮没有找到可核实先例。</li><li><b>“GAN 普遍优于 diffusion。”</b> HER2match 只支持其测试设置下的窄结论。</li><li><b>“DAB concentration loss 就是真实蛋白浓度监督。”</b> 它通常是从 RGB/OD/矩阵反演出的 proxy，受染色矩阵、协议、I₀ 和错位影响。</li><li><b>“MIST/BCI 是同片细胞级真值。”</b> 主要是连续切片；HER2match 的 same-section HER2 数据是更强但更窄的例外。</li><li><b>MCCL 的完整 GAN/浓度机制。</b> 本轮因全文/代码不可得，只能确认题录和摘要级多通道相关学习，不能补写具体实现。</li><li><b>任何仓库已在当前环境成功复现。</b> 本轮做了代码/README核查，但没有在本机执行完整训练。</li></ul></div>
+<h3>方法论上的阴性结论</h3><ol><li>GAN 的 adversarial realism 不能代替 protein-expression constraint。</li><li>Cycle consistency 不能代替实例级对应，也不能让缺失的 marker information 变得可辨识。</li><li>浓度空间改变表示，但不会自动消除连续切片错位。</li><li>加一个 registration network 可能减少错位损失，但也可能把生成错误藏进形变场。</li><li>颜色/OD损失有效，并不等于“生成空间改成浓度”有效；两者必须做受控消融。</li></ol>
+
+<h2 id="s11"><span class="num">11</span>参考文献与代码</h2>
+<div class="scroll"><table><thead><tr><th>工作</th><th>题录</th><th>链接</th><th>本报告用途</th></tr></thead><tbody>
+<tr><td>Pix2Pix</td><td>Isola et al., <i>Image-to-Image Translation with Conditional Adversarial Networks</i>, CVPR 2017, DOI 10.1109/CVPR.2017.632</td><td><a href="https://arxiv.org/abs/1611.07004">arXiv</a></td><td>配对 GAN 基础</td></tr>
+<tr><td>CycleGAN</td><td>Zhu et al., <i>Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks</i>, ICCV 2017</td><td><a href="https://arxiv.org/abs/1703.10593">arXiv</a></td><td>非配对与 cycle loophole</td></tr>
+<tr><td>CUT</td><td>Park et al., <i>Contrastive Learning for Unpaired Image-to-Image Translation</i>, ECCV 2020</td><td><a href="https://arxiv.org/abs/2007.15651">arXiv</a></td><td>PatchNCE 路线</td></tr>
+<tr><td>RegGAN</td><td>Fan et al., <i>Breaking the Dilemma of Medical Image-to-image Translation</i>, NeurIPS 2021</td><td><a href="https://arxiv.org/abs/2110.06465">arXiv</a></td><td>抗错位 GAN；数字来自 MRI</td></tr>
+<tr><td>Seeing is Believing</td><td>Vasiljević et al., <i>CycleGAN for virtual stain transfer: Is seeing really believing?</i>, AI in Medicine 2022, DOI 10.1016/j.artmed.2022.102420</td><td><a href="https://www.sciencedirect.com/science/article/pii/S0933365722001725">publisher</a></td><td>视觉合理与下游正确脱钩</td></tr>
+<tr><td>PSPStain</td><td>Chen et al., <i>Pathological Semantics-Preserving Learning for H&amp;E-to-IHC Virtual Staining</i>, MICCAI 2024, DOI 10.1007/978-3-031-72083-3_36</td><td><a href="https://arxiv.org/abs/2407.03655">paper</a> · <a href="https://github.com/ccitachi/PSPStain">code</a></td><td>GAN + DAB/FOD + prototype</td></tr>
+<tr><td>HER2match</td><td><i>GANs vs. Diffusion Models for virtual staining with the HER2match dataset</i>, Springer LNCS 2025, DOI 10.1007/978-3-032-05472-2_12</td><td><a href="https://arxiv.org/abs/2506.18484">paper</a></td><td>GAN/diffusion 窄范围比较</td></tr>
+<tr><td>CCPL</td><td><i>Cross-channel Perception Learning for H&amp;E-to-IHC Virtual Staining</i>, arXiv 2506.07559 / ICME 2025</td><td><a href="https://arxiv.org/abs/2506.07559">paper</a> · <a href="https://github.com/Freddie1946/Cross-channel-Perception-Learning-for-H-E-to-IHC-Virtual-Staining">code</a></td><td>H/D FOD + cross-channel</td></tr>
+<tr><td>ProgASP</td><td>Kang et al., <i>Progressive Translation of H&amp;E to IHC with Enhanced Structural Fidelity</i>, arXiv 2511.01698</td><td><a href="https://arxiv.org/abs/2511.01698">paper</a></td><td>RGB GAN + DAB concentration loss</td></tr>
+<tr><td>PGVMS</td><td><i>A Prompt-Guided Unified Framework for Virtual Multiplex IHC Staining with Pathological Semantic Learning</i>, IEEE TMI 2026</td><td><a href="https://github.com/ccitachi/PGVMS">code</a></td><td>unified multi-marker GAN</td></tr>
+<tr><td>UNIStainNet</td><td><i>Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</i>, ACM BCB 2026, DOI 10.1145/3807503.3819452</td><td><a href="https://github.com/facevoid/UNIStainNet">code</a></td><td>SPADE/UNI/PatchGAN multi-marker</td></tr>
+<tr><td>CFM-HES</td><td><i>Making HE Histopathological Images More Colorful by Conditional Flow Matching</i>, MICCAI 2026</td><td><a href="https://github.com/MedSalimBenOmrane/CFM-HES">code</a></td><td>浓度生成 + BL，但非 GAN</td></tr>
+<tr><td>StainQuant/BL-AE</td><td>Eastwood et al., <i>Beer-Lambert Autoencoder for Unsupervised Stain Representation Learning and Deconvolution</i>, arXiv 2601.11336</td><td><a href="https://arxiv.org/abs/2601.11336">paper</a> · <a href="https://github.com/measty/StainQuant">code</a></td><td>可微 BL decoder，但非 conventional GAN</td></tr>
+<tr><td>AQuA</td><td><i>A robust and scalable framework for hallucination detection in virtual tissue staining and digital pathology</i>, Nat Biomed Eng 2025, DOI 10.1038/s41551-025-01421-9</td><td><a href="https://www.nature.com/articles/s41551-025-01421-9">paper</a></td><td>幻觉检测与安全评价</td></tr>
+</tbody></table></div>
+<div class="box teal"><div class="bt">最终建议</div><p>如果你现在要选一条“能训、能解释、能和已有 PSPStain/扩散路线对照”的 GAN 线：<b>以 PSPStain/CUT 为基线，先保留 RGB 输出，加入 DAB/FOD distribution + prototype 约束；第二步加 concentration auxiliary head；第三步才做 concentration GAN + Beer–Lambert renderer。</b> 这条路线能把“已有先例、真正新意、工程风险”分开，不会把“OD loss 已有人做过”误写成“浓度域生成已有人做过”。</p></div>
+<p class="small">报告证据纪律：原文/官方代码明确的内容标为 [VERIFIED]；仅摘要、搜索结果或本轮未能读取全文的内容标为 [UNVERIFIED]；MRI/一般图像上的数字不外推为 H&amp;E→IHC 结果。生成日期：2026-10-12。</p>
+</main></div></body></html>

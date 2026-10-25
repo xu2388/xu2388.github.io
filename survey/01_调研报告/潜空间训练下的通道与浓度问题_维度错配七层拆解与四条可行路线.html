@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潜空间训练下的通道与浓度问题 · 「维度对不上」七层拆解 + 四条可行路线</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+.box .scroll,.card .body .scroll{border:none;border-radius:0;margin:10px 0 0}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.quote{border-left:3px solid var(--blue);background:var(--blueSoft);padding:12px 16px;margin:14px 0;border-radius:0 8px 8px 0;font-size:13.5px}
+.quote .en{font-family:var(--mono);font-size:12.3px;color:#2a3340;line-height:1.7}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.pipe{display:flex;align-items:center;justify-content:space-between;gap:3px;overflow-x:auto;padding:2px 0}
+.pcell{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
+.ptag{font-size:10.5px;line-height:1.25;white-space:nowrap;min-height:15px;text-align:center;color:var(--muted);font-weight:600}
+.ptag.t-blue{color:var(--blue)}.ptag.t-purple{color:var(--purple)}.ptag.t-green{color:var(--green)}
+.ptag.t-teal{color:var(--teal)}.ptag.t-red{color:var(--red)}.ptag.t-amber{color:var(--amber)}
+.pbox{border:1px solid var(--strong);border-radius:8px;background:#fff;padding:7px 11px;font-size:12px;font-weight:650;text-align:center;white-space:nowrap;font-family:var(--mono);color:var(--text)}
+.pbox.out{background:var(--greenSoft);border-color:#b7e0c7}
+.pbox.phys{background:var(--redSoft);border-color:#f4cfcc}
+.psub{font-size:10px;font-weight:400;color:var(--muted);margin-top:1px;font-family:var(--sans)}
+.parrow{flex:0 0 auto;color:var(--muted);font-size:13px;font-weight:700;align-self:center;padding-bottom:0}
+.pnote{margin-top:12px;padding-top:11px;border-top:1px dashed var(--strong);font-size:12.5px;color:var(--text2);text-align:center}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">Latent training · channels &amp; concentration</div><div class="sub">潜空间训练下的通道与浓度问题<br>七层错配拆解 · 四条可行路线</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l2" href="#s0-1">一句话版本</a>
+<a class="l2" href="#s0-2">七个「对不上」总表</a>
+<a class="l2" href="#s0-3">你的直觉对，但定位要改</a>
+<a class="l1" href="#s1">1 · 拆解：到底是几个问题</a>
+<a class="l2" href="#s1-1">1.1 七层错配</a>
+<a class="l2" href="#s1-2">1.2 只有三层是「通道数」</a>
+<a class="l1" href="#s2">2 · 通道数不匹配的标准做法</a>
+<a class="l2" href="#s2-1">2.1 diffusers 官方做法（逐字）</a>
+<a class="l2" href="#s2-2">2.2 为什么必须微调</a>
+<a class="l2" href="#s2-3">2.3 两种「加通道」完全不同</a>
+<a class="l1" href="#s3">3 · 潜通道数是超参，不是定律</a>
+<a class="l2" href="#s3-1">3.1 SD3 原文逐字（4/8/16）</a>
+<a class="l2" href="#s3-2">3.2 代价曲线</a>
+<a class="l2" href="#s3-3">3.3 空间压缩因子同样是超参</a>
+<a class="l1" href="#s4">4 · 核心洞察：K=3 时两者是同一个问题</a>
+<a class="l2" href="#s4-1">4.1 固定可逆映射</a>
+<a class="l2" href="#s4-2">4.2 K=3 双射 / K=2 有损</a>
+<a class="l2" href="#s4-3">4.3 推论：不需要「浓度原生 VAE」</a>
+<a class="l2" href="#s4-4">4.4 真正的差别是噪声几何</a>
+<a class="l1" href="#s5">5 · 通道扩展解决不了的三件事</a>
+<a class="l2" href="#s5-1">5.1 语义</a>
+<a class="l2" href="#s5-2">5.2 统计</a>
+<a class="l2" href="#s5-3">5.3 物理</a>
+<a class="l1" href="#s6">6 · 文献地图：四条路线</a>
+<a class="l2" href="#s6-1">6.1 路线 1 · RGB 潜空间</a>
+<a class="l2" href="#s6-2">6.2 路线 2 · 浓度原生潜空间</a>
+<a class="l2" href="#s6-3">6.3 路线 3 · 解码器-only 微调</a>
+<a class="l2" href="#s6-4">6.4 路线 4 · VAE+UNet 域适应</a>
+<a class="l2" href="#s6-5">6.5 阴性结论：没人做过的事</a>
+<a class="l1" href="#s7">7 · 对你项目的具体建议</a>
+<a class="l2" href="#s7-1">7.1 首选：解码器重定向</a>
+<a class="l2" href="#s7-2">7.2 备选：浓度原生压缩 VAE</a>
+<a class="l2" href="#s7-3">7.3 明确不推荐的两条</a>
+<a class="l2" href="#s7-4">7.4 配置与伪代码</a>
+<a class="l1" href="#s8">8 · 零成本前置实验</a>
+<a class="l2" href="#s8-1">8.1 VAE 重建上限 = 天花板</a>
+<a class="l2" href="#s8-2">8.2 三个判据</a>
+<a class="l2" href="#s8-3">8.3 止损</a>
+<a class="l1" href="#s9">9 · 证据边界与未核实清单</a>
+<a class="l1" href="#s10">10 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Latent training · channel &amp; concentration mismatch</div>
+<h1>潜空间训练下的通道与浓度问题：「维度对不上」是七层错配里最浅的一层</h1>
+<p class="desc">复用 SD 框架时，浓度表示与潜空间之间的七层错配 · 逐层判定「是通道数问题吗」· 四条文献路线与一条首选方案 · H&amp;E→IHC 虚拟染色方向 · 2026-10-11</p>
+<div class="meta"><span>调研日期 2026-10-11</span><span>核心结论：潜通道数是超参（SD3 一手证据）</span><span>K=3 时浓度空间 ≡ RGB 空间</span><span>首选 = 解码器重定向</span><span>给出零成本前置实验</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<h3 id="s0-1">一句话版本</h3>
+<div class="box key"><div class="bt">你不是找不到那篇工作——是因为那个问题在 K=3 时根本不成立；而真正的问题不是「通道数」，是「噪声几何」和「物理算子不在潜空间」</div>
+<p><strong>「维度对不上」是七个彼此独立的问题被折叠成了一个词。</strong>其中只有 <strong>三</strong> 层真的与通道数有关，而这三层都有官方文档支持的标准解法（一行改 <code>conv_in</code> + 一次微调），是全部七层里<strong>最好修</strong>的。真正卡人的是另外四层：<strong>语义</strong>（浓度图不是 RGB 图）、<strong>统计</strong>（OD 重尾且可 &gt;1，而 VAE 只见过 [0,1] RGB）、<strong>物理</strong>（Beer–Lambert 定义在全分辨率浓度上，不能在 1/8 潜空间上算）、以及<strong>目标表示本身</strong>。</p>
+<p style="margin-bottom:0">而最关键的一条是：<strong>当浓度通道数 K = 3 时，浓度空间与 RGB 空间之间是一个固定可逆映射</strong>（逐元素 <code>exp</code> + 一个 3×3 矩阵）。⇒ <strong>「在浓度空间做生成」与「在 RGB 空间做生成」是同一个生成问题，只差一个变量替换。</strong>这就是为什么你找不到那篇工作：它不是一个独立的问题，所以没有人把它当独立问题发表。真正的差别只有一个——<strong>扩散噪声在两个空间里的几何形状不同</strong>。</p></div>
+
+<h3 id="s0-2">七个「对不上」总表</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:4%" class="c">#</th><th style="width:19%">错配层</th><th style="width:26%">具体表现</th><th style="width:11%" class="c">是「通道数」问题吗</th><th style="width:11%" class="c">好修吗</th><th>修法 / 为什么难</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>1</strong></td><td><strong>目标表示 vs VAE 输入语义</strong></td><td>你要生成的是 <code>C</code>（染色浓度），而 VAE 吃的是 RGB 显示色</td><td class="c"><span class="b low">否</span></td><td class="c"><span class="b bad">难</span></td><td>语义问题。VAE 解码器会把「浓度值」当成颜色渲染出来。要改 VAE 或加浓度输出头</td></tr>
+<tr><td class="c"><strong>2</strong></td><td><strong>通道数（VAE 输入侧）</strong></td><td><code>C</code> 是 K=2 或 3 通道，而 VAE encoder 首层是 <code>Conv2d(3,·,3,1)</code></td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b high">易</span></td><td>改 <code>conv_in</code> 的 <code>in_channels</code> + 微调。<strong>官方文档明确支持</strong>（见 §2）</td></tr>
+<tr><td class="c"><strong>3</strong></td><td><strong>通道数（条件侧）</strong></td><td>要把 <code>C_H</code>/<code>C_E</code>/<code>f_morph</code> 拼进 UNet，而 <code>conv_in</code> 只吃 4 通道潜码</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b high">易</span></td><td>沿通道维拼接 + 扩 <code>conv_in</code>。<strong>SD3 原文自己就这么做</strong>（见 §3）</td></tr>
+<tr><td class="c"><strong>4</strong></td><td><strong>潜通道数 d</strong></td><td>SD1.5/2.1 是 d=4，你想让潜码直接承载浓度语义</td><td class="c"><span class="b high">是</span></td><td class="c"><span class="b medium">中</span></td><td>d 是自由超参（SD3 扫过 4/8/16）。但改 d ⇒ <strong>SD UNet 先验作废</strong>，backbone 要重训</td></tr>
+<tr><td class="c"><strong>5</strong></td><td><strong>空间压缩因子 f</strong></td><td>SD 是 f=8（512²→64²），你的浓度图想用别的压缩率</td><td class="c"><span class="b low">否</span></td><td class="c"><span class="b medium">中</span></td><td>是空间超参不是通道超参。f 变 ⇒ token 数变 ⇒ 同样是「换 backbone」的代价</td></tr>
+<tr><td class="c"><strong>6</strong></td><td><strong>值域与统计</strong></td><td><code>C</code>/OD 重尾、可 &gt;1、近似对数正态；VAE 只见过 [0,1] 的 RGB 统计</td><td class="c"><span class="b low">否</span></td><td class="c"><span class="b bad">难</span></td><td>统计问题。<strong>硬塞进去不微调 = 你「黑团」的成因</strong>（潜码跑出分布，H2）</td></tr>
+<tr><td class="c"><strong>7</strong></td><td><strong>物理算子所在的空间</strong></td><td>Beer–Lambert 定义在<strong>全分辨率浓度</strong>上；潜空间是 1/8 分辨率的抽象码</td><td class="c"><span class="b low">否</span></td><td class="c"><span class="b bad">结构性</span></td><td>物理问题。<strong>在潜空间上算 BL 是无意义的</strong>；渲染只能在解码之后做</td></tr>
+</tbody></table></div>
+<p class="small">读法：第 2/3/4 层是「通道数」问题，都是官方支持的操作；第 1/6 层是「VAE 要不要动」的问题；第 5 层是「backbone 要不要换」的问题；第 7 层是硬约束，任何路线都绕不开。把它们分开，你的痛苦就变成了四道有名字的、各自有解的题。</p>
+
+<h3 id="s0-3">你的直觉是对的，但问题的定位要改</h3>
+<div class="grid2">
+<div class="mini"><div class="mt">✅ 你说对的部分</div><p><strong>「最终要回归潜空间训练」——对。</strong>全分辨率浓度扩散的显存代价是结构性的：SD1.5-style U-Net 在 256² 全分辨率浓度上，单个激活张量约 84 MB（320ch × 256² × 4B），而 base-64 小 U-Net 约 17 MB，差约 5 倍；HistDiST 官方 README 逐字要求 <strong>24GB VRAM</strong>。潜空间把空间维度压 8 倍 ⇒ token 数少 64 倍，这是唯一能把成本压下来的方向。</p></div>
+<div class="mini"><div class="mt">⚠️ 要改的部分</div><p><strong>但「通道浓度问题」不是拦路虎，它是一个 1 行的改动。</strong>你真正需要决定的是另外三件事：<strong>①</strong> 扩散过程住在哪个空间（RGB 潜 / 浓度潜）；<strong>②</strong> 物理约束从哪里进（损失 / 输出头 / 采样期投影）；<strong>③</strong> 要不要为「浓度原生潜空间」付掉 SD 先验的代价。<strong>这三件事才是决定性的，而它们都与通道数无关。</strong></p></div>
+</div>
+
+<h2 id="s1"><span class="num">1</span>拆解：到底是几个问题</h2>
+
+<h3 id="s1-1">1.1 七层错配在一张图里的位置</h3>
+<div class="flow">
+<div class="pipe">
+  <div class="pcell"><div class="ptag t-blue">② 通道数</div><div class="pbox">C<div class="psub">浓度 · K 通道</div></div><div class="ptag t-purple">① 语义</div></div>
+  <div class="parrow">&#8594;</div>
+  <div class="pcell"><div class="ptag">&nbsp;</div><div class="pbox">VAE Encoder</div><div class="ptag">&nbsp;</div></div>
+  <div class="parrow">&#8594;</div>
+  <div class="pcell"><div class="ptag t-green">④ 通道数 d · ⑤ 压缩 f</div><div class="pbox">z<div class="psub">1/8&#215; 潜码</div></div><div class="ptag">&nbsp;</div></div>
+  <div class="parrow">&#8594;</div>
+  <div class="pcell"><div class="ptag t-teal">③ 条件通道</div><div class="pbox">UNet / DiT</div><div class="ptag">&nbsp;</div></div>
+  <div class="parrow">&#8594;</div>
+  <div class="pcell"><div class="ptag">&nbsp;</div><div class="pbox">z&#8242;</div><div class="ptag">&nbsp;</div></div>
+  <div class="parrow">&#8594;</div>
+  <div class="pcell"><div class="ptag">&nbsp;</div><div class="pbox">VAE Decoder</div><div class="ptag t-amber">⑥ 统计</div></div>
+  <div class="parrow">&#8594;</div>
+  <div class="pcell"><div class="ptag t-red">⑦ 物理算子</div><div class="pbox phys">Beer&#8211;Lambert</div><div class="ptag">&#160;只能在这一步</div></div>
+  <div class="parrow">&#8594;</div>
+  <div class="pcell"><div class="ptag">&nbsp;</div><div class="pbox out">&#206;<div class="psub">RGB</div></div><div class="ptag">&nbsp;</div></div>
+</div>
+<div class="pnote"><strong>物理算子只能放在解码之后</strong>，且必须在全分辨率上做：<code>&#206; = I&#8320; &#183; 10^(&#8722;M&#183;&#264;)</code> &nbsp;&#8596;&nbsp; <code>&#264; = M&#8315;&#185; &#183; (&#8722;log&#8321;&#8320;(&#206;/I&#8320;))</code></div>
+</div>
+<p>把这条链路摊开看，七个错配分布在<strong>四个完全不同的层面</strong>上：编码器入口（②）、编码器语义（①）、潜码本身（④⑤）、解码器出口（⑥）、以及链外的物理渲染（⑦）。<strong>它们之间没有耦合</strong>——改 <code>conv_in</code> 的通道数不会让统计问题变好，也不会让 BL 变得能在潜空间上算。</p>
+
+<h3 id="s1-2">1.2 只有三层是「通道数」，且都是最好修的</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:16%">层</th><th style="width:22%">「对不上」的原始形态</th><th style="width:30%">标准解法</th><th>关键前提</th></tr></thead>
+<tbody>
+<tr><td><strong>② VAE 输入</strong></td><td><code>Conv2d(3, 128, 3, 1)</code> 收到 K 通道张量 → <code>RuntimeError: expected input[…,K,…] to have 3 channels</code></td><td>把 <code>in_channels</code> 从 3 改成 K；新增通道的权重单独初始化；<strong>必须微调</strong></td><td>微调数据要够。SD 官方 <code>conv_in</code> 的新通道是<strong>随机初始化</strong>的（逐字见 §2.1）</td></tr>
+<tr><td><strong>③ UNet 条件</strong></td><td>想把条件潜码拼进 <code>conv_in</code>，但 <code>in_channels=4</code> 写死</td><td>沿 channel 维 concat，把 <code>in_channels</code> 改成 4+K'。diffusers 有<strong>专门文档</strong>讲这件事（4→9 的 inpainting 例）</td><td>新通道权重随机初始化后<strong>不微调就输出噪声</strong></td></tr>
+<tr><td><strong>④ 潜通道数 d</strong></td><td>SD 是 d=4，你想让 d 更大以承载更多信息</td><td>d 是<strong>自由超参</strong>，SD3 的 Table 3 / Fig 10 就是这条扫描曲线</td><td><strong>代价不对称</strong>：d 越大重建越好，但需要更多模型容量才能达到同样 FID</td></tr>
+</tbody></table></div>
+<div class="box good"><div class="bt">一句话：这三层加起来是「一次改代码 + 一次微调」，不是研究方向</div>
+<p style="margin-bottom:0">如果你卡在这里，卡的不是科学问题，是工程问题。而下面三节会证明：<strong>这三层里有两层你甚至可能根本不需要动</strong>。</p></div>
+
+<h2 id="s2"><span class="num">2</span>通道数不匹配：官方文档里的标准做法</h2>
+<p>这一节把「改通道数」这件事钉死成可执行操作。证据来自 HuggingFace diffusers 官方训练文档 <code>adapt_a_model</code>——它<strong>就是为「复用预训练扩散模型但输入通道数不同」写的</strong>。</p>
+
+<h3 id="s2-1">2.1 diffusers 的官方做法（逐字）</h3>
+<div class="card">
+<div class="ch"><div><div class="title">Adapt a model to a new task — 官方文档</div><div class="v">huggingface.co/docs/diffusers/v0.35.1/training/adapt_a_model <span class="b high">VERIFIED</span></div></div><div><span class="b blue">官方支持的操作</span></div></div>
+<div class="body">
+<p>文档用「文生图 → inpainting」做例子，因为 inpainting 需要把输入通道从 <strong>4 改成 9</strong>（4 通道 masked-image latent + 1 通道 mask + 4 通道 noisy latent）。逐字：</p>
+<div class="quote"><div class="en">"Inpainting requires 9 channels in the input sample."<br>
+"To adapt your text-to-image model for inpainting, you'll need to change the number of <code>in_channels</code> from 4 to 9."<br>
+"Changing the number of <code>in_channels</code> means you need to set <code>ignore_mismatched_sizes=True</code> and <code>low_cpu_mem_usage=False</code> to avoid a size mismatch error because the shape is different now."</div></div>
+<pre><code>from diffusers import AutoModel
+
+unet = AutoModel.from_pretrained(
+    "stable-diffusion-v1-5/stable-diffusion-v1-5",
+    subfolder="unet",
+    in_channels=9,                 # ← 从 4 改成你要的数
+    low_cpu_mem_usage=False,
+    ignore_mismatched_sizes=True,  # ← 允许形状不匹配
+    use_safetensors=True,
+)</code></pre>
+<p style="margin-bottom:0">这段代码的意义是：<strong>「预训练权重复用 + 输入通道数改变」是被官方承认并支持的组合</strong>，不是 hack。你不需要为了加通道而放弃 SD 权重。</p>
+</div></div>
+
+<h3 id="s2-2">2.2 但为什么必须微调——逐字警告</h3>
+<div class="box stop"><div class="bt">官方文档的这句话是整个 §2 最重要的一句</div>
+<div class="quote" style="margin:10px 0 0;background:#fff;border-color:#f4cfcc"><div class="en">"The pretrained weights of the other components from the text-to-image model are initialized from their checkpoints, but <strong>the input channel weights (<code>conv_in.weight</code>) of the <code>unet</code> are randomly initialized</strong>. <strong>It is important to finetune the model for inpainting because otherwise the model returns noise.</strong>"</div></div>
+<p style="margin:10px 0 0">拆开读，这里有三个可迁移的硬事实：</p>
+<ol style="margin-bottom:0">
+<li><strong>其余组件（VAE、text encoder、UNet 的其它层）原样保留</strong> —— 预训练红利还在。</li>
+<li><strong>只有 <code>conv_in.weight</code> 被随机初始化</strong> —— 因为它的形状变了，没有对应的旧权重可搬。</li>
+<li><strong>不微调 = 输出噪声</strong> —— 因为随机初始化的第一层会把整个输入分布打乱，后续所有层都在错误的输入分布上工作。</li>
+</ol></div>
+<div class="box warn"><div class="bt">一个必须知道的细节：新通道的初始化方式有两种，别混用</div>
+<p style="margin-bottom:0"><strong>diffusers 的通用路径是「随机初始化」</strong>（上面逐字）。但工程上还有一种常见做法是<strong>把新增通道的权重初始化为原 3 通道权重的均值</strong>——这样在 <code>t=0</code> 附近网络行为接近原模型，微调收敛更快、更不容易崩。<br>
+<span class="b medium">本轮未核实</span> 第二种做法的原始出处我<strong>没有找到一手文档</strong>（只见到社区实践描述），所以本文不把它当作「官方推荐」，只当作「可选的、更稳的初始化」。<strong>结论不变：无论哪种初始化，都必须微调。</strong></p></div>
+
+<h3 id="s2-3">2.3 两种「加通道」在数学上完全不同</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:16%"></th><th style="width:42%">A · 给 UNet 加<strong>条件</strong>通道</th><th>B · 改 <strong>潜码</strong>通道数 d</th></tr></thead>
+<tbody>
+<tr><td><strong>改什么</strong></td><td><code>conv_in.in_channels: 4 → 4+K'</code></td><td>VAE 的 <code>z_channels</code>（整个 VAE 都要重训）</td></tr>
+<tr><td><strong>数学性质</strong></td><td>条件侧。加的是<strong>已知的</strong>输入（H&amp;E 编码、morphology 特征）</td><td>生成侧。加的是<strong>要被扩散生成</strong>的变量</td></tr>
+<tr><td><strong>SD 先验</strong></td><td><span class="b high">保住</span> 其余权重全留，只补一层</td><td><span class="b bad">作废</span> 潜空间定义变了，UNet 的每一层都在错的分布上</td></tr>
+<tr><td><strong>要训多少</strong></td><td>一个 <code>conv_in</code> + 后续微调</td><td>VAE（全量）+ backbone（全量）</td></tr>
+<tr><td><strong>谁做过</strong></td><td>SD3 自己（逐字见 §3.1）；StainFuser（ControlNet 条件 3ch RGB）；inpainting（4→9）</td><td>SD3（4/8/16 三档全扫过）；SANA（DC-AE 32×压缩）</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">分界线的判据</div>
+<p style="margin-bottom:0">问一句：<strong>「这个新通道，推理时我拿得到吗？」</strong><br>
+拿得到（H&amp;E 图、H&amp;E 的浓度、morphology 特征）⇒ <strong>走 A，条件侧拼接，代价极小，SD 先验全留。</strong><br>
+拿不到、需要模型自己生成（IHC 的 DAB 浓度）⇒ <strong>它必须在生成侧。但注意：它可以是「潜码解码后的输出通道」，而不必是「潜码本身的通道」</strong>——这正是 §7.1 首选方案的核心技巧。</p></div>
+
+<h2 id="s3"><span class="num">3</span>第一手证据：潜通道数是超参，不是定律</h2>
+<p>这一节是全文最重要的一手证据。你说「数据维度对不上」，隐含了一个前提：<strong>「SD 的潜空间是 4 通道」是一条必须迁就的硬约束。</strong>它不是。SD3 的作者在论文里<strong>把潜通道数 d 当作一个可扫描的超参，扫了 4 / 8 / 16 三档并报了完整代价曲线。</strong></p>
+
+<h3 id="s3-1">3.1 SD3 原文逐字（arXiv:2403.03206）</h3>
+<div class="card">
+<div class="ch"><div><div class="title">Scaling Rectified Flow Transformers for High-Resolution Image Synthesis</div><div class="v">Esser et al., ICML 2024 · arXiv:2403.03206 §5.2.1 "Improved Autoencoders" <span class="b high">VERIFIED</span></div></div><div><span class="b high">一手原文</span></div></div>
+<div class="body">
+<p><strong>① 潜通道数 d 是显式声明的实验变量：</strong></p>
+<div class="quote"><div class="en">"We use a spatial downsampling factor of 8, such that h = H/8 and w = W/8, and <strong>experiment with different values for d</strong> in Section 5.2.1."</div></div>
+<p><strong>② 更多潜通道 ⇒ 重建更好（这是收益）：</strong></p>
+<div class="quote"><div class="en">"Similar to Dai et al. (2023), we find that <strong>increasing the number of latent channels d significantly boosts reconstruction performance</strong>, see Table 3. Intuitively, predicting latents with higher d is a more difficult task, and thus models with increased capacity should be able to perform better for larger d, ultimately achieving higher image quality."</div></div>
+<p><strong>③ Table 3 的表题本身就是「不同通道配置」：</strong></p>
+<div class="quote"><div class="en">"Table 3: Improved Autoencoders. <strong>Reconstruction performance metrics for different channel configurations.</strong> The downsampling factor for all models is f = 8."</div></div>
+<p><strong>④ Fig 10 的表题给出了完整的三档扫描（4 / 8 / 16）：</strong></p>
+<div class="quote"><div class="en">"Figure 10: FID scores after training flow models with different sizes (parameterized via their depth) on the latent space of different autoencoders (<strong>4 latent channels, 8 channels and 16 channels</strong>) as discussed in Section 5.2.1. As expected, the flow model trained on the 16-channel autoencoder space <strong>needs more model capacity to achieve similar performance</strong>. At depth d = 22, the gap between 8-chn and 16-chn becomes negligible. <strong>We opt for the 16-chn model</strong> as we ultimately aim to scale to much larger model sizes."</div></div>
+<p style="margin-bottom:0"><strong>⑤ 还有一句是本文档 §8 的地基（下一节会用到）：</strong></p>
+<div class="quote" style="margin-bottom:0"><div class="en">"The reconstruction quality of this autoencoder provides <strong>an upper bound on the achievable image quality after latent diffusion training</strong>."</div></div>
+</div></div>
+
+<h3 id="s3-2">3.2 代价曲线：d 是双向可调的，但代价不对称</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:12%" class="c">潜通道数 d</th><th style="width:26%">重建质量</th><th style="width:30%">达到同等 FID 需要的模型容量</th><th>适用判断</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>4</strong>（SD1.5 / SD2.1）</td><td>基准</td><td>最低</td><td>你手上有现成的 SD 权重与先验 ⇒ <strong>复用成本最低</strong></td></tr>
+<tr><td class="c"><strong>8</strong></td><td>明显更好</td><td>中等</td><td>SD3 Fig 10 里，depth ≥ 22 时 8-chn 与 16-chn 的差距「可忽略」</td></tr>
+<tr><td class="c"><strong>16</strong>（SD3 实际选择）</td><td>最好</td><td>最高</td><td>SD3 选它是因为「目标是继续放大模型规模」；<strong>小模型不该盲目跟</strong></td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">这条曲线直接回答了你的一个隐含焦虑</div>
+<p style="margin-bottom:0">如果 d=4 装不下浓度信息，<strong>你可以加 d</strong>——这是被顶会论文验证过的标准操作。但你要同时接受两件事：<strong>①</strong> 加 d 之后 SD 的 UNet 先验作废（潜空间定义变了）；<strong>②</strong> 加 d 需要更多模型容量才能把 FID 拉回来。<br>
+⇒ 对你的具体情形（小数据集、算力有限），<strong>d=4 保留 SD 先验，通常比 d=8/16 自训更划算。</strong>SD3 选 16 是因为它有工业级算力目标，不是因为你该选 16。</p></div>
+
+<h3 id="s3-3">3.3 空间压缩因子 f 同样是超参</h3>
+<p>除了通道数，<strong>空间压缩因子</strong>也是自由选择的。这一点由 SANA 的官方页面给出直接证据：</p>
+<div class="quote"><div class="en">SANA (NVlabs): "Compared with <strong>AE-F8</strong>, our <strong>AE-F32 outputs 16× fewer latent tokens</strong>, which is crucial for efficient training and…" — 即 AE 的空间压缩率可以在 F8 与 F32 之间选择</div></div>
+<p>SANA 用的 DC-AE（Deep Compression Autoencoder）把潜空间压缩到 32 倍，token 数比 SD 的 F8 少 16 倍。这与 SD3 的通道扫描是<strong>两个正交的自由度</strong>：</p>
+<div class="grid3">
+<div class="mini"><div class="mt">通道数 d</div><p>SD1.5/2.1 = 4<br>SD3 = 16<br>SANA DC-AE = 32<br><span class="small">SD3 扫过 4/8/16</span></p></div>
+<div class="mini"><div class="mt">空间压缩 f</div><p>SD = 8（512²→64²）<br>SANA = 32<br><span class="small">f 越大 token 越少、重建越难</span></p></div>
+<div class="mini"><div class="mt">对你的含义</div><p>两个都可调<br>但<strong>任何一项偏离 SD 的 (4, 8) ⇒ 丢掉 SD 先验</strong><br><span class="small">这才是真正的代价</span></p></div>
+</div>
+<div class="box pur"><div class="bt">把 §2 与 §3 合起来看，你的「维度对不上」变成了一个选择题</div>
+<p style="margin-bottom:0"><strong>选项 1（保先验）：</strong>潜码保持 (d=4, f=8)，只改条件侧通道（§2.3 的 A 型改动）。<strong>SD UNet 先验全留</strong>，改动量 = 一行 + 一次微调。<br>
+<strong>选项 2（要浓度原生潜空间）：</strong>自由选 (d, f)，自训 VAE + 自训 backbone。<strong>先验全丢</strong>，但潜空间统计与你的数据匹配。<br>
+<strong>这两条路都不需要「先解决通道数问题」</strong>——通道数在这两条路里都是参数，不是障碍。</p></div>
+<h2 id="s4"><span class="num">4</span>核心洞察：K=3 时浓度空间与 RGB 空间是同一个问题</h2>
+<p>这一节回答你最直接的那个问题：「为什么我一直找不到那篇工作？」答案是——<strong>在 K=3 的情形下，那篇工作不成立，因为它描述的问题与「在 RGB 空间做生成」是同一个问题。</strong></p>
+
+<h3 id="s4-1">4.1 固定可逆映射：浓度 ↔ OD ↔ RGB</h3>
+<p>把 Beer–Lambert 全链写清楚（这是你已经在用的链路）：</p>
+<pre><code>正演（渲染）：  OD = M · C              I = I₀ · 10^(−OD)
+反演（解混）：  OD = −log₁₀(I / I₀)     C = M⁻¹ · OD
+
+⇒ 合并：  I = I₀ · 10^(−M·C)
+⇒ 逆：    C = M⁻¹ · ( −log₁₀(I / I₀) )
+</code></pre>
+<p>关键事实：<strong>当 <code>M</code> 是 3×3 可逆矩阵、且 <code>I₀</code> 已知时，这个映射是双射</strong>。它是<strong>逐元素 <code>exp</code>（单调）+ 一个 3×3 线性变换</strong>的组合，因此：</p>
+<div class="box key"><div class="bt">C ∈ ℝ³ ⟷ OD ∈ ℝ³ ⟷ I ∈ ℝ³₊ 三者互为固定可逆映射</div>
+<p style="margin-bottom:0">⇒ <strong>「在浓度空间做生成」与「在 RGB 空间做生成」不是两个不同的生成问题，而是同一个问题在两组坐标下的表达。</strong>它们共享同一个数据流形、同一个分布、同一组条件依赖关系。<br>
+这就是为什么你搜不到「浓度空间潜扩散」那篇工作：<strong>它不是一个独立的技术问题，所以没有人把它当独立问题发表。</strong>你在找一个不存在的问题的答案。</p></div>
+
+<h3 id="s4-2">4.2 但这个等价性有一个精确的边界：K=3 双射 / K=2 有损</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:10%" class="c">K</th><th style="width:14%">M 的形状</th><th style="width:22%">C → RGB</th><th style="width:22%">RGB → C</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td class="c"><strong>K=3</strong><br><span class="small">[C_H, C_DAB, C_res]</span></td><td><code>3×3</code>，可逆<br><span class="small">正交基下 M₃ᵀM₃ = I</span></td><td><span class="b high">单射且满射</span><br>双射</td><td><span class="b high">精确可逆</span><br>逆 = 转置</td><td><strong>浓度空间 ≡ RGB 空间。</strong>「在浓度空间生成」不带来新的生成问题，只带来新的噪声几何</td></tr>
+<tr><td class="c"><strong>K=2</strong><br><span class="small">[C_H, C_DAB]</span></td><td><code>3×2</code>，秩 2</td><td><span class="b medium">单射非满射</span><br>OD 落在 ℝ³ 的 2 维子空间</td><td><span class="b bad">有损投影</span><br>伪逆丢残差</td><td>RGB 里有一部分（伊红、未染色组织、M 误差）<strong>无法由 C_H/C_DAB 表达</strong>。这是真实的表示损失</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">你库内已有的实测数字，正好是这个表的验证</div>
+<p style="margin-bottom:0">你已实测：真实 IHC 上 <code>‖Render(Deconv(x)) − x‖ = 0.023</code>（对比随机噪声 0.636）。这个 0.023 <strong>精确地就是「H+DAB 两列解释不了的 OD 分量」</strong>，也就是 K=2 情形的正交补残差。<br>
+⇒ 它的存在说明：<strong>K=2 时你不能说「浓度空间与 RGB 空间等价」</strong>；只有补上第三通道（<code>C_res</code> = <code>s_H × s_DAB</code> 的正交补）之后，等价性才严格成立。<strong>这就是库内那条 <code>Z = [C_H, C_DAB, C_res]</code> 建议的数学理由。</strong></p></div>
+
+<h3 id="s4-3">4.3 推论：你不需要「浓度原生 VAE」也能回到潜空间训练</h3>
+<div class="box good"><div class="bt">这是本文对你最有用的一条</div>
+<p>因为 <strong>K=3 时 C ↔ RGB 是固定可逆映射</strong>，所以：</p>
+<ul style="margin-bottom:0">
+<li><strong>「在潜空间生成浓度」</strong> 和 <strong>「在潜空间生成 RGB，再解混出浓度」</strong> 是<strong>同一件事</strong>（差一个固定的、无需学习的后处理）。</li>
+<li>⇒ 你<strong>不需要</strong>为了「让潜空间承载浓度语义」而去训练一个浓度原生 VAE。</li>
+<li>⇒ 你可以<strong>保留 SD 的 4 通道潜空间</strong>（保住 UNet 先验），只要保证<strong>解码后的输出能稳定地解混出正确的浓度</strong>即可。</li>
+<li>⇒ 而「保证解混正确」这件事，用<strong>损失函数</strong>（在 OD 空间比对）就能做到，不需要改 VAE 的架构。</li>
+</ul></div>
+<p>把这句话再说一遍，因为它是你困惑的解药：<strong>你一直在找「如何处理通道浓度」的方法，但正确的做法是「不处理它」——让浓度成为解码后的物理量，而不是潜空间的坐标。</strong>潜空间只需要承载「重建这张图所需的信息」，而浓度的正确性由渲染器 + 损失来保证。</p>
+
+<h3 id="s4-4">4.4 那真正的差别是什么：噪声几何</h3>
+<p>如果两个空间只是坐标不同，为什么还要讨论「在哪个空间做扩散」？因为<strong>扩散过程不是坐标无关的——它依赖「加高斯噪声」这个操作，而高斯性不是坐标不变的。</strong></p>
+<pre><code>在 RGB 空间加噪：      I_t = √ᾱ_t · I + √(1−ᾱ_t) · ε,      ε ~ N(0, I)     ← 加性
+在 OD  空间加噪：      OD_t = √ᾱ_t · OD + √(1−ᾱ_t) · ε
+                       ⇒ I_t = I₀ · 10^(−OD_t) = I · 10^(−√(1−ᾱ_t)·ε)    ← 乘性！
+
+反向也一样：在 RGB 加性噪声映射到 OD 空间后，
+            是 −log₁₀(I + ε) 这种重尾、非高斯的扰动。
+</code></pre>
+<div class="scroll"><table>
+<thead><tr><th style="width:20%"></th><th style="width:40%">在 RGB（或 SD 潜）空间扩散</th><th>在浓度 / OD 空间扩散</th></tr></thead>
+<tbody>
+<tr><td><strong>噪声的物理含义</strong></td><td>对<strong>显示颜色</strong>的加性扰动</td><td>对<strong>染色浓度</strong>的加性扰动（映射到强度上是乘性）</td></tr>
+<tr><td><strong>与病理物理的一致性</strong></td><td>无直接物理含义</td><td>「浓度被扰动」更接近真实染色波动（试剂浓度、孵育时间）</td></tr>
+<tr><td><strong>噪声调度可迁移性</strong></td><td>SD 的 β_t / ᾱ_t 直接可用</td><td><span class="b bad">必须重标定</span>。已有的「线性空间更好」证据（DCTdiff, ICML 2025）用的是 <strong>DCT 正交变换</strong>，正交保持高斯性；<code>log</code> 是逐元素非线性，<strong>不能外推</strong></td></tr>
+<tr><td><strong>代价</strong></td><td>几乎零（现成权重 + 现成调度）</td><td>潜空间定义要自己定，调度要自己标定</td></tr>
+</tbody></table></div>
+<div class="box key"><div class="bt">所以「要不要在浓度空间做扩散」是一个真问题，但它是<strong>噪声几何</strong>问题，不是<strong>通道数</strong>问题</div>
+<p style="margin-bottom:0">如果你的动机是「通道数对不上」，那答案是：<strong>不需要换空间</strong>。<br>
+如果你的动机是「我希望扩散过程的噪声符合病理物理」，那答案是：<strong>这才是真问题，而且它是本文档 §6 路线 2 与 §7.2 备选方案要解决的问题</strong>——代价是丢掉 SD 先验并重标定噪声调度。</p></div>
+
+<h2 id="s5"><span class="num">5</span>通道扩展解决不了的三件事</h2>
+<p>§2 证明了通道数可以一行改掉。但改完之后，还有三件事它<strong>一点都帮不上</strong>。这三件事才是你「痛苦」的真正来源。</p>
+
+<h3 id="s5-1">5.1 语义：浓度图不是「颜色很奇怪的照片」</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:20%"></th><th style="width:40%">RGB 图像（VAE 见过的）</th><th>浓度 / OD 图（你要喂的）</th></tr></thead>
+<tbody>
+<tr><td><strong>通道含义</strong></td><td>R/G/B = 显示器三原色</td><td>H / DAB / res = <strong>三种染料的浓度</strong>（物理量，有量纲）</td></tr>
+<tr><td><strong>通道间关系</strong></td><td>高度相关（自然图像的 R/G/B 强耦合）</td><td><strong>近似独立</strong>（H 和 DAB 是两种不同染料的沉积）</td></tr>
+<tr><td><strong>典型值</strong></td><td>接近均匀分布，集中在 [0,1]</td><td>重尾；<code>C_H</code> 在核区高、<code>C_DAB</code> 在阳性区高，大量像素接近 0</td></tr>
+<tr><td><strong>空间结构</strong></td><td>自然纹理、平滑梯度</td><td>稀疏、点状/膜状、高对比边界</td></tr>
+</tbody></table></div>
+<p>把浓度图喂给冻结的 SD VAE，编码器会「以为」自己在看一张 RGB 照片，把它编码成 RGB 照片的潜码。<strong>它不会报错——这才是最危险的地方</strong>：它会产生一个看起来正常的潜码，但这个潜码的语义与你的浓度无关。解码回来是一张「像某种染色照片的东西」，而不是浓度图。</p>
+
+<h3 id="s5-2">5.2 统计：你的黑团就是这一层没处理的后果</h3>
+<div class="box stop"><div class="bt">直接对应你库内已确诊的故障</div>
+<p>你库内已确诊：黑团是<strong>两个独立故障</strong>——训练侧 fp16 溢出（bf16 根治）+ <strong>采样侧潜码局部落到 SD VAE 未见区域 → decoder 输出 ≤ −1 → 被 clamp 成纯黑</strong>。</p>
+<p style="margin-bottom:0">第二条<strong>就是「统计错配」的实例</strong>：把分布外的输入喂给冻结 VAE，潜码跑出流形，解码器在未见区域外推。库内已给出的零成本判据（30 分钟、零训练）：<strong>用 VAE 编码器编真实瓦片，报逐通道 mean/std/1%/5%/95%/99% 分位；再统计采样出来的潜码落在真实分布 [1%,99%] 之外的比例。<code>&gt;5%</code> ⇒ 统计错配成立。</strong><br>
+⇒ 这条判据<strong>在你决定「把浓度图喂进 SD VAE」之前就应该先跑一遍</strong>。通道数改对了，统计错配照样会让潜码跑出分布。</p></div>
+
+<h3 id="s5-3">5.3 物理：Beer–Lambert 不能在潜空间上算</h3>
+<div class="box stop"><div class="bt">这是一条结构性约束，任何路线都绕不开</div>
+<p>Beer–Lambert 的物理意义建立在两个前提上：</p>
+<ul>
+<li><strong>① 逐像素成立</strong>：<code>I(x,y) = I₀·10^(−M·C(x,y))</code> 对<strong>每一个像素</strong>独立成立。</li>
+<li><strong>② 线性于浓度</strong>：<code>OD = M·C</code> 是<strong>线性</strong>关系——这是 Ruifrok 全部定量论证的基础。</li>
+</ul>
+<p style="margin-bottom:0">而潜码是 <strong>1/8 分辨率的、通道间混合的抽象编码</strong>：一个潜像素对应原图 64 个像素，且每个潜通道不对应任何单一染料。<strong>在潜空间上写 <code>I = I₀·10^(−M·z)</code> 是数学上无意义的</strong>（量纲不对、像素对应关系不对、通道语义不对）。<br>
+⇒ <strong>渲染器只能放在解码之后。</strong>这意味着：<strong>任何「潜空间训练」方案，物理约束都必须作用在「解码后」或「损失里」，而不可能作用在「生成过程中」。</strong>这条约束直接决定了 §7 的方案设计。</p></div>
+
+<h2 id="s6"><span class="num">6</span>文献地图：四条路线，各自被谁占了</h2>
+<p>把 §4 与 §5 的结论展开成具体方案，文献里其实只有四条路线。每条我都给出代表工作与逐字依据。</p>
+
+<h3 id="s6-1">6.1 路线 1 · RGB 潜空间 + 浓度作条件 / 损失 / 输出头</h3>
+<div class="card">
+<div class="ch"><div><div class="title">扩散在 SD 潜空间跑，浓度不进入潜空间</div><div class="v">代表：StainFuser · HistDiST · HistDiT <span class="b high">库内已代码级核实</span></div></div><div><span class="b high">可复用 SD 先验</span></div></div>
+<div class="body">
+<p><strong>StainFuser（arXiv:2403.09302）</strong>——库内已做代码级实测，关键事实：</p>
+<ul>
+<li>SD <strong>2.1</strong> latent diffusion；<code>arch.encoder</code> = <code>AutoencoderKL</code>（SD2.1 VAE，<strong>4 通道，512² → 64²</strong>）；<code>arch.conditioner</code> = 真 ControlNet（<code>conv_in / time_proj / down_blocks / mid_block</code> 从预训练 UNet 逐层 <code>load_state_dict</code>）。</li>
+<li><strong><code>controlnet_cond</code> 喂的是原始 RGB 像素（3 通道）</strong>，实测第一层是 <code>Conv2d(3, 16, 3, 1)</code>。</li>
+<li>★ 一个真实的坑：<code>conditioning_embedding_in_channels=4</code> 是<strong>死参数</strong>——<code>arch.py</code> L35 定义了它但没传下去；diffusers 0.26.3 用默认值 3。喂 4 通道会直接 <code>RuntimeError: expected input[…,4,…] to have 3 channels</code>。<strong>这就是「通道数对不上」在真实代码里的样子——它是一个 bug，不是一个研究方向。</strong></li>
+<li>整个 VAE <code>requires_grad_(False)</code>，UNet 的 <code>conv_in</code> 冻结 ⇒ <strong>输出必须是 4 通道潜码，再由冻结 VAE 解码成 RGB</strong>。</li>
+</ul>
+<p><strong>HistDiST / HistDiT</strong> 同族：前者在 latent 空间工作、用 Phikon 做 morphology conditioning、官方 README 逐字要求 <strong>24GB VRAM</strong>；后者（Structure-Aware Latent Conditional DiT）用<strong>冻结的 <code>sd-vae-ft-mse</code></strong>，且库内已确认<strong>全文未讨论潜空间域差</strong>。</p>
+<div class="box good" style="margin-bottom:0"><div class="bt">这条路线的本质</div><p style="margin-bottom:0">浓度<strong>不进入潜空间</strong>。潜空间承载「重建一张 IHC 图所需的信息」；浓度的正确性由 <strong>①条件侧输入（H&amp;E 的浓度）</strong> 与 <strong>②损失（在 OD 空间比对）</strong> 保证。<strong>成本最低，SD 先验全留。</strong></p></div>
+</div></div>
+
+<h3 id="s6-2">6.2 路线 2 · 浓度原生潜空间（自训 AE/VAE）</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:18%">工作</th><th style="width:16%">空间</th><th style="width:20%">「潜码」是什么</th><th>关键事实（逐字 / 一手）</th></tr></thead>
+<tbody>
+<tr><td><strong>BL-AE</strong><br><span class="small">arXiv:2601.11336 · StainQuant</span></td><td>RGB → 浓度</td><td><strong>K 个非负浓度通道</strong>（<strong>全分辨率</strong>，不压缩）</td><td>逐字："The encoder is a compact U-Net that predicts <strong>K nonnegative concentration channels</strong>; the decoder is a <strong>differentiable BL forward model with a learnable stain matrix</strong> initialized from typical chromogen hues." 5 染色 mIHC（H, CDX2, MUC2, MUC5, CD8）；无监督；代码 <code>github.com/measty/StainQuant</code><br><span class="b medium">注意</span> 它是 <strong>AE 不是 VAE</strong>，且「潜码」= 全分辨率浓度，<strong>不是压缩潜码</strong></td></tr>
+<tr><td><strong>CFM-HES</strong><br><span class="small">MICCAI 2026</span></td><td>浓度（全分辨率）</td><td>—（不压缩）</td><td>库内已核实：backbone 逐字为「<strong>a U-Net backbone architecture [22]</strong>」而 [22] = Ronneberger 2015 的<strong>普通 U-Net，不是 SD U-Net</strong>；<code>I = I₀·exp(−HW)</code>，<code>I₀=255</code>、自然对数；配对数据（25 对 WSI）<br><span class="b bad">对你不利</span> 消融：确定性 U-Net 31.34 PSNR / <strong>0.978 SSIM</strong> vs CFM 32.06 / <strong>0.968 SSIM</strong> ⇒ 只 +0.72 dB 且 SSIM 反向</td></tr>
+<tr><td><strong>MAISI</strong><br><span class="small">NVIDIA, arXiv:2409.11169</span></td><td>3D CT 潜空间</td><td>自训 3D VAE 的潜码</td><td>3D Latent Diffusion Model，<strong>VAE 与 backbone 全部自训</strong>，不复用 SD 任何权重。<strong>「自训 VAE + 自训 LDM」这条路线在医学影像里是成熟范式</strong>——但代价是先验为零</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">路线 2 的真实收益，容易被误判</div>
+<p style="margin-bottom:0">很多人以为路线 2 的收益是「物理约束可以进潜空间」——<strong>错，§5.3 已证明不可能</strong>。路线 2 的真实收益只有一条：<strong>潜空间的统计分布与你的数据匹配</strong>，因此潜码不容易跑出流布（治你的黑团 H2），且 (d, f) 可自由选。<br>
+⇒ <strong>而这条收益，用路线 1 + 一次解码器微调（路线 3）就能拿到大部分，成本低得多。</strong></p></div>
+
+<h3 id="s6-3">6.3 路线 3 · 解码器-only 微调：潜空间逐字不变</h3>
+<div class="card">
+<div class="ch"><div><div class="title">Stony Brook 病理 VAE（MICCAI 2025 · arXiv:2503.11591）</div><div class="v">库内已核实：<code>StonyBrook-CVLab/sd-vae-ft-ema-path</code> <span class="b high">VERIFIED</span></div></div><div><span class="b high">真 drop-in</span></div></div>
+<div class="body">
+<p>它的做法是本文档<strong>最值得借鉴的一个模板</strong>：</p>
+<ul>
+<li>基座 = <code>stabilityai/sd-vae-ft-ema</code> = <strong>SD 1.5 VAE（KL-f8-c8）</strong>；潜码 <strong>4×64×64 与 SD1.5 完全相同</strong>。</li>
+<li><strong>只微调解码器、编码器冻结</strong> ⇒ 论文原话「<strong>AE latent space is unchanged</strong>」。</li>
+<li>⇒ <strong>扩散模型无需重训 ⇒ 真 drop-in。</strong></li>
+<li>训练：TCGA 乳腺/结肠/前列腺 2,500 WSI / 2,400 万 patch；损失 = L1 + PatchGAN + <strong>UNI 感知损失</strong>；UNI 相似度 <strong>0.837 → 0.932</strong>。</li>
+<li>加载：<code>AutoencoderKL.from_pretrained("StonyBrook-CVLab/sd-vae-ft-ema-path")</code>（注意<strong>不是</strong> HF 页示例里的 <code>DiffusionPipeline</code>）。</li>
+<li>★ 它的核心论点与你的评价规范一致：<strong>「PSNR/SSIM 与病理模型能否正常工作相关性很差」</strong>⇒ 感知损失应用<strong>病理基础模型嵌入</strong>（UNI / Phikon / Prov-GigaPath），而不是自然图像的 LPIPS。</li>
+<li><span class="b medium">前提</span> 它微调于 <strong>H&amp;E 非 IHC</strong>；且代码未发布（原文明确），只能按配方复现。</li>
+</ul>
+<div class="box key" style="margin-bottom:0"><div class="bt">为什么这条路线对你特别重要</div><p style="margin-bottom:0">它证明了：<strong>「换掉解码器」可以完全不动潜空间，从而完全保住 SD 的 UNet 先验。</strong>把它的「解码目标」从 RGB 换成<strong>浓度</strong>，就得到了 §7.1 的首选方案。</p></div>
+</div></div>
+
+<h3 id="s6-4">6.4 路线 4 · VAE + UNet 一起域适应</h3>
+<div class="card">
+<div class="ch"><div><div class="title">Adapting Pretrained Vision-Language Foundational Models to Medical Imaging Domains</div><div class="v">Chambon, Bluethgen, Langlotz, Chaudhari · arXiv:2210.04133 · NeurIPS 2022 FM4DM Workshop <span class="b high">VERIFIED</span></div></div><div><span class="b medium">部分保先验</span></div></div>
+<div class="body">
+<p>这是<strong>「把一个自然图像 SD 域适应到医学域」这条路线最早的公开工作之一</strong>，摘要逐字：</p>
+<div class="quote"><div class="en">"We explore <strong>the sub-components of the Stable Diffusion pipeline (the variational autoencoder, the U-Net and the text-encoder)</strong> to fine-tune the model to generate medical images."</div></div>
+<p>它的方法论价值在于：<strong>把「SD 不适用于本域」拆成三个可分别微调的组件（VAE / UNet / text-encoder），并分别 benchmark。</strong>这正好是本文 §1 的七层错配在文献里的对应版本。</p>
+<p style="margin-bottom:0"><span class="b medium">未核实</span> 本轮只读了摘要，<strong>没有取到正文里 VAE 微调 vs UNet 微调的定量对比</strong>（哪些组件必须动、收益各多少）。若你要把这条路当承重依据，需要补抓全文。</p>
+</div></div>
+
+<h3 id="s6-5">6.5 阴性结论：没有人做过的事（这才是你的位置）</h3>
+<div class="box pur"><div class="bt">五条阴性结论 —— 它们同时解释了「为什么你找不到」和「你的位置在哪」</div>
+<ol style="margin-bottom:0">
+<li><strong>[N] 没有人用「压缩的浓度原生 VAE」当扩散潜空间。</strong> BL-AE 是 AE 且不压缩；CFM-HES 在全分辨率浓度上跑流匹配。⇒ <strong>「浓度原生压缩潜空间 + 扩散」这一格是空的。</strong></li>
+<li><strong>[N] 没有人做过「RGB 潜空间 vs 浓度潜空间」的受控消融。</strong>（库内已记，8 组英文 query + 中文综述核对均未命中。）</li>
+<li><strong>[N] 病理 LDM 领域没有人系统处理过「潜空间域差」。</strong> HistDiT 用冻结 <code>sd-vae-ft-mse</code> 且全文未讨论该问题；Stony Brook 的病理 VAE 是唯一正面处理「解码器不适合病理」的工作，但它微调于 H&amp;E 且代码未发布。</li>
+<li><strong>[N] 「扩散在浓度 / OD 域生成」= 空格（确认）。</strong> OD 在已有生成式工作里<strong>只作损失 / 引导 / 评价</strong>：PSPStain 的 FOD map（损失）、SheafStain 的 DAB 强度/边缘损失、PGVMS 的 ImageJ OD（评价）、PGLStain 的 OD 兼容性作弱配对监督分配引导（<strong>不是生成空间</strong>）。</li>
+<li><strong>[N] 「潜空间浓度扩散」这个题面本身可能不成立</strong>（§4.1）：K=3 时它与 RGB 潜空间是同一个问题。<strong>只有当你把「噪声几何」作为卖点时，它才是一个独立的科学问题。</strong></li>
+</ol></div>
+<div class="box good"><div class="bt">于是你的位置清楚了</div>
+<p style="margin-bottom:0">你的痛苦来自「在找一个不存在的问题的答案」。而<strong>真正的空白是第 2 条</strong>：<strong>「同一个 backbone、同一份数据、只改生成空间（RGB 潜 / 浓度潜 / log-浓度潜）的受控消融，用实例级下游指标（HER2 分级 DICE、H-score 一致性）评价」</strong>——库内已把这条列为「论文卖点」。<strong>你要找的那篇工作不存在，而它不存在正是你可以做的理由。</strong></p></div>
+
+<h2 id="s7"><span class="num">7</span>对你项目的具体建议</h2>
+
+<h3 id="s7-1">7.1 首选：解码器重定向（Decoder Retargeting）</h3>
+<div class="box key"><div class="bt">一句话：保留 SD 的编码器与 4 通道潜空间，把解码器的输出目标从「RGB」改成「浓度三通道」</div>
+<p>这是本文的核心推荐。它由三个已验证的部件拼成：</p>
+<ul>
+<li><strong>部件 1 · 潜空间逐字不变</strong>（来自路线 3 / Stony Brook）：<strong>编码器冻结</strong> ⇒ <code>z = E_SD(x)</code> 与 SD 完全一致 ⇒ <strong>SD UNet 真 drop-in，先验全留。</strong></li>
+<li><strong>部件 2 · 解码目标换成浓度</strong>（来自 §4.1 的可逆映射）：训练 <code>D_conc: z → [C_H, C_DAB, C_res]</code>，目标 = <code>M₃⁻¹·(−log₁₀(x/I₀))</code>，其中 <code>M₃ = [s_H, s_DAB, ŝ_res]</code> 是<strong>正交基</strong>（<code>ŝ_res = normalize(s_H × s_DAB)</code>，再 Gram–Schmidt）。</li>
+<li><strong>部件 3 · 物理在解码后</strong>（来自 §5.3 的硬约束）：<code>Î = I₀ · 10^(−M₃ · D_conc(z))</code>。<strong>渲染器不进潜空间，只在解码后。</strong></li>
+</ul>
+<p style="margin-bottom:0"><strong>为什么这是最优解：</strong>潜码承载的仍是「重建这张图所需的信息」（SD 先验适用），而<strong>浓度成为解码后的物理量</strong>。你不需要改 VAE 的架构、不需要改潜通道数、不需要重训编码器、不需要动 SD 的 UNet 权重——<strong>只训一个解码器</strong>。</p></div>
+<div class="scroll"><table>
+<thead><tr><th style="width:22%">维度</th><th>解码器重定向方案</th></tr></thead>
+<tbody>
+<tr><td><strong>改哪个模块</strong></td><td>只加/训一个解码器 <code>D_conc</code>（约 50M 参数，结构可沿用 SD VAE 的 decoder 或小 U-Net 上采样栈）</td></tr>
+<tr><td><strong>要不要重训</strong></td><td><strong>编码器不训</strong>（冻结）· <strong>UNet 不因潜空间而重训</strong>（任务本身的微调照常）· <strong>只训解码器</strong></td></tr>
+<tr><td><strong>通道数问题</strong></td><td><strong>消失</strong>。编码器永远只看 RGB（3 通道）；解码器永远只输出 3 通道浓度。K=3 与 3 通道天然对齐</td></tr>
+<tr><td><strong>成本</strong></td><td>低。一次解码器训练（可在你已有的 BCI/MIST 配对数据上做），无需 24GB 级显存（解码器比 UNet 小得多）</td></tr>
+<tr><td><strong>SD 先验</strong></td><td><span class="b high">全留</span></td></tr>
+<tr><td><strong>失败模式</strong></td><td>① 解码器容量不足 ⇒ 浓度图糊（用 AE 重建上限测，见 §8.1）；② 编码器（为 RGB 训练）对 IHC 的编码信息不足 ⇒ 潜码里没有 DAB 信息（用潜码-浓度互信息测）；③ 与 Stony Brook 同样的小数据过拟合风险</td></tr>
+<tr><td><strong>怎么验证</strong></td><td>① <code>D_conc(E_SD(x))</code> 对真实 IHC 的 OD 重建误差；② 闭环 <code>‖Render(D_conc(E_SD(x))) − x‖</code>（对照你的 0.023 基线）；③ 下游 HER2/H-score 一致性</td></tr>
+</tbody></table></div>
+
+<h3 id="s7-2">7.2 备选：浓度原生压缩 VAE + 自训小 backbone</h3>
+<p>如果你的动机<strong>确实</strong>是「噪声几何要符合物理」（§4.4），或者你发现 SD 潜空间装不下 DAB 信息，那才走这条路：</p>
+<ol>
+<li>训一个<strong>压缩的</strong>浓度原生 VAE：<code>E: RGB → z</code>（自选 d, f），<code>D: z → [C_H, C_DAB, C_res]</code>；</li>
+<li>扩散在 <code>z</code> 上跑，backbone <strong>从头训</strong>（小 U-Net 或 DiT）；</li>
+<li>渲染在解码之后（同 §7.1 部件 3）。</li>
+</ol>
+<div class="scroll"><table>
+<thead><tr><th style="width:24%"></th><th style="width:38%">路线 2（浓度原生 VAE）</th><th>§7.1 解码器重定向</th></tr></thead>
+<tbody>
+<tr><td><strong>潜空间统计匹配数据</strong></td><td><span class="b high">是</span>（治 H2 黑团最彻底）</td><td><span class="b medium">否</span>（需靠微调 + 分布内约束）</td></tr>
+<tr><td><strong>SD 先验</strong></td><td><span class="b bad">全丢</span></td><td><span class="b high">全留</span></td></tr>
+<tr><td><strong>(d, f) 自由度</strong></td><td><span class="b high">自由</span></td><td><span class="b low">固定 (4, 8)</span></td></tr>
+<tr><td><strong>噪声几何可控</strong></td><td><span class="b high">可</span>（可重标定调度）</td><td><span class="b low">否</span></td></tr>
+<tr><td><strong>训练成本</strong></td><td>VAE（全量）+ backbone（全量）</td><td>一个解码器</td></tr>
+<tr><td><strong>文献先例</strong></td><td>MAISI（CT，自训 VAE+LDM）· CFM-HES（浓度域但用普通 U-Net）</td><td>Stony Brook（解码器-only 的 RGB 版）</td></tr>
+</tbody></table></div>
+<div class="box warn"><div class="bt">建议的决策顺序</div>
+<p style="margin-bottom:0"><strong>先走 §7.1</strong>（成本低、先验全留）。<strong>只有当 §8 的零成本实验证明「SD 潜空间装不下浓度信息」或「统计错配无法用微调压下去」时，才升级到 §7.2。</strong>不要一上来就自训 VAE——那是把两个未验证的风险（VAE 好不好、backbone 好不好）叠在一起，出问题时无法归因。</p></div>
+
+<h3 id="s7-3">7.3 明确不推荐的两条</h3>
+<div class="grid2">
+<div class="mini"><div class="mt"><span class="b bad">不推荐 A</span> 把 K 通道浓度硬塞进 3 通道槽，喂冻结 SD VAE，不微调</div><p>这是「以为改了通道数就完事」的典型。§5.2 已证明：<strong>这正是你黑团 H2 的成因</strong>——潜码跑出分布，解码器在未见区域外推。而且它<strong>不会报错</strong>，只会静默产出「看起来像染色照片但浓度全错」的图。<strong>更危险的是</strong>：你库内已记录过——clamp 把黑团压到质检阈值以下，等于<strong>把「可检测的失败」变成「不可检测的失败」</strong>。</p></div>
+<div class="mini"><div class="mt"><span class="b bad">不推荐 B</span> 在潜空间上算 Beer–Lambert</div><p>§5.3 已证明这是数学上无意义的：量纲不对（潜通道不是染料浓度）、像素对应不对（1 个潜像素 = 64 个原像素）、通道语义不对（潜通道是混合编码）。<strong>渲染器只能放在解码之后。</strong>如果你看到某篇工作声称「在潜空间做物理渲染」，先检查它是不是把「latent」用成了「浓度图」的同义词——库内已经出现过这种术语混淆（SGCD 把伊红密度当 DAB 密度）。</p></div>
+</div>
+
+<h3 id="s7-4">7.4 配置与伪代码</h3>
+<p><strong>① 通道数相关的最小改动</strong>（如果你确实要把浓度拼进 UNet 条件侧）：</p>
+<pre><code># ── 条件侧：沿通道维拼接 + 扩 conv_in（§2.1 官方做法）────────────────
+# 原本 UNet conv_in 吃 4 通道潜码；现在额外拼进 H&amp;E 的浓度栈（K'=3）
+unet = AutoModel.from_pretrained(
+    "stable-diffusion-v1-5/stable-diffusion-v1-5", subfolder="unet",
+    in_channels=4 + 3,                 # 4 潜码 + 3 条件
+    low_cpu_mem_usage=False,
+    ignore_mismatched_sizes=True,      # 新通道权重随机初始化
+)
+# ⇒ 官方逐字警告：不微调则「the model returns noise」
+
+# ── 编码侧：只有当你真的要喂浓度图给 VAE 时才需要 ────────────────
+# 首选方案（§7.1）不需要改这一层，因为编码器永远只看 RGB
+</code></pre>
+<p><strong>② 首选方案的训练目标</strong>（解码器重定向）：</p>
+<pre><code># 记号：x = RGB 图像（H&amp;E 或 IHC），I₀ = 背景光强，M₃ = 正交染色矩阵
+#       E_SD = 冻结的 SD VAE 编码器，D_conc = 待训的浓度解码器
+#       z_scaling = 0.18215（SD 的潜码缩放因子，必须沿用）
+
+z   = E_SD(x).latent_dist.sample() * z_scaling     # 冻结，逐字与 SD 一致
+C_t = pinv(M3) @ ( -log10( clamp(x,1e-6,1) / I0 ) )  # 目标浓度，纯计算，无需标注
+
+C_hat = D_conc(z)                                   # 3 通道: [C_H, C_DAB, C_res]
+
+# 渲染必须在解码之后（§5.3 硬约束）
+x_hat = I0 * 10 ** ( - ( M3 @ C_hat ) )             # 可微 BL 渲染
+
+L_rec  = L1(x_hat, x) + lambda_p * UNI_perceptual(x_hat, x)   # 病理基础模型感知损失
+L_od   = L1( M3 @ C_hat, -log10(clamp(x,1e-6,1)/I0) )          # 在 OD 空间比对（量纲干净）
+L_fod  = FOD_loss(C_hat[1], C_target[1])                       # 蛋白约束，挂 C_DAB（库内第一优先级）
+
+# ★ C_res 不能加非负约束（库内已记）：C_H, C_DAB → softplus；C_res → 线性输出
+</code></pre>
+<div class="box teal"><div class="bt">两个容易踩的细节</div>
+<p style="margin-bottom:0"><strong>① <code>z_scaling = 0.18215</code> 必须沿用</strong>——这是 SD 潜空间的量纲约定，改了它等于换了潜空间，UNet 先验立刻失效。<br>
+<strong>② log 底数不能混用</strong>：SD 生态与 StainQuant 用<strong>自然对数 + I₀=1</strong>，而 Ruifrok / Macenko / 你 <code>physics.py</code> 用 <strong>log₁₀ + I₀≈255</strong>。混用会静默缩放 <code>ln(10) ≈ 2.303</code> 倍。<strong>在你的 <code>L_od</code> 里必须先声明用哪一套，并在全流程里保持一致。</strong></p></div>
+
+<h2 id="s8"><span class="num">8</span>零成本前置实验：在训任何扩散之前先做</h2>
+<p>这一节的依据是 SD3 论文的一句逐字结论（§3.1 第 ⑤ 条）：<strong>「自编码器的重建质量，给出了潜空间扩散训练之后所能达到的图像质量的上界。」</strong></p>
+
+<h3 id="s8-1">8.1 VAE 重建上限 = 你的天花板</h3>
+<div class="box key"><div class="bt">先量天花板，再决定要不要盖楼</div>
+<p>如果 <code>encode → decode</code> 的重建本身就丢掉了 DAB 阳性区的结构，那么<strong>任何扩散模型、任何采样技巧、任何引导强度都不可能把它找回来</strong>——因为信息在编码那一步就没了。</p>
+<p style="margin-bottom:0">你库内已经有这条判据（「AE 重建上限分层测试，零训练成本，判据 R²=0.67」）。现在把它<strong>升级成对多个候选 VAE 的横向比较</strong>：</p></div>
+<div class="scroll"><table>
+<thead><tr><th style="width:26%">候选编码器</th><th style="width:20%">潜码规格</th><th style="width:22%">预期</th><th>为什么值得测</th></tr></thead>
+<tbody>
+<tr><td><strong>SD1.5 VAE</strong>（<code>sd-vae-ft-ema</code>）</td><td>4×64×64 @512²</td><td>基准</td><td>你现有可能在用的</td></tr>
+<tr><td><strong>SD2.1 VAE</strong></td><td>4×64×64</td><td>与 SD1.5 接近</td><td>StainFuser 用的就是它</td></tr>
+<tr><td><strong>Stony Brook 病理 VAE</strong><br><code>sd-vae-ft-ema-path</code></td><td>4×64×64<br><strong>与 SD1.5 逐字相同</strong></td><td><span class="b high">应明显更好</span></td><td>它专门微调过解码器以适配病理图像；<strong>且潜空间不变 ⇒ 真 drop-in</strong>。这是唯一有理由期待的免费提升</td></tr>
+<tr><td><strong>你的候选浓度原生 VAE</strong><br>（若走 §7.2）</td><td>自选 (d, f)</td><td>未知</td><td>作为 §7.2 是否值得启动的判据</td></tr>
+</tbody></table></div>
+
+<h3 id="s8-2">8.2 三个判据（全部零训练或低成本）</h3>
+<div class="grid3">
+<div class="mini"><div class="mt">判据 1 · 重建上限</div><p><strong>分层测</strong> <code>PSNR/SSIM(encode→decode)</code>，<strong>必须按 DAB 高/低分组分别报</strong>。</p><p class="small">全局 PSNR 会被大片阴性区域（占多数、容易重建）拉高，掩盖阳性区的崩坏。<strong>分不清「H1 解码器不够好」与「H2 潜码跑出分布」时就靠这个。</strong></p></div>
+<div class="mini"><div class="mt">判据 2 · 统计错配</div><p>编真实瓦片得 <code>z</code>，报<strong>逐通道</strong> mean/std/1%/5%/95%/99% 分位；再统计采样潜码落在真实 [1%,99%] 外的比例。</p><p class="small"><code>&gt;5%</code> ⇒ 统计错配成立（库内已定）。<strong>这一步应该在「把浓度图喂进 SD VAE」之前跑。</strong></p></div>
+<div class="mini"><div class="mt">判据 3 · K=3 闭环可逆性</div><p>用<strong>三通道正交基</strong> <code>M₃</code> 重跑你的闭环：<code>‖Render(Deconv(x)) − x‖</code>。</p><p class="small">你已经量过 K=2 的值是 <strong>0.023</strong>。K=3 正交基下应当降到<strong>机器精度量级</strong>（<code>M₃ᵀM₃ = I</code> ⇒ 恒等式）。<strong>若没有降到接近 0，说明你的 <code>M₃</code> 没真正正交化</strong>——这是一个 30 秒的自检。</p></div>
+</div>
+
+<h3 id="s8-3">8.3 止损与升级判据</h3>
+<div class="scroll"><table>
+<thead><tr><th style="width:34%">观察到的现象</th><th style="width:26%">判定</th><th>行动</th></tr></thead>
+<tbody>
+<tr><td>病理 VAE 的重建上限在 DAB 阳性区<strong>显著高于</strong> SD 原版 VAE</td><td>H1（解码器不够好）</td><td><strong>直接换解码器</strong>（路线 3），潜空间不动，成本最低</td></tr>
+<tr><td>重建上限高，但采样后崩</td><td>H2（潜码跑出分布）</td><td>走 §7.1 + 分布内约束；<strong>若统计错配压不下去 ⇒ 升级 §7.2</strong></td></tr>
+<tr><td>K=3 闭环残差<strong>没降到接近 0</strong></td><td><code>M₃</code> 未正交化</td><td>先修矩阵（Gram–Schmidt），<strong>这一步不修好，后面所有浓度语义都不可信</strong></td></tr>
+<tr><td>所有候选 VAE 的阳性区重建上限都很低</td><td>潜空间表达力不足</td><td><strong>只有这时才该启动 §7.2</strong>（自训浓度原生 VAE，可选更大的 d）</td></tr>
+<tr><td>SD 潜码与 <code>C_DAB</code> 的互信息接近 0</td><td>潜空间里没有 DAB 信息</td><td>解码器重定向无效 ⇒ 走 §7.2。<strong>这条是最直接的「§7.1 是否可行」判据</strong></td></tr>
+</tbody></table></div>
+<div class="box good"><div class="bt">执行顺序（建议）</div>
+<p style="margin-bottom:0"><strong>判据 3（30 秒）→ 判据 1（半天，含下载 Stony Brook 权重）→ 判据 2（30 分钟）→ 决定走 §7.1 还是 §7.2。</strong><br>
+前三步<strong>全部不需要训练扩散模型</strong>。如果 §7.1 可行，你只需要训一个解码器；如果不可行，你已经有了「为什么不可行」的量化证据，再启动自训 VAE 也有明确目标。</p></div>
+
+<h2 id="s9"><span class="num">9</span>证据边界与未核实清单</h2>
+<p>按库内既定纪律，逐条标注证据等级。<span class="b high">VERIFIED</span> = 本轮一手读到原文/原文段落；<span class="b medium">未核实</span> = 只有摘要或二手转述；<span class="b bad">[N]</span> = 定向检索后的阴性结论。</p>
+<div class="scroll"><table>
+<thead><tr><th style="width:24%">条目</th><th style="width:12%" class="c">等级</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>diffusers 通道扩展做法 + 「不微调则输出噪声」</td><td class="c"><span class="b high">VERIFIED</span></td><td>逐字读官方文档 <code>adapt_a_model</code> 全文（v0.35.1），含代码块</td></tr>
+<tr><td>SD3 潜通道数 4/8/16 扫描 + 上界原则 + 通道维拼接</td><td class="c"><span class="b high">VERIFIED</span></td><td>逐字读 arXiv:2403.03206v1 HTML 正文（§5.2.1、Table 3 表题、Fig 10 表题）</td></tr>
+<tr><td>BL-AE 架构（编码器输出 K 个非负浓度通道 + 可微 BL 解码器）</td><td class="c"><span class="b high">VERIFIED</span></td><td>逐字读 arXiv:2601.11336 摘要页；代码地址已核实为 <code>github.com/measty/StainQuant</code>。<strong>但未读正文</strong>（是否压缩、K 的取值细节未核实）</td></tr>
+<tr><td>Chambon 2022 域适应（VAE/UNet/text-encoder 分别微调）</td><td class="c"><span class="b medium">摘要级</span></td><td>读了摘要，<strong>未读正文</strong>的组件级定量对比。若要承重需补抓</td></tr>
+<tr><td>StainDiffuser 是像素空间还是潜空间</td><td class="c"><span class="b medium">未核实</span></td><td>摘要只说「multitask dual diffusion + 小数据集收敛 + 两个 marker」，<strong>未声明空间</strong>。本轮未读正文</td></tr>
+<tr><td>SANA DC-AE 的 32× 压缩与 F8 对比</td><td class="c"><span class="b high">VERIFIED</span></td><td>读 NVlabs SANA 官方页面逐字句</td></tr>
+<tr><td>SD3 使用 16 通道 VAE</td><td class="c"><span class="b high">VERIFIED</span></td><td>由 SD3 原文 Fig 10 表题 + 「We opt for the 16-chn model」逐字确认（§3.1 第 ④ 条）</td></tr>
+<tr><td>PLoS 多染色「单一 H&amp;E 编码器 + 多个染色解码器」（最多 8 种染色）</td><td class="c"><span class="b medium">摘要级</span></td><td>读了摘要与正文片段（curl 到 HTML）。<strong>它是 GAN 家族（引用 StarGAN/GAN），不是扩散</strong>；作为「1 编码器 → K 解码器」的架构先例有价值，但不构成扩散路线的先例</td></tr>
+<tr><td>「新通道权重初始化为原 3 通道均值」</td><td class="c"><span class="b medium">未核实</span></td><td><strong>未找到一手出处</strong>，只见到社区实践描述。本文只把它列为「可选更稳的初始化」，不当作官方推荐</td></tr>
+<tr><td>「没有人用压缩浓度原生 VAE 当扩散潜空间」等 5 条阴性结论</td><td class="c"><span class="b bad">[N]</span></td><td>基于本轮 WebSearch + arXiv/OpenAlex/S2 检索 + 库内既有 8 组 query 记录。<strong>非全量文献计量学结论</strong>；不排除「做过但未发表/未索引」</td></tr>
+<tr><td>Beer–Lambert 在潜空间不可计算（§5.3）</td><td class="c"><span class="b high">推理结论</span></td><td>这是<strong>本文的数学论证</strong>，不是文献引用：量纲 / 像素对应 / 通道语义三条各自独立成立</td></tr>
+<tr><td>K=3 时 C↔RGB 为双射（§4.1）</td><td class="c"><span class="b high">推理结论</span></td><td>同样是本文的数学论证：<code>M</code> 3×3 可逆 + <code>exp</code> 单调 ⇒ 双射。不依赖任何文献</td></tr>
+</tbody></table></div>
+
+<h2 id="s10"><span class="num">10</span>参考文献</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:5%" class="c">#</th><th style="width:31%">工作</th><th style="width:20%">出处</th><th>本文引用它的理由</th></tr></thead>
+<tbody>
+<tr><td class="c">1</td><td><strong>Adapt a model to a new task</strong>（diffusers 官方训练文档）</td><td>HuggingFace diffusers v0.35.1 <code>docs/source/en/training/adapt_a_model.md</code></td><td>§2 的唯一依据：通道扩展的标准做法 + 「不微调则输出噪声」逐字警告</td></tr>
+<tr><td class="c">2</td><td><strong>Scaling Rectified Flow Transformers for High-Resolution Image Synthesis</strong>（SD3）<br>Esser et al.</td><td>ICML 2024 · arXiv:2403.03206</td><td>§3 的核心一手证据：潜通道数 d 扫过 4/8/16、代价曲线、通道维拼接、重建上界原则</td></tr>
+<tr><td class="c">3</td><td><strong>Beer-Lambert Autoencoder for Unsupervised Stain Representation Learning and Deconvolution in Multi-IHC Brightfield Histology Images</strong><br>Eastwood, McKee, Hu, Tejpar, Minhas</td><td>arXiv:2601.11336（2026-01-16）· 代码 <code>github.com/measty/StainQuant</code></td><td>§6.2：浓度原生 AE 的先例（编码器输出 K 个非负浓度通道 + 可微 BL 解码器）</td></tr>
+<tr><td class="c">4</td><td><strong>StainFuser</strong><br>Jewsbury, Wang, Bhalerao, Rajpoot, Vu</td><td>arXiv:2403.09302 · <code>R-J96/stainFuser</code></td><td>§6.1：SD2.1 潜空间 + ControlNet 条件的代码级实测；<code>conditioning_embedding_in_channels=4</code> 死参数的实例</td></tr>
+<tr><td class="c">5</td><td><strong>Stony Brook 病理微调 VAE</strong>（<code>sd-vae-ft-ema-path</code>）</td><td>MICCAI 2025 · arXiv:2503.11591</td><td>§6.3 / §7.1：<strong>解码器-only 微调、潜空间逐字不变</strong> ⇒ 首选方案的技术原型</td></tr>
+<tr><td class="c">6</td><td><strong>Adapting Pretrained Vision-Language Foundational Models to Medical Imaging Domains</strong><br>Chambon, Bluethgen, Langlotz, Chaudhari</td><td>arXiv:2210.04133 · NeurIPS 2022 FM4DM Workshop</td><td>§6.4：把 SD 拆成 VAE/UNet/text-encoder 分别域适应的方法论先例</td></tr>
+<tr><td class="c">7</td><td><strong>MAISI: Medical AI for Synthetic Imaging</strong>（NVIDIA）</td><td>arXiv:2409.11169</td><td>§6.2：自训 VAE + 自训 LDM 在医学影像里的成熟范式（代价：先验为零）</td></tr>
+<tr><td class="c">8</td><td><strong>SANA</strong>（DC-AE 深度压缩自编码器）</td><td>NVlabs · <code>nvlabs.github.io/Sana/</code></td><td>§3.3：空间压缩因子 f 是超参（F8 vs F32，token 数差 16 倍）</td></tr>
+<tr><td class="c">9</td><td><strong>HistDiST</strong></td><td>arXiv:2505.06793（库内已核实）</td><td>§6.1：潜空间 + Phikon conditioning；官方 README 逐字 24GB VRAM</td></tr>
+<tr><td class="c">10</td><td><strong>HistDiT: A Structure-Aware Latent Conditional Diffusion Transformer</strong></td><td>Springer LNCS（库内记为 arXiv:2604.08305）</td><td>§6.1 / §6.5：冻结 <code>sd-vae-ft-mse</code> 且<strong>全文未讨论潜空间域差</strong>——阴性结论 #3 的依据</td></tr>
+<tr><td class="c">11</td><td><strong>CFM-HES</strong>（浓度域条件流匹配）</td><td>MICCAI 2026 · LNCS 16891 · <code>github.com/MedSalimBenOmrane/CFM-HES</code></td><td>§6.2：浓度域先例；backbone 逐字为普通 U-Net 2015；消融对生成模型不利（+0.72 dB、SSIM 反向）</td></tr>
+<tr><td class="c">12</td><td><strong>Scalable, trustworthy generative model for virtual multi-staining from H&amp;E whole slide images</strong><br>Ounissi, Sarbout et al.</td><td>PLoS Comput Biol 2025 · DOI 10.1371/journal.pcbi.1013516</td><td>§6.5 附带：<strong>单一 H&amp;E 编码器 + 多个染色解码器</strong>（最多 8 种染色）的架构先例——「共享表示 + 染色专属输出」这一模式已有先例，但属 GAN 家族</td></tr>
+<tr><td class="c">13</td><td><strong>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</strong><br>Kataria, Knudsen, Elhabian</td><td>arXiv:2403.11340</td><td>§6 附带：小数据集下的多任务扩散虚拟染色；<strong>空间归属未核实</strong></td></tr>
+<tr><td class="c">14</td><td><strong>DCTdiff</strong>（线性空间扩散 vs 像素空间）</td><td>ICML 2025 · arXiv:2412.15032（库内已核实）</td><td>§4.4：唯一严谨的「线性空间扩散更好」证据，但用 <strong>DCT 正交变换</strong> ⇒ 不能外推到 <code>log</code> 非线性</td></tr>
+</tbody></table></div>
+<hr>
+<p class="small">本文档由 WorkBuddy 生成 · 2026-10-11 · 归属：<code>/Users/hua/Desktop/科研/H&amp;E2IHC_扩散模型调研/01_调研报告/</code> · 相关文档：<code>扩散虚拟染色_结构保持机制_Condition注入与约束引导的机制比较.html</code>（H 浓度锚定投影）· <code>浓度域OD域虚拟染色_方法级文献地图与Beer-Lambert渲染桥.html</code>（浓度域文献地图）· <code>训练一个好VAE的公开资源地图_面向扩散潜空间.html</code>（VAE 两条路线）· <code>HE与IHC的H通道是否共享_染色化学_配准与计算三层拆解.html</code>（H 通道四层拆解）。</p>
+</main></div></body></html>

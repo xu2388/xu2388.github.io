@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAB-only 浓度扩散架构全流程可行性审查</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">DAB-only Diffusion</div>
+<div class="sub">浓度扩散全流程审查<br>H&amp;E→HER2-IHC · 2026-10-08</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · 用户方案的完整数据流</a>
+<a class="l2" href="#s1-1">1.1 扩散什么</a>
+<a class="l2" href="#s1-2">1.2 四个模块如何分工</a>
+<a class="l1" href="#s2">2 · DAB-only 核心假设</a>
+<a class="l1" href="#s3">3 · 逐模块可行性与问题</a>
+<a class="l2" href="#s3-1">3.1 H 通道直接复用</a>
+<a class="l2" href="#s3-2">3.2 E 通道与形态编码器</a>
+<a class="l2" href="#s3-3">3.3 A 蛋白表达估计器</a>
+<a class="l2" href="#s3-4">3.4 B 真实 IHC score model</a>
+<a class="l2" href="#s3-5">3.5 主 DAB diffusion</a>
+<a class="l1" href="#s4">4 · 框架中的结构性问题</a>
+<a class="l1" href="#s5">5 · backbone 与参数化选择</a>
+<a class="l1" href="#s6">6 · 推荐的收敛版架构</a>
+<a class="l2" href="#s6-1">6.1 v1 不要同时上 A/B</a>
+<a class="l2" href="#s6-2">6.2 v2 加入物理先验</a>
+<a class="l1" href="#s7">7 · loss 与 timestep 逻辑</a>
+<a class="l1" href="#s8">8 · 验证路线与止损</a>
+<a class="l1" href="#s9">9 · 最终决策</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">方案可行性审查 · DAB-only concentration diffusion</div>
+<h1>DAB-only 浓度扩散架构<br>—— 完整处理逻辑、问题诊断与模型选择</h1>
+<p class="desc">对象：用户补充的完整架构方案——复用 H&amp;E 的 H 浓度、以 H/E 作为形态条件、只扩散 DAB、加入 Protein Estimator A、Real-IHC Score Model B，并用 Beer–Lambert 渲染回 RGB。依据：当前项目已验证的浓度闭环、H 通道块级共享证据（Corr<sub>128</sub>=0.407，pixel Corr=0.061）以及既有 FeatStainDiff/PST-Diff/物理约束调研。</p>
+<div class="meta"><span>DAB-only diffusion</span><span>H channel reuse</span><span>Protein Estimator A</span><span>Real-IHC Score Model B</span><span>Beer–Lambert renderer</span><span>2026-10-08</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box key">
+<div class="bt">总判定：DAB-only 是比“同时生成 H+DAB”更合理的收敛方向，但当前完整图仍然过度堆叠，需要拆成 v1/v2</div>
+<p><b>核心方向成立：</b>既然你已经验证 H&amp;E 与 IHC 的 H 通道存在块级共享证据，那么第一版不应让 diffusion 同时重新生成 H。最合理的生成目标是：</p>
+<div class="formula"><b>[C<sub>H</sub><sup>HE</sup>, C<sub>E</sub><sup>HE</sup>] → diffusion → Ĉ<sub>DAB</sub><sup>IHC</sup> → [C<sub>H</sub>, Ĉ<sub>DAB</sub>] → Beer–Lambert → IHC RGB</b></div>
+<p>但这里的“复用 H”不能等于未经校准的硬拷贝。<b>H 的块级相关性 0.407 支持“作为结构锚/条件”，不支持“像素级等同”</b>；H&amp;E 与 IHC 两侧的 stain matrix、白点、染色强度尺度仍可能不同。因此应使用一个低容量、可测量的 <code>T_H</code> 做域尺度校准，而不是直接假设 <code>C_H^HE=C_H^IHC</code>。</p>
+</div>
+
+<div class="box stop">
+<div class="bt">当前架构最大的风险不是 diffusion，而是“非配对数据如何训练条件 diffusion”</div>
+<p>如果主训练仍然使用标准噪声预测：</p>
+<pre><code>L_diff = || ε - ε_θ(C_DAB^IHC,t,C_H^HE,C_E^HE) ||²</code></pre>
+<p>那么 <code>C_DAB^IHC</code> 与 H&amp;E 条件至少要有病例/区域级对应。若完全随机 non-paired，把某张 H&amp;E 和另一张无关 IHC 的 DAB 拼成训练 pair，模型会学到 <b>p(C_DAB)</b> 或 cohort average，而不是 <b>p(C_DAB|H&amp;E)</b>。这是数据识别问题，不是换 U-Net 能解决的问题。</p>
+</div>
+
+<div class="scroll"><table>
+<thead><tr><th>部分</th><th>判定</th><th>真正应保留的版本</th><th>改动成本</th><th>可复现性</th></tr></thead>
+<tbody>
+<tr><td>DAB-only 生成</td><td><span class="b high">成立</span></td><td>扩散只生成 DAB；H 做结构锚，但加域尺度校准</td><td>中</td><td><span class="b high">高</span></td></tr>
+<tr><td>H/E spatial anchor</td><td><span class="b high">成立</span></td><td>v1 直接拼接 <code>C_H,C_E</code>；形态编码器后置</td><td>低–中</td><td><span class="b high">高</span></td></tr>
+<tr><td>A 蛋白表达估计器</td><td><span class="b medium">有条件成立</span></td><td>只做软条件/先验；pseudo-IHC 监督不能当真值；v1 可不加入</td><td>中</td><td><span class="b medium">中</span></td></tr>
+<tr><td>B 真实 IHC score model</td><td><span class="b medium">有条件成立</span></td><td>先做 IHC DAB prior audit；确认 H 域校准后再做采样 guidance</td><td>高</td><td><span class="b low">中–低</span></td></tr>
+<tr><td>低频 morphology encoder</td><td><span class="b medium">成立但需收窄</span></td><td>形态不是只有低频；v1 不重复 raw H/E + low-pass + encoder 三条路径</td><td>中</td><td><span class="b medium">中</span></td></tr>
+<tr><td>Beer–Lambert render</td><td><span class="b high">成立</span></td><td>fixed/calibrated M，非负参数化，C<sub>res</sub> 暂不加入 v1</td><td>中</td><td><span class="b high">高</span></td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s1"><span class="num">1</span>用户方案的完整数据流</h2>
+
+<h3 id="s1-1">1.1 扩散什么：从“生成 H+DAB”收敛到“只生成 DAB”</h3>
+<pre><code>H&amp;E RGB
+   │
+   ├─ fixed H/E deconvolution ──&gt; C_H^HE
+   │                                  │
+   │                                  ├─ T_H calibration ──&gt; C_H^cond
+   │                                  └─ final reuse / anchor
+   │
+   ├─ fixed H/E deconvolution ──&gt; C_E^HE
+   │                                  │
+   │                                  └─ morphology condition only
+   │
+   └─ optional morphology encoder ──&gt; f_morph
+
+noisy C_DAB^t + C_H^cond + C_E^HE + optional f_morph
+                         │
+                         ▼
+                 concentration diffusion U-Net
+                         │
+                         ▼
+                    Ĉ_DAB^IHC
+                         │
+             [C_H^cond, Ĉ_DAB^IHC]
+                         │
+                         ▼
+                Beer–Lambert renderer
+                         │
+                         ▼
+                     virtual IHC RGB</code></pre>
+<p>这比让 diffusion 同时输出 <code>C_H</code> 与 <code>C_DAB</code> 更容易解释：</p>
+<ul><li>H 通道：已有共享证据，主要承担结构锚；</li><li>E 通道：不进入 IHC 输出，只为胞质、基质、组织边界提供形态证据；</li><li>DAB 通道：唯一需要从 H&amp;E 推断的 marker-specific latent variable。</li></ul>
+
+<h3 id="s1-2">1.2 四个模块如何分工</h3>
+<div class="scroll"><table>
+<thead><tr><th>模块</th><th>输入</th><th>输出</th><th>它应该回答的问题</th><th>它不应该承担的责任</th></tr></thead>
+<tbody>
+<tr><td>H/E structure branch</td><td><code>C_H^HE,C_E^HE</code></td><td>spatial condition / morphology feature</td><td>原始组织结构在哪里、是什么样</td><td>直接预测 HER2 强度</td></tr>
+<tr><td>A Protein Estimator</td><td>H&amp;E structure</td><td><code>c_exp</code>（全局/区域表达先验）</td><td>目标蛋白量级大概在哪</td><td>提供真实 DAB spatial ground truth</td></tr>
+<tr><td>B Real-IHC Score Model</td><td>真实 IHC concentration</td><td><code>s_B</code></td><td>生成 DAB 是否落在真实 IHC 分布</td><td>确定某张 H&amp;E 的唯一阳性位置</td></tr>
+<tr><td>Main DAB diffusion</td><td>noisy DAB + H/E conditions</td><td><code>Ĉ_DAB</code></td><td>在原始结构条件下生成 marker-specific concentration</td><td>单独承担所有真实度、物理度、临床度</td></tr>
+<tr><td>Renderer</td><td><code>C_H,C_DAB,M,I_0</code></td><td>RGB IHC</td><td>把浓度状态变成可检查的图像</td><td>修复错误的 DAB spatial biology</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s2"><span class="num">2</span>DAB-only 核心假设</h2>
+
+<div class="box good"><div class="bt">H 通道证据支持“条件复用”，不支持“像素复制”</div><p>你给出的块级证据：</p><pre><code>Corr_128(C_H^HE, C_H^IHC) = 0.407
+Corr_pixel(C_H^HE, C_H^IHC) = 0.061</code></pre><p>这组数字的正确解释是：H 具有一定的<strong>区域级共享结构</strong>，但连续切片/染色链造成的像素级对应很弱。它正好支持：</p><pre><code>C_H^HE → structure condition / deterministic anchor
+not: C_H^HE(x,y) = C_H^IHC(x,y) as hard pixel GT</code></pre></div>
+
+<div class="box warn"><div class="bt">H 直接复用仍有一个物理尺度问题</div><p>H&amp;E 分解得到的 <code>C_H^HE</code> 使用的是 H&amp;E 侧的 <code>M_HE</code>；最终 IHC 渲染使用 <code>M_IHC</code>。即使两者都叫 H，浓度的数值尺度也未必一致。建议定义：</p><div class="formula">C<sub>H</sub><sup>cond</sup> = T<sub>H</sub>(C<sub>H</sub><sup>HE</sup>) = a<sub>H</sub> C<sub>H</sub><sup>HE</sup> + b<sub>H</sub></div><p>其中 <code>T_H</code> 先限制为全局 affine/monotone calibration，不要让一个高容量网络自由改变 H。<b>如果 E0 的 H 共享证据是在未校准尺度上得到的，必须先在同一 M/X0 口径下复核。</b></p></div>
+
+<h2 id="s3"><span class="num">3</span>逐模块可行性与问题</h2>
+
+<h3 id="s3-1">3.1 H 通道直接复用：成立，但必须加 calibration</h3>
+<div class="box key"><div class="bt">推荐形式</div><pre><code>C_H^HE ── fixed / low-capacity T_H ──&gt; C_H^cond
+                                           │
+                                           ├─ condition to DAB diffusion
+                                           └─ final H channel for renderer</code></pre><p>v1 可以先令 <code>T_H</code> 为固定线性尺度或 identity，作为 baseline；主版本再用低容量 <code>T_H</code> 校准。不要一开始让 diffusion 重建 H，也不要把 H 作为严格像素监督。</p></div>
+<p>必须做的三个消融：</p>
+<ol><li>H full：使用 <code>C_H^cond</code>；</li><li>H zero：把 H 条件置零；</li><li>H shuffled：在 batch 内打乱 H 条件。</li></ol>
+<p>如果 H zero/shuffle 后结构指标几乎不变，说明主干没有真正使用 H；如果 H zero 后 DAB 全部崩塌，则要区分“合法结构依赖”和“错误的强条件短路”。</p>
+
+<h3 id="s3-2">3.2 E 通道与 morphology encoder：E 有用，但“低频=形态”不成立</h3>
+<div class="box good"><div class="bt">E 通道的正确地位</div><p><code>C_E^HE</code> 可以携带胞质、基质、胶原、腺体边界和组织空间关系。它不应被解释成 IHC 的输出染色，而应作为<strong>morphology evidence</strong>。这正是把 E 加进结构条件的合理性。</p></div>
+<p>但用户方案中“low-frequency extraction → morphology encoder”有一个概念风险：</p>
+<ul><li>低频更偏组织布局、背景和整体区域；</li><li>核边界、细胞膜、胞质边缘也包含重要高频成分；</li><li>scanner/stain appearance 也会进入 E 的低频。</li></ul>
+<p>因此建议 v1：</p>
+<pre><code>U_t = concat([u_DAB^t, C_H^cond, norm(C_E^HE)])
+U-Net(U_t, t)</code></pre>
+<p>先不加 low-pass 和 morphology encoder 两个额外分支。v2 再加一个小型多尺度 encoder：</p>
+<pre><code>f_morph = E_morph([C_H^cond, C_E^HE, grad(C_H), grad(C_E)])
+U-Net receives f_morph at 2 or 3 scales</code></pre>
+<p>这样可以判断收益来自“E 本身”还是“额外 encoder 容量”。</p>
+
+<h3 id="s3-3">3.3 A：Protein Estimator 的价值与循环监督风险</h3>
+<div class="box warn"><div class="bt">判定：有条件成立；不能当真实蛋白标签</div><p>如果 A 的训练标签来自：</p><pre><code>H&amp;E → PSPStain → pseudo-IHC → DAB/FOD statistic</code></pre><p>那么 A 学到的是 PSPStain 的表达偏差。它可以作为<strong>proxy expression prior</strong>，但不能被命名为真实 protein predictor，更不能成为主监督。</p></div>
+<p>A 输出一个全局 <code>c_exp</code> 的能力边界是：</p><ul><li>它可以控制 DAB 的大致量级；</li><li>它不能确定 HER2 膜阳性区域在哪里；</li><li>如果 pseudo-IHC 偏向整图变棕，A 会把这个偏差传给 diffusion。</li></ul>
+<p>推荐：</p><ol><li>v1 不加入 A，先让 H/E condition + DAB diffusion 跑通；</li><li>v2 将 A 作为可 dropout 的 soft condition，训练时随机置零；</li><li>记录 <code>c_exp</code> 与输出 DAB/FOD 的相关性，以及 A zeroing 后是否只改变全局量级而不破坏结构；</li><li>若有真实 HER2 grade，优先用它做 calibration/ordinal check，而不是把 PSPStain pseudo label 当 GT。</li></ol>
+
+<h3 id="s3-4">3.4 B：Real-IHC Score Model 的两个 P0 问题</h3>
+<div class="box stop"><div class="bt">P0-1：条件域不一致</div><p>B 在真实 IHC 上训练的形式是：</p><div class="formula">s<sub>B</sub> = ∇<sub>C<sub>DAB</sub><sup>t</sup></sub> log p(C<sub>DAB</sub><sup>t</sup> | C<sub>H</sub><sup>IHC</sup>,t)</div><p>但推理时输入的是 <code>C_H^HE</code>。因此 B 实际上面对 covariate shift：</p><div class="formula">p<sub>train</sub>(C<sub>H</sub>) = p(C<sub>H</sub><sup>IHC</sup>) &nbsp;≠&nbsp; p<sub>test</sub>(C<sub>H</sub><sup>HE</sup>)</div><p>如果不校准，B 可能把 H&amp;E/IHC 的 stain-scale 差异误判成不真实 DAB。</p></div>
+<div class="box warn"><div class="bt">P0-2：B 只提供“真实世界先验”，不提供实例级位置</div><p>无配对真实 IHC 训练的 B 只能学：</p><pre><code>什么样的 DAB/H 组合在真实 IHC 中常见</code></pre><p>它不能知道这张 H&amp;E 的哪一块一定是 HER2 阳性。若 <code>λ_B</code> 太大，B 会把每张图拉向真实 IHC 的平均分布，导致“全局染色更像、实例表达更错”。</p></div>
+<p>因此 B 的三个版本应分阶段：</p>
+<div class="scroll"><table><thead><tr><th>版本</th><th>条件</th><th>优点</th><th>风险</th><th>建议</th></tr></thead><tbody><tr><td>B0</td><td><code>p(C_DAB)</code>，不条件 H</td><td>没有 H 域偏移；最容易验证</td><td>只提供 marginal prior，弱</td><td><span class="b high">先做 prior audit</span></td></tr><tr><td>B1</td><td><code>p(C_DAB|T_H(C_H^HE))</code></td><td>训练/推理条件口径一致</td><td>需要可靠 H calibration</td><td><span class="b medium">主候选</span></td></tr><tr><td>B2</td><td>完整采样 score guidance</td><td>能直接约束每步采样</td><td>第二个 diffusion/score 网络；梯度尺度和双先验冲突</td><td><span class="b low">最后做</span></td></tr></tbody></table></div>
+<p>如果 B2 最终启用，必须做 score normalization：</p><pre><code>g_diff = norm(score_main)
+g_B    = norm(score_B)
+s_final = score_main + λ_B(t) * (g_diff / (g_B + eps)) * score_B</code></pre><p>不能把两个 score 直接相加后凭经验调一个绝对 λ。</p>
+
+<h3 id="s3-5">3.5 主 DAB diffusion：可行，但数据配对边界必须写清楚</h3>
+<div class="box key"><div class="bt">标准 conditional diffusion 的必要条件</div><p>训练 <code>ε_θ(C_DAB^IHC | H&amp;E)</code> 时，target DAB 至少需要与 H&amp;E 在病例、区域或弱配准层面对应。完全随机 non-paired 的目标 DAB 不能提供实例级条件监督。</p></div>
+<div class="scroll"><table><thead><tr><th>数据模式</th><th>标准 DAB diffusion 是否可用</th><th>应采用的训练逻辑</th></tr></thead><tbody><tr><td>registered / weak-paired</td><td><span class="b high">可以</span></td><td>主 diffusion loss 训练；用 distribution/ranking 抵抗错位，记录错位等级</td></tr><tr><td>case-matched but patch-unregistered</td><td><span class="b medium">有条件</span></td><td>弱配对 target patch + FOD distribution/ranking；不要 pixel L1</td></tr><tr><td>完全 non-paired</td><td><span class="b bad">不能直接用标准 conditional MSE</span></td><td>需改成 target prior + unpaired transport/cycle/分布约束；实例级表达只能作为不确定分布</td></tr></tbody></table></div>
+
+<h2 id="s4"><span class="num">4</span>框架中的结构性问题</h2>
+<div class="scroll"><table>
+<thead><tr><th>问题</th><th>严重性</th><th>后果</th><th>修法</th></tr></thead>
+<tbody>
+<tr><td>H 直接复用却不校准 M/白点/尺度</td><td><span class="b bad">P0</span></td><td>H domain shift 被渲染成 IHC 色差或 DAB 偏差</td><td>fixed M + 低容量 <code>T_H</code>；先做 H-only calibration</td></tr>
+<tr><td>标准 DAB diffusion 使用完全无关 target</td><td><span class="b bad">P0</span></td><td>条件被忽略，模型退化为真实 IHC marginal / cohort average</td><td>明确 weak-paired 训练边界；完全 non-paired 改训练目标</td></tr>
+<tr><td>A 用 PSPStain pseudo-IHC 监督</td><td><span class="b bad">P0</span></td><td>把 baseline 偏差循环灌入主模型</td><td>A 只作 soft prior、dropout、uncertainty；不作 GT</td></tr>
+<tr><td>B 训练条件是 IHC H、推理条件是 HE H</td><td><span class="b bad">P0</span></td><td>score guidance 的“真实度”在推理域失效</td><td>B0 无条件或 B1 先做 <code>T_H</code> 统一</td></tr>
+<tr><td>B 的 marginal prior 覆盖实例表达</td><td><span class="b bad">P0</span></td><td>全局统计变好，空间阳性位置变差</td><td>小权重、mid/late gate、score normalization、B zeroing</td></tr>
+<tr><td>raw H/E + low-pass + morphology encoder 三重重复条件</td><td><span class="b medium">P1</span></td><td>参数/梯度归因不清，shortcut 增加</td><td>v1 只 raw concat；v2 再加多尺度 encoder</td></tr>
+<tr><td>把低频等同于 morphology</td><td><span class="b medium">P1</span></td><td>丢失核/膜边界等高频结构</td><td>多尺度/梯度结构；不把 frequency 名称当语义承诺</td></tr>
+<tr><td>同时引入 A、B、FOD、ranking、semantic loss</td><td><span class="b medium">P1</span></td><td>梯度冲突与性能归因都不可解释</td><td>逐模块、逐 gate 消融；v1 最小化</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s5"><span class="num">5</span>backbone 与参数化选择</h2>
+
+<div class="box good"><div class="bt">主推荐：小型 conditional 2D U-Net + v-prediction</div><p>浓度图是 2D spatial field，通道数低、局部结构强、数据规模有限。第一版不应使用 FeatStainDiff 的 U-ViT/FMoE 作为 backbone；应先选择最容易复现、最容易定位问题的 U-Net。</p></div>
+<div class="scroll"><table><thead><tr><th>候选</th><th>优点</th><th>问题</th><th>建议</th><th>改动成本</th><th>可复现性</th></tr></thead><tbody><tr><td><b>2D conditional U-Net</b></td><td>多尺度 skip；局部空间归纳偏置；条件注入成熟</td><td>长程依赖有限</td><td><span class="b high">第一主干</span></td><td>中</td><td><span class="b high">高</span></td></tr><tr><td><b>U-ViT</b></td><td>与 FeatStainDiff 逻辑相近；全局建模强</td><td>小数据/小图可能过重；空间 token 设计复杂</td><td><span class="b medium">第二对照</span></td><td>中–高</td><td><span class="b medium">中</span></td></tr><tr><td><b>DiT</b></td><td>大规模训练扩展好</td><td>需要更多数据和算力；局部结构先验弱</td><td><span class="b low">后置</span></td><td>高</td><td><span class="b medium">中</span></td></tr><tr><td><b>Flow-matching U-Net</b></td><td>端点恢复不除法；适合后续稳定性对照</td><td>重新建立训练/采样管线</td><td><span class="b medium">第二阶段</span></td><td>中</td><td><span class="b medium">中–高</span></td></tr><tr><td><b>FMoE-DCT/MHSA</b></td><td>可自适应路由</td><td>专家 collapse、频率轴解释、复杂度高</td><td><span class="b low">最后才做</span></td><td>高</td><td><span class="b low">中–低</span></td></tr></tbody></table></div>
+<p>建议第一版规模：</p><pre><code>input:  [u_DAB^t, C_H^cond, C_E^HE]  # 3 channels
+output: u_DAB or v_DAB                # 1 channel
+base channels: 64 or 96
+channel multipliers: [1,2,4,4]
+residual blocks per level: 2
+attention: only at 24×24 / 12×12 if needed
+</code></pre>
+<p>建议扩散的变量不是 raw <code>C_DAB</code>，而是非负浓度的无约束变换：</p><div class="formula">u<sub>DAB</sub> = log(1+C<sub>DAB</sub>) &nbsp;&nbsp;→ diffusion &nbsp;&nbsp;→ C<sub>DAB</sub>=exp(u<sub>DAB</sub>)−1</div><p>这样避免对浓度做硬 <code>clamp(min=0)</code> 而造成梯度断裂。监督和 B score model 必须使用同一变量尺度，不能主扩散在 <code>u</code> 空间、B 却在 raw concentration 空间直接相加。</p>
+
+<h2 id="s6"><span class="num">6</span>推荐的收敛版架构</h2>
+
+<h3 id="s6-1">6.1 v1：只保留必要模块</h3>
+<div class="box key"><div class="bt">v1 的目标不是做出“所有模块齐全”，而是证明 DAB-only 条件扩散成立</div><pre><code>H&amp;E
+ ├─ fixed M_HE → C_H^HE → low-capacity T_H → C_H^cond
+ └─ fixed M_HE → C_E^HE → normalization → C_E^cond
+                                  │
+noisy u_DAB^t ────────────────────┤
+                                  ▼
+                        conditional 2D U-Net
+                                  │
+                         predicted u_DAB / v_DAB
+                                  │
+                         C_DAB = exp(u_DAB)-1
+                                  │
+                    [C_H^cond, C_DAB] + M_IHC
+                                  │
+                         Beer–Lambert → IHC RGB</code></pre><p><b>v1 暂不加入：</b>A Protein Estimator、B Score Guidance、low-pass 专用分支、FMoE、semantic loss、C<sub>res</sub>。每一个都可作为后续独立实验。</p></div>
+
+<h3 id="s6-2">v2：加入 A，但只作为软表达条件</h3>
+<pre><code>c_exp = A(H&amp;E)
+condition = concat([C_H^cond, C_E^cond, g_exp(t)*c_exp_token])
+
+training:
+- random condition dropout on c_exp
+- log c_exp / output FOD correlation
+- compare A on / A zero / A shuffled
+</code></pre>
+<p>如果 A zero 后结构保持、DAB 全局量级有可控变化，说明 A 是合法表达先验；如果 A zero 后输出完全失效，说明主模型在抄 pseudo-label shortcut。</p>
+
+<h3 id="s6-3">v3：最后加入 B prior guidance</h3>
+<p>B 的推荐不是直接从用户图中的形式一步到位，而是：</p>
+<ol><li>先训练 B0：无条件真实 IHC DAB prior，验证能否识别真实/伪造浓度的分布差异；</li><li>再训练 B1：输入经过 <code>T_H</code> 的统一 H 条件，确认训练/推理域一致；</li><li>最后才在采样中加入 B2：只在 mid/late timestep、小权重、score-normalized 的 guidance。</li></ol>
+<pre><code>s_final(t) = s_main(t) + λ_B(t) * normalize(s_B(t))
+# λ_B(t) starts at 0; first scan λ_B ∈ {0, 0.05, 0.1} after norm matching
+</code></pre>
+<p>如果 B 只提高 FOD histogram，却降低 membrane DICE 或 regional ranking，应判为“先验过强”，回退到 v2，而不是继续调大 B。</p>
+
+<h2 id="s7"><span class="num">7</span>loss 与 timestep 逻辑</h2>
+<div class="formula">L = L<sub>diff</sub> + λ<sub>FOD</sub>(t)L<sub>FOD</sub> + λ<sub>rank</sub>(t)L<sub>rank</sub> + λ<sub>sem</sub>(t)L<sub>sem</sub> + λ<sub>res</sub>||C<sub>res</sub>||</div>
+<p>建议顺序：</p>
+<table><thead><tr><th>阶段</th><th>主要约束</th><th>原因</th></tr><tbody><tr><td>v1</td><td>只有 <code>L_diff</code> + renderer 检查</td><td>先确认 DAB-only diffusion 能生成稳定浓度</td></tr><tr><td>v2</td><td>global FOD mean + 20-bin histogram</td><td>先控制表达量级与分布，不引入空间错位惩罚</td></tr><tr><td>v3</td><td>regional ranking</td><td>增加实例/区域层面的表达顺序</td></tr><tr><td>v4</td><td>小权重 pathology semantic auxiliary</td><td>防止外观/结构被物理 loss 单独劫持</td></tr><tr><td>v5</td><td>B score guidance</td><td>只在前面稳定后作为真实 IHC prior</td></tr></tbody></table>
+<p>时间步上不应把 <code>C_H</code> 简单称为“高频”、把 DAB 简单称为“中频”。更稳妥的表述是：</p><pre><code>early/high-noise: strong morphology condition, weak expression prior
+middle: global DAB/FOD distribution
+late/low-noise: regional DAB ranking / membrane detail
+all stages: retain a nonzero H structure floor</code></pre><p>如果物理 loss 通过 <code>x_hat_0</code> 回传，使用 <code>λ_FOD(t)∝sqrt(SNR(t))</code> 或改为 v-prediction；不要用 PCGrad 去掩盖由 <code>x_hat_0</code> Jacobian 造成的幅度爆炸。</p>
+
+<h2 id="s8"><span class="num">8</span>验证路线与止损</h2>
+<div class="scroll"><table><thead><tr><th>实验</th><th>只改变什么</th><th>通过判据</th><th>不通过怎么办</th></tr></thead><tbody><tr><td>H calibration</td><td>identity vs <code>T_H</code></td><td>H distribution/structure 改善，DAB 不被改变成整体偏色</td><td>锁定固定 calibration；不要让 U-Net 自由修 H</td></tr><tr><td>H zero/shuffle</td><td>H condition</td><td>结构 DICE/SS 明显下降；DAB global distribution 不应完全归零</td><td>查 condition 是否真的进 U-Net，或是否被 E/shortcut 代替</td></tr><tr><td>E zero</td><td>只移除 C_E</td><td>若结构/膜指标下降，E 有合法 morphology 信息</td><td>保留 E 但去掉低频重复分支；不能把 E 当 target stain</td></tr><tr><td>A on/zero/shuffle</td><td>c_exp</td><td>只改变表达量级/分布，不改变组织结构</td><td>撤销 A，说明 pseudo-label shortcut 太强</td></tr><tr><td>B zero / weak / strong</td><td>score guidance</td><td>弱 guidance 改善 FOD 且不伤 ranking/DICE</td><td>强 guidance 失败则停止 B，不继续调参</td></tr><tr><td>marker swap</td><td>HER2 token/marker condition</td><td>结构稳定，表达分布有目标 marker 差异</td><td>token 未生效或只变颜色，检查条件语义</td></tr><tr><td>3 seeds</td><td>只改变 seed</td><td>均值改善且最差 seed 不出现黑团/全棕</td><td>按最差 seed 做止损，不用最好 seed 宣称成功</td></tr></tbody></table></div>
+<p>必须记录：</p><ul><li>每步 <code>u_DAB</code>/DAB 分位数、<code>x0_pred</code> 范围与 renderer 后 clamp fraction；</li><li>H condition、E condition、A token、B score 的 RMS/gradient norm；</li><li>DAB FOD global mean、20-bin histogram、regional ranking；</li><li>nuclei/membrane DICE、结构 SS、H-score/ordinal consistency；</li><li>黑团/AQuA/暗块比例，独立于 PSNR/FID 报告。</li></ul>
+
+<h2 id="s9"><span class="num">9</span>最终决策</h2>
+<div class="box key"><div class="bt">建议正式收敛为下面这一版</div><ol><li><b>扩散目标：</b>只扩散 <code>u_DAB=log(1+C_DAB)</code>，不重新生成 H。</li><li><b>H 处理：</b><code>C_H^HE</code> 作为结构锚和最终 H 通道，但先经过低容量 <code>T_H</code> 做 M/白点/尺度校准；不做 pixel hard equality。</li><li><b>E 处理：</b><code>C_E^HE</code> 只做 morphology condition；v1 直接拼接，v2 才加入多尺度 morphology encoder；不把“低频”当作全部形态。</li><li><b>主 backbone：</b>小型 conditional 2D U-Net + v-prediction；epsilon 作为最小 baseline，flow matching 作为后续对照。</li><li><b>A：</b>先不加；后续只作为 dropout 的 soft expression prior，明确标注 PSPStain pseudo-label 来源。</li><li><b>B：</b>先做真实 IHC DAB prior audit；解决 H 域校准后再做 score guidance；不能让 B 决定实例级阳性位置。</li><li><b>物理闭环：</b><code>[C_H^cond,C_DAB]</code> + fixed/calibrated <code>M_IHC</code> + Beer–Lambert；v1 不加 <code>C_res</code>，除非残差审计证明它必要。</li><li><b>训练顺序：</b><code>L_diff → global FOD → regional ranking → semantic auxiliary → B guidance</code>，一次只加一个。</li></ol></div>
+<div class="box good"><div class="bt">最稳的论文方法主张</div><p><b>我们不让扩散模型重复生成已有共享证据的苏木素通道，而是在经过域校准的 H&amp;E 结构条件下，仅生成 marker-specific DAB 浓度；随后使用 fixed/calibrated stain matrix 和 Beer–Lambert 定律将浓度状态渲染为 IHC 图像。蛋白表达估计器只提供软先验，真实 IHC score model 只提供受控的 target-domain prior，二者均不被宣称为实例级真值。</b></p></div>
+<div class="box warn"><div class="bt">最终可行性等级</div><p><b>整体方向：成立但必须收窄。</b>“DAB-only + H/E condition + physical renderer”是当前最合理的主线；“A+B+形态编码器+低频分支+score guidance 一次性全部加入”不适合作为第一版，因数据配对、H 域偏移、pseudo-label 循环和多重梯度路径会同时让结果不可归因。</p></div>
+<div class="foot"><p><b>DAB-only 浓度扩散架构全流程可行性审查</b> · 2026-10-08 · 归入 <code>06_方案可行性审查/</code></p><p>本报告把用户补充的整套架构拆成数据假设、表示、条件、扩散、score prior 和渲染六层，明确哪些是已验证、哪些是有条件成立、哪些应后置。</p></div>
+</main>
+</div>
+</body>
+</html>

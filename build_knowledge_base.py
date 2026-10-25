@@ -12,6 +12,8 @@
 
 用法：python3 build_knowledge_base.py
 """
+from __future__ import annotations
+
 import os
 import re
 import glob
@@ -35,13 +37,89 @@ TOPIC_ORDER = [
 ]
 
 
-# ---------- 极简 markdown 渲染（标题/列表/表格/代码块/引用/粗体行内码） ----------
+# ---------- 极简 markdown 渲染（标题/列表/表格/代码块/引用/粗体行内码/数学） ----------
+# 数学式与行内代码必须在强调解析之前保护起来：正文里 $f*h$、$\begin{align*}$ 这类
+# 写法含星号，若不先摘出，会被下面的 *斜体* 规则配对吃掉，公式到浏览器时已破损。
+DISPLAY_MATH = re.compile(r"\$\$[^$]*\$\$")
+INLINE_MATH = re.compile(r"\$[^\s$](?:[^$\n]*[^\s$])?\$")
+
+
 def inline(text: str) -> str:
+    # 图片：先转占位符（避免 URL 被 escape 破坏），其余转义后再还原
+    imgs = []
+
+    def _stash(m):
+        imgs.append((m.group(1), m.group(2)))
+        return "\x00%d\x00" % (len(imgs) - 1)
+
+    # 行内代码与数学：原样封存为占位符，交给各自的渲染方（<code> / KaTeX）处理
+    keep = []
+
+    def _keep(html):
+        keep.append(html)
+        return "\x02%d\x03" % (len(keep) - 1)
+
+    text = re.sub(r"`([^`]+)`", lambda m: _keep("<code>%s</code>" % htmlmod.escape(m.group(1))), text)
+    text = DISPLAY_MATH.sub(lambda m: _keep(htmlmod.escape(m.group(0))), text)
+    text = INLINE_MATH.sub(lambda m: _keep(htmlmod.escape(m.group(0))), text)
+    # 转义过的星号（写作 \* ，意为字面星号，如假设集里的「色泽 = *」通配记号）
+    # 要先封存，否则会被下面的 *斜体* 规则两两配对吃掉。
+    text = re.sub(r"\\([*_`#])", lambda m: _keep(htmlmod.escape(m.group(1))), text)
+
+    text = re.sub(r"!\[([^\]]*)\]\(([^)\s]+)\)", _stash, text)
     text = htmlmod.escape(text)
-    text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", text)
+    for i, html in enumerate(keep):
+        text = text.replace("\x02%d\x03" % i, html)
+    for i, (alt, src) in enumerate(imgs):
+        text = text.replace(
+            "\x00%d\x00" % i,
+            '<img src="%s" alt="%s" loading="lazy" />'
+            % (htmlmod.escape(src, quote=True), htmlmod.escape(alt, quote=True)),
+        )
     return text
+
+
+def split_table_row(row: str) -> list:
+    r"""按 | 切表格行，但公式里的竖线不算分隔符。
+
+    范数写作 $\|x\|_2$ 时，朴素 split("|") 会把公式拦腰切断，
+    在页面上变成两个残缺单元格（$(1)$ 那一列尤其明显）。
+    """
+    s = row.strip()
+    if s.startswith("|"):
+        s = s[1:]
+    if s.endswith("|"):
+        s = s[:-1]
+    cells, buf, in_math = [], [], False
+    i, n = 0, len(s)
+    while i < n:
+        c = s[i]
+        if c == "\\" and i + 1 < n:          # 保留 \| \, \{ 等转义对
+            buf.append(c)
+            buf.append(s[i + 1])
+            i += 2
+            continue
+        if c == "$":
+            if s[i:i + 2] == "$$":           # $$ 作为一个整体定界符
+                in_math = not in_math
+                buf.append("$$")
+                i += 2
+                continue
+            in_math = not in_math
+            buf.append(c)
+            i += 1
+            continue
+        if c == "|" and not in_math:
+            cells.append("".join(buf).strip())
+            buf = []
+            i += 1
+            continue
+        buf.append(c)
+        i += 1
+    cells.append("".join(buf).strip())
+    return cells
 
 
 def render_md(md: str) -> str:
@@ -86,7 +164,7 @@ def render_md(md: str) -> str:
             if rows:
                 out.append("<table>")
                 for ri, r in enumerate(rows):
-                    cells = [c.strip() for c in r.strip().strip("|").split("|")]
+                    cells = split_table_row(r)
                     tag = "th" if ri == 0 else "td"
                     out.append(
                         "<tr>" + "".join(f"<{tag}>{inline(c)}</{tag}>" for c in cells) + "</tr>"

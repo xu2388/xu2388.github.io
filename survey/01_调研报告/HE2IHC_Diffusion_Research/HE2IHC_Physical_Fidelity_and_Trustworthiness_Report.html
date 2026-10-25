@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H&E→IHC 虚拟染色 · 物理合规性与生成可信性调研</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg-soft:#f7f8fa; --bg-softer:#fbfcfd; --panel:#ffffff;
+    --border:#e4e7ec; --border-strong:#cdd3dc;
+    --text:#171a1f; --text-2:#3d444d; --muted:#6b7480;
+    --accent:#1a56db; --accent-soft:#eaf0fd;
+    --green:#0d7a3f; --green-soft:#e6f5ec;
+    --amber:#9a6200; --amber-soft:#fdf3e2;
+    --red:#c22a2a; --red-soft:#fdeceb;
+    --purple:#6b32c9; --purple-soft:#f1ebfd;
+    --teal:#0a6f78; --teal-soft:#e3f4f6;
+    --gray-soft:#eef0f3;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;scroll-padding-top:20px;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;}
+  .wrap{display:flex;max-width:1560px;margin:0 auto;}
+  nav.toc{width:292px;flex:0 0 292px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--bg-softer);}
+  nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--accent);text-transform:uppercase;margin-bottom:4px;}
+  nav.toc .brand-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+  nav.toc a{display:block;color:var(--text-2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent;}
+  nav.toc a:hover{background:var(--gray-soft);color:var(--accent);}
+  nav.toc a.lv1{font-weight:650;margin-top:9px;color:var(--text);}
+  nav.toc a.lv2{padding-left:20px;font-size:12.5px;color:var(--muted);}
+  main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px;}
+  header.doc{border-bottom:2px solid var(--border-strong);padding-bottom:22px;margin-bottom:30px;}
+  header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;}
+  header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em;}
+  header.doc .sub{font-size:14.5px;color:var(--muted);margin:0;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .meta-row span{font-size:12px;background:var(--gray-soft);border:1px solid var(--border);color:var(--text-2);padding:3px 10px;border-radius:20px;}
+  h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--accent);letter-spacing:-.01em;}
+  h2 .num{color:var(--accent);font-weight:800;margin-right:8px;}
+  h3{font-size:18px;margin:34px 0 12px;color:var(--text);}
+  h3::before{content:"▍";color:var(--accent);margin-right:6px;font-size:14px;}
+  h4{font-size:15.5px;margin:24px 0 9px;color:var(--text);}
+  h5{font-size:13.5px;margin:18px 0 7px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  p{margin:9px 0;} ul,ol{margin:9px 0 9px 22px;padding:0;} li{margin:5px 0;}
+  a{color:var(--accent);}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--gray-soft);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f;}
+  pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0;}
+  pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit;}
+  .box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--bg-soft);}
+  .box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em;}
+  .box.key{background:var(--accent-soft);border-color:#c2d4f7;} .box.key .bt{color:var(--accent);}
+  .box.warn{background:var(--amber-soft);border-color:#f0dcb4;} .box.warn .bt{color:var(--amber);}
+  .box.stop{background:var(--red-soft);border-color:#f4cfcc;} .box.stop .bt{color:var(--red);}
+  .box.good{background:var(--green-soft);border-color:#c2e4cf;} .box.good .bt{color:var(--green);}
+  .box.pur{background:var(--purple-soft);border-color:#d9c9f7;} .box.pur .bt{color:var(--purple);}
+  .box.teal{background:var(--teal-soft);border-color:#b8e2e7;} .box.teal .bt{color:var(--teal);}
+  .tbl-scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px;}
+  table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:640px;}
+  thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--border-strong);white-space:nowrap;font-size:12.3px;}
+  td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6;}
+  tbody tr:nth-child(even){background:var(--bg-softer);}
+  tbody tr:hover{background:var(--accent-soft);}
+  td.c,th.c{text-align:center;}
+  .b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6;}
+  .bS{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bA{background:var(--accent-soft);color:var(--accent);border:1px solid #c2d4f7;}
+  .bB{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+  .bC{background:var(--gray-soft);color:var(--muted);border:1px solid var(--border-strong);}
+  .bHigh{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bMed{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+  .bLow{background:var(--gray-soft);color:var(--muted);border:1px solid var(--border-strong);}
+  .bNo{background:var(--red-soft);color:var(--red);border:1px solid #f4cfcc;}
+  .bYes{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bPar{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+  .stars{color:#d99000;letter-spacing:1px;}
+  .card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:var(--panel);}
+  .card > .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  .card > .ch .t{font-weight:700;font-size:15px;line-height:1.45;}
+  .card > .ch .v{font-size:12px;color:var(--muted);margin-top:3px;}
+  .card > .cb{padding:6px 18px 18px;}
+  .kv{display:grid;grid-template-columns:118px 1fr;gap:3px 14px;font-size:13.2px;margin:12px 0;}
+  .kv dt{color:var(--muted);font-weight:600;font-size:12.3px;padding-top:1px;} .kv dd{margin:0;}
+  .flow{background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:20px;margin:16px 0;overflow-x:auto;}
+  .fnode{display:inline-block;border:1.5px solid var(--border-strong);background:#fff;border-radius:7px;padding:7px 14px;font-size:12.5px;text-align:center;line-height:1.45;font-family:var(--mono);}
+  .fnode.hl{border-color:var(--accent);background:var(--accent-soft);font-weight:700;color:var(--accent);}
+  .fnode.gr{border-color:#b7e0c7;background:var(--green-soft);}
+  .fnode.am{border-color:#f0dcb4;background:var(--amber-soft);}
+  .fnode.pu{border-color:#d9c9f7;background:var(--purple-soft);}
+  .fnode.tl{border-color:#b8e2e7;background:var(--teal-soft);}
+  .fnode.rd{border-color:#f4cfcc;background:var(--red-soft);}
+  .farrow{display:block;text-align:center;color:var(--muted);font-size:15px;line-height:1.2;margin:5px 0;}
+  .frow{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;align-items:center;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr;}}
+  .mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--bg-softer);}
+  .mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px;}
+  .mini p{font-size:12.8px;margin:4px 0;color:var(--text-2);}
+  hr{border:none;border-top:1px solid var(--border);margin:34px 0;}
+  .small{font-size:12.5px;color:var(--muted);}
+  .tag{display:inline-block;font-size:11px;background:var(--gray-soft);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin:2px 3px 2px 0;color:var(--text-2);font-family:var(--mono);}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:10px 0 0;}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  @media(max-width:900px){nav.toc{display:none;} main{padding:22px 18px 90px;} header.doc h1{font-size:22px;}}
+  @media print{nav.toc{display:none;} main{padding:0;max-width:none;} .card{break-inside:avoid;} h2{break-before:page;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">物理合规性 &amp; 可信性</div>
+  <div class="brand-sub">无配对数据下<br>生成结果凭什么可信？</div>
+  <a class="lv1" href="#s0">摘要与核心结论</a>
+  <a class="lv1" href="#s1">Part 1 · 问题的精确表述</a>
+  <a class="lv2" href="#s1-3">三种"不可知"</a>
+  <a class="lv2" href="#s1-4">不可辨识性定理式分析</a>
+  <a class="lv1" href="#s2">Part 2 · 真实配对能逼近到什么程度</a>
+  <a class="lv2" href="#s2-tbl">五条路线总表</a>
+  <a class="lv2" href="#s2-card">核心工作精读</a>
+  <a class="lv1" href="#s3">Part 3 · 物理规律约束</a>
+  <a class="lv1" href="#s4">Part 4 · 幻觉检测（无需 GT）</a>
+  <a class="lv1" href="#s5">Part 5 · 无 GT 的评价体系</a>
+  <a class="lv1" href="#s6">Part 6 · 不确定性量化</a>
+  <a class="lv1" href="#s7">Part 7 · 因果与反事实</a>
+  <a class="lv1" href="#s8">Part 8 · 哪些能保证，哪些不能</a>
+  <a class="lv1" href="#s9">Part 9 · 可落地方案</a>
+  <a class="lv1" href="#s10">Part 10 · 实验路线</a>
+  <a class="lv1" href="#s11">附录 · 参考文献与声明</a>
+</nav>
+
+<main>
+
+<header class="doc">
+  <div class="kicker">Physical Fidelity &amp; Trustworthiness of Virtual Staining</div>
+  <h1>没有真实配对数据，凭什么相信生成的 IHC 图像？<br>—— 虚拟染色的物理合规性、不可辨识性与可信性调研</h1>
+  <p class="sub">针对「无像素级真值 → 无法保证符合真实物理成图规律」这一核心问题的系统调研与可落地方案</p>
+  <div class="meta-row">
+    <span>检索时间：2026-10-01</span>
+    <span>覆盖文献：45+ 篇</span>
+    <span>前置报告：HE2IHC_Diffusion_Disentanglement_Report.html</span>
+    <span>目标：把「不可知」变成「可约束 + 可检测 + 可量化」</span>
+  </div>
+</header>
+
+<!-- ================================================================= -->
+<h2 id="s0"><span class="num">0</span>摘要与核心结论</h2>
+
+<div class="box stop">
+  <div class="bt">先把你的问题说准</div>
+  <p>你提出的不是一个工程细节，而是一个<b>根本性的认识论问题</b>。它可以被拆成三个层次，三者的性质完全不同：</p>
+  <table style="min-width:0;margin:10px 0 0">
+    <tbody>
+      <tr><td style="width:22%;border:none;padding-left:0"><b>① 数据层</b></td><td style="border:none">我们用作「真值」的 IHC 图，来自<b>相邻切片</b>，不是同一个物理切片的同一位置。所以「真值」本身就是一个近似。</td></tr>
+      <tr><td style="border:none;padding-left:0"><b>② 生成层</b></td><td style="border:none">即使模型完美拟合了训练分布，也<b>不能保证</b>输出服从染色化学与光学成像的物理规律——它可能生成「统计上像 IHC、但物理上不可能」的图。</td></tr>
+      <tr><td style="border:none;padding-left:0"><b>③ 验证层</b></td><td style="border:none">因为没有真值，我们无法用「和真值比」的方式验证。所有指标都只能证明「像」，不能证明「对」。</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="box key">
+  <div class="bt">一句话结论</div>
+  <p style="margin:0">在非配对设定下，<b>「生成图是否等于真实物理配对图」在原理上不可验证、也不可保证</b>——这是一个<b>不可辨识性（non-identifiability）</b>问题，不是调参能解决的。<br>
+  但可以做到三件非常有价值的事：<br>
+  <b>① 可约束</b>——用 Beer–Lambert 物理前向模型把输出限制在「物理可行流形」上；<br>
+  <b>② 可检测</b>——用域循环 + 累积推理不确定性自动检测幻觉（AQuA 框架，Nature BME 2025，准确率 97.8–99.8%）；<br>
+  <b>③ 可量化</b>——用不确定性图告诉病理医生「这张图的哪些区域不可信」。<br>
+  <b>报告的重心因此不是「如何消除不可知」，而是「如何把不可知变成可控、可报告的风险」。</b></p>
+</div>
+
+<h3>0.1 六个必须记住的判断</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">判断</th><th>结论与依据</th></tr></thead>
+<tbody>
+<tr><td><b>① 「真值」不唯一，也不等于物理真值</b></td><td>H&amp;E 与 IHC 来自相邻切片，存在 <b>10–50 px 固有错位</b>（UNIStainNet 明确指出）以及切片过程的<b>局部形变</b>。所以监督信号本身是<b>弱配对（weakly-paired）</b>的。Topology-aware 工作（arXiv 2601.02806）正是为这个问题设计的。</td></tr>
+<tr><td><b>② 一对多：p(IHC | H&amp;E) 本身是病态的</b></td><td>同一个 H&amp;E 位置在物理上可能对应多种合理的 IHC（切片厚度、抗体批次、显色时间不同）。所以「唯一正确答案」在物理上就不存在——<b>用 L1/L2 逼一个单点真值在方法论上就是错的</b>。这解释了为什么病理领域普遍改用分布级指标（FID/KID）和语义级指标。</td></tr>
+<tr><td><b>③ 循环一致性不保证实例正确</b></td><td>CycleGAN 的循环一致性只约束「A→B→A 能回来」，属于<b>分布级</b>约束，不约束「A→B 这一步是否物理正确」。理论上存在无穷多组满足循环一致的映射，其中大多数是物理错误的。<b>这是你担心的核心，且它在理论上成立。</b></td></tr>
+<tr><td><b>④ 物理约束是唯一能"从外部注入真值"的手段</b></td><td>既然数据里没有真值，那就从<b>物理定律</b>里找。Beer–Lambert 定律给出了染色浓度 → RGB 的确定性前向映射。把它作为可微模块嵌入模型，等于给模型加了一条<b>不依赖数据的硬约束</b>。BeerLaNet（MICCAI 2025）与 Beer-Lambert Autoencoder（arXiv 2601.11336）都验证了这条路线。</td></tr>
+<tr><td><b>⑤ 幻觉是可以被自动检测的</b></td><td><b>这是本报告最重要的发现。</b>AQuA（Nature Biomedical Engineering 2025）证明：在<b>完全不需要真值</b>的情况下，通过 H&amp;E ↔ AF 双向模型的多次迭代 + 累积推理不确定性，可以检测出「现实型幻觉」——而且<b>病理医生会被这类幻觉骗过，AQuA 不会</b>。</td></tr>
+<tr><td><b>⑥ 存在能让"配对"变真的物理手段</b></td><td><b>脱染-复染（destain-restain）</b>可以在<b>同一张切片</b>上先染 H&amp;E、成像、脱色、再染 IHC、再成像 → 得到真正像素级配对的 H&amp;E/IHC。DeReStainer（arXiv 2409.00649）即基于此特性。这是唯一能从物理上解决配对问题的路径，代价是破坏性且不可大规模获取。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>0.2 诚实的边界声明（请先读这一条）</h3>
+<div class="box warn">
+  <div class="bt">⚠️ 哪些事情本报告无法帮你做到</div>
+  <ul style="margin-bottom:0">
+    <li><b>无法</b>让你的模型输出「真实的物理配对 IHC」——因为在非配对设定下，那个东西不存在可获取的参照。</li>
+    <li><b>无法</b>用任何指标证明单张生成图的绝对正确性——只能证明它在分布上、语义上、物理上是合理的。</li>
+    <li><b>无法</b>保证模型对训练分布外的 marker / 组织 / 扫描仪也物理正确——外推性需要单独验证。</li>
+    <li><b>可以</b>做到：物理可行、结构保持、幻觉可检测、不确定性可量化、临床一致性可验证。<b>这已经足够支撑一篇有说服力的工作。</b></li>
+  </ul>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s1"><span class="num">1</span>Part 1 · 问题的精确表述</h2>
+
+<h3>1.1 把「不知道真值」写成数学</h3>
+<p>设 H&amp;E 图像为 <code>x</code>，我们希望生成的 IHC 为 <code>ŷ</code>。真正的目标是：</p>
+<pre><code>目标:   ŷ ≈ y*     其中 y* = 与 x <b>物理同源</b>的 IHC 图
+                   （即：同一张切片、同一位置、真实染色后成像的结果）
+
+但现实中我们只有:  y_obs = y* + Δ_section + Δ_deform + Δ_stain_batch
+                        ↑          ↑            ↑
+                   相邻切片偏移   切片形变    染色批次差异
+
+问题:  ‖ŷ − y*‖  <b>无法计算</b>，因为 y* 不可观测。
+我们只能计算:  ‖ŷ − y_obs‖   ← 这个量里混入了 Δ，会惩罚正确的生成</code></pre>
+
+<div class="box warn">
+  <div class="bt">⚠️ 这解释了一个反直觉的现象</div>
+  <p style="margin:0">UNIStainNet 在论文中明确指出：<b>由于 H&amp;E 与 IHC 存在 10–50 px 的固有错位，像素级 L1 监督会惩罚正确的生成</b>。MIU-Diff 也明确警告：<b>「在非配对生成中，更高的 PSNR 并不总意味着更好的生成质量」</b>。<br>
+  所以：<b>你的担心不仅是哲学层面的，它已经在实验中被反复证实为真实的工程障碍。</b></p>
+</div>
+
+<h3 id="s1-2">1.2 为什么「拟合了分布」≠「物理正确」</h3>
+<p>生成模型的训练目标通常是分布匹配：</p>
+<pre><code>min_G  D( p_G(ŷ | x) , p_data(y_obs | x) )
+
+这个目标只保证: 生成的 <b>集合</b> 看起来像真实的 <b>集合</b>
+它不保证:       每一张生成的图在物理上可实现
+
+反例（理论上必然存在）:
+  设 G₁ 为正确映射，G₂ 为"把 DAB 染到细胞核里而不是细胞膜上"的映射。
+  若训练集里恰好有少量核染色样本，则 p_{G₂} 与 p_data 的分布距离可能很小，
+  但 G₂ 在生物学上是错误的。
+  → 分布匹配无法区分这两者。</code></pre>
+
+<h3 id="s1-3">1.3 三种「不可知」——必须分开对待</h3>
+<div class="grid3">
+  <div class="mini">
+    <div class="mt" style="color:var(--red)">不可知 I · 数据不可知</div>
+    <p><b>「真实配对图长什么样？」</b></p>
+    <p>性质：<b>物理上不可获得</b>（除非用脱染-复染）。</p>
+    <p class="small"><b>可做的缓解</b>：① 用脱染-复染做小规模真配对验证集；② 用多重免疫荧光/CODEX 反演虚拟明场，与真实明场配准；③ 用精细配准 + 形变场估计降低 Δ。</p>
+  </div>
+  <div class="mini">
+    <div class="mt" style="color:var(--amber)">不可知 II · 物理不可知</div>
+    <p><b>「生成的图符合染色物理吗？」</b></p>
+    <p>性质：<b>可以部分解决</b>——物理定律是已知的。</p>
+    <p class="small"><b>可做的缓解</b>：Beer–Lambert 可微前向模型 + 一致性损失，把输出投影到物理可行流形（BeerLaNet、StainQuant）。</p>
+  </div>
+  <div class="mini">
+    <div class="mt" style="color:var(--green)">不可知 III · 正确性不可知</div>
+    <p><b>「这张图能信吗？」</b></p>
+    <p>性质：<b>可以转化为可检测信号</b>。</p>
+    <p class="small"><b>可做的缓解</b>：AQuA 式域循环幻觉检测 + 扩散多采样不确定性图 + 下游任务一致性验证。</p>
+  </div>
+</div>
+
+<h3 id="s1-4">1.4 不可辨识性的形式化：为什么循环一致性不够</h3>
+<div class="box pur">
+  <div class="bt">📐 一个可以直接写进论文的理论论证</div>
+  <p>设源域 <code>X</code>（H&amp;E）与目标域 <code>Y</code>（IHC）的联合分布为 <code>p(x, y*)</code>。非配对设定下我们只有边缘分布 <code>p_X(x)</code> 和 <code>p_Y(y)</code>。</p>
+  <p>存在<b>无穷多</b>个联合分布 <code>q(x, y)</code> 满足 <code>∫q(x,y)dy = p_X(x)</code> 且 <code>∫q(x,y)dx = p_Y(y)</code>——这些被称为 <b>coupling</b> 或 <b>transport plan</b>。CycleGAN 类方法（以及任何只做分布匹配的方法）只能保证学到的映射诱导出<b>某一个</b>这样的 coupling，<b>但不保证是真实的那一个</b>。</p>
+  <p>循环一致性 <code>G_{Y→X}(G_{X→Y}(x)) ≈ x</code> 只排除了「不可逆」的映射，剩下的可行解集合仍然巨大。这就是为什么 <b>CycleGAN 的原始论文自己也强调：cycle consistency 是「信息损失下界」的约束，而不是正确性保证</b>。</p>
+  <p style="margin-bottom:0"><b>理论上的补救</b>：要唯一确定 coupling，需要额外的假设或额外信息。可用的额外信息有三类：<br>
+  ① <b>物理定律</b>（Beer–Lambert，把可行映射收缩）；<br>
+  ② <b>部分配对数据</b>（少量脱染-复染样本，直接锚定 coupling）；<br>
+  ③ <b>归纳偏置</b>（结构保持、拓扑一致、稀疏表达等先验）。<br>
+  <b>本报告后续的所有方案，本质上都是在这三类额外信息上做文章。</b></p>
+</div>
+
+<p class="small">理论背景参考：非线性 ICA 的可辨识性理论（arXiv 2206.07751）指出，无额外假设时非线性解耦在一般情况下不可辨识；只有在稀疏性、辅助变量、时间结构等条件下才可获得可辨识性。这个结论对虚拟染色同样适用——<b>「我加了正交损失就能解耦出真实的物理因子」是一个过强的假设。</b></p>
+
+<!-- ================================================================= -->
+<h2 id="s2"><span class="num">2</span>Part 2 · 真实配对数据能逼近到什么程度</h2>
+
+<div class="box good">
+  <div class="bt">✅ 这一节是整份报告最有建设性的部分</div>
+  <p style="margin:0">「没有配对数据」这个前提<b>并不是绝对成立</b>。有五条路线可以从不同角度逼近真实配对。你不需要全部做，但至少应该知道每条路线的可及性与代价——<b>尤其是路线 A（脱染-复染），它是唯一能给出物理真配对的方案，哪怕规模很小也极其有价值。</b></p>
+</div>
+
+<h3 id="s2-tbl">2.1 五条路线总表</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:14%">路线</th><th style="width:20%">原理</th><th class="c">配对<br>真实性</th><th class="c">可及性</th><th style="width:22%">代表工作</th><th>主要局限</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>A. 脱染-复染<br>（destain-restain）</b></td>
+  <td>同一张切片先染 H&amp;E → 成像 → 脱色 → 再染 IHC → 再成像</td>
+  <td class="c"><span class="b bYes">物理真配对</span></td>
+  <td class="c"><span class="b bB">需实验室</span></td>
+  <td>DeReStainer（arXiv 2409.00649）</td>
+  <td>破坏性、需湿实验、样本量小；脱染可能损伤抗原表位，导致第二次染色弱于原生 IHC。</td>
+</tr>
+<tr>
+  <td><b>B. 相邻切片 + 精细配准</b></td>
+  <td>连续切片分别染 H&amp;E / IHC，用可变形配准对齐</td>
+  <td class="c"><span class="b bPar">近似配对</span></td>
+  <td class="c"><span class="b bS">纯计算</span></td>
+  <td>DGR（Nat Commun 2026）· ZeroReg3D（arXiv 2506.21923）· STN-guided（ACM MM Asia 2025）· TACM（arXiv 2601.02806）</td>
+  <td>形变不可逆（切片是 2D 投影，形变非双射）；配准误差会引入伪监督。</td>
+</tr>
+<tr>
+  <td><b>C. 多重成像反演</b></td>
+  <td>用 CyCIF / IMC / CODEX 等多重成像数据，通过物理染色模型<b>正演</b>出虚拟明场图，与真实明场图配准</td>
+  <td class="c"><span class="b bYes">同切片配准</span></td>
+  <td class="c"><span class="b bB">需数据</span></td>
+  <td>Frontiers Bioinformatics 2026 虚拟明场工具箱</td>
+  <td>依赖多重成像设备；正演模型的参数（染色强度 kᵢ、光谱）需标定；分辨率需重采样。</td>
+</tr>
+<tr>
+  <td><b>D. 三维重建 / 连续切片体积</b></td>
+  <td>数十至数百张连续切片重建 3D 体积，把「相邻」变成「已知位移」</td>
+  <td class="c"><span class="b bPar">准配对</span></td>
+  <td class="c"><span class="b bC">成本高</span></td>
+  <td>ZeroReg3D · 序列切片配准工作流（J Anat 2026）</td>
+  <td>需要完整连续切片序列；累积配准误差；通量低。</td>
+</tr>
+<tr>
+  <td><b>E. 分子层真值<br>（空间转录组）</b></td>
+  <td>用空间转录组 / 空间蛋白组作为<b>分子层</b>真值，验证生成图的表达模式</td>
+  <td class="c"><span class="b bPar">语义级真值</span></td>
+  <td class="c"><span class="b bB">需数据</span></td>
+  <td>STP-BENCH（arXiv 2609.05956）· 多尺度置信度量化（2026）· ST2HE（Briefings in Bioinformatics 2026）</td>
+  <td>不是像素级真值，是「表达模式」级的验证；空间分辨率通常低于 IHC。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="legend">
+  <span><span class="b bYes">物理真配对</span>可直接当作像素级真值使用</span>
+  <span><span class="b bPar">近似/准配对</span>需配合鲁棒损失使用</span>
+</div>
+
+<h3 id="s2-card">2.2 核心工作精读（3 篇）</h3>
+
+<!-- ===== DeReStainer ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">① DeReStainer · H&amp;E to IHC Pathological Image Translation via Decoupled Staining Channels</div>
+      <div class="v">Linda Wei, Shengyi Hua, Shaoting Zhang, Xiaofan Zhang · 2024 · arXiv:2409.00649</div>
+    </div>
+    <div><span class="b bYes">真配对路线</span> <span class="b bS">S</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <div class="box key">
+      <div class="bt">🎯 为什么这篇对你特别重要</div>
+      <p style="margin:0">它提出了一个你可能没想到的物理事实：<b>同一张切片的 H&amp;E 与 IHC 共享 Hematoxylin（苏木素）通道</b>。因为 H&amp;E 里的苏木素和 IHC 里的苏木素复染是同一个东西——染的是细胞核。</p>
+    </div>
+
+    <h5>核心思想：destain-restain 框架</h5>
+    <pre><code>物理流程:
+  同一张切片
+    ↓ 染 H&E
+  成像 (H&E) ──→ 记录 苏木素通道 H_HE
+    ↓ 脱色 (destain)
+    ↓ 染 IHC (DAB + 苏木素复染)
+  成像 (IHC) ──→ 记录 苏木素通道 H_IHC ≈ H_HE   ← 共享！
+                    + DAB 通道 D_IHC          ← 需要生成
+
+因此: 需要"生成"的只有 DAB 通道，苏木素通道可以近似直接用 H&E 的</code></pre>
+
+    <h5>解耦设计：按染色通道而不是按抽象 latent</h5>
+    <p>作者没有用「content encoder + style encoder」这种抽象解耦，而是直接按<b>物理染色通道</b>解耦——用颜色去卷积把图像分解为 Hematoxylin 与 DAB 两个通道，然后<b>为这两个通道分别设计损失函数</b>。</p>
+    <pre><code>L_total = L_H  (苏木素通道一致性)      ← 物理上应该保持
+        + L_DAB (DAB 通道生成质量)      ← 需要新生成
+        + L_bench (BCI benchmark 指标)
+        + L_semantic (HER2 分级语义指标)</code></pre>
+
+    <div class="box teal">
+      <div class="bt">💡 这个思路对你的直接启发</div>
+      <p style="margin:0">你在上一份报告里纠结「structure vs stain 怎么拆」——<b>DeReStainer 给出了一个物理上正确的拆法</b>：<br>
+      <b>苏木素通道 = 物理上可验证的「共享成分」（可以从 H&amp;E 直接搬）</b><br>
+      <b>DAB 通道 = 物理上必须生成的「目标成分」</b><br>
+      这不是启发式假设，而是染色化学的事实。<b>建议把它作为你的解耦轴的第一性原理依据。</b></p>
+    </div>
+
+    <h5>结果</h5>
+    <p>论文报告在 BCI 基准的图像内在属性指标与 HER2 语义指标上均优于当时开源方法。<span class="small">（注：论文未给出详细数值表，建议查阅原文 Table 2/3。）</span></p>
+
+    <h5>迁移可行性</h5>
+    <ul>
+      <li><b>可直接用</b>：颜色去卷积得到 H / DAB 通道 → 分别施加损失。这一步可以<b>直接插到 PSPStain 或扩散模型的输出上</b>。</li>
+      <li><b>需要自己做的</b>：如果你能拿到脱染-复染的同切片配对数据（哪怕几百张），就拥有了一个<b>真正可用的验证集</b>——这比任何指标都值钱。</li>
+      <li><b>局限</b>：脱染过程可能损伤抗原，第二次染色的强度可能低于原生 IHC，需要实验确认偏置大小。</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== DGR ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">② DGR · Generative AI for Misalignment-Resistant Virtual Staining</div>
+      <div class="v">Ma, Li et al. · <b>Nature Communications 2026</b> · DOI 10.1038/s41467-026-71038-2</div>
+    </div>
+    <div><span class="b bPar">配准路线</span> <span class="b bS">S</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <h5>它到底解决什么问题</h5>
+    <p>虚拟染色的临床落地被<b>空间不匹配</b>阻碍——相邻切片的形态结构几乎从不完美对齐，配准误差在训练时被当作「噪声」注入监督信号。作者的观点很关键：</p>
+    <div class="box pur">
+      <div class="bt">📌 DGR 的核心论断</div>
+      <p style="margin:0">「<b>把错位从『需要被消除的噪声』重新理解为『组织病理学的固有属性』</b>」——因为切片本身是 3D 组织的 2D 投影，形变在物理上不可逆，试图完美配准本身就是错的方向。</p>
+    </div>
+
+    <h5>DGR = Decoupled Generation and Registration</h5>
+    <p>核心是<b>把「生成」和「配准」两个过程解耦</b>，让配准模型去吸收空间错位，而生成模型不必再为错位买单。通过<b>级联配准（cascaded registration）</b>缓解空间不匹配。</p>
+
+    <h5>对你的价值</h5>
+    <ul>
+      <li>这是目前<b>规格最高</b>（Nature Communications）的、正面处理「配对不真实」问题的工作。</li>
+      <li>它的思路可以直接用于你的 PSPStain：<b>把配准模块从生成模块中剥离出来单独训练</b>，生成器只负责染色映射。</li>
+      <li>「错位是固有属性」这个论断可以成为你论文里<b>放弃像素级 L1 监督</b>的正当理由。</li>
+    </ul>
+    <p class="small">⚠️ 注：Nature 官网对自动抓取有防护，本报告的信息来自论文摘要与作者实验室（HKUST SmartLab）的公开介绍页。建议查阅原文获取完整的架构与消融细节。</p>
+  </div>
+</div>
+
+<!-- ===== 虚拟明场工具箱 ===== -->
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">③ 虚拟明场成像工具箱 · 从多重成像数据正演生成 H&amp;E / IHC</div>
+      <div class="v">Whitmarsh, Al Sa'd, Molaeinezhad, … Walton et al. · <b>Frontiers in Bioinformatics 2026</b> · DOI 10.3389/fbinf.2026.1765143</div>
+    </div>
+    <div><span class="b bYes">正演路线</span> <span class="b bS">S</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <div class="box key">
+      <div class="bt">🎯 这条路线的独特价值：它是「确定性」的，因此没有幻觉</div>
+      <p style="margin:0">不是用深度学习去「猜」IHC，而是用<b>物理染色模型</b>从已知的分子/通道信息<b>正演计算</b>出明场图。因为是确定性计算，<b>不存在幻觉风险</b>——这与生成式虚拟染色有本质区别。</p>
+    </div>
+
+    <h5>物理模型（Beer–Lambert 式指数衰减）</h5>
+    <pre><code>每个染色类别 i 有 RGB 颜色 (S_iR, S_iG, S_iB)
+通道强度 I_i = 该类别下所有 marker 通道的均值
+
+物理渲染（指数衰减）:
+  R = d_R + (c_R − d_R) · exp( −Σ_i k_i · I_i · (c_R − S_iR) )
+
+  其中 c = 最大透射（背景/白），d = 最小透射（探测器底噪），k_i = 染色强度常数
+
+对比 —— 简单加性模型（线性减色）:
+  R = c_R − Σ_i k_i · I_i · (c_R − S_iR)
+  → 论文指出物理模型比加性模型更忠实，且是确定性的</code></pre>
+
+    <h5>关键：它如何解决你的验证难题</h5>
+    <p>因为输入是 CyCIF / IMC / CODEX 等多重成像数据（同一张切片上同时测量了多个 marker），正演出的虚拟明场图可以与<b>同一张切片的真实明场图配准</b>——这就获得了接近真实的配对！</p>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>验证层次</th><th>方法</th><th>结果</th></tr></thead>
+      <tbody>
+        <tr><td>图像质量（与真实配准明场比）</td><td>PCC / MSE / MS-SSIM / EMD / PSNR</td><td>PCC 0.62±0.07，MS-SSIM 0.72±0.06，PSNR 20.8±2.5</td></tr>
+        <tr><td>细胞计数一致性</td><td>StarDist 在虚拟 H&amp;E 上计数 vs 真值</td><td>强相关</td></tr>
+        <tr><td>组织类型分类</td><td>ResNet34-Kather100k 分类器</td><td>肿瘤组织 <b>86% 正确一致</b></td></tr>
+        <tr><td><b>病理医生盲评</b></td><td>15 例肝细胞癌，三级分级</td><td><b>准确率 80%，加权 Cohen's κ = 0.84</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="box warn">
+      <div class="bt">⚠️ 一个非常重要的诚实提示（论文自己写的）</div>
+      <p style="margin:0">论文明确采用 <b>NAFNet（确定性复原网络）</b>而不是 GAN / 扩散模型来做图像增强，理由就是<b>「最小化幻觉风险」</b>。并指出：<b>当像素尺寸 &gt; ~1 μm 时，深度学习上采样器会产生幻觉</b>（例如把热点簇误判为细胞）。<br>
+      → <b>这直接说明：生成式方法在病理图像上是有幻觉代价的，而且这个代价是被量化过的。</b></p>
+    </div>
+
+    <h5>迁移可行性</h5>
+    <p><b>如果你能拿到 CyCIF / CODEX / IMC 数据</b>（公开数据集是有的，论文列了 6 个），你可以：① 用这个工具箱生成一个「物理上正确」的 IHC 参照集；② 用它检验你的扩散模型输出是否偏离物理可行域。<b>这是低成本获得「准真值」的最佳路径。</b></p>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s3"><span class="num">3</span>Part 3 · 物理规律约束：从外部注入「硬真值」</h2>
+
+<div class="box key">
+  <div class="bt">核心思路</div>
+  <p style="margin:0">既然数据里没有真值，就从<b>物理定律</b>里找。Beer–Lambert 定律给出了「染色浓度 → RGB 像素值」的<b>确定性可微映射</b>。把它作为可微模块嵌入生成模型，等于给模型加了一条<b>不依赖数据、不可被训练集偏置污染</b>的硬约束。</p>
+</div>
+
+<h3>3.1 Beer–Lambert 定律与染色去卷积</h3>
+<pre><code>Beer–Lambert 定律（透射光随吸收物质指数衰减）:
+
+    X̄ = (x̄₀ · 1ᵀ) ⊙ exp( −S Dᵀ )
+
+  X̄ : 图像（c 个颜色通道 × p 个像素），c=3 (RGB)
+  x̄₀ : 入射光
+  S  : 颜色外观矩阵（每种染料的颜色光谱），c × r
+  D  : 光密度矩阵（每种染料在每个像素的浓度），p × r
+  r  : 染料数量
+  ⊙  : 逐元素乘积
+
+对数线性化后 → 染色分离变成一个<b>低秩近似</b>问题:
+    ln(x̄₀)1ᵀ − ln(X̄) = S Dᵀ
+    → min ‖·‖²_F  s.t. S ≥ 0, D ≥ 0, ‖s_i‖=1
+
+经典解法: Ruifrok & Johnston 颜色去卷积 · Macenko · Vahadane 稀疏 NMF
+问题: 需要预设染料数量 r、染料光谱 S、参考模板 → 泛化性差</code></pre>
+
+<h3>3.2 两条把物理模型「学进化」的路线</h3>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">路线 ① · BeerLaNet：把物理模型的求解算法「展开」成网络</div>
+      <div class="v">Xu, Wu, Tripathi, Ippolito, Haeffele (JHU / UPenn) · <b>MICCAI 2025</b> · arXiv:2510.06592 · <a href="https://github.com/xutianyue/BeerLaNet">官方代码</a></div>
+    </div>
+    <div><span class="b bS">S</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <h5>核心方法：算法展开（algorithmic unrolling）</h5>
+    <p>把 Beer–Lambert 求解的<b>交替近端梯度下降</b>算法展开成 K 层网络（实验用 10 层），把正则参数 <code>γ, λ</code> 和初始染料矩阵 <code>S_init</code> 变成<b>可学习参数</b>，端到端由下游任务损失反传。</p>
+    <pre><code>每层 k 的更新:
+  1. x₀ 闭式更新:  x₀ = (1/p)(X + S Dᵀ)1
+  2. D 梯度步:    D ← D − τ[D SᵀS + XᵀS − 1 x₀ᵀS]
+  3. D 近端算子:  逐列做 非负 + ℓ₁ → 再 ℓ₂ 收缩（→ 低秩）
+  4. S 梯度步:    S ← S − τ[S DᵀD + X D − x₀ 1ᵀD]
+  5. S 近端算子:  逐列非负 + 球面投影
+
+关键改动 vs Vahadane:
+  对 S <b>和</b> D 都加 ℓ₂ 正则 → 促进低秩解
+  → r 可以初始设大（论文用 r=8），让<b>秩自适应于数据</b>
+  → 不需要预先知道真实染料数量</code></pre>
+
+    <h5>结果（跨域泛化）</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>任务</th><th class="c">BeerLaNet</th><th class="c">次优方法</th><th class="c">基线</th></tr></thead>
+      <tbody>
+        <tr><td>疟疾寄生虫检测 mAP50</td><td class="c"><b>95.07</b></td><td class="c">—</td><td class="c">—</td></tr>
+        <tr><td>疟疾生活史分类 RAcc</td><td class="c"><b>90.33</b></td><td class="c">—</td><td class="c">—</td></tr>
+        <tr><td><b>检测 APU（越低越稳）</b></td><td class="c"><b>2.00</b></td><td class="c">5.25 (LStainNorm)</td><td class="c">18.10</td></tr>
+        <tr><td><b>分类 APU</b></td><td class="c"><b>1.86</b></td><td class="c">9.31 (Vahadane)</td><td class="c">18.36 (Reinhard)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="small">APU = Average Percent Underperformance，衡量跨任务表现的<b>一致性</b>。BeerLaNet 的 APU 远低于所有对比方法，说明它在大色偏下不崩。<b>Macenko 在 Camelyon17 上最好（95.92）但在 malaria 上掉约 10 个点</b>——典型的不鲁棒。</p>
+
+    <div class="box good">
+      <div class="bt">✅ 论文明确点出的「物理约束 vs 生成式幻觉」对比</div>
+      <p style="margin:0">BeerLaNet 论文直接把「GAN 类方法（如 StainGAN）可能引入合成伪影或<b>虚构细胞结构</b>，构成诊断风险」作为动机之一。它的立场是：<b>物理约束的方法提取的是「物理上有依据的染色不变结构」，而不是「编造的结构」。</b><br>
+      <b>这正是你担心的问题的另一种解法：不走生成路线，走物理分解路线。</b></p>
+    </div>
+
+    <h5>迁移到 H&amp;E→IHC 的可行性 · <span class="b bS">S</span></h5>
+    <ul>
+      <li><b>最直接用法</b>：把 BeerLaNet 作为你模型的<b>输出层</b>或<b>输出后处理</b>。扩散模型生成 IHC 后，用 BeerLaNet 做一次物理一致的染色分解/重组，检验输出是否落在物理可行域内。</li>
+      <li><b>作为损失</b>：把 Beer–Lambert 前向模型 <code>F(S, D) = x̄₀ · exp(−SDᵀ)</code> 做成可微模块，对生成图做<b>分解-重构一致性损失</b>：<code>L_phys = ‖F(S, D̂) − ŷ‖²</code>，其中 D̂ 是学到的浓度图。</li>
+      <li><b>注意</b>：BeerLaNet 原本是做<b>染色归一化</b>（同染色、跨域），不是跨染色生成。迁移时需要把「染色不变」的目标改为「染色转换」。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">路线 ② · Beer-Lambert Autoencoder：可微前向模型 + 学到的染色矩阵</div>
+      <div class="v">Eastwood, McKee, Hu, Tejpar, Minhas · 2026 · arXiv:2601.11336 · <a href="https://github.com/measty/StainQuant">官方代码 StainQuant</a></div>
+    </div>
+    <div><span class="b bS">S</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+    <h5>架构：编码器自由，解码器物理</h5>
+    <pre><code>RGB 图像
+   ↓
+<b>Encoder</b>: 紧凑 U-Net → 预测 K 个<b>非负浓度通道</b> D̂
+   ↓
+<b>Decoder</b>: 可微 Beer-Lambert 前向模型
+             X̂ = x̄₀ · exp( −S D̂ᵀ )
+             S 可学习，初始化为典型显色剂色调
+   ↓
+重构 RGB 图像 X̂
+
+训练: 无监督 —— 感知重构损失 + 抑制不必要染色混合的正则项</code></pre>
+
+    <h5>为什么这个架构值得抄</h5>
+    <div class="grid2">
+      <div class="mini">
+        <div class="mt">① 编码器自由、解码器刚性</div>
+        <p>神经网络只负责「预测浓度」，而「浓度 → 颜色」这一步被<b>物理定律锁死</b>。这意味着模型<b>没有自由度去编造物理上不可能的颜色</b>。</p>
+      </div>
+      <div class="mini">
+        <div class="mt">② 天然处理 K&gt;3 的 multiplex</div>
+        <p>经典 Beer-Lambert 去卷积在 K&gt;3 时欠定且不稳定。这个架构用 U-Net 先验解决了欠定性，报告在多路 IHC（5 染料）上显著降低了通道串扰。</p>
+      </div>
+    </div>
+
+    <div class="box teal">
+      <div class="bt">💡 对你的直接启发：把扩散模型的输出头改成「物理头」</div>
+      <pre style="margin:8px 0 0"><code>方案: 扩散 U-Net 不直接预测 RGB，而是预测 <b>浓度图 D̂</b>
+     然后用可微 Beer-Lambert 前向模型转成 RGB
+
+好处: ① 输出天然满足物理规律（不可能出现"物理上不存在的颜色"）
+      ② 浓度图 D 是<b>可解释的中间量</b>——直接对应 DAB 浓度
+      ③ 可以同时监督 D（若有浓度真值或 IOD 测量）
+      ④ 与 PSPStain 的 FOD（Focal Optical Density）目标天然契合！
+          因为 FOD 本来就是在光密度域定义的</code></pre>
+    </div>
+
+    <div class="box good">
+      <div class="bt">🎯 这是本报告给你的最强建议之一</div>
+      <p style="margin:0"><b>PSPStain 的 PALS 策略本身就在用 Focal Optical Density（光密度）</b>——这已经是物理量了。<br>
+      如果把扩散模型的输出从 RGB 改成「浓度/光密度图」，再用 Beer–Lambert 转 RGB，你就有了一条<b>从物理量到像素的完整可解释链条</b>：<br>
+      <code>扩散生成 DAB 浓度 → Beer-Lambert 前向 → RGB 图像 → 与 FOD loss 直接对接</code><br>
+      这条链路上每一步都有物理意义，<b>且每一步都可以单独可视化验证</b>。这是把「不可知」变成「可检查」的最优雅方式。</p>
+    </div>
+  </div>
+</div>
+
+<h3>3.3 更广义的物理一致性：CoCoGen 与扩散后验采样</h3>
+<div class="grid2">
+  <div class="mini">
+    <div class="mt">CoCoGen（SIAM 2025 / arXiv 2312.10527）</div>
+    <p><b>Physically-Consistent and Conditioned Score-based Generative Models for Forward and Inverse Problems</b></p>
+    <p>把物理约束（PDE 残差、守恒律）直接编入 score-based 生成模型的采样过程，使生成的样本<b>同时满足数据分布与物理方程</b>。</p>
+    <p class="small"><b>迁移思路</b>：把「染色浓度守恒」「非负性」「单调性（染色时间↑→浓度↑）」等弱物理约束写成残差项，加入采样引导。</p>
+  </div>
+  <div class="mini">
+    <div class="mt">扩散后验采样（DPS 等）</div>
+    <p>把「观测 = 已知前向算子 + 噪声」的逆问题，用扩散先验 + 后验采样求解。</p>
+    <p class="small"><b>迁移思路</b>：如果你能定义「H&amp;E 的观测算子」（例如：IHC 去卷积后的苏木素通道 ≈ H&amp;E 的苏木素通道，即 DeReStainer 的发现），那么这就成了一个有真实观测的逆问题，<b>可以用 DPS 类方法获得有测量一致性的解</b>。</p>
+  </div>
+</div>
+
+<div class="box pur">
+  <div class="bt">🔑 把 DeReStainer 的发现和逆问题框架结合起来</div>
+  <pre style="margin:8px 0 0"><code>物理观测方程（来自 DeReStainer 的物理事实）:
+
+    H_IHC ≈ H_HE        ← 苏木素通道共享，这是一个<b>真实的观测</b>！
+
+于是任务变成:
+    已知: H_HE（观测）
+    求:   D_IHC（DAB 浓度）
+    使得: ŷ = BeerLambert(S, [H_IHC, D_IHC]) 既符合物理，又与 IHC 域分布一致
+
+这是一个<b>有部分观测的逆问题</b>，而不是纯生成问题。
+→ 可以在采样时加入测量一致性约束 ‖H(ŷ) − H_HE‖，让生成结果在
+  苏木素通道上<b>被 H&E 硬锚定</b>。这是真正意义上的"物理配对信息"。</code></pre>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s4"><span class="num">4</span>Part 4 · 幻觉检测：不需要真值的质量保证</h2>
+
+<div class="box key">
+  <div class="bt">这是整份报告最重要的发现</div>
+  <p style="margin:0">你的问题「我们无法验证生成结果」——<b>已经被解决了</b>，而且是在 Nature Biomedical Engineering 上、由 Ozcan 组（UCLA）完成的。核心结论：<b>幻觉可以在完全不需要真值的情况下被自动检测出来，而且能抓到连病理医生都会漏掉的「现实型幻觉」。</b></p>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">AQuA · A robust and scalable framework for hallucination detection in virtual tissue staining and digital pathology</div>
+      <div class="v">Luzhe Huang*, Yuzhu Li*, Nir Pillar, Tal Keidar Haran, William Dean Wallace, Aydogan Ozcan · <b>Nature Biomedical Engineering 2025</b>, 9(12):2196–2214 · DOI 10.1038/s41551-025-01421-9</div>
+    </div>
+    <div><span class="b bS">S 直接可用</span> <span class="b bHigh">High</span></div>
+  </div>
+  <div class="cb">
+
+    <h5>幻觉的两类划分（这个分类本身就有价值）</h5>
+    <div class="grid2">
+      <div class="mini">
+        <div class="mt" style="color:var(--amber)">类型 I · 技术与不真实幻觉</div>
+        <p>模糊区域、折叠组织、异常染色区域——类似传统病理伪影。</p>
+        <p class="small">这类通常能被<b>有经验的病理技师/医生发现</b>。</p>
+      </div>
+      <div class="mini">
+        <div class="mt" style="color:var(--red)">类型 II · 现实型幻觉（危险）</div>
+        <p><b>组织成分被替换为不存在的成分。</b>例如：良性切片里凭空出现肿瘤细胞、伪造核分裂象、伪造肿瘤微环境中的淋巴细胞。</p>
+        <p class="small">后果：误判组织特征、<b>改变肿瘤分级</b>、影响治疗反应预测。<b>病理医生会被骗。</b></p>
+      </div>
+    </div>
+
+    <h5>AQuA 的核心原理：域循环 + 累积推理不确定性</h5>
+    <div class="flow">
+      <div class="frow">
+        <span class="fnode tl">自荧光 AF</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode hl">VS 模型<br>(AF→H&E)</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode">虚拟 H&E</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode hl">VAF 模型<br>(H&E→AF)</span>
+        <span class="farrow" style="display:inline;margin:0">→</span>
+        <span class="fnode tl">重建 AF</span>
+      </div>
+      <span class="farrow">↻ &nbsp;重复 T 次（论文 T=4 或 5），得到一条图像序列</span>
+      <div class="frow"><span class="fnode pu">序列输入 → 预训练 ResNet-50 + C 个投票头（时序卷积 + 全连接）</span></div>
+      <span class="farrow">↓ &nbsp;多数投票 / 集成</span>
+      <div class="frow"><span class="fnode gr">置信度分数 s → 阈值 α 判定「好 / 幻觉」</span></div>
+    </div>
+    <p><b>关键：</b>检测依据是<b>两个独立网络在图像域之间反复推理所累积的不确定性</b>，<b>完全不与任何真实染色参照比较</b>。因此在真实部署中（没有 HS 真值时）也能工作。</p>
+
+    <pre><code>为什么这个原理有效:
+  一个"物理/语义正确"的生成结果，在 VS → VAF → VS → VAF ... 的循环中应该<b>稳定收敛</b>
+  一个"幻觉"结果，每次往返都会被放大或漂移 → 累积不确定性升高
+  → 不确定性本身就是幻觉的探测器</code></pre>
+
+    <h5>定量结果（很有说服力）</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>场景</th><th class="c">指标</th><th class="c">结果</th></tr></thead>
+      <tbody>
+        <tr><td>肾脏组织 VS 检测</td><td class="c">准确率 / 灵敏度</td><td class="c"><b>99.8% / 99.8%</b>（chemistry-free，无 HS 真值）</td></tr>
+        <tr><td>肾脏组织</td><td class="c">AUC</td><td class="c"><b>≈ 1.0</b>（ROC 与 PR 曲线）</td></tr>
+        <tr><td>肾脏组织</td><td class="c">与 3 位认证病理医生一致性</td><td class="c"><b>98.5%</b></td></tr>
+        <tr><td>肺组织 VS 检测</td><td class="c">准确率 / 灵敏度</td><td class="c">97.8% / 99.5%</td></tr>
+        <tr><td>肺组织 · 现实型幻觉</td><td class="c">检出率</td><td class="c"><b>AQuA 100% 拒绝，而病理医生未能识别</b></td></tr>
+        <tr><td>模型级评估（M-AQuA，10 个 VS 模型）</td><td class="c">分离度</td><td class="c"><b>N=2 张图即可完全分离好/坏模型</b></td></tr>
+        <tr><td>TCGA 泛化（989 张盲测图，49 个来源站点）</td><td class="c">准确率</td><td class="c">87.6%（未见伪影模式）</td></tr>
+        <tr><td>对比 TransMIL（传统染色图质检）</td><td class="c">准确率</td><td class="c"><b>AQuA 100% vs TransMIL 68.2%</b></td></tr>
+        <tr><td>跨组织泛化（肾训练→肺测试）</td><td class="c">灵敏度</td><td class="c">98.9%</td></tr>
+        <tr><td>对抗鲁棒性</td><td class="c">—</td><td class="c">因双网络迭代推理，<b>天然抗梯度攻击</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="box stop">
+      <div class="bt">⚠️ 这一条结果你必须记住</div>
+      <p style="margin:0"><b>「AQuA rejected 100% of positive images including realistic hallucinations, while pathologists failed to identify realistic hallucinations.」</b><br>
+      也就是说：<b>病理医生会被「现实型幻觉」骗过，但 AQuA 不会。</b><br>
+      → 这直接回答了你的问题：「我们没有真值，怎么知道生成对不对？」<b>答案是：你不需要真值，你需要一个能检测不确定性的循环框架。而且它比人类专家更可靠。</b></p>
+    </div>
+
+    <h5>AQuA 的局限（论文自己列的）</h5>
+    <ul>
+      <li><b>训练仍需真值</b>：推理时不需要真值，但<b>训练 AQuA 需要配准好的 AF–HS 配对图</b>和标注好/坏模型的标签。这是密集的数据准备工作。</li>
+      <li><b>RBC 假阴性</b>：训练集中红细胞代表性不足，导致纯 RBC 视野被误接受。</li>
+      <li><b>现实型幻觉仍是根本风险</b>：即使好的 VS 模型，与真实染色仍存在形态差异（虽然与自然变异相当）。</li>
+      <li><b>依赖 VS/VAF 模型质量</b>：循环模型不够好时性能下降（但 TCGA 上仍保持 87.6%）。</li>
+      <li><b>尚未验证</b>：染色到染色（stain-to-stain）转换、染色归一化场景。</li>
+    </ul>
+
+    <div class="box good">
+      <div class="bt">迁移到你的 H&amp;E→IHC 项目的可行性 · <span class="b bS">S</span> · 预期价值 <span class="b bHigh">High</span></div>
+      <p><b>迁移方案</b>：AQuA 用的是 AF ↔ H&amp;E 循环。<b>你可以改成 H&amp;E ↔ IHC 循环</b>：</p>
+      <pre style="margin:8px 0 0"><code>H&E ──[你的 H&E→IHC 模型]──→ 虚拟 IHC
+                                   ↓
+              [训练一个 IHC→H&E 反向模型]
+                                   ↓
+                              重建 H&E
+                                   ↓
+        ↻ 重复 T 次 → 序列 → ResNet-50 + C 投票头 → 置信度 s
+
+训练: 用"好的生成结果"与"人为制造的坏结果（如过度染色、结构错位、
+      虚假阳性区域）"作为正负样本训练 AQuA-Net
+推理: 无需真值，输出置信度图 + 异常定位热图（Spatio-temporal Grad-CAM）</code></pre>
+      <p style="margin-bottom:0"><b>额外收益</b>：AQuA 还提供 <b>M-AQuA（模型级评估）</b>——只需 N=2 张图就能判断一个虚拟染色模型整体是好是坏。这可以直接作为你的<b>模型选择与版本对比工具</b>。</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">旁证 · Scalable, trustworthy generative model for virtual multi-staining</div>
+      <div class="v">Ounissi, Sarbout, Hugot, Martinez-Vinson, Berrebi, Racoceanu · <b>PLOS Computational Biology 2025</b>, 21(10):e1013516</div>
+    </div>
+    <div><span class="b bA">A</span> <span class="b bMed">Med</span></div>
+  </div>
+  <div class="cb">
+    <h5>「可信」的另一种实现：复用判别器做自检</h5>
+    <p>训练完通常被丢弃的 <b>PatchGAN 判别器</b>，在这里被重新利用为<b>自检模块</b>：双头输出 <code>C_lum</code>（亮度置信图）与 <code>C_rgb</code>（RGB 空间置信图），取逐像素最小值得到 <code>C_all</code>，归一化后渲染成 Jet 热图给病理医生看。</p>
+    <ul>
+      <li><b>输入质检</b>：染色前先用判别器验证新 H&E 切片是否落在训练分布内。经验置信区间 <b>3.11% ≤ 可接受 ≤ 14.86%</b>（用置信图标准差）。</li>
+      <li><b>输出自检</b>：热图高亮不确定区域，<b>告诉病理医生什么时候该申请传统化学染色确认</b>。</li>
+      <li><b>知识引导损失</b>：用 IHC 激活区掩膜（RGB→HSV 阈值）提供免标注的引导。</li>
+    </ul>
+    <div class="box teal">
+      <div class="bt">💡 这条路线对你更友好</div>
+      <p style="margin:0">AQuA 需要额外训两个模型；而这个方案<b>只需要复用你本来就有的判别器</b>。成本极低。<br>
+      <b>建议</b>：在你的 PSPStain + 扩散模型里保留 PatchGAN 判别器（UNIStainNet 的 ablation 也证明判别器不可去掉），并在推理时输出置信度热图。<b>这是一个几乎零成本的「可信性」功能。</b></p>
+    </div>
+    <h5>其他可借鉴点</h5>
+    <ul>
+      <li><b>单共享 H&amp;E 编码器 + 多染色解码器</b>：8 种染色共用 1 个编码器，参数从 16 组降到 9 组。</li>
+      <li><b>Ablation 结论</b>：<code>L_fwd + L_id</code> 组合最好；<b>latent loss 在所有配置下都损害性能</b>（← 这条很重要，说明抽象 latent 约束不一定有用）。</li>
+      <li><b>非配对设定下，低倍镜（更大上下文）反而更好</b>；配对设定下倍镜影响不大。<b>上下文比像素密度更有价值。</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s5"><span class="num">5</span>Part 5 · 无 GT 的评价体系：从「像」到「对」</h2>
+
+<div class="box key">
+  <div class="bt">评价的四层金字塔</div>
+  <pre style="margin:8px 0 0"><code>第 4 层  临床效用        HER2/Ki67 分级一致性 · 病理医生盲评 κ · 下游任务 AUC
+         ↑ 最接近"对"，但成本最高
+第 3 层  物理合规        Beer-Lambert 一致性 · 光密度分布 · 非负性 · 通道串扰
+第 2 层  语义一致        病理基础模型特征距离（MRA）· DAB-KL · Pearson-r · IOD 偏差
+第 1 层  图像相似        PSNR · SSIM · LPIPS · FID · KID
+         ↑ 最容易算，但最不可信（受错位污染）
+
+<b>你的论文必须至少覆盖第 2 层和第 3 层，最好加第 4 层。</b>
+只报第 1 层 = 无法回应"你怎么知道它对"这个质疑。</code></pre>
+</div>
+
+<h3>5.1 无真值的评价工具总表</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:16%">方法 / 指标</th><th class="c">层次</th><th style="width:26%">原理</th><th style="width:24%">为什么无 GT 也能用</th><th class="c">代码</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>AQuA</b></td><td class="c">3–4</td>
+  <td>域循环 + 累积推理不确定性 → 置信度</td>
+  <td>完全不与真实染色比较；只依赖两个模型往返的稳定性</td>
+  <td class="c"><span class="b bB">论文未开源</span></td>
+</tr>
+<tr>
+  <td><b>MRA</b><br><span class="small">Molecular Retrieval Accuracy</span></td><td class="c">2</td>
+  <td>用 <b>GigaPath</b> embedding 做「检索」：预测 IHC 的嵌入是否最匹配其真值</td>
+  <td>度量的是<b>分子层语义</b>而非像素；对错位不敏感</td>
+  <td class="c">HistDiST 论文提出</td>
+</tr>
+<tr>
+  <td><b>PaPIS</b><br><span class="small">Pathology-Aware Perceptual Image Similarity</span></td><td class="c">1–2</td>
+  <td>细胞形态分割网络特征 + Retinex 分解（反射率=高频核结构 / 照度=低频染色）</td>
+  <td>聚焦病理学相关特征（核位置/形状/组织），而非自然图像纹理</td>
+  <td class="c">未开源</td>
+</tr>
+<tr>
+  <td><b>PHV</b><br><span class="small">病理特征距离</span></td><td class="c">2</td>
+  <td>病理基础模型多层特征的距离</td>
+  <td>特征级而非像素级 → 对错位鲁棒</td>
+  <td class="c">HistDiST</td>
+</tr>
+<tr>
+  <td><b>DAB-KL / Pearson-r / IOD 偏差</b></td><td class="c">2–3</td>
+  <td>颜色去卷积后比较 DAB 强度分布 / 积分光密度</td>
+  <td>这些是<b>物理/统计量</b>，不需要逐像素对齐</td>
+  <td class="c">UNIStainNet / MIU-Diff</td>
+</tr>
+<tr>
+  <td><b>Hist / VIF</b></td><td class="c">2</td>
+  <td>直方图相关性 / 视觉信息保真度</td>
+  <td>分布级统计，无需对齐</td>
+  <td class="c">MIU-Diff</td>
+</tr>
+<tr>
+  <td><b>病理医生盲评 + Cohen's κ</b></td><td class="c">4</td>
+  <td>多位病理医生盲法分级，算一致性</td>
+  <td>不依赖任何计算真值；是临床效用的直接证据</td>
+  <td class="c">Frontiers 2026 用 κ=0.84</td>
+</tr>
+<tr>
+  <td><b>下游任务一致性</b></td><td class="c">4</td>
+  <td>在虚拟 IHC 上跑 HER2 分级 / Ki67 计数，与真实分级比</td>
+  <td>把「像不像」转化为「能不能用」</td>
+  <td class="c">PLOS CB 2025（AUC 0.877）</td>
+</tr>
+<tr>
+  <td><b>正演一致性</b></td><td class="c">3</td>
+  <td>用 Beer–Lambert 前向模型分解再重构，看残差</td>
+  <td>物理定律本身就是参照，不需要数据真值</td>
+  <td class="c">BeerLaNet · StainQuant</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>5.2 PaPIS 详解：为什么 PSNR/SSIM 在病理上失效</h3>
+<div class="card">
+  <div class="cb">
+    <h5>PaPIS 的三个组件</h5>
+    <pre><code>1. 细胞形态特征提取
+   预训练细胞形态分割网络（EfficientNet-B7 编码器）→ 多层多通道特征
+   注意: 是<b>核分割/分类</b>导向的特征，不是自然图像纹理
+
+2. Retinex 多尺度分解
+   反射率图 R（高频）→ 核边界、边缘
+   照度图  L（低频）→ 平滑强度变化（染色）
+   → <b>把"结构"和"染色"在频域上分开评估</b>
+
+3. 距离合成
+   D_high = 反射率统计量（均值 μ、标准差 σ）的 SSIM/DISTS 式比较
+   D_low  = 照度图的 MSE
+   PaPIS = λ·Σ MSE(L) + D_high</code></pre>
+
+    <h5>关键发现：三类判别情况</h5>
+    <div class="grid3">
+      <div class="mini">
+        <div class="mt">AH / AL（一致）</div>
+        <p>PaPIS 与传统指标看法一致。</p>
+      </div>
+      <div class="mini">
+        <div class="mt" style="color:var(--green)">PD（PaPIS 占优）</div>
+        <p>传统分数低但 PaPIS 高 → <b>核结构保存良好但整体色偏</b>。传统指标会误判为差。</p>
+      </div>
+      <div class="mini">
+        <div class="mt" style="color:var(--red)">TD（传统占优）</div>
+        <p>传统分数高但 PaPIS 低 → <b>纹理均匀但组织结构/对齐很差</b>。这是最危险的情况：<b>看起来指标好，实际临床不可用</b>。</p>
+      </div>
+    </div>
+
+    <div class="box warn">
+      <div class="bt">⚠️ 作者自己承认的最大局限</div>
+      <p style="margin:0"><b>「本研究缺乏专家病理医生的主观验证。」</b>作者明确写道：PaPIS 与临床有效性的关联<b>尚未建立</b>，需要通过专家感知与诊断效用的直接相关性来验证。<br>
+      → 也就是说：PaPIS 本身也还没被证明「与病理医生的判断一致」。它只是比 SSIM 更接近病理语义。<b>引用它时要谨慎。</b></p>
+    </div>
+
+    <h5>可用之处</h5>
+    <p>PaPIS 作为<b>训练损失</b>是有效的：论文把它作为感知损失加入 CycleGAN 后，<b>细胞形态一致性（位置、形状、大小）提升，细节损失减少，更接近真值</b>。所以你可以把它当作一个<b>比 LPIPS 更病理友好的感知损失</b>来用，而不是当作评价指标来用。</p>
+  </div>
+</div>
+
+<h3>5.3 一个必须理解的方法论要点：分布级 ≠ 实例级</h3>
+<div class="box pur">
+  <div class="bt">📐 为什么 FID 好不代表单张图对</div>
+  <pre style="margin:8px 0 0"><code>FID / KID 衡量的是:  分布 p_G 与 p_data 的距离
+                      即「生成图集合」与「真实图集合」的整体相似度
+
+它<b>不</b>保证:          任意单张 ŷ 都是正确的
+
+反例:
+  假设模型学会生成两类图 —— (a) 完全正确的 IHC；(b) 完全错误的 IHC。
+  若两类各占 50%，而真实分布也恰好是这两类的混合，
+  则 FID 可能很低，但<b>一半的输出是错的</b>。
+
+→ 结论: <b>分布级指标 + 实例级指标必须同时报告。</b>
+   实例级可用: 不确定性图（每个像素的方差）· 置信度分数 · 病理医生盲评</code></pre>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s6"><span class="num">6</span>Part 6 · 不确定性量化：让模型知道自己不知道</h2>
+
+<div class="box good">
+  <div class="bt">✅ 扩散模型在这里有一个天然优势</div>
+  <p style="margin:0">GAN 是确定性映射，一次输出一个结果，无法表达「我不确定」。<br>
+  <b>扩散模型是随机过程——从同一个 H&amp;E 出发多次采样，可以得到一个分布。</b>这个分布本身就是不确定性的度量。<b>这是你选择扩散路线的一个此前没被提及的重要理由。</b></p>
+</div>
+
+<h3>6.1 三种可用的不确定性来源</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:20%">来源</th><th style="width:30%">如何获取</th><th style="width:26%">捕捉什么</th><th>成本</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>① 采样随机性<br>（aleatoric）</b></td>
+  <td>同一 H&amp;E 用不同随机种子跑 N 次 DDPM 采样（不是 DDIM，要保留随机性）</td>
+  <td>数据本身的一对多歧义 —— <b>这正是 H&amp;E→IHC 的固有属性</b>。方差高的区域 = 物理上确实不确定的区域。</td>
+  <td>N× 推理</td>
+</tr>
+<tr>
+  <td><b>② 域循环累积<br>（AQuA 式）</b></td>
+  <td>H&amp;E→IHC→H&amp;E→IHC … 重复 T 次，观察漂移</td>
+  <td>模型自身的不一致 —— <b>幻觉的直接信号</b></td>
+  <td>2T× 推理</td>
+</tr>
+<tr>
+  <td><b>③ 集成 / MC-Dropout</b></td>
+  <td>训练 K 个模型或开启 dropout 多次前向</td>
+  <td>模型不确定性（epistemic）—— 分布外输入的信号</td>
+  <td>K× 训练或推理</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>6.2 输出形态：不确定性图（可信度热图）</h3>
+<pre><code>对每个像素 (i,j):
+    μ(i,j) = (1/N) Σ_n ŷ_n(i,j)              # 期望生成结果
+    σ²(i,j) = (1/N) Σ_n (ŷ_n(i,j) − μ(i,j))²  # 不确定性
+
+输出三个东西给使用者:
+  ① 虚拟 IHC（用 μ）
+  ② 不确定性图 σ（越亮 = 越不可信）
+  ③ 可选的：把 σ > τ 的区域标记出来，提示"此处建议化学染色确认"
+
+这直接呼应了 PLOS CB 2025 的设计哲学:
+  "热图高亮不确定区域，让病理医生知道什么时候该申请传统染色确认"</code></pre>
+
+<div class="box teal">
+  <div class="bt">💡 为什么这对你的论文特别有价值</div>
+  <p style="margin:0">你的问题本质是「我无法保证它是对的」。<b>不确定性图把「无法保证」转化为「明确标注了哪里不能保证」——这是从缺陷变成了功能。</b><br>
+  在临床上，一个会说「这里我不确定」的模型，比一个所有地方都自信但偶尔编造的模型<b>安全得多</b>，也更容易被接受。</p>
+</div>
+
+<h3>6.3 相关文献与工具</h3>
+<ul>
+  <li><b>医学图像不确定性量化综述</b>（Medical Image Analysis 2024 · arXiv 2310.06873）——系统梳理了 aleatoric / epistemic 不确定性在医学图像分析中的方法与评价。</li>
+  <li><b>Multiscale confidence quantification for virtual spatial transcriptomics</b>（2026）——虽然任务是虚拟空间转录组，但「多尺度置信度量化」的框架可以直接借鉴：从细胞级到组织级分层给出置信度。</li>
+  <li><b>Conformal Prediction Masks</b>（ICLR 2023）——用共形预测为图像到图像复原网络生成不确定性掩膜，<b>有统计保证</b>（覆盖率保证）。这对「我需要一个可信的置信区间」这个诉求很合适。</li>
+  <li><b>CONReg</b>（J Digit Imaging 2026）——共形预测用于医学图像配准的不确定性感知，可作为你配准模块的参考。</li>
+  <li><b>Conf-Gen</b>（ICML 2026）——生成模型的共形不确定性量化，是较新的方向。</li>
+</ul>
+
+<!-- ================================================================= -->
+<h2 id="s7"><span class="num">7</span>Part 7 · 因果与反事实：一个更彻底的框架</h2>
+
+<div class="box pur">
+  <div class="bt">🔍 换个角度看你的问题</div>
+  <p style="margin:0">「真实物理配对图是什么样」这个问题，用因果语言说就是：<br>
+  <b>「在同一个组织切片上，如果施加『IHC 染色』这个干预（而不是 H&amp;E 染色），观测到的图像会是什么？」</b><br>
+  这是一个典型的<b>反事实（counterfactual）问题</b>。</p>
+</div>
+
+<h3>7.1 染色过程的因果图</h3>
+<pre><code>                    ┌──────────────┐
+                    │  组织生物学状态  │  ← 混杂变量：患者、疾病、组织类型
+                    │  (真实蛋白表达)  │
+                    └───────┬──────┘
+                            │
+              ┌─────────────┴─────────────┐
+              ↓                           ↓
+    ┌──────────────────┐        ┌──────────────────┐
+    │  H&E 染色过程      │        │  IHC 染色过程      │
+    │  (苏木素 + 伊红)    │        │  (抗体 + DAB + 苏木素)│
+    └────────┬─────────┘        └─────────┬────────┘
+             ↓                            ↓
+      ┌────────────┐               ┌────────────┐
+      │   H&E 图像  │               │  IHC 图像   │
+      └────────────┘               └────────────┘
+             ↑                            ↑
+             └──────────┬─────────────────┘
+                        │
+              ┌─────────┴─────────┐
+              │  技术混杂因素       │  ← 扫描仪、批次、切片厚度、染色时间
+              │  (nuisance)       │
+              └───────────────────┘
+
+关键因果结构:
+  · H&E 图像 与 IHC 图像 都是「组织生物学状态」的<b>效应</b>，不是彼此的因果
+  · 但二者通过<b>共享的组织结构</b>相关联（共同的混杂路径）
+  · 技术混杂因素同时影响两者，制造<b>伪相关</b>
+
+→ 用因果语言说: 你的模型应该学的是
+     P(IHC | do(染色过程 = IHC), 组织状态)
+  而不是
+     P(IHC | H&E)     ← 这个条件概率里混入了技术混杂</code></pre>
+
+<div class="box warn">
+  <div class="bt">⚠️ 这解释了一个常见的失败模式</div>
+  <p style="margin:0">如果模型学的是 <code>P(IHC | H&E)</code>，它可能学到<b>「这个数据集里 H&amp;E 偏紫的样本，IHC 也偏棕」</b>这类<b>批次伪相关</b>——因为同一批样本用了同一批试剂。<br>
+  当换到新医院/新扫描仪时，这个伪相关失效，模型崩溃。<b>这就是「符合物理规律」和「符合数据集统计」的差别。</b></p>
+</div>
+
+<h3>7.2 因果视角带来的三个具体做法</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:20%">做法</th><th style="width:34%">实现</th><th>解决什么</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>① 去混杂<br>（deconfounding）</b></td>
+  <td>把技术混杂因素（扫描仪 ID、批次、染色强度）显式建模为额外变量并做后门调整；或用对抗方式让特征对混杂不变。</td>
+  <td>避免学到批次伪相关 → 提升跨中心泛化。</td>
+</tr>
+<tr>
+  <td><b>② 干预一致性<br>（invariance）</b></td>
+  <td>要求模型在<b>混杂因素变化时输出不变</b>（例如：对 H&amp;E 做染色增强/归一化后，输出应基本不变）。</td>
+  <td>这是「物理规律」的一个可操作代理——物理规律不随批次改变。</td>
+</tr>
+<tr>
+  <td><b>③ 反事实一致性</b></td>
+  <td>用 CycleGAN 式的双向映射做「反事实检查」：IHC→H&amp;E 应回到原 H&amp;E。这是<b>反事实一致性</b>的最简形式（本质上就是 AQuA 的单次循环）。</td>
+  <td>提供实例级的合理性检查。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p class="small"><b>相关文献</b>：Causal disentanglement for single-cell representations（Nature Communications 2025）· From Identifiable Causal Representations to Controllable Counterfactual Generation（arXiv 2310.11011）· Causal Counterfactual Reasoning with Structural Priors（MICCAI 2026）。<b>说明</b>：因果方法在虚拟染色上的直接应用目前还很少，这既意味着参考有限，也意味着<b>如果你做，是有新颖性的</b>。</p>
+
+<!-- ================================================================= -->
+<h2 id="s8"><span class="num">8</span>Part 8 · 哪些能保证，哪些不能 —— 诚实的结论</h2>
+
+<div class="box stop">
+  <div class="bt">🚫 明确无法保证的（写进你的 limitation 章节）</div>
+  <ol style="margin-bottom:0">
+    <li><b>无法保证单张生成图等于真实物理配对图。</b>因为在非配对设定下 <code>p(IHC | H&amp;E)</code> 的 coupling 不可辨识，且物理真值不可获取。</li>
+    <li><b>无法保证生成图在物理上唯一正确。</b>同一个 H&amp;E 在物理上可能对应多个合理 IHC（切片厚度、抗体批次、显色时间），这是真实的生物学/技术变异，不是模型缺陷。</li>
+    <li><b>无法保证对未见过的 marker / 组织类型 / 扫描仪外推正确。</b>这需要单独的外推实验。</li>
+    <li><b>无法用任何自动指标替代临床验证。</b>所有计算指标都是代理，最终必须由病理医生判断。</li>
+    <li><b>无法保证解耦出的 latent 对应真实的物理因子。</b>非线性 ICA 的可辨识性理论表明，无额外假设时解耦一般不可辨识。</li>
+  </ol>
+</div>
+
+<div class="box good">
+  <div class="bt">✅ 可以保证的（这是你论文的贡献空间）</div>
+  <ol style="margin-bottom:0">
+    <li><b>物理可行性可以保证</b>——如果输出经过 Beer–Lambert 可微前向模型（浓度 → 颜色）。<br>
+    <span class="small">理由：把输出空间从「任意 RGB」收缩到「物理可行的浓度→颜色流形」，从结构上排除了物理不可能的输出。</span></li>
+    <li><b>结构保持可以量化保证</b>——通过苏木素通道共享约束（DeReStainer）、低频一致性、拓扑一致性（TACM）、核分割 Dice。</li>
+    <li><b>幻觉可以被检测并定位</b>——AQuA 式域循环，实测准确率 97.8–99.8%，优于病理医生对现实型幻觉的识别。</li>
+    <li><b>不确定性可以被量化并可视化</b>——扩散多采样 + 方差图，或共形预测的覆盖率保证。</li>
+    <li><b>分布级与语义级的合理性可以验证</b>——FID/KID（分布）+ MRA/PHV（语义）+ DAB-KL/Pearson-r/IOD（染色物理量）。</li>
+    <li><b>临床效用可以验证</b>——HER2/Ki67 分级一致性、病理医生盲评 Cohen's κ、下游任务 AUC。</li>
+    <li><b>可以建立一个小规模的真实配对验证集</b>——通过脱染-复染或多重成像反演，<b>哪怕只有几百张，也足以支撑「在真配对上验证过」这一声明</b>。</li>
+  </ol>
+</div>
+
+<h3>8.1 一句话的答辩准备</h3>
+<div class="box key">
+  <div class="bt">如果审稿人问：「你没有真实配对数据，怎么知道生成的是对的？」</div>
+  <p style="margin:0"><b>推荐回答框架</b>：</p>
+  <p>「这个问题在非配对设定下确实无法从原理上完全解决——<code>p(IHC|H&amp;E)</code> 的 coupling 不可辨识，且物理真值需要破坏性实验才能获得。因此我们<b>不声称</b>生成了真实配对图，而是从三个方向把不可知转化为可管理：</p>
+  <ol style="margin-bottom:0">
+    <li><b>物理层面</b>：我们把输出约束在 Beer–Lambert 可微前向模型定义的物理可行流形上，因此输出<b>在物理上是可实现的</b>（给出浓度图可视化证据）。</li>
+    <li><b>检测层面</b>：我们引入域循环幻觉检测器（AQuA 式），在<b>不需要真值</b>的情况下给出置信度与异常定位，实测准确率 XX%。</li>
+    <li><b>验证层面</b>：我们构建了 N 张脱染-复染的真配对验证集，在此上报告像素级指标；并在 MIST/BCI 上报告语义级（MRA）与临床级（HER2 分级一致性、病理医生盲评 κ）指标。</li>
+  </ol>
+  <p style="margin-top:8px;margin-bottom:0">我们明确声明：本方法输出<b>不应用于替代真实 IHC 诊断</b>，而应作为<b>预筛与优先级排序工具</b>，其置信度图用于指示需要化学染色确认的区域。」</p>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s9"><span class="num">9</span>Part 9 · 面向你项目的可落地方案</h2>
+
+<div class="box key">
+  <div class="bt">设计原则</div>
+  <p style="margin:0">每个模块只解决一个明确问题，可单独开关，有独立可量化的效果。<b>不引入无法验证的模块。</b></p>
+</div>
+
+<h3>9.1 五个可落地模块（按优先级）</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th class="c" style="width:5%">#</th><th style="width:20%">模块</th><th style="width:26%">解决你问题中的哪一部分</th><th style="width:26%">实现要点</th><th class="c">成本</th><th class="c">预期<br>价值</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td class="c"><b>M1</b></td>
+  <td><b>物理输出头</b><br><span class="small">Beer-Lambert 可微前向</span></td>
+  <td>「物理不可知」——保证输出物理可实现</td>
+  <td>扩散 U-Net 不预测 RGB，改预测浓度图 D̂；用 <code>X̂ = x̄₀·exp(−S D̂ᵀ)</code> 转 RGB，S 可学习。与 PSPStain 的 FOD（光密度）目标天然对接。</td>
+  <td class="c"><span class="b bS">低</span></td>
+  <td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td class="c"><b>M2</b></td>
+  <td><b>苏木素通道锚定</b><br><span class="small">DeReStainer 的物理事实</span></td>
+  <td>「数据不可知」——把 H&amp;E 的苏木素通道当作<b>真实观测</b>注入</td>
+  <td>颜色去卷积得 H_HE；损失 <code>L_H = ‖H(ŷ) − H_HE‖</code>；或作为逆问题的测量一致性项加入采样引导。</td>
+  <td class="c"><span class="b bS">低</span></td>
+  <td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td class="c"><b>M3</b></td>
+  <td><b>不确定性图</b><br><span class="small">扩散多采样</span></td>
+  <td>「正确性不可知」——把不可知变成可视化输出</td>
+  <td>同一 H&amp;E 用 N=8–16 个种子跑 DDPM（保留随机性），输出均值 μ 与方差 σ²。σ 高于阈值的区域标记为「需人工确认」。</td>
+  <td class="c"><span class="b bS">低</span></td>
+  <td class="c"><span class="b bHigh">High</span></td>
+</tr>
+<tr>
+  <td class="c"><b>M4</b></td>
+  <td><b>判别器自检</b><br><span class="small">PLOS CB 2025 做法</span></td>
+  <td>「正确性不可知」——零成本的可信度信号</td>
+  <td>复用你本来就保留的 PatchGAN 判别器，输出双头置信图（亮度 + RGB），取逐像素最小值作为 C_all，渲染热图。</td>
+  <td class="c"><span class="b bS">极低</span></td>
+  <td class="c"><span class="b bMed">Med–High</span></td>
+</tr>
+<tr>
+  <td class="c"><b>M5</b></td>
+  <td><b>域循环幻觉检测器</b><br><span class="small">AQuA 式</span></td>
+  <td>「正确性不可知」——最强力但最重的方案</td>
+  <td>训练 H&amp;E→IHC 与 IHC→H&amp;E 两个模型；往返 T 次得序列；ResNet-50 + C 投票头输出置信度。需要好/坏样本标注。</td>
+  <td class="c"><span class="b bB">中高</span></td>
+  <td class="c"><span class="b bHigh">High</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.2 建议的模型草图（在你的 PSPStain + Diffusion 上加 M1–M3）</h3>
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:12px;line-height:1.75">
+                    ┌──────────────────┐
+                    │      H&E         │
+                    └────────┬─────────┘
+                             │
+                  ┌──────────┴──────────┐
+                  ↓                     ↓
+        ┌──────────────────┐   ┌──────────────────┐
+        │ 颜色去卷积         │   │ 条件编码          │
+        │ → H_HE, E_HE     │   │ (structure/stain) │
+        └────────┬─────────┘   └────────┬─────────┘
+                 │                      │
+                 │  ★ M2 锚定           │
+                 │                      ↓
+                 │        ┌────────────────────────────┐
+                 │        │  条件扩散 U-Net             │
+                 │        │  ★ M1 输出: 浓度图 D̂        │
+                 │        │     (不是 RGB!)            │
+                 │        └──────────────┬─────────────┘
+                 │                       ↓
+                 │        ┌────────────────────────────┐
+                 │        │  Beer-Lambert 可微前向模型   │
+                 │        │  X̂ = x̄₀·exp(−S D̂ᵀ)        │
+                 │        │  S 可学习（初始化为 DAB 色调）│
+                 │        └──────────────┬─────────────┘
+                 │                       ↓
+                 │                虚拟 IHC (RGB)
+                 │                       │
+                 └───────────┬───────────┘
+                             ↓
+                 ┌───────────────────────────┐
+                 │  ★ M2  L_H = ‖H(X̂) − H_HE‖│
+                 │  PSPStain ①  L_FOD        │
+                 │  PSPStain ②  L_PCLS       │
+                 │  ★ M1  L_phys 重构一致性    │
+                 │        PatchGAN 对抗       │
+                 └───────────────────────────┘
+
+  推理时额外输出（★ M3）:
+     N 次采样 → μ（虚拟 IHC） + σ²（不确定性图） + 判别器置信热图（★ M4）
+</pre>
+</div>
+
+<div class="box good">
+  <div class="bt">✅ 这个设计为什么优雅</div>
+  <ul style="margin-bottom:0">
+    <li><b>物理链条完整可解释</b>：扩散生成 DAB 浓度 → Beer-Lambert 转颜色 → 与 FOD 光密度目标直接对接。每一步都有物理意义，<b>每一步都能单独可视化检查</b>。</li>
+    <li><b>不增加不可验证的模块</b>：M1 有物理定律支撑，M2 有染色化学事实支撑，M3/M4 是输出侧功能，都不依赖新的训练目标。</li>
+    <li><b>与 PSPStain 的两个 loss 完全兼容</b>：FOD 本来就是光密度域的量，改用浓度图输出后<b>更自然</b>而非更别扭。</li>
+    <li><b>直接回应审稿质疑</b>：你有物理可行性证据（浓度图）、有不确定性图、有幻觉检测、有结构锚定。</li>
+  </ul>
+</div>
+
+<h3>9.3 一个重要的反向建议</h3>
+<div class="box stop">
+  <div class="bt">🚫 不要做的事</div>
+  <ul style="margin-bottom:0">
+    <li><b>不要试图用「更强的解耦」来保证物理正确性。</b>解耦是表示学习，物理正确性是生成约束，二者不是一回事。上一份报告的解耦设计解决「结构 vs 染色」，这份报告的物理约束解决「可实现性」，<b>是两个正交的问题，不要混为一谈</b>。</li>
+    <li><b>不要用 FID/PSNR 作为主要证据。</b>见 Part 5.3——分布级指标不能证明实例级正确性。</li>
+    <li><b>不要跳过病理医生盲评。</b>如果条件允许，这是唯一能真正支撑「临床可用」的验证。</li>
+    <li><b>不要在论文里声称「物理上正确」而不给证据。</b>要么给出 Beer-Lambert 分解重构的残差，要么给出浓度图的非负性与单调性验证。</li>
+  </ul>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s10"><span class="num">10</span>Part 10 · 实验路线</h2>
+
+<h3>10.1 分阶段路线</h3>
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:13px;line-height:2.0">
+Step A  物理输出头（M1）
+   │     实现: 扩散 U-Net 输出浓度图 D̂ → Beer-Lambert 转 RGB
+   │     观察: ① 训练是否收敛（物理前向是可微的，梯度应正常）
+   │           ② 浓度图 D̂ 是否非负、空间上是否与 DAB 区域吻合
+   │           ③ FOD loss 是否比 RGB 输出时更小
+   │     停止条件: 若浓度图可视化看不出结构 → 检查 S 的初始化与缩放
+   ↓
+Step B  苏木素锚定（M2）
+   │     实现: 颜色去卷积 → H_HE → L_H = ‖H(X̂) − H_HE‖
+   │     观察: 结构类指标（SSIM / 核 Dice / edge 一致性）是否提升
+   │     停止条件: 若无提升 → 检查去卷积矩阵是否标定正确
+   ↓
+Step C  不确定性输出（M3）
+   │     实现: N=8~16 次 DDPM 采样 → μ, σ²
+   │     观察: ① σ 是否在预期的高歧义区域（如表达边界）更大
+   │           ② σ 是否与"生成错误"相关（用少量真配对或医生判断检验）
+   │     停止条件: 若 σ 与错误完全不相关 → 不确定性未捕捉到有用信号
+   ↓
+Step D  判别器自检（M4）
+   │     实现: 复用 PatchGAN，输出双头置信图
+   │     观察: 置信图是否能标出人为注入的伪影
+   │     停止条件: 置信图无区分度 → 判别器训练不足
+   ↓
+Step E  小规模真配对验证集
+   │     实现: ① 脱染-复染（首选，若能接触实验室）
+   │           ② 或 CyCIF/CODEX 正演虚拟明场 + 配准真实明场
+   │     观察: 在真配对上报告像素级指标（这是你论文最硬的证据）
+   │     停止条件: 配对质量本身要先用配准残差验证
+   ↓
+Step F  幻觉检测器（M5，可选）
+   │     实现: 训练 IHC→H&E 反向模型 + AQuA-Net
+   │     观察: 在好/坏样本上的灵敏度/特异度
+   │     停止条件: 若反向模型质量太差 → 先提升反向模型
+   ↓
+Step G  临床级验证
+         实现: HER2/Ki67 分级一致性 · 病理医生盲评（Cohen's κ）· 下游任务 AUC
+         观察: 与真实 IHC 的临床结论一致性
+</pre>
+</div>
+
+<h3>10.2 每个阶段对应的"证据强度"</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th class="c" style="width:10%">阶段</th><th style="width:24%">产出</th><th style="width:24%">能回应什么质疑</th><th>不能回应什么</th></tr></thead>
+<tbody>
+<tr><td class="c"><b>A</b></td><td>浓度图 + 物理前向</td><td>「你的输出物理上可实现吗？」</td><td>「浓度图本身对吗？」</td></tr>
+<tr><td class="c"><b>B</b></td><td>结构一致性指标</td><td>「你保住了组织结构吗？」</td><td>「染色语义对吗？」</td></tr>
+<tr><td class="c"><b>C</b></td><td>不确定性图</td><td>「模型知道自己不知道吗？」</td><td>「不确定的地方到底对不对？」</td></tr>
+<tr><td class="c"><b>D</b></td><td>置信热图</td><td>「有廉价的可信度信号吗？」</td><td>「这个信号可靠吗？」</td></tr>
+<tr><td class="c"><b>E</b></td><td><b>真配对像素级指标</b></td><td><b>「在真实配对上表现如何？」← 最硬</b></td><td>样本量小，外推性有限</td></tr>
+<tr><td class="c"><b>F</b></td><td>幻觉检测灵敏度/特异度</td><td>「怎么知道哪张图不能信？」</td><td>检测器本身也可能漏检</td></tr>
+<tr><td class="c"><b>G</b></td><td>临床一致性 κ / AUC</td><td>「临床上能用吗？」← 最终答案</td><td>单中心、单 marker 的局限</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>10.3 全局停止规则</h3>
+<div class="box stop">
+  <div class="bt">🚦 出现以下任一情况，立即停止并回退</div>
+  <ol style="margin-bottom:0">
+    <li><b>浓度图 D̂ 出现负值或大面积零值</b> → 物理前向模型的参数化有问题（应改用 softplus 等保证非负的激活）。</li>
+    <li><b>不确定性图 σ 在所有区域都接近均匀</b> → 扩散采样没有捕捉到有意义的不确定性（可能用了 DDIM 确定性采样，或模型过度自信）。</li>
+    <li><b>置信热图与人为注入的伪影无相关</b> → 判别器已经饱和，失去自检能力。</li>
+    <li><b>真配对验证集上的指标明显差于相邻切片上的指标</b> → 说明你之前一直在拟合错位噪声，需要重新审视监督设计（参考 DGR）。</li>
+    <li><b>某个模块加上去指标不变</b> → 删除，不要为它找理由。</li>
+  </ol>
+</div>
+
+<h3>10.4 最终要回答的核心问题</h3>
+<div class="box key">
+  <div class="bt">❓ 「没有真实配对数据，我们不能保证生成图符合真实物理成图规律」——这个问题该怎么回答？</div>
+  <p><b>本报告的答案：</b></p>
+  <p><b>第一步：承认问题的真实性，不要试图绕过。</b><br>
+  这在理论上确实成立——非配对设定下 <code>p(IHC|H&amp;E)</code> 的 coupling 不可辨识，cycle consistency 只保证分布匹配不保证实例正确，且物理真值需要破坏性实验。</p>
+  <p><b>第二步：把「保证物理正确」替换为「保证物理可行」。</b><br>
+  用 Beer–Lambert 可微前向模型把输出空间从「任意 RGB」收缩到「物理可行的浓度→颜色流形」。这是<b>可证明的、可可视化的</b>约束，而且与 PSPStain 的 FOD 光密度目标天然契合。<b>这是唯一能从外部注入"硬约束"的路径。</b></p>
+  <p><b>第三步：把「保证正确」替换为「检测错误 + 量化不确定」。</b><br>
+  AQuA 框架证明了幻觉可以<b>在完全不需要真值的情况下</b>被检测（准确率 97.8–99.8%），而且能抓到病理医生都会漏掉的现实型幻觉。扩散多采样给出的不确定性图则告诉使用者「哪里不能信」。</p>
+  <p><b>第四步：用物理手段把一部分配对变真。</b><br>
+  脱染-复染（同一张切片）与多重成像正演，都能提供接近真实的配对。<b>哪怕只有几百张，也足以支撑「在真配对上验证过」这一声明</b>——这是你论文里最硬的一块证据。</p>
+  <p style="margin-bottom:0"><b>最终立场</b>：<b>不声称生成真实配对图，而声称生成「物理可行、结构保持、幻觉可检测、不确定性可量化」的虚拟染色结果，并明确限定其临床用途为预筛与优先级排序工具。</b>这是一个诚实且足够有说服力的科学立场。</p>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s11"><span class="num">11</span>附录 · 检索策略、可信度声明与参考文献</h2>
+
+<h3>11.1 检索策略</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">主题块</th><th>主要检索词</th></tr></thead>
+<tbody>
+<tr><td><b>物理约束 / 染色建模</b></td><td><code>physics-informed virtual staining</code> · <code>Beer-Lambert stain deconvolution</code> · <code>optical density generative model</code> · <code>differentiable forward model histology</code> · <code>stain unmixing</code> · <code>algorithmic unrolling</code> · <code>physically consistent score-based generative model</code></td></tr>
+<tr><td><b>不可辨识性 / 理论</b></td><td><code>identifiability unpaired image translation</code> · <code>cycle consistency insufficient</code> · <code>nonlinear ICA identifiability</code> · <code>coupling transport plan ambiguity</code> · <code>one-to-many ambiguity image translation</code></td></tr>
+<tr><td><b>配对数据逼近</b></td><td><code>serial section registration</code> · <code>adjacent slides alignment</code> · <code>3D histology reconstruction</code> · <code>misalignment-resistant virtual staining</code> · <code>destain restain</code> · <code>multiplexed imaging virtual brightfield</code></td></tr>
+<tr><td><b>幻觉 / 可信性</b></td><td><code>hallucination detection virtual staining</code> · <code>ground-truth-free quality assessment pathology</code> · <code>trustworthy generative pathology</code> · <code>virtual staining quality assurance</code></td></tr>
+<tr><td><b>评价 / 不确定性</b></td><td><code>pathology-guided perceptual metric</code> · <code>molecular retrieval accuracy</code> · <code>uncertainty quantification medical image synthesis</code> · <code>conformal prediction medical imaging</code> · <code>confidence quantification virtual spatial transcriptomics</code></td></tr>
+<tr><td><b>因果 / 反事实</b></td><td><code>causal representation learning pathology</code> · <code>counterfactual generation histopathology</code> · <code>deconfounding domain generalization</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><b>来源</b>：arXiv · Nature Biomedical Engineering · Nature Communications · npj Digital Medicine · PLOS Computational Biology · Medical Image Analysis · Frontiers in Bioinformatics · IEEE TMI · MICCAI · NeurIPS · ICML · ICLR · AAAI · ACM MM · SIAM · PMC/PubMed。</p>
+
+<h3>11.2 可信度声明</h3>
+<div class="box warn">
+  <div class="bt">⚠️ 请在使用本报告数据前阅读</div>
+  <ul style="margin-bottom:0">
+    <li><b>AQuA 的定量结果</b>（99.8% / 97.8% 准确率、与病理医生 98.5% 一致、TransMIL 对比等）来自论文正文抽取，未做独立复现。其任务设置是 <b>AF ↔ H&amp;E</b>，不是 <b>H&amp;E → IHC</b>，迁移时性能可能有差异。</li>
+    <li><b>DGR（Nature Communications 2026）</b>：Nature 官网对自动抓取有防护，本报告信息来自论文摘要与作者实验室（HKUST SmartLab）公开介绍页。<b>架构细节与消融数据建议查阅原文</b>。DOI: 10.1038/s41467-026-71038-2。</li>
+    <li><b>BeerLaNet 的年份/venue</b>：arXiv 编号 2510.06592 对应 2025 年 10 月，检索显示为 MICCAI 2025 工作。论文正文抽取中<b>未见独立消融章节</b>。</li>
+    <li><b>PaPIS</b>：作者<b>明确声明缺乏病理医生主观验证</b>，临床有效性「尚待建立」。建议作为训练损失使用，而非评价指标。</li>
+    <li><b>Frontiers 2026 虚拟明场工具箱</b>：论文的验证数据（PCC/MS-SSIM/κ）基于 PARS、CyCIF、CODEX 等特定数据源，迁移到你自己的数据需重新标定染色参数。</li>
+    <li><b>「S」级迁移评分</b>：为本报告的<b>工程判断</b>，依据是「是否直接命中你的问题 + 是否有代码 + 是否已被验证」，不是论文质量评价。</li>
+    <li><b>理论部分</b>（Part 1.4 的不可辨识性论证、Part 7 的因果图）为本报告基于文献的<b>综合推演</b>，不是直接引用某一篇论文的定理。若写入论文，建议引用非线性 ICA 可辨识性文献（arXiv 2206.07751）与 CycleGAN 原文的讨论。</li>
+  </ul>
+</div>
+
+<h3>11.3 参考文献</h3>
+
+<h5>幻觉检测与可信性</h5>
+<ol class="small" style="line-height:1.85">
+<li>Huang L*, Li Y*, Pillar N, Keidar Haran T, Dean Wallace W, Ozcan A. <b>A robust and scalable framework for hallucination detection in virtual tissue staining and digital pathology (AQuA)</b>. <i>Nature Biomedical Engineering</i> 2025;9(12):2196–2214. DOI:10.1038/s41551-025-01421-9 · PMC12705451 · arXiv:2404.18458</li>
+<li>Ounissi M*, Sarbout I*, Hugot J-P, Martinez-Vinson C, Berrebi D, Racoceanu D. <b>Scalable, trustworthy generative model for virtual multi-staining from H&amp;E whole slide images</b>. <i>PLOS Computational Biology</i> 2025;21(10):e1013516. DOI:10.1371/journal.pcbi.1013516</li>
+<li>Whitmarsh T, Al Sa'd M, Molaeinezhad A, et al. <b>A toolkit for generating virtual brightfield images of histological and immunohistochemical stains from multiplexed data with AI-based channel selection and image enhancement</b>. <i>Frontiers in Bioinformatics</i> 2026;6. DOI:10.3389/fbinf.2026.1765143</li>
+</ol>
+
+<h5>物理约束与染色建模</h5>
+<ol class="small" start="4" style="line-height:1.85">
+<li>Xu T*, Wu Y*, Tripathi AK, Ippolito MM, Haeffele BD. <b>Adaptive Stain Normalization for Cross-Domain Medical Histology (BeerLaNet)</b>. MICCAI 2025. arXiv:2510.06592 · <a href="https://github.com/xutianyue/BeerLaNet">code</a></li>
+<li>Eastwood M, McKee T, Hu Z, Tejpar S, Minhas F. <b>Beer-Lambert Autoencoder for Unsupervised Stain Representation Learning and Deconvolution in Multi-immunohistochemical Brightfield Histology Images</b>. arXiv 2026. 2601.11336 · <a href="https://github.com/measty/StainQuant">code (StainQuant)</a></li>
+<li>CoCoGen: <b>Physically-Consistent and Conditioned Score-based Generative Models for Forward and Inverse Problems</b>. <i>SIAM</i> 2025. arXiv:2312.10527</li>
+<li>Ruifrok AC, Johnston DA. <b>Quantification of histochemical staining by color deconvolution</b>. <i>Analytical and Quantitative Cytology and Histology</i> 2001（经典基础）</li>
+<li>Vahadane A, et al. <b>Structure-Preserving Color Normalization and Sparse Stain Separation for Histological Images</b>. <i>IEEE TMI</i> 2016（经典基础）</li>
+<li>Chung H, Ye JC. <b>Diffusion Posterior Sampling for General Noisy Inverse Problems</b>. ICLR 2023 · <a href="https://github.com/DPS2022/diffusion-posterior-sampling">code</a></li>
+</ol>
+
+<h5>配对数据逼近与配准</h5>
+<ol class="small" start="10" style="line-height:1.85">
+<li>Wei L, Hua S, Zhang S, Zhang X. <b>DeReStainer: H&amp;E to IHC Pathological Image Translation via Decoupled Staining Channels</b>. arXiv 2024. 2409.00649</li>
+<li>Ma, Li, et al. <b>Generative AI for misalignment-resistant virtual staining (DGR: Decoupled Generation and Registration)</b>. <i>Nature Communications</i> 2026. DOI:10.1038/s41467-026-71038-2</li>
+<li>Jiang M, Zhou J, Zeng N, Li M, Tang Q, He C, Fu H, He H. <b>Topology-aware Pathological Consistency Matching for Weakly-Paired IHC Virtual Staining</b>. arXiv 2026. 2601.02806</li>
+<li>Liao IY, Fadlelbari MMS, Khattab M, et al. <b>Rethinking Misalignment in Virtual Staining: A Preliminary Study on Using STN-Guided Supervision at Training Time</b>. ACM MM Asia 2025. DOI:10.1145/3743093.3770927</li>
+<li><b>ZeroReg3D: A Zero-shot Registration Pipeline for 3D histology</b>. arXiv 2025. 2506.21923</li>
+<li><b>Two-step workflow integrating automatic registration and manual refinement for accurate alignment of serial histological sections in 3D reconstruction</b>. <i>Journal of Anatomy</i> 2026. DOI:10.1111/joa.70203</li>
+</ol>
+
+<h5>评价指标与不确定性</h5>
+<ol class="small" start="15" style="line-height:1.85">
+<li>Wang Q, Tweel JED, Haji Reza P, Layton A. <b>Pathology-Guided Virtual Staining Metric for Evaluation and Training (PaPIS)</b>. arXiv 2025. 2507.12624</li>
+<li>Großkopf E, Bundele V, Hosseinzadeh M, Lensch HPA. <b>HistDiST: Histopathological Diffusion-based Stain Transfer</b>（提出 MRA 指标）. arXiv 2025. 2505.06793 · <a href="https://github.com/ErikGro/HistDiST">code</a></li>
+<li>Liu A, Wang X, Cai J, Li C. <b>Score-based Diffusion Model for Unpaired Virtual Histology Staining (MIU-Diff)</b>（提出 Hist/VIF/IOD 评价）. arXiv 2025. 2506.23184</li>
+<li>Saurav JR, et al. <b>UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</b>（错位感知损失设计 + DAB-KL/Pearson-r）. ACM-BCB 2026. arXiv:2603.12716 · <a href="https://github.com/aauthors131/UNIStainNet">code</a></li>
+<li>Abdar M, et al. <b>A review of uncertainty quantification in medical image analysis</b>. <i>Medical Image Analysis</i> 2024. arXiv:2310.06873</li>
+<li><b>Multiscale confidence quantification for virtual spatial transcriptomics</b>. 2026. PMC12991153</li>
+<li><b>Conformal Prediction Masks: Visualizing Uncertainty in Medical Image-to-Image Recovery</b>. ICLR 2023</li>
+<li><b>CONReg: Uncertainty-Aware Medical Image Registration Using Conformal Prediction</b>. <i>Journal of Digital Imaging</i> 2026. DOI:10.1007/s10278-026-01878-3</li>
+<li><b>STP-BENCH: A Unified Systematic Benchmark for Virtual Spatial Transcriptomics</b>. arXiv 2026. 2609.05956</li>
+</ol>
+
+<h5>理论：不可辨识性与解耦</h5>
+<ol class="small" start="24" style="line-height:1.85">
+<li>Zhu J-Y, Park T, Isola P, Efros AA. <b>Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks</b>. ICCV 2017. arXiv:1703.10593（循环一致性的原始定义与讨论）</li>
+<li>Zheng Q, et al. <b>On the Identifiability of Nonlinear ICA: Sparsity and Beyond</b>. arXiv 2022. 2206.07751（非线性解耦的可辨识性条件）</li>
+<li>CycleNet: <b>Rethinking Cycle Consistency in Text-Guided Diffusion for Image Manipulation</b>. NeurIPS 2023</li>
+<li><b>From Identifiable Causal Representations to Controllable Counterfactual Generation</b>. arXiv 2023. 2310.11011</li>
+</ol>
+
+<h5>综述与临床转化</h5>
+<ol class="small" start="28" style="line-height:1.85">
+<li><b>Virtual staining for pathology: Challenges, limitations and future directions</b>. 2025. DOI:10.1016/j.intonc.2025.03.005（首个从模型与算法视角的虚拟染色综述）</li>
+<li><b>Virtual histological staining: toward standardization and clinical translation</b>. <i>Biomedical Engineering Letters</i> 2026. DOI:10.1007/s13534-026-00597-6 · PMID:42603942</li>
+<li><b>H&amp;E to IHC virtual staining methods in breast cancer: an overview</b>. <i>npj Digital Medicine</i> 2025. DOI:10.1038/s41746-025-01741-9</li>
+<li>Rivenson Y, et al. <b>Deep learning-enabled virtual histological staining of biological samples</b>. <i>Light: Science &amp; Applications</i> 2023</li>
+<li>Xiong et al. <b>Unpaired Multi-Domain Histopathology Virtual Staining using Dual Path Prompted Inversion (StainPromptInversion)</b>. AAAI 2025. arXiv:2412.11106 · <a href="https://github.com/DianaNerualNetwork/StainPromptInversion">code</a></li>
+</ol>
+
+<hr>
+<p class="small" style="text-align:center;margin-top:30px">
+本报告由 WorkBuddy AI 基于公开文献检索生成 · 检索日期 2026-10-01<br>
+所有论文数据来自作者自报结果，未做独立复现；迁移可行性评分为工程判断<br>
+<b>核心立场：不声称生成真实配对图，而声称生成「物理可行、结构保持、幻觉可检测、不确定性可量化」的结果。</b><br>
+配套报告：<code>HE2IHC_Diffusion_Disentanglement_Report.html</code>（解耦学习方向）
+</p>
+
+</main>
+</div>
+</body>
+</html>

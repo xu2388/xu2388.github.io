@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fbfcfd">
+<meta name="format-detection" content="telephone=no">
+<title>频域/门控治理 GAN 缺陷：先例核实与机制修正</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:29px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:760px}thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}.small{font-size:12.5px;color:var(--muted)}.formula{font-family:var(--mono);background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--purple);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:14px 0}.cite{font-size:12.5px;color:var(--muted);border-left:3px solid var(--strong);padding-left:12px}hr{border:none;border-top:1px solid var(--border);margin:34px 0}@media(max-width:1080px){.grid2{grid-template-columns:1fr}}@media(max-width:900px){html{scroll-padding-top:12px}body{font-size:16px;line-height:1.75;overflow-x:hidden}.wrap{display:block;width:100%;max-width:none}nav.toc{display:block;position:sticky;top:0;z-index:10;width:100%;height:auto;max-height:52px;overflow-x:auto;overflow-y:hidden;padding:9px 12px;border-right:0;border-bottom:1px solid var(--border);background:rgba(251,252,253,.96);-webkit-overflow-scrolling:touch;white-space:nowrap}nav.toc .brand{display:inline-block;margin:0 14px 0 0;font-size:12px}nav.toc .sub{display:none}nav.toc a{display:inline-block;margin:0 4px 0 0;padding:5px 9px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:12px;white-space:nowrap}nav.toc a.l1{margin-top:0;font-weight:700;color:var(--text)}nav.toc a.l2{padding-left:9px;font-size:12px;color:var(--muted)}main{width:100%;max-width:none;padding:22px 14px 72px}header.doc{padding-bottom:18px;margin-bottom:26px}header.doc .kicker{font-size:11px;letter-spacing:.08em}header.doc h1{font-size:25px;line-height:1.38;margin:8px 0 12px;overflow-wrap:anywhere}header.doc .desc{font-size:15px;line-height:1.7}.meta{gap:6px;margin-top:14px}.meta span{font-size:11.5px;padding:4px 8px;line-height:1.45}h2{font-size:21px;line-height:1.4;margin:40px 0 14px;padding-bottom:7px}h3{font-size:17px;line-height:1.5;margin:26px 0 9px}h4{font-size:15px}p{margin:8px 0}ul,ol{margin-left:20px}.box{padding:13px 14px;margin:14px 0;border-radius:9px}.box .bt{font-size:13px}.card{margin:14px 0}.card .ch{padding:10px 13px}.card .body{padding:7px 13px 13px}.grid2{grid-template-columns:1fr;gap:12px}.mini{padding:11px 12px}.scroll{margin:13px 0;border-radius:8px;-webkit-overflow-scrolling:touch}.scroll:after{content:"左右滑动查看表格";display:block;padding:5px 10px;color:var(--muted);font-size:11px;background:var(--softer);border-top:1px solid var(--border)}table{min-width:700px;font-size:13px}thead th{padding:9px 9px;font-size:12px}td{padding:8px 9px}.flow{margin:13px 0;padding:11px 12px;overflow:hidden}.flow pre,pre{margin:10px 0;padding:11px 12px;font-size:11.5px;line-height:1.55;white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}.formula{margin:11px 0;padding:11px 12px;font-size:12px;line-height:1.65;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.b{font-size:10.5px;padding:2px 6px}.cite{font-size:12px}a{overflow-wrap:anywhere}}@media(max-width:380px){main{padding-left:11px;padding-right:11px}header.doc h1{font-size:22px}h2{font-size:19px}.meta span{font-size:11px}nav.toc{padding-left:9px;padding-right:9px}}@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="toc">
+<div class="brand">GAN defects · frequency × gating</div>
+<div class="sub">先例核实 · 上一版结论修正 · 可执行设计<br>截至 2026-10-13 · 一手证据优先</div>
+<a class="l1" href="#s0">0 · 先给结论：修正后的判定</a>
+<a class="l1" href="#s1">1 · 与既有报告的分工</a>
+<a class="l1" href="#s2">2 · 上一版哪里说错了</a>
+<a class="l1" href="#s3">3 · 关键区分：门控 vs 固定滤波</a>
+<a class="l2" href="#s31">3.1 棋盘格有解析解，不是学习问题</a>
+<a class="l2" href="#s32">3.2 为什么"理论保证"站在固定滤波那边</a>
+<a class="l1" href="#s4">4 · 抗棋盘格/抗混叠先例地图</a>
+<a class="l1" href="#s5">5 · 频域×GAN 先例地图</a>
+<a class="l1" href="#s6">6 · 频域"门控"的真实先例：F-Drop</a>
+<a class="l1" href="#s7">7 · 门控×GAN 先例地图</a>
+<a class="l1" href="#s8">8 · 可学习上采样先例地图</a>
+<a class="l1" href="#s9">9 · 四象限：成熟度 × 是否进入生成器</a>
+<a class="l1" href="#s10">10 · 真正空白在哪：三个创新点</a>
+<a class="l1" href="#s11">11 · 修正后的推荐设计</a>
+<a class="l1" href="#s12">12 · 修正后的可执行消融</a>
+<a class="l1" href="#s13">13 · 证据边界与未核实清单</a>
+<a class="l1" href="#s14">14 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Feasibility review · 方案可行性审查</div>
+<h1>频域 / 门控治理 GAN 缺陷：先例核实与上一版结论修正</h1>
+<p class="desc">你的质疑成立：上一版把"GAN + 频域 + 门控"整体判为空白，这个结论<strong>过窄</strong>。本文逐条核实"频域治 GAN 缺陷""门控治 GAN 缺陷""门控约束上采样治棋盘格"这三条主张各自有多少先例，并把结论收窄到真正站得住的位置——同时纠正一个方向性判断：<strong>"理论可靠"这四个字，站在固定滤波那边，不站在可学习门控那边。</strong></p>
+<div class="meta"><span>主任务：H&amp;E→IHC 虚拟染色</span><span>生成框架：conditional GAN</span><span>待核机制：频带门控 · 抗混叠上采样</span><span>报告日期：2026-10-13</span><span>上一版：《GAN+频域+门控_虚拟染色方法调研》</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先给结论：修正后的判定</h2>
+
+<div class="box key"><div class="bt">一句话回答你的问题</div><p><b>"频域治 GAN 缺陷"——有人做，而且不少；"门控治 GAN 缺陷"——动机明确、并且把功劳归给门控的工作，我这一轮查不到；"用门控约束上采样去防棋盘格"——全场没有这么做，不是因为没人想到，而是因为棋盘格有<u>解析解</u>，用固定抗混叠滤波就能根治，而可学习门控<u>不提供频域保证</u>。</b></p></div>
+
+<p>你的三条直觉，逐条判定：</p>
+
+<div class="scroll"><table><thead><tr><th style="width:31%">你的主张</th><th style="width:12%">判定</th><th>依据与边界</th></tr></thead><tbody>
+<tr><td>GAN 本身存在已知缺陷（训练崩溃、模式崩溃、棋盘格等）</td><td><span class="b high">成立</span></td><td>这是既有共识，见《GAN问题与不足调研》。无需再证。</td></tr>
+<tr><td>频域机制可以<strong>针对性</strong>解决其中某些缺陷</td><td><span class="b high">成立，且已有人做</span></td><td>至少 5 篇是"先点名 GAN 某个具体缺陷，再用频域去治"：Durall 2020（上卷积导致频谱失真 → 频谱正则项，并称改善训练稳定性）、F-Drop&amp;Match 2021（D 被高频扰动带偏 → 频域死区 + 频域匹配）、SSD-GAN 2021（D 因下采样丢高频 → D 内嵌频域分类器）、FFL 2021（神经网络谱偏置 → 自适应频点加权损失）、WaveGAN-ECCV 2022（生成器难合成高频 → 小波分频 + 高低频 skip 路由）。<strong>但治理目标几乎全部集中在"高频细节"，没有人用频域治模式崩溃或训练不稳定。</strong></td></tr>
+<tr><td>门控机制可以<strong>针对性</strong>解决 GAN 缺陷</td><td><span class="b medium">方向成立，直接先例≈0</span></td><td>门控在 GAN 里存在，但用途是<strong>多风格/多模态路由</strong>与<strong>特征过滤</strong>，不是治缺陷。唯一在摘要里提到 mode collapse 的 Gated-GAN，把稳定性归功于自编码器重建损失，不是门控。门控负责稳定的消融，我这一轮没找到。</td></tr>
+<tr><td>用一个门控去约束上采样，防止棋盘格</td><td><span class="b bad">此具体机制无先例</span></td><td>抗棋盘格谱系（Odena 2016 → Aitken 2017 → Kinoshita 2020 → StyleGAN2 双线性 → StyleGAN3 窗化 sinc → blur-pool）<strong>全部是固定滤波或初始化</strong>，无一是门控。可学习/内容感知上采样（CARAFE、FADE、SAPA、DySample）确实带门控，但<strong>全部用于分割/检测/抠图，动机是精度，不是伪影，且没有一篇搬进 GAN 生成器</strong>。</td></tr>
+<tr><td>"从理论上来说肯定是具有可靠性的"</td><td><span class="b bad">此处需要反向纠正</span></td><td><strong>理论保证站在固定滤波一侧。</strong>棋盘格是"核尺寸与步长不整除 → 重叠不均"的确定性后果，抗混叠低通有 Nyquist 意义上的解析保证（StyleGAN3 摘要原话：小改动"guarantee that unwanted information cannot leak"）。可学习门控由网络预测、与输入相关，<strong>没有频域约束保证，甚至可以学出新的伪影</strong>。见 §3。</td></tr>
+</tbody></table></div>
+
+<div class="box good"><div class="bt">修正后的可主张创新点（这才是既空白又站得住的）</div><p><b>不是"我用门控治棋盘格"，而是：以固定抗混叠重采样为底座（把棋盘格从根上消掉），再用<u>有界频带门控</u>控制"高频残差分支注入多少"。</b>这样分工是：固定滤波负责"保证不产生伪影"，门控负责"决定真实高频细节注入多少、在哪里注入"。前半段有解析保证，后半段是你要主张的新意，而且它在 H&amp;E→IHC 虚拟染色里确实没有人做过。详见 §10、§11。</p></div>
+
+<div class="box warn"><div class="bt">这一版相对上一版，改了三个判断</div><ol><li>把"GAN+频域+门控整体空白"收窄为"<strong>病理虚拟染色场景下的频带门控</strong>空白"。泛领域的"频域×GAN×伪影"其实相当拥挤。</li><li>把"门控可治 GAN 缺陷"从隐含肯定，改为"<strong>方向成立但直接先例≈0</strong>"。</li><li>新增一条方向性纠正：<strong>可学习门控不继承抗混叠的理论保证</strong>。这是上一版没写、但会直接影响你方案设计的一句话。</li></ol></div>
+
+<h2 id="s1"><span class="num">1</span>与既有报告的分工</h2>
+
+<p>本文是上一版的<strong>勘误与深化</strong>，不是重写。资料库内相关报告的分工如下（已递归扫描 56 份 HTML）：</p>
+
+<div class="scroll"><table><thead><tr><th style="width:34%">既有文件</th><th>已经回答的问题</th><th>本文的新增内容</th></tr></thead><tbody>
+<tr><td><a href="../01_调研报告/GAN+频域+门控_虚拟染色方法调研.html">GAN+频域+门控_虚拟染色方法调研.html</a></td><td>GAN+频域/门控的方法地图、迁移到 H&amp;E→IHC 的架构建议、F0–R1 消融。</td><td><strong>本文修正它的结论边界</strong>（§2），并补上它漏掉的一整条线：抗棋盘格/抗混叠谱系（§4）与可学习上采样谱系（§8）。</td></tr>
+<tr><td><a href="../01_调研报告/GAN问题与不足调研.html">GAN问题与不足调研.html</a></td><td>GAN 原理、梯度饱和、振荡、模式崩溃、棋盘格成因、D 过拟合。</td><td>把每个缺陷对应到"谁真的用频域/门控治过它"，以及"治不了的那部分为什么治不了"。</td></tr>
+<tr><td><a href="../01_调研报告/扩散模型门控机制_文献地图与频域交汇.html">扩散模型门控机制_文献地图与频域交汇.html</a></td><td>扩散框架下门控与频域交汇的文献地图。</td><td>本文是它在 <strong>GAN 框架下的同构姊妹篇</strong>，但结论不同：GAN 侧缺少"门控治缺陷"的先例，而扩散侧有 CFG、ControlNet 这类条件强度控制。</td></tr>
+<tr><td><a href="../01_调研报告/频域在扩散模型中的应用_结构保持视角_调研报告.html">频域在扩散模型中的应用_结构保持视角_调研报告.html</a></td><td>扩散里频域用于结构保持的机制与先例。</td><td>本文补 GAN 侧频域先例，并指出 GAN 侧频域治理的目标几乎只有"高频细节"一项。</td></tr>
+<tr><td><a href="../01_调研报告/PSPStain_频域条件注入_文献综述报告.html">PSPStain_频域条件注入_文献综述报告.html</a></td><td>频域条件注入类方法综述。</td><td>本文只补 GAN 生成器侧的"频带门控"空档判定，不重复条件注入部分。</td></tr>
+<tr><td><a href="../05_伪影与失败模式/扩散模型黑团伪影_成因诊断与解决方案.html">扩散模型黑团伪影_成因诊断与解决方案.html</a></td><td>扩散黑团伪影的成因与排查。</td><td>本文第 §4 是它的 GAN 侧对偶：GAN 的周期伪影（棋盘格）成因与固定解法。</td></tr>
+</tbody></table></div>
+
+<h2 id="s2"><span class="num">2</span>上一版哪里说错了</h2>
+
+<p>上一版写的是"本轮没有找到一个已经充分验证、同时满足 GAN + 显式 learned frequency-band gate + H&amp;E→IHC + 蛋白表达验证 + 官方代码和清晰消融的成熟先例"。<strong>这句话字面上没错，但它是通过把五个条件同时叠加得到的，等于用合取把整个领域排除掉了。</strong>它给人留下的印象是"这类工作没人做"，而事实是：</p>
+
+<div class="scroll"><table><thead><tr><th>上一版的说法</th><th>核实后的事实</th><th>性质</th></tr></thead><tbody>
+<tr><td>暗示"频域×GAN"先例稀少</td><td>相当拥挤：ICCV/AAAI/ECCV/NeurIPS 2019–2023 至少 8 条主线，多数带官方代码。</td><td><span class="b bad">过窄</span></td></tr>
+<tr><td>暗示"门控×GAN"是空白</td><td>不空白，但方向不对：门控用于路由/过滤，不是治缺陷。</td><td><span class="b medium">判断粗糙</span></td></tr>
+<tr><td>没有提到抗棋盘格/抗混叠这条线</td><td>这条线很成熟，而且<strong>恰好是回答"为什么不用门控"的关键证据</strong>。</td><td><span class="b bad">漏检</span></td></tr>
+<tr><td>把"频域"与"门控"并列成两个可互换的抓手</td><td>两者性质不同：频域是<strong>约束/监督信号</strong>，门控是<strong>路径/强度控制</strong>；在抗混叠问题上，只有固定滤波有理论保证。</td><td><span class="b bad">未区分</span></td></tr>
+</tbody></table></div>
+
+<div class="box stop"><div class="bt">方法论教训（写给我自己）</div><p>"没有找到 X + Y + Z + W 同时成立的先例"是一句几乎必然为真的话，因为合取项越多越容易为空。这种句式<strong>听起来像严谨，实际上是不可证伪的</strong>。正确的写法是<strong>逐条报告每个合取项各自的先例密度</strong>，让读者自己看到"哪一项才是真正的空档"。本文就是按这个方式重写的。</p></div>
+
+<h2 id="s3"><span class="num">3</span>关键区分：门控 vs 固定滤波</h2>
+
+<p>你说"门控约束上采样防棋盘格，理论上肯定可靠"。这句话里混了两个不同的机制，而理论保证只属于其中一个。这一节是整个报告的支点。</p>
+
+<h3 id="s31">3.1 棋盘格有解析解，它不是"学习问题"</h3>
+
+<p>棋盘格伪影的成因是<strong>确定性的、可算的</strong>，不是需要网络去"学"的：</p>
+
+<div class="formula">
+stride = s，kernel = k。当 k 不能被 s 整除时，
+输出像素被覆盖的次数在空间上呈周期性不等（uneven overlap），
+→ 输出中残留一个周期为 s 的高频模式 → 人眼看到棋盘格。
+</div>
+
+<p>因此它有两条<strong>闭式解</strong>，不需要任何学习：</p>
+
+<ol>
+<li><strong>让 k 能被 s 整除</strong>（例如 k=4, s=2）：重叠次数变成均匀，伪影从根上消失。这是最原始的修法。</li>
+<li><strong>把上采样拆成"最近邻/双线性放大 + 普通卷积"，或干脆插入固定低通滤波</strong>：把转置卷积换成不产生重叠不均的算子。Aitken 2017 用的是<strong>初始化</strong>方案（"convolution NN resize"），StyleGAN2 用<strong>固定双线性</strong>，StyleGAN3 用<strong>窗化 sinc（Kaiser 窗）</strong>，blur-pool 用<strong>固定低通</strong>置于下采样前——<strong>全是固定、与输入无关的常数核</strong>。</li>
+</ol>
+
+<div class="box key"><div class="bt">这就是为什么"门控"不是这个问题的解法</div><p>棋盘格是<strong>算子结构缺陷</strong>（采样重叠不均），不是<strong>内容相关的错误</strong>。门控的全部价值在于"随输入自适应地调节"，而这个问题的最优解恰恰是"<strong>不管输入是什么，都别产生那个周期性模式</strong>"——一个常数滤波就够，而且能被证明够。让一个网络去<em>学</em>一件有闭式解的事，只会引入不确定性，不会提升上界。</p></div>
+
+<h3 id="s32">3.2 为什么"理论保证"站在固定滤波那边</h3>
+
+<p>这是最需要纠正的一点。信号处理里有一条硬结论：</p>
+
+<div class="box pur"><div class="bt">抗混叠定理（Nyquist）</div><p>只要在<strong>降采样之前</strong>施加一个截止频率低于新奈奎斯特频率的低通滤波，就能<strong>保证</strong>高频不被折叠进低频。这是一条"保证"，不是"倾向"。</p></div>
+
+<p>Alias-Free GAN（StyleGAN3）的摘要原文措辞就是"guarantee"：</p>
+<p class="cite">"we derive generally applicable, small architectural changes that <b>guarantee</b> that unwanted information cannot leak into the hierarchical synthesis process." —— Karras et al., Alias-Free GAN, NeurIPS 2021（arXiv:2106.12423，本轮已逐字核实摘要）</p>
+
+<p>而一个<strong>可学习门控</strong>由网络预测、与输入相关，它：</p>
+
+<div class="scroll"><table><thead><tr><th style="width:26%">性质</th><th style="width:37%">固定低通/固定重采样</th><th>可学习门控 / 内容感知上采样</th></tr></thead><tbody>
+<tr><td>与输入的关系</td><td>常数核，与输入无关</td><td>由输入预测，逐样本逐位置变化</td></tr>
+<tr><td>频域保证</td><td><span class="b high">有</span>（低通 ⇒ 截止频率以上的能量被压制，有解析上界）</td><td><span class="b bad">无</span>（没有任何机制保证它学到的重采样不产生新的高频）</td></tr>
+<tr><td>能否学出新的伪影</td><td>不会（核固定）</td><td><strong>可能</strong>。学习目标里没有"禁止周期性模式"这一项，除非你显式加</td></tr>
+<tr><td>失效模式</td><td>过度平滑、丢真实高频细节</td><td>门控饱和、退化为恒等映射、把伪影学到核里</td></tr>
+<tr><td>可复现性</td><td><span class="b high">高</span>（无额外参数，无训练不稳定）</td><td><span class="b low">低–中</span>（多了要学的参数和新的不稳定源）</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">把这句话记住，它会改变你的设计</div><p><b>"用门控治棋盘格" = 用一个没有频域保证的自适应模块，去替代一个已经有频域保证的固定模块。</b>这在理论上不是"更可靠"，而是"更不可靠但更灵活"。如果你真要用门控，正确的挂法不是"让门控决定怎么上采样"，而是"让固定滤波保证不产生伪影，门控只决定<strong>高频细节残差注入多少</strong>"。见 §11。</p></div>
+
+<h2 id="s4"><span class="num">4</span>抗棋盘格/抗混叠先例地图</h2>
+
+<p>这条线上一版整个漏掉了。它存在的意义是：<strong>它证明了"这个问题的标准解法是固定滤波，而不是门控"</strong>。</p>
+
+<div class="scroll"><table><thead><tr><th style="width:24%">工作</th><th style="width:11%">venue/year</th><th style="width:18%">机制类型</th><th>它做了什么 / 关键原文</th><th style="width:9%">核实</th></tr></thead><tbody>
+<tr><td>Deconvolution and Checkerboard Artifacts<br><span class="small">Odena, Dumoulin, Olah</span></td><td>Distill 2016</td><td>成因分析（科普性）</td><td>指出棋盘格三来源：转置卷积重叠不均、随机初始化、损失函数的频率偏置。是这条线公认的起点，但它是 Distill 解释性文章而非正式论文。</td><td><span class="b low">未核实</span></td></tr>
+<tr><td>Checkerboard artifact free sub-pixel convolution<br><span class="small">Aitken et al.</span></td><td>arXiv 2017<br>1707.02937</td><td><span class="b low">固定</span>初始化</td><td>方案是初始化方法 "convolution NN resize"，<strong>不是学习门控</strong>。并转引 Odena 的三来源结论。</td><td><span class="b medium">子agent已读PDF</span></td></tr>
+<tr><td>Making Convolutional Networks Shift-Invariant Again（blur-pool）<br><span class="small">Zhang</span></td><td>ICML 2019<br>1904.11486</td><td><span class="b low">固定</span>低通</td><td>在下采样前插入<strong>固定低通滤波</strong>。原文："the well-known signal processing fix is anti-aliasing by low-pass filtering before downsampling"。目标：平移不变性。<strong>无学习成分。</strong></td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>Analyzing and Improving the Image Quality of StyleGAN（StyleGAN2）<br><span class="small">Karras et al.</span></td><td>CVPR 2020<br>1912.04958</td><td><span class="b low">固定</span>双线性</td><td>改用<strong>固定双线性</strong>上/下采样。注意：它著名的 blob/droplet 伪影成因是 <strong>instance normalization</strong>（生成器绕过归一化偷传强度），<strong>不是转置卷积</strong>，修法是权重重调制。全文不含 "checkerboard"。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>Alias-Free Generative Adversarial Networks（StyleGAN3）<br><span class="small">Karras et al.</span></td><td>NeurIPS 2021<br>2106.12423</td><td><span class="b low">固定</span>窗化 sinc</td><td>把双线性换成<strong>窗化 sinc 滤波（Kaiser 窗，n=6）</strong>。原文强调"<b>guarantee</b> that unwanted information cannot leak"。目标：texture sticking / aliasing。摘要不含 "checkerboard"。</td><td><span class="b high">本轮逐字核实</span></td></tr>
+<tr><td>CycleGAN without checkerboard artifacts<br><span class="small">Osakabe et al.</span></td><td>arXiv 2020<br>2012.00287</td><td><span class="b low">固定</span>平滑卷积</td><td>GAN 侧直接治棋盘格，机制是插入<strong>固定卷积层</strong>（Kinoshita &amp; Kiya, ICASSP 2020 "Fixed smooth convolutional layer"）。仍是固定滤波，不是门控。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>Rethinking the Up-Sampling Operations in CNN-based Generative Network<br><span class="small">Tan et al.</span></td><td>arXiv 2023<br>2312.10461</td><td>诊断</td><td>实证：上采样算子会留下可检测的结构性伪影（Neighboring Pixel Relationships）；并指出<strong>仅靠频域伪影不足以泛化</strong>。</td><td><span class="b medium">子agent已读</span></td></tr>
+</tbody></table></div>
+
+<div class="box teal"><div class="bt">这张表的读法</div><p>七个条目，<strong>没有一个用门控</strong>。抗棋盘格这条线从 2016 到 2023 一直走的是"固定滤波 / 初始化 / 算子替换"路线。所以当你说"用一个门控去约束上采样防棋盘格"时，你不是在填补一个没人想到的空档，而是在<strong>绕过一条已经收敛的技术路线</strong>。这本身可以是创新，但你必须回答一个问题：<em>门控相比固定低通，多出来的那部分自适应能力，具体买到了什么？</em>如果答案是"能更好地保留真实高频细节"，那么正确的做法是 §11 的"固定滤波打底 + 门控管残差"，而不是"门控直接管上采样"。</p></div>
+
+<h2 id="s5"><span class="num">5</span>频域×GAN 先例地图</h2>
+
+<p>按"频域挂在流水线的哪一格"组织。这个轴比方法名重要，因为<strong>挂在判别器输入</strong>和<strong>挂在生成器输出</strong>两种情况下，梯度回传路径、数值稳定性、对数据缺陷的鲁棒性完全不同。</p>
+
+<div class="scroll"><table><thead><tr><th style="width:15%">挂载位置</th><th style="width:22%">代表工作</th><th style="width:9%">venue/year</th><th>它声称治的 GAN 缺陷</th><th style="width:8%">核实</th></tr></thead><tbody>
+<tr><td><strong>训练目标（正则项）</strong></td><td>Watch your Up-Convolution<br><span class="small">Durall, Keuper, Keuper</span></td><td>CVPR 2020<br>2003.01826</td><td><strong>最接近你的直觉的一篇。</strong>原文：常见上采样方法（up-convolution / transposed convolution）"are causing the inability of such models to reproduce spectral distributions of natural training data correctly"；补救措施是"add a novel <b>spectral regularization term to the training optimization objective</b>"；并称"a correct approximation of the frequency spectrum has positive effects on the <b>training stability</b> and output quality"。<br>⇒ 这是一条"<strong>结构缺陷（上卷积）→ 频域约束 → 训练稳定性</strong>"的完整论证链。摘要不含 "checkerboard"。</td><td><span class="b high">本轮逐字核实</span></td></tr>
+<tr><td><strong>训练目标（正则项）</strong></td><td>Focal Frequency Loss<br><span class="small">Jiang et al.</span></td><td>ICCV 2021<br>2012.12821</td><td>先点名神经网络"inherent bias"（即 spectral bias），再对难合成的频点自适应加权。用于 VAE/pix2pix/SPADE/StyleGAN2。<strong>与空间损失互补，非专治棋盘格。</strong></td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td><strong>训练目标（正则项）</strong></td><td>F-Match（F-Drop&amp;Match 之一）</td><td>ICCV 2021<br>2106.02343</td><td>生成器目标里的频域正则项，惩罚频域 <strong>batch mean</strong> 误差。原文："F-Match minimizes the difference between real and fake images in the frequency domain"。</td><td><span class="b high">本轮逐字核实</span></td></tr>
+<tr><td><strong>判别器输入（滤波）</strong></td><td>F-Drop（F-Drop&amp;Match 之一）</td><td>ICCV 2021<br>2106.02343</td><td>从<strong>判别器输入</strong>滤掉不必要的高频。原文："prevents the discriminators from being confused by perturbations of the high-frequency components"。<strong>这实际上就是一个固定的频域门（高频死区）</strong>——见 §6。</td><td><span class="b high">本轮逐字核实</span></td></tr>
+<tr><td><strong>判别器内部（额外分类头）</strong></td><td>SSD-GAN（Spectral Shift Discriminator）<br><span class="small">Chen et al.</span></td><td>AAAI 2021<br>2012.05535</td><td><strong>明确诊断</strong>：判别器因下采样而丢失高频，故在 D 内部嵌入 frequency-aware classifier，让 D 同时判断空间真实性与频谱真实性。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td><strong>生成器特征（多频带分解）</strong></td><td>WaveGAN（小波版）<br><span class="small">Yang et al.</span></td><td>ECCV 2022<br>2207.07288</td><td>用小波把编码特征拆成多频分量，配<strong>低/高频 skip connection 路由</strong> + frequency L1-loss。治：few-shot 高频细节丢失。这是<strong>最接近"频带路由"的先例</strong>，但它是固定的低/高频两支路由，<u>不是可学习门控</u>。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td><strong>生成器特征（多频带卷积）</strong></td><td>OctGAN（把 OctConv 放进 GAN）</td><td>ICIG 2023<br>10.1007/978-3-031-46308-2_5</td><td>把 Octave Convolution 搬进 GAN。注意：OctConv 的 α 是<strong>固定超参</strong>，不是可学习门控。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td><strong>域适应（输入频谱）</strong></td><td>FDA: Fourier Domain Adaptation<br><span class="small">Yang &amp; Soatto</span></td><td>CVPR 2020<br>2004.05498</td><td><strong>核实：与 GAN 缺陷治理无关。</strong>用低频谱互换做无监督域适应（语义分割），零训练、不生成。列在这里是为了防止被误引为先例。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td><strong>事后诊断/筛查</strong></td><td>On the Spectral Bias of Neural Networks<br><span class="small">Rahaman et al.</span></td><td>ICML 2019<br>1806.08734</td><td>诊断：ReLU 网络倾向先拟合低频。这是<strong>理论依据</strong>，不是治理方法。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td><strong>事后诊断/筛查</strong></td><td>Fourier Spectrum Discrepancies in Deep Network Generated Images<br><span class="small">Dzanic et al.</span></td><td>NeurIPS 2020<br>1911.06465</td><td>以<strong>检测</strong>为主（判别真假图，99.2%），仅附带一个"修改高频属性以模仿真实"的修图方案。</td><td><span class="b medium">子agent已读</span></td></tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">这张表回答了你的问题</div><p><strong>"频域能不能针对性解决 GAN 缺陷"——能，而且已经有人做了至少四类。</strong>但请注意最后一列的分布：<strong>所有"真治理"条目的目标都是同一个——高频细节丢失 / 判别器看不到高频。</strong>没有任何一条是"用频域治模式崩溃"或"用频域治训练发散"。频域能治的是<strong>信息层面的缺陷</strong>（频带覆盖、频谱一致性），治不了<strong>博弈层面的缺陷</strong>（模式崩溃、D/G 失衡）。</p></div>
+
+<h2 id="s6"><span class="num">6</span>频域"门控"的真实先例：F-Drop 是固定频带死区</h2>
+
+<p>这一节很重要，因为它是<strong>最接近你说的"频域门控"的先例</strong>，同时它恰好证明了 §3 的论点。</p>
+
+<div class="card"><div class="ch"><div><div class="title">F-Drop&amp;Match: GANs with a Dead Zone in the High-Frequency Domain</div><div class="v">Shin'ya Yamaguchi, Sekitoshi Kanai · ICCV 2021 · arXiv:2106.02343 · <a href="https://arxiv.org/abs/2106.02343">https://arxiv.org/abs/2106.02343</a></div></div><div><span class="b high">本轮逐字核实</span></div></div>
+<div class="body">
+<p><strong>它诊断的缺陷：</strong>摘要原文 "GANs ... lack the ability to exactly replicate the high-frequency components of natural images"。</p>
+<p><strong>它的两个机制：</strong></p>
+<ol>
+<li><strong>F-Drop</strong>——从<strong>判别器输入</strong>滤掉不必要的高频分量。原文："This simple modification prevents the discriminators from being confused by perturbations of the high-frequency components. In addition, F-Drop makes the GANs focus on fitting in the low-frequency domain."</li>
+<li><strong>F-Match</strong>——生成器目标里的频域正则项，惩罚频域 batch mean 误差，帮助生成器拟合被 F-Drop 滤掉的那部分高频。</li>
+</ol>
+<p><strong>为什么它是"门控"：</strong>F-Drop 在频域上开了一个"死区"——某个频率以上的分量被<strong>丢弃</strong>。这就是一个<strong>频率门</strong>（frequency gate）。</p>
+<p><strong>为什么它同时证明了 §3 的论点：</strong>这个门是<strong>固定的</strong>——它由超参决定的截止频率定义，不随输入自适应、不由网络学习。作者选择固定门，是因为"哪些频率是噪声、哪些是真实高频"这件事<strong>在训练开始前就要有保证</strong>；如果让网络自己学这个门，判别器又会被它自己的门所欺骗。</p>
+<p class="small">注：F-Drop 作用在判别器输入端，是"输入预处理"式的门；你要做的"频带门控"作用在生成器特征上，是"路径/强度"式的门。两者位置不同，不能直接互引为先例，但机制上同属"频域门"。</p>
+</div></div>
+
+<div class="box teal"><div class="bt">由此得到一条设计原则</div><p><strong>在 GAN 里出现的频域门，目前都是固定的、有解析截止频率的。可学习的频域门还没有人做。</strong>这是一个真实的空档（§10 把它列为候选创新点之一），但它的风险也来自同一处：<strong>一个可学习的频率门可能学会"打开"那些本该被关掉的频率</strong>，从而重新引入高频伪影。要控制这个风险，门必须有界（见 §11）。</p></div>
+
+<h2 id="s7"><span class="num">7</span>门控×GAN 先例地图</h2>
+
+<p>这一节的结论是<strong>否定的</strong>：门控在 GAN 里确实存在，但<strong>没有一篇是把门控当作 GAN 缺陷的解药、并且用消融把功劳归给门控的</strong>。逐条看：</p>
+
+<div class="scroll"><table><thead><tr><th style="width:19%">工作</th><th style="width:10%">venue/year</th><th style="width:20%">门控的角色</th><th>是否以 GAN 缺陷为动机 / 稳定性归因给谁</th><th style="width:8%">核实</th></tr></thead><tbody>
+<tr><td>Gated Convolution<br><span class="small">Yu et al.</span></td><td>ICCV 2019<br>1806.03589</td><td>逐通道逐位置的<strong>软门控</strong>（"learnable dynamic feature selection mechanism for each channel at each spatial location"）</td><td>动机是<strong>不规则 mask / 无效像素</strong>（"vanilla convolution treats all input pixels as valid ones"），与 GAN 不稳定无关。<strong>稳定由 SN-PatchGAN（谱归一化）负责，不是门控。</strong>摘要未提 mode collapse。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>SAGAN<br><span class="small">Zhang, Goodfellow, Metaxas, Odena</span></td><td>ICML 2019<br>1805.08318</td><td>self-attention（长程依赖），不是门控</td><td>分工明确：attention 建模长程依赖；<strong>spectral normalization 改善训练动态</strong>。attention <strong>未被论证</strong>为治模式崩溃。摘要未提 mode collapse。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>Gated-GAN<br><span class="small">Chen et al.</span></td><td>IEEE TIP 2019<br>1904.02296</td><td>多风格分支<strong>路由</strong></td><td><strong>摘要确实写了</strong>"traditional GAN suffers from the mode collapse issue, resulting in unstable training"。<strong>但归因关键：</strong>稳定靠的是"To stabilize training, the encoder and decoder are combined as an <b>autoencoder</b>"——即重建损失，<strong>门控只负责多风格分支选择</strong>。这是"提到模式崩溃但没把功劳给门控"的典型。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>MEGAN: Mixture of Experts of GANs<br><span class="small">Park et al.</span></td><td>IJCAI 2018<br>1805.02481</td><td>gating network <strong>硬路由选择生成器</strong>（配 categorical reparameterization）</td><td>动机是"struggle in learning complex underlying modalities / poor-quality images"。摘要<strong>未出现</strong> mode collapse 字样。"治模式崩溃"的动机<strong>未说明</strong>。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>GiGAN: Gate in GAN<br><span class="small">Nie, Jia, Ding, Wong</span></td><td>Neurocomputing 2021<br>10.1016/j.neucom.2021.07.085</td><td>门控<strong>过滤特征</strong></td><td>动机是<strong>整图重建导致伪影/低质</strong>，门控用于局部转换。<strong>不涉及</strong>训练不稳定。有消融，但消融对象是特征过滤效果，不是稳定性。</td><td><span class="b medium">子agent已读ACM页</span></td></tr>
+<tr><td>ADA: Training GANs with Limited Data<br><span class="small">Karras et al.</span></td><td>NeurIPS 2020<br>2006.06676</td><td><strong>不是门控</strong>（数据增强）</td><td>解决<strong>判别器过拟合</strong>（limited data）。原文明确 "does not require changes to loss functions or network architectures"。列在这里是为了排除误引。</td><td><span class="b medium">子agent已读</span></td></tr>
+</tbody></table></div>
+
+<div class="box stop"><div class="bt">这一节的判定</div><p><strong>把门控明确当作 GAN 缺陷解药、并且用消融把稳定性归因给门控本身的工作——我这一轮实际查到的数量是 0。</strong>存在的只有三类替代品：① 动机提到模式崩溃但归因给别的机制（Gated-GAN → 自编码器重建）；② 门控用于多模态/多风格路由（MEGAN、Gated-GAN），目标不是稳定性；③ 门控用于特征过滤（Gated Conv、GiGAN），目标是伪影/质量。</p>
+<p>所以你说"门控天然可以治 GAN 缺陷"——<strong>方向上没人反驳，但直接先例支撑不了这句话</strong>。它现在是一个<strong>待验证的假设</strong>，不是一个"已被证明的共识"。这对你其实是好消息：假设越缺先例，你越有空间；但你必须自己做消融把它变成证据，不能引别人的论文来"背书"。</p></div>
+
+<h2 id="s8"><span class="num">8</span>可学习上采样先例地图</h2>
+
+<p>这一节是"门控约束上采样"最接近的邻居。结论：<strong>这类算子存在、带门控、被大量使用——但全部用在分割/检测/抠图，动机是精度，不是伪影，没有一篇搬进 GAN 生成器。</strong></p>
+
+<div class="scroll"><table><thead><tr><th style="width:17%">工作</th><th style="width:10%">venue/year</th><th style="width:24%">机制（是否门控）</th><th>应用领域与动机</th><th style="width:8%">核实</th></tr></thead><tbody>
+<tr><td>CARAFE: Content-Aware ReAssembly of FEatures<br><span class="small">Wang et al.</span></td><td>ICCV 2019<br>1905.02188</td><td>预测<strong>自适应重组核</strong>（instance-specific，on-the-fly 生成核）。本质是"用预测的权重门控上采样核"。</td><td>密集预测精度。摘要原文强调 "Instead of using a fixed kernel for all samples (e.g. deconvolution), CARAFE enables instance-specific content-aware handling"。<strong>全文无 "checkerboard"，也不用 "gating" 一词。</strong>动机不是伪影。</td><td><span class="b medium">子agent已读</span></td></tr>
+<tr><td>FADE: Fusing the Assets of Decoder and Encoder<br><span class="small">Lu, Liu, Fu, Cao</span></td><td>ECCV 2022<br>2207.10392</td><td><strong>摘要逐字含 "gating mechanism"</strong>："a decoder-dependent <b>gating mechanism</b> for enhanced detail delineation"。另有 semi-shift 卷积对每个特征点的贡献做细粒度控制。</td><td>任务无关的<strong>密集预测</strong>上采样（语义分割 + 图像抠图）。目标是细节刻画与任务无关性，<strong>不是消除伪影</strong>。</td><td><span class="b high">本轮逐字核实</span></td></tr>
+<tr><td>DySample: Learning to Upsample by Learning to Sample<br><span class="small">Liu, Lu, Fu, Cao</span></td><td>ICCV 2023<br>2308.15085</td><td>绕开动态卷积，把上采样重构为<strong>点采样</strong>，用动态生成的学习式采样偏移代替动态核。</td><td>摘要明确覆盖五类密集预测任务（语义分割、目标检测、实例分割、全景分割、单目深度）。<strong>摘要未提 checkerboard</strong>（其正文引用了 Odena 作为"既有上采样器有棋盘格问题"的论据，但那是背景陈述，不是它的贡献）。</td><td><span class="b high">本轮逐字核实</span></td></tr>
+<tr><td>SAPA: Similarity-Aware Point Affiliation<br><span class="small">Lu et al.</span></td><td>NeurIPS 2022<br>2209.12866</td><td>基于相似度的点归属式上采样（与 FADE 同组后续）。</td><td>密集预测。</td><td><span class="b low">未核实</span></td></tr>
+</tbody></table></div>
+
+<div class="box warn"><div class="bt">三个必须注意的核实要点</div><ol>
+<li><strong>不要因为 DySample 正文引用了 Odena，就说"DySample 治棋盘格"。</strong>它引用 Odena 是在<em>动机段落</em>里说明"现有上采样器有这个问题"，而它自己的贡献是效率与精度。这是典型的"引用 ≠ 继承目标"。</li>
+<li><strong>FADE 的 "gating mechanism" 是真的</strong>（摘要逐字有），但它的门控作用在"上采样核生成"上，且目标写的是 "enhanced detail delineation"（增强细节刻画），不是"抑制伪影"。你可以引它作为"上采样处确实可以用门控"的机制先例，<strong>但不能引它作为"门控能治伪影"的证据</strong>。</li>
+<li><strong>CARAFE 与 StyleGAN2/StyleGAN3 全文均不含 "checkerboard"。</strong>不要把"抗混叠"直接等同于"治棋盘格"——两者相关但不等价：抗混叠管的是<em>折叠</em>（aliasing），棋盘格管的是<em>重叠不均</em>（uneven overlap）。</li>
+</ol></div>
+
+<h2 id="s9"><span class="num">9</span>四象限：成熟度 × 是否进入 GAN 生成器</h2>
+
+<p>把前面四节的先例密度投影到两个轴上：<strong>机制在通用视觉里成熟吗</strong> × <strong>它被搬进 GAN 生成器了吗</strong>。右上角是拥挤区，左下角才是空档。</p>
+
+<div class="flow"><pre><code>                    进入 GAN 生成器 ─────────────►
+                    否                         是
+              ┌──────────────────────────┬──────────────────────────┐
+   成熟       │  · 内容感知上采样          │  · 频域 loss              │
+   （通用      │    CARAFE/FADE/SAPA/      │    FFL / F-Drop&amp;Match     │
+   视觉已      │    DySample               │  · 频域判别器 SSD-GAN      │
+   收敛）      │    （门控存在，但服务精度）│  · 谱正则 Durall 2020      │
+              │                          │  · 小波分频 WaveGAN-ECCV   │
+    ▲         │  · 固定抗混叠/抗棋盘格     │  · 固定抗混叠 StyleGAN2/3  │
+    │         │    blur-pool / Aitken     │    blur-pool 也可用于 GAN  │
+    │         │  · 固定频域门 F-Drop 的    │                          │
+    │         │    "高频死区"概念本身      │                          │
+    │         ├──────────────────────────┼──────────────────────────┤
+    │         │                          │                          │
+   空白       │  ★ 可学习频带门控          │  ★ 频带门控 + 虚拟染色      │
+   （无人做） │    （概念空档，见 §10-A）  │    （场景空档，见 §10-C）  │
+              │  ★ 门控明确治 GAN 缺陷     │  ★ 可学习门控直接管上采样   │
+              │    （先例≈0，见 §7）       │    （无先例且无理论保证）   │
+              └──────────────────────────┴──────────────────────────┘</code></pre></div>
+
+<div class="box key"><div class="bt">读图</div><p><strong>你要主张的创新点必须落在下半区（空白），但落点要选对。</strong>左下角的两个★是"概念空档"——没有人在任何领域做过，风险是"没人做可能说明它没用"；右下角的"频带门控 + 虚拟染色"是"场景空档"——机制在别处被验证过，只是没人搬到你的场景，<strong>这类空档最安全</strong>。</p>
+<p>而右下角的"可学习门控直接管上采样"要单独标红：它既是空档，又是<strong>唯一一个理论保证反向的空档</strong>（§3）。空档 + 无理论保证 = 高风险，不建议作为主创新点。</p></div>
+
+<h2 id="s10"><span class="num">10</span>真正空白在哪：三个创新点</h2>
+
+<p>把"空白"拆成三种，风险递减、可发表性递增：</p>
+
+<div class="card"><div class="ch"><div><div class="title">A · 概念空档：可学习的频带门控</div><div class="v">没有任何领域做过（我这一轮未找到）</div></div><div><span class="b bad">高风险</span></div></div>
+<div class="body">
+<p><strong>是什么：</strong>把 F-Drop 那个<strong>固定</strong>的高频死区，换成生成器内部<strong>可学习</strong>的频带门控（对 DWT 的 LL/LH/HL/HH 或 FFT 的频带组分别给一个有界的软门）。</p>
+<p><strong>为什么是空档：</strong>GAN 里出现的频域门目前全是固定的（F-Drop）；小波分频的 WaveGAN-ECCV 用的是<strong>固定低/高频两支路由</strong>；OctConv 的 α 是固定超参。没有一篇是"可学习的频带门"。</p>
+<p><strong>风险：</strong>没人做可能有两个原因——① 确实没人想到；② 试过但收益不足以发表。你无法从文献区分这两者。<strong>可证伪的预测：</strong>如果这个方向有内在价值，那么即使是最简单的版本（固定 DWT + 4 个有界标量门）也应该在某个指标上优于无门控基线；如果连这个都不成立，就不必往复杂版本走。</p>
+</div></div>
+
+<div class="card"><div class="ch"><div><div class="title">B · 组合空档：频带门控 × 抗混叠底座</div><div class="v">两个成熟机制的新组合</div></div><div><span class="b medium">中风险</span></div></div>
+<div class="body">
+<p><strong>是什么：</strong>固定抗混叠滤波负责"保证不产生伪影"，有界频带门控负责"决定真实高频细节注入多少"。§11 展开。</p>
+<p><strong>为什么是空档：</strong>抗混叠那侧从来不用门控（§4），频带门控那侧从来不做抗混叠（§6、§8）。两者在文献里是两条平行线，没有人把它们叠在一起。</p>
+<p><strong>为什么比 A 安全：</strong>两部分各自都有先例，你只需要证明"叠起来更好"，而不需要证明"这个概念本身成立"。而且这个组合<strong>天然解决了 §3 的理论缺口</strong>——因为伪影由固定滤波负责，门控不必承担频域保证。</p>
+</div></div>
+
+<div class="card"><div class="ch"><div><div class="title">C · 场景空档：频带门控 + H&amp;E→IHC 虚拟染色</div><div class="v">机制在别处验证过，没人搬到你的场景</div></div><div><span class="b high">最安全</span></div></div>
+<div class="body">
+<p><strong>是什么：</strong>把频带门控用于虚拟染色，约束细胞边界、膜连续性、多尺度纹理，并与 DAB/FOD 表达监督分工。</p>
+<p><strong>为什么是空档（已核实）：</strong>虚拟染色侧最近的邻域是：UNIStainNet（SPADE-UNet + 冻结 UNI 基础模型，<strong>无频域/门控</strong>）、CSSP2P GAN（研究对抗损失对染色保真度的影响，<strong>无频域/门控</strong>）、Nature Communications 2026 抗错位虚拟染色（靠级联配准，<strong>无频域/门控</strong>）。医学侧有频域注意力 GAN 的最近邻（CT→DWI 多频域双重注意力），病理侧有小波 + ESRGAN（但是<strong>分类</strong>不是生成）。<strong>四元交叉（病理虚拟染色 × 频域 × 门控 × GAN）确为空白。</strong></p>
+<p><strong>为什么最安全：</strong>你不需要证明机制新颖，只需要证明"它在我的任务上有效"。审稿人接受"首次将该机制用于该任务"的难度，远低于接受"首次提出该机制"。</p>
+</div></div>
+
+<div class="box good"><div class="bt">推荐的创新点表述</div><p>把 A、B、C 叠起来写成一句话：<b>"面向 H&amp;E→IHC 虚拟染色的频带感知软门控 GAN：以固定抗混叠重采样消除上采样周期伪影，以有界频带门控控制高频结构残差的注入量，从而在保持 DAB/FOD 表达一致性的同时改善细胞边界与膜连续性。"</b></p><p>这个表述的好处：<strong>抗混叠那半句有理论保证和成熟先例（好写、难被反驳），频带门控那半句是场景首次（有新颖性），两者叠起来是组合空档（有故事）。</strong>它同时避免了"我用门控治棋盘格"这个既不新颖（棋盘格有更好解法）又无理论保证（§3）的表述。</p></div>
+
+<h2 id="s11"><span class="num">11</span>修正后的推荐设计</h2>
+
+<p>核心原则一句话：<strong>把"保证"和"自适应"分给两个不同的模块。</strong>固定滤波负责保证，门控负责自适应。不要让同一个模块同时承担两件事。</p>
+
+<h3>11.1 分工表</h3>
+
+<div class="scroll"><table><thead><tr><th style="width:20%">职责</th><th style="width:24%">交给谁</th><th>理由</th><th style="width:10%">改动成本</th><th style="width:10%">可复现性</th></tr></thead><tbody>
+<tr><td>保证不产生棋盘格/混叠</td><td><strong>固定抗混叠重采样</strong>（双线性上采样 + 普通卷积，或 k 被 s 整除，或 blur-pool 式固定低通）</td><td>有 Nyquist 解析保证，无额外参数，无新不稳定源。直接复用 StyleGAN2/3、blur-pool 的现成做法。</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>决定高频细节注入多少</td><td><strong>有界频带门控</strong>（固定 DWT → 每个频带一个有界标量/通道门）</td><td>这才是自适应真正有价值的地方：真实高频（细胞膜、染色颗粒边界）与伪影高频需要被区别对待。</td><td><span class="b medium">中</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>约束蛋白表达一致性</td><td><strong>DAB/FOD 表达损失</strong>（沿用你现有方案）</td><td>频域管不了"表达量对不对"，这是语义/物理层面的约束。频域与表达损失是互补，不是替代。</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+<tr><td>抑制高频伪影被判别器利用</td><td><strong>可选的固定频域死区</strong>（F-Drop 式，作用在 D 输入）</td><td>有先例、机制清晰。注意它是<strong>固定门</strong>，不要做成可学习门（判别器会学会绕过它）。</td><td><span class="b low">低</span></td><td><span class="b medium">中</span></td></tr>
+<tr><td>控制残差分支强度</td><td><strong>residual gate</strong> <code>h' = h + γ(x)·Δh(x)</code>，γ 有界</td><td>比"门控整个 backbone"安全：门关掉时退化为恒等映射，不会毁掉主干特征。</td><td><span class="b low">低</span></td><td><span class="b high">高</span></td></tr>
+</tbody></table></div>
+
+<h3>11.2 推荐架构（第一版）</h3>
+
+<div class="flow"><pre><code>H&amp;E RGB
+  │
+  ├─► OD_H / morphology condition ─────────────────┐
+  │                                                 │
+  └─► G backbone ──► 中间特征 h ──► ┌──────────────────────────────┐
+                                    │ 残差频带门控块                │
+                                    │  DWT(h) → LL, LH, HL, HH     │
+                                    │  每支: g_b = σ(w_b)·s_b      │
+                                    │        (有界标量门, b∈{LL..}) │
+                                    │  Δh = IDWT(g·bands)          │
+                                    │  h' = h + γ(x)·Δh    ← 有界  │
+                                    └──────────────┬───────────────┘
+                                                   │
+                    ★ 固定抗混叠重采样（双线性 + 普通卷积）◄─ 放在所有放大处
+                                                   │
+                                            fake IHC RGB
+                                                   │
+                    ┌──────────────────────────────┼───────────────────────┐
+                    ▼                              ▼                       ▼
+           spatial PatchGAN D             DAB/FOD 表达损失        弱 DWT 高频损失
+           (可选: D 输入加固定高频死区)    (沿用现有方案)          (只在高频带, 权重小)</code></pre></div>
+
+<div class="box pur"><div class="bt">门控的形式：有界是关键</div><div class="formula">g_b = g_min + (g_max − g_min) · σ(w_b)<br><br>其中 g_min &gt; 0（防止某频带被永久关死），g_max 有限（防止某频带被无限放大）。<br>例如 g_min = 0.1, g_max = 2.0。<br><br>γ(x) = σ(·) 同样有界，且初始化为接近 0，<br>使训练初期网络退化为"无门控基线"。</div>
+<p><strong>为什么必须给上界：</strong>§6 的教训——可学习频率门最大的风险是"学会打开本该关掉的频率"。有界门把最坏情况限制在"某频带被放大 2 倍"，而不是"发散"。<strong>初始化 γ≈0 让你在训练初期拿到一个干净的基线对照，也让消融更可信。</strong></p></div>
+
+<h3>11.3 明确的"不要做"清单</h3>
+
+<div class="box stop"><div class="bt">四条不要</div><ol>
+<li><strong>不要用门控替换固定抗混叠上采样。</strong>这是 §3 的核心结论。上采样处保持固定滤波。</li>
+<li><strong>不要把频带门做成无界或无初始化保护的形式。</strong>否则第一周你会看到"训练崩溃"，而且分不清是门控的锅还是 GAN 本身的锅。</li>
+<li><strong>不要第一步就同时加频域判别器 + 多专家路由 + 多个病理损失。</strong>四个变量同时动，任何结果都无法归因。</li>
+<li><strong>不要引 FADE 或 CARAFE 作为"门控能治伪影"的证据。</strong>它们的目标是精度（§8），引错了会被审稿人指出。</li>
+</ol></div>
+
+<h2 id="s12"><span class="num">12</span>修正后的可执行消融</h2>
+
+<p>相对上一版的 F0–R1，这一版做了三处修改：<strong>① 把"抗混叠"提前到 F1（它是有保证的，先拿稳）；② 把"门控治棋盘格"从方案里删掉；③ 新增"固定频带门 vs 可学习频带门"的对照实验</strong>（这是你创新点的核心证据）。</p>
+
+<div class="scroll"><table><thead><tr><th style="width:8%">编号</th><th style="width:26%">配置</th><th style="width:22%">要验证的假设</th><th>判据（按此判成败）</th><th style="width:9%">改动成本</th></tr></thead><tbody>
+<tr><td><strong>F0</strong></td><td>现有 GAN baseline（原样）</td><td>—</td><td>建立全部指标的参照点。记录：DAB/FOD 相关性、细胞边界指标、伪影肉眼评估、训练曲线。</td><td><span class="b low">无</span></td></tr>
+<tr><td><strong>F1</strong></td><td>F0 + <strong>固定抗混叠重采样</strong>（双线性上采样 + 普通卷积，替换所有转置卷积）</td><td>"棋盘格是算子结构缺陷，固定滤波就能消掉"</td><td><strong>这是有理论保证的一步，预期必须成立。</strong>判据：功率谱中周期峰消失；肉眼无棋盘格；DAB/FOD 指标<strong>不下降</strong>（若下降说明是过度平滑，需要调滤波强度）。<br>若这一步不成立，说明你的伪影不是棋盘格，重新诊断。</td><td><span class="b low">低</span></td></tr>
+<tr><td><strong>F2</strong></td><td>F1 + 固定 Haar/DWT 分支 + skip（<strong>无门控</strong>）</td><td>"分频本身是否带来收益"</td><td>与 F1 对比。若 F2 ≈ F1，说明单纯分频没用，收益必须来自门控，直接进 G3。</td><td><span class="b medium">中</span></td></tr>
+<tr><td><strong>G1</strong></td><td>F1 + 生成器中层 SE / Coordinate Attention</td><td>"普通注意力是否改善结构保持"</td><td>与 F1 对比。注意这是<strong>特征重标定</strong>，不是频带门控，作为对照基线。</td><td><span class="b low">低</span></td></tr>
+<tr><td><strong>G2</strong></td><td>F1 + gated convolution（Gated Conv 式软门控）</td><td>"位置/通道级软门控是否比 SE 更好"</td><td>与 G1 对比。若 G2 ≈ G1，说明门控粒度不重要，减少后续变量。</td><td><span class="b medium">中</span></td></tr>
+<tr><td><strong>G3</strong></td><td>F2 + <strong>固定频带门</strong>（LL/LH/HL/HH 各一个固定标量，手动调）</td><td>"频带权重是否重要"</td><td>与 F2 对比。<strong>这一步是关键分水岭：</strong>如果固定门就能拿到大部分收益，那么"可学习门"的必要性存疑，你的创新点需要重新表述。</td><td><span class="b medium">中</span></td></tr>
+<tr><td><strong>G4</strong></td><td>F2 + <strong>可学习有界频带门</strong>（§11.2 的形式）</td><td><strong>核心创新点：可学习频带门是否优于固定门</strong></td><td>与 G3 对比。<strong>这是你论文的主表。</strong>必须看到 G4 &gt; G3 才成立。同时报告：门控学到的 g_b 值（是否某一频带被压到 g_min）、门控是否退化为常数（若四个 g_b 收敛到同一值 = 门控失效）。</td><td><span class="b medium">中</span></td></tr>
+<tr><td><strong>D1</strong></td><td>G4 + SSD-GAN 式频域判别器</td><td>"频域判别器是否有额外收益"</td><td>与 G4 对比。<strong>风险最高的一步</strong>：D 可能学到 scanner/批次频谱而非病理真实性。必须做"换扫描仪/换批次"的泛化测试。</td><td><span class="b medium">中</span></td></tr>
+<tr><td><strong>R1</strong></td><td>G4 + 多专家 / 动态路由</td><td>"动态路由是否有收益"</td><td>最后再试。<strong>改动最大、最容易引入 shortcut，收益不明确时不要写进主方案。</strong></td><td><span class="b bad">高</span></td></tr>
+</tbody></table></div>
+
+<div class="box key"><div class="bt">实验的决策树</div><div class="flow"><pre><code>F1 固定抗混叠 → 棋盘格消失了吗？
+  ├─ 否 → 你的伪影不是棋盘格，重新做频谱诊断，不要继续往下
+  └─ 是 → 但 DAB/FOD 指标掉了吗？
+        ├─ 掉了 → 滤波过强，调低通截止，或改成"只在最上面一两级放大处滤波"
+        └─ 没掉 → 继续
+
+F2 无门控分频 → 比 F1 好吗？
+  ├─ 否 → 直接跳 G3/G4，收益必须来自门控
+  └─ 是 → 继续
+
+G3 固定频带门 vs G4 可学习频带门
+  ├─ G4 ≈ G3 → 创新点不成立，改为报告"固定频带权重已足够"（这本身是一个有价值的阴性结果）
+  └─ G4 >  G3 → 创新点成立，继续 D1
+
+G4 的门控值 g_b 收敛到同一常数了吗？
+  ├─ 是 → 门控退化了，检查初始化与 γ 的梯度是否过小
+  └─ 否 → 记录学到的频带偏好，这是你论文里最有说服力的可视化</code></pre></div></div>
+
+<h3>12.1 反事实测试（防止"门控其实是摆设"）</h3>
+
+<p>这是 §7 那个"先例≈0"的代价：你必须自己证明门控真的在起作用。三个必做的反事实测试：</p>
+
+<ol>
+<li><strong>门控置换测试：</strong>训练后，把学到的 g_b 换成随机值（同分布）再推理。如果指标不变，说明门控没在起作用。</li>
+<li><strong>门控冻结测试：</strong>训练中把 g_b 固定为常数（不更新）。如果指标与 G4 相同，说明可学习性没有贡献。</li>
+<li><strong>频带消融测试：</strong>逐个把某个频带门设成 g_min（关死）。观察哪个频带最关键——这直接回答"你约束的是细胞边界还是染色纹理"。</li>
+</ol>
+
+<h2 id="s13"><span class="num">13</span>证据边界与未核实清单</h2>
+
+<div class="box warn"><div class="bt">明确未核实的事项（不要当作事实引用）</div><ol>
+<li><strong>Odena, Dumoulin, Olah, "Deconvolution and Checkerboard Artifacts", Distill 2016</strong>——本轮抓取 <code>distill.pub/2016/deconv-checkerboard/</code> 返回空，未读到原文。它的存在经 DySample 引文 [32] 与 Aitken 2017 转引佐证。<strong>它的"三来源"结论是转引，不是本轮直读。</strong>若要正式引用，请自行打开该页面确认。</li>
+<li><strong>SAPA (NeurIPS 2022, arXiv:2209.12866)</strong>——仅见检索摘要，未读原文。</li>
+<li><strong>StyleGAN3 的 "windowed sinc / Kaiser window n=6"</strong>——该细节在正文而非摘要；摘要本轮已逐字核实（"guarantee that unwanted information cannot leak"），滤波细节为子 agent 报告，<strong>标为部分核实</strong>。</li>
+<li><strong>DySample 正文引用 Odena 作为棋盘格论据</strong>——子 agent 报告其正文有此引用，摘要中无。本轮未直读该处正文。</li>
+<li><strong>Hybrid GAN based on frequency and spatial domain for histopathological image synthesis</strong>, BMC Bioinformatics 2025, DOI 10.1186/s12859-025-06057-9——Springer/PMC 官方页抓取失败，<strong>仅有索引元数据</strong>。其"频域 + 空域融合是否用门控"未说明。这是病理方向唯一疑似"频域×GAN"的工作，值得你后续自行核实。</li>
+<li><strong>"判别器放大高频/周期伪影"的直接实证</strong>——未找到。这是一个流传较广的说法，但本轮没有找到用实验直接证明它的论文。<strong>不要把它当作既有结论引用。</strong></li>
+<li><strong>CondConv / Dynamic Convolution 直接用于"治 GAN 缺陷"的承重论文</strong>——未找到（注意：未找到 ≠ 不存在）。</li>
+</ol></div>
+
+<div class="box teal"><div class="bt">跨文档对账（本次执行）</div><p>按资料库纪律对 <strong>UNIStainNet</strong> 做了跨文档 venue 对账。该工作在库内多份文件中曾以 <code>CVPR 2025</code> / <code>CVPR 2026</code> 等写法出现。其 DOI 为 <code>10.1145/3807503.3819452</code>（10.1145 = ACM DL 前缀），故<strong>本文统一按 ACM-BCB 2026 记录</strong>。本文只把它当作"虚拟染色侧无频域/门控"的证据，venue 不影响该结论。</p></div>
+
+<h2 id="s14"><span class="num">14</span>参考文献</h2>
+
+<p class="small">核实等级：<span class="b high">逐字</span> = 本轮我本人抓取并读到该结论；<span class="b medium">子agent</span> = 由只读子 agent 抓取原文/官方页面后报告；<span class="b low">未核实</span> = 仅二手或抓取失败。</p>
+
+<div class="scroll"><table><thead><tr><th style="width:40%">文献</th><th style="width:20%">出处</th><th>标识</th><th style="width:10%">核实</th></tr></thead><tbody>
+<tr><td>Watch your Up-Convolution: CNN Based Generative Deep Neural Networks are Failing to Reproduce Spectral Distributions<br><span class="small">Durall, Keuper, Keuper</span></td><td>CVPR 2020</td><td>arXiv:2003.01826</td><td><span class="b high">逐字</span></td></tr>
+<tr><td>F-Drop&amp;Match: GANs with a Dead Zone in the High-Frequency Domain<br><span class="small">Yamaguchi, Kanai</span></td><td>ICCV 2021</td><td>arXiv:2106.02343</td><td><span class="b high">逐字</span></td></tr>
+<tr><td>FADE: Fusing the Assets of Decoder and Encoder for Task-Agnostic Upsampling<br><span class="small">Lu, Liu, Fu, Cao</span></td><td>ECCV 2022</td><td>arXiv:2207.10392</td><td><span class="b high">逐字</span></td></tr>
+<tr><td>Learning to Upsample by Learning to Sample (DySample)<br><span class="small">Liu, Lu, Fu, Cao</span></td><td>ICCV 2023</td><td>arXiv:2308.15085</td><td><span class="b high">逐字</span></td></tr>
+<tr><td>Alias-Free Generative Adversarial Networks (StyleGAN3)<br><span class="small">Karras et al.</span></td><td>NeurIPS 2021</td><td>arXiv:2106.12423</td><td><span class="b high">逐字</span></td></tr>
+<tr><td>Focal Frequency Loss for Image Reconstruction and Synthesis<br><span class="small">Jiang, Zhang, et al.</span></td><td>ICCV 2021</td><td>arXiv:2012.12821</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>SSD-GAN: Measuring the Realness in the Spatial and Spectral Domains<br><span class="small">Chen et al.</span></td><td>AAAI 2021</td><td>arXiv:2012.05535</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>WaveGAN (wavelet-based GAN for few-shot)<br><span class="small">Yang et al.</span></td><td>ECCV 2022</td><td>arXiv:2207.07288</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Octave Convolution<br><span class="small">Chen et al.</span></td><td>ICCV 2019</td><td>arXiv:1904.05049</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Making Convolutional Networks Shift-Invariant Again (blur-pool)<br><span class="small">Zhang</span></td><td>ICML 2019</td><td>arXiv:1904.11486</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Checkerboard artifact free sub-pixel convolution<br><span class="small">Aitken et al.</span></td><td>arXiv 2017</td><td>arXiv:1707.02937</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Analyzing and Improving the Image Quality of StyleGAN (StyleGAN2)<br><span class="small">Karras et al.</span></td><td>CVPR 2020</td><td>arXiv:1912.04958</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>CycleGAN without checkerboard artifacts<br><span class="small">Osakabe et al.</span></td><td>arXiv 2020</td><td>arXiv:2012.00287</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>CARAFE: Content-Aware ReAssembly of FEatures<br><span class="small">Wang et al.</span></td><td>ICCV 2019</td><td>arXiv:1905.02188</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Free-Form Image Inpainting with Gated Convolution<br><span class="small">Yu et al.</span></td><td>ICCV 2019</td><td>arXiv:1806.03589</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Self-Attention Generative Adversarial Networks (SAGAN)<br><span class="small">Zhang, Goodfellow, Metaxas, Odena</span></td><td>ICML 2019</td><td>arXiv:1805.08318</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Gated-GAN: Adversarial Gated Networks for Multi-Collection Style Transfer<br><span class="small">Chen et al.</span></td><td>IEEE TIP 2019</td><td>arXiv:1904.02296 · DOI 10.1109/TIP.2018.2869695</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>MEGAN: Mixture of Experts of GANs for Multimodal Image Generation<br><span class="small">Park et al.</span></td><td>IJCAI 2018</td><td>arXiv:1805.02481</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>GiGAN: Gate in GAN<br><span class="small">Nie, Jia, Ding, Wong</span></td><td>Neurocomputing 2021</td><td>DOI 10.1016/j.neucom.2021.07.085</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>On the Spectral Bias of Neural Networks<br><span class="small">Rahaman et al.</span></td><td>ICML 2019</td><td>arXiv:1806.08734</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Fourier Spectrum Discrepancies in Deep Network Generated Images<br><span class="small">Dzanic, Shah, Witherden</span></td><td>NeurIPS 2020</td><td>arXiv:1911.06465</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Fourier Domain Adaptation for Semantic Segmentation (FDA)<br><span class="small">Yang, Soatto</span></td><td>CVPR 2020</td><td>arXiv:2004.05498</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Training Generative Adversarial Networks with Limited Data (ADA)<br><span class="small">Karras et al.</span></td><td>NeurIPS 2020</td><td>arXiv:2006.06676</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Rethinking the Up-Sampling Operations in CNN-based Generative Network<br><span class="small">Tan et al.</span></td><td>arXiv 2023</td><td>arXiv:2312.10461</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</td><td>ACM-BCB 2026</td><td>DOI 10.1145/3807503.3819452</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Leveraging Adversarial Learning for Pathological Fidelity in Virtual Staining (CSSP2P GAN)</td><td>MICCAI DGM4MICCAI 2025</td><td>arXiv:2511.18946 · DOI 10.1007/978-3-032-05472-2_20</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Misalignment-resistant virtual staining</td><td>Nature Communications 2026</td><td>DOI 10.1038/s41467-026-71038-2</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>联合掩码引导与多频域双重注意力机制的 CT 到 DWI 影像生成模型<br><span class="small">张泽华 等</span></td><td>电子与信息学报 2026</td><td>DOI 10.11999/JEIT250643</td><td><span class="b medium">子agent</span></td></tr>
+<tr><td>Hybrid GAN based on frequency and spatial domain for histopathological image synthesis</td><td>BMC Bioinformatics 2025</td><td>DOI 10.1186/s12859-025-06057-9</td><td><span class="b low">未核实</span></td></tr>
+<tr><td>Deconvolution and Checkerboard Artifacts<br><span class="small">Odena, Dumoulin, Olah</span></td><td>Distill 2016</td><td>distill.pub/2016/deconv-checkerboard/</td><td><span class="b low">未核实</span></td></tr>
+<tr><td>SAPA: Similarity-Aware Point Affiliation for Feature Upsampling<br><span class="small">Lu et al.</span></td><td>NeurIPS 2022</td><td>arXiv:2209.12866</td><td><span class="b low">未核实</span></td></tr>
+</tbody></table></div>
+
+<hr>
+<p class="small">本报告由检索核实生成，核实等级逐条标注。凡标 <span class="b low">未核实</span> 的条目请勿直接当作事实引用。报告日期 2026-10-13。</p>
+
+</main></div></body></html>

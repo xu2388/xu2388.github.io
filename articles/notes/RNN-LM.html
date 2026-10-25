@@ -12,13 +12,10 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
+<h1 class="site-title">我的个人博客</h1>
 <p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">8</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
 </div></header>
 <article class="article">
 <h1>循环神经网络语言模型（RNN-LM）· 学习笔记</h1>
@@ -136,7 +133,7 @@
 <p>答：训练分布与推理分布不一致，产生曝光偏差。模型从未见过自己的错误输出，一旦某步预测偏离，后续输入即落入训练时未出现的状态，误差沿序列放大。缓解手段包括计划采样（逐步混入模型预测）、强化学习式目标函数等。</p>
 <h2>四、小结</h2>
 <ol><li>RNN-LM 以链式法则把句子概率分解为逐词条件概率，用共享参数的循环网络建模前文，以交叉熵为损失；损失随正确词概率下降而对数增长。</li><li>Seq2Seq 由双向 RNN 编码器与单向 RNN 解码器组成，注意力机制以“打分—归一化—加权求和”三步生成动态上下文向量，解决了固定向量瓶颈；加性、点积、缩放点积、通用、局部五种打分函数在维度要求、参数量与效率上各有取舍。</li><li>解码阶段存在贪心、束搜索、Top-K/Top-p 采样与温度采样等策略；温度只重塑概率分布的陡峭程度，不改变模型权重，$T\to0$ 退化为贪心，$T$ 过大则近乎随机。</li><li>集成学习通过融合多个模型的概率分布抵消随机错误、强化共识，可用不同初始化或不同检查点实现，代价是推理成本成倍增加；同一思想可迁移到分割（逐像素平均）、检测（框融合）与大模型（检查点集成、MoE）。</li><li>模型的知识分布式存储于嵌入层、注意力层、前馈层、循环层与输出层，注意力负责“看哪里”，前馈层负责“想什么”。</li><li>GPT 是本套结构的解码器化与 Transformer 化：去掉编码器、以自注意力替代交叉注意力、以并行结构替代循环，训练任务仍是下一词预测；规模增长带来语法、逻辑与常识的涌现，但模型本身不含事实校验，因而会产生幻觉。</li></ol>
-<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/013_循环神经网络语言模型（RNN-LM）详解.html">013_循环神经网络语言模型（RNN-LM）详解.md</a></p>
+<p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/详解.html">详解.md</a></p>
 <a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>

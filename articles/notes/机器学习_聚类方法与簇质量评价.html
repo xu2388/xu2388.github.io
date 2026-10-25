@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>机器学习 · 聚类方法与簇质量评价</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"机器学习 · 聚类方法与簇质量评价","date":"2026-10-24","tags":["课程笔记","机器学习"],"category":"课程笔记","summary":"聚类是无监督划分，簇语义由使用者命名。距离层面以闵可夫斯基家族为主（p=1 曼哈顿、p=2 欧氏、p 趋于无穷取分量最大绝对差，0≤p<1 不满足直递性），量纲不一致时必须先标准化。K 均值最小化簇内平方和，靠「指派—重心更新」交替下降，原料两道算例逐轮复核为 8.00→4.00 与 0.01299→0.00649；层次聚类以最小/最大/平均三种 linkage 合并并递推更新簇间距离；高斯混合用 EM 迭代责任度与三组参数，协方差取单位阵并硬指派时退化为 K 均值。簇质量以轮廓系数、DB 指数与 Jaccard/FM/Rand、纯度联合评价。原料高斯混合算例六处数值有误，已复核勘误。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>机器学习 · 聚类方法与簇质量评价</h1>
+<div class="meta">课程笔记 · 机器学习 · 整理自豆包对话 豆包对话 · 机器学习第9章聚类试卷 / 聚类章节考试模拟题与讲解 / 聚类算法讲解 / 解释高斯聚类 / 聚类方法性能对比 / 聚类方法对比实验结果 / 轴承故障无监督聚类检测报告</div>
+<h1>机器学习 · 聚类方法与簇质量评价</h1>
+<h2>一、概述：聚类与分类的任务差别</h2>
+<p>聚类的形式化描述（原料口径）：样本集 $D=\{x_1,\dots,x_m\}$，每个 $x_i$ 是 $n$ 维特征向量且<strong>不带类别标记</strong>；算法把 $D$ 划分为 $k$ 个互不相交的簇 $\{C_l\}$，满足 $C_{l&#x27;}\cap C_l=\varnothing\ (l&#x27;\neq l)$ 且 $D=\bigcup_{l=1}^{k}C_l$，结果是一个长度为 $m$ 的簇标记向量 $\lambda=(\lambda_1,\dots,\lambda_m)$。与分类的差别有两点：分类要学「样本 $\to$ 已知标记」的映射，类别预先定义；聚类不需标记，只揭示样本内在分布，<strong>簇对应的概念语义要由使用者事后命名，算法无法自动确定</strong>。这条分界线贯穿全文：评价聚类要么靠外部参考模型，要么靠簇自身几何。</p>
+<h2>二、距离与相似度度量</h2>
+<h3>2.1 四条基本性质</h3>
+<p>原料把「非负性、同一性、对称性、直递性」列为距离度量的必备性质，并特别指出可加性不是必需项：</p>
+<p>$$ \operatorname{dist}(x_i,x_j)\ge0,\qquad \operatorname{dist}(x_i,x_j)=0\iff x_i=x_j,\qquad \operatorname{dist}(x_i,x_j)=\operatorname{dist}(x_j,x_i), $$</p>
+<p>$$ \operatorname{dist}(x_i,x_j)\le\operatorname{dist}(x_i,x_k)+\operatorname{dist}(x_k,x_j)\quad\text{（直递性，即三角不等式）} . $$</p>
+<h3>2.2 闵可夫斯基距离与其特例</h3>
+<p>$$ d_{mk}(x_i,x_j)=\Big(\sum_{k=1}^{n}\lvert x_{ik}-x_{jk}\rvert^{p}\Big)^{1/p},\qquad p\ge1 . $$</p>
+<table>
+<tr><th>$p$ 取值</th><th>退化结果</th><th>原料判定要点</th></tr>
+<tr><td>$p=1$</td><td>曼哈顿距离（$L_1$ 范数）</td><td>常被误说成欧氏距离</td></tr>
+<tr><td>$p=2$</td><td>欧氏距离（$L_2$ 范数）</td><td>聚类最常用的默认度量</td></tr>
+<tr><td>$p\to\infty$</td><td>各分量绝对差的最大值（切比雪夫距离）</td><td>不是&quot;平均绝对距离&quot;</td></tr>
+<tr><td>$0\le p&lt;1$</td><td>形式上仍可计算</td><td><strong>不满足直递性</strong>，不是合法距离</td></tr>
+</table>
+<p>原料另指出 $p\ge1$ 时四条性质全成立，证明要点在直递性（Minkowski 不等式）。对<strong>无序离散属性</strong>原料给出 VDM（值差度量），混合属性可与闵可夫斯基距离结合成 MinkovDM；VDM 表达式与算例原料未给，本文不编造。</p>
+<h3>2.3 标准化为何是前置动作</h3>
+<p>两处独立支撑。其一：特征提取之后、降维之前必须做零均值单位方差标准化，因为特征量纲差异极大（峭度量级 1~10，能量比 0~1），否则量级大的维度会吞掉距离计算。其二是一处反例：4096 维原始信号直接聚类的 ARI 只有 0.0093，归因于高维度量失效；经幅值归一化、无量纲指标与相对占比处理后升到 0.9237。原料据此把聚类本质概括为「构造度量空间，使欧氏距离对应物理相似性」。余弦距离在原料中仅作&quot;簇间距离可选欧氏、曼哈顿、余弦等&quot;一句带过，无公式无算例，本文不展开。</p>
+<h2>三、K 均值：目标函数与逐轮迭代</h2>
+<h3>3.1 目标函数与交替两步</h3>
+<p>K 均值（原型聚类代表，原料亦称基于欧氏距离的 Lloyd 迭代）假设簇为超球体分布，最小化<strong>簇内平方和</strong>：</p>
+<p>$$ E=\sum_{i=1}^{k}\ \sum_{x\in C_i}\big\lVert x-\mu_i\big\rVert_2^{2},\qquad \mu_i=\frac{1}{\lvert C_i\rvert}\sum_{x\in C_i}x . $$</p>
+<p>流程（原料口径）：输入 $D$ 与簇数 $k$，随机取 $k$ 个样本作初始均值向量，然后反复两步直到簇划分不变——<strong>指派</strong>：每个样本划入距离最近的 $\mu_i$ 所在簇；<strong>重心更新</strong>：每簇取簇内均值作新 $\mu_i$。指派步固定重心优化划分，更新步固定划分优化重心，故 $E$ 单调不增。</p>
+<h3>3.2 算例一：八点两簇，逐轮到收敛</h3>
+<p>原料样本集 $x_1=(0,0)$、$x_2=(1,0)$、$x_3=(0,1)$、$x_4=(1,1)$、$x_5=(5,5)$、$x_6=(5,6)$、$x_7=(6,5)$、$x_8=(6,6)$，$k=2$，初始 $\mu_1=(0,0)$、$\mu_2=(5,5)$，欧氏距离。原料只要求第一次迭代，本文把迭代链跑完（数值经标准库程序复核）。</p>
+<p><strong>第 1 轮 · 指派</strong>：</p>
+<table>
+<tr><th>样本</th><th>坐标</th><th>到 $\mu_1$</th><th>到 $\mu_2$</th><th>划入</th></tr>
+<tr><td>$x_1$</td><td>(0,0)</td><td>0.0000</td><td>7.0711</td><td>$C_1$</td></tr>
+<tr><td>$x_2$</td><td>(1,0)</td><td>1.0000</td><td>6.4031</td><td>$C_1$</td></tr>
+<tr><td>$x_3$</td><td>(0,1)</td><td>1.0000</td><td>6.4031</td><td>$C_1$</td></tr>
+<tr><td>$x_4$</td><td>(1,1)</td><td>1.4142</td><td>5.6569</td><td>$C_1$</td></tr>
+<tr><td>$x_5$</td><td>(5,5)</td><td>7.0711</td><td>0.0000</td><td>$C_2$</td></tr>
+<tr><td>$x_6$</td><td>(5,6)</td><td>7.8102</td><td>1.0000</td><td>$C_2$</td></tr>
+<tr><td>$x_7$</td><td>(6,5)</td><td>7.8102</td><td>1.0000</td><td>$C_2$</td></tr>
+<tr><td>$x_8$</td><td>(6,6)</td><td>8.4853</td><td>1.4142</td><td>$C_2$</td></tr>
+</table>
+<p>得 $C_1=\{x_1,x_2,x_3,x_4\}$、$C_2=\{x_5,x_6,x_7,x_8\}$，与原料一致；本轮目标值按旧重心计为 $E_1=0+1+1+2+0+1+1+2=8.0000$。</p>
+<p><strong>第 1 轮 · 重心更新</strong>：</p>
+<p>$$ \mu_1&#x27;=\Big(\tfrac{0+1+0+1}{4},\tfrac{0+0+1+1}{4}\Big)=(0.5,\,0.5),\qquad \mu_2&#x27;=\Big(\tfrac{5+5+6+6}{4},\tfrac{5+6+5+6}{4}\Big)=(5.5,\,5.5), $$</p>
+<p>与原料所给一致。<strong>第 2 轮</strong>：每个样本到本簇重心距离都变成 $0.7071=\sqrt{0.5}$，到另一簇重心为 $6.3640\sim7.7782$，指派不变、重心也不再变化，算法收敛，$E_2=8\times0.5=4.0000$。</p>
+<table>
+<tr><th>轮次</th><th>指派结果</th><th>$\mu_1$</th><th>$\mu_2$</th><th>簇内平方和</th></tr>
+<tr><td>初始</td><td>待定</td><td>(0,0)</td><td>(5,5)</td><td>—</td></tr>
+<tr><td>第 1 轮</td><td>$\{x_1..x_4\}$ / $\{x_5..x_8\}$</td><td>(0.5,0.5)</td><td>(5.5,5.5)</td><td>8.0000（按旧重心）</td></tr>
+<tr><td>第 2 轮</td><td>同上，未变</td><td>(0.5,0.5)</td><td>(5.5,5.5)</td><td>4.0000</td></tr>
+</table>
+<p>目标值 8.00→4.00 后停止，属一步收敛情形：本例两簇相隔很远、初值落在簇内部，故一步到位，不代表一般情形。</p>
+<h3>3.3 算例二：西瓜三点</h3>
+<p>另一份原料用西瓜数据集 4.0 的 $x_1=(0.697,0.460)$、$x_2=(0.774,0.376)$、$x_3=(0.403,0.237)$，$k=2$，$\mu_1=x_3$、$\mu_2=x_1$：</p>
+<table>
+<tr><th>样本</th><th>到 $\mu_1=(0.403,0.237)$</th><th>到 $\mu_2=(0.697,0.460)$</th><th>划入</th></tr>
+<tr><td>$x_1$</td><td>0.3690</td><td>0.0000</td><td>$C_2$</td></tr>
+<tr><td>$x_2$</td><td>0.3962（原料得数 0.46，按公式复核应为 0.3962）</td><td>0.1140</td><td>$C_2$</td></tr>
+<tr><td>$x_3$</td><td>0.0000</td><td>0.3690</td><td>$C_1$</td></tr>
+</table>
+<p>指派 $C_1=\{x_3\}$、$C_2=\{x_1,x_2\}$ 与原料一致；更新后 $\mu_1$ 不变，</p>
+<p>$$ \mu_2=\Big(\tfrac{0.697+0.774}{2},\tfrac{0.460+0.376}{2}\Big)=(0.7355,\,0.418) , $$</p>
+<p>与原料一致，$E_1=0.1140^{2}=0.012985$。<strong>第 2 轮</strong>：$x_1,x_2$ 到新 $\mu_2$ 距离均为 0.0570、$x_3$ 为 0，指派与重心均不变，$E_2=2\times0.0570^{2}=0.006493$，收敛。目标值恰好减半，是因为两点簇的重心落在两点正中，各自距离缩为原来的一半。</p>
+<p>原料此处唯一数值错误是 $x_2$ 到 $\mu_1$：实际 $\sqrt{0.371^{2}+0.139^{2}}=0.3962$，误差不影响指派结论（两值都大于 0.1140）。附带一处观察：样本仅 3 个而 $k=2$，必然出现单样本簇，其重心即样本本身、对目标值的贡献恒为 0。</p>
+<h3>3.4 初值敏感、局部最优与失效场景</h3>
+<p>原料的四条硬结论：K 均值是 <strong>NP 难</strong>问题，实际用<strong>贪心</strong>迭代近似求解，因此<strong>找不到全局最优</strong>；对<strong>初始均值向量极敏感</strong>，不同初值可能给出完全不同的结果；对<strong>噪声与孤立点敏感</strong>（远离中心的点以距离平方持续拽动重心）；<strong>只能发现球形/凸簇</strong>。$k$ 的选取方面原料只支撑到三点：必须预先给定 $k$、可结合轮廓系数定最优 $k$、CH 指数是选簇数最常用的内部指标；<strong>肘部法在原料中既无定义也无算例</strong>，故不作介绍。</p>
+<p>同族的 LVQ 是<strong>带监督</strong>的原型聚类：原型向量附类别标记，按标记是否一致向样本靠近或远离，与 K 均值最直接的差别就是更新时用到了标记。</p>
+<h2>四、层次聚类：AGNES、DIANA 与三种 linkage</h2>
+<h3>4.1 两种策略与流程</h3>
+<p>原料把层次聚类概括为&quot;在不同层次划分数据集，形成树形结构&quot;：<strong>AGNES</strong>（凝聚式，自底向上）初始每个样本为一个簇，每步合并距离最近的一对，直到达到预设簇数；<strong>DIANA</strong>（分拆式，自顶向下）初始全体为一簇，不断拆分。AGNES 流程：①每样本成初始簇；②算全部簇对距离、构建距离（相似度）矩阵；③重复&quot;合并最小距离两簇 → 更新新簇与其余簇的距离&quot;直到簇数为 $k$；④返回划分。停止条件是达到预设 $k$ 或全部样本聚为一类，且可<strong>在树状图上按需切分</strong>选择粒度。缺点为&quot;计算量大、不能回溯&quot;——早期错误会一路带到顶端。复杂度原料两处写法不一致（$O(n^{3})$ 与 $O(n^{2})$），见 §九勘误。</p>
+<h3>4.2 三种 linkage 与距离矩阵更新</h3>
+<p>$$ d_{\min}(C_i,C_j)=\min_{x\in C_i,\,y\in C_j}d(x,y),\qquad d_{\max}(C_i,C_j)=\max_{x\in C_i,\,y\in C_j}d(x,y),\qquad d_{\mathrm{avg}}(C_i,C_j)=\frac{1}{\lvert C_i\rvert\,\lvert C_j\rvert}\sum_{x\in C_i}\sum_{y\in C_j}d(x,y). $$</p>
+<p>原料给出的别名是：$d_{\min}$ 单链接、$d_{\max}$ 全链接、$d_{\mathrm{avg}}$ 均链接。合并后新簇与第三簇 $k$ 的距离按递推更新，不必重算全部样本对；全链接满足最大值规则 $d(k,i\cup j)=\max\big(d(k,i),d(k,j)\big)$。Ward 法（准则为合并后误差平方和增量 $\Delta(i,j)=\dfrac{n_i n_j}{n_i+n_j}\operatorname{dist}(\mu_i,\mu_j)^{2}$）的 Lance–Williams 递推：</p>
+<p>$$ d(k,\;i\cup j)=\frac{n_k+n_i}{n_k+n_i+n_j}d(k,i)+\frac{n_k+n_j}{n_k+n_i+n_j}d(k,j)-\frac{n_k}{n_k+n_i+n_j}d(i,j). $$</p>
+<p>三种准则的特性差异（原料结论）：单链接易把相距很近的链状点串成大簇，即链式效应；全链接对离群点高度敏感，单个离群点即可抬升簇间距离而撕裂大簇；Ward 偏好大小均衡的球状簇，抗噪优于前两者。</p>
+<h3>4.3 逐步合并的复核</h3>
+<p>原料未给层次聚类算例，本文用 §3.2 的八点复算三种 linkage（欧氏距离，$k=2$ 停止；并列候选对按编号最小先合并，不影响最终分组）：</p>
+<table>
+<tr><th>合并步</th><th>单链接</th><th>全链接</th><th>均链接</th></tr>
+<tr><td>1–4</td><td>依次合并 $(x_1,x_2)$、$(x_3,x_4)$、$(x_5,x_6)$、$(x_7,x_8)$，距离均 1.0000</td><td>同左</td><td>同左</td></tr>
+<tr><td>5</td><td>$\{x_1,x_2\}$ 与 $\{x_3,x_4\}$，1.0000</td><td>同左，1.4142</td><td>同左，1.2071</td></tr>
+<tr><td>6</td><td>$\{x_5,x_6\}$ 与 $\{x_7,x_8\}$，1.0000</td><td>同左，1.4142</td><td>同左，1.2071</td></tr>
+</table>
+<p>第 5 步最能区分三者：两簇之间 4 个样本对距离为 $1,1,\sqrt2,\sqrt2$，故 $d_{\min}=1.0000$、$d_{\max}=1.4142$、$d_{\mathrm{avg}}=(2+2\sqrt2)/4=1.2071$。三条曲线在本数据集上<strong>最终分组完全相同</strong>（$\{x_1..x_4\}$ 与 $\{x_5..x_8\}$），差别只在合并高度。停到 $k=2$ 后同一对簇在三种取法下是三个不同的数，可见&quot;簇间距离不是客观量，而是准则的产物&quot;：</p>
+<table>
+<tr><th>簇间距离取法</th><th>$C_1$ 与 $C_2$ 的距离</th><th>复核依据</th></tr>
+<tr><td>最小距离（单链接）</td><td>5.6569</td><td>$x_4=(1,1)$ 与 $x_5=(5,5)$，即 $\sqrt{32}$</td></tr>
+<tr><td>最大距离（全链接）</td><td>8.4853</td><td>$x_1=(0,0)$ 与 $x_8=(6,6)$，即 $\sqrt{72}$</td></tr>
+<tr><td>平均距离（均链接）</td><td>7.1064</td><td>全部 16 个样本对距离的算术平均</td></tr>
+</table>
+<h2>五、高斯混合模型与 EM</h2>
+<h3>5.1 软分配、责任度与三组参数</h3>
+<p>原料把高斯混合聚类概括为「用 $k$ 个高斯分布拟合数据，用概率做软聚类，靠 EM 迭代求解」：</p>
+<p>$$ p_{\mathcal{M}}(x)=\sum_{i=1}^{k}\alpha_i\,\mathcal{N}(x\mid\mu_i,\Sigma_i),\qquad \alpha_i&gt;0,\quad \sum_{i=1}^{k}\alpha_i=1 , $$</p>
+<p>三组参数分别是混合系数 $\alpha_i$（该簇占比）、均值 $\mu_i$（中心）、协方差 $\Sigma_i$（大小、胖瘦与倾斜方向）。样本 $x_j$ 由第 $i$ 个成分生成的后验概率即<strong>责任度</strong> $\gamma_{ji}$，最终簇标记取</p>
+<p>$$ \lambda_j=\arg\max_{i\in\{1,\dots,k\}}\gamma_{ji}. $$</p>
+<p>与硬分配相比，软分配允许 70%/30% 这样的中间态；协方差矩阵让 GMM 能贴合椭圆、斜向、大小不一的簇，而 K 均值因默认各簇方差相同只处理球形簇。</p>
+<h3>5.2 为何需要极大似然与 EM</h3>
+<p>原料的解释是：GMM 的参数（均值、协方差、混合系数）<strong>无法用解析方法直接求解</strong>，故改用期望最大化迭代；判停条件是&quot;参数几乎不变&quot;&quot;对数似然增长很小&quot;或&quot;达到最大轮数&quot;。道理在于单样本似然是 $p_{\mathcal{M}}(x_j)$ 这个<strong>加权和</strong>，对 $\mu_i,\Sigma_i,\alpha_i$ 求导时各成分经对数耦合、无闭式解；EM 先固定参数算责任度 $\gamma_{ji}$（E 步），把加权和拆成加权单项，再据此分别最大化加权对数似然，于是每个参数都得到&quot;加权平均&quot;式的闭式更新（M 步）。原料未给推导，本文不越界。</p>
+<p>$$ \gamma_{ji}=\frac{\alpha_i\,p(x_j\mid\mu_i,\Sigma_i)}{\sum_{l=1}^{k}\alpha_l\,p(x_j\mid\mu_l,\Sigma_l)},\qquad \mu_i=\frac{\sum_{j=1}^{m}\gamma_{ji}x_j}{\sum_{j=1}^{m}\gamma_{ji}}, $$</p>
+<p>$$ \Sigma_i=\frac{\sum_{j=1}^{m}\gamma_{ji}(x_j-\mu_i)(x_j-\mu_i)^{\top}}{\sum_{j=1}^{m}\gamma_{ji}},\qquad \alpha_i=\frac{1}{m}\sum_{j=1}^{m}\gamma_{ji}. $$</p>
+<p>分母 $N_i=\sum_{j}\gamma_{ji}$ 即原料所说的第 $i$ 簇&quot;有效样本数&quot;。</p>
+<h3>5.3 逐轮复算：西瓜 30 样本</h3>
+<p>原料用西瓜数据集 4.0 的 30 个二维样本（密度、含糖率）走了第一轮 EM，设定 $k=3$、$\alpha_i=1/3$、$\mu_1=x_6=(0.403,0.237)$、$\mu_2=x_{22}=(0.714,0.346)$、$\mu_3=x_{27}=(0.532,0.472)$、$\Sigma_1=\Sigma_2=\Sigma_3=\operatorname{diag}(0.1,0.1)$。本文按多元高斯密度公式</p>
+<p>$$ p(x\mid\mu,\Sigma)=\frac{1}{(2\pi)^{d/2}\lvert\Sigma\rvert^{1/2}}\exp\Big(-\frac12(x-\mu)^{\top}\Sigma^{-1}(x-\mu)\Big) $$</p>
+<p>对 30 个样本完整重算 E 步与 M 步。<strong>这一节原料的数值几乎全部无法复现</strong>：以 $x_1=(0.697,0.460)$ 为例，原料给密度 $0.010,2.791,0.635$、责任度 $0.003,0.813,0.184$；复核应为密度 $0.8056,1.4893,1.3880$，责任度</p>
+<p>$$ \gamma_{11}=0.2188,\qquad \gamma_{12}=0.4044,\qquad \gamma_{13}=0.3769 . $$</p>
+<p>可直接自检的判据：$\Sigma=0.1I$（二维、$\lvert\Sigma\rvert=0.01$）时密度理论上界为 $1/(2\pi\times0.1)\approx1.5915$，原料的 2.791 已越界，属必误；不过就 $x_1$ 而言&quot;最大责任落在成分 2&quot;这一<strong>定性结论仍成立</strong>，只是概率远非 81.3%。逐轮复核结果：</p>
+<table>
+<tr><th>轮次（M 步后）</th><th>$N_1,N_2,N_3$</th><th>$\mu_1$</th><th>$\mu_2$</th><th>$\mu_3$</th><th>$\alpha_1,\alpha_2,\alpha_3$</th><th>对数似然</th></tr>
+<tr><td>初始参数</td><td>—</td><td>(0.403,0.237)</td><td>(0.714,0.346)</td><td>(0.532,0.472)</td><td>0.333,0.333,0.333</td><td>3.8607</td></tr>
+<tr><td>第 1 轮</td><td>10.86,9.66,9.47</td><td>(0.4893,0.2505)</td><td>(0.5686,0.2820)</td><td>(0.5320,0.2949)</td><td>0.362,0.322,0.316</td><td>32.5363</td></tr>
+<tr><td>第 2 轮</td><td>10.86,9.67,9.47</td><td>(0.4880,0.2502)</td><td>(0.5704,0.2816)</td><td>(0.5317,0.2958)</td><td>0.362,0.322,0.316</td><td>32.5635</td></tr>
+<tr><td>第 3 轮</td><td>10.86,9.68,9.46</td><td>(0.4862,0.2496)</td><td>(0.5734,0.2808)</td><td>(0.5306,0.2973)</td><td>0.362,0.323,0.315</td><td>32.5945</td></tr>
+</table>
+<p>第一轮协方差复核为 $\Sigma_1=[[0.0247,0.0044],[0.0044,0.0159]]$、$\Sigma_2=[[0.0223,0.0042],[0.0042,0.0173]]$、$\Sigma_3=[[0.0240,0.0050],[0.0050,0.0164]]$，与原料的 $[[0.010,0.004],[0.004,0.008]]$ 等三组不符。对数似然由 3.86 跳到 32.54、此后每轮只增 0.03 左右，符合&quot;EM 保证不降、增量递减&quot;；但三个成分迅速收缩到高度重叠的区域（重心横坐标都在 0.49~0.57 内），硬指派后三簇大小为 14、11、5，并未分出分离的椭圆簇——这正印证&quot;EM 依赖初始值&quot;。原料宣称的 $\mu_1\approx(0.353,0.215)$ 若要复现需要另一套初值或协方差设定，原料未交代，故本文以复核值为准、原值存档于 §九。</p>
+<h3>5.4 与 K 均值的退化关系</h3>
+<p>原料结论：「把 GMM 的协方差矩阵设为单位矩阵并只取概率最大的簇，就退化成 K 均值」，另一处写作&quot;K 均值是 GMM 在协方差相同、硬分配下的特例&quot;。代价在参数量：K 均值只估 $\mu$，GMM 每个成分要同时估 $\alpha,\mu,\Sigma$，二维全协方差本身就有三个自由元素，故原料同时给出&quot;计算量大、高维易失稳、协方差常约束为对角阵&quot;的告诫。分量数 $k$ 与自由度的定量关系原料没有给出（只在 CH 指数里出现&quot;除以自由度 $k-1$ 与 $n-k$ 以消除簇数偏差&quot;），本文不编造。</p>
+<h2>六、密度型方法：DBSCAN</h2>
+<p>原料只给概念与流程，<strong>无邻域数值算例</strong>，故本节只写概念。设邻域半径 $\varepsilon$、最小样本数 MinPts：<strong>核心对象</strong>指 $\lvert N_\varepsilon(x_j)\rvert\ge$ MinPts 的样本；<strong>边界点</strong>位于某核心对象邻域内但自身密度不足；<strong>噪声点</strong>不属于任何核心对象邻域、被标为不属任何簇。</p>
+<table>
+<tr><th>概念</th><th>原料定义</th></tr>
+<tr><td>密度直达</td><td>$x_j$ 在 $x_i$ 的 $\varepsilon$ 邻域内且 $x_i$ 是核心对象，则 $x_j$ 由 $x_i$ 密度直达</td></tr>
+<tr><td>密度可达</td><td>存在序列 $p_1,\dots,p_n$，$p_1=x$、$p_n=y$，每个 $p_{i+1}$ 由 $p_i$ 密度直达</td></tr>
+<tr><td>密度相连</td><td>存在 $z$ 使 $x$ 与 $y$ 都由 $z$ 密度可达，则 $x$ 与 $y$ 密度相连</td></tr>
+</table>
+<p>流程（原料伪码文字版）：先扫全部样本，把满足邻域条件者收入核心对象集 $\Omega$；再反复从 $\Omega$ 任取一核心对象作种子做密度扩张，把可达样本纳入当前簇并从 $\Omega$ 移除；$\Omega$ 清空后未被收编的样本即噪声。$\varepsilon$ 与 MinPts 直接决定结果；优点是不用预先指定簇数、能挖任意形状、自动剔噪声，缺点是大数据慢、密度不均效果差、高维度量失效。</p>
+<h2>七、簇质量评价</h2>
+<h3>7.1 外部指标：需要参考模型</h3>
+<p>原料把 Jaccard 系数、FMI 指数、RI 指数归为外部指标：对样本两两配对，统计聚类与参考模型在&quot;同簇/不同簇&quot;上的一致情况，四个计数为</p>
+<p>$$ a=\text{两者同簇},\quad b=\text{仅聚类同簇},\quad c=\text{仅参考同簇},\quad d=\text{两者都不同簇}, $$</p>
+<p>$$ \mathrm{JC}=\frac{a}{a+b+c},\qquad \mathrm{FMI}=\sqrt{\frac{a}{a+b}\cdot\frac{a}{a+c}},\qquad \mathrm{RI}=\frac{2(a+d)}{m(m-1)} . $$</p>
+<p>原料算例：$m=5$，$\lambda=(1,1,2,2,3)$，参考 $\lambda^{*}=(1,1,1,2,2)$，共 $\binom52=10$ 对。逐对复核得 $a=1$（$(x_1,x_2)$）、$b=1$（$(x_3,x_4)$）、$c=3$（$(x_1,x_3)$、$(x_2,x_3)$、$(x_4,x_5)$）、$d=5$，于是</p>
+<p>$$ \mathrm{JC}=\frac{1}{1+1+3}=0.2000,\quad \mathrm{FMI}=\sqrt{\frac12\cdot\frac14}\approx0.3536,\quad \mathrm{RI}=\frac{2(1+5)}{5\times4}=0.6000 , $$</p>
+<p>三值与原料一致（原料把 RI 分母写成 10 却保留分子 $2(a+d)$，见 §九勘误第 6 条）。</p>
+<p>另有 ARI（调整兰德指数）在成对一致性上扣除&quot;随机乱分也能碰对&quot;的期望，取值 $[-1,1]$，近 0 即相当于随机；NMI（归一化互信息）先算互信息 $I(X;Y)=\sum_{i}\sum_{j}\frac{n_{ij}}{n}\log\frac{n\,n_{ij}}{a_i b_j}$，再用几何平均熵 $\sqrt{H(X)H(Y)}$ 归一化，取值 $[0,1]$，其中 $H(X)=-\sum_i\frac{a_i}{n}\log\frac{a_i}{n}$ 是标签熵（原料中&quot;熵&quot;唯一用于评价之处）。纯度按每簇占多数的真实类别计，</p>
+<p>$$ \text{Purity}=\frac{1}{n}\sum_{j=1}^{C}\max_i n_{ij}\in[0,1], $$</p>
+<p>原料点出其致命缺陷：让每个样本单独成簇则纯度等于 1 却毫无意义，故<strong>从不单独使用</strong>，须与 ARI、NMI 同看。</p>
+<h3>7.2 内部指标：不需要标签</h3>
+<table>
+<tr><th>指标</th><th>公式</th><th>方向与原料注记</th></tr>
+<tr><td>轮廓系数</td><td>$s_i=(b_i-a_i)/\max(a_i,b_i)$，整体 $SC=\frac1n\sum_i s_i$</td><td>$[-1,1]$ 越大越好；$&gt;0.7$ 优秀、$0.5\sim0.7$ 中等、$&lt;0.5$ 模糊；对凸球状簇更准确</td></tr>
+<tr><td>DB 指数</td><td>$DB=\frac1k\sum_{i=1}^{k}\max_{j\neq i}\frac{\bar{s}_i+\bar{s}_j}{d_{ij}}$</td><td>$[0,+\infty)$ 越小越好；$\bar{s}_i$ 为簇内到质心均距，$d_{ij}$ 为两质心距；对异常值敏感</td></tr>
+<tr><td>Dunn 指数</td><td>$DI=\min_{1\le i\le k}\big\{\min_{j\neq i} d_{\min}(C_i,C_j)/\max_{1\le l\le k}\operatorname{diam}(C_l)\big\}$</td><td>越大越好；簇间最小距除以簇内最大直径</td></tr>
+<tr><td>CH 指数</td><td>$CH=\dfrac{SS_B/(k-1)}{SS_W/(n-k)}$，$SS_B=\sum_i n_i(\mu_i-\mu)^{2}$，$SS_W=\sum_i\sum_{x\in C_i}(x-\mu_i)^{2}$</td><td>$[0,+\infty)$ 越大越好；除以自由度消除簇数偏差，常用于选 $k$</td></tr>
+</table>
+<p>三档判读要记牢：接近 1 是簇内紧密且簇间分离，接近 0 是边界模糊、重叠严重，<strong>小于 0 说明该样本离隔壁簇比自己簇还近，即分错了簇</strong>。两份原料对 DB 指数用了不同符号体系，含义相同。</p>
+<h3>7.3 单指标不可信</h3>
+<p>原料报告有一处反例：变分自编码器隐空间聚类的轮廓系数高达 0.6351，ARI 却只有 0.0531——隐空间确实形成紧凑簇，但簇的语义是&quot;负载工况&quot;而非&quot;故障类型&quot;；同批实验里深度嵌入聚类训练后所有样本被分入单一簇，ARI 约 0，属彻底塌缩。可见内部指标好只保证几何漂亮，不保证语义正确，须多指标联合校验。</p>
+<h2>八、不同簇形状下的方法对比</h2>
+<h3>8.1 概念层面</h3>
+<table>
+<tr><th>维度</th><th>K 均值</th><th>高斯混合 GMM</th><th>DBSCAN</th><th>AGNES 层次聚类</th></tr>
+<tr><td>可处理的簇形状</td><td>只能球形/凸簇</td><td>椭圆、斜向、大小不一</td><td>任意形状</td><td>任意形状</td></tr>
+<tr><td>是否要指定 $k$</td><td>必须</td><td>必须</td><td>不用</td><td>切树时要</td></tr>
+<tr><td>分配方式</td><td>硬分配</td><td>软分配（按概率）</td><td>密度连通</td><td>按簇间距离合并</td></tr>
+<tr><td>噪声识别</td><td>不能</td><td>不能（可看低概率点）</td><td>能自动识别</td><td>不能</td></tr>
+<tr><td>主要参数</td><td>$k$</td><td>$k$、初始 $\mu$ 与 $\Sigma$</td><td>$\varepsilon$、MinPts</td><td>簇间距离取法</td></tr>
+<tr><td>主要缺点</td><td>初值敏感、只球形、怕噪声</td><td>计算慢、易局部最优</td><td>参数难调、高维弱</td><td>计算量大、不能回溯</td></tr>
+</table>
+<p>原料另覆盖谱聚类（相似度图 → 拉普拉斯矩阵取特征向量降维 → 低维跑 K 均值，可识别环形与交错非凸簇，代价是复杂度高、依赖核参数）与 BIRCH（CF 特征树单遍增量聚类，时间接近 $O(N)$，只对球形凸簇有效）。</p>
+<h3>8.2 实验层面（数值照抄原料）</h3>
+<p>第一组是球形凸簇倾向明显的特征空间：</p>
+<table>
+<tr><th>聚类方法</th><th>ARI</th><th>NMI</th><th>纯度</th></tr>
+<tr><td>BIRCH</td><td>0.8876</td><td>0.9361</td><td>92.40%</td></tr>
+<tr><td>层次聚类（Ward）</td><td>0.8169</td><td>0.9163</td><td>90.77%</td></tr>
+<tr><td>GMM</td><td>0.7879</td><td>0.9288</td><td>92.77%</td></tr>
+<tr><td>K-Means</td><td>0.7733</td><td>0.9117</td><td>91.82%</td></tr>
+<tr><td>层次聚类（Complete）</td><td>0.7657</td><td>0.8638</td><td>83.56%</td></tr>
+<tr><td>谱聚类</td><td>0.6791</td><td>0.8832</td><td>92.45%</td></tr>
+<tr><td>DBSCAN（eps=1.0）</td><td>0.2790</td><td>0.6230</td><td>95.99%</td></tr>
+</table>
+<p>原料解读：BIRCH 整体最优；DBSCAN 纯度最高而 ARI、NMI 极低，是&quot;大量点被判噪声、只剩少量高密度干净簇&quot;造成的<strong>纯度虚高</strong>；排序 BIRCH &gt; Ward 层次 &gt; GMM &gt; K-Means 说明该数据偏向球形凸簇，也说明簇间密度差距大、eps=1.0 不合适。第二组是同一批方法在 4096 维原始信号上的内部指标：</p>
+<table>
+<tr><th>模型</th><th>轮廓系数（越高越好）</th><th>CH 指数（越高越好）</th><th>DB 指数（越低越好）</th></tr>
+<tr><td>K-Means</td><td>0.5289</td><td>46.57</td><td>2.27</td></tr>
+<tr><td>层次聚类</td><td>0.5487</td><td>54.50</td><td>2.56</td></tr>
+<tr><td>DBSCAN</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+<p>轮廓系数与 CH 偏向层次聚类、DB 偏向 K 均值，原料把分歧归因于衡量角度不同（CH 看全局方差比，DB 看最难区分的配对簇）；0.5 左右只算中等；DBSCAN 无值是因大量样本被标噪声、内部指标算不出。第三组是特征改造的全过程，说明&quot;天花板在特征而不在算法&quot;：</p>
+<table>
+<tr><th>阶段</th><th>特征与聚类器</th><th>维度</th><th>ARI</th><th>NMI</th><th>纯度</th></tr>
+<tr><td>基线</td><td>原始信号 + K-Means</td><td>4096D</td><td>0.0093</td><td>0.0356</td><td>17.3%</td></tr>
+<tr><td>基线</td><td>原始信号 + 层次聚类</td><td>4096D→PCA50</td><td>0.0087</td><td>0.0312</td><td>16.8%</td></tr>
+<tr><td>基线</td><td>原始信号 + DBSCAN</td><td>4096D</td><td>0.0052</td><td>0.0213</td><td>15.2%</td></tr>
+<tr><td>简单特征</td><td>14 维统计量 + K-Means</td><td>14D</td><td>0.1026</td><td>0.2841</td><td>35.2%</td></tr>
+<tr><td>高级特征</td><td>35 维多域特征 + K-Means</td><td>36D</td><td>0.3792</td><td>0.6133</td><td>66.8%</td></tr>
+<tr><td>高级特征</td><td>35 维 + 层次聚类</td><td>36D</td><td>0.3521</td><td>0.5894</td><td>62.5%</td></tr>
+<tr><td>高级特征</td><td>35 维 + 谱聚类</td><td>36D</td><td>0.3412</td><td>0.5768</td><td>60.2%</td></tr>
+<tr><td>高级特征</td><td>35 维 + GMM</td><td>36D</td><td>0.3289</td><td>0.5621</td><td>58.7%</td></tr>
+<tr><td>深度表征</td><td>VAE + K-Means</td><td>16D</td><td>0.0531</td><td>0.2117</td><td>57.9%</td></tr>
+<tr><td>深度表征</td><td>VAE + GMM</td><td>16D</td><td>0.1582</td><td>0.3400</td><td>54.7%</td></tr>
+<tr><td>深度表征</td><td>深度嵌入聚类（联合训练）</td><td>10D</td><td>0.0523</td><td>0.0891</td><td>22.1%</td></tr>
+<tr><td>物理特征</td><td>39 维 + GMM（0HP）</td><td>39D</td><td>0.8983</td><td>0.9304</td><td>87.7%</td></tr>
+<tr><td>物理特征</td><td>39 维 + GMM（1HP）</td><td>39D</td><td>0.8598</td><td>0.9191</td><td>93.6%</td></tr>
+<tr><td>物理特征</td><td>39 维 + GMM（跨负载）</td><td>39D</td><td>0.9237</td><td>0.9241</td><td>91.3%</td></tr>
+<tr><td>物理特征</td><td>39 维 + K-Means</td><td>39D</td><td>0.7744</td><td>0.8929</td><td>92.7%</td></tr>
+</table>
+<p>数据是一批公开的轴承振动信号（2400 条样本、每条 4096 点、四种负载、10 类运行状态），约束是<strong>完全不使用故障标签</strong>，管线为&quot;归一化滤波 → 多域特征 → 标准化与 PCA → 聚类 → 多指标评估&quot;。与本文相关的结论有三条：高维原始信号直接聚类近乎随机分组；人工高级特征带来一次跃升（0.1026→0.3792）；注入物理先验后同一批聚类器的 ARI 升到 0.92 量级，而跨负载验证（0.79→0.92 的反超）说明好的度量空间应压缩工况差异、放大故障差异。</p>
+<h2>九、常见误区与原料勘误</h2>
+<ol><li><strong>把 K 均值当全局最优</strong>：它是 NP 难问题的贪心近似，&quot;簇划分不变&quot;只是局部稳定点，换初值重跑是必要动作。</li><li><strong>把层次聚类的簇间距离当客观量</strong>：§4.3 复算显示同一对簇在三种 linkage 下是 5.6569、8.4853、7.1064，换准则会改合并顺序与树高。</li><li><strong>以为层次聚类可边合并边修正</strong>：合并不可回溯；单链接有链式效应，全链接撕裂大簇且对离群点敏感。</li><li><strong>以为 GMM 比 K 均值万能</strong>：GMM 同样要预设 $k$、EM 同样局部最优、协方差参数量随维度迅速膨胀；原料实测里 GMM（0.7879）在球形凸簇上不敌 BIRCH（0.8876）与 Ward 层次（0.8169）。</li><li><strong>只看一个指标</strong>：纯度可被&quot;人人单独成簇&quot;刷到 1，DBSCAN 的 95.99% 即属虚高；轮廓系数 0.6351 可以配 ARI 0.0531。</li></ol>
+<p><strong>勘误汇总</strong>（本文数值均以标准库程序按公式复核）：</p>
+<table>
+<tr><th>序号</th><th>出处</th><th>原料表述</th><th>复核结果</th><th>判据</th></tr>
+<tr><td>1</td><td>西瓜三点 K 均值</td><td>$x_2$ 到 $\mu_1$ 约 0.46</td><td>0.3962</td><td>$\sqrt{0.371^{2}+0.139^{2}}=\sqrt{0.156962}$</td></tr>
+<tr><td>2</td><td>西瓜 30 点 GMM E 步</td><td>密度 0.010、2.791、0.635</td><td>0.8056、1.4893、1.3880</td><td>$\Sigma=0.1I$ 时密度上界 $1/(2\pi\times0.1)\approx1.5915$，2.791 越界</td></tr>
+<tr><td>3</td><td>同上责任度</td><td>0.003、0.813、0.184</td><td>0.2188、0.4044、0.3769</td><td>同一密度代入 $\gamma$ 公式；argmax 仍为成分 2</td></tr>
+<tr><td>4</td><td>同上 M 步</td><td>$\mu\approx(0.353,0.215)$ 等三组，$\alpha=0.333,0.367,0.300$</td><td>$\mu=(0.4893,0.2505),(0.5686,0.2820),(0.5320,0.2949)$，$\alpha=0.362,0.322,0.316$</td><td>30 样本全量 E 步 + 加权 M 步复算</td></tr>
+<tr><td>5</td><td>层次聚类复杂度</td><td>一处 $O(n^{3})$，一处 $O(n^{2})$</td><td>原料内部不统一，本文两处并存</td><td>非数值问题，不改判</td></tr>
+<tr><td>6</td><td>Rand 指数分母</td><td>$2(a+d)/10$</td><td>式子应为 $2(a+d)/20$，数值同为 0.6</td><td>$m=5$ 时 $m(m-1)=20$</td></tr>
+</table>
+<h2>十、总结要点</h2>
+<table>
+<tr><th>知识块</th><th>必记结论</th></tr>
+<tr><td>任务差别</td><td>聚类无标签，只给出划分 $\lambda$；簇的语义由使用者命名</td></tr>
+<tr><td>距离与预处理</td><td>四条性质缺一不可；$p=1$ 曼哈顿、$p=2$ 欧氏、$p\to\infty$ 取最大绝对差、$0\le p&lt;1$ 不满足直递性；无序离散属性用 VDM；量纲不一致必须先标准化，高维原信号上距离失效</td></tr>
+<tr><td>K 均值</td><td>最小化簇内平方和，两步交替；$E$ 单调不增，算例为 8.00→4.00 与 0.01299→0.00649；贪心、NP 难、初值敏感、只球形、怕噪声</td></tr>
+<tr><td>层次聚类</td><td>AGNES 自底向上、DIANA 自顶向下；三种 linkage 给出的簇间距离不同；合并后按递推式更新距离矩阵；不能回溯，可切树定簇数</td></tr>
+<tr><td>高斯混合</td><td>软分配靠责任度 $\gamma_{ji}$；E 步算后验、M 步加权更新 $\alpha,\mu,\Sigma$；参数无解析解故用 EM，按对数似然增幅判停；$\Sigma$ 取单位阵且硬指派时退化为 K 均值</td></tr>
+<tr><td>DBSCAN</td><td>核心对象、边界点、噪声点；密度直达→可达→相连；不用定簇数、任意形状、自动去噪，但密度不均与高维场景失效</td></tr>
+<tr><td>簇质量</td><td>外部：JC、FMI、RI、ARI $[-1,1]$、NMI $[0,1]$、纯度 $[0,1]$（可虚高）；内部：轮廓系数 $[-1,1]$（$&lt;0$ 即分错簇）、DB 越小越好、Dunn 越大越好、CH 越大越好</td></tr>
+<tr><td>选型</td><td>球形均匀用 K 均值；椭圆斜向用 GMM；任意形状带噪声用 DBSCAN；看层次用层次聚类；非凸环形用谱聚类；上限取决于特征空间而非算法</td></tr>
+</table>
+<p>全部方法都在同一目标上做工——簇内紧、簇间分，差别只在&quot;用什么代表簇&quot;（点、分布、密度连通区域、层次树）与&quot;用什么方式划分&quot;（硬指派、软概率、合并、扩张）；评价侧的分工是：内部指标只回答几何好不好看，外部指标才回答簇的语义对不对，0.6351 轮廓系数配 0.0531 ARI 就是混淆两者的代价。本文重跑四道算例并勘误六处，正是为了把&quot;参考答案&quot;与&quot;按公式可验证的事实&quot;分开。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 机器学习第9章聚类试卷 / 聚类章节考试模拟题与讲解 / 聚类算法讲解 / 解释高斯聚类 / 聚类方法性能对比 / 聚类方法对比实验结果 / 轴承故障无监督聚类检测报告</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

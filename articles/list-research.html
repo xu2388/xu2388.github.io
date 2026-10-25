@@ -9,30 +9,85 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">科研与学习档案</h1>
-<p class="site-subtitle">研究文章 · 7 篇</p>
-<nav class="site-nav"><a href="../index.html">首页</a><a class="active" href="../index.html#research">科研<span class="n">8</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">研究文章 · 18 篇</p>
+<nav class="site-nav"><a href="../index.html">首页</a><a class="active" href="../index.html#research">科研<span class="n">20</span></a><a href="../index.html#learning">学习<span class="n">8</span></a><a href="../index.html#essays">随笔<span class="n">2</span></a><a href="../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
 </div></header>
 <main class="container">
 <nav class="crumbs"><a href="../index.html">首页</a> / 研究文章</nav>
 <h1 class="list-title">研究文章</h1>
-<p class="list-sub">虚拟染色主线的完整研究文章：问题、方法、实验与自我推翻，保留原始数据与结论。　共 7 篇</p>
+<p class="list-sub">虚拟染色主线的完整研究文章：问题、方法、实验与自我推翻，保留原始数据与结论。　共 18 篇</p>
 <ul class="article-list">
 <li>
-  <a href="001-虚拟染色主线.html">虚拟染色这一年：从扩散模型到 CUT，一条路我走死了又走活了</a><span class="date">2026-10-24</span><br />
+  <a href="011-DGR抗错位虚拟染色精读.html">DGR：面向错位鲁棒的虚拟染色——论文深度解读</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span>
+  <span class="desc">解读 DGR（Misalignment-Resistant Virtual Staining）如何用解耦与区域对齐放弃逐点对应，在配准误差下仍保持结构可判读，并讨论其对本项目结构控制路线的可借鉴之处。</span>
+</li>
+<li>
+  <a href="012-StarDiff复原扩散精读.html">Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span>
+  <span class="desc">解读 Star-Diffusion 如何针对复染（special stains）设计扩散框架，梳理其结构约束与染色控制策略，并评估其思路在浓度域路线中的可移植性。</span>
+</li>
+<li>
+  <a href="013-PSPStain语义保持精读.html">PSPStain：病理语义保持的虚拟染色——论文深度解读</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span>
+  <span class="desc">解读 PSPStain 如何以病理语义保持为核心目标组织训练与评价，覆盖其语义监督设计、数据策略与指标体系，作为语义可判读性路线的代表作分析。</span>
+</li>
+<li>
+  <a href="014-PST-Diff结构约束精读.html">PST-Diff：病理结构约束的扩散染色——论文深度解读</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span>
+  <span class="desc">逐式解读 PST-Diff 如何把结构约束嵌入扩散采样：以条件频率引导（CFG）按频率分阶段注入 H&amp;E 结构、用不对称注意力分离结构与外观、以潜空间距离项约束配对，并讨论该路线在错位数据与结构-染色权衡上的边界与可借鉴之处。</span>
+</li>
+<li>
+  <a href="015-浓度空间扩散M0实践.html">从零实现浓度空间扩散基线 M0：H&amp;E→IHC 虚拟染色的最小可行实践</a><span class="date">2026-10-25</span><br />
+  <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">浓度域</span> <span class="tag">Beer-Lambert</span> <span class="tag">实践教程</span>
+  <span class="desc">本文给出 H&amp;E→IHC 虚拟染色最小可行基线 M0 的完整实现方案：以比尔-朗伯定律将两模态解混为染料浓度，仅在 DAB 单通道上做 v-参数化条件扩散、H/E 浓度全程保持干净作为条件，经 DDIM 百步采样与物理回投重建 IHC；并配套四道工程闸门、三级 baseline 与 U0→U1→U2 条件消融判据，使&quot;浓度空间扩散能否工作&quot;成为可证伪的问题。</span>
+</li>
+<li>
+  <a href="016-潜空间扩散的表示改造.html">潜空间扩散该预测什么：从 x-prediction、流匹配到病理模态转移的表示改造</a><span class="date">2026-10-25</span><br />
+  <span class="tag">扩散模型</span> <span class="tag">潜空间</span> <span class="tag">流匹配</span> <span class="tag">x-prediction</span> <span class="tag">虚拟染色</span>
+  <span class="desc">潜空间扩散有三个可独立改动的旋钮：表示空间、预测目标、条件注入。ε、x₀、v 只是同一目标在不同噪声水平上的加权差异，三者对 x₀ 误差的隐含加权之比为 α²:1:σ²；x₀-预测在原生像素上可行靠的是流形假设，潜空间压缩掩盖而非解决容量问题。而病理模态转移缺配对切片，目标模态作条件只能约束分布、给不出像素级对应，前两个旋钮的改造因此无法单独兑现。原料中的论文编号与指标已逐条联网核实，不符者列入勘误。</span>
+</li>
+<li>
+  <a href="017-病理潜扩散的条件注入连读.html">条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">条件注入</span> <span class="tag">潜空间</span>
+  <span class="desc">StainDiffuser 与 StainFuser 分别回答「条件从哪一层进入扩散模型」：前者在像素空间 DDPM 上以共享 H&amp;E 编码器加分割辅助分支，把目标细胞定位先验做成仅训练期生效的多任务约束（染色损失加 λ 倍分割损失）；后者在 Stable Diffusion 潜空间同时注入双条件——目标风格经 VAE 编码作交叉注意力的键值，源形态经零初始化卷积逐层加性嵌入。本文连读两篇，给出六维横向对照与数值核实清单（剔除三处不可采信项），并提出「注入位置决定推理输入、配对需求与语义上限」这一核心判断。</span>
+</li>
+<li>
+  <a href="018-DiNof归一化流与扩散融合.html">DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">归一化流</span> <span class="tag">扩散模型</span> <span class="tag">流匹配</span> <span class="tag">生成模型</span>
+  <span class="desc">DiNof 把 SDE 型扩散与 Glow 类可逆归一化流串联成两段式生成过程：前向前半程随机加噪、后半程由归一化流确定性映射到高斯分布，采样因而只需约 600 步并在 CIFAR-10 上把 FID 从同架构纯扩散的 4.29 压到 2.01，同时保留精确似然的可算性。本文精读其分段机制、联合训练与 Tm 消融，把流/混合生成与纯扩散并列为两条路线，并评估其对虚拟染色少步采样与密度可算诉求的迁移价值。</span>
+</li>
+<li>
+  <a href="019-DUST双染色扩散精读.html">DUST：双染色嵌入与动态双头扩散的统一染色转换 —— 论文精读</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">组织病理学</span> <span class="tag">染色转换</span>
+  <span class="desc">把 H&amp;E、MT、PAS、PASM 四种肾病理染色的 12 个互转方向收进同一个 DDPM：源域与目标域用整数向量 r 双编码（源记 1、目标记 2）作为条件，输出头由 3 通道扩到 9 通道，同时预测噪声、原图与逐通道融合权重，再以三项 MSE（噪声、重建、后验均值）联合训练。概念验证循环 H&amp;E→MT→PASM→PAS→H&amp;E 上平均 FID 约 42、KID 约 0.02，优于 CycleGAN（H&amp;E→MT 为 54.03）与 Palette（87.35）。</span>
+</li>
+<li>
+  <a href="020-UMDST多染色统一转换精读.html">UMDST：无监督多染色图像转换的统一框架 —— 论文精读</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">染色转换</span> <span class="tag">无监督</span> <span class="tag">肾脏病理</span>
+  <span class="desc">针对肾脏病理「每种染色对各建一个模型」的成本困境，UMDST（AAAI 2022）用单一非配对 GAN 同时支持 H&amp;E、MAS、PAS、PASM 四种染色之间的任意转换：风格引导归一化（SGN）以目标域风格仿射因子平衡内容与风格，多风格编码（MSE）把染色标签映射为可学习风格码，改进独热标签（δ=0.05）进一步解锁混合染色与对比度调节；ANHIR 数据集上 CSS 达 0.682 / 0.674 / 0.600（MAS / PAS / PASM），五位病理医生评分 ER=4.4（与 UGATIT 持平）。</span>
+</li>
+<li>
+  <a href="021-VisionMamba状态空间骨干精读.html">Vision Mamba：把状态空间模型做成视觉骨干——线性复杂度与病理图像的适配性</a><span class="date">2026-10-25</span><br />
+  <span class="tag">论文精读</span> <span class="tag">状态空间模型</span> <span class="tag">Mamba</span> <span class="tag">视觉骨干</span> <span class="tag">病理图像</span>
+  <span class="desc">Vim 用选择性状态空间模型替代自注意力：连续 SSM 经零阶保持离散化成 h_t = exp(ΔA)h_{t-1} + ΔBx_t，其中 Δ、B、C 由当前 patch 特征线性生成，使状态的记住/遗忘随内容而变；再靠双向扫描 + 每路前置 Conv1d 与 ViT 式分类头，把序列建模开销从 4MD² + 2M²D 降到 8MDN。论文报告 Vim-Ti 在 ImageNet-1K 达 76.1%、1248×1248 批推理比 DeiT 快 2.8 倍且省 86.8% 显存、ADE20K mIoU 41.0。对千兆像素级、patch 序列动辄上千万的 WSI 而言，这条线性路线直击病理大模型的实际瓶颈。</span>
+</li>
+<li>
+  <a href="001-虚拟染色主线.html">虚拟染色研究一年记：从扩散模型到 CUT 的路线演进与结论</a><span class="date">2026-10-24</span><br />
   <span class="tag">主线</span> <span class="tag">虚拟染色</span> <span class="tag">H&amp;E→IHC</span> <span class="tag">扩散模型</span> <span class="tag">CUT/GAN</span>
-  <span class="desc">我一年多虚拟染色研究的完整自述：从扩散模型起步、撞上「有色调无结构」、找扩散里的 CUT、因为训练成本转投 CUT-GAN、再到浓度域和逐像素跨图不可迁移的硬结论。保留了我自己的困惑、自我推翻和原始数据。</span>
+  <span class="desc">本文系统回顾一年多来的虚拟染色（H&amp;E→IHC）研究：从扩散模型起步、遇到「有色调无结构」问题、调研扩散框架中 CUT 的对应物、因训练成本转投 CUT-GAN，再到浓度域探索与「逐像素跨图不可迁移」的结论。保留思路演变、自我推翻的判断过程与原始数据。</span>
 </li>
 <li>
-  <a href="002-逐像素跨图不可迁移.html">为什么 H&amp;E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据</a><span class="date">2026-10-24</span><br />
+  <a href="002-逐像素跨图不可迁移.html">为什么 H&amp;E 到 DAB 的逐像素预测不可行：一份归因报告的关键数据</a><span class="date">2026-10-24</span><br />
   <span class="tag">主线</span> <span class="tag">归因</span> <span class="tag">逐像素跨图</span> <span class="tag">BCI数据集</span> <span class="tag">H-score</span>
-  <span class="desc">一份内部 M0 归因报告告诉我：H&amp;E 预测 DAB 在逐像素、跨图口径下根本不可学，不是模型没调好，是数据里没这个规律。本文保留全部硬数据（8px 输给常数 −16.3%、625 个平移全救不回、跨图块级 r≈0、22.5px 错位）和我当时的困惑。</span>
+  <span class="desc">一份内部 M0 归因报告表明：H&amp;E 预测 DAB 在逐像素、跨图口径下不可学习，原因不在模型调优，而在数据中不存在相应规律。本文保留全部关键数据（8px 块输给常数基线 −16.3%、625 个平移均无法挽回、跨图块级 r≈0、22.5px 中位错位）以及当时的判断过程。</span>
 </li>
 <li>
-  <a href="003-肾脏病理分割这条线.html">肾脏病理分割这条线：从&quot;急着交结果&quot;到&quot;回头磕边界&quot;的一次绕远路</a><span class="date">2026-10-24</span><br />
+  <a href="003-肾脏病理分割这条线.html">肾脏病理分割研究复盘：从复现 SOTA 到回归边界问题</a><span class="date">2026-10-24</span><br />
   <span class="tag">研究</span> <span class="tag">病理分割</span> <span class="tag">病灶分割</span> <span class="tag">频域</span> <span class="tag">边界优化</span> <span class="tag">风格迁移</span>
-  <span class="desc">一开始我只是想复现个 SOTA 模型把 Masson/PAS/PASM 三染色的病灶分割结果交上去，结果这条线一路带我摸过 nnU-Net、GloPath、Swin-UNETR，又为扩数据拐进了文本驱动风格迁移，最后自己绕回起点，卡在边界模糊这个真问题上。本文按时间顺序留下完整的思路演变、我引用的每个模型的指标、我实测的那组 Dice/IoU，和一路的自我推翻。</span>
+  <span class="desc">最初的目的是复现一个 SOTA 模型，完成 Masson/PAS/PASM 三染色的病灶分割任务；此后这条线索先后经过 nnU-Net、GloPath、Swin-UNETR 的调研，又为扩充数据转入文本驱动风格迁移，最终回到起点，收敛于边界模糊这一核心问题。本文按时间顺序记录完整的思路演变、所引用各模型的指标、实测的 Dice/IoU 数据，以及一路的自我推翻。</span>
 </li>
 <li>
   <a href="008-浓度空间Diffusion.html">从 RGB 到染料浓度域：H&amp;E→IHC 虚拟染色的物理可解释路线研究</a><span class="date">2026-10-24</span><br />

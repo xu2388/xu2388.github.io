@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HistDiST + DB-DCE 代码审查 —— 实现缺陷清单与 3500→4000 崩溃归因</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{display:flex;max-width:1560px;margin:0 auto}
+nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--softer)}
+nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}
+nav.toc a:hover{background:#eef0f3;color:var(--blue)}
+nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}
+nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}
+main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px}
+header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}
+header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}
+header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}
+h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}
+h2 .num{color:var(--blue);font-weight:800;margin-right:8px}
+h3{font-size:18px;margin:34px 0 12px}
+h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}
+h4{font-size:15.5px;margin:22px 0 8px;color:var(--text)}
+p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}
+a{color:var(--blue)}
+code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}
+.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}
+.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}
+.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}
+.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}
+.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}
+.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}
+.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}
+.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:700px}
+thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12.3px}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}
+td.c,th.c{text-align:center}
+.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}
+.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}
+.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}
+.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}
+.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}
+.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}
+.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}
+.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}
+.card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:#fff}
+.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.card .title{font-weight:700;font-size:15px;line-height:1.45}
+.card .v{font-size:12px;color:var(--muted);margin-top:3px}
+.card .body{padding:6px 18px 18px}
+.card .body p{font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}
+.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}
+.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}
+pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+.flow{border:1px solid var(--border);border-radius:10px;padding:16px 20px;background:var(--softer);margin:16px 0}
+.small{font-size:12.5px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:22px}}
+@media print{nav.toc{display:none}main{padding:0;max-width:none}.card{break-inside:avoid}h2{break-before:page}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">代码审查</div>
+  <div class="sub">HistDiST + DB-DCE<br>实现缺陷与崩溃归因</div>
+  <a class="l1" href="#s0">0 · 结论先行</a>
+  <a class="l1" href="#s1">1 · P0 缺陷（三条）</a>
+  <a class="l2" href="#s1-1">1.1 aux 梯度对 UNet 无门控</a>
+  <a class="l2" href="#s1-2">1.2 两个 1/x 梯度放大器</a>
+  <a class="l2" href="#s1-3">1.3 clamp(±6) 与数据箱冲突</a>
+  <a class="l1" href="#s2">2 · P1 缺陷（六条）</a>
+  <a class="l2" href="#s2-1">2.1 p_tok 无界无监控</a>
+  <a class="l2" href="#s2-2">2.2 采样只钳终潜码</a>
+  <a class="l2" href="#s2-3">2.3 l_freq 不具尺度不变性</a>
+  <a class="l2" href="#s2-4">2.4 潜码箱 ch2 在 9.35σ</a>
+  <a class="l2" href="#s2-5">2.5 GradSurgery 共享 cos_ema</a>
+  <a class="l2" href="#s2-6">2.6 gate=off 原因不可辨</a>
+  <a class="l1" href="#s3">3 · P2 缺陷与工程债</a>
+  <a class="l1" href="#s4">4 · 崩溃窗口的定量证据</a>
+  <a class="l1" href="#s5">5 · 机理假说与可证伪预测</a>
+  <a class="l1" href="#s6">6 · 行动清单</a>
+  <a class="l1" href="#s7">7 · 与既有结论的衔接</a>
+  <a class="l1" href="#s8">8 · 文档勘误</a>
+  <a class="l1" href="#s9">9 · 浓度图策略对比 ★</a>
+  <a class="l2" href="#s9-1">9.1 代码用的是 scheme B</a>
+  <a class="l2" href="#s9-2">9.2 两条策略的形式化</a>
+  <a class="l2" href="#s9-3">9.3 四个后果（量化）</a>
+  <a class="l2" href="#s9-4">9.4 它正好解释梯度炸弹</a>
+  <a class="l2" href="#s9-5">9.5 三个选项</a>
+  <a class="l2" href="#s9-6">9.6 五行诊断</a>
+  <a class="l1" href="#s10">10 · 关键数值速查</a>
+</nav>
+
+<main>
+
+<header class="doc">
+  <div class="kicker">Code Review · 实现缺陷与崩溃归因</div>
+  <h1>HistDiST + DB-DCE 代码审查<br>—— 17 处实现缺陷与 step 3500→4000 崩溃的机理归因</h1>
+  <p class="desc">审查对象：<code>/Users/hua/Downloads/histdist_full/HistDiST/</code>（710 行主循环 + 6 个模块 + 全部日志/采样图证据）。所有结论均标注文件与行号，可直接对照复核。</p>
+  <div class="meta">
+    <span>2026-10-04</span>
+    <span>代码 1310 行</span>
+    <span>日志 181 行 CSV / 531 行 TXT</span>
+    <span>17 处缺陷</span>
+    <span>P0 × 3 · P1 × 6 · P2 × 8</span>
+    <span>基于 bf16 段（step 500→4525）</span>
+    <span>含浓度图策略对比 §9</span>
+  </div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>结论先行</h2>
+
+<div class="box key">
+  <div class="bt">一句话结论</div>
+  <p><strong>这不是「某个超参数没调好」，而是三条结构性缺陷叠在一起：辅助损失的梯度对 UNet 完全无门控、无裁剪，而它本身含两个 1/x 放大器；同时辅助损失被一个比数据流形宽 4.26 倍的 clamp 训练。三者组合产生正反馈——生成图变暗 → 梯度爆炸 → 全局 clip 把主损失的学习率压掉 → 辅助损失接管更新方向 → 生成图更暗。step 3500→4000 的「突然崩成纯噪声」与这个正反馈的形态吻合。</strong></p>
+  <p><strong>而且其中那个 1/x 放大器不是独立 bug，是策略选择的后果</strong>：代码走的是 <strong>scheme B</strong>（从生成的 RGB <strong>反演</strong>浓度），而 R2 报告里你定的 M1 是<strong>正演</strong>（U-Net 直接输出浓度图 → Beer-Lambert 渲染）。<strong>整条正演路径在这个仓库里是死代码（<code>render_ihc</code> 从未被调用）。</strong>正演方案里 <code>log</code> 的自变量恒大于 0，那个梯度炸弹<strong>结构上不可能存在</strong>。详见 §9。</p>
+  <p class="small">需要诚实标注：三条缺陷本身是<strong>代码事实</strong>（可逐行复核）；把它们串成崩溃原因是<strong>高置信度假说</strong>，不是已证实的结论。第 5 节给了可证伪的预测与判定实验。</p>
+</div>
+
+<h3>最需要先看的三件事</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:34px">#</th><th>缺陷</th><th>位置</th><th>后果（已量化）</th><th class="c">严重度</th></tr></thead>
+<tbody>
+<tr>
+  <td class="c"><strong>1</strong></td>
+  <td>辅助损失经 <code>aux.backward()</code> 把梯度<strong>直接累加进 UNet 的 860M 参数</strong>，而门控只保护 <code>dbdce + protein_adapter</code>；随后 <code>clip_grad_norm_(trainables, 1.0)</code> 对<strong>全体参数的总范数</strong>裁剪 → 辅助梯度一大，主损失的梯度就被同比例压小</td>
+  <td><code>losses.py</code> L109–164<br><code>training_dbdce.py</code> L204 / L656–667</td>
+  <td>辅助梯度范数若达 10³，该步 <code>l_diff</code> 的有效步长被压到 <strong>0.1%</strong>，更新方向几乎全由辅助损失决定</td>
+  <td class="c"><span class="b bad">P0</span></td>
+</tr>
+<tr>
+  <td class="c"><strong>2</strong></td>
+  <td>辅助损失的梯度有两个 <strong>1/x 放大器</strong>：颜色解卷积的 <code>-log10(I/I0)</code>（<code>clamp</code> 限了值没限梯度，d/dI = −1/(I·ln10)），以及频带能量的 <code>log(sx)</code>（<strong>退化参考被 mask 处理了，退化预测没有</strong>）</td>
+  <td><code>physics.py</code> L49<br><code>losses.py</code> L61–63</td>
+  <td>预测图变暗时单元素梯度可达 <strong>10³–10⁶</strong>；这正是缺陷 1 被触发的方式</td>
+  <td class="c"><span class="b bad">P0</span></td>
+</tr>
+<tr>
+  <td class="c"><strong>3</strong></td>
+  <td>辅助损失的 x̂₀ 用 <code>clamp(±6)</code>，主通路与采样器用<strong>数据分位数箱</strong>。实际箱的上界是 <code>[3.81, 4.04, 1.41, 1.74]</code> → <strong>通道 2 的 ±6 比数据箱宽 4.26 倍</strong></td>
+  <td><code>training_dbdce.py</code> L564 vs L515/541/282</td>
+  <td>辅助损失<strong>主动奖励离流形潜码</strong>，采样器再把它截回去 —— 训练/推理流形不一致，且随缺陷 1 放大而加剧</td>
+  <td class="c"><span class="b bad">P0</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+  <div class="bt">顺带发现：一个被日志掩盖的关键信号</div>
+  <p>全run 9 个 <code>gate=off</code> 的翻译步里，<strong>有 5 个挤在 3500–4000 窗口内</strong>（该窗口只有 11 个翻译步，45% off，而全段只有 11.2%）。按 i.i.d. dropout 模型，这个聚集的概率约 <strong>0.9%</strong>。所以这些 off <strong>几乎不可能是 dropout，而是「解码输出非有限 → aux 被静默跳过」</strong>。</p>
+  <p>也就是说：<strong>崩溃前夜，解码器已经在反复输出非有限值了。</strong>但这个信号完全不可见——因为代码把 dropout 和非有限解码都记成同一个 <code>off</code>，没有记录原因（缺陷 2.6）。这是本轮审查里最「便宜」的一个发现：加一个字段就能把崩溃前 500 步的预警显示出来。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>P0 缺陷：三条结构性错误</h2>
+
+<h3 id="s1-1">1.1 辅助损失的梯度对 UNet 完全无门控，却被全局裁剪</h3>
+
+<p>门控参数在 <code>training_dbdce.py</code> L204 定义：</p>
+
+<pre><code>gate_params = list(dbdce.parameters()) + list(protein_adapter.parameters())
+gate = GradSurgery(gate_params, mode=args.gate, ema=args.gate_ema)</code></pre>
+
+<p>而辅助损失的梯度路径是 <code>l_prot / l_freq → c_pred → pred01 → pred_rgb → x̂₀ → model_pred → UNet</code>。这条链<strong>穿过 UNet</strong>。在 <code>losses.py</code> L116–120：</p>
+
+<pre><code>for k, (name, aux) in enumerate(aux_losses.items()):
+    for p in self.params:          # 只清 gate_params 的梯度
+        p.grad = None
+    aux.backward(retain_graph=(k &lt; n_aux - 1))   # UNet 的梯度在这里被直接累加</code></pre>
+
+<p><code>aux.backward()</code> 对<strong>非门控参数</strong>（即 UNet 的全部权重）是累加写入的，从不经过 <code>cos</code> 判定，也从不清零。所以：</p>
+
+<ul>
+  <li>辅助损失进 UNet 的梯度 —— <strong>无门控、无监控、无单独裁剪</strong>；</li>
+  <li>随后 L667 执行 <code>clip_grad_norm_(trainables, 1.0)</code>，这是对 <strong>UNet + dbdce + adapter 全体参数总范数</strong>的一次性裁剪。</li>
+</ul>
+
+<div class="box stop">
+  <div class="bt">这才是真正的伤害机制</div>
+  <p>设某步 <code>l_diff</code> 的梯度范数为 ‖g_main‖，辅助损失的梯度范数为 ‖g_aux‖。全局裁剪系数为</p>
+  <pre><code>clip_coef ≈ 1.0 / (‖g_main‖ + ‖g_aux‖)</code></pre>
+  <p>当 ‖g_aux‖ ≫ ‖g_main‖ 时，<strong>主损失的梯度也被同一个系数乘小</strong>——也就是说：<strong>辅助损失一旦梯度爆炸，就顺手把主损失的学习率压到接近 0，把这一步的更新方向整个交给辅助损失。</strong></p>
+  <p>代码里有一条注释（L578–580）表明作者<strong>意识到</strong>了这个风险：</p>
+  <pre><code># Pre-filter non-finite aux losses: a NaN aux backward would
+# accumulate NaN into UNet grads and make GradScaler skip the ENTIRE step
+if math.isfinite(l_prot.item()): ...</code></pre>
+  <p><strong>但守的是「损失值」不是「梯度」。</strong>一个有限的损失完全可以有非有限或极大的梯度——<code>losses.py</code> L136 的 <code>isfinite(g_aux)</code> 检查正是为此写的，可它<strong>只覆盖门控参数</strong>。UNet 完全裸露。这个「写了守、守错了地方」的模式是本项目最值得记住的一课。</p>
+</div>
+
+<h4>两种坏结局，取决于裸露的 UNet 梯度是 inf 还是 NaN</h4>
+
+<div class="scroll">
+<table>
+<thead><tr><th>情形</th><th><code>clip_grad_norm_</code> 行为</th><th>结果</th><th>本 run 是否发生</th></tr></thead>
+<tbody>
+<tr><td>UNet 梯度 <strong>有限但极大</strong></td><td><code>clip_coef ≈ 0</code></td><td>全体梯度被压向 0，该步近乎空转；方向由辅助损失主导</td><td><span class="b medium">最可能</span></td></tr>
+<tr><td>UNet 梯度含 <strong>inf</strong></td><td><code>clip_coef = 1/(inf+1e-6) = 0</code></td><td><strong>静默空转步</strong>（无报错、无日志）</td><td><span class="b medium">可能</span></td></tr>
+<tr><td>UNet 梯度含 <strong>NaN</strong></td><td><code>clip_coef = NaN</code> → 梯度全变 NaN</td><td><code>optimizer.step()</code> 把 <strong>全部 860M 权重写成 NaN</strong>，一步毁模型</td><td><span class="b high">未发生</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>本 run 权重始终有限（step 4000–4525 的 <code>l_diff</code> 仍是 0.43–0.93），所以第三种没发生。但它是<strong>已经埋好的地雷</strong>：只要某一步 UNet 收到 NaN 梯度，整个模型一步报废，而且 NaN 检测器（L592）是在<strong>下一次</strong>前向才会发现——那时权重已经坏了。</p>
+
+<h3 id="s1-2">1.2 辅助损失的梯度为什么能无界：两个 1/x 放大器</h3>
+
+<p>两个地方用了同一个错误模式——<strong><code>clamp</code> 限住了函数值，但没限住梯度</strong>。</p>
+
+<h4>放大器 A：颜色解卷积（<code>physics.py</code> L49）</h4>
+
+<pre><code>return (-torch.log10((img.clamp(1e-6, 1.0)) / i0)).clamp(min=0.0)</code></pre>
+
+<p>值域确实被夹住了：<code>OD ∈ [0, 6]</code>（因为 <code>img/i0</code> 最小 1e-6，<code>-log10(1e-6)=6</code>）。但梯度是</p>
+
+<pre><code>d(OD)/d(img) = -1 / (img · ln10)</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>预测图该像素的亮度 <code>img</code></th><th class="c">1.0</th><th class="c">0.1</th><th class="c">1e-3</th><th class="c">1e-4</th></tr></thead>
+<tbody>
+<tr><td>梯度放大倍数</td><td class="c">0.43×</td><td class="c">4.3×</td><td class="c"><strong>434×</strong></td><td class="c"><strong>4340×</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>生成图一旦整体变暗，大量像素落进 <code>10⁻³–10⁻⁴</code> 这个高增益带。再乘上 <code>l_prot</code> 的 λ=0.1 与伪逆矩阵的量级，<strong>单元素梯度就能到 10³–10⁴</strong>。这就是 1.1 里 ‖g_aux‖ ≫ ‖g_main‖ 的来源。</p>
+
+<h4>放大器 B：频带能量的 log（<code>losses.py</code> L61–63）</h4>
+
+<pre><code>ok = sy &gt; 0                                    # ← 退化参考：处理了
+n = ok.sum().clamp(min=1)
+d = (sx.clamp(min=1e-8).log() - sy.clamp(min=1e-8).log()).abs()
+#    ↑ 退化预测：没处理</code></pre>
+
+<p>作者为「整块苏木精解卷积为 0 的退化参考」写了逐样本屏蔽（注释 L57–60 写得很清楚），<strong>但对退化的预测 sx→0 完全没有防护</strong>。同样是 <code>clamp</code> 只保值不限梯度：<code>d/d(sx) ∝ 1/sx</code>，<code>sx=1e-5</code> 时梯度 10⁵。</p>
+
+<div class="box pur">
+  <div class="bt">这是一个不对称的疏忽，而且方向很关键</div>
+  <p>参考图（真实 H&E）退化是<strong>数据问题</strong>，概率低；预测图退化是<strong>模型自己造成的</strong>，恰恰在模型学坏的时候大量出现。<strong>防护写在了不常发生的那一侧，没写在必然发生的那一侧。</strong></p>
+</div>
+
+<h3 id="s1-3">1.3 <code>clamp(±6)</code> 与数据箱冲突：辅助损失被奖励去产生离流形潜码</h3>
+
+<p>三处钳位口径不一致，直接读 <code>runs/bci_v6/latent_bounds.pt</code> 拿到实际数值：</p>
+
+<pre><code>lo   = [-1.4165, -1.4274, -5.6112, -2.2867]
+hi   = [ 3.8125,  4.0383,  1.4067,  1.7437]
+mean = [ 0.8118,  0.7481, -0.1798, -0.4605]
+std  = [ 0.6686,  0.7015,  0.5811,  0.5972]</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>位置</th><th>用途</th><th>钳位</th></tr></thead>
+<tbody>
+<tr><td><code>L515–516</code></td><td><code>target_lat</code>（主通路）</td><td>数据箱 <code>latent_lo/hi</code></td></tr>
+<tr><td><code>L541–542</code></td><td><code>s_lat</code>（结构条件）</td><td>数据箱 <code>latent_lo/hi</code></td></tr>
+<tr><td><code>L282–283</code></td><td>采样器终潜码</td><td>数据箱 <code>latent_lo/hi</code></td></tr>
+<tr><td><code>L564</code></td><td><strong><code>x̂₀</code>（辅助损失用）</strong></td><td><strong><code>clamp(-6, 6)</code></strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>把 ±6 换算成「比数据箱宽多少倍」：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>通道</th><th class="c">数据箱上界</th><th class="c">±6 相对上界</th><th class="c">数据箱下界</th><th class="c">−6 相对下界</th></tr></thead>
+<tbody>
+<tr><td>ch0</td><td class="c">3.81</td><td class="c">1.57×</td><td class="c">−1.42</td><td class="c">4.23×</td></tr>
+<tr><td>ch1</td><td class="c">4.04</td><td class="c">1.49×</td><td class="c">−1.43</td><td class="c">4.20×</td></tr>
+<tr><td><strong>ch2</strong></td><td class="c"><strong>1.41</strong></td><td class="c"><strong>4.26×</strong></td><td class="c">−5.61</td><td class="c">1.07×</td></tr>
+<tr><td><strong>ch3</strong></td><td class="c"><strong>1.74</strong></td><td class="c"><strong>3.45×</strong></td><td class="c">−2.29</td><td class="c">2.62×</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+  <div class="bt">后果：辅助损失在训练模型生产「采样器一定会丢掉的东西」</div>
+  <p>通道 2 的上界只有 <code>1.4067</code>，而辅助损失的 clamp 允许 <code>+6.0</code>。通道 2 的下界是 <code>−5.61</code>，而 clamp 允许 <code>−6.0</code>。<strong>也就是说：辅助损失监督的那个 x̂₀，合法取值范围比真实数据流形宽 4.26 倍，而且宽的方向正是三个通道里上尾最紧的那两个。</strong></p>
+  <p>辅助损失是在浓度空间算的（DAB 的 L1 + 矩匹配）。要让 DAB 更浓，一个廉价解就是把潜码推到极端值。于是：<strong>辅助损失有明确的梯度动机把潜码推出流形；采样器再按数据箱把它截回来；截回来的那个潜码是「被削平过的离流形点」——正是解码出黑团/噪声的输入。</strong></p>
+  <p>这也顺带解释了为什么单靠收紧采样端的 clamp 只能把黑团减半：<strong>训练端在持续地把潜码往外推，你在推理端收紧只是把推出去的部分截掉，推力本身没消失。</strong></p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>P1 缺陷：六条设计问题</h2>
+
+<h3 id="s2-1">2.1 <code>p_tok</code> 是唯一无界、无监控的可训练注入</h3>
+
+<p><code>condition.py</code> L84–95 的 <code>ProteinAdapter</code>：</p>
+
+<pre><code>self.proj = nn.Linear(cond_ch, d_model)     # 64 → 768
+nn.init.zeros_(self.proj.weight); nn.init.zeros_(self.proj.bias)
+...
+return self.proj(tokens)                     # (B,256,768) —— 输出完全无界</code></pre>
+
+<p>上游 <code>DBDCE.prot_branch</code>（<code>encoders.py</code> L54–59）最后一层是裸 <code>conv2</code>，也没有输出归一化。所以<strong>从 DBDCE 到 p_tok 这条链上没有任何幅度约束</strong>。而 <code>p_tok</code> 直接充当 cross-attention 的 K/V。</p>
+
+<div class="grid2">
+<div class="mini">
+  <div class="mt">为什么这能造成「全图噪声」</div>
+  <p>K/V 的幅度直接决定 attention logits 的尺度。K/V 一大，softmax 进入饱和区，<strong>256 个 token 的权重会塌到极少数几个上</strong>——相当于把条件信息换成一个常数偏置。表现就是整张图失去结构，而不是局部出黑团。</p>
+</div>
+<div class="mini">
+  <div class="mt">监控缺口</div>
+  <p>NaN 检测器（L603–605）只打印 <code>|noisy_lat|</code> / <code>|model_pred|</code> / <code>|s_lat|</code>。<code>p_tok</code> 只出现在 <code>prov</code> 列表里（L599），而且<strong>只在 <code>l_diff</code> 已经变成非有限之后</strong>——损伤已经发生了。</p>
+</div>
+</div>
+
+<div class="box pur">
+  <div class="bt">一个很说明问题的反差</div>
+  <p>死代码 <code>StructAdapter</code>（v6 已弃用）身上带着一整套幅度控制：<code>RES_SCALE</code>、逐通道 RMS 归一化、3σ 裁剪、<code>raw_max</code> 监控（<code>condition.py</code> L22 / L64–80），注释里连「tanh 会在 resmax&gt;2 时饱和杀掉梯度」的教训都记下了。</p>
+  <p>而<strong>真正在用的 <code>ProteinAdapter</code> 一个都没有</strong>。<strong>纪律被用在了死路上，活路上是裸的。</strong>把 <code>StructAdapter</code> 那套（RMS 归一化 + 3σ clamp + 每 25 步记录 rms）原样搬到 <code>ProteinAdapter</code>，是改动最小、最可能直接见效的一步。</p>
+</div>
+
+<h3 id="s2-2">2.2 采样器只钳位终潜码，20 步 DDIM 全程无约束</h3>
+
+<p><code>training_dbdce.py</code> L276–283：</p>
+
+<pre><code>for t in ddim.timesteps:
+    unet_in = torch.cat([lat, s_lat.to(lat.dtype)], dim=1)
+    pred = unet(unet_in, t, encoder_hidden_states=p_tok.to(lat.dtype), return_dict=False)[0]
+    lat = ddim.step(pred, t, lat, return_dict=False)[0]   # ← 循环内不钳位
+lat_old = lat.clamp(-6, 6)                                 # ← 只在最后钳一次
+lat_used = lat.clamp(latent_lo, latent_hi) if ... else lat_old</code></pre>
+
+<p>轨迹可以在 20 步里跑到任意远的地方，只有终点被截回来。<strong>「每一步都逐通道钳位」不是可选项，是必需项</strong>——这也印证了此前给出的 Tier 1 建议（推理端逐步收紧）在代码层面的必要性。</p>
+
+<h3 id="s2-3">2.3 <code>l_freq</code> 不具尺度不变性：有非零底噪，且逼模型匹配一个任意的绝对浓度尺度</h3>
+
+<p><code>losses.py</code> L37–69。<code>x</code> 是<strong>预测 IHC 的苏木精通道</strong>，<code>y</code> 是<strong>真实 H&E 的苏木精通道</strong>。两者都由颜色解卷积得到，而 <code>estimate_background</code>（<code>physics.py</code> L36–42，q=0.95）是<strong>逐图独立估计背景光强 i0</strong>。</p>
+
+<pre><code>d = (sx.clamp(min=1e-8).log() - sy.clamp(min=1e-8).log()).abs()</code></pre>
+
+<p>关键点：<strong>如果 <code>sx</code> 和 <code>sy</code> 之间存在一个整体尺度差（这完全任意——取决于两张图各自的 i0，以及染色矩阵的归一化常数），<code>.abs()</code> 不会把它消掉，而是给每个频带加一个常数偏移。</strong></p>
+
+<div class="box warn">
+  <div class="bt">两个后果</div>
+  <ol>
+    <li><strong>损失有非零底噪。</strong>这就是为什么 <code>l_freq</code> 的中位数是 <strong>3.52</strong>、最小值是 <strong>1.51</strong>，从来不接近 0 —— 它<strong>不可能</strong>到 0，因为底下垫着一个任意的尺度差。</li>
+    <li><strong>它逼模型去匹配一个没有物理意义的绝对浓度尺度。</strong>模型为了让 log 差变小，会去调整预测苏木精的<strong>绝对幅值</strong>，而不是它的空间结构。这不是我们想要的监督信号。</li>
+  </ol>
+  <p><strong>修法（标准做法，改动很小）：把两个谱都按各自的总能量归一化后再取 log，即比较「相对频带分布」而不是绝对能量。</strong>这样损失就是尺度不变的，底噪趋近 0，梯度的量级任意性也一并消失。可验证：改完后中位数应显著向 0 移动。</p>
+</div>
+
+<h3 id="s2-4">2.4 潜码箱的标定问题：通道 2 的下界在 9.35σ</h3>
+
+<p>把实际箱换算成「相对该通道自身均值的 σ 倍数」：</p>
+
+<pre><code>ch0: (lo-μ)/σ = (-1.4165-0.8118)/0.6686 = -3.33σ     (hi-μ)/σ = +4.49σ
+ch1: -3.10σ                                          +4.69σ
+ch2: (-5.6112+0.1798)/0.5811 = -9.35σ  ←←←            +2.73σ
+ch3: -3.06σ                                          +3.69σ</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>通道</th><th class="c">下界（σ）</th><th class="c">上界（σ）</th><th>判读</th></tr></thead>
+<tbody>
+<tr><td>ch0</td><td class="c">−3.33</td><td class="c">+4.49</td><td>正常分位数箱</td></tr>
+<tr><td>ch1</td><td class="c">−3.10</td><td class="c">+4.69</td><td>正常分位数箱</td></tr>
+<tr><td><strong>ch2</strong></td><td class="c"><strong>−9.35</strong></td><td class="c">+2.73</td><td><strong>下界实质是敞开的</strong> —— 恰好是分布尾巴最肥的那一侧</td></tr>
+<tr><td>ch3</td><td class="c">−3.06</td><td class="c">+3.69</td><td>正常分位数箱</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>「0.05% 分位数」在 150×64×64 ≈ 610 万个元素上由<strong>约 3000 个极端像素</strong>决定。通道 2 在 −9.35σ 处才取到 0.05% 分位，说明它的左尾是重尾（幂律型），分位数本身<strong>不稳定</strong>——换 150 张图重算，这个边界会明显移动。</p>
+
+<div class="box warn">
+  <div class="bt">同一个箱还同时太紧</div>
+  <p><code>mean/std</code> 存的是<strong>真实 IHC</strong> 潜码的统计量，但这个箱被同时套在 H&E 潜码上（L541）。文档记录的效果是：裁掉 H&E 的 1.58% 元素、IHC 的 0.14%——而 0.05%/99.95% 分位箱的设计意图就是各裁 0.1%。<strong>所以 H&E 侧被超裁了约 16 倍。</strong></p>
+  <p><strong>结论：这个箱在 IHC ch2 上太松（9.35σ），在 H&E 上太紧（超裁 16 倍）。两个方向都错。</strong></p>
+</div>
+
+<p><strong>修法（一行，且可直接用 <code>--diag_once</code> 验证）：</strong>把分位数箱换成鲁棒箱 <code>μ_c ± k·σ_c</code>（k=3）：</p>
+
+<pre><code>ch2: 从 [-5.6112, +1.4067]  →  [-0.1798-3×0.5811, -0.1798+3×0.5811]
+                            =  [-1.9231, +1.5635]      下界收紧 2.9×</code></pre>
+
+<p>然后重跑 <code>[blob]</code> 诊断，比较 black%。这是一个<strong>半天内可完成、零训练成本</strong>的实验。</p>
+
+<h3 id="s2-5">2.5 GradSurgery 两个设计问题：共享 <code>cos_ema</code>，且日志打的是瞬时 cos</h3>
+
+<p><strong>问题一：单一标量管两个损失。</strong><code>losses.py</code> L98 只有一个 <code>self.cos_ema</code>，却在 L141 被<strong>每个辅助损失各更新一次</strong>。于是 <code>l_freq</code> 的冲突历史会污染 <code>l_prot</code> 的判定，反之亦然。正确做法是<strong>每个辅助损失一个独立的 EMA</strong>。</p>
+
+<p><strong>问题二：判定量从不打印。</strong>判定用的是 <code>cos_ema</code>（L144），日志记的是瞬时 <code>cos</code>（L161）。于是日志里出现了这种行：</p>
+
+<pre><code>('protein', 'kept', -0.5175)      ← cos 是负的，却判定为 kept</code></pre>
+
+<p>这不是 bug（<code>cos_ema</code> 当时仍 ≥0），但它让门控<strong>无法从日志审计</strong>——决定行为的那个变量一次都没被记录。<strong>把 <code>cos_ema</code> 加进返回的 tuple 即可。</strong></p>
+
+<p><strong>顺带一个语义问题：</strong>ema=0.9 时单次观测只移动 10%，但判定发生在<strong>把当前观测算进去之后</strong>（L141→L144）。对成对里的第一个损失，<code>cos_ema</code> 从 0 附近起步，<strong>一次大的负 cos 就能当场把判定翻掉</strong>。所以这个机制的<strong>有效记忆约 10 步</strong>，更接近「逐步骤门控」而非「冲突历史门控」。如果意图是后者，应该：① 判定前不含当前观测；② 把有效记忆窗口写进注释。</p>
+
+<h3 id="s2-6">2.6 <code>gate=off</code> 无法区分「条件 dropout」与「解码非有限被静默跳过」</h3>
+
+<p><code>training_dbdce.py</code> L562–586：<code>dropped</code> 只由 dropout 分支设置（L549）。当 <code>pred_rgb</code> 非有限（L567）时，代码<strong>直接跳过整个 aux 块</strong>，<code>gate_info</code> 保持 <code>"off"</code>——在 <code>log.txt</code> 和 <code>log.csv</code> 里与 dropout 步<strong>完全无法区分</strong>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>统计口径</th><th class="c">off 步数</th><th class="c">占比</th></tr></thead>
+<tbody>
+<tr><td>bf16 段全部翻译步</td><td class="c">9 / 80</td><td class="c">11.2%</td></tr>
+<tr><td><strong>3500–4000 窗口</strong>（崩坏前夜）</td><td class="c"><strong>5 / 11</strong></td><td class="c"><strong>45%</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>按 i.i.d. 11.2% 的 dropout 模型，11 个步里出现 ≥5 个 off 的概率约 <strong>0.9%</strong>。所以这些 off <strong>极可能是「aux 解码非有限」而不是 dropout</strong>——也就是说：<strong>崩溃前 500 步，解码器已经在反复输出非有限值，代码检测到了（它确实跳过了），但没记下来，信号就此消失。</strong></p>
+
+<p><strong>修法：</strong>把 <code>gate_info</code> 拆成 <code>off(drop)</code> / <code>off(nonfinite)</code> 两个值。一行改动，把崩溃前 500 步的预警变成可见。</p>
+
+<h2 id="s3"><span class="num">3</span>P2 缺陷与工程债</h2>
+
+<h3>3.1 脚本与代码默认值差 10 倍（静默陷阱）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>来源</th><th class="c"><code>lamb_prot</code></th><th class="c"><code>lamb_freq</code></th></tr></thead>
+<tbody>
+<tr><td><code>start_bci_v6_h20.sh</code> L29（实际使用）</td><td class="c"><strong>0.1</strong></td><td class="c"><strong>0.01</strong></td></tr>
+<tr><td><code>training_dbdce.py</code> L69–70（默认值）</td><td class="c">1.0</td><td class="c">0.1</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>《交接_5090迁移清单.md》§4 把 0.1/0.01 列为「一律不许动」，所以<strong>脚本是权威</strong>。但直接跑 <code>training_dbdce.py</code> 而不带脚本参数，辅助损失权重会静默变化 10 倍，且 ckpt 里 <code>args</code> 记的是当时的实际值——事后无法从 ckpt 判断。建议<strong>把默认值改成 0.1/0.01</strong>，或把这两个 flag 设为 required。</p>
+
+<h3>3.2 死代码与每次前向的浪费</h3>
+
+<ul>
+  <li><code>condition.py</code> L25–81 <code>StructAdapter</code> —— 主循环从不实例化。<strong>死代码。</strong>（只有诊断脚本 <code>batch_check.py</code> 用它。）</li>
+  <li><code>losses.py</code> L73–77 <code>orth_loss</code> —— 从不调用。<strong>死代码。</strong></li>
+  <li><code>encoders.py</code> L61–72 —— <code>DBDCE.forward</code> <strong>无条件计算两个分支的多尺度金字塔</strong>（<code>struct_branch</code> 3 个 ResBlock + <code>_pyramid</code> × 2），返回一个 dict；而调用方 L543 是 <code>_, _, fp = dbdce(cond_img)</code>，<strong>dict 被直接丢掉</strong>。512×512 分辨率上，struct 分支每步算一遍、扔一遍。</li>
+</ul>
+
+<div class="box teal">
+  <div class="bt">一处值得表扬的对照</div>
+  <p>NaN 跳步路径的 <code>del</code> 链（L611–613）和主循环顶部的预绑定（L495–496）写得很讲究——注释里明确记录了 v6 step 571 那次 OOM 的成因（<code>del</code> 链漏掉 aux 局部量 → 死图跨迭代双缓冲）。这种纪律是好的。但同一份代码里，struct 分支仍然在每步分配一张 512×512×64 的特征图然后丢掉。<strong>纪律用在了罕见路径上，常见路径上在浪费。</strong></p>
+</div>
+
+<h3>3.3 <code>swap_eval_dbdce.py</code> 的四个不一致（会让解耦评估失真）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>行号</th><th>问题</th><th>后果</th></tr></thead>
+<tbody>
+<tr><td>L54 / L93</td><td>VAE 用 <code>.half()</code> + <code>autocast(float16)</code>，而训练/采样用 <strong>bf16</strong></td><td>评估的解码精度与被评估的 run 不同</td></tr>
+<tr><td>L96</td><td><code>s_lats</code> <strong>没有</strong>做潜码箱钳位（训练与 <code>sample_ema</code> 都做了）</td><td>喂给 UNet 的结构条件与训练分布不一致</td></tr>
+<tr><td>L104–111</td><td>循环内不钳位，<strong>终潜码也完全不钳位</strong>（对比 <code>sample_ema</code> L281–283）</td><td><strong>即使 ckpt 健康，评估也会出现黑团/噪声</strong>，且与 <code>runs/*/samples/</code> 不可比</td></tr>
+<tr><td>L125</td><td><code>ihc_rgb_to_concentration(grid[i][j:j+1]...)</code> 逐<strong>单张</strong>图调用 → 每张生成图<strong>各自估计自己的 i0</strong></td><td>图像间余弦相似度是在<strong>不同 OD 尺度</strong>上比较的；偏暗的图会被自己的背景归一化「提亮」，<strong>人为抬高与他图的相似度</strong>，污染解耦指标</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>修法：</strong>① 统一用 bf16；② <code>s_lat</code> 与终潜码按数据箱钳位；③ 所有图<strong>共用同一个 i0</strong>（用真实 IHC 的），再算余弦。</p>
+
+<h2 id="s4"><span class="num">4</span>崩溃窗口的定量证据</h2>
+
+<div class="box key">
+  <div class="bt">先修正一个统计口径问题</div>
+  <p><code>log.csv</code> 是<strong>跨三次运行追加</strong>写的：181 行里 <strong>step ≤ 500 的 20 行来自 fp16 时代</strong>，step &gt; 500 的 161 行才是 bf16 段（bf16 从 <code>[resume] optimizer state restored @ step 500</code> 开始）。所以任何「从头看趋势」的读法都混了两种精度。下面所有统计<strong>只取 bf16 段</strong>。</p>
+  <p class="small">顺带：<code>log.txt</code> 里的 <strong>51 条 <code>[warn]</code> 全部来自两次 fp16 尝试</strong>（step ≤ 627，<code>scale 32768/16384</code>）。bf16 段 <strong>0 条 warn</strong>。文档说的「0 warn」是对的，但直接 <code>grep warn log.txt</code> 会得到 51 条——见第 8 节。</p>
+</div>
+
+<h3>4.1 <code>l_diff</code> 在崩溃窗口发生了真实的regime 切换</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>step 窗口</th><th class="c">l_diff 均值</th><th class="c">min</th><th class="c">max</th><th class="c">n</th><th>判读</th></tr></thead>
+<tbody>
+<tr><td>500–1000</td><td class="c">0.5173</td><td class="c">0.2975</td><td class="c">0.8574</td><td class="c">20</td><td>收敛中</td></tr>
+<tr><td>1000–1500</td><td class="c">0.4281</td><td class="c">0.2876</td><td class="c">0.5330</td><td class="c">20</td><td>收敛</td></tr>
+<tr><td>1500–2000</td><td class="c">0.4512</td><td class="c">0.3561</td><td class="c">0.6351</td><td class="c">20</td><td>平台</td></tr>
+<tr><td>2000–2500</td><td class="c">0.4042</td><td class="c">0.2805</td><td class="c">0.5344</td><td class="c">20</td><td>最低点</td></tr>
+<tr><td>2500–3000</td><td class="c">0.4368</td><td class="c">0.2848</td><td class="c">0.6165</td><td class="c">20</td><td>平台</td></tr>
+<tr><td>3000–3500</td><td class="c">0.4729</td><td class="c">0.2723</td><td class="c">0.8795</td><td class="c">20</td><td>开始抬头</td></tr>
+<tr style="background:#fdeceb"><td><strong>3500–4000</strong></td><td class="c"><strong>0.6435</strong></td><td class="c">0.3201</td><td class="c">0.9049</td><td class="c">20</td><td><strong>+36% 跳变</strong></td></tr>
+<tr style="background:#fdeceb"><td><strong>4000–4500</strong></td><td class="c"><strong>0.6292</strong></td><td class="c">0.3618</td><td class="c">1.0164</td><td class="c">20</td><td><strong>维持高位</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+  <div class="bt">这个跳变的意义</div>
+  <p>前 3000 步 <code>l_diff</code> 是平坦甚至下降的，然后在 3500–4000 一次性抬高 36% 并<strong>再也不回来</strong>。这说明：<strong>崩坏不是「EMA 与 live 脱钩」这么单纯——live 权重本身同期也变差了。</strong></p>
+  <p>而 <code>l_diff</code> 的绝对值仍然很小（0.64 在整段历史范围内），所以单步 MSE <strong>原理上不可能</strong>把它报警出来。这与「训练损失全程正常、采样突然全噪声」的观测完全一致——两件事不矛盾，因为它们在度量不同的东西。</p>
+</div>
+
+<h3>4.2 <code>l_freq</code> 的重尾</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>量（bf16 段）</th><th class="c">n</th><th class="c">min</th><th class="c">median</th><th class="c">mean</th><th class="c">max</th></tr></thead>
+<tbody>
+<tr><td><code>l_freq</code></td><td class="c">70</td><td class="c">1.51</td><td class="c"><strong>3.52</strong></td><td class="c">4.39</td><td class="c"><strong>17.33</strong>（step 3900）</td></tr>
+<tr><td><code>l_prot</code></td><td class="c">71</td><td class="c">0.0117</td><td class="c"><strong>0.1528</strong></td><td class="c">0.2213</td><td class="c"><strong>1.8824</strong>（step 550）</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>均值（4.39）明显高于中位数（3.52），且最大值是中位数的 <strong>4.9 倍</strong>——典型的重尾，由少数病态样本贡献。注意 <code>l_freq</code> 最小值 1.51 且从不接近 0，正是 2.3 节说的「尺度不变性缺失导致的非零底噪」。</p>
+
+<h3>4.3 两个「同步异常」的巧合</h3>
+
+<div class="grid2">
+<div class="mini">
+  <div class="mt">step 3900：l_freq 最高、l_diff 最低</div>
+  <p><code>l_freq = 17.33</code>（历史最高）与 <code>l_diff = 0.3201</code>（窗口内最低）<strong>同时发生</strong>。这与「辅助损失梯度压掉了主损失梯度」的形态一致（1.1 节）。</p>
+  <p class="small">单步巧合，不能单独作为证据，但方向是对的。</p>
+</div>
+<div class="mini">
+  <div class="mt">step 3350：l_prot 尖峰</div>
+  <p><code>l_prot = 1.4673</code>，是中位数 0.1528 的 <strong>9.6 倍</strong>，出现在崩溃窗口之前 150 步。</p>
+  <p class="small">配合 2.6 节的 off 聚集，构成「崩溃前夜辅助分支已失控」的两条独立线索。</p>
+</div>
+</div>
+
+<h3>4.4 <code>[blob]</code> 三变体诊断：解码侧旋钮近乎无效，方差全在潜码侧</h3>
+
+<p>代码在采样结束后对<strong>同一条终潜码</strong>做了三种解码（L308–347）：① <code>clamp(±6)</code>、② 数据箱分位数界、③ stat-match（重标定 mean/std）。这等于一个免费的消融——如果黑团是解码侧造成的，换钳位方式应当明显改变 black%。实测（bf16 段）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th class="c">step</th><th class="c">① ±6 black%</th><th class="c">① min</th><th class="c">② 数据箱 black%</th><th class="c">② min</th><th class="c">③ stat-match black%</th><th class="c">③ min</th></tr></thead>
+<tbody>
+<tr><td class="c">500</td><td class="c">0.000</td><td class="c">−0.69</td><td class="c">0.000</td><td class="c">−0.68</td><td class="c">0.000</td><td class="c">−1.06</td></tr>
+<tr><td class="c">1000</td><td class="c">0.104</td><td class="c">−1.98</td><td class="c">0.073</td><td class="c">−1.29</td><td class="c">0.090</td><td class="c">−1.72</td></tr>
+<tr><td class="c">1500</td><td class="c">0.202</td><td class="c">−2.17</td><td class="c">0.170</td><td class="c">−1.52</td><td class="c">0.177</td><td class="c">−1.59</td></tr>
+<tr><td class="c">2000</td><td class="c">0.476</td><td class="c">−2.11</td><td class="c">0.390</td><td class="c">−1.70</td><td class="c">0.496</td><td class="c">−1.62</td></tr>
+<tr><td class="c">2500</td><td class="c">0.394</td><td class="c">−2.09</td><td class="c">0.336</td><td class="c">−1.66</td><td class="c">0.420</td><td class="c">−1.78</td></tr>
+<tr><td class="c">3000</td><td class="c">0.461</td><td class="c">−2.25</td><td class="c">0.388</td><td class="c">−1.80</td><td class="c">0.505</td><td class="c">−1.74</td></tr>
+<tr><td class="c">3500</td><td class="c">0.403</td><td class="c">−2.33</td><td class="c"><strong>0.357</strong></td><td class="c">−1.80</td><td class="c">0.442</td><td class="c">−1.73</td></tr>
+<tr><td class="c"><strong>4000</strong></td><td class="c"><strong>4.367</strong></td><td class="c">−2.03</td><td class="c"><strong>4.026</strong></td><td class="c">−1.94</td><td class="c"><strong>0.145</strong></td><td class="c"><strong>−2.28</strong></td></tr>
+<tr><td class="c"><strong>4500</strong></td><td class="c"><strong>3.409</strong></td><td class="c">−1.96</td><td class="c"><strong>3.109</strong></td><td class="c">−1.78</td><td class="c"><strong>0.150</strong></td><td class="c">−2.09</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>三个读数，每一个都直接决定「该往哪修」：</p>
+
+<div class="grid2">
+<div class="mini">
+  <div class="mt">500–3500 步：三变体互差 &lt; 1.3×</div>
+  <p>0.357–0.505 之间徘徊，<strong>三种完全不同的钳位策略给出几乎相同的结果</strong>。潜码健康时，「解码侧怎么钳」基本不改变输出。</p>
+  <p class="small">⇒ 解码侧不是这一段黑团的成因。</p>
+</div>
+<div class="mini">
+  <div class="mt">3500 → 4000：① 与 ② 同时 ×11</div>
+  <p>0.403→<strong>4.367</strong>、0.357→<strong>4.026</strong>。两个互不相关的钳位策略崩坏幅度几乎一致 ⇒ <strong>崩坏不发生在解码侧，发生在潜码侧</strong>。同一份终潜码，换什么解码器都救不回来。</p>
+  <p class="small">⇒ 换 VAE 无法修复 4000/4500。</p>
+</div>
+</div>
+
+<div class="box warn">
+  <div class="bt">③ stat-match 的「改善」是假象，属于同一类陷阱</div>
+  <p>变体 ③ 的 black% 从 4.026 掉到 <strong>0.145</strong>（降 28×），看起来是救回来了。但它的<strong>最小值同时从 −1.73 恶化到 −2.28</strong>——比历史上任何一步都更黑。</p>
+  <p>原因是 ③ 只把潜码的 mean/std 重新标定了一遍，<strong>把数值从 −1 这个阈值附近挪开</strong>，于是「越界像素的计数」变少了，图本身还是噪声。这既不是修复，也不是压缩——<strong>是把「可检测的失败」变成「不可检测的失败」</strong>，与 2.6 节的 <code>gate=off</code>、以及报告反复点名的「分位数 clamp 把黑团压到质检阈值以下」是同一种错误模式。</p>
+  <p class="small">方法学推论：<strong>凡是「某指标下降」的改进，都要同时看它的极值是否变差。</strong>只看占比会误判。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>机理假说与可证伪预测</h2>
+
+<div class="box key">
+  <div class="bt">假说的边界（先说清楚）</div>
+  <p>下面这条链的<strong>每一个环节都是已核实的代码事实</strong>（行号可查），但<strong>把它们串成「这就是崩溃原因」是假说</strong>。我没有权重文件（见 8.1），无法做实验 A/B/C 来证实。所以下面给出<strong>可证伪的预测</strong>——如果预测不成立，这条链就该被放弃。</p>
+</div>
+
+<h3>5.1 正反馈链</h3>
+
+<div class="flow">
+<pre><code>  ① 辅助损失在浓度空间监督 x̂₀（clamp ±6，比数据箱宽 4.26×）
+        │   ← 有明确梯度动机把潜码推出流形
+        ▼
+  ② 模型产出越来越暗 / 越来越极端的生成图
+        │
+        ▼
+  ③ 颜色解卷积 -log10(I/I0) 在暗像素处梯度放大 10³–10⁶
+     频带能量 log(sx) 在低能量处梯度放大 10⁵
+        │   ← 两个 1/x 放大器（§1.2）
+        ▼
+  ④ ‖g_aux‖ ≫ ‖g_main‖
+        │
+        ▼
+  ⑤ clip_grad_norm_(全体, 1.0)  →  clip_coef ≈ 1/‖g_aux‖
+        │   ← 主损失梯度被同比例压小（§1.1）
+        ▼
+  ⑥ 该步更新方向几乎完全由辅助损失决定
+        │
+        ▼
+  ⑦ p_tok（无界、无监控，§2.1）被推入更大幅度
+        │   ← cross-attention K/V 尺度变化
+        ▼
+  ⑧ 回到 ②，且更严重   ──►  正反馈
+        │
+        ▼
+  ⑨ 某一刻 K/V 尺度越过临界 → 全图失去结构 → 纯噪声
+     时间点：step 3500 → 4000 之间
+</code></pre>
+</div>
+
+<p>这条链能解释四个观测：<strong>① 崩坏是「突然的、永久的」</strong>（正反馈的典型形态）；<strong>② 训练损失全程正常</strong>（单步 MSE 看不见分布级的偏移）；<strong>③ 三种解码变体全是噪声</strong>（潜码本身坏了，不是解码问题）；<strong>④ 崩溃前 off 步聚集</strong>（辅助解码已在反复产生非有限值）。</p>
+
+<h3>5.2 可证伪的预测</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:34px">#</th><th>预测</th><th>如果预测成立</th><th>如果预测不成立</th></tr></thead>
+<tbody>
+<tr>
+  <td class="c"><strong>P1</strong></td>
+  <td>step 3900 附近（<code>l_freq=17.33</code> 那一步）记录到的 <code>|p_tok|</code> rms 应显著高于早期（如 step 1500）</td>
+  <td>确认 ⑦ 环节，<code>p_tok</code> 幅度失控是崩坏路径的一环</td>
+  <td>假说中的 ⑦ 环节不成立，需换路径（回到 EMA 脱钩假说）</td>
+</tr>
+<tr>
+  <td class="c"><strong>P2</strong></td>
+  <td>用 step_004000 的 EMA 采样时，把 <code>encoder_hidden_states</code> 换成 CLIP("H&amp;E") 绕开 <code>p_tok</code>，图像应<strong>明显恢复</strong>（不要求完美，但不再是纯噪声）</td>
+  <td>蛋白通路实锤 —— 与用户文档实验 C 一致</td>
+  <td>蛋白通路不是主因，问题在 conv_in 额外通道或 UNet 本身</td>
+</tr>
+<tr>
+  <td class="c"><strong>P3</strong></td>
+  <td>把 aux 的 <code>clamp(±6)</code> 改成数据箱、并给辅助梯度单独裁剪后重训，<code>l_diff</code> 在 3500–4000 的跳变应<strong>消失或大幅减弱</strong></td>
+  <td>确认 §1.1 + §1.3 是主因，这是可复现的修复</td>
+  <td>说明还有别的路径，需要继续定位</td>
+</tr>
+<tr>
+  <td class="c"><strong>P4</strong></td>
+  <td>把潜码箱从分位数换成 <code>μ ± 3σ</code>（ch2 下界 −5.61 → −1.92）后，<code>[blob]</code> 的 black%（② 变体）应<strong>低于 0.357</strong>（3500 步的基线）</td>
+  <td>确认 §2.4，且给出一个零训练成本的改进</td>
+  <td>说明黑团的主要来源不是箱太松，应转向上游</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s6"><span class="num">6</span>行动清单</h2>
+
+<p>按「性价比 = 预期收益 / 改动成本」排序。<span class="b high">低成本</span> = 一行到几行；<span class="b medium">中</span> = 需要小重构或一次重训。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:30px" class="c">序</th><th>动作</th><th>位置</th><th class="c">成本</th><th class="c">可复现性</th><th>预期收益</th></tr></thead>
+<tbody>
+<tr>
+  <td class="c"><strong>1</strong></td>
+  <td><strong>补日志，不改行为</strong>：① 每 25 步记录 <code>|p_tok|</code> rms / <code>|s_lat|</code> rms；② <code>gate</code> 字段拆成 <code>off(drop)</code> / <code>off(nonfinite)</code>；③ gate 返回 tuple 里加上 <code>cos_ema</code>；④ 记录被 clamp 的像素比例与区域</td>
+  <td><code>training_dbdce.py</code> L676–685<br><code>losses.py</code> L161</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>把下一次崩坏从「无预警」变成「有预警」。<strong>这是所有后续实验的前提。</strong></td>
+</tr>
+<tr>
+  <td class="c"><strong>2</strong></td>
+  <td><strong>潜码箱换鲁棒箱</strong> <code>μ_c ± 3σ_c</code>，重跑 <code>--diag_once</code> 看 black%</td>
+  <td><code>misc_diagnose/check_bounds.py</code> 生成新 bounds</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>ch2 下界收紧 2.9×。零训练成本，当天可判定（预测 P4）</td>
+</tr>
+<tr>
+  <td class="c"><strong>3</strong></td>
+  <td><strong>统一钳位口径</strong>：把 aux 的 <code>x̂₀.clamp(-6,6)</code> 改成数据箱 <code>clamp(latent_lo, latent_hi)</code></td>
+  <td><code>training_dbdce.py</code> L564</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>消除「训练端把潜码往外推、推理端截回来」的流形不一致（§1.3）</td>
+</tr>
+<tr>
+  <td class="c"><strong>4</strong></td>
+  <td><strong>给辅助梯度加单独裁剪</strong>：在 <code>aux.backward()</code> 之后、写回之前，把 UNet 侧梯度按范数裁剪（或直接对 <code>aux</code> 损失做梯度裁剪）。同时把 <code>clip_grad_norm_</code> 改成 <code>error_if_nonfinite=True</code>，把静默空转变成显式报错</td>
+  <td><code>losses.py</code> L119–120<br><code>training_dbdce.py</code> L667</td>
+  <td class="c"><span class="b medium">中</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>切断 §1.1 的伤害机制——这是最核心的一处修复</td>
+</tr>
+<tr>
+  <td class="c"><strong>5</strong></td>
+  <td><strong>给 <code>ProteinAdapter</code> 加幅度控制</strong>：把死代码 <code>StructAdapter</code> 已有的 RMS 归一化 + 3σ clamp + <code>raw_max</code> 监控搬过来</td>
+  <td><code>condition.py</code> L84–95</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>消除唯一的无界可训练注入（§2.1）。代码已经写好了，只是放错了地方</td>
+</tr>
+<tr>
+  <td class="c"><strong>6</strong></td>
+  <td><strong><code>l_freq</code> 改成尺度不变</strong>：两个谱各自按总能量归一化后再取 log</td>
+  <td><code>losses.py</code> L51–63</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>去掉非零底噪与「逼模型匹配任意绝对浓度」的错误监督（§2.3）。改完后中位数应显著向 0 移动</td>
+</tr>
+<tr>
+  <td class="c"><strong>7</strong></td>
+  <td><strong>给颜色解卷积的 <code>log</code> 加 ε</strong>：<code>-log10(clamp(x,1e-6,1))</code> → <code>-log10(x + 1e-3)</code></td>
+  <td><code>physics.py</code> L49</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td><strong>梯度放大器从 434,000× 封顶到 434×（降 1000 倍）</strong>，代价是 OD 上限 6→3（IHC 够用）。见 §9.5 选项 1</td>
+</tr>
+<tr>
+  <td class="c"><strong>8</strong></td>
+  <td><strong>把死代码 <code>render_ihc</code> 用起来</strong>，加物理一致性损失 <code>L_phys = ‖Render(Deconv(x̂₀)) − x̂₀‖</code>（即 R2 的 L_phys），并把它记进日志</td>
+  <td><code>physics.py</code> L92 已有；接进 <code>training_dbdce.py</code> L565–577</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>堵住反演损失对 1 维零空间的<strong>盲区</strong>（ΔC=0 而 ΔRGB=0.553），同时产出「物理不可行度」这个可写进论文的指标。见 §9.5 选项 2</td>
+</tr>
+<tr>
+  <td class="c"><strong>9</strong></td>
+  <td><strong>采样循环内逐步钳位</strong>：把 <code>lat.clamp(latent_lo, latent_hi)</code> 放进 DDIM 循环</td>
+  <td><code>training_dbdce.py</code> L276–280</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>20 步轨迹不再无约束游走（§2.2）</td>
+</tr>
+<tr>
+  <td class="c"><strong>10</strong></td>
+  <td><strong>GradSurgery 每个 aux 一个 <code>cos_ema</code></strong>，判定前不含当前观测</td>
+  <td><code>losses.py</code> L98 / L141–144</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>消除两个辅助损失之间的相互污染（§2.5）</td>
+</tr>
+<tr>
+  <td class="c"><strong>11</strong></td>
+  <td><strong>删掉 struct 分支的无效计算</strong>（或让 <code>DBDCE.forward</code> 支持只要 protein 分支）</td>
+  <td><code>encoders.py</code> L61–72</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>省掉每步一张 512×512×64 特征图的计算与激活（§3.2）</td>
+</tr>
+<tr>
+  <td class="c"><strong>12</strong></td>
+  <td><strong>修 <code>swap_eval_dbdce.py</code> 的四个不一致</strong>：bf16、s_lat/终潜码钳位、共用 i0</td>
+  <td>L54 / L93 / L96 / L104–111 / L125</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>让解耦评估的结论可信（§3.3）</td>
+</tr>
+<tr>
+  <td class="c"><strong>13</strong></td>
+  <td><strong>换 drop-in 病理 VAE 解码器</strong>（见 §7.2），只需改一行 <code>from_pretrained</code></td>
+  <td>采样与训练的解码处</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b medium">中</span></td>
+  <td>直接针对黑团模式；扩散模型不需要重训</td>
+</tr>
+<tr>
+  <td class="c"><strong>14</strong></td>
+  <td><strong>把默认值改成 0.1/0.01</strong>，或把 <code>--lamb_prot/--lamb_freq</code> 设为 required</td>
+  <td><code>training_dbdce.py</code> L69–70</td>
+  <td class="c"><span class="b high">低</span></td>
+  <td class="c"><span class="b high">高</span></td>
+  <td>消除 10 倍静默陷阱（§3.1）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+  <div class="bt">最小改动路径（如果只做三件事）</div>
+  <p><strong>1 → 7 → 8。</strong>先补日志（否则下次崩坏还是无预警）；再给解卷积的 <code>log</code> 加 ε（把梯度炸弹从 43 万倍封到 434 倍）；再用起 <code>render_ihc</code> 加 <code>L_phys</code>（堵住反演损失的盲区）。<strong>这三条一共不到 20 行，都不改模型结构、不需要重新设计实验。</strong></p>
+  <p class="small">原来的「1 → 4 → 5」（补日志 / 给 aux 梯度单独裁剪 / 给 p_tok 加幅度控制）仍然成立，只是 4 和 5 是治「伤害传导」，而 7 和 8 是治「伤害来源」。<strong>先堵来源，再治传导，性价比更高。</strong></p>
+</div>
+
+<h2 id="s7"><span class="num">7</span>与既有结论的衔接</h2>
+
+<h3>7.1 这次审查给「黑团方案阶梯」补上了因果链</h3>
+
+<p>此前给出的四层方案阶梯（Tier 0 诊断 → Tier 1 推理端收紧 → Tier 2 训练端 anchor loss → Tier 3 换/微调 VAE）是基于「潜码离流形」这个现象组织的。本次代码审查回答了<strong>潜码为什么离流形</strong>：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>此前的建议</th><th>本次代码审查给出的依据</th></tr></thead>
+<tbody>
+<tr><td>Tier 1：逐通道、<strong>逐步</strong>钳位</td><td>确认采样循环内完全不钳位（§2.2）——「逐步」不是优化，是必需</td></tr>
+<tr><td>Tier 1：用 <code>μ_c ± kσ_c</code> 而不是分位数</td><td>确认分位数箱在 ch2 下界是 9.35σ，由约 3000 个极端像素决定（§2.4）</td></tr>
+<tr><td>Tier 2：加 <code>L_anchor</code> 把潜码拉回数据统计</td><td>确认辅助损失的 clamp 比数据箱宽 4.26×，<strong>正在反向推</strong>潜码出去（§1.3）——anchor loss 的必要性从「锦上添花」升级为「对冲」</td></tr>
+<tr><td>「收紧 clamp 只能减半，因为约束的是边缘分布不是联合分布」</td><td>得到第二条独立解释：<strong>训练端在持续往外推</strong>，推理端收紧只是截掉推出去的部分（§1.3）</td></tr>
+<tr><td>「把 clamp 比例作为指标输出，避免把可检测失败变成不可检测失败」</td><td>本次又发现同类问题：<code>gate=off</code> 把「非有限解码」和「dropout」合并成一个不可辨的值（§2.6）</td></tr>
+<tr><td><strong>R2 的 M1 物理输出头 / <code>L_phys</code> 一致性损失</strong></td><td><strong>确认从未实现。</strong>代码走 scheme B（从 RGB 反演浓度），整条正演路径 <code>render_ihc</code> 是死代码。而 <strong>1/x 梯度炸弹正是反演策略的直接后果</strong>——正演下 <code>log</code> 自变量恒大于 0，炸弹结构上不存在（§9）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.2 drop-in 病理 VAE 仍然是性价比最高的一步</h3>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="title"><code>StonyBrook-CVLab/sd-vae-ft-ema-path</code></div>
+      <div class="v">MICCAI 2025 · arXiv 2503.11591 · Stony Brook / Argonne / UChicago</div>
+    </div>
+    <div><span class="b high">可直接替换</span></div>
+  </div>
+  <div class="body">
+    <p>底座就是 <code>stabilityai/sd-vae-ft-ema</code>，即 <strong>SD 1.5 的 VAE（KL-f8-c8）</strong>，潜码 <strong>4×64×64 —— 与 SD1.5 完全一致</strong>。关键在于是<strong>只微调解码器、编码器完全冻结</strong>，原话：</p>
+    <pre><code>By preserving the encoder, we ensure that the AE latent space is
+unchanged and we only learn to interpret it differently during
+reconstruction.</code></pre>
+    <p><strong>潜码分布不变 ⇒ 已有的扩散模型不需要重训，只换解码器。</strong>结果：UNI embedding 相似度 <strong>0.837 → 0.932</strong>，在相近压缩率下超过 JPEG-50（0.904）。</p>
+    <pre><code>from diffusers import AutoencoderKL
+vae = AutoencoderKL.from_pretrained("StonyBrook-CVLab/sd-vae-ft-ema-path")</code></pre>
+    <p class="small">注意：用 <code>AutoencoderKL</code>，不是 HF 自动生成的 model card 里那个 <code>DiffusionPipeline</code>。</p>
+    <p><strong>与本项目的对接点：</strong>本项目所有解码都走 <code>vae.decode()</code>，所以替换点是集中的。但要同时注意<strong>训练端的 <code>s_lat</code> 与 <code>target_lat</code> 也来自 <code>vae.encode()</code></strong>——由于编码器冻结且潜空间不变，编码侧结果应当一致，但建议实测确认（encode 同一批 H&E，比较替换前后的 latent 差异）。</p>
+  </div>
+</div>
+
+<div class="box warn">
+  <div class="bt">一个必须同时记住的边界条件</div>
+  <p>arXiv 2604.12152 的消融显示：<strong>重建保真度与生成幻觉由两个独立的分量支配</strong>（Cohen's h &lt; 0.02）。所以<strong>换 VAE 能治「解码出来的黑团」，不能治「条件区触发的结构幻觉」</strong>。这两类伪影在形态上可能很像，但成因不同、修法不同。判断方法：如果换 VAE 后黑团明显减少 → 解码侧问题；如果几乎不变 → 幻觉侧问题，要回到条件通路（<code>p_tok</code> / <code>s_lat</code>）。</p>
+  <p><strong>范围还要再收窄一层（§4.4 的 <code>[blob]</code> 新证据）</strong>：三变体诊断显示，<strong>潜码健康时（step 500–3500）三种解码钳位方式互差不到 1.3×</strong>，而 3500→4000 三个变体一起爆炸。这说明<strong>解码侧旋钮在本 run 里近乎无效，方差几乎全在潜码侧</strong>。所以换 VAE 的目标应当明确限定为：<strong>压掉崩坏之前那 0.36–0.50% 的零星黑团</strong>（那里更像是解码器的普遍性偏差，是它真正能起作用的地方），而<strong>不能指望它救 4000/4500 那种整张噪声</strong>——那已经是终潜码本身坏了，任何解码器都无从恢复。换句话说：换 VAE 是 Tier 3 里性价比最高的一步，但它治的是「解码侧残余」，不是「潜码侧崩坏」。</p>
+  <p class="small">补充：arXiv 2604.12152 自己的三个数据集是膝关节 MRI / 脑 MRI / 胸片，<strong>从未测过病理</strong>，所以它的 +2.91~3.29 dB 不能外推到本任务。它的价值在于「VAE 选择是主要约束」这个结论，而不是那个具体数字。</p>
+</div>
+
+<h3>7.3 一个便宜且能同时验证两件事的实验</h3>
+
+<div class="box teal">
+  <div class="bt">AE 重建天花板诊断（不需要训练扩散模型）</div>
+  <p>取 50–100 张真实 IHC patch，做 <code>x → VAE.encode → VAE.decode → x̂</code>，分别用 SD1.5 原版 VAE 和 <code>sd-vae-ft-ema-path</code> 计算 PSNR / UNI 相似度。</p>
+  <ul>
+    <li>如果病理 VAE 明显更好 → <strong>解码器是瓶颈</strong>，换掉（动作 11）。</li>
+    <li>再按「DAB 浓度高的区域」vs「浓度低的区域」<strong>分层</strong>比较重建误差。如果高 DAB 区的误差显著更大 → 说明解码器在高浓度区的表示能力不足，<strong>这直接对应「黑团出现在 DAB 最强的区域」的可证伪预测</strong>。</li>
+  </ul>
+  <p>整个实验半天内可完成，不需要 GPU 训练，也不依赖那两份丢失的权重。</p>
+</div>
+
+<h2 id="s8"><span class="num">8</span>文档勘误：交给别人之前要改的地方</h2>
+
+<p>这份代码包是要交给外部 agent/专家排查的，所以文档的准确性直接影响下一轮排查的效率。以下是我在实际核对时发现的不一致。</p>
+
+<h3>8.1 检查点并没有随包（影响最大）</h3>
+
+<div class="box stop">
+  <div class="bt">核实结果</div>
+  <p><code>00_README_agent.md</code> L48 写：<em>「检查点已随包：<code>runs/bci_v6/ckpt/step_004000.pt</code> 与 <code>step_004500.pt</code>（各 3.3G）」</em>。</p>
+  <p><strong>但包里没有 <code>ckpt/</code> 目录。</strong><code>runs/bci_v6/</code> 下只有 <code>latent_bounds.pt</code>、<code>log.csv</code>、<code>log.txt</code>、<code>samples/</code>、<code>train.done</code>、<code>train.lock</code>；整个包 <strong>103 MB</strong>。</p>
+  <p>后果：文档推荐的实验 <strong>A / B / C / E 全部无法在本地执行</strong>——它们都需要加载 EMA 权重。我的假说 P1/P2 也因此无法验证。</p>
+  <p class="small">可能原因：<code>.gitignore</code> 只写了 <code>.DS_Store</code>，所以不是 git 忽略；更可能是打包时手动排除了大文件，但 README 没同步更新。</p>
+</div>
+
+<h3>8.2 文档地图与实际文件名不符</h3>
+
+<p><code>模型架构与实现细节_专家排查.md</code> L174 的文件地图写 <code>ckpt/{step_003500,step_004000,opt_latest}</code>，但启动脚本是 <code>--save_every 500 --keep_ckpts 2</code>，所以 <strong>step_003500 已被轮换删除</strong>（文档 §8.1 自己也承认了这点）。而 step_004500 存在却没写进地图。</p>
+
+<p><strong>更需要注意的是这带来的方法论损失：</strong>「好权重（3500）vs 坏权重（4000）」这个<strong>最直接的对比对已经不可得</strong>，只能用「两份坏权重之间的漂移（4000 vs 4500）」来推断方向。这个退而求其次的方案要写在文档里，否则下一个接手的人会去找一个不存在的文件。建议：<strong>把 <code>--keep_ckpts</code> 提到 4</strong>，保留 2000 步的历史窗口。</p>
+
+<h3>8.3 「0 warn」需要加限定语</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th>说法</th><th>实际情况</th></tr></thead>
+<tbody>
+<tr><td>专家文档 §0 / §11.1：「0 条 <code>[warn]</code>」</td><td>对 <strong>bf16 段</strong>成立。但 <code>grep -c "\[warn\]" log.txt</code> 得到 <strong>51</strong>，全部来自两次 fp16 尝试（step ≤ 627，<code>scale 32768/16384</code>）</td></tr>
+<tr><td><code>log.csv</code> 181 行</td><td>其中 <strong>20 行（step ≤ 500）来自 fp16 段</strong>，161 行才是 bf16 段</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>建议在文档里明确写：</strong>「<code>log.txt</code> 与 <code>log.csv</code> 都是<strong>跨三次运行追加</strong>的；bf16 段从 <code>[resume] optimizer state restored @ step 500</code> 开始，以 <code>scale=1</code> 为标记；step ≤ 627 的 warn 全部属于已被取代的 fp16 尝试。」否则下一个排查者会因为 51 条 warn 而走错方向。</p>
+
+<h3>8.4 文档没提到的两个可用证据</h3>
+
+<ul>
+  <li><strong>off 步在崩溃窗口的聚集</strong>（9/80 → 5/11，p≈0.9%）—— 见 §2.6，这是崩溃前夜唯一的直接预警信号，文档里没有。</li>
+  <li><strong>潜码箱的 σ 换算</strong>（ch2 下界 9.35σ）—— 见 §2.4，需要从 <code>latent_bounds.pt</code> 读原始数值才能算出来，文档只列了箱的数值没做这个换算。</li>
+</ul>
+
+<h2 id="s9"><span class="num">9</span>浓度图策略：代码用的是 scheme B，与你原方案不是一回事</h2>
+
+<div class="box key">
+  <div class="bt">你的直觉是对的，而且这不是小差异</div>
+  <p>你在 R2 报告里定的方案（<strong>M1 物理输出头 / Step A</strong>）是：<strong>扩散 U-Net 不预测 RGB，直接输出浓度图 D̂，再用可微 Beer-Lambert 前向模型转成 RGB</strong> —— 生成发生在<strong>浓度空间</strong>。</p>
+  <p>而这份代码走的是它自己明确标注的 <strong>scheme B</strong>：<strong>保留 RGB 潜码输出 → 解码出 RGB → 再用颜色解卷积「倒推」出浓度 → 在浓度空间算损失</strong> —— 生成发生在 <strong>RGB 空间</strong>，浓度只是一个<strong>事后读出</strong>。</p>
+  <p>方向正好相反：一个是<strong>正演</strong>，一个是<strong>反演</strong>。而这个差异，恰好就是我上一节报的 P0-2（梯度炸弹）的成因。</p>
+</div>
+
+<h3 id="s9-1">9.1 先确认：代码里前向物理渲染是<strong>死代码</strong></h3>
+
+<p><code>training_dbdce.py</code> 文件头的自述（L8）：</p>
+
+<pre><code>aux losses in Beer-Lambert concentration space (scheme B: decode predicted x0)</code></pre>
+
+<p><code>hdadapt/__init__.py</code> L6 说得更直白：</p>
+
+<pre><code>RGB latent (kept, scheme B)  =>  decode predicted x0 -&gt; Beer-Lambert
+                                  concentration space losses</code></pre>
+
+<p>然后我做了一次全仓库检索，看物理模块的每个函数到底有没有被调用：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>函数</th><th>方向</th><th>调用点</th><th class="c">状态</th></tr></thead>
+<tbody>
+<tr><td><code>ihc_rgb_to_concentration</code></td><td>反演 RGB→C</td><td><code>training_dbdce.py</code> L571、L575</td><td class="c"><span class="b high">在用</span></td></tr>
+<tr><td><code>he_rgb_to_hematoxylin</code></td><td>反演 RGB→C_H</td><td><code>training_dbdce.py</code> L573</td><td class="c"><span class="b high">在用</span></td></tr>
+<tr><td><strong><code>render_ihc</code></strong></td><td><strong>正演 C→RGB</strong></td><td><strong>无</strong>（只在 <code>physics.py</code> L92 定义、<code>__init__.py</code> L13 导出）</td><td class="c"><span class="b bad">死代码</span></td></tr>
+<tr><td><code>concentration_to_od</code> / <code>od_to_rgb</code></td><td>正演中间步</td><td>仅被 <code>render_ihc</code> 调用 → 同样是死的</td><td class="c"><span class="b bad">死代码</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+  <div class="bt">一句话</div>
+  <p><strong>整条 Beer-Lambert 前向路径（<code>C → OD → RGB</code>）在这个仓库里从来没有被执行过一次。</strong>物理模块只被当成一个「从生成的 RGB 里读出浓度」的工具，从没被当成「约束生成的 RGB 必须物理可实现」的约束。</p>
+  <p>也就是说：<strong>R2 报告里的 L_phys 一致性损失没有实现；R2 里的 M1 模块没有实现。</strong>代码实现的是 M1 的<strong>反向</strong>版本。</p>
+</div>
+
+<h3 id="s9-2">9.2 两条策略的形式化</h3>
+
+<div class="grid2">
+<div class="mini">
+  <div class="mt">策略 A · 正演（你的原方案 / M1）</div>
+  <p>U-Net 输出浓度 <code>C = (DAB, H)</code>，然后</p>
+  <p><code>x = x̄₀ · exp(−S·C)</code></p>
+  <p>浓度是<strong>一等输出</strong>：非负性是结构保证的，单调性可检验，可直接可视化。</p>
+</div>
+<div class="mini">
+  <div class="mt">策略 B · 反演（代码实际）</div>
+  <p>U-Net 输出 latent，解码得 RGB，然后</p>
+  <p><code>C = pinv(S) · OD(x̂₀)</code></p>
+  <p>浓度是<strong>派生量</strong>：它是对一张已经画好的图的「解释」，解释得对不对没人检查。</p>
+</div>
+</div>
+
+<h3 id="s9-3">9.3 四个后果，全部量化</h3>
+
+<h4>后果 1：A 的输出天然在物理流形上；B 的浓度只是一个「投影」</h4>
+
+<p><code>S</code> 是 3×2，所以它的像空间只是 RGB 三维空间里的一个<strong>二维曲面</strong>。用 <code>pinv(S)</code> 反演任意一张 RGB，得到的 C 只有在这张 RGB 本来就落在这个曲面上时才准确；否则 <code>Render(Deconv(x)) ≠ x</code>，差值就是这张图的<strong>物理不可行度</strong>。</p>
+
+<p>实测（用代码里 <code>physics.py</code> 的同一套矩阵与同一套 <code>clamp</code>）：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>输入 RGB</th><th>类型</th><th><code>Render(Deconv(x))</code></th><th class="c">重建残差 max</th></tr></thead>
+<tbody>
+<tr><td><code>(0.75, 0.55, 0.42)</code></td><td>典型 IHC 棕</td><td><code>(0.740, 0.527, 0.418)</code></td><td class="c"><span class="b high">0.023</span></td></tr>
+<tr><td><code>(0.45, 0.30, 0.22)</code></td><td>深棕</td><td><code>(0.486, 0.276, 0.227)</code></td><td class="c"><span class="b high">0.036</span></td></tr>
+<tr><td><code>(0.5, 0.5, 0.5)</code></td><td>中性灰</td><td><code>(0.559, 0.444, 0.525)</code></td><td class="c"><span class="b medium">0.059</span></td></tr>
+<tr><td><code>(0.9, 0.2, 0.9)</code></td><td>品红偏色</td><td><code>(0.459, 0.408, 0.673)</code></td><td class="c"><span class="b bad">0.441</span></td></tr>
+<tr><td>随机噪声</td><td>解码崩坏</td><td><code>(0.247, 0.211, 0.560)</code></td><td class="c"><span class="b bad">0.636</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+  <div class="bt">这张表是整节的要害</div>
+  <p><strong>真实 IHC 图几乎就在 2 染色流形上</strong>（残差 0.023）—— 所以 scheme B 在<strong>图像正常时</strong>是一个忠实的浓度读出器。</p>
+  <p><strong>但生成图崩坏时残差高达 0.64</strong> —— 此时 <code>Deconv</code> 读出的「浓度」是<strong>纯粹的垃圾</strong>，而 <code>l_prot</code> 会拿这个垃圾去和真实浓度比 L1、算矩匹配，并给出一个<strong>看起来很正常、数值有限的损失值</strong>。</p>
+  <p><strong>代码里没有任何地方能区分这两种情况。</strong>这就是 scheme B 的结构性缺陷：它假设解码器的输出是物理可实现的，而这个假设从不被检验。</p>
+</div>
+
+<h4>后果 2（最关键）：1/x 梯度炸弹在策略 A 里<strong>结构上不可能存在</strong></h4>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>策略 A（正演）</th><th>策略 B（代码，反演）</th></tr></thead>
+<tbody>
+<tr><td>图像取值</td><td><code>x = x̄₀·exp(−S·C)</code>，C ≥ 0 ⇒ <strong><code>x &gt; 0</code> 恒成立</strong></td><td>任意 RGB，可以精确等于 0</td></tr>
+<tr><td><code>log(x)</code> 的自变量</td><td><strong>永不接近 0</strong></td><td>变暗时趋近 0</td></tr>
+<tr><td>梯度量级</td><td>有界</td><td><code>1/(x·ln10)</code> → <strong>可达 4.3×10⁵</strong></td></tr>
+<tr><td>失效模式</td><td><strong>梯度消失</strong>（<code>exp(−OD)→0</code>，有界、可修 —— 这就是为什么 M1 要配「浓度值域约束」）</td><td><strong>梯度爆炸</strong>（毁掉训练）</td></tr>
+<tr><td>修法</td><td>给浓度加上界（softplus + cap）</td><td>只能给 log 的自变量加 ε，<strong>或改策略</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+  <div class="bt">所以第 1.2 节的 P0-2 不是独立 bug</div>
+  <p>它<strong>是策略选择的直接后果</strong>。你选正演，那个 <code>log</code> 根本不会出现在训练图上；你选反演，它就必然出现，而且必然在生成图变暗时爆炸。</p>
+  <p><strong>这也解释了一个此前想不通的地方</strong>：为什么「给浓度加值域约束」（R2 里给 M1 写的必做项）在 scheme B 里<strong>没有对应物</strong> —— 因为 scheme B 里根本没有「浓度预测」这个东西可加约束，只有从 RGB 反推出来的一个派生量。</p>
+</div>
+
+<h4>后果 3：策略 B 的损失对一个 1 维子空间<strong>完全盲</strong></h4>
+
+<p><code>pinv(S)</code> 是 2×3、秩 2，所以它的零空间是 <strong>1 维</strong>的。也就是说存在一个 OD 扰动方向 <code>n</code>，沿它改变图像时，<strong>读出的浓度 C 一个数字都不变</strong>。</p>
+
+<p>这个方向可以解析求出：<code>n ∝ s_DAB × s_H</code>（两个染色向量的叉积）。用代码里的矩阵算出来是：</p>
+
+<pre><code>n = (-0.658, +0.697, -0.285)          # OD 空间，已归一化
+  · 与 DAB 染色向量内积 = 0（精确）
+  · 与 H   染色向量内积 = 0（精确）
+含义：R 更亮 · G 更暗 · B 更亮   → 偏品红/洋红的方向</code></pre>
+
+<p>沿这个方向移动图像，看损失能不能发现：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>沿 n 的位移 t</th><th>RGB 变化</th><th class="c">ΔC（损失看到的）</th><th class="c">ΔRGB（图像真实变化）</th></tr></thead>
+<tbody>
+<tr><td>t = 0.2</td><td><code>(0.447,0.240,0.525) → (0.605,0.174,0.598)</code></td><td class="c"><strong>1.1e−16</strong></td><td class="c">0.158</td></tr>
+<tr><td>t = 0.5</td><td><code>(0.447,0.240,0.525) → (0.953,0.108,0.728)</code></td><td class="c"><strong>1.1e−16</strong></td><td class="c">0.506</td></tr>
+<tr><td>t = 1.0</td><td><code>(0.447,0.240,0.525) → (1.000,0.048,1.000)</code></td><td class="c"><strong>1.1e−16</strong></td><td class="c"><strong>0.553</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+  <div class="bt">模型可以把图从「棕紫」推到「饱和品红」，而两个损失都报告完美满足</div>
+  <p>ΔC 是机器零（1.1e−16），ΔRGB 却到 <strong>0.553</strong> —— 超过动态范围的一半。<strong><code>l_prot</code> 和 <code>l_freq</code> 都从 C 算，所以它们共享同一个盲区。</strong></p>
+  <p>换句话说：<strong>辅助损失对图像施加的约束是「投影后相等」，而不是「图像相等」。模型有一条完全无监督的自由通道，而这条通道正好就是「非物理颜色」的方向。</strong></p>
+  <p class="small">补充：这个盲区在 OD 的 <code>clamp(min=0.0)</code> 生效的边界上会失效（clamp 是分段线性的，会在拐点处破坏线性性）。所以严格地说盲区存在于「三个通道 OD 都为正」的内点区域——这恰好是生成图正常时的区域。</p>
+</div>
+
+<h4>后果 4：<code>clamp(min=0.0)</code> 静默抹掉负浓度</h4>
+
+<p><code>physics.py</code> L79：</p>
+
+<pre><code>return c.clamp(min=0.0), i0</code></pre>
+
+<p>反演出来的浓度<strong>可以是负的</strong>（因为 <code>pinv(S)·OD</code> 对任意 OD 都有解，包括物理上不可能的）。代码把负值直接夹成 0 —— 值上是对的（浓度不能为负），但<strong>梯度在这部分元素上变成 0</strong>，于是「反演给出了非物理结果」这件事<strong>既不会被记录，也不会产生任何学习信号</strong>。</p>
+
+<p class="small">这和第 2.6 节的 <code>gate=off</code> 是<strong>同一个错误模式</strong>：把一个可检测的失败，变成一个不可检测的失败。这个模式在本项目里已经出现了至少三次（<code>gate=off</code>、<code>clamp(min=0)</code>、分位数箱）。</p>
+
+<h3 id="s9-4">9.4 这条差异正好解释了黑团与梯度炸弹</h3>
+
+<p>用代码里的 <code>clamp</code> 复现「生成图变暗」时的实际数值：</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>生成的 RGB</th><th>OD（<code>clamp(1e-6,1)</code> 后）</th><th>反演出的 C = (DAB, H)</th><th><code>Render(C)</code></th><th class="c">d(OD)/d(RGB)</th></tr></thead>
+<tbody>
+<tr><td><code>(0.02, 0.02, 0.02)</code></td><td><code>(1.70, 1.70, 1.70)</code></td><td><code>(1.49, 1.59)</code></td><td><code>(0.038, 0.010, 0.026)</code></td><td class="c">217×</td></tr>
+<tr><td><code>(0.005, 0.005, 0.005)</code></td><td><code>(2.30, 2.30, 2.30)</code></td><td><code>(2.02, 2.16)</code></td><td><code>(0.012, 0.002, 0.007)</code></td><td class="c">868×</td></tr>
+<tr><td><code>(1e−6, 1e−6, 1e−6)</code></td><td><strong><code>(6.00, 6.00, 6.00)</code></strong>（clamp 上限）</td><td><strong><code>(5.26, 5.62)</code></strong></td><td><code>(0.000, 0.000, 0.000)</code></td><td class="c"><strong>434,000×</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+  <div class="bt">读这张表</div>
+  <p>真实 IHC 的 DAB 浓度是 O(1) 量级。<strong>生成图变暗时，反演出的 C_DAB 被推到 5.26 —— 远超任何真实值，而且是纯粹的伪影。</strong>然后 <code>l_prot</code> 会拿这个 5.26 去和真实浓度做 L1 —— <strong>它不是在惩罚错误，它是在被错误喂养。</strong></p>
+  <p>同时梯度放大到了 <strong>434,000 倍</strong>。这和第 1.1 节的「aux 梯度压掉主损失梯度」严丝合缝地接上了：<strong>策略 B → 反演 → log 在暗像素处爆炸 → aux 梯度爆炸 → 全局 clip 压掉主损失 → 模型更暗 → 回到第一步。</strong></p>
+</div>
+
+<h3 id="s9-5">9.5 三个选项（按改动成本排序）</h3>
+
+<div class="card">
+  <div class="ch">
+    <div><div class="title">选项 1 · 一行改动：给 <code>log</code> 的自变量加 ε</div><div class="v"><code>physics.py</code> L49 · 改动 1 行 · 可复现性高</div></div>
+    <div><span class="b high">立即做</span></div>
+  </div>
+  <div class="body">
+    <pre><code># 现在
+return (-torch.log10((img.clamp(1e-6, 1.0)) / i0)).clamp(min=0.0)
+# 改成
+return (-torch.log10(img.clamp(0.0, 1.0) + 1e-3) / 1.0 + torch.log10(i0)).clamp(min=0.0)</code></pre>
+    <p><strong>效果：把梯度放大器从 434,000× 封顶到 434×（降低 1000 倍）。</strong>因为 <code>d(−log10(x+ε))/dx = −1/((x+ε)·ln10)</code>，在 x=0 处取到最大值 <code>1/(ε·ln10)</code>。</p>
+    <p><strong>代价：</strong>OD 上限从 6 降到 3（ε=1e-3）。<strong>对 IHC 完全够用</strong>——真实 IHC 的最深 DAB 区域 OD 在 2–3 之间，OD=3 已经是很深的棕黑。如果你觉得不够，ε=1e-4 给 OD 上限 4、放大器封顶 4340×，仍是 100 倍的改善。</p>
+    <p class="small">注意：<code>img.clamp(1e-6, 1.0)</code> 这个写法本身就同时犯了两个错——它既让 log 在 1e-6 处取到 6 的大值，又让梯度在 <code>(1e-6, 1e-3)</code> 这个带里达到 10⁴–10⁶。<code>+ε</code> 的写法把这两件事一起解决。</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div><div class="title">选项 2 · 小改动：把死代码 <code>render_ihc</code> 用起来，加 L_phys</div><div class="v">即 R2 报告里的 L_phys · 改动 ~10 行 · 可复现性高</div></div>
+    <div><span class="b blue">推荐</span></div>
+  </div>
+  <div class="body">
+    <pre><code>from hdadapt import render_ihc          # 这个函数已经写好了，只是没人调用
+
+C_pred, _ = ihc_rgb_to_concentration(pred01, i0=ihc_i0)
+x_hat     = render_ihc(C_pred, i0=ihc_i0)
+l_phys    = (x_hat - pred01).abs().mean()      # 物理不可行度</code></pre>
+    <p><strong>为什么它能治后果 3 的盲区：</strong><code>Render(Deconv(·))</code> 是把图像投影到 2 染色流形上。沿零空间方向 <code>n</code> 移动图像时，投影点不变、但图像本身变了，所以<strong>残差会变</strong>——L_phys 恰好对这一方向有梯度。这是唯一一个用现成代码就能堵住盲区的做法。</p>
+    <p><strong>额外收益：</strong><code>l_phys</code> 本身就是一个可以写进论文的指标——「物理不可行度」。R2 报告里说「不要在论文里声称物理上正确而不给证据，要么给出 Beer-Lambert 分解重构的残差」——<strong>这个残差就是它。</strong>顺手把它记进日志（每 25 步一个数），你就有了一条曲线。</p>
+    <p class="small">注意：L_phys 不能解决梯度炸弹（它仍然要经过 <code>Deconv</code> 的 log）。<strong>选项 1 和选项 2 是互补的，不是替代关系</strong>，两个都做成本仍然很低。</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div><div class="title">选项 3 · 大改动：真正实现 M1 —— U-Net 直接输出浓度图</div><div class="v">即你 R2 报告里的原方案 · 需要重新设计输出头与训练 · 改动大</div></div>
+    <div><span class="b medium">不建议现在做</span></div>
+  </div>
+  <div class="body">
+    <p>这才是你原来想的方案，也是<strong>唯一能同时结构性解决</strong>「物理合规 + 盲区 + 梯度炸弹」三件事的路径。但代价很实在：</p>
+    <ul>
+      <li>输出头从 <strong>4 通道 latent</strong> 变成 <strong>2 通道浓度</strong>，SD1.5 的 VAE 潜空间整个用不上了；</li>
+      <li>你现在的 v-prediction、8 通道 conv_in、噪声调度都是围绕 latent 空间设计的，都要改；</li>
+      <li><strong>最大的代价：放弃 SD1.5 的预训练先验</strong>。你现在的 4500 步之所以能出棕色 DAB 斑块，靠的是预训练权重。换到一个自定义浓度空间等于从头训。</li>
+    </ul>
+    <p><strong>我的判断：现在不要做。</strong>这与你「改动小 &gt; 有实验收益 &gt; 复杂度」的排序直接冲突。但它是你论文里应该写的正式方案——<strong>先把 scheme B 修到能用（选项 1 + 2），拿到稳定的 baseline，再在论文层面论证 M1 的必要性并做消融。</strong>这样「正演 vs 反演」本身就成了一个有说服力的实验章节。</p>
+    <p class="small">折中路径（如果将来要做）：不动扩散主干，只在解码之后接一个小的<strong>物理投影头</strong>——把解码出的 RGB 过一遍「Deconv → 限幅 → Render」，得到一个<strong>保证物理可行</strong>的输出，再和扩散输出加权融合。这相当于把黑团报告 Tier 1 里的「区域级物理回退」变成全图版本，改动远小于选项 3，也能拿到「输出物理可实现」的论据。</p>
+  </div>
+</div>
+
+<h3 id="s9-6">9.6 五行诊断：判断这条差异对本 run 到底重不重要</h3>
+
+<div class="box teal">
+  <div class="bt">零训练成本，可当天做</div>
+  <p>算「物理不可行度」<code>‖Render(Deconv(x)) − x‖</code>，在三组图各算一次：</p>
+  <div class="scroll">
+  <table>
+  <thead><tr><th>算在哪</th><th class="c">预期残差</th><th>判读</th></tr></thead>
+  <tbody>
+  <tr><td>真实 IHC（训练集抽 50 张）</td><td class="c">≈ 0.02–0.04</td><td>基线：真实图像几乎就在流形上</td></tr>
+  <tr><td>step 3500 的生成图（还正常）</td><td class="c">？</td><td>若 ≈ 0.05 → 解码器在正常工作时是物理可行的，scheme B 本身没错</td></tr>
+  <tr><td>step 4000 / 4500 的生成图（噪声）</td><td class="c">？</td><td><strong>若 ≫ 0.1 → scheme B 正在监督垃圾，选项 2/3 的必要性被证实</strong></td></tr>
+  </tbody>
+  </table>
+  </div>
+  <p><strong>这个实验的价值：</strong>它把「策略差异重不重要」从一个理论争论变成一个数字。如果 3500 的生成图残差已经明显高于真实图，说明解码器一直在输出非物理颜色，<strong>scheme B 从第 500 步起就在监督一个不存在的量</strong>——那这就是比黑团更根本的问题。</p>
+  <p class="small">实现只需要 <code>render_ihc</code> 与 <code>ihc_rgb_to_concentration</code> 两个现成函数，加 <code>runs/bci_v6/samples/</code> 里已有的 PNG。</p>
+</div>
+
+<h2 id="s10"><span class="num">10</span>关键数值速查</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>量</th><th>值</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td>潜码箱 lo</td><td><code>[-1.4165, -1.4274, -5.6112, -2.2867]</code></td><td><code>latent_bounds.pt</code> 实际读取</td></tr>
+<tr><td>潜码箱 hi</td><td><code>[3.8125, 4.0383, 1.4067, 1.7437]</code></td><td>同上</td></tr>
+<tr><td>真实 IHC 潜码 mean / std</td><td><code>[0.8118, 0.7481, -0.1798, -0.4605]</code> / <code>[0.6686, 0.7015, 0.5811, 0.5972]</code></td><td>同上</td></tr>
+<tr><td>箱的 σ 换算</td><td>ch0 [−3.33, +4.49] · ch1 [−3.10, +4.69] · <strong>ch2 [−9.35, +2.73]</strong> · ch3 [−3.06, +3.69]</td><td>计算</td></tr>
+<tr><td>±6 相对数据箱</td><td>ch2 上界 <strong>4.26×</strong> · ch3 上界 3.45× · ch0/ch1 下界 ~4.2×</td><td>计算</td></tr>
+<tr><td><code>l_diff</code> 3000–3500 / 3500–4000 / 4000–4500</td><td><strong>0.4729 → 0.6435 → 0.6292</strong>（+36%）</td><td><code>log.csv</code> bf16 段</td></tr>
+<tr><td><code>l_freq</code>（bf16 段）</td><td>n=70 · min 1.51 · <strong>median 3.52</strong> · mean 4.39 · <strong>max 17.33</strong>（step 3900）</td><td>同上</td></tr>
+<tr><td><code>l_prot</code>（bf16 段）</td><td>n=71 · min 0.0117 · <strong>median 0.1528</strong> · mean 0.2213 · max 1.8824（step 550）</td><td>同上</td></tr>
+<tr><td><code>gate=off</code> 比例</td><td>bf16 段 <strong>9/80 = 11.2%</strong>；3500–4000 窗口 <strong>5/11 = 45%</strong></td><td>同上</td></tr>
+<tr><td>black%（② 分位数箱钳位）</td><td>0.073(1000) → 0.170(1500) → 0.390(2000) → 0.336(2500) → 0.388(3000) → 0.357(3500) → <strong>4.026(4000)</strong> → 3.109(4500)</td><td><code>log.txt [blob]</code></td></tr>
+<tr><td>black%（③ stat-match）</td><td>4000 步 <strong>0.145</strong>（vs ② 的 4.026，改善 28×）<strong>但最小值同时从 −1.73 恶化到 −2.28</strong> ⇒ 装饰性修复</td><td>同上</td></tr>
+<tr><td>black% 三变体互差（step 500–3500）</td><td><strong>1.3× 以内</strong>（0.357–0.505）⇒ 潜码健康时解码侧钳位口径几乎不影响结果</td><td><code>log.txt [blob]</code>，见 §4.4</td></tr>
+<tr><td><code>[warn]</code> 总数</td><td>51 —— <strong>全部来自 fp16 尝试</strong>（step ≤ 627）；bf16 段 0</td><td><code>log.txt</code></td></tr>
+<tr><td>实际超参</td><td>batch 2 · <code>aux_n 1</code> · lr 1e-4 · gen_every 2 · dropout 0.1 · <code>lamb_prot 0.1</code> · <code>lamb_freq 0.01</code> · gate pcgrad · bf16 · <code>--no_grad_ckpt</code></td><td><code>start_bci_v6_h20.sh</code></td></tr>
+<tr><td>代码默认值（与脚本差 10×）</td><td><code>lamb_prot 1.0</code> · <code>lamb_freq 0.1</code></td><td><code>training_dbdce.py</code> L69–70</td></tr>
+<tr><td>EMA</td><td>decay 0.999（时间常数 ≈1000 步）· shadow fp32 · 覆盖 unet + dbdce + protein</td><td><code>ema.py</code></td></tr>
+<tr><td>采样</td><td>DDIM 20 步 · EMA 权重 · bf16 · <strong>无固定 seed</strong> · 4 张固定验证 H&E</td><td><code>sample_ema</code> L245–351</td></tr>
+<tr><td>浓度图策略</td><td><strong>scheme B（反演）</strong>：latent → decode → RGB → <code>pinv(S)·OD</code> 读出 C。<strong><code>render_ihc</code>（正演 C→RGB）全仓库无调用点 = 死代码</strong></td><td><code>__init__.py</code> L6 · 全仓库检索</td></tr>
+<tr><td>反演损失的零空间方向 <code>n</code></td><td><code>(−0.658, +0.697, −0.285)</code>（OD 空间，与两个染色向量精确正交）</td><td>由 <code>STAIN_MAT_IHC</code> 解析计算</td></tr>
+<tr><td>沿 <code>n</code> 移动的监督盲区</td><td><strong>ΔC = 1.1e−16（机器零）而 ΔRGB = 0.553</strong> —— <code>l_prot</code> 与 <code>l_freq</code> 都看不见</td><td>数值实验</td></tr>
+<tr><td>物理不可行度 <code>‖Render(Deconv(x))−x‖</code></td><td>真实 IHC 棕 <strong>0.023</strong> · 深棕 0.036 · 中性灰 0.059 · 品红偏色 <strong>0.441</strong> · 随机噪声 <strong>0.636</strong></td><td>数值实验</td></tr>
+<tr><td>变暗时的反演结果</td><td>RGB <code>1e−6</code> → OD <code>6.0</code>（clamp 上限）→ <code>C_DAB = 5.26</code>（远超真实值）→ 梯度放大 <strong>434,000×</strong></td><td>数值实验</td></tr>
+<tr><td>加 ε 后的封顶（选项 1）</td><td><code>-log10(x+1e-3)</code>：梯度放大上限 <strong>434×</strong>（降 1000 倍），OD 上限 3（IHC 够用）</td><td>计算</td></tr>
+</tbody>
+</table>
+</div>
+
+<hr>
+
+<div class="box">
+  <div class="bt">审查范围与方法说明</div>
+  <p><strong>已逐行读取：</strong><code>training_dbdce.py</code>（710 行全部）、<code>hdadapt/</code> 全部 6 个模块（physics / encoders / condition / losses / ema / data）、<code>swap_eval_dbdce.py</code>、<code>extract_h_channel.py</code>、<code>start_bci_v6_h20.sh</code>、<code>misc_diagnose/</code> 两个脚本、三份交接/排查文档、<code>runs/bci_v6/</code> 全部日志与采样图。</p>
+  <p><strong>已直接解析：</strong><code>latent_bounds.pt</code>（解 zip + struct 读出 lo/hi/mean/std 的原始 float，而非依赖文档转述）。</p>
+  <p><strong>未做：</strong>加载检查点做实验 A/B/C/E —— 因为包里没有权重（见 §8.1）。所以第 5 节的机理链条是<strong>基于代码事实的假说</strong>，不是实测结论。</p>
+</div>
+
+<p class="small" style="margin-top:26px">生成于 2026-10-04 · 审查对象 <code>/Users/hua/Downloads/histdist_full/HistDiST/</code> · 本报告归入 <code>05_伪影与失败模式/</code></p>
+
+</main>
+</div>
+</body>
+</html>

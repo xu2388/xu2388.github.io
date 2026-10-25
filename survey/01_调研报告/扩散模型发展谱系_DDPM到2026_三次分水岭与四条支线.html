@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散生成模型发展谱系 · DDPM → 2026 · 三次分水岭与四条支线 · H&amp;E→IHC 调研</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}.flow{margin:16px 0}.flow>pre{border-left-color:var(--teal);background:#f4fafb}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">扩散谱系<br>DDPM → 2026</div>
+<div class="sub">三次分水岭 · 四条支线<br>截至 2026-10 · 逐条标注证据等级</div>
+<h4>总览</h4>
+<a class="l1" href="#s0">0 · 执行摘要</a>
+<a class="l1" href="#s1">1 · 谱系总表（时间轴）</a>
+<h4>三次分水岭</h4>
+<a class="l1" href="#s2">2 · 起点：DDPM（2020）</a>
+<a class="l1" href="#s3">3 · 分水岭 I：DDIM（2021）</a>
+<a class="l1" href="#s4">4 · 分水岭 II：SDE 统一（2021）</a>
+<a class="l1" href="#s5">5 · 理论补完（2021–2024）</a>
+<h4>四条支线</h4>
+<a class="l1" href="#s6">6 · 支线 A：训练无关求解器</a>
+<a class="l1" href="#s7">7 · 支线 B：训练式少步生成</a>
+<a class="l1" href="#s8">8 · 支线 C：流匹配与矫正流</a>
+<a class="l1" href="#s9">9 · 支线 D：骨干与潜空间</a>
+<h4>当下与判定</h4>
+<a class="l1" href="#s10">10 · 2025–2026 前沿</a>
+<a class="l1" href="#s11">11 · 「谁泛化谁」逐条核实</a>
+<a class="l1" href="#s12">12 · 常见误解与纠正清单</a>
+<h4>落地</h4>
+<a class="l1" href="#s13">13 · 与库内既有报告的分工</a>
+<a class="l1" href="#s14">14 · 对本课题的意义</a>
+<a class="l1" href="#s15">15 · 证据边界与未核实清单</a>
+<a class="l1" href="#s16">16 · 参考文献</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">Research Map · Generative Model Lineage</div>
+<h1>扩散生成模型的谱系：从 DDPM 到 2026<br>三次分水岭、四条支线与「谁泛化谁」的逐条核实</h1>
+<p class="desc">你问的是「DDPM → DDIM 之后还有没有工作」。答案是：有，而且 <b>DDIM 之后这条线裂成了四条并行的支线</b>，其中一条（流匹配）在 2024 年之后事实上取代了扩散成为主流训练目标。本报告按「解决什么问题」而非「论文名」组织，给出一张谱系总表、三次分水岭的机制拆解，以及一节对本课题最值钱的判定。</p>
+<div class="meta">
+<span>截至 2026-10-11</span>
+<span>核心工作 60+ 篇</span>
+<span>四次分水岭 / 四条支线</span>
+<span>含「谁泛化谁」逐条核实表</span>
+<span>证据分级 A/B/C</span>
+</div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>执行摘要</h2>
+
+<div class="box key">
+<div class="bt">一句话结论</div>
+<p>「DDPM → DDIM → …」不是一条线，而是<b>一次分叉成四条</b>：DDIM 之后，一条去改<b>采样器</b>（不重训）、一条去改<b>训练方式</b>（蒸馏/一致性）、一条干脆<b>换掉训练目标</b>（流匹配/矫正流）、一条去改<b>骨干与生成空间</b>（DiT / 潜空间）。其中第三条在 2024 年后成为事实主流——<b>今天最强的图像/视频模型，训练目标几乎都不是 DDPM 的 ε-预测</b>。</p>
+</div>
+
+<h3>0.1 五条改变判断的结论</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">① 三次分水岭，不是一次</div>
+<p><b>DDIM（2021）</b>：把采样从「随机马尔可夫链」变成「解一个 ODE」，这是后面所有加速的地基。</p>
+<p><b>SDE 统一（2021）</b>：给出连续时间语言（VP/VE SDE、概率流 ODE），从此 DDPM 与 NCSN 是同一个东西的两个离散化。</p>
+<p><b>流匹配（2022–2024）</b>：换掉训练目标本身——从「预测噪声」改为「回归速度场」。这是最近一次、也是影响最大的一次。</p>
+</div>
+<div class="mini">
+<div class="mt">② 快速采样这条支线已经收敛</div>
+<p>DPM-Solver（2022）的「半线性结构 + 指数积分器」成为之后所有求解器的共同语言；<b>10–20 步区间在 2022 年底到 2023 年中基本被解决</b>（DPM-Solver++ / UniPC / DEIS / Restart），此后没有出现决定性的新训练无关高阶求解器。</p>
+<p>2024 年之后的增量集中在 <b>&lt;5 步</b>（且大多需要训练）和<b>迁移到新场景</b>（flow / 离散扩散 / 执行层）。</p>
+</div>
+<div class="mini">
+<div class="mt">③ 「1-step FID」是一个几乎不可比的数字</div>
+<p>同一个「1 步 FID 2.0」，可能来自 EDM/CIFAR-10、EDM/ImageNet-64、SDv1.5/COCO、SDXL/COCO，或根本<b>没有教师模型</b>（从零训练）。量级能差 10 倍以上。</p>
+<p>本报告对每个数字都标出<b>数据集 + 教师模型</b>；没标的一律写「摘要未说明」。</p>
+</div>
+<div class="mini">
+<div class="mt">④ 你的前提需要一处修正</div>
+<p>「扩散模型很丰富」是对的，但<b>H&amp;E→IHC 这个具体任务上，2026 年的 SOTA 主要是 GAN 而不是扩散</b>，且有一篇正面对比论文（HER2match）逐字写着 <i>"overall, GANs perform better than DMs"</i>。详见 §14。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">⑤ 三个必须纠正的常见说法（本报告核实过）</div>
+<ul>
+<li><b>「SD3 用了 reflow」——错。</b> SD3 全文检索不到 reflow 字样；它用的是 rectified flow 的<b>单轮训练 + logit-normal 时间步采样</b>。reflow 是 Rectified Flow 原论文提出的递归流程，SD3 未采用。</li>
+<li><b>「UniPC 是 CVPR 2023」——错。</b> UniPC 是 <b>NeurIPS 2023</b>（arXiv 页面 Comments 逐字 <code>Accepted by NeurIPS 2023</code>）。</li>
+<li><b>「AMED-Solver 是 training-free」——错。</b> 它训练一个 9k 参数的 predictor（CVPR 2024 Spotlight），属需要训练一类，常被误引。</li>
+</ul>
+</div>
+
+<h3>0.2 一张图看懂谱系</h3>
+<div class="flow">
+<pre><code>2020  DDPM ──────────────┐
+       (ε-预测 + L_simple)│
+                          │
+2021  DDIM ★分水岭 I ─────┤ 非马尔可夫前向 → 确定性采样 → 采样 = 解 ODE
+      SDE 统一 ★分水岭 II ─┤ VP/VE SDE、逆时 SDE、概率流 ODE
+      Improved DDPM      │ cosine 调度 + 学习方差
+                          │
+      ┌───────────────────┴───────────────────────────────────┐
+      │                    DDIM 之后的四条支线                  │
+      └───────────────────┬───────────────────────────────────┘
+                          │
+   ┌──────────────┬───────┴────────┬────────────────┬─────────────────┐
+   ▼              ▼                ▼                ▼                 
+支线 A         支线 B           支线 C           支线 D
+训练无关求解器  训练式少步生成    流匹配/矫正流     骨干与潜空间
+(改采样)        (改训练)          (改目标)          (改结构)
+   │              │                │                │
+PNDM/PLMS      渐进蒸馏           Flow Matching    ADM 架构消融
+DPM-Solver ★   Consistency       Rectified Flow   LDM / 潜空间
+DPM-Solver++   LCM / LCM-LoRA    Stochastic Int.  DiT (adaLN-Zero)
+UniPC / DEIS   ADD / SDXL-Turbo  SiT (受控实验)    U-ViT (long skip)
+EDM            DMD / DMD2        SD3 / MMDiT ★    MMDiT (双流)
+Restart        sCM / rCM         FLUX / FLUX.2    Sana / DiS / DiM
+   │              │                │                │
+2022-23 收敛    → 1 步可用        → 2024 起主流    → 2023 后收敛
+   │              │                │                │
+   └──────────────┴────────────────┴────────────────┘
+                          │
+2025-2026  无蒸馏单步生成（MeanFlow → iMF → pMF）
+           AR ↔ 扩散 相互反攻与融合（LLaDA / VAR / Self-Forcing / A3）
+           理论进展（FORS 的 polylog 采样 = ICML 2026 Outstanding Paper）</code></pre>
+</div>
+
+<div class="box teal">
+<div class="bt">怎么用这张图</div>
+<p>看到任何一篇「扩散 / 流匹配」的论文，先问一句：<b>它改的是 A、B、C、D 里的哪一格？</b> 同一个「让采样更快」的目标，落在 A（不重训，改数值积分）和 B（重训，改学生网络）里，<b>成本差一个数量级、失败模式完全不同</b>。这是本报告最重要的一张定位工具。</p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>谱系总表（时间轴）</h2>
+
+<p>下表按时间排列，每一行只回答一个问题：<b>它解决了前一行没有解决的什么问题</b>。「需重训」列是本表最实用的一列——它直接决定你能不能直接拿来用在已有的预训练模型上。</p>
+
+<div class="scroll">
+<table>
+<thead>
+<tr><th style="width:52px">年份</th><th style="width:190px">工作</th><th>解决了前一格没有解决的问题</th><th style="width:70px">支线</th><th style="width:78px">需重训</th><th style="width:96px">venue</th></tr>
+</thead>
+<tbody>
+<tr><td>2015</td><td>Deep Unsupervised Learning<br>using Nonequilibrium Thermodynamics</td><td>首次提出扩散概率模型，但<b>从未证明能生成高质量样本</b></td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>2019</td><td>NCSN / SMLD</td><td>从「得分匹配 + 退火 Langevin」的独立路径达到同等级质量，为后来的统一提供另一半</td><td>—</td><td>—</td><td>NeurIPS 2019</td></tr>
+<tr><td><b>2020</b></td><td><b>DDPM</b></td><td>把「扩散能生成高质量样本」变成事实，确立 ε-预测 + L_simple 的工程范式</td><td>起点</td><td>—</td><td>NeurIPS 2020</td></tr>
+<tr><td><b>2021</b></td><td><b>DDIM ★</b></td><td>采样太慢（1000 步）。构造非马尔可夫前向 → 确定性采样 → <b>把采样重解释为解 ODE</b></td><td>A</td><td><span class="b high">否</span></td><td>ICLR 2021</td></tr>
+<tr><td><b>2021</b></td><td><b>SDE 统一 ★</b></td><td>DDPM 与 NCSN 是两套不同语言。统一为连续时间 SDE，给出逆时 SDE / 概率流 ODE</td><td>理论</td><td>—</td><td>ICLR 2021 Oral</td></tr>
+<tr><td>2021</td><td>Improved DDPM</td><td>似然不具竞争力 + 方差靠手工常数。余弦调度 + 学习方差 + 时间步重要性采样</td><td>A/理论</td><td><span class="b bad">是</span>*</td><td>ICML 2021</td></tr>
+<tr><td>2021</td><td>ADM（Diffusion Beat GANs）</td><td>保真度落后 GAN。受控架构消融 + classifier guidance</td><td>D</td><td><span class="b bad">是</span></td><td>NeurIPS 2021</td></tr>
+<tr><td>2022</td><td>LDM / Stable Diffusion</td><td>像素空间算力爆炸。改到潜空间 + cross-attention 条件注入</td><td>D</td><td><span class="b bad">是</span></td><td>CVPR 2022</td></tr>
+<tr><td>2022</td><td>Classifier-Free Guidance</td><td>classifier guidance 需外挂分类器。联合训练条件/无条件模型</td><td>D</td><td><span class="b bad">是</span></td><td>arXiv 2022</td></tr>
+<tr><td>2022</td><td>Analytic-DPM</td><td>反向方差靠手工常数。证明<b>最优方差有闭式解</b>，50 步达 DDIM 级质量</td><td>A</td><td><span class="b high">否</span></td><td>ICLR 2022 杰出论文</td></tr>
+<tr><td>2022</td><td>PNDM / PLMS</td><td>DDIM 大步长引入新噪声。伪数值方法 + 线性多步法</td><td>A</td><td><span class="b high">否</span></td><td>ICLR 2022</td></tr>
+<tr><td>2022</td><td><b>DPM-Solver ★</b></td><td>黑箱高阶求解器无视 ODE 的半线性结构。<b>解析计算线性项</b>，只近似非线性项</td><td>A</td><td><span class="b high">否</span></td><td>NeurIPS 2022</td></tr>
+<tr><td>2022</td><td>DEIS</td><td>同期独立的指数积分器路线；证明确定性 DDIM 是 DEIS 的特例</td><td>A</td><td><span class="b high">否</span></td><td>ICLR 2023</td></tr>
+<tr><td>2022</td><td><b>EDM</b></td><td>理论/实践过度复杂化。拆成解耦设计维度：σ 参数化、preconditioning、调度、churn</td><td>A</td><td><span class="b high">否</span></td><td>NeurIPS 2022</td></tr>
+<tr><td>2022</td><td>DPM-Solver++</td><td>高阶求解器在 <b>CFG 大 guidance 下不稳定</b>。改用 data-prediction 参数化 + 动态阈值</td><td>A</td><td><span class="b high">否</span></td><td>MIR 2025</td></tr>
+<tr><td>2022</td><td>Progressive Distillation</td><td>数值方法在极少步撞墙。<b>训练</b>一个学生网络反复把步数减半</td><td>B</td><td><span class="b bad">是</span></td><td>ICLR 2022</td></tr>
+<tr><td>2022</td><td><b>Flow Matching</b></td><td>CNF 训练需模拟 ODE。给出 <b>simulation-free</b> 的条件流匹配目标</td><td>C</td><td><span class="b bad">是</span></td><td>ICLR 2023</td></tr>
+<tr><td>2022</td><td><b>Rectified Flow</b></td><td>路径弯曲 → 少步不准。直线插值路径 + reflow 递归拉直</td><td>C</td><td><span class="b bad">是</span></td><td>ICLR 2023 Spotlight</td></tr>
+<tr><td>2023</td><td>UniPC</td><td>&lt;10 步区间仍不够好。统一 predictor-corrector，<b>不增 NFE 即可升阶</b></td><td>A</td><td><span class="b high">否</span></td><td>NeurIPS 2023</td></tr>
+<tr><td>2023</td><td>Restart Sampling</td><td>ODE 离散误差小但会 plateau，SDE 质量高但慢。交替「加噪 + 跟 ODE」</td><td>A</td><td><span class="b high">否</span></td><td>NeurIPS 2023</td></tr>
+<tr><td>2023</td><td>Stochastic Interpolants</td><td>flow 与 diffusion 各说各话。给出统一框架 + 可调扩散系数</td><td>C</td><td><span class="b bad">是</span></td><td>JMLR 2025</td></tr>
+<tr><td>2023</td><td>Consistency Models</td><td>扩散按设计不支持单步。自一致性映射 + 边界条件 → 一步生成</td><td>B</td><td><span class="b bad">是</span></td><td>ICML 2023</td></tr>
+<tr><td>2023</td><td>DiT</td><td>U-Net 的卷积归纳偏置是否必需。ViT 骨干 + adaLN-Zero</td><td>D</td><td><span class="b bad">是</span></td><td>ICCV 2023 Oral</td></tr>
+<tr><td>2023</td><td>U-ViT</td><td>与 DiT 同期竞争：主张 long skip 关键、上下采样非必需</td><td>D</td><td><span class="b bad">是</span></td><td>CVPR 2023</td></tr>
+<tr><td>2023</td><td>LCM / LCM-LoRA</td><td>一致性模型难落地到高分辨率文生图。搬到 SD 潜空间 + 把 CFG 蒸进模型</td><td>B</td><td><span class="b bad">是</span></td><td>arXiv / 技术报告</td></tr>
+<tr><td>2023</td><td>ADD / SDXL-Turbo</td><td>1–4 步下细节崩。对抗损失 + 分数蒸馏组合</td><td>B</td><td><span class="b bad">是</span></td><td>Stability 技术报告</td></tr>
+<tr><td>2023</td><td>DPM-Solver-v3</td><td>求解器强依赖特定参数化。用 empirical model statistics 找最优参数化</td><td>A</td><td><span class="b high">否</span></td><td>NeurIPS 2023</td></tr>
+<tr><td>2024</td><td><b>SiT</b></td><td>「换插值到底有没有用」缺受控实验。<b>同架构同参数量同 GFLOPs</b> 对比</td><td>C</td><td><span class="b bad">是</span></td><td>ECCV 2024</td></tr>
+<tr><td>2024</td><td><b>SD3 / MMDiT</b></td><td>rectified flow 尚未成为标准。logit-normal 时间步采样 + 双流骨干</td><td>C/D</td><td><span class="b bad">是</span></td><td>arXiv 2024</td></tr>
+<tr><td>2024</td><td>DMD / DMD2</td><td>蒸馏依赖昂贵的 dataset 构造。分布匹配，梯度 = 两个 score 之差</td><td>B</td><td><span class="b bad">是</span></td><td>CVPR 2024 / NeurIPS 2024</td></tr>
+<tr><td>2024</td><td>FLUX.1</td><td>把 flow 底座 + 对抗蒸馏做到 12B 生产级</td><td>C/D</td><td><span class="b bad">是</span></td><td>无正式论文 <span class="b low">C</span></td></tr>
+<tr><td>2024</td><td>AMED-Solver</td><td>突破 5 步。<b>但需训练</b>一个 9k 参数 predictor（常被误引为 training-free）</td><td>A+B</td><td><span class="b bad">是</span></td><td>CVPR 2024 Spotlight</td></tr>
+<tr><td>2024</td><td>sCM</td><td>连续时间一致性模型训练不稳定。统一参数化框架</td><td>B</td><td><span class="b bad">是</span></td><td>ICLR 2025 Oral</td></tr>
+<tr><td>2025</td><td><b>MeanFlow</b></td><td>单步生成仍需蒸馏/教师。引入 <b>average velocity</b>，从零训练即可 1-NFE</td><td>C</td><td><span class="b bad">是</span></td><td>技术报告</td></tr>
+<tr><td>2025</td><td>Shortcut Models</td><td>蒸馏流程多阶段。单网络以「目标步长」为条件，一个阶段覆盖 1–128 步</td><td>B/C</td><td><span class="b bad">是</span></td><td>ICLR 2025</td></tr>
+<tr><td>2025</td><td>rCM</td><td>DMD（mode-seeking）与 CM（mode-covering）各有缺陷。用 score 正则缝合，推到 14B</td><td>B</td><td><span class="b bad">是</span></td><td>ICLR 2026</td></tr>
+<tr><td>2025</td><td>STORK / TADA / FSampler</td><td>求解器主干已收敛，转向 flow 适配 / 高维初始噪声 / 执行层跳步</td><td>A</td><td><span class="b high">否</span></td><td>arXiv 2025</td></tr>
+<tr><td>2025</td><td>iMF</td><td>MeanFlow 的训练不稳定与 guidance 不灵活。重参数化 + 显式条件</td><td>C</td><td><span class="b bad">是</span></td><td>arXiv 2025</td></tr>
+<tr><td>2026</td><td>pMF</td><td>MeanFlow 家族仍依赖 latent。解耦输出空间与 loss 空间，做到 one-step + latent-free</td><td>C</td><td><span class="b bad">是</span></td><td>arXiv 2026-01</td></tr>
+<tr><td>2026</td><td>FORS</td><td>采样步数依赖多项式。给出 <b>polylog(1/δ)</b> 步采样算法，指数级改进</td><td>理论</td><td>—</td><td>ICML 2026 杰出论文</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">* Improved DDPM 的改进（余弦调度、学习方差）若要生效需要<b>重新训练</b>，但它本身不改变采样器；表中标「否」是指「它不要求你为加速额外训练一个学生网络」。这一点在 §5 会展开。</p>
+
+<div class="box key">
+<div class="bt">读表要点</div>
+<p>把「需重训」这一列单独看一遍：<b>所有标「否」的工作（支线 A）都可以直接套在你已有的预训练模型上</b>——DDIM、DPM-Solver、DPM-Solver++、UniPC、EDM 采样器、Restart。所有标「是」的都需要训练预算。这一列就是你决定「先试哪个」的第一道过滤器。</p>
+</div>
+
+<h2 id="s2"><span class="num">2</span>起点：DDPM（2020）</h2>
+
+<div class="card">
+<div class="ch">
+<div><div class="title">Denoising Diffusion Probabilistic Models</div><div class="v">Jonathan Ho, Ajay Jain, Pieter Abbeel · NeurIPS 2020 · arXiv:2006.11239</div></div>
+<div><span class="b high">A</span> <span class="b blue">NeurIPS 2020</span></div>
+</div>
+<div class="body">
+<p><b>它解决了什么</b>：Sohl-Dickstein et al.（2015）提出了扩散概率模型，但论文自己写着 <i>"to the best of our knowledge, there has been no demonstration that they are capable of generating high quality samples"</i>。DDPM 是第一次证明这件事。</p>
+<p><b>机制</b>：前向是无参数的马尔可夫链，按方差表 β₁…β_T 逐步加高斯噪声；因高斯性可闭式采样 x_t = √(ᾱ_t)·x₀ + √(1−ᾱ_t)·ε。反向用网络参数化高斯转移，采用 <b>ε-预测</b>：网络不预测均值，而是预测「被加进去的那个噪声」。</p>
+</div>
+</div>
+
+<h3>2.1 最值得记住的一点：简化损失为什么有效</h3>
+
+<p>这是整条谱系的第一个「工程奇迹」，也是理解后面一切的基础。完整变分下界里的权重是 β_t²/(2σ_t²α_t(1−ᾱ_t))，DDPM 直接把它<b>丢掉</b>，只留 MSE：</p>
+
+<div class="formula">L<sub>simple</sub> = E<sub>t,x₀,ε</sub> ‖ ε − ε<sub>θ</sub>(√ᾱ<sub>t</sub>·x₀ + √(1−ᾱ<sub>t</sub>)·ε, t) ‖²</div>
+
+<p>论文给出的解释（要点）：这个丢弃是<b>重新加权</b>了变分界，使「小 t 的损失项被降权」——小 t 时噪声极小、去噪任务很简单，降权后网络可以专注在<b>大 t 的困难去噪任务</b>上。论文明确指出它<b>不是</b> ELBO 本身，而是 <i>"a weighted variational bound that emphasizes different aspects of reconstruction"</i>。</p>
+
+<div class="box good">
+<div class="bt">为什么这条要单独讲</div>
+<p>因为 DDIM 能成立，<b>完全依赖训练目标只通过边缘分布 q(x_t|x₀) 起作用</b>，而不依赖前向过程是不是马尔可夫的。DDPM 把损失简化成「在给定噪声水平下预测噪声」，恰恰使这个性质变得显式。<b>没有 L_simple 的这个形式，DDIM 的非马尔可夫构造就无从谈起。</b></p>
+</div>
+
+<h3>2.2 关键数字（论文 Table 1 / Table 2）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>项目</th><th>数值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>CIFAR-10 无条件</td><td>IS 9.46 ± 0.11 · FID 3.17（对训练集）/ 5.24（对测试集）</td><td>NLL ≤ 3.75 bits/dim</td></tr>
+<tr><td>目标消融</td><td>ε-预测 + L_simple：IS 9.46 / FID 3.17<br>直接预测 μ̃ + 真变分界：IS 7.28 / <b>FID 23.69</b></td><td><b>这是「简化损失更好」的直接证据</b></td></tr>
+<tr><td>学习对角方差</td><td>训练不稳定、质量更差</td><td>这条后来被 Improved DDPM 用 v-参数化修好</td></tr>
+<tr><td>LSUN 256×256</td><td>Church FID 7.89 · Bedroom FID 4.90</td><td>—</td></tr>
+<tr><td>超参</td><td>T = 1000；β 从 10⁻⁴ 线性增至 0.02</td><td>线性调度在 32²/64² 上有问题，见 §5</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">官方代码：<code>github.com/hojonathanho/diffusion</code>。</p>
+
+<h2 id="s3"><span class="num">3</span>分水岭 I：DDIM（2021）—— 把采样变成解 ODE</h2>
+
+<div class="card">
+<div class="ch">
+<div><div class="title">Denoising Diffusion Implicit Models</div><div class="v">Jiaming Song, Chenlin Meng, Stefano Ermon · ICLR 2021 · arXiv:2010.02502</div></div>
+<div><span class="b high">A</span> <span class="b blue">ICLR 2021</span></div>
+</div>
+<div class="body">
+<p><b>它解决了什么</b>：DDPM 必须顺序跑满 T=1000 步。论文原文指出采样 50k 张 32×32 图约需 20 小时，而 GAN 不到 1 分钟。</p>
+<p><b>一句话机制</b>：训练目标只依赖边缘分布 q(x_t|x₀)，<b>不依赖联合分布是否马尔可夫</b>。既然如此，就可以构造一族「非马尔可夫」前向过程，它们给出完全相同的边缘分布（因此训练目标不变、可直接复用预训练模型），但反向过程可以只在子序列上采样——大步长、少步数。</p>
+</div>
+</div>
+
+<h3>3.1 核心机制：非马尔可夫前向 + η 旋钮</h3>
+
+<p>DDIM 构造一族由实向量 σ ∈ ℝ<sup>T</sup><sub>≥0</sub> 索引的推断分布：</p>
+
+<div class="formula">q<sub>σ</sub>(x<sub>t−1</sub> | x<sub>t</sub>, x₀) = N( √α<sub>t−1</sub>·x₀ + √(1−α<sub>t−1</sub>−σ<sub>t</sub>²)·(x<sub>t</sub>−√α<sub>t</sub>x₀)/√(1−α<sub>t</sub>) ,  σ<sub>t</sub>²·I )</div>
+
+<p>关键点是：虽然联合分布非马尔可夫，但其<b>边缘分布 q(x_t|x₀) = N(√α_t·x₀, (1−α_t)I) 与 DDPM 完全一致</b>，因此训练目标相同。</p>
+
+<p>采样更新式（原文 Eq.12）由三部分组成，这个结构值得记住：</p>
+
+<pre><code>x_{t-1} = √α_{t-1} · [ (x_t − √(1−α_t)·ε_θ(x_t)) / √α_t ]   ← 「预测的 x₀」
+        + √(1−α_{t-1} − σ_t²) · ε_θ(x_t)                     ← 指向 x_t 的方向
+        + σ_t · ε_t                                          ← 随机噪声</code></pre>
+
+<div class="scroll">
+<table>
+<thead><tr><th>η 取值</th><th>σ 的取法</th><th>退化成什么</th></tr></thead>
+<tbody>
+<tr><td><b>η = 1</b></td><td>σ<sub>τ<sub>i</sub></sub> = √((1−α<sub>τ<sub>i−1</sub></sub>)/(1−α<sub>τ<sub>i</sub></sub>))·√(1−α<sub>τ<sub>i</sub></sub>/α<sub>τ<sub>i−1</sub></sub>)</td><td>前向变为马尔可夫 → <b>就是 DDPM</b>（随机）</td></tr>
+<tr><td><b>η = 0</b></td><td>σ = 0</td><td><b>DDIM</b>：随机噪声项消失，生成过程成为对初始隐变量 x_T 的<b>确定性函数</b>（隐式模型）</td></tr>
+<tr><td>0 &lt; η &lt; 1</td><td>连续插值</td><td>在随机性与确定性之间连续可调</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">为什么「确定性」这件事是分水岭</div>
+<p>η=0 时，x₀ 是 x_T 的确定性函数。论文证明该迭代<b>等价于对某个 ODE 做 Euler 积分</b>：<code>dx̄(t) = ε_θ(x̄(t)/√(σ²+1)) dσ(t)</code>。并且 Proposition 1 证明这个 ODE 在最优模型下等价于 SDE 论文的 VE-SDE 对应的<b>概率流 ODE</b>。</p>
+<p>这一步的意义远超「快」：它把采样从「跑一条随机链」变成了「解一个确定的微分方程」——于是<b>整个数值分析工具箱（高阶格式、自适应步长、误差分析）都可以直接搬进来</b>。后面 §6 的所有求解器，都建立在这一点上。同时它也解锁了两件 DDPM 做不到的事：隐空间语义插值、以及可逆编码重建。</p>
+</div>
+
+<h3>3.2 关键数字：Table 1（CIFAR-10，FID）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>η \ 步数 S</th><th class="c">10</th><th class="c">20</th><th class="c">50</th><th class="c">100</th><th class="c">1000</th></tr></thead>
+<tbody>
+<tr><td><b>0.0（DDIM）</b></td><td class="c">13.36</td><td class="c">6.84</td><td class="c"><b>4.67</b></td><td class="c"><b>4.16</b></td><td class="c">4.04</td></tr>
+<tr><td>0.2</td><td class="c">14.04</td><td class="c">7.11</td><td class="c">4.77</td><td class="c">4.25</td><td class="c">4.09</td></tr>
+<tr><td>0.5</td><td class="c">16.66</td><td class="c">8.35</td><td class="c">5.25</td><td class="c">4.46</td><td class="c">4.29</td></tr>
+<tr><td>1.0（DDPM）</td><td class="c">41.07</td><td class="c">18.36</td><td class="c">8.01</td><td class="c">5.78</td><td class="c">4.73</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">一个常见的记错点</div>
+<p>网上常写「DDIM 在 50 步达到 FID 4.16」——<b>不准确</b>。按原表：<b>50 步是 4.67，100 步才是 4.16</b>。真正的对比优势在短轨迹：<b>50 步时 DDIM 4.67 vs DDPM 8.01</b>，差距极大；但到 1000 步时 DDIM 4.04 对 DDPM 4.73，差距收窄。引用时请用 4.67/4.16 这组。</p>
+</div>
+
+<p>加速比：摘要写 <b>10×–50×</b>（wall-clock），正文实验节写 <b>10×–100×</b>——两处口径不同，引用时建议说「摘要口径 10×–50×」。官方代码：<code>github.com/ermongroup/ddim</code>。</p>
+
+<h2 id="s4"><span class="num">4</span>分水岭 II：SDE 统一（2021）—— 连续时间的语言</h2>
+
+<div class="card">
+<div class="ch">
+<div><div class="title">Score-Based Generative Modeling through Stochastic Differential Equations</div><div class="v">Yang Song, Jascha Sohl-Dickstein, Diederik P. Kingma, Abhishek Kumar, Stefano Ermon, Ben Poole · ICLR 2021 Oral · arXiv:2011.13456</div></div>
+<div><span class="b high">A</span> <span class="b blue">ICLR 2021 Oral</span></div>
+</div>
+<div class="body">
+<p><b>它解决了什么</b>：此时领域里有两套动机与形式都不同的框架——DDPM（变分/离散马尔可夫）与 NCSN/SMLD（得分匹配/退火 Langevin）。本文把它们统一进一个连续时间 SDE 框架，并额外给出 predictor-corrector 采样器、可精确计算似然的等价 neural ODE、以及逆问题求解的新途径。</p>
+</div>
+</div>
+
+<h3>4.1 必须记住的方程</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:150px">对象</th><th>方程</th><th>来自</th></tr></thead>
+<tbody>
+<tr><td>前向 SDE</td><td><code>dx = f(x,t)dt + g(t)dw</code></td><td>一般形式</td></tr>
+<tr><td><b>逆时 SDE</b></td><td><code>dx = [f(x,t) − g(t)²∇_x log p_t(x)]dt + g(t)dw̄</code></td><td>Anderson 1982</td></tr>
+<tr><td>VP SDE（方差保持）</td><td><code>dx = −½β(t)x dt + √(β(t))dw</code></td><td><b>就是 DDPM</b></td></tr>
+<tr><td>VE SDE（方差爆炸）</td><td><code>dx = √(d[σ²(t)]/dt) dw</code></td><td><b>就是 SMLD/NCSN</b></td></tr>
+<tr><td>sub-VP SDE</td><td><code>dx = −½β(t)x dt + √(β(t)(1−e^{−2∫β}))dw</code></td><td>本文新提出</td></tr>
+<tr><td><b>概率流 ODE</b></td><td><code>dx = [f(x,t) − ½g(t)²∇_x log p_t(x)]dt</code></td><td>与 SDE 共享同一边缘分布轨迹的确定性过程</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>逆时 SDE 的关键意义在于：<b>它只依赖扰动分布的得分</b> ∇_x log p_t(x)——也就是只依赖神经网络能估计的那个东西。这就是「学得分 = 会生成」的严格表述。</p>
+
+<h3>4.2 「DDPM 和 NCSN 是同一个 SDE 的两种离散化」——原文逐字</h3>
+
+<div class="box key">
+<div class="bt">论文原句（已逐字核对）</div>
+<ul>
+<li>§3.4：<i>"The noise perturbations used in SMLD and DDPM can be regarded as <b>discretizations of two different SDEs</b>."</i></li>
+<li>Appendix B：<i>"the noise perturbations used in SMLD and DDPM <b>correspond to discretizations of VE and VP SDEs respectively</b>."</i></li>
+<li>关于采样：<i>"Ancestral sampling, the sampling method of DDPM (Eq. (4)), actually corresponds to <b>one special discretization of the reverse-time VP SDE</b>"</i>，并明确说这 <i>"unifies the sampling method in Ho et al. (2020) as a numerical solver to the reverse-time VP SDE"</i>。</li>
+</ul>
+<p>最后这句很重要：<b>它把 DDPM 的采样重新定义成了一个数值求解器</b>。这正是后来「换一个更好的求解器就能加速」这个思路的正式出生证。</p>
+</div>
+
+<p><b>关键数字</b>：CIFAR-10 无条件 IS 9.89、FID 2.20、似然 2.99 bits/dim；并首次从 score-based 模型生成 1024×1024 高保真图像。官方代码：<code>github.com/yang-song/score_sde</code>（另有 PyTorch 版）。</p>
+
+<div class="box pur">
+<div class="bt">这一节对你自己项目的实际含义</div>
+<p>「VP vs VE」不是抽象概念。如果你要改的是<b>前向退化过程</b>（比如在 OD/浓度空间定义加噪），SDE 框架给的是一个连续时间语言，而 DDPM 给的是离散递推。<b>想在浓度空间做扩散，用 SDE 语言描述比用离散 β 表描述更容易论证「这个前向过程定义良好」</b>。库内《扩散机制本体的改动_六轴谱系》§2 已把「打开前向退化算子 D」这条轴系统展开，本报告不重复。</p>
+</div>
+
+<h2 id="s5"><span class="num">5</span>理论补完（2021–2024）</h2>
+
+<p>分水岭之后、支线爆发之前，有四组工作把地基补完。它们各自的定位很容易混，这里给一张对照表。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:160px">工作</th><th>补的是哪个洞</th><th>关键结论</th><th style="width:70px">需重训</th><th style="width:120px">venue</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Improved DDPM</b><br><span class="small">Nichol &amp; Dhariwal 2021</span></td>
+<td>似然不具竞争力；反向方差靠手工常数</td>
+<td>余弦调度 + <b>学习方差</b>（v-参数化）+ 时间步重要性采样。摘要称「少一个数量级的前向次数」；正文写「<b>100 步即足以达到近最优 FID</b>」</td>
+<td><span class="b bad">是</span></td>
+<td>ICML 2021</td>
+</tr>
+<tr>
+<td><b>Analytic-DPM</b><br><span class="small">Bao, Li, Zhu, Zhang 2022</span></td>
+<td>反向方差的最优值是什么，没人知道</td>
+<td>Theorem 1 证明<b>最优均值与最优方差都是得分函数的闭式函数</b>。且最优均值与 DDPM 的 ε-参数化均值<b>完全一致</b>，差别只在用网络输出替代真实得分。摘要称 20×–80× 加速</td>
+<td><span class="b high">否</span></td>
+<td>ICLR 2022 杰出论文</td>
+</tr>
+<tr>
+<td><b>gDDIM</b><br><span class="small">Zhang, Tao, Chen 2023</span></td>
+<td>原 DDIM 只适用于各向同性扩散</td>
+<td>从数值积分视角重新解释 DDIM（视为「对得分做特定近似」），推广到 BDM / CLD 等非各向同性扩散。BDM 上 &gt;20× 加速；CLD 上 CIFAR-10 FID 2.26 @50 NFE</td>
+<td><span class="b high">否</span></td>
+<td>ICLR 2023</td>
+</tr>
+<tr>
+<td><b>收敛理论三连</b><br><span class="small">Chen / Lee / Benton</span></td>
+<td>「扩散采样为何有效」缺乏可证明的复杂度</td>
+<td>见 §5.2</td>
+<td>—</td>
+<td>ICLR 2023 / ALT 2023 / ICLR 2024</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>5.1 Analytic-DPM 的精确数字（这是「少步采样」的理论最优）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>方法（CIFAR-10，even trajectory）</th><th class="c">K=50</th><th class="c">K=100</th><th class="c">K=1000</th></tr></thead>
+<tbody>
+<tr><td><b>Analytic-DDIM</b></td><td class="c"><b>4.04</b></td><td class="c">3.55</td><td class="c">—</td></tr>
+<tr><td>DDIM（基线）</td><td class="c">7.74</td><td class="c">6.08</td><td class="c">4.13</td></tr>
+<tr><td>DDPM（σ_n = β_n）</td><td class="c">—</td><td class="c">—</td><td class="c">3.04</td></tr>
+</tbody>
+</table>
+</div>
+<p class="small">读法：Analytic-DDIM 在 <b>50 步（4.04）就已经打到 DDIM 1000 步（4.13）的水平</b>，这就是「20×–80× 加速」的出处。似然侧：CIFAR-10 上 Analytic-DDPM（OT）K=50 得 NLL 3.61，已匹配其全 1000 步的 3.59。</p>
+
+<div class="box warn">
+<div class="bt">一处必须提醒的 arXiv ID 陷阱</div>
+<p>Analytic-DPM 的 ID 是 <b>arXiv:2201.06503</b>。<b>arXiv:2201.06528 不是这篇</b>（那是一篇凝聚态物理论文）。本报告在检索中确认了这一点，因为二者只差一位数字，很容易抄错。</p>
+</div>
+
+<h3>5.2 收敛理论：把「为什么有效」变成定理</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:180px">工作</th><th style="width:110px">venue</th><th>打破了什么假设</th><th>结论</th></tr></thead>
+<tbody>
+<tr>
+<td>Chen et al.<br><span class="small">Sampling is as easy as learning the score</span></td>
+<td>ICLR 2023</td>
+<td>此前要么依赖强数据假设，要么依赖排除非对数凹性的函数不等式</td>
+<td>只需 <b>L2-accurate</b> 得分估计（而非 L∞）；复杂度在所有相关参数上<b>多项式</b>。另给出证据表明使用 CLD 并<b>不</b>降低复杂度（与常规认知相反）</td>
+</tr>
+<tr>
+<td>Lee, Lu, Tan</td>
+<td>ALT 2023</td>
+<td>此前对多模态、非光滑分布无法给出有效保证</td>
+<td>对一般分布给出多项式收敛保证，<b>不依赖任何函数不等式或光滑性假设</b>；有界支撑/尾部衰减 → Wasserstein 保证，加光滑性 → TV 保证</td>
+</tr>
+<tr>
+<td>Benton et al.<br><span class="small">Nearly d-Linear Convergence Bounds</span></td>
+<td>ICLR 2024</td>
+<td>此前最紧的界在数据维度上是超线性，或需强光滑性</td>
+<td>首个在维度上<b>线性（至多对数因子）</b>的界，仅假设二阶矩有限：<br><b>Õ(d·log²(1/δ)/ε²) 步</b>即可在 KL 意义下逼近到 ε² 以内</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">理论线的走向（与 2026 呼应）</div>
+<p>把这三篇连起来看是一条清晰的下降曲线：<b>多项式 → 一般分布多项式 → 维度线性</b>。而 2026 年 ICML 的杰出论文（FORS）把这个曲线又推了一格：<b>polylog(1/δ)</b>。也就是说，「需要多少步」这个问题的理论上限，在 2022–2026 这四年里从多项式一路降到了多对数——这是本报告里唯一一条「理论上界被反复打破」的线。</p>
+</div>
+
+<h2 id="s6"><span class="num">6</span>支线 A：训练无关的快速求解器</h2>
+
+<div class="box key">
+<div class="bt">这条支线的定义</div>
+<p><b>不改模型、不训练、只换采样器</b>。你拿一个已经训好的扩散模型，把它从 1000 步压到 10–20 步，画质基本不掉。<b>这是四条支线里唯一「零成本」的一条</b>，也是 DDIM 之后最先爆发、最先收敛的一条。</p>
+</div>
+
+<h3>6.1 先看全景：这条支线的收敛时间线</h3>
+<div class="flow">
+<pre><code>DDIM (2021)          一阶 Euler，η=0 确定性            ── 起点：采样 = 解 ODE
+  │
+PNDM / PLMS (2022)   伪数值方法；线性多步；3 步 warmup  ── 首次把经典数值方法搬进来
+  │
+DPM-Solver (2022) ★  「半线性结构 + 指数积分器」        ── 理论上把结构吃透，10 NFE
+  │                  λ = half log-SNR 成为公共语言
+  ├── DEIS (2023)    换插值变量（t / ρ 上的 Taylor）     ── 同期独立路线
+  │
+DPM-Solver++ (2022)  改 data-prediction，为 CFG 而生     ── 解决「大 guidance 下高阶反而不如 DDIM」
+  │
+UniPC (2023)         统一 predictor-corrector            ── 不增 NFE 即升阶
+EDM (2022)           σ 参数化 + preconditioning + churn  ── 框架级重构，可插在别人的模型上
+Restart (2023)       ODE 与 SDE 交替                     ── 打破 ODE 的 plateau
+  │
+  ├─────────── 2022 年底 ~ 2023 年中：10–20 NFE 区间基本被解决 ───────────┤
+  │
+DPM-Solver-v3 (2023) 用 empirical model statistics 找最优参数化（仍 training-free）
+SA-Solver (2023)     SDE 路线的 stochastic Adams
+AMED-Solver (2024)   5 NFE ★ 但需要训练一个 predictor —— 不是 training-free
+STORK (2025)         同时解决 stiffness 与 semi-linear 依赖，适配 flow matching
+TADA (2025)          高维初始噪声（training-free）
+FSampler (2025)      执行层 ε 外推，跳过部分模型调用
+可微求解器搜索 (2025) 把「时间步 + 系数」当作可微搜索空间
+AREX (2026-10)       affine-residual 指数积分器，面向 flow matching
+  │
+  └── 2024 之后：主干无新里程碑，增量在「<5 步（多需训练）」与「迁移到新场景」</code></pre>
+</div>
+
+<h3>6.2 DPM-Solver：这条支线的理论基石</h3>
+
+<div class="card">
+<div class="ch">
+<div><div class="title">DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps</div><div class="v">Cheng Lu, Yuhao Zhou, Fan Bao, Jianfei Chen, Chongxuan Li, Jun Zhu · NeurIPS 2022 · arXiv:2206.00927</div></div>
+<div><span class="b high">A</span> <span class="b blue">NeurIPS 2022</span></div>
+</div>
+<div class="body">
+<p><b>它解决了什么</b>：DDIM 只是一阶 Euler；而把黑箱高阶 ODE 求解器（RK45 之类）直接套上去会失败——因为它们<b>无视扩散 ODE 的半线性结构</b>，把线性项和非线性项一起离散，导致线性项的误差被指数放大，少步时不收敛。</p>
+<p><b>核心洞察（摘要逐字）</b>：<i>"we propose an exact formulation of the solution of diffusion ODEs. The formulation <b>analytically computes the linear part</b> of the solution, rather than leaving all terms to black-box ODE solvers... By applying change-of-variable, the solution can be equivalently simplified to <b>an exponentially weighted integral</b> of the neural network."</i></p>
+</div>
+</div>
+
+<h4>具体机制</h4>
+<p>扩散 ODE 可以写成「线性项 + 神经网络非线性项」：</p>
+<div class="formula">dx<sub>t</sub>/dt = f(t)·x<sub>t</sub> + (g²(t)/2σ<sub>t</sub>)·ε<sub>θ</sub>(x<sub>t</sub>, t)</div>
+
+<p>关键变量是 <b>λ<sub>t</sub> := log(α<sub>t</sub>/σ<sub>t</sub>)</b>，即 <b>half log-SNR</b>（log-SNR 的一半）。用变分常数法（variation of constants），解的精确形式是：</p>
+
+<div class="formula">x<sub>t</sub> = (α<sub>t</sub>/α<sub>s</sub>)·x<sub>s</sub> − α<sub>t</sub> · ∫<sub>λ<sub>s</sub></sub><sup>λ<sub>t</sub></sup> e<sup>−λ</sup> · ε̂<sub>θ</sub>(x̂<sub>λ</sub>, λ) dλ</div>
+
+<p>读法：<b>线性部分 (α_t/α_s)·x_s 是解析精确的</b>，只剩下一个指数加权积分需要数值近似。这正是指数积分器（exponential integrator）的经典形式——<b>把「能解析算的」和「必须近似的」分开，是整条支线最核心的思想</b>。</p>
+
+<p>基于此定义 DPM-Solver-1/2/3（1/2/3 阶），Theorem 3.2 证明 DPM-Solver-k 是 k 阶求解器（误差 O(h<sub>max</sub><sup>k</sup>)），并给出在 λ 上的自适应步长调度。</p>
+
+<div class="box good">
+<div class="bt">已核实的头条数字（摘要逐字）</div>
+<p><b>CIFAR-10：10 NFE 得 4.70 FID，20 NFE 得 2.87 FID</b>；比此前 SOTA 的训练无关采样器快 <b>4–16×</b>。论文强调它 <i>"suitable for both discrete-time and continuous-time DPMs <b>without any further training</b>"</i>。</p>
+<p class="small">论文 Table 1 对照：DPM-Solver-2 @12 NFE = 5.28 FID；DPM-Solver-3 @18 NFE = 2.90 FID；而黑箱 RK2(λ) @18 NFE = 42.04、RK3(λ) @18 NFE = 4.90。这组对照直接证明了「必须利用半线性结构」。官方代码：<code>github.com/LuChengTHU/dpm-solver</code>。</p>
+</div>
+
+<h3>6.3 DPM-Solver++：为 classifier-free guidance 而生</h3>
+
+<p>这篇的重要性在于它修正了一个<b>实践中的反直觉现象</b>：在 CFG 的大 guidance scale 下，高阶求解器会<b>变得比一阶 DDIM 还差</b>。作者定位了两个病根：</p>
+<ol>
+<li><b>大 guidance scale 收窄了高阶求解器的收敛半径</b> → 数值不稳定；</li>
+<li><b>train-test mismatch</b>：收敛解落在训练数据分布范围之外。</li>
+</ol>
+
+<p>修法有三条，每条都值得记住：</p>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:150px">修法</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td><b>换参数化</b></td><td>从噪声预测改为 <b>data-prediction</b>：<code>x_θ(x_t,t) := (x_t − σ_t·ε_θ(x_t,t))/α_t</code>。噪声预测下网络误差被 σ 放大，大 σ 时尤其糟。注意其精确解里积分核是 <b>e<sup>+λ</sup></b>，与 ε_θ 版的 e<sup>−λ</sup> 不同，所以两者高阶版本<b>本质不同</b>，不是简单替换</td></tr>
+<tr><td><b>动态阈值</b></td><td>抑制 train-test mismatch</td></tr>
+<tr><td><b>Multistep 变体</b></td><td>DPM-Solver++(2M) 用历史点减小有效步长来治不稳定。<b>k=1 时等价于 DDIM(η=0)</b>——即它是 DDIM 在 data-prediction 下的高阶推广</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><b>数字</b>：guided sampling 下 15–20 步即可高质量。论文 Figure 1 的设定很能说明问题——ImageNet 256×256、classifier guidance scale = 8.0、仅 15 NFE 时，<b>DPM-Solver++ 优于 DDIM，而 PNDM / DPM-Solver-3 / DEIS-2 反而不如 DDIM</b>。venue：arXiv v1 2022-11，最终发表于 Machine Intelligence Research (2025)，DOI 10.1007/s11633-025-1562-4。</p>
+
+<div class="box warn">
+<div class="bt">对你的项目直接相关</div>
+<p>你如果要用 CFG（虚拟染色里引导强度是常用旋钮），<b>应该直接上 DPM-Solver++(2M) 而不是 DPM-Solver</b>。这是 diffusers 等库的默认选择，原因就是这个。</p>
+</div>
+
+<h3>6.4 UniPC 与 DEIS</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:130px">工作</th><th>机制</th><th>关键数字</th><th>venue</th></tr></thead>
+<tbody>
+<tr>
+<td><b>UniPC</b></td>
+<td>提出统一 corrector（UniC）+ 统一 predictor（UniP），任意阶共享同一解析形式。<b>corrector 复用 buffer 中已有的 ε_θ 评估</b>，因此「不增模型评估即可升阶」，可接在任意已有 DPM 采样器之后</td>
+<td><b>仅 10 NFE</b>：CIFAR-10 无条件 <b>3.87 FID</b>；ImageNet 256×256 条件 <b>7.51 FID</b></td>
+<td><b>NeurIPS 2023</b><br><span class="b bad">（不是 CVPR）</span></td>
+</tr>
+<tr>
+<td><b>DEIS</b></td>
+<td>同为半线性 + 指数积分器，但用对 <b>t（或缩放变量 ρ）</b>的 Taylor/拉格朗日多项式近似 ε_θ，而 DPM-Solver 在 <b>λ</b> 上展开。论文证明<b>确定性 DDIM 是 DEIS 的特例</b>（VPSDE 下 r=0 的 t-AB-DEIS），并继承底层 RK/AB 的收敛阶保证</td>
+<td>摘要 v4：<b>4.17 FID @10 NFE、3.37 FID @15 NFE</b>（CIFAR-10）</td>
+<td>ICLR 2023</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>6.5 EDM：既是框架也是采样器</h3>
+
+<div class="card">
+<div class="ch">
+<div><div class="title">Elucidating the Design Space of Diffusion-Based Generative Models</div><div class="v">Tero Karras, Miika Aittala, Timo Aila, Samuli Laine (NVIDIA) · NeurIPS 2022 · arXiv:2206.00364</div></div>
+<div><span class="b high">A</span> <span class="b blue">NeurIPS 2022</span></div>
+</div>
+<div class="body">
+<p><b>它解决了什么</b>（摘要逐字）：<i>"the theory and practice of diffusion-based generative models are currently <b>unnecessarily convoluted</b>"</i>。它把扩散拆成<b>相互解耦的设计维度</b>：σ 参数化、缩放 s(t)、时间步 {t_i}、preconditioning、训练噪声分布、loss 加权。其采样改进<b>可即插即用地作用在别人的预训练 score 网络上</b>。</p>
+</div>
+</div>
+
+<h4>四个关键设计（这一节是全报告最「可操作」的部分）</h4>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:150px">设计</th><th>内容</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Preconditioning</b></td>
+<td>用 <code>D_θ(x;σ) = c_skip(σ)·x + c_out(σ)·F_θ(c_in(σ)·x; c_noise(σ))</code>，其中<br>
+<code>c_skip = σ_data²/(σ²+σ_data²)</code>、<code>c_out = σ·σ_data/√(σ_data²+σ²)</code>、<code>c_in = 1/√(σ²+σ_data²)</code>、<code>c_noise = ¼·ln(σ)</code>，<b>σ_data = 0.5</b>。<br>
+设计动机：让输入/目标<b>单位方差</b>，并让 c_skip 尽量<b>不放大</b> F_θ 的误差；大 σ 时允许网络直接预测期望输出而非预测噪声再相减</td>
+</tr>
+<tr>
+<td><b>Heun 二阶采样器</b></td>
+<td>每步先 Euler 一步得 x_{i+1}，再在 t_{i+1} 评估一次 dx/dt，取<b>显式梯形平均</b>；σ(t_{i+1})=0 时退化为 Euler（避免除零）。局部误差 O(h³)，代价是每步多一次 NFE</td>
+</tr>
+<tr>
+<td><b>时间步调度</b></td>
+<td><code>σ_{i&lt;N} = (σ_max^{1/ρ} + (i/(N−1))·(σ_min^{1/ρ} − σ_max^{1/ρ}))^ρ</code>，<b>ρ = 7</b>，σ_min = 0.002，σ_max = 80。<br>
+原文结论：<b>ρ=3 理论上使每步截断误差近似均衡，但图像采样 ρ∈[5,10] 明显更好</b>；且步长应随 σ 减小而单调减小，无需 per-sample 自适应</td>
+</tr>
+<tr>
+<td><b>churn（随机采样器）</b></td>
+<td>每步先把噪声<b>抬升</b>到 t̂_i = t_i + γ_i·t_i（γ_i = min(S_churn/N, √2−1)，仅当 t_i ∈ [S_tmin, S_tmax]），在新噪声水平评估 D_θ 再走 ODE。<b>关键细节：噪声注入后再评估 D_θ</b>（Euler–Maruyama 用的是注入前的 x_i,t_i），低 NFE 大步长下差异显著</td>
+</tr>
+<tr>
+<td><b>训练噪声分布</b></td>
+<td><code>ln(σ) ~ N(P_mean = −1.2, P_std = 1.2)</code>（log-normal）比均匀采样好得多；loss 加权 λ(σ) = 1/c_out(σ)²</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">已核实的 EDM 数字（摘要逐字）</div>
+<p>CIFAR-10 <b>class-conditional FID 1.79、unconditional 1.97，仅 35 NFE</b>。最能说明「采样器可移植」的一句：<i>"improving the FID of a previously trained ImageNet-64 model <b>from 2.07 to near-SOTA 1.55</b>, and after re-training with our proposed improvements to a new SOTA of 1.36."</i></p>
+<p class="small">即：<b>不动模型、只换采样器，2.07 → 1.55</b>；重训后才到 1.36。官方代码：<code>github.com/NVlabs/edm</code>。</p>
+</div>
+
+<div class="box warn">
+<div class="bt">EDM 里一个容易被忽略的反向结果</div>
+<p>随机采样（churn）<b>不是普适更好</b>：原文明确说「在更有多样性的数据集（ImageNet-64）上随机采样明显更好；但在其自训练 CIFAR-10 模型上随机采样<b>反而有害</b>（S_churn=0 最优）」。引用「加噪更好」时请带上这个条件。</p>
+</div>
+
+<h3>6.6 Restart Sampling（2023）</h3>
+<p>定位：<b>ODE 采样器离散误差小但会 plateau；SDE 采样器靠随机性收缩累积误差、质量更高但更慢。</b> Restart 在两者间找平衡——交替进行「额外前向加噪声步」与「严格跟随反向 ODE」。每个 Restart 迭代既减小被收缩的误差，又引入额外采样误差，<b>故存在最优迭代次数 K</b>（FID 随 K 先降后升）。</p>
+<p><b>数字</b>：原文 Table 1（EDM，uncond CIFAR-10）：Improved SDE 63 NFE = 2.27 → <b>Restart 43 NFE = 1.90</b>。优于此前最佳 SDE 结果，CIFAR-10 / ImageNet 64×64 分别加速 10× / 2×。venue：NeurIPS 2023。代码：<code>github.com/Newbeeer/diffusion_restart_sampling</code>。</p>
+
+<h3>6.7 2023–2026 的增量，与「这条支线收敛了吗」的判定</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:150px">工作</th><th>年份</th><th>做了什么</th><th class="c" style="width:70px">需训练</th><th>数字 / 备注</th></tr></thead>
+<tbody>
+<tr><td>DPM-Solver-v3</td><td>NeurIPS 2023</td><td>既有 solver 强依赖特定参数化；提出最小化一阶离散误差的<b>最优参数化</b>，用 empirical model statistics 作系数</td><td class="c"><span class="b high">否</span></td><td>uncond CIFAR-10：<b>12.21 FID @5 NFE</b>、2.51 FID @10 NFE；比此前 SOTA 快 15–30%</td></tr>
+<tr><td>SA-Solver</td><td>NeurIPS 2023</td><td>多数快采样只解 ODE；本文用 stochastic Adams 解<b>方差控制的 SDE</b>，兼顾多样性</td><td class="c"><span class="b high">否</span></td><td>摘要未给具体 FID <span class="b low">B</span></td></tr>
+<tr><td><b>AMED-Solver</b></td><td>CVPR 2024 Spotlight</td><td>基于「采样轨迹几乎落在二维子空间」的几何观察，直接学习 mean direction</td><td class="c"><span class="b bad">是</span></td><td><b>5 NFE</b>：CIFAR-10 6.61 FID、ImageNet 64 10.74。<b>训练 9k 参数 predictor，常被误引为 training-free</b></td></tr>
+<tr><td>STORK</td><td>arXiv 2025-05</td><td>同时解决 ODE 的 stiffness 与对 semi-linear 结构的依赖，<b>因而可用于 flow matching</b></td><td class="c"><span class="b high">否</span></td><td>摘要未给具体 FID <span class="b low">B</span></td></tr>
+<tr><td>Differentiable Solver Search</td><td>ICML 2025</td><td>证明既有 Adams-like 多步 solver 的 Lagrange 插值<b>次优</b>；把「时间步 + 系数」当可微搜索空间</td><td class="c"><span class="b high">否</span></td><td>10 步：SiT-XL/2 <b>2.40</b>、FlowDCN-XL/2 2.35、DiT-XL/2 2.33</td></tr>
+<tr><td>TADA</td><td>NeurIPS 2025</td><td>用<b>高维初始噪声</b>（动量动力学）在既有预训练模型上产生更细节样本</td><td class="c"><span class="b high">否</span></td><td>ImageNet-512 上比当时 SOTA solver 快至多 186%</td></tr>
+<tr><td>FSampler</td><td>arXiv 2025-11</td><td><b>执行层</b>：用有限差分预测下一个 ε，<b>在某些步跳过模型调用</b>；带稳定性保护</td><td class="c"><span class="b high">否</span></td><td>FLUX.1 dev / Qwen Image / Wan 2.2 上减少时间 8–22%、减少调用 15–25%</td></tr>
+<tr><td>离散扩散高阶求解器</td><td>NeurIPS 2025</td><td>离散扩散此前只有一阶 τ-leaping；首次引入 <b>θ-RK-2 与 θ-Trapezoidal</b>，后者在 KL 下二阶精确</td><td class="c"><span class="b high">否</span></td><td>跨 200M–8B 模型一致增益 <span class="b low">B</span></td></tr>
+<tr><td>AREX</td><td>arXiv 2026-10</td><td>面向 flow matching 的 affine-residual 指数积分器：用目标分布的均值/协方差做 L2-最优仿射近似，分解为「全局仿射分量（矩阵 propagator 显式积分）+ 神经残差」</td><td class="c"><span class="b high">否</span></td><td>few-step 区间一致提升 fidelity <span class="b low">B</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 判定：这条支线已经收敛（2022 年底 – 2023 年中）</div>
+<ol>
+<li><b>理论已定型</b>：DPM-Solver 的「半线性 + 指数积分器」是后续所有求解器的共同语言；DEIS / UniPC / DPM-Solver++ / v3 都是它的变体（换插值变量、换参数化、加 corrector）。<b>「DDIM 是 k=1 特例」这一点被反复证明。</b></li>
+<li><b>10–20 NFE 区间已被解决</b>：DPM-Solver++ / UniPC 在 15–20 步达到接近 1000 步的质量，并成为 diffusers 等库的默认。2023 年之后<b>没有出现能在 10–20 NFE 区间决定性地超越它们的新训练无关高阶求解器</b>。</li>
+<li><b>2024 后的增量在边缘</b>：&lt;5 NFE 必须靠训练（AMED）；其余是「搬到新场景」（flow / 离散扩散 / bridge）或「正交技巧」（TADA / FSampler / 跳步），量级是 8%–25% 或换个维度的 ~2×，<b>不是数量级</b>。</li>
+<li><b>2025–2026 的标题已转向</b>：从「新的高阶 ODE 格式」变成「执行层优化」「增强动力学」「实例感知离散化」——这是<b>工程化/自适应化</b>，不是理论突破。</li>
+</ol>
+</div>
+
+<h2 id="s7"><span class="num">7</span>支线 B：训练式少步生成（蒸馏与一致性）</h2>
+
+<div class="box key">
+<div class="bt">这条支线的定义</div>
+<p><b>训练一个新网络（学生），让它少步甚至一步出图</b>。它解决的是支线 A 撞墙后的空白：数值方法在 &lt;5 步基本无能为力，只能靠改变模型本身。代价是需要训练预算 + 教师模型。</p>
+</div>
+
+<h3>7.1 三类机制，一张表分清楚</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:140px">机制类别</th><th>代表</th><th>核心思路</th></tr></thead>
+<tbody>
+<tr><td><b>轨迹自蒸馏</b></td><td>Progressive Distillation、Consistency Models、LCM、TCD、Hyper-SD</td><td>让学生网络去「一步跨过」教师的多步输出；反复减半步数或强制同轨迹上的点映射到同一起点</td></tr>
+<tr><td><b>对抗 + 分数蒸馏</b></td><td>ADD / SDXL-Turbo、FLUX.1-schnell</td><td>对抗损失保真实感/高频细节，分数蒸馏项保语义/结构。<b>消融显示只用分数蒸馏会崩</b></td></tr>
+<tr><td><b>分布匹配</b></td><td>DMD / DMD2、SiD、Self-Forcing</td><td>让一步生成器的<b>分布</b>匹配教师，梯度 = 两个 score function 之差</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.2 逐篇：机制与「教师 + 数据集」</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:130px">工作</th><th style="width:110px">venue</th><th>机制</th><th>关键数字（含教师与数据集）</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Progressive Distillation</b></td><td>ICLR 2022</td>
+<td>训练确定性采样器（DDIM），用 2N 步输出作 teacher 蒸出 N 步 student，<b>反复把步数减半</b>（8192→…→4）</td>
+<td>CIFAR-10 无条件，<b>教师 = 自身更多步采样器</b>：<b>1 步 9.12 / 2 步 4.51 / 4 步 3.00 / 8 步 2.57</b>。摘要原话 "a FID of 3.0 on CIFAR-10 in 4 steps"</td>
+</tr>
+<tr>
+<td><b>Consistency Models</b></td><td>ICML 2023</td>
+<td>学一个映射 f，把 ODE 轨迹上<b>任意时刻</b>的点映射到<b>同一起点</b>（f(x_t,t)=f(x_t′,t′)）；边界条件 <b>f(x_ε,ε)=x_ε</b>。两种训练模式：蒸馏（CD）或从零（CT）</td>
+<td>教师 = EDM。CIFAR-10（教师 2.04）：<b>CD 1 步 3.55</b> / 2 步 2.93；CT 1 步 8.73。ImageNet 64（教师 2.44）：CD 1 步 6.20</td>
+</tr>
+<tr>
+<td><b>LCM / LCM-LoRA</b><br><span class="small">落地最广</span></td><td>arXiv 2023</td>
+<td>把 CFG-guided 反向过程视为<b>增广 PF-ODE</b>，在 SD 潜空间做 skipping-step 一致性蒸馏；<b>把 guidance scale ω 作为输入条件</b>（故推理可免 CFG）。LCM-LoRA 把蒸馏出的 LoRA 当通用加速模块，免训练插入</td>
+<td><b>教师 = SD-V2.1</b>（不是常以为的 v1.5），数据集 LAION-5B-Aesthetics：512×512 下 <b>1 步 35.36 / 4 步 11.10</b>；768 下 4 步 13.53。768 的 2–4 步仅需 <b>32 A100 GPU 小时</b></td>
+</tr>
+<tr>
+<td><b>ADD / SDXL-Turbo</b></td><td>Stability 技术报告</td>
+<td>L = L_adv + λ·L_distill。对抗项在<b>冻结的 DINOv2 多尺度特征</b>上做；分数蒸馏项用预训练 SD 作 teacher</td>
+<td>COCO zero-shot 512×512：<b>ADD-M 1 步 FID 19.7</b>（对照 PD 1 步 37.2）。<b>消融：只用 L_distill 崩到 FID 315.6</b>，只用 L_adv 缺语义</td>
+</tr>
+<tr>
+<td><b>DMD</b></td><td>CVPR 2024</td>
+<td>令一步生成器在<b>分布层面</b>匹配 teacher，最小化近似 KL，其梯度 = 两个 score function 之差；再叠加 regression loss 匹配大尺度结构</td>
+<td>教师 = EDM / SDv1.5：ImageNet 64 <b>1 步 2.62</b>（教师 EDM 35 步 1.84）；zero-shot COCO-30k FID 11.49</td>
+</tr>
+<tr>
+<td><b>DMD2</b></td><td>NeurIPS 2024</td>
+<td>对 DMD 三处修复：<b>去掉 regression loss</b>（用 TTUR 治不稳定）、<b>引入 GAN loss</b>（直接在真实数据上训练）、支持多步并模拟推理输入</td>
+<td>教师 = EDM：ImageNet-64 <b>1 步 1.51</b>，加长训练 <b>1.28</b> —— <b>1 步已超越教师（EDM ODE 511 步 2.32）</b>。COCO 上 1 步 8.35，超越教师 SDv1.5 的 50 步 8.59</td>
+</tr>
+<tr>
+<td><b>TCD</b></td><td>arXiv 2024</td>
+<td>把 self-consistency 的边界条件从「只能映射到 x₀」<b>推广到轨迹上任意时刻 s</b>，用半线性形式 + 指数积分器精确追踪整条 PF-ODE；加 strategic stochastic sampling 抑制误差累积</td>
+<td>COCO validation，4 步：<b>TCD 12.68</b> vs LCM 15.03 / DPM++(2S) 18.50 / DDIM 44.86。<b>教师的具体 SD 版本号正文未明确</b></td>
+</tr>
+<tr>
+<td><b>sCM</b></td><td>ICLR 2025 Oral</td>
+<td>统一参数化框架（trigflow），解决连续时间 CM 训练不稳定</td>
+<td>2 步：CIFAR-10 2.06、ImageNet 64 <b>1.48</b>、ImageNet 512 1.88（最大 1.5B 参数）。<b>摘要未说明教师模型</b></td>
+</tr>
+<tr>
+<td><b>rCM</b></td><td>ICLR 2026</td>
+<td>指出 sCM 在细节生成上的根本缺陷（误差累积 + 前向散度的 mode-covering），用 <b>score distillation 作为 long-skip 正则</b>补上 mode-seeking</td>
+<td>在 <b>Cosmos-Predict2 / Wan2.1，最高 14B、5 秒视频</b>上验证，1–4 步，加速 15×–50×，质量对齐 DMD2 但多样性更好、无需 GAN 调参</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 「1-step FID」为什么几乎不可比——本报告最重要的警示之一</div>
+<p>同一句「1 步 FID X」在不同论文里几乎不可比，因为<b>教师 × 数据集 × 评测协议</b>全都不同：</p>
+<ul>
+<li><b>EDM on CIFAR-10 / ImageNet-64</b>（小数据集 + 强教师，数字最漂亮）：CM 1 步 3.55 / 6.20；DMD 1 步 3.77 / 2.62；<b>DMD2 1 步 1.51 / 1.28</b>（教师 EDM 本身 2.32，故 DMD2 已超教师）</li>
+<li><b>SDv1.5 on COCO</b>（真实文生图）：DMD 1 步 11.49；DMD2 1 步 8.35 —— 量级完全不同</li>
+<li><b>SDXL on COCO</b>（又换一个教师）：DMD2 1 步 19.01；SDXL-Turbo 1 步 24.57；LCM-SDXL 1 步 81.62</li>
+<li><b>SD-V2.1 on LAION-Aesthetics</b>：LCM 1 步 35.36 —— <b>LCM 自己的 1 步数字其实「不好看」，它主打的是 4 步</b></li>
+<li><b>W-Flow 1.29</b>（ImageNet-256）：<b>无教师、从零训练</b>，与上面所有「蒸馏自教师」的数字<b>根本不同类</b>，不能并列</li>
+</ul>
+<p><b>呈现规范</b>：每条 FID 必须写全「数据集 / 分辨率 / 教师模型与步数 / 是否 CFG / 评测样本数」，否则应写「摘要未说明教师模型」。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">这条支线现在的格局</div>
+<p>不是「谁赢了」，而是<b>目标函数哲学之争</b>：DMD 系 = 反向 KL（保真、易 mode collapse）；CM 系 = 正向 KL（多样、细节弱）；<b>rCM = 两者折中且可规模化（14B）</b>。2025 年新增第四条腿：<b>RL 后训练</b>（Flow-GRPO 等）。</p>
+</div>
+
+<h2 id="s8"><span class="num">8</span>支线 C：流匹配与矫正流 —— 范式接替</h2>
+
+<div class="box key">
+<div class="bt">这条支线为什么最重要</div>
+<p>前两条支线改的是「怎么采样」，这一条<b>改的是训练目标本身</b>：从「预测被加进去的噪声 ε」改为「回归把噪声推向数据的速度场 v」。<b>2024 年之后，主流图像/视频模型的训练目标几乎都是这个</b>。这是 DDPM 之后唯一一次「换地基」级别的变化。</p>
+</div>
+
+<h3>8.1 三篇奠基工作</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:130px">工作</th><th style="width:120px">venue</th><th>解决了什么</th><th>关键机制 / 定理</th></tr></thead>
+<tbody>
+<tr>
+<td><b>Flow Matching</b><br><span class="small">Lipman et al.</span></td><td>ICLR 2023</td>
+<td>CNF 传统训练需<b>模拟 ODE</b>，代价高且不稳定</td>
+<td>Theorem 2（CFM 核心）：L_CFM 与 L_FM 仅差一个与 θ 无关的常数，故<b>梯度相同</b> —— 这就是「simulation-free 训练」的理论根据。Table 1 同架构 U-Net 对照：CIFAR-10 上 <b>FM w/ OT 得 NLL 2.99 / FID 6.35 / NFE 142</b>，优于 DDPM 的 3.12 / 7.48 / 274</td>
+</tr>
+<tr>
+<td><b>Rectified Flow</b><br><span class="small">Liu, Gong, Liu</span></td><td>ICLR 2023 Spotlight</td>
+<td>路径弯曲 → 少步不准</td>
+<td>用线性插值 X_t = tX₁ + (1−t)X₀ 定义路径，回归目标为常数速度 X₁−X₀，损失极简。<b>Theorem 3.7：递归 rectification 使 flow 越来越直，收敛率 O(1/K)</b>（K = reflow 轮数）</td>
+</tr>
+<tr>
+<td><b>Stochastic Interpolants</b><br><span class="small">Albergo, Boffi, Vanden-Eijnden</span></td><td>JMLR 2025</td>
+<td>flow 与 diffusion 各说各话</td>
+<td>用一族连续时间随机过程 x_t = I(t,x₀,x₁) + γ(t)z 连接任意两密度；导出可调扩散系数的前/后向 Fokker-Planck；摘要明确 "unifies flow-based and diffusion-based methods"</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>reflow 到底做什么、代价是什么（这一点经常被含糊过去）</h4>
+<div class="box warn">
+<div class="bt">reflow 的精确内容与代价</div>
+<p><b>Algorithm 4（Reflow）</b>：循环 K 轮，每轮 <code>Model = Train(Coupling); Coupling = sample(Model, Data)</code>——即<b>用上一轮 flow 生成的（噪声, 样本）配对当新训练集，再训一个新 flow</b>。</p>
+<p><b>代价</b>（CIFAR-10 实验）：每轮 reflow 先生成 <b>4,000,000 对</b> (z₀,z₁)，再<b>微调 30 万步</b>。即每轮 = 一次大规模采样 + 一次重新训练。</p>
+<p><b>副作用（论文逐字）</b>：reflow <i>"substantially improves both FID and recall in the small step regime (e.g., N ≲ 80), <b>even though it worsens the results in the large step regime</b> due to the accumulation of error on estimating v_x"</i>。<b>即 reflow 会让大步数区间的结果变差。</b></p>
+</div>
+
+<div class="box stop">
+<div class="bt">★ 必须纠正：「SD3 用了 reflow」是错的</div>
+<p>检索 SD3 全文，<b>reflow / re-flow / 2-stage distill 等字样均未找到</b>。SD3 用的是 <b>rectified flow 的单轮训练 + logit-normal 时间步采样</b>，<b>不是</b> Rectified Flow 原论文的递归 reflow 流程。如果报告或论文里写「SD3 通过 reflow 拉直轨迹」，这是事实性错误。</p>
+</div>
+
+<h3>8.2 受控实验：SiT 回答了「换插值到底有没有用」</h3>
+
+<div class="card">
+<div class="ch">
+<div><div class="title">SiT: Exploring Flow and Diffusion-based Generative Models with Scalable Interpolant Transformers</div><div class="v">Nanye Ma, Mark Goldstein, Michael S. Albergo, Nicholas M. Boffi, Eric Vanden-Eijnden, Saining Xie · ECCV 2024 · arXiv:2401.08740</div></div>
+<div><span class="b high">A</span> <span class="b blue">ECCV 2024</span></div>
+</div>
+<div class="body">
+<p>这是<b>整条谱系里最干净的一次受控实验</b>：严格沿用 DiT 的架构/参数/GFLOPs，只改插值框架内的设计选择。摘要逐字：<i>"SiT surpasses DiT uniformly across model sizes on the conditional ImageNet 256x256 and 512x512 benchmark using the <b>exact same model structure, number of parameters, and GFLOPs</b>."</i> FID-50K：<b>2.06（256）/ 2.62（512）</b>，对照 DiT-XL 的 2.27 / 3.04。</p>
+</div>
+</div>
+
+<div class="box warn">
+<div class="bt">但请注意 SiT 消融的完整读法（这一点很容易被断章取义）</div>
+<p>SiT 的小规模受控消融（ImageNet 训练集 FID-50K）显示，<b>三个改动的增益量级相当</b>，不是「换插值一枝独秀」：</p>
+<ul>
+<li><b>换插值</b>：SBDM-VP（即 diffusion 路径）39.8 → Linear 34.8 → GVP 34.6</li>
+<li><b>换参数化</b>：score L_s 43.6 → weighted score 39.1 → velocity 39.8</li>
+<li><b>ODE → SDE</b>：SBDM-VP 39.8→37.8；Linear 34.8→33.6；GVP 34.6→32.9</li>
+</ul>
+<p>所以正确的表述是：<b>「在同架构下，flow/线性插值优于 diffusion 路径，成立；但它是多项设计共同作用的结果，不是单变量碾压。」</b> 引用时别把 SiT 说成「flow 一定赢 diffusion 的证明」。</p>
+</div>
+
+<h3>8.3 工业采用：SD3 / FLUX</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:120px">系统</th><th>训练目标</th><th>关键设计</th><th>证据等级</th></tr></thead>
+<tbody>
+<tr>
+<td><b>SD3 / SD3.5</b><br><span class="small">arXiv:2403.03206</span></td>
+<td><b>Rectified flow</b>（单轮，<b>非 reflow</b>）</td>
+<td><b>logit-normal 时间步采样</b>：π(t;m,s) ∝ 1/(t(1−t))·exp(−(logit(t)−m)²/(2s²))，等价于加权损失 w_t = t/(1−t)·π(t)；<b>MMDiT 双流骨干</b>（文本/图像各自独立权重 + 双向信息流）。最大 8B 参数</td>
+<td><span class="b high">A</span>（摘要已核）</td>
+</tr>
+<tr>
+<td><b>FLUX.1</b></td>
+<td>flow matching</td>
+<td>12B，混合架构（多模态 + 并行 DiT block）。FLUX.1 [schnell] 用 <b>latent adversarial diffusion distillation</b> 做 1–4 步</td>
+<td><span class="b low">C</span> 官方 model card 说 "building on flow matching, which includes diffusion as a special case" —— 但这是<b>厂商声明</b>，非定理</td>
+</tr>
+<tr>
+<td><b>FLUX.2</b><br><span class="small">2025-11</span></td>
+<td>latent flow matching</td>
+<td>Mistral-3 24B 视觉语言模型 + <b>rectified flow transformer</b>；[dev] 32B 开源权重</td>
+<td><span class="b medium">B</span> 官方博客</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box warn">
+<div class="bt">FLUX.1 没有正式论文</div>
+<p>Black Forest Labs 在 2024-08-01 发布公告末尾写「We will publish a more detailed tech report in the near future」，但<b>截至 2026-10 仍未发布</b>。架构细节只能引非官方技术报告（arXiv:2507.09595，标题页自称 "unofficial technical report"）。BFL 第一篇官方论文其实是 FLUX.1 Kontext（arXiv:2506.15742）。<b>引用 FLUX.1 架构时请注明证据等级。</b></p>
+</div>
+
+<h3>8.4 2025–2026 的路径与耦合设计</h3>
+<p>2026 年这个方向的活跃点集中在 <b>coupling（耦合）与路径设计</b>：Flow Matching with Semidiscrete Couplings（ICLR 2026）、Beyond Optimal Transport: Model-Aligned Coupling（CVPR 2026）、Optimal Transport Flow Matching by Design（arXiv 2606.04092，把先验当设计变量，用自然图像<b>低频投影</b>做先验使 identity coupling 经验 OT-最优、轨迹曲率降 &gt;2×）、Multi-Marginal Flow Matching with Adversarially Learnt Interpolants（ICLR 2026）等。<span class="b medium">B</span>（标题级核实，未逐篇读全文）</p>
+
+<h2 id="s9"><span class="num">9</span>支线 D：骨干与潜空间</h2>
+
+<p>这条支线改的不是目标也不是采样器，而是<b>网络长什么样、在什么空间里生成</b>。它有一个很干净的主线：<b>「U-Net 的归纳偏置是否必需」</b>，以及一个对本课题极重要的副线：<b>自编码器重建质量是下游生成质量的硬上界</b>。</p>
+
+<h3>9.1 骨干谱系</h3>
+<div class="scroll">
+<table>
+<thead><tr><th style="width:110px">阶段</th><th style="width:120px">代表</th><th>骨干关键变化</th><th>解决的问题</th></tr></thead>
+<tbody>
+<tr><td>2020</td><td>DDPM</td><td>U-Net + 单头 attention @16² + 正弦时间步嵌入</td><td>确立「预测噪声」范式</td></tr>
+<tr><td>2021</td><td>Improved DDPM</td><td><b>不改骨干</b>，改目标/方差/调度</td><td>似然与采样步数</td></tr>
+<tr><td>2021</td><td><b>ADM</b></td><td><b>受控架构消融</b>：多分辨率 attention（32²/16²/8²）、按「每头通道数」而非头数配置、BigGAN 残差块、AdaGN</td><td>保真度追平 GAN + classifier guidance</td></tr>
+<tr><td>2022</td><td>CFG</td><td>无需分类器的 guidance</td><td>去掉外挂分类器</td></tr>
+<tr><td>2022</td><td><b>LDM / SD</b></td><td><b>潜空间 + cross-attention</b></td><td>像素空间算力爆炸</td></tr>
+<tr><td>2022–23</td><td>U-ViT / <b>DiT</b></td><td>ViT 骨干。U-ViT 保留 long skip；DiT 用 <b>adaLN-Zero</b> 去掉 skip</td><td>U-Net 归纳偏置是否必需</td></tr>
+<tr><td>2024</td><td>SiT</td><td><b>骨干不变</b>，换 interpolant/flow</td><td>证明「过程 &gt; 结构」</td></tr>
+<tr><td>2024</td><td><b>MMDiT / SD3</b></td><td>双流（文本/图像分权）+ Rectified Flow</td><td>文本理解、可预测缩放</td></tr>
+<tr><td>2024</td><td>DiS / DiM / Sana</td><td>SSM/Mamba、linear attention</td><td>高分辨率效率</td></tr>
+<tr><td>2025–26</td><td>（DiT/MMDiT 变体为主）</td><td><b>未见颠覆性新家族</b></td><td>瓶颈转向 latent / flow / 数据 / 对齐</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+<div class="bt">ADM 的架构消融（这是本领域少见的真正受控实验）</div>
+<p>在 ImageNet 128×128、250 步采样下做的消融，结论包括：<b>BigGAN 残差上/下采样块单项收益最大</b>（FID 降约 1.20）；<b>AdaGN 相比简单相加 FID 领先 2.02</b>；<b>残差连接按 1/√2 重标定是负收益</b>（FID 恶化 +0.25）；等 wall-clock 下<b>拓宽通道优于加深</b>。多项叠加后 1200K 迭代时 FID 从 13.21 压到 10.21。</p>
+<p class="small">⚠️ <b>一处常见误归因</b>：中文二手文章常把「多分辨率 attention、多头、BigGAN 残差、AdaGN」这套架构改造归给 Improved DDPM。<b>这是 ADM 做的，不是 iDDPM</b>。iDDPM 官方 README 的配置是 <code>--num_channels 128 --num_res_blocks 3 --learn_sigma True</code>，LSUN 配置写 <code>--num_heads 1 --attention_resolutions 16</code>——<b>它没有做架构改造</b>。</p>
+</div>
+
+<div class="box teal">
+<div class="bt">DiT 的缩放结论与一个常被忽略的提醒</div>
+<p>DiT 训练了 4 个尺寸 × 3 个 patch size = 12 个模型（33M–675M 参数，0.4–119 GFLOPs）。核心发现：<b>"compute—not just parameters—appears to be the key"</b>，GFLOPs 与 FID-50K 强负相关。条件注入方式消融（DiT-XL/2，400K 迭代，无 guidance）：<b>In-context 35.24 → Cross-attention 26.14 → adaLN 25.21 → adaLN-Zero 19.47</b>。adaLN-Zero 把每个 block 残差分支的门控 <b>zero-init</b>，使每个 block 初始为恒等映射。</p>
+<p class="small">⚠️ <b>但这不是严格的单因子实验</b>：GFLOPs 由深度/宽度/token 数共同决定，属相关而非单因子因果。</p>
+</div>
+
+<h3>9.2 潜空间副线：自编码器重建质量是硬上界</h3>
+
+<div class="box key">
+<div class="bt">这条对你自己的项目最重要</div>
+<p>LDM（Rombach et al., CVPR 2022）解决的问题是：像素空间扩散 <i>"often consumes hundreds of GPU days and inference is expensive due to sequential evaluations"</i>。做法是先训一个自编码器把图像压到低维 latent z = E(x)（冻结），在 z 上训扩散，采样后 x = D(z)。</p>
+<p>论文测试了压缩因子 <b>f ∈ {1,2,4,8,16,32}</b>（f=4 表示高宽各缩 4 倍，<b>不是面积缩 4 倍</b>）；<b>Stable Diffusion 实际用 f=8</b>（256×256 → 32×32×4）。受控实验（固定参数量与训练步数、仅变 f、类条件 ImageNet、2M 步）显示 <b>pixel-space 的 LDM-1 与 LDM-8 之间存在约 38 点的 FID 差距</b>；f 太小 → 把太多感知压缩留给扩散去学；f 太大 → 第一阶段丢信息、保真度受限；<b>f=4–16 是最佳折中</b>。</p>
+<p>重建指标表（作者 f=4 自编码器 PSNR/R-FID = 27.4 / 0.58；DALL-E f=8 = 22.8 / 32.01；VQGAN f=16 = 19.9 / 4.98）——<b>注意这是「重建指标」不是生成样本指标</b>，且因同时改变表征与算力尺度，不能证明单因子因果。</p>
+</div>
+
+<p>Sana（NVIDIA，arXiv:2410.10629）把这条推到极端：<b>32× 深压缩自编码器 + 全 linear attention</b>，生成至 4096×4096；Sana-0.6B 与 Flux-12B 竞争，<b>小 20 倍、吞吐快 100+ 倍</b>。它和 LDM 的 f 消融一起说明同一件事：<b>「latent 质量决定上限」是这条副线反复验证的规律</b>——这也与库内《训练一个好 VAE 的公开资源地图》和《潜空间训练下的通道与浓度问题》的出发点一致。</p>
+
+<h2 id="s10"><span class="num">10</span>2025–2026 前沿：现在到哪了</h2>
+
+<div class="box key">
+<div class="bt">先给结论</div>
+<p><b>主基线已经收敛，且这是一个确定性的答案</b>：图像/视频生成的事实标准是 <b>flow matching / rectified flow 训练目标 + Transformer 骨干（DiT / MMDiT）+ latent space</b>。<b>2025–2026 没有出现取代它的新范式。</b>真正活跃的三条线都不是替换 flow matching，而是它的极限压缩与补丁。</p>
+</div>
+
+<h3>10.1 最活跃前沿（一）：无蒸馏的单步生成 —— MeanFlow 家族</h3>
+
+<p>这是 2025–2026 最有「范式感」的一条线，核心诉求是<b>同时打破「多步采样」和「依赖蒸馏」</b>——逐个拆除默认假设。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:150px">工作</th><th style="width:110px">venue</th><th>拆掉了哪个默认假设</th><th>关键数字</th></tr></thead>
+<tbody>
+<tr>
+<td><b>MeanFlow</b><br><span class="small">Geng, Deng, Bai, Kolter, He<br>arXiv:2505.13447</span></td>
+<td>技术报告 <span class="b low">（arXiv 页面 Comments 写 "Tech report"，未标 NeurIPS）</span></td>
+<td>拆「多步」：引入 <b>average velocity</b> 取代 Flow Matching 的 instantaneous velocity，导出二者恒等式指导训练</td>
+<td><b>1-NFE FID 3.43</b>（ImageNet 256×256，from scratch）。摘要逐字：<i>"self-contained and requires no pre-training, distillation, or curriculum learning"</i> <span class="b high">A</span></td>
+</tr>
+<tr>
+<td><b>iMF</b><br><span class="small">arXiv:2512.02012</span></td>
+<td>arXiv 2025</td>
+<td>拆「训练不稳定 + guidance 不灵活」：把目标重构为对 instantaneous velocity 的标准回归，把 guidance 显式建模为条件变量</td>
+<td><b>1-NFE FID 1.72</b>（ImageNet 256²，from scratch，无蒸馏）<span class="b medium">B</span></td>
+</tr>
+<tr>
+<td><b>pMF</b><br><span class="small">arXiv:2601.22158</span></td>
+<td>arXiv 2026-01</td>
+<td>拆「latent 依赖」：解耦网络输出空间（图像流形，x-prediction）与 loss 空间（velocity space），做到 <b>one-step + latent-free</b></td>
+<td>ImageNet 256² <b>2.22 FID</b>、512² <b>2.48 FID</b> <span class="b medium">B</span></td>
+</tr>
+<tr>
+<td><b>Shortcut Models</b><br><span class="small">arXiv:2410.12557</span></td>
+<td>ICLR 2025</td>
+<td>拆「多阶段蒸馏」：单网络以「noise level + desired step size」为条件，<b>单训练阶段</b>覆盖 1/2/4/…/128 步</td>
+<td>ImageNet-256：1 步 10.6、4 步 7.8、128 步 3.8 <span class="b medium">B</span></td>
+</tr>
+<tr>
+<td><b>W-Flow</b><br><span class="small">arXiv:2605.11755</span></td>
+<td>arXiv 2026-05</td>
+<td>用 Wasserstein gradient flow + Sinkhorn divergence 定义参考分布到目标分布的演化，再训静态生成器一步压缩</td>
+<td><b>1 步 FID 1.29</b>（ImageNet 256²），声称 SOTA <span class="b low">C</span>（无代码信息）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p class="small">对照：<b>这些数字与 §7 里那些「蒸馏自 EDM/SDXL」的 1-step FID 根本不同类</b>——它们是<b>无教师、从零训练</b>，所以不能和 DMD2 的 1.28 并列比较。这是本节最容易出错的地方。</p>
+
+<h3>10.2 最活跃前沿（二）：自回归 ↔ 扩散，不是取代而是融合</h3>
+
+<p>「next-token prediction vs diffusion」这个争论在 2025–2026 的实况是<b>双向反攻 + 开始融合</b>。</p>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">扩散反攻语言</div>
+<p><b>LLaDA</b>（arXiv:2502.09992）：从零训练、前向 mask、反向生成、优化 likelihood 下界。LLaDA 8B 在 in-context learning 上对标 LLaMA3 8B，且缓解 reversal curse。明确挑战「LLM 能力必须依赖 AR」的假设。</p>
+<p><b>性能刻画</b>（arXiv:2510.04146）：DLM 靠 token 位置并行取得更高 arithmetic intensity，但<b>长上下文扩展性差</b>；AR 在 batch 吞吐上更优；结论是<b>降低 sampling steps 是开源 DLM 降低延迟的关键</b>。</p>
+</div>
+<div class="mini">
+<div class="mt">自回归反攻视觉</div>
+<p><b>VAR</b>（NeurIPS 2024，arXiv:2404.02905）：用 <b>next-scale prediction</b>（粗到细）替代 raster-scan next-token。ImageNet 256² <b>FID 18.65→1.73</b>、IS 80.4→350.2、推理约 20× 快，呈现类 LLM 的 power-law 缩放。</p>
+<p><b>Self-Forcing</b>（NeurIPS 2025 spotlight，arXiv:2506.08009）：解决 AR 视频扩散的 <b>exposure bias</b>——训练时就做自回归 rollout + KV caching，用 video-level holistic loss 监督。<b>基座是 Wan2.1 这个 flow matching 模型</b>；单 GPU 亚秒级流式生成。</p>
+</div>
+</div>
+
+<p><b>融合方向</b>：ICLR 2026 的 <b>A3（Any-order Any-subset Autoregressive）</b>把扩散式训练重构为结构化多组预测，把标准 AR 分解推广到任意 token 组与生成顺序——即<b>把 AR 当扩散的特例</b>。正确的表述是：<b>这已不是二选一，而是 factorization 的选择问题。</b></p>
+
+<h3>10.3 理论进展（2025–2026 确实有，且分量重）</h3>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:170px">工作</th><th style="width:150px">venue</th><th>结论</th></tr></thead>
+<tbody>
+<tr>
+<td><b>FORS</b><br><span class="small">High-accuracy sampling for diffusion models and log-concave distributions</span><br><span class="small">Fan Chen, Sinho Chewi, Constantinos Daskalakis, Alexander Rakhlin</span></td>
+<td><b>ICML 2026 杰出论文</b> <span class="b high">A</span></td>
+<td>在仅访问 Õ(δ)-accurate score 的前提下，达到 <b>δ-error in polylog(1/δ) steps</b>——<b>相对所有先前结果是指数级改进</b>。复杂度 Õ(d·polylog(1/δ))；数据有内在维度 d⋆ 时降到 Õ(d⋆·polylog(1/δ))；L-Lipschitz 情形 Õ(dL·polylog(1/δ))。并给出<b>首个仅用梯度评估的通用 log-concave 分布的 polylog 采样器</b></td>
+</tr>
+<tr>
+<td><b>The Flexibility Trap</b><br><span class="small">Zanlin Ni, Shenzhi Wang, Yang Yue 等</span></td>
+<td><b>ICML 2026 杰出论文</b> <span class="b high">A</span></td>
+<td>反直觉批判：任意顺序生成看似是 dLLM 的核心优势，但在数学/代码等通用推理任务上，dLLM 会<b>利用顺序自由跳过高不确定性的分叉 token</b>，导致解空间覆盖过早坍塌。提出的 <b>JustGRPO</b>（放弃任意顺序）在保留并行解码的同时 GSM8K 达 89.1%</td>
+</tr>
+<tr>
+<td><b>A Random Matrix Perspective on the Consistency of Diffusion Models</b><br><span class="small">Binxu Wang, Jacob A. Zavatone-Veth, Cengiz Pehlevan</span></td>
+<td>ICML 2026 荣誉提名 <span class="b high">A</span></td>
+<td>解释「不同数据子集训练的扩散模型对同一噪声种子给出几乎相同输出」：来自<b>共享的线性高斯统计</b>而非记忆或深层非线性动力学。用随机矩阵理论量化有限数据集如何塑造 denoiser 的期望与方差</td>
+</tr>
+<tr>
+<td><b>On the Relation between Rectified Flows and Optimal Transport</b><br><span class="small">arXiv:2505.19712</span></td>
+<td>NeurIPS 2025 <span class="b medium">B</span></td>
+<td><b>反例驱动的重要纠偏</b>：证明「把 rectified flow 的 velocity field 约束为梯度即可得到 OT 解」这一广为引用的等价性<b>只在远强于此前认知的假设下成立</b>，并给出多个反例——该做法<b>一般不可靠</b></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+<div class="bt">一个外部信号：ICML 2026 的两个杰出论文都给了扩散</div>
+<p>一个采样理论（FORS），一个是对扩散语言模型核心假设的批判（The Flexibility Trap）。荣誉提名里还有一篇扩散一致性理论。<b>这说明扩散仍是理论前沿的主阵地，而且获奖工作「理论/批判」重于「工程」</b>——与 §6「求解器主干已收敛」的判断相互印证。</p>
+</div>
+
+<h3>10.4 我无法确认的部分（诚实标注）</h3>
+<div class="box warn">
+<div class="bt">视频生成的「范式改变」无法用一手学术来源确认</div>
+<p>2026 年 Sora 2 / Veo 3 / Kling 等多为闭源产品，检索到的来源<b>几乎全是二手博客</b>，其中「DiT 是 2025 视频生成范式转变核心」这类说法<b>不能作为可引用技术断言</b>。能确认的只有两条有一手学术来源的线：<b>AR 视频扩散（Self-Forcing）</b>与<b>大规模 few-step 视频蒸馏（rCM）</b>。</p>
+<p>另：是否存在本报告<b>未检索到</b>的 2026 年新训练目标/路径设计，无法排除（检索非穷举）。「未见 2026 有全新 coupling 机制被广泛采纳」是<b>负向发现，置信度中等</b>。</p>
+</div>
+
+<h2 id="s11"><span class="num">11</span>「谁泛化谁」逐条核实</h2>
+
+<p>「flow matching 泛化了 diffusion」这句话在 2025 年被反复引用，但<b>它是定理、是推导、还是博客里的说法，三者含义完全不同</b>。这一节把每个命题的出处与性质逐条核实，是本报告最有原创价值的一节。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>命题</th><th>出处</th><th>性质</th><th style="width:110px">可信度</th></tr></thead>
+<tbody>
+<tr>
+<td>diffusion 路径 ⊂ FM 的 Gaussian 路径族</td>
+<td>Flow Matching 论文 <b>Theorem 3 + §4.1 Example I + Appendix D</b></td>
+<td>推导 + 定理（但<b>未以单一命名定理形式呈现</b>）</td>
+<td><span class="b high">实质是证明</span></td>
+</tr>
+<tr>
+<td>FM 的向量场 ≡ diffusion 的概率流 ODE 向量场（在 VE/VP 上）</td>
+<td>FM 论文 <b>Appendix D</b>（逐字用 "coincides"）</td>
+<td>推导</td>
+<td><span class="b high">实质是证明</span></td>
+</tr>
+<tr>
+<td>PF-ODE（含 DDIM ≈ VP-ODE 连续极限）⊂ nonlinear rectified flow</td>
+<td>Rectified Flow 论文 <b>Proposition 3.11</b></td>
+<td>命题（Proposition，<b>非 Theorem</b>）</td>
+<td><span class="b high">命题级</span></td>
+</tr>
+<tr>
+<td>score-based diffusion = one-sided linear stochastic interpolant</td>
+<td>Stochastic Interpolants 论文 <b>§5.1</b></td>
+<td>Section 内推导</td>
+<td><span class="b high">推导级</span></td>
+</tr>
+<tr>
+<td><b>「diffusion 与 Gaussian flow matching 完全相同 / 可互换」</b></td>
+<td><b>Gao, Hoogeboom, Heek, De Bortoli, Murphy, Salimans — ICLR 2025 Blogpost Track</b>（OpenReview <code>C8Yyg9wy0s</code>，2025-01-23）</td>
+<td><b>博客帖（Blogpost Track，非 full paper）</b>。摘要逐字：<i>"show that diffusion models and Gaussian flow matching <b>are the same</b> ... you can use the two frameworks <b>interchangeably</b>"</i></td>
+<td><span class="b medium">非正式（但作者权威：DeepMind）</span></td>
+</tr>
+<tr>
+<td>「flow matching 包含 diffusion 为特例」</td>
+<td>Black Forest Labs FLUX.1 发布公告</td>
+<td><b>厂商声明</b>，非定理</td>
+<td><span class="b low">非正式</span></td>
+</tr>
+<tr>
+<td>rectification 使凸 transport cost 非增</td>
+<td>Rectified Flow <b>Theorem 3.5</b></td>
+<td>定理</td>
+<td><span class="b high">定理</span></td>
+</tr>
+<tr>
+<td>递归 rectification 以 O(1/K) 变直</td>
+<td>Rectified Flow <b>Theorem 3.7</b></td>
+<td>定理</td>
+<td><span class="b high">定理</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box key">
+<div class="bt">结论：正确的写法是什么</div>
+<ol>
+<li><b>「flow matching 泛化 diffusion」是一个已被推导的弱命题</b>：FM 论文用 Theorem 3 + Example I + Appendix D 把 VP/VE 路径及其概率流 ODE 向量场<b>推导为</b>其 Gaussian 路径族的特例；RF 用 Proposition 3.11 把 PF-ODE 表述为 nonlinear rectified flow 的 instance。这两处是<b>论文内的推导/命题</b>，不是二手流传。</li>
+<li><b>「二者完全相同、可互换」这个更强的命题，最直接的公开出处是 2025 年的 ICLR Blogpost</b>，<b>不是</b>某篇正式会议 full paper 的命名定理。</li>
+<li>所以引用时应该写成：<b>「FM 论文已把 diffusion 路径作为其 Gaussian 路径族的特例给出推导；而『二者等价』的强表述主要来自 2025 年 DeepMind 的 ICLR blogpost。」</b> 不要笼统说「有一篇论文证明了 diffusion 是 flow matching 的特例」。</li>
+</ol>
+</div>
+
+<h2 id="s12"><span class="num">12</span>常见误解与纠正清单</h2>
+
+<p>这一节是本报告的「防错表」。每条都是检索中实际遇到的、且在中文二手材料里流传较广的错误说法。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:230px">流传的说法</th><th style="width:80px">判定</th><th>正确表述与依据</th></tr></thead>
+<tbody>
+<tr>
+<td>DDIM 在 50 步达到 FID 4.16</td><td><span class="b bad">错</span></td><td><b>50 步是 4.67，100 步才是 4.16</b>（DDIM 原文 Table 1，已逐字核对）。短轨迹的真正优势在 50 步：DDIM 4.67 vs DDPM 8.01</td></tr>
+<tr>
+<td>UniPC 是 CVPR 2023</td><td><span class="b bad">错</span></td><td><b>NeurIPS 2023</b>。arXiv:2302.04867 的 Comments 逐字 <code>Accepted by NeurIPS 2023</code></td></tr>
+<tr>
+<td>AMED-Solver 是 training-free</td><td><span class="b bad">错</span></td><td>它<b>训练</b>一个 9k 参数 predictor（CVPR 2024 Spotlight）。原文明确 "we train a network that only predict the intermediate time steps"。同类误标还有 CVPR 2026 的 Instance-Aware Discretizations（需小规模 tuning）、GAS 与 Linear Multistep Solver Distillation（蒸馏）</td></tr>
+<tr>
+<td>SD3 用 reflow 拉直轨迹</td><td><span class="b bad">错</span></td><td>SD3 全文检索不到 reflow 字样。它用 <b>rectified flow 的单轮训练 + logit-normal 时间步采样</b>。reflow 是 Rectified Flow 原论文的递归流程，SD3 未采用</td></tr>
+<tr>
+<td>Improved DDPM 引入了多分辨率 attention / BigGAN 残差 / AdaGN</td><td><span class="b bad">错</span></td><td>这些是 <b>ADM（Dhariwal &amp; Nichol 2021）</b>做的架构消融。iDDPM 官方 README 配置为 <code>--num_channels 128 --num_res_blocks 3</code>、LSUN 用 <code>--num_heads 1 --attention_resolutions 16</code>——<b>未做架构改造</b></td></tr>
+<tr>
+<td>「低频决定真实」是 AIRPNet 论文原话</td><td><span class="b bad">错</span></td><td>这是<b>自媒体措辞</b>。论文原话是「精准修复高频细节的同时有效恢复全局结构」（库内《频域在扩散模型中的应用》已核实）</td></tr>
+<tr>
+<td>所有「1 步 FID」可以横向比较</td><td><span class="b bad">错</span></td><td>教师 × 数据集 × 协议全不同，量级能差 10 倍以上。见 §7 的警示框</td></tr>
+<tr>
+<td>「diffusion 已经被淘汰 / obsolete」</td><td><span class="b medium">无出处</span></td><td><b>未找到任何 2026 年正式论文这样声称。</b>主流表述是「flow matching 统一/涵盖 diffusion」或「velocity 参数化取代 ε/score 参数化」。而且架构上主流系统仍是 diffusion transformer，采样仍是去噪式 ODE/SDE——<b>被替换的是训练参数化与损失，不是整个模型族</b></td></tr>
+<tr>
+<td>Analytic-DPM 是 arXiv:2201.06528</td><td><span class="b bad">错</span></td><td>正确 ID 是 <b>arXiv:2201.06503</b>。2201.06528 是一篇凝聚态物理论文</td></tr>
+<tr>
+<td>「低频=结构」是普适规律</td><td><span class="b medium">需限定</span></td><td>「结构」指两种东西：<b>全局布局（低频）</b>与<b>边缘/边界（高频，SSIM 奖励）</b>。FGDM 去高频使 SSIM 从 0.908 掉到 0.748（说明高频承 SSIM）；FDG 低频管全局结构。<b>两篇方向相反且都对</b>，引用前必须说清是哪种结构、什么指标</td></tr>
+<tr>
+<td>reflow 总是让结果更好</td><td><span class="b medium">需限定</span></td><td>RF 论文逐字：reflow 在小步数区间（N ≲ 80）显著改善 FID 与 recall，<b>但会让大步数区间的结果变差</b>（v_x 估计误差累积）</td></tr>
+<tr>
+<td>随机采样（churn）普遍更好</td><td><span class="b medium">需限定</span></td><td>EDM 原文：ImageNet-64 上随机采样明显更好，<b>但在其自训练 CIFAR-10 模型上反而有害</b>（S_churn=0 最优）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s13"><span class="num">13</span>与库内既有报告的分工</h2>
+
+<p>资料库已有 45 份报告，主题高度重叠。本节逐份写明关系，<b>本报告不重复它们已核实的结论</b>。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th style="width:280px">既有报告</th><th>它回答的问题</th><th>与本报告的关系</th></tr></thead>
+<tbody>
+<tr>
+<td><b>扩散模型噪声调度与时间步分配</b><br><span class="small">01_调研报告 · 299 KB · 15 节</span></td>
+<td>「调度、抽样概率、损失权重是同一个概率对象的三个入口」。含 §7 DDIM 反演与噪声调度的深挖</td>
+<td><b>最相邻。</b> 它以<b>概率视角</b>组织（p(t) / w(t) / 调度三者的等价性），本报告以<b>时间脉络与分支谱系</b>组织。<br><b>分工</b>：调度的数学细节、DDIM 反演的误差来源、Min-SNR 权重形状，全部看它；「DDIM 在谱系里处在什么位置、它之后裂成了哪四条支线」看本报告。本报告 §5 的 Analytic-DPM 与它 §4.2 的重要性采样是同一族工作，但角度不同（它讲 p(t) 设计，本报告讲「最优方差有闭式解」）</td>
+</tr>
+<tr>
+<td><b>扩散机制本体的改动_六轴谱系</b><br><span class="small">01_调研报告 · 111 KB · 14 节</span></td>
+<td>「我打算改扩散的某个部件，能不能改、改了什么」。六轴：前向退化算子 / 初始状态 / 训练目标 / 时间步与采样轨迹 / 状态空间 / 先验与桥</td>
+<td><b>正交。</b> 它按<b>「改哪根轴」</b>组织，本报告按<b>「谁在什么时候解决了什么问题」</b>组织。<br><b>重叠处</b>：它的 §5.2「求解器：把 ODE 的线性部分解析解出来」与本报告 §6 是同一批工作。它的定位是<b>可移植性判定</b>（能不能搬到你的项目），本报告的定位是<b>谱系与收敛判定</b>（这条线走到哪了）。<br><b>它的 §5.3「蒸馏与一致性：把步数压到个位数」</b>与本报告 §7 重叠，同样是一个判可移植性、一个讲发展脉络</td>
+</tr>
+<tr>
+<td><b>PSPStain_频域条件注入_文献综述报告</b><br><span class="small">01_调研报告 · 222 KB</span></td>
+<td>频域信息作为 condition 注入扩散 U-Net 的可行性</td>
+<td><b>正交。</b> 它讲「条件怎么注入」，本报告讲「模型怎么演化」。本报告 §8 的 flow matching 谱系与它无重叠</td>
+</tr>
+<tr>
+<td><b>扩散虚拟染色_结构保持机制</b><br><span class="small">01_调研报告 · 109 KB</span></td>
+<td>Condition 注入 vs 约束/引导的机制比较</td>
+<td><b>正交。</b> 同上</td>
+</tr>
+<tr>
+<td><b>训练一个好 VAE 的公开资源地图</b><br><span class="small">01_调研报告 · 70 KB</span></td>
+<td>面向扩散潜空间的 VAE 训练资源</td>
+<td><b>互补。</b> 本报告 §9.2 只给「自编码器重建质量是硬上界」这条规律与 LDM 的 f 消融；<b>怎么训一个好 VAE 看它</b></td>
+</tr>
+<tr>
+<td><b>潜空间训练下的通道与浓度问题</b><br><span class="small">01_调研报告 · 80 KB</span></td>
+<td>「维度对不上」的七层拆解 + 四条可行路线</td>
+<td><b>下游。</b> 本报告 §9.2 是它的上游依据（为什么 latent 质量重要）</td>
+</tr>
+<tr>
+<td><b>浓度域 / OD 域虚拟染色_方法级文献地图与 Beer–Lambert 渲染桥</b><br><span class="small">01_调研报告 · 82 KB</span></td>
+<td>浓度域/OD 域的方法级地图</td>
+<td><b>正交且互补。</b> 本报告 §4 的 SDE 统一与 §9.2 的潜空间上界，是它的理论背景</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s14"><span class="num">14</span>对本课题的意义（H&amp;E→IHC 浓度扩散）</h2>
+
+<div class="box stop">
+<div class="bt">★ 先修正一个可能的前提偏差</div>
+<p>如果你的出发点是「扩散模型在这个领域很丰富、所以用它做 H&amp;E→IHC 是自然选择」——<b>这个前提在 2026 年需要修正</b>。检索结果指向：</p>
+<ul>
+<li><b>2026 年的 SOTA 主要是 GAN</b>：UNIStainNet（arXiv:2603.12716，SPADE-UNet + PatchGAN，条件于冻结的 UNI 基础模型）与 DGR（Nature Communications 2026，CycleGAN/RegGAN 谱系）<b>都是 GAN</b>。UNIStainNet 明确把「diffusion 需 iterative inference、GAN 只需 one pass」作为选 GAN 的理由。</li>
+<li><b>有一篇正面对比论文，结论是 GAN 更优</b>：<i>GANs vs. Diffusion Models for virtual staining with the HER2match dataset</i>（arXiv:2506.18484）。摘要逐字：<b><i>"overall, GANs perform better than DMs, with only the BBDM achieving comparable results."</i></b> 它还强调<b>data alignment 比模型选择更关键</b>——所有模型在 HER2match 上训练出的视觉效果都远好于常用的 consecutive-slide BCI 数据集。</li>
+<li><b>框架选择绝大多数是「继承」而非「论证」</b>：扩散类论文普遍直接套用 DDPM / LDM，极少论证「为什么该任务该用扩散而不是 GAN/flow」。<b>唯一做框架级论证的恰恰是上面那篇对比论文。</b></li>
+</ul>
+</div>
+
+<h3>14.1 sampler / 步数问题：这个领域的真实状况</h3>
+
+<div class="box good">
+<div class="bt">这是一个有价值且证据充分的负向发现</div>
+<p>准确的表述是：<b>「步数常被报告但极少被论证；sampler 选择几乎从不被论证。」</b></p>
+<ul>
+<li><b>确实做了步数消融/设计的（强证据）</b>：StainDiffuser（训练 T=2000/4000，并消融 500/1000/2000/4000，128² 上 PSNR 15.89→21.67、FID 54.09→23.46，<b>步数越多越好</b>）；HistDiST（200 inversion + 200 denoising，并消融 η 常量 / η cosine / η cosine start 20%，指出<b>确定性 DDIM 反而抬高 FID</b>）；BBDM 超分虚拟染色（Nature Comms 2025，T=1000，<b>系统扫描 exit point 10→500 共 9 个</b>，是本领域对 sampler 设计论证最深的一篇）；Fast-DDPM（10 步 vs 1000 步）。</li>
+<li><b>但绝大多数只报一个数字</b>，不做消融、不解释 sampler 选择，DDPM/DDIM/η 调度几乎总是默认继承。</li>
+<li><b>未找到</b>任何一篇论文明确论证「为什么 H&amp;E→IHC 应选 DDIM 而非 DDPM，或选哪个 η」——HistDiST 是最接近的。</li>
+<li><b>未找到</b>任何病理虚拟染色论文把 <b>NFE 作为标准评估指标</b>——主流指标是 FID/KID/PSNR/SSIM/LPIPS + 病理任务指标。</li>
+<li><b>Flow matching 在病理虚拟染色里几乎是空白</b>：只找到一篇 StainFlash（<b>ICLR 2027 匿名投稿，未发表、未同行评议</b>，不应作为「已成功」的证据）。</li>
+</ul>
+</div>
+
+<h3>14.2 你可以直接用上的三件事</h3>
+
+<div class="grid2">
+<div class="mini">
+<div class="mt">① 零成本加速：先换求解器</div>
+<p>支线 A 的所有方法<b>不需要重训</b>。如果你现在的采样器是 DDIM 或朴素 DDPM，换 <b>DPM-Solver++(2M)</b> 或 <b>UniPC</b> 是零训练成本的收益。<b>但注意</b>：如果你用 CFG，要选 DPM-Solver++ 而不是 DPM-Solver（见 §6.3）。</p>
+<p>如果 latent 空间是 SD 系，<b>EDM 的 preconditioning + ρ=7 调度</b>也可直接套。</p>
+</div>
+<div class="mini">
+<div class="mt">② 一个可写进论文的空白</div>
+<p>§14.1 那五条负向发现本身就是贡献点：<b>「该领域的 sampler 与步数选择长期缺乏系统论证；NFE 作为评估维度基本缺失」</b>。你可以在自己的论文里补上这一步——它成本低、且审稿人会认。</p>
+</div>
+<div class="mini">
+<div class="mt">③ 一个需要正面回应的对照</div>
+<p>HER2match 那篇（GAN &gt; DM）<b>必须引用并正面回应</b>。回避它比引用它风险更大——审稿人如果知道这篇而你没提，会认为你的 related work 不完整。可用的回应角度：BBDM 是唯一可比的扩散方法，而你的方案在<b>浓度域 + 物理渲染闭环 + 定量表达控制</b>上提供了 GAN 与既有扩散方法都没有的东西。</p>
+</div>
+<div class="mini">
+<div class="mt">④ 一处技术上的呼应</div>
+<p>HistDiST 发现<b>确定性 DDIM 反而抬高 FID、需要受控的 η 随机性</b>——这与 EDM 的 churn、Restart 的「ODE plateau」是同一个现象的三种表述。<b>如果你的浓度扩散也在低 NFE 下出现细节缺失，这条线索值得优先排查</b>，而不是先去改网络结构。</p>
+</div>
+</div>
+
+<div class="box pur">
+<div class="bt">一个可证伪的预测（供你验证）</div>
+<p>综合 §6 的收敛判定与 §14.1 的负向发现，可以给一个具体预测：<b>在 H&amp;E→IHC 这类任务上，把采样器从 DDIM 换成 DPM-Solver++(2M) 或 UniPC，在 15–25 NFE 区间应当带来可测的 FID/KID 改善，而在 50+ NFE 区间改善会收窄甚至消失</b>（因为长轨迹下各求解器都收敛）。</p>
+<p><b>止损条件</b>：如果在 15–25 NFE 区间没有可测改善，说明你的任务上「采样器不是瓶颈」，应当把预算转向 latent 质量或监督信号，而不是继续调采样器。</p>
+</div>
+
+<h2 id="s15"><span class="num">15</span>证据边界与未核实清单</h2>
+
+<div class="box warn">
+<div class="bt">明确未核实的事项 —— 引用前请自行核对</div>
+<ol>
+<li><b>DDPM 的精确架构描述</b>（U-Net 通道配置、attention 位置、正弦嵌入注入方式）：本轮抓取未能拿到原文 Appendix B 全文，报告中相关描述标 <span class="b low">C</span>，来源为二手复现配置与 ADM 论文的转述。</li>
+<li><b>ADM Table 1–3 的逐行 FID 数值</b>：架构消融的<b>定性结论</b>（BigGAN 残差收益最大、AdaGN 领先 2.02、1/√2 重标定为负收益）已核实；但逐行精确 FID 未能核对原文表格，标 <span class="b low">C</span>。</li>
+<li><b>LDM 的自编码器重建表</b>（PSNR/R-FID = 27.4/0.58 等）与「pixel 与 latent 间约 38 点 FID 差」：标 <span class="b low">C</span>，未能逐行核对原文表格。</li>
+<li><b>DiT 的条件方案消融数字</b>（In-context 35.24 → adaLN-Zero 19.47）：标 <span class="b low">C</span>。</li>
+<li><b>MeanFlow 的 venue</b>：arXiv 页面 Comments 只写 "Tech report"，<b>未标 NeurIPS</b>。检索结果中出现的「NeurIPS 2025」未能从一手页面确认。</li>
+<li><b>W-Flow（1 步 FID 1.29）</b>：标 <span class="b low">C</span>，且摘要未给官方代码信息。</li>
+<li><b>iMF / pMF / rCM / Shortcut Models 的具体数字</b>：标 <span class="b medium">B</span>（摘要级），未逐篇读正文表格。</li>
+<li><b>FLUX.1 的架构细节与训练配置</b>：<b>官方技术报告未发布</b>。只能引非官方报告（arXiv:2507.09595，自称 unofficial）。</li>
+<li><b>2026 年的 coupling / 路径设计工作</b>（Semidiscrete Couplings、Model-Aligned Coupling、OT Flow Matching by Design 等）：标 <span class="b medium">B</span>，仅标题级核实。</li>
+<li><b>视频生成的范式问题</b>：无法用一手学术来源确认，见 §10.4。</li>
+<li><b>2025/2026 两篇虚拟染色综述（Springer 2026 DOI 10.1007/s13534-026-00597-6、ScienceDirect 2025）的正文</b>：被反爬拦截，<b>未能确认其是否讨论 sampler / 步数报告规范</b>。因此 §14.1 中「未找到综述讨论该规范」这一条，<b>可能源于访问限制而非论文不存在该内容</b>——引用时须谨慎。</li>
+</ol>
+</div>
+
+<div class="box good">
+<div class="bt">本轮实际抓到一手来源并逐字核实的（可信度最高）</div>
+<p>DDIM（arXiv:2010.02502）、DPM-Solver（2206.00927）、SiT（2401.08740）、MeanFlow（2505.13447）、SD3（2403.03206）、EDM（2206.00364）、UniPC（2302.04867）、HER2match（2506.18484）、ICML 2026 奖项页、Gao et al. 的 ICLR 2025 Blogpost（OpenReview <code>C8Yyg9wy0s</code>）。以上各条在报告中的数字与引文均已逐字比对。</p>
+</div>
+
+<h2 id="s16"><span class="num">16</span>参考文献</h2>
+
+<h3>三次分水岭与理论</h3>
+<ul>
+<li>Ho, Jain, Abbeel. <i>Denoising Diffusion Probabilistic Models</i>. NeurIPS 2020. arXiv:2006.11239. 代码 <code>github.com/hojonathanho/diffusion</code></li>
+<li>Song, Meng, Ermon. <i>Denoising Diffusion Implicit Models</i>. ICLR 2021. arXiv:2010.02502. 代码 <code>github.com/ermongroup/ddim</code></li>
+<li>Song, Sohl-Dickstein, Kingma, Kumar, Ermon, Poole. <i>Score-Based Generative Modeling through Stochastic Differential Equations</i>. ICLR 2021 Oral. arXiv:2011.13456. 代码 <code>github.com/yang-song/score_sde</code></li>
+<li>Song, Ermon. <i>Generative Modeling by Estimating Gradients of the Data Distribution</i>. NeurIPS 2019 Oral. arXiv:1907.05600. 代码 <code>github.com/ermongroup/ncsn</code></li>
+<li>Nichol, Dhariwal. <i>Improved Denoising Diffusion Probabilistic Models</i>. ICML 2021. arXiv:2102.09672. 代码 <code>github.com/openai/improved-diffusion</code></li>
+<li>Bao, Li, Zhu, Zhang. <i>Analytic-DPM</i>. ICLR 2022 Outstanding Paper. <b>arXiv:2201.06503</b>. 代码 <code>github.com/baofff/Analytic-DPM</code></li>
+<li>Zhang, Tao, Chen. <i>gDDIM</i>. ICLR 2023. arXiv:2206.05564. 代码 <code>github.com/qsh-zh/gDDIM</code></li>
+<li>Chen, Chewi, Li, Li, Salim, Zhang. <i>Sampling is as easy as learning the score</i>. ICLR 2023. arXiv:2209.11215</li>
+<li>Lee, Lu, Tan. <i>Convergence of score-based generative modeling for general data distributions</i>. ALT 2023. arXiv:2209.12381</li>
+<li>Benton, De Bortoli, Doucet, Deligiannidis. <i>Nearly d-Linear Convergence Bounds for Diffusion Models via Stochastic Localization</i>. ICLR 2024. arXiv:2308.03686</li>
+</ul>
+
+<h3>支线 A · 训练无关求解器</h3>
+<ul>
+<li>Liu, Ren, Lin, Zhao. <i>Pseudo Numerical Methods for Diffusion Models on Manifolds</i>. ICLR 2022. arXiv:2202.09778. 代码 <code>github.com/luping-liu/PNDM</code></li>
+<li>Lu, Zhou, Bao, Chen, Li, Zhu. <i>DPM-Solver</i>. NeurIPS 2022. arXiv:2206.00927. 代码 <code>github.com/LuChengTHU/dpm-solver</code></li>
+<li>Lu et al. <i>DPM-Solver++</i>. Machine Intelligence Research 2025. arXiv:2211.01095</li>
+<li>Zhao, Bai, Rao, Zhou, Lu. <i>UniPC</i>. <b>NeurIPS 2023</b>. arXiv:2302.04867. 代码 <code>github.com/wl-zhao/UniPC</code></li>
+<li>Zhang, Chen. <i>Fast Sampling of Diffusion Models with Exponential Integrator (DEIS)</i>. ICLR 2023. arXiv:2204.13902. 代码 <code>github.com/qsh-zh/deis</code></li>
+<li>Karras, Aittala, Aila, Laine. <i>Elucidating the Design Space of Diffusion-Based Generative Models</i>. NeurIPS 2022. arXiv:2206.00364. 代码 <code>github.com/NVlabs/edm</code></li>
+<li>Xu, Deng, Cheng, Tian, Liu, Jaakkola. <i>Restart Sampling for Improving Generative Processes</i>. NeurIPS 2023. arXiv:2306.14878</li>
+<li>Zheng, Lu, Chen, Zhu. <i>DPM-Solver-v3</i>. NeurIPS 2023. arXiv:2310.13268</li>
+<li>Zhou, Chen, Wang, Chen. <i>AMED-Solver</i>. CVPR 2024 Spotlight. arXiv:2312.00094</li>
+<li>Tan, Wang, Bertozzi, Ryu. <i>STORK</i>. arXiv:2505.24210（2025）</li>
+<li>Wang et al. <i>Differentiable Solver Search for Fast Diffusion Sampling</i>. ICML 2025. arXiv:2505.21114</li>
+<li>Chen, Zheng, Berthelot, Gu, Susskind, Zhai. <i>TADA</i>. NeurIPS 2025. arXiv:2506.21757. 代码 <code>github.com/apple/ml-tada</code></li>
+<li>Ren et al. <i>Fast Solvers for Discrete Diffusion Models</i>. NeurIPS 2025. arXiv:2502.00234</li>
+<li>Lin, Lim, Erichson. <i>AREX</i>. arXiv:2610.03483（2026-10）</li>
+</ul>
+
+<h3>支线 B · 训练式少步生成</h3>
+<ul>
+<li>Salimans, Ho. <i>Progressive Distillation for Fast Sampling of Diffusion Models</i>. ICLR 2022. arXiv:2202.00512</li>
+<li>Song, Dhariwal, Chen, Sutskever. <i>Consistency Models</i>. ICML 2023. arXiv:2303.01469. 代码 <code>openai/consistency_models</code></li>
+<li>Luo, Tan, Huang, Li, Zhao. <i>Latent Consistency Models</i>. arXiv:2310.04378. 代码 <code>luosiallen/latent-consistency-model</code></li>
+<li>Luo et al. <i>LCM-LoRA: A Universal Stable-Diffusion Acceleration Module</i>. arXiv:2311.05556</li>
+<li>Sauer, Lorenz, Blattmann, Rombach. <i>Adversarial Diffusion Distillation</i>. arXiv:2311.17042</li>
+<li>Yin, Gharbi, Zhang, Shechtman, Durand, Freeman, Park. <i>One-step Diffusion with Distribution Matching Distillation (DMD)</i>. CVPR 2024. arXiv:2311.18828</li>
+<li>Yin et al. <i>Improved Distribution Matching Distillation (DMD2)</i>. NeurIPS 2024. arXiv:2405.14867. 项目页 <code>tianweiy.github.io/dmd2</code></li>
+<li>Zheng et al. <i>Trajectory Consistency Distillation (TCD)</i>. arXiv:2402.19159</li>
+<li>Lu, Song. <i>Simplifying, Stabilizing and Scaling Continuous-Time Consistency Models (sCM)</i>. ICLR 2025 Oral. arXiv:2410.11081</li>
+<li>Zheng et al. <i>Large Scale Diffusion Distillation via Score-Regularized Continuous-Time Consistency (rCM)</i>. ICLR 2026. arXiv:2510.08431</li>
+<li>Frans, Hafner, Levine, Abbeel. <i>Shortcut Models</i>. ICLR 2025. arXiv:2410.12557</li>
+</ul>
+
+<h3>支线 C · 流匹配与矫正流</h3>
+<ul>
+<li>Lipman, Chen, Ben-Hamu, Nickel, Le. <i>Flow Matching for Generative Modeling</i>. ICLR 2023. arXiv:2210.02747</li>
+<li>Liu, Gong, Liu. <i>Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow</i>. ICLR 2023 Spotlight. arXiv:2209.03003. 代码 <code>github.com/gnobitab/RectifiedFlow</code></li>
+<li>Albergo, Boffi, Vanden-Eijnden. <i>Stochastic Interpolants: A Unifying Framework for Flows and Diffusions</i>. JMLR 2025. arXiv:2303.08797</li>
+<li>Ma, Goldstein, Albergo, Boffi, Vanden-Eijnden, Xie. <i>SiT</i>. ECCV 2024. arXiv:2401.08740. 代码 <code>github.com/willisma/SiT</code></li>
+<li>Esser, Kulal, Blattmann, … Rombach. <i>Scaling Rectified Flow Transformers for High-Resolution Image Synthesis (SD3)</i>. arXiv:2403.03206</li>
+<li>Gao, Hoogeboom, Heek, De Bortoli, Murphy, Salimans. <i>Diffusion Models and Gaussian Flow Matching: Two Sides of the Same Coin</i>. <b>ICLR 2025 Blogpost Track</b>. OpenReview <code>C8Yyg9wy0s</code></li>
+<li>Geng, Deng, Bai, Kolter, He. <i>Mean Flows for One-step Generative Modeling</i>. arXiv:2505.13447</li>
+<li>Geng, Lu, Wu, Shechtman, Kolter, He. <i>Improved Mean Flows (iMF)</i>. arXiv:2512.02012</li>
+<li>Lu et al. <i>Pixel Mean Flows (pMF)</i>. arXiv:2601.22158</li>
+<li>Hertrich, Chambolle, Delon. <i>On the Relation between Rectified Flows and Optimal Transport</i>. NeurIPS 2025. arXiv:2505.19712</li>
+</ul>
+
+<h3>支线 D · 骨干与潜空间</h3>
+<ul>
+<li>Dhariwal, Nichol. <i>Diffusion Models Beat GANs on Image Synthesis (ADM)</i>. NeurIPS 2021. arXiv:2105.05233. 代码 <code>github.com/openai/guided-diffusion</code></li>
+<li>Ho, Salimans. <i>Classifier-Free Diffusion Guidance</i>. arXiv:2207.12598</li>
+<li>Rombach, Blattmann, Lorenz, Esser, Ommer. <i>High-Resolution Image Synthesis with Latent Diffusion Models</i>. CVPR 2022. arXiv:2112.10752</li>
+<li>Peebles, Xie. <i>Scalable Diffusion Models with Transformers (DiT)</i>. ICCV 2023 Oral. arXiv:2212.09748. 代码 <code>facebookresearch/DiT</code></li>
+<li>Bao et al. <i>All are Worth Words: A ViT Backbone for Diffusion Models (U-ViT)</i>. CVPR 2023. arXiv:2209.12152</li>
+<li>Xie et al. <i>Sana: Efficient High-Resolution Image Synthesis with Linear Diffusion Transformers</i>. arXiv:2410.10629</li>
+<li>Fei, Fan, Yu, Huang. <i>DiS: Scalable Diffusion Models with State Space Backbone</i>. arXiv:2402.05608</li>
+<li>Teng et al. <i>DiM: Diffusion Mamba</i>. arXiv:2405.14224</li>
+</ul>
+
+<h3>2025–2026 前沿与理论</h3>
+<ul>
+<li>Chen, Chewi, Daskalakis, Rakhlin. <i>High-accuracy sampling for diffusion models and log-concave distributions</i>. <b>ICML 2026 Outstanding Paper</b>. arXiv:2602.01338</li>
+<li>Ni, Wang, Yue, Yu, Zhao, Hua, Chen, Song, Yu, Zheng, Huang. <i>The Flexibility Trap: Rethinking the Value of Arbitrary Order in Diffusion Language Models</i>. <b>ICML 2026 Outstanding Paper</b>. arXiv:2601.15165</li>
+<li>Wang, Zavatone-Veth, Pehlevan. <i>A Random Matrix Perspective on the Consistency of Diffusion Models</i>. ICML 2026 Honorable Mention</li>
+<li>Wu et al. <i>Motion Attribution for Video Generation (Motive)</i>. ICML 2026 Honorable Mention</li>
+<li>Nie et al. <i>Large Language Diffusion Models (LLaDA)</i>. arXiv:2502.09992</li>
+<li>Kim et al. <i>Beyond Next-Token Prediction: A Performance Characterization of Diffusion versus Autoregressive Language Models</i>. arXiv:2510.04146</li>
+<li>Tian, Jiang, Yuan, Peng, Wang. <i>Visual Autoregressive Modeling (VAR)</i>. NeurIPS 2024. arXiv:2404.02905</li>
+<li>Huang, Li, He, Zhou, Shechtman. <i>Self Forcing</i>. NeurIPS 2025 Spotlight. arXiv:2506.08009</li>
+<li>Du et al. <i>Autoregressive Models Rival Diffusion Models at ANY-ORDER Generation (A3)</i>. ICLR 2026</li>
+</ul>
+
+<h3>病理 / 医学侧（本课题相关）</h3>
+<ul>
+<li>Klöckner, Teixeira, Montezuma, Cardoso, Horlings, Oliveira. <i>GANs vs. Diffusion Models for virtual staining with the HER2match dataset</i>. arXiv:2506.18484. DOI 10.1007/978-3-032-05472-2_12</li>
+<li>Saurav, Pham, Mukherjee, Yi, Orr, Luber. <i>UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</i>. arXiv:2603.12716（<b>GAN</b>）</li>
+<li>Ma, Li, Li, Liu, Wu, Zhou, Liang, Chan, Wong, Chen. <i>Generative AI for Misalignment-Resistant Virtual Staining (DGR)</i>. Nature Communications 2026. DOI 10.1038/s41467-026-71038-2；arXiv:2509.14119（<b>GAN</b>）</li>
+<li>Kataria, Knudsen, Elhabian. <i>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</i>. arXiv:2403.11340</li>
+<li>Großkopf, Bundele, Hosseinzadeh, Lensch. <i>HistDiST: Histopathological Diffusion-based Stain Transfer</i>. DAGM GCPR 2025. arXiv:2505.06793</li>
+<li>Zhang, Huang, … Ozcan. <i>Pixel super-resolved virtual staining of label-free tissue</i>. Nature Communications 2025. DOI 10.1038/s41467-025-60387-z（<b>BBDM</b>）</li>
+<li>Jiang, Imran, Zhang, Zhou, Liang, Gong, Shao. <i>Fast-DDPM</i>. JBHI 2025. arXiv:2405.14802</li>
+<li>Liu, Deng, Li, Kazemi, Grashei, Wilkens, You, Groll, Navab, Mogler, Schüffler. <i>Star-Diff: Restoration Diffusion for Diagnostic-Consistent Virtual IHC</i>. arXiv:2508.02528</li>
+</ul>
+
+<div class="foot">
+<p>扩散生成模型发展谱系 · 从 DDPM 到 2026 · 三次分水岭与四条支线 · 归档于 <code>01_调研报告/</code> · 生成日期 2026-10-11</p>
+<p class="small">证据分级：<span class="b high">A</span> 一手正文/表格已逐字核实 · <span class="b medium">B</span> 摘要或部分数字已核实 · <span class="b low">C</span> 仅二手来源或未能核实（<b>请勿直接引用</b>）。</p>
+</div>
+</main>
+</div>
+</body>
+</html>

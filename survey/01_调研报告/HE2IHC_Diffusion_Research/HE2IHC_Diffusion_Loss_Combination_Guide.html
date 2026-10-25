@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扩散模型训练 · 噪声预测损失与其他损失能否共存</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg-soft:#f7f8fa; --bg-softer:#fbfcfd; --panel:#ffffff;
+    --border:#e4e7ec; --border-strong:#cdd3dc;
+    --text:#171a1f; --text-2:#3d444d; --muted:#6b7480;
+    --accent:#1a56db; --accent-soft:#eaf0fd;
+    --green:#0d7a3f; --green-soft:#e6f5ec;
+    --amber:#9a6200; --amber-soft:#fdf3e2;
+    --red:#c22a2a; --red-soft:#fdeceb;
+    --purple:#6b32c9; --purple-soft:#f1ebfd;
+    --teal:#0a6f78; --teal-soft:#e3f4f6;
+    --gray-soft:#eef0f3;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;scroll-padding-top:20px;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;}
+  .wrap{display:flex;max-width:1560px;margin:0 auto;}
+  nav.toc{width:296px;flex:0 0 296px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:26px 18px 60px 26px;border-right:1px solid var(--border);background:var(--bg-softer);}
+  nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--accent);text-transform:uppercase;margin-bottom:4px;}
+  nav.toc .brand-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+  nav.toc a{display:block;color:var(--text-2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent;}
+  nav.toc a:hover{background:var(--gray-soft);color:var(--accent);}
+  nav.toc a.lv1{font-weight:650;margin-top:9px;color:var(--text);}
+  nav.toc a.lv2{padding-left:20px;font-size:12.5px;color:var(--muted);}
+  main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1180px;}
+  header.doc{border-bottom:2px solid var(--border-strong);padding-bottom:22px;margin-bottom:30px;}
+  header.doc .kicker{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700;}
+  header.doc h1{font-size:28px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em;}
+  header.doc .sub{font-size:14.5px;color:var(--muted);margin:0;}
+  .meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .meta-row span{font-size:12px;background:var(--gray-soft);border:1px solid var(--border);color:var(--text-2);padding:3px 10px;border-radius:20px;}
+  h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--accent);letter-spacing:-.01em;}
+  h2 .num{color:var(--accent);font-weight:800;margin-right:8px;}
+  h3{font-size:18px;margin:34px 0 12px;color:var(--text);}
+  h3::before{content:"▍";color:var(--accent);margin-right:6px;font-size:14px;}
+  h4{font-size:15.5px;margin:24px 0 9px;color:var(--text);}
+  h5{font-size:13.5px;margin:18px 0 7px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  p{margin:9px 0;} ul,ol{margin:9px 0 9px 22px;padding:0;} li{margin:5px 0;}
+  a{color:var(--accent);}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--gray-soft);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f;}
+  pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0;}
+  pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit;}
+  .box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--bg-soft);}
+  .box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em;}
+  .box.key{background:var(--accent-soft);border-color:#c2d4f7;} .box.key .bt{color:var(--accent);}
+  .box.warn{background:var(--amber-soft);border-color:#f0dcb4;} .box.warn .bt{color:var(--amber);}
+  .box.stop{background:var(--red-soft);border-color:#f4cfcc;} .box.stop .bt{color:var(--red);}
+  .box.good{background:var(--green-soft);border-color:#c2e4cf;} .box.good .bt{color:var(--green);}
+  .box.pur{background:var(--purple-soft);border-color:#d9c9f7;} .box.pur .bt{color:var(--purple);}
+  .box.teal{background:var(--teal-soft);border-color:#b8e2e7;} .box.teal .bt{color:var(--teal);}
+  .tbl-scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px;}
+  table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:640px;}
+  thead th{background:#f2f4f7;text-align:left;padding:10px 11px;font-weight:700;border-bottom:2px solid var(--border-strong);white-space:nowrap;font-size:12.3px;}
+  td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6;}
+  tbody tr:nth-child(even){background:var(--bg-softer);}
+  tbody tr:hover{background:var(--accent-soft);}
+  td.c,th.c{text-align:center;}
+  .b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6;}
+  .bS{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bA{background:var(--accent-soft);color:var(--accent);border:1px solid #c2d4f7;}
+  .bB{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+  .bC{background:var(--gray-soft);color:var(--muted);border:1px solid var(--border-strong);}
+  .bHigh{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bMed{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+  .bLow{background:var(--gray-soft);color:var(--muted);border:1px solid var(--border-strong);}
+  .bBad{background:var(--red-soft);color:var(--red);border:1px solid #f4cfcc;}
+  .bOk{background:var(--green-soft);color:var(--green);border:1px solid #b7e0c7;}
+  .bPar{background:var(--amber-soft);color:var(--amber);border:1px solid #f0dcb4;}
+.bTl{background:var(--teal-soft);color:var(--teal);border:1px solid #bfe3e7;}
+.bPu{background:var(--purple-soft);color:var(--purple);border:1px solid #d9c8f5;}
+  .stars{color:#d99000;letter-spacing:1px;}
+  .card{border:1px solid var(--border);border-radius:11px;margin:20px 0;overflow:hidden;background:var(--panel);}
+  .card > .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  .card > .ch .t{font-weight:700;font-size:15px;line-height:1.45;}
+  .card > .ch .v{font-size:12px;color:var(--muted);margin-top:3px;}
+  .card > .cb{padding:6px 18px 18px;}
+  .kv{display:grid;grid-template-columns:118px 1fr;gap:3px 14px;font-size:13.2px;margin:12px 0;}
+  .kv dt{color:var(--muted);font-weight:600;font-size:12.3px;padding-top:1px;} .kv dd{margin:0;}
+  .flow{background:#f8f9fb;border:1px solid var(--border);border-radius:10px;padding:20px;margin:16px 0;overflow-x:auto;}
+  .fnode{display:inline-block;border:1.5px solid var(--border-strong);background:#fff;border-radius:7px;padding:7px 14px;font-size:12.5px;text-align:center;line-height:1.45;font-family:var(--mono);}
+  .fnode.hl{border-color:var(--accent);background:var(--accent-soft);font-weight:700;color:var(--accent);}
+  .fnode.gr{border-color:#b7e0c7;background:var(--green-soft);}
+  .fnode.am{border-color:#f0dcb4;background:var(--amber-soft);}
+  .fnode.pu{border-color:#d9c9f7;background:var(--purple-soft);}
+  .fnode.tl{border-color:#b8e2e7;background:var(--teal-soft);}
+  .fnode.rd{border-color:#f4cfcc;background:var(--red-soft);}
+  .farrow{display:block;text-align:center;color:var(--muted);font-size:15px;line-height:1.2;margin:5px 0;}
+  .frow{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;align-items:center;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr;}}
+  .mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--bg-softer);}
+  .mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px;}
+  .mini p{font-size:12.8px;margin:4px 0;color:var(--text-2);}
+  hr{border:none;border-top:1px solid var(--border);margin:34px 0;}
+  .small{font-size:12.5px;color:var(--muted);}
+  .tag{display:inline-block;font-size:11px;background:var(--gray-soft);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin:2px 3px 2px 0;color:var(--text-2);font-family:var(--mono);}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:10px 0 0;}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .eq{background:#fff;border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:8px;padding:14px 18px;margin:14px 0;font-family:var(--mono);font-size:13px;line-height:1.8;overflow-x:auto;}
+  @media(max-width:900px){nav.toc{display:none;} main{padding:22px 18px 90px;} header.doc h1{font-size:22px;}}
+  @media print{nav.toc{display:none;} main{padding:0;max-width:none;} .card{break-inside:avoid;} h2{break-before:page;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">噪声损失 vs 辅助损失</div>
+  <div class="brand-sub">扩散模型训练目标<br>能不能相加？怎么相加？</div>
+  <a class="lv1" href="#s0">摘要与核心结论</a>
+  <a class="lv1" href="#s1">Part 1 · 噪声损失为什么"最重要"</a>
+  <a class="lv2" href="#s1-2">它的真实身份：ELBO / score matching</a>
+  <a class="lv2" href="#s1-3">采样器对它的依赖</a>
+  <a class="lv1" href="#s2">Part 2 · 直接相加会出什么问题</a>
+  <a class="lv2" href="#s2-1">问题一：尺度失衡</a>
+  <a class="lv2" href="#s2-2">问题二：梯度方向冲突</a>
+  <a class="lv2" href="#s2-3">问题三：时间步本身是任务</a>
+  <a class="lv1" href="#s3">Part 3 · 硬证据：Lantern 受控实验</a>
+  <a class="lv1" href="#s4">Part 4 · 文献里的六种范式</a>
+  <a class="lv1" href="#s5">Part 5 · 实操细节清单（10 条）</a>
+  <a class="lv1" href="#s6">Part 6 · 什么时候可以直接加</a>
+  <a class="lv2" href="#s6-2">常见误解澄清</a>
+  <a class="lv1" href="#s7">Part 7 · 病理领域的具体案例</a>
+  <a class="lv1" href="#s8">Part 8 · 给你的 PSPStain+Diffusion 配方</a>
+  <a class="lv2" href="#s8-3">三档实施方案</a>
+  <a class="lv2" href="#s8-5">★ 把 PCLS 改造成条件（双 SPADE）</a>
+  <a class="lv2" href="#s8-6">训练循环伪代码 + 三个坑</a>
+  <a class="lv1" href="#s9">Part 9 · 决策流程图</a>
+  <a class="lv1" href="#s10">附录 · 参考文献与声明</a>
+</nav>
+
+<main>
+
+<header class="doc">
+  <div class="kicker">Training Objectives for Diffusion Models</div>
+  <h1>噪声预测损失与其他损失能否一起训练？<br>—— 扩散模型多损失联合优化的理论、证据与实操配方</h1>
+  <p class="sub">回答「条件生成需要多个损失，但噪声预测损失才是核心，其他损失到底能不能一起加」这个问题</p>
+  <div class="meta-row">
+    <span>检索时间：2026-10-01</span>
+    <span>覆盖文献：30+ 篇</span>
+    <span>前置报告：解耦学习 / 物理合规性</span>
+    <span>结论：可以加，但必须保护噪声损失的主导地位</span>
+  </div>
+</header>
+
+<!-- ================================================================= -->
+<h2 id="s0"><span class="num">0</span>摘要与核心结论</h2>
+
+<div class="box key">
+  <div class="bt">一句话结论</div>
+  <p style="margin:0"><b>能加，而且大量工作确实这么做。但「加」的方式有讲究——直接加权求和是最差的做法之一。</b><br>
+  噪声预测损失的重要性不是「它的权重应该最大」，而是<b>它是唯一一个让网络保持"生成模型"身份的项</b>。辅助损失若在<b>梯度方向</b>上与它冲突，就会把 ε<sub>θ</sub> 推离真实的 score 场，导致采样器失效。<br>
+  正确的做法是：<b>① 保护噪声损失的主导地位；② 只在梯度方向一致时才让辅助损失发力；③ 在训练末期关闭辅助损失。</b></p>
+</div>
+
+<h3>0.1 先纠正一个理解偏差</h3>
+<div class="box warn">
+  <div class="bt">⚠️「噪声预测损失最重要」这句话的准确含义</div>
+  <p>它<b>不是</b>说「它的数值应该最大」或「它的权重应该占 90%」。<br>
+  它的准确含义是：<b>只有噪声预测损失在直接优化生成分布 p<sub>θ</sub>(x)。其他所有损失都在优化「某个从 x<sub>t</sub> 到期望输出的映射」，但它们不保证这个映射是一个合法的 score 场。</b></p>
+  <p style="margin-bottom:0">打个比方：<br>
+  噪声预测损失 = <b>发动机</b>（决定车能不能动）<br>
+  其他损失 = <b>方向盘 / 导航</b>（决定车往哪开）<br>
+  <b>方向盘不能替代发动机。但如果方向盘打得太猛，车会翻。</b>——这就是直接加权求和的真实后果。</p>
+</div>
+
+<h3>0.2 五个必须记住的判断</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">判断</th><th>结论与证据</th></tr></thead>
+<tbody>
+<tr><td><b>① 辅助损失确实被大量使用</b></td><td>StainDiffuser 用 <code>L = L_gen + λ·L_seg</code>（λ=1 或 3）；DisDiff (NeurIPS 2023) 用 <code>L = L_simple + λ·L_dis</code>；MIU-Diff 用去噪损失 + 局部对比损失；ADD 用蒸馏损失 + 对抗损失。<b>这是主流做法，不是异端。</b></td></tr>
+<tr><td><b>② 但直接加权求和会灾难性失败</b></td><td>Lantern 的受控实验（唯一变量是梯度组合规则）：纯去噪基线 FPD <b>30.87</b>；加上辅助损失后用 PCGrad/GradNorm/IMTL-G/ConFIG 组合，FPD 变成 <b>68.5 / 60.3 / 406.9 / 204.7</b>——<b>最差恶化 100 倍以上</b>。而加权求和 + 无调度的不确定性加权「使 FPD 恶化了数个数量级」。</td></tr>
+<tr><td><b>③ 冲突的本质是梯度方向，不是损失量级</b></td><td>Lantern 实测去噪梯度与辅助梯度的<b>冲突角 θ<sub>conf</sub> ≈ 92°–128°</b>（>90° 即相互对抗）。所以调 λ 是治标——真正要处理的是方向。</td></tr>
+<tr><td><b>④ 训练末期必须关闭辅助损失</b></td><td>Lantern 的调度消融（同一架构、同一损失、唯一变量是门控时间）：<br>S1（一开始就开）FPD <b>173.4</b> / S2（warmup 后开，保持到结束）FPD <b>236.3</b> / <b>S3（末期关闭）FPD 32.84</b> ← 唯一可用。<br>而且：<b>对梯度天然对齐的损失（如 Laplacian），调度完全不敏感</b>（FPD 23.5–26.0）。</td></tr>
+<tr><td><b>⑤ 最安全的做法是不加额外损失</b></td><td>把条件做成<b>网络输入</b>（ControlNet / T2I-Adapter / InstructPix2Pix / cross-attention / FiLM / classifier-free guidance），零额外损失。HistDiST 在 H&amp;E→IHC 上就是这么做的——只有 v-prediction 一个损失，条件全部走 cross-attention + latent 拼接。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>0.3 你该怎么做（三句话版）</h3>
+<div class="box good">
+  <div class="bt">✅ 直接答案</div>
+  <ol style="margin-bottom:0">
+    <li><b>首选</b>：把能做成条件的都做成条件，不加损失。你的「结构条件」「stain token」都属于这一类——用 SPADE / FiLM / cross-attention 注入即可，<b>零额外损失</b>。</li>
+    <li><b>次选</b>：必须加损失时（比如 PSPStain 的 FOD 和 PCLS），用 <b>「x̂₀ 上计算 + 时间步门控 + 训练末期关闭 + 梯度方向保护」</b>四件套。其中「末期关闭」是最重要、最容易被忽略的一条。</li>
+    <li><b>诊断先行</b>：加之前先测<b>冲突角 θ<sub>conf</sub></b>（去噪梯度与辅助梯度的夹角）。&lt;90° 可常开；&gt;90° 必须门控 + 末期关闭。</li>
+  </ol>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s1"><span class="num">1</span>Part 1 · 噪声预测损失为什么"最重要"</h2>
+
+<h3>1.1 从表面看：它只是「预测加进去的噪声」</h3>
+<div class="eq">L<sub>simple</sub>(θ) = E<sub>x₀, ε, t</sub> [ ‖ ε − ε<sub>θ</sub>(x<sub>t</sub>, t) ‖² ]
+
+其中  x<sub>t</sub> = √ᾱ<sub>t</sub> · x₀ + √(1−ᾱ<sub>t</sub>) · ε,   ε ~ N(0, I)</div>
+<p>看起来就是一个普通的回归任务：给定加噪图 x<sub>t</sub> 和时间步 t，预测加进去的噪声 ε。为什么它比其他损失特殊？</p>
+
+<h3 id="s1-2">1.2 它的真实身份：这不是一个"随便设计的损失"</h3>
+<div class="box pur">
+  <div class="bt">📐 三个等价身份</div>
+  <p><b>身份一：变分下界（ELBO）的（重加权）形式。</b><br>
+  DDPM 的原始推导是从最大化数据对数似然 log p<sub>θ</sub>(x₀) 出发的。其变分下界可分解为三项：先验损失 + 重构损失 + 扩散损失。前两项在实践中趋于 0，<b>剩下的扩散损失，在特定重加权下正好就是 L<sub>simple</sub></b>。<br>
+  → 所以它<b>有概率论根基</b>，不是启发式设计。</p>
+
+  <p><b>身份二：去噪分数匹配（Denoising Score Matching）。</b><br>
+  ε<sub>θ</sub> 与 score 函数有严格对应关系：</p>
+  <div class="eq" style="margin:8px 0">∇<sub>x_t</sub> log p<sub>t</sub>(x<sub>t</sub>) = − ε<sub>θ</sub>(x<sub>t</sub>, t) / √(1−ᾱ<sub>t</sub>)</div>
+  <p>→ 所以最小化 L<sub>simple</sub> <b>等价于学习数据分布的对数密度的梯度</b>。</p>
+
+  <p style="margin-bottom:0"><b>身份三：反向采样器的唯一输入。</b><br>
+  无论是 DDPM、DDIM 还是反向 SDE，采样公式里<b>唯一需要从网络拿的量就是 ε<sub>θ</sub></b>：</p>
+  <div class="eq" style="margin:8px 0 0">x<sub>t−1</sub> = (1/√α<sub>t</sub>) · ( x<sub>t</sub> − (β<sub>t</sub>/√(1−ᾱ<sub>t</sub>)) · <b>ε<sub>θ</sub>(x<sub>t</sub>,t)</b> ) + σ<sub>t</sub> z</div>
+</div>
+
+<h3 id="s1-3">1.3 关键推论：采样器对 ε<sub>θ</sub> 的"信任"是无条件的</h3>
+<p>这是整个问题的核心。采样过程<b>假设</b> ε<sub>θ</sub> 是一个合法的 score 场，即它是某个标量势函数 −log p<sub>t</sub>(x) 的梯度（保守向量场）。采样器的所有理论保证——收敛性、分布正确性、ODE 可逆性——都建立在这个假设上。</p>
+
+<div class="box stop">
+  <div class="bt">🚫 辅助损失做了什么破坏</div>
+  <pre style="margin:8px 0 0"><code>纯去噪训练:
+    ε_θ  →  逼近真实的 score 场（保守场，可积分为势函数）
+    采样器有效 ✓
+
+加上辅助损失 L_aux（例如"输出图要像 IHC"）后:
+    ε_θ  →  既要逼近 score 场，又要让 x̂₀ 满足 L_aux
+    如果两者要求的方向不一致，ε_θ 会被拉离 score 场
+    → ε_θ 不再是一个合法的 score 场（可能变成非保守场）
+    → 采样器的理论保证失效
+    → 表现：样本质量崩塌、模式坍塌、recall 崩溃</code></pre>
+</div>
+
+<p>Lantern 论文对这个问题的表述非常精准，值得直接引用：</p>
+<div class="box key">
+  <div class="bt">💬 原文</div>
+  <p style="margin:0">「Denoising is the objective that makes the network generative, so it must stay primary; <b>an auxiliary that overrides it degrades the samples it is meant to improve.</b>」<br>
+  <span class="small">（去噪是让网络成为生成模型的那个目标，所以它必须保持主导地位；一个压过它的辅助损失，反而会损害它本想改善的样本。）</span></p>
+</div>
+
+<div class="box teal">
+  <div class="bt">🔑 由此得到的设计原则</div>
+  <p style="margin:0">问题被分解为<b>两个正交的子问题</b>（Lantern 原文的框架）：</p>
+  <ol style="margin-bottom:0">
+    <li><b>如何构造一个更新方向</b>，既接纳辅助信号，又保持去噪主导？→ 这是<b>方向</b>问题。</li>
+    <li><b>决定辅助损失在训练的什么时候生效</b>？→ 这是<b>时间</b>问题。</li>
+  </ol>
+  <p style="margin-top:8px;margin-bottom:0">后面 Part 3 的硬证据会表明：<b>第二个问题（时间）比第一个问题更容易解决，而且收益更大。</b></p>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s2"><span class="num">2</span>Part 2 · 直接相加会出什么问题</h2>
+
+<p>很多人第一反应是：<code>L_total = L_denoise + λ·L_aux</code>，调 λ 就行。这个做法有三个层次的隐患，从浅到深。</p>
+
+<h3 id="s2-1">2.1 问题一（浅层）：时间步依赖的尺度失衡</h3>
+<p>这是最容易理解、也最容易被忽略的一点。<b>辅助损失通常作用在 x̂₀ 上，而 x̂₀ 的质量强烈依赖 t。</b></p>
+<div class="eq">x̂₀(x<sub>t</sub>, t) = ( x<sub>t</sub> − √(1−ᾱ<sub>t</sub>) · ε<sub>θ</sub>(x<sub>t</sub>, t) ) / √ᾱ<sub>t</sub></div>
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:12.5px;line-height:1.85">
+t → T（高噪声端）:  x_t ≈ 纯噪声  →  x̂₀ 几乎无意义  →  辅助损失巨大但信号无意义
+t → 0（低噪声端）:  x_t ≈ 干净图  →  x̂₀ 质量高      →  辅助损失有意义
+
+后果:
+  · 辅助损失的<b>数值量级</b>随 t 剧烈变化（可能跨越几个数量级）
+  · 固定 λ 意味着：在高 t 时辅助损失主导（且是噪声主导的错误信号）
+                    在低 t 时辅助损失几乎不起作用
+  · 梯度方差极大 → 训练不稳定
+
+另一个陷阱: 除以 √ᾱ_t 在 t→0 时数值爆炸（ᾱ_t → 1 时其实还好，
+            但 ε 预测的微小误差会被 1/√ᾱ_t 放大）
+</pre>
+</div>
+
+<h3 id="s2-2">2.2 问题二（核心）：梯度方向冲突</h3>
+<div class="box stop">
+  <div class="bt">🎯 这才是真正的问题</div>
+  <p style="margin:0">调 λ 只能改<b>幅度</b>，不能改<b>方向</b>。如果两个损失的梯度方向本来就相反，那么无论 λ 多小，你都在持续地把网络往两个矛盾的方向拉——只是慢一点而已。</p>
+</div>
+<div class="eq">定义两个梯度:
+    g<sub>d</sub> = ∇<sub>θ</sub> L<sub>denoise</sub>          （去噪梯度）
+    g<sub>a</sub> = ∇<sub>θ</sub> ( w<sub>aux</sub>(s) · L<sub>aux</sub> )   （辅助梯度）
+
+定义冲突角:
+    θ<sub>conf</sub> = arccos( ĝ<sub>d</sub> · ĝ<sub>a</sub> )    其中 ĝ = g / ‖g‖
+
+判据:
+    θ_conf &lt; 90°  →  两个目标相互<b>促进</b>（可以放心一起加）
+    θ_conf = 90°  →  正交（互不干扰，加了没用但不伤）
+    θ_conf &gt; 90°  →  两个目标相互<b>对抗</b>（必须处理）</div>
+<p>Lantern 实测：去噪梯度与物理残差损失的冲突角在训练中<b>从合作逐渐转为对抗</b>，实测值 <b>92°–128°</b>。这就是为什么简单加权会失败。</p>
+
+<h3 id="s2-3">2.3 问题三（深层）：扩散训练本身就是多任务学习</h3>
+<p>这一点很多人没意识到，但它解释了为什么扩散训练这么"脆"。Min-SNR 论文（Hang et al., ICCV 2023）给出了清晰的论证：</p>
+<div class="box pur">
+  <div class="bt">📐 把扩散训练重新表述为多任务学习（MTL）</div>
+  <pre style="margin:8px 0 0"><code>训练过程包含 <b>T 个任务</b>，每个 timestep 是一个任务:
+    L¹(θ), L²(θ), ..., L^T(θ)
+
+理想更新方向 δ 必须对所有任务都不增加损失:
+    ⟨ δ , ∇L^t(θ) ⟩ ≤ 0,   ∀ t ∈ {1,...,T}
+
+Pareto 最优解:
+    δ* = − Σ_t w_t · ∇L^t(θ)
+    其中 w 解 min ‖ Σ_t w^t ∇L^t(θ) ‖²  s.t. Σ w^t = 1, w^t ≥ 0
+
+→ 这说明: <b>不同 timestep 之间存在真实的梯度冲突</b>，需要显式平衡</code></pre>
+</div>
+<p><b>实验证据（Min-SNR 论文 Figure 2）</b>：把去噪过程按噪声水平分箱，只在某个区间（如 t∈[200,300)）微调：</p>
+<blockquote style="border-left:3px solid var(--amber);padding-left:14px;color:var(--text-2);font-size:13.5px;margin:12px 0">
+「微调特定时间步会使相邻时间步受益，但<b>对相距较远的其他时间步往往有害</b>。」
+</blockquote>
+<p>→ 这直接证明了<b>不同 t 的最优梯度方向是矛盾的</b>。</p>
+
+<h4>解决方案：Min-SNR-γ 加权</h4>
+<div class="eq">w<sub>t</sub> = min{ SNR(t), γ }       其中 SNR(t) = ᾱ<sub>t</sub>² / (1−ᾱ<sub>t</sub>)²
+
+（不同预测目标下的形式不同）
+  预测 x₀ 时:  w<sub>t</sub> = min{ SNR(t), γ }
+  预测 ε  时:  w<sub>t</sub> = min{ γ / SNR(t), 1 }
+  预测 v  时:  再除以 (SNR + 1)</div>
+<ul>
+  <li><b>推荐 γ = 5</b>（论文默认值，γ ∈ {1,5,10,20} 中 5 最稳）</li>
+  <li><b>效果</b>：收敛速度提升 <b>3.4×</b>；ViT-XL 在 ImageNet-256 上以更小参数量达到 FID <b>2.06</b>（3.3× 快于 DiT）</li>
+  <li><b>代码</b>：<a href="https://github.com/TiankaiHang/Min-SNR-Diffusion-Training">TiankaiHang/Min-SNR-Diffusion-Training</a></li>
+  <li><b>关键洞察</b>：论文指出运行时 Pareto 优化（UGD / Frank-Wolfe）虽然理论上最优，但实践中失败——因为<b>稀疏性</b>（多数时间步权重被压到 0，而扩散需要所有时间步）、<b>不稳定性</b>（单时间步样本少 → 梯度噪声大）、<b>低效</b>。所以需要一个<b>预定义的全局加权方案</b>。</li>
+</ul>
+
+<h4>其他相关加权方案</h4>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:22%">方案</th><th class="c">年份/venue</th><th style="width:30%">核心形式</th><th>关键结论</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>P2 weighting</b><br><span class="small">Perception Prioritized</span></td><td class="c">CVPR 2022</td>
+  <td>w<sub>λ</sub>(t) = σ<sub>t</sub>² / (σ<sub>t</sub>² + λ²) 的变形，用 <code>(SNR+1)^γ</code> 形式重新加权，<b>提升接近噪声端（高 t）的权重</b></td>
+  <td>「某些噪声水平是更好的 pretext task」——优先学习这些噪声水平能显著提升性能，且跨数据集/架构/采样策略都有效。</td>
+</tr>
+<tr>
+  <td><b>Min-SNR-γ</b></td><td class="c">ICCV 2023</td>
+  <td>w<sub>t</sub> = min{SNR(t), γ}，γ=5</td>
+  <td>3.4× 收敛加速；把扩散训练显式建模为 MTL。</td>
+</tr>
+<tr>
+  <td><b>Zero terminal SNR</b><br><span class="small">+ v-prediction</span></td><td class="c">WACV 2024</td>
+  <td>重标定噪声调度使 ᾱ<sub>T</sub> = 0（终端 SNR 严格为 0）；用 v-prediction 替代 ε-prediction</td>
+  <td>常见噪声调度「不强制最后一个时间步 SNR 为零」，导致训练时模型看到的是带信号的数据，而推理时输入纯噪声 → <b>训练-推理不匹配</b>。修复后生成质量显著提升。HistDiST 正是采用了这一方案（零终端 SNR + v-prediction，γ=5）。</td>
+</tr>
+<tr>
+  <td><b>DTR</b><br><span class="small">Denoising Task Routing</span></td><td class="c">ICLR 2024</td>
+  <td>给不同时间步分配不同的网络参数（路由），并在早期（高 t）阶段赋予更大权重</td>
+  <td>把扩散训练看作 MTL，通过「任务路由 + 任务权重」缓解时间步冲突。是即插即用的附加策略。</td>
+</tr>
+<tr>
+  <td><b>Loss Functions 比较研究</b></td><td class="c">arXiv 2025</td>
+  <td>系统对比 x / ε / v / s 四个空间的 NELBO vs 加权损失 vs 重标定损失</td>
+  <td>① 理论等价 ≠ 经验等价；② <b>更好的似然 ≠ 更好的样本质量</b>；③ v-space 在 SNR→0 时最稳定；④ 加权损失更稳定，重标定后可跨空间比较。<a href="https://github.com/dibyanshu100/LFDM">code</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s3"><span class="num">3</span>Part 3 · 硬证据：Lantern 的受控实验</h2>
+
+<div class="box key">
+  <div class="bt">为什么这篇特别有说服力</div>
+  <p style="margin:0">Lantern（arXiv 2607.25060，2026）在量热器模拟任务上做了一个<b>完美的受控实验</b>：<br>
+  <b>架构固定、辅助损失固定、权重调度固定、预处理固定——唯一变量是「梯度组合规则」。</b><br>
+  因此它测的就是「辅助损失与去噪损失到底能不能一起加」这个纯粹的问题。<b>虽然任务是高能物理而不是病理，但结论与领域无关——它描述的是优化器的行为。</b></p>
+</div>
+
+<h3>3.1 主结果：通用多任务方法全部失败</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:22%">方法</th><th class="c">辅助损失</th><th class="c">FPD ↓</th><th class="c">KPD ↓</th><th class="c">CFD<sub>vox</sub> ↓</th><th class="c">AUC(HL) →0.5</th><th>判定</th></tr>
+</thead>
+<tbody>
+<tr style="background:var(--green-soft)">
+  <td><b>Base（纯去噪，无辅助损失）</b></td><td class="c">—</td><td class="c"><b>30.87</b>±1.26</td><td class="c">0.002</td><td class="c">0.122</td><td class="c">0.531</td><td><span class="b bOk">基线</span></td>
+</tr>
+<tr><td>Base + PCGrad</td><td class="c">Voxel</td><td class="c">68.50±44.58</td><td class="c">0.137</td><td class="c">0.142</td><td class="c">0.566</td><td><span class="b bBad">2.2× 恶化</span></td></tr>
+<tr><td>Base + GradNorm</td><td class="c">Voxel</td><td class="c">60.27±11.15</td><td class="c">0.102</td><td class="c">0.142</td><td class="c">0.549</td><td><span class="b bBad">2.0× 恶化</span></td></tr>
+<tr><td>Base + IMTL-G</td><td class="c">Voxel</td><td class="c"><b>406.9</b>±80.9</td><td class="c">2.216</td><td class="c">0.192</td><td class="c">0.807</td><td><span class="b bBad">13× 恶化</span></td></tr>
+<tr><td>Base + ConFIG</td><td class="c">Voxel</td><td class="c">204.7±31.2</td><td class="c">0.882</td><td class="c">0.156</td><td class="c">0.636</td><td><span class="b bBad">6.6× 恶化</span></td></tr>
+<tr style="background:var(--green-soft)">
+  <td><b>Lantern（GradBlend）</b></td><td class="c">Voxel</td><td class="c"><b>32.84</b>±3.27</td><td class="c">−0.0007</td><td class="c">0.125</td><td class="c">0.538</td><td><span class="b bOk">≈ 基线</span></td>
+</tr>
+<tr><td>Base + PCGrad</td><td class="c">Laplacian</td><td class="c">169.0±72.8</td><td class="c">0.640</td><td class="c">0.155</td><td class="c">0.621</td><td><span class="b bBad">5.5× 恶化</span></td></tr>
+<tr><td>Base + GradNorm</td><td class="c">Laplacian</td><td class="c">133.5±51.5</td><td class="c">0.472</td><td class="c">0.147</td><td class="c">0.620</td><td><span class="b bBad">4.3× 恶化</span></td></tr>
+<tr><td>Base + IMTL-G</td><td class="c">Laplacian</td><td class="c"><b>3454</b>±4820</td><td class="c">23.52</td><td class="c">0.510</td><td class="c">0.874</td><td><span class="b bBad">112× 恶化 · 发散</span></td></tr>
+<tr><td>Base + ConFIG</td><td class="c">Laplacian</td><td class="c">262.8±73.9</td><td class="c">1.209</td><td class="c">0.172</td><td class="c">0.656</td><td><span class="b bBad">8.5× 恶化</span></td></tr>
+<tr style="background:var(--green-soft)">
+  <td><b>Lantern（GradBlend）</b></td><td class="c">Laplacian</td><td class="c"><b>25.97</b>±1.44</td><td class="c">−0.0048</td><td class="c">0.120</td><td class="c">0.534</td><td><span class="b bOk"><b>优于基线</b></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="small">FPD/KPD 为 Fréchet/Kernel 距离（越低越好，×10³）；CFD<sub>vox</sub> 为体素级相关结构距离；AUC 越接近 0.5 表示生成样本与真实样本越难区分（越好）。三个随机种子取均值±标准差。</p>
+
+<div class="box warn">
+  <div class="bt">⚠️ 三条必须注意的现象</div>
+  <ul style="margin-bottom:0">
+    <li><b>标准差极大</b>：PCGrad 的 FPD 是 68.50<b>±44.58</b>，IMTL-G 是 406.9<b>±80.9</b>，Laplacian 下甚至 3454<b>±4820</b>。论文原话：「These are unstable outcomes, not small regressions.」（这是不稳定，不是小幅回退。）</li>
+    <li><b>PRDC 揭示了失败模式</b>：多任务基线「precision 和 density 上升，但 <b>recall 崩塌</b>——这是模式坍塌的特征」。而 Base 和 Lantern 保持平衡。</li>
+    <li><b>「加权求和」和「无调度的不确定性加权」使 FPD 恶化了数个数量级</b>；只有<b>带调度的</b>不确定性加权变体才有竞争力。</li>
+  </ul>
+</div>
+
+<h3>3.2 梯度诊断：为什么失败</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:20%">方法</th><th class="c">θ<sub>conf</sub> (°)</th><th class="c">Balance</th><th class="c">cos<sub>d</sub></th><th class="c">cos<sub>a</sub></th><th>解读</th></tr>
+</thead>
+<tbody>
+<tr><td>Base + ConFIG</td><td class="c">92.0±1.2</td><td class="c">1.81</td><td class="c">0.69</td><td class="c">0.69</td><td><b>cos<sub>d</sub> = cos<sub>a</sub></b>：把两个梯度当同级对待，步长与两者夹角相同</td></tr>
+<tr><td>Base + GradNorm</td><td class="c">127.5±3.6</td><td class="c">0.83</td><td class="c">0.36</td><td class="c">0.41</td><td>Balance &lt; 1 → <b>偏向辅助梯度，反而压制了去噪</b></td></tr>
+<tr><td>Base + IMTL-G</td><td class="c">116.7±3.3</td><td class="c">1.33</td><td class="c">0.52</td><td class="c">0.52</td><td>cos<sub>d</sub> = cos<sub>a</sub>；R<sup>d</sup><sub>1</sub>=0.14（几乎无进展）</td></tr>
+<tr><td>Base + PCGrad</td><td class="c">123.9±7.1</td><td class="c">2.13</td><td class="c">0.55</td><td class="c">0.31</td><td>部分分离</td></tr>
+<tr style="background:var(--green-soft)"><td><b>Lantern</b></td><td class="c">119.7±0.5</td><td class="c"><b>3.26</b></td><td class="c"><b>0.71</b></td><td class="c"><b>0.21</b></td><td><b>cos<sub>d</sub> 与 cos<sub>a</sub> 差距最大（0.71 vs 0.21）→ 步长紧贴去噪方向，远离辅助方向</b></td></tr>
+</tbody>
+</table>
+</div>
+<p><b>Balance</b> = R<sup>d</sup><sub>1</sub> / R<sup>a</sup><sub>1</sub>，&gt;1 表示该步更偏向去噪目标。<b>cos<sub>d</sub></b> 是合成步长与去噪梯度的余弦，<b>cos<sub>a</sub></b> 是与辅助梯度的余弦。</p>
+<div class="box key">
+  <div class="bt">🔍 这张表告诉我们的核心事实</div>
+  <p style="margin:0"><b>所有方法测得的冲突角都在 92°–128°，也就是说：去噪梯度和辅助梯度在参数空间里确实是相互对抗的。</b><br>
+  差别只在于<b>合成步长站在哪一边</b>。ConFIG 和 IMTL-G 让 cos<sub>d</sub> = cos<sub>a</sub>（中立），结果两个目标都没做好；GradNorm 甚至偏向辅助（Balance 0.83），压制了去噪；只有 Lantern 明确站在去噪一边（Balance 3.26）。<br>
+  <b>结论：在冲突存在的前提下，"公平对待两个目标"是错误策略，必须明确让去噪优先。</b></p>
+</div>
+
+<h3>3.3 调度消融：最重要的发现</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:16%">调度</th><th style="width:34%">定义</th><th class="c">FPD ↓（Voxel）</th><th class="c">FPD ↓（Laplacian）</th></tr>
+</thead>
+<tbody>
+<tr><td><b>S1</b></td><td>第一步就打开辅助损失门控</td><td class="c">173.4</td><td class="c">25.34</td></tr>
+<tr><td><b>S2</b></td><td>warmup 50 epoch，epoch 250 达到全权重，<b>保持到最后</b></td><td class="c"><b>236.3</b></td><td class="c"><b>23.53</b></td></tr>
+<tr style="background:var(--green-soft)"><td><b>S3</b></td><td>同 S2，但<b>在结束前关闭</b>（Voxel 在 epoch 650 衰减到 0；Laplacian 在 550）</td><td class="c"><b>32.84</b></td><td class="c">25.97</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="box good">
+  <div class="bt">✅ 三条可直接照搬的结论</div>
+  <ol style="margin-bottom:0">
+    <li><b>辅助损失必须在训练末期关闭。</b>对比 S2（保持到最后，FPD 236.3）与 S3（末期关闭，FPD 32.84）——<b>差 7 倍</b>。论文原话：「the voxel loss competes with denoising late in training」。<br>
+    <b>原因是：体素残差损失的梯度在训练过程中从「合作」逐渐转为「对抗」</b>——早期它帮助模型快速找到结构，后期它开始和去噪抢方向。</li>
+    <li><b>是否需要调度，取决于损失本身是否冲突。</b>Laplacian 损失在 S1/S2/S3 下 FPD 只有 23.5–26.0 的波动，<b>完全不敏感</b>。论文原话：「The gate is therefore necessary where the auxiliary conflicts with denoising and <b>inert where it does not.</b>」（门控在冲突处必要，在不冲突处无作用。）</li>
+    <li><b>「末期关闭」是免费收益。</b>Lantern 最终对两个损失都用 S3，因为「在不损失 Laplacian 性能的前提下移除了体素冲突」，且「保持单一调度、避免逐损失调参」。</li>
+  </ol>
+</div>
+
+<h3>3.4 GradBlend 的核心思想（可以借鉴）</h3>
+<div class="box pur">
+  <div class="bt">💡 分离「方向」与「幅度」</div>
+  <pre style="margin:8px 0 0"><code>设 ĝ_d = g_d/‖g_d‖,  ĝ_a = g_a/‖g_a‖
+
+冲突角:      θ_conf = arccos( ĝ_d · ĝ_a )
+
+<b>方向</b>: 辅助损失可以参与，但被角度门控
+    ρ_eff = 1                        θ_conf ≤ 120°
+    ρ_eff = 1 − (θ_conf−120°)/30°    120° < θ_conf ≤ 150°
+    ρ_eff = 0                        θ_conf > 150°
+    ĝ_dir = ( ĝ_d + ρ_eff · ĝ_a ) / ‖ ĝ_d + ρ_eff · ĝ_a ‖
+
+<b>幅度</b>: 只锚定在去噪梯度上，随冲突收缩
+    m_ref = ‖g_d‖ · max( cos(θ_conf/2), 0.05 )
+
+最终更新:  g_blend = m_ref · ĝ_dir</code></pre>
+  <p style="margin:8px 0 0"><b>三个关键设计</b>：<br>
+  ① 两个梯度都先<b>单位化</b>——因此辅助梯度不能靠自身的范数主导方向；<br>
+  ② 步长<b>只由去噪梯度决定</b>，辅助损失不进入步长 → 辅助损失无法抬高有效学习率；<br>
+  ③ <b>冲突越大步长越小</b>（cos(θ/2) 在 θ=180° 时为 0），冲突时自动保守；0.05 的下限防止步长完全崩塌。</p>
+</div>
+<p class="small"><b>局限（论文自述）</b>：角度阈值（120°/150°）与幅度下限（0.05）是经验设定的，未做理论推导；调度关闭时刻也是先验固定的；论文只分别研究了两个辅助损失，未刻画二者同时使用时的交互。代码：<a href="https://github.com/Aaheer17/lantern-kdd27">Aaheer17/lantern-kdd27</a>。</p>
+
+<!-- ================================================================= -->
+<h2 id="s4"><span class="num">4</span>Part 4 · 文献里的六种范式</h2>
+
+<p>综合来看，让条件生成生效的做法可以归为五种范式。<b>按「对噪声损失干扰程度」从低到高排序</b>——这也是我推荐你的采用顺序。</p>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">范式 A · 不加任何额外损失，全部做成条件输入 <span class="b bS">最安全</span></div>
+      <div class="v">ControlNet · T2I-Adapter · InstructPix2Pix · cross-attention · FiLM / SPADE · classifier-free guidance</div>
+    </div>
+    <div><span class="b bHigh">推荐度 High</span></div>
+  </div>
+  <div class="cb">
+    <h5>机制</h5>
+    <pre><code>条件 → 网络输入（不进入损失函数）
+
+  ① latent 拼接:  x_t ← [x_t ; E(c)]            （InstructPix2Pix, HistDiST）
+  ② 旁路注入:     零卷积 / adapter 加到主干      （ControlNet, T2I-Adapter）
+  ③ 归一化调制:   h' = (γ_c + γ_s)⊙h + (β_c + β_s)  （SPADE, FiLM, UNIStainNet）
+  ④ 交叉注意力:   K,V ← 条件特征                （SD cross-attn, HistDiST 的 Phikon）
+  ⑤ 无分类器引导: 训练时随机丢弃条件，推理时
+                  ε = ε(x,t,∅) + w·(ε(x,t,c) − ε(x,t,∅))
+                  → <b>完全不新增损失</b></code></pre>
+    <h5>为什么最安全</h5>
+    <p>整个训练目标仍然<b>只有一个 L<sub>simple</sub></b>。网络自己学会「如何使用条件」——条件的作用体现在<b>输入</b>而非<b>目标函数</b>。因此不存在梯度冲突问题。</p>
+    <h5>证据</h5>
+    <ul>
+      <li><b>HistDiST</b>（H&amp;E→IHC，2025）：训练目标<b>只有 v-prediction 损失</b>（γ=5），双条件全部走 cross-attention + latent 拼接，达到 SOTA。</li>
+      <li><b>Classifier-Free Guidance</b>（Ho &amp; Salimans 2022）：已经成为文生图系统的默认组件，<b>零额外损失</b>。</li>
+      <li><b>ControlNet</b>：论文明确指出零卷积设计「避免了对主干的破坏性干扰」。</li>
+    </ul>
+    <div class="box good">
+      <div class="bt">对你项目的建议</div>
+      <p style="margin-bottom:0">你的「结构条件」「stain token」「病理语义条件」<b>全部应该做成这一类</b>——用 SPADE / FiLM / cross-attention 注入，<b>不要为它们单独设计损失</b>。这能一次性避开整个梯度冲突问题。</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">范式 B · 辅助损失作用在 x̂₀ 上 + 门控 + 末期关闭 <span class="b bA">标准做法</span></div>
+      <div class="v">Lantern（GradBlend）· StainDiffuser · MIU-Diff · DisDiff (NeurIPS 2023)</div>
+    </div>
+    <div><span class="b bMed">推荐度 Med–High</span></div>
+  </div>
+  <div class="cb">
+    <h5>标准形式</h5>
+    <div class="eq">L<sub>total</sub> = L<sub>denoise</sub>(θ) + w<sub>aux</sub>(s) · ℓ<sub>phys</sub>( x̂₀(x<sub>t</sub>,t), x̃₀ )
+
+其中  x̂₀(x<sub>t</sub>,t) = ( x<sub>t</sub> − √(1−ᾱ<sub>t</sub>)·ε<sub>θ</sub>(x<sub>t</sub>,t) ) / √ᾱ<sub>t</sub>    ← 单步干净估计
+      w<sub>aux</sub>(s) 为随优化步 s 变化的时间门控</div>
+    <h5>四个必要设计（缺一不可）</h5>
+    <ol>
+      <li><b>作用在 x̂₀ 上</b>，不是 ε 上。因为辅助损失的目标（如"输出图要像 IHC"）是在干净图像空间定义的。</li>
+      <li><b>时间步门控</b>：只在 x̂₀ 有意义的 t 上启用（通常 t &lt; 某个阈值，或按 SNR 加权）。</li>
+      <li><b>末期关闭</b>：Lantern 的核心发现，FPD 从 236.3 降到 32.84。</li>
+      <li><b>梯度方向保护</b>：GradBlend 或至少监控冲突角。</li>
+    </ol>
+    <h5>StainDiffuser 的具体做法（与你的任务最接近）</h5>
+    <div class="eq">L<sub>stain</sub> = L<sub>gen</sub>(φ) + λ · L<sub>seg</sub>(θ)      λ = 1 或 3
+
+L<sub>gen</sub>(φ) = E[ ‖ε − f<sub>φ</sub>(I<sup>he</sup>, I<sup>ihc</sup><sub>t</sub>, t)‖² ]     ← 生成 IHC 的去噪损失
+L<sub>seg</sub>(θ) = E[ ‖ε − f<sub>θ</sub>(I<sup>he</sup>, I<sup>seg</sup><sub>t</sub>, t)‖² ]     ← 分割的去噪损失</div>
+    <div class="box teal">
+      <div class="bt">💡 StainDiffuser 的关键技巧：辅助任务也被表述为扩散损失</div>
+      <p style="margin:0"><b>分割任务不是用「分割损失」做的，而是用另一个扩散过程做的</b>——对分割掩膜做加噪-去噪，用同样的 ε-prediction 损失。<br>
+      这样做的深层好处：<b>辅助损失与主损失的「形式」完全一致</b>（都是预测高斯噪声的 MSE），因此尺度天然匹配、梯度结构相似、冲突更小。<br>
+      <b>这是一个非常聪明的规避策略，建议你借鉴。</b></p>
+    </div>
+    <h5>StainDiffuser 的 ablation（证明辅助任务真的有用）</h5>
+    <div class="tbl-scroll">
+    <table>
+      <thead><tr><th class="c">分割</th><th class="c">距离变换</th><th class="c">PSNR ↑</th><th class="c">SSIM ↑</th><th class="c">FID ↓</th><th class="c">KID ↓</th></tr></thead>
+      <tbody>
+        <tr><td class="c">✗</td><td class="c">✗</td><td class="c">19.89</td><td class="c">0.565</td><td class="c">32.99</td><td class="c">0.008</td></tr>
+        <tr><td class="c">✗</td><td class="c">✓</td><td class="c">20.02</td><td class="c">0.612</td><td class="c">33.14</td><td class="c">0.011</td></tr>
+        <tr style="background:var(--green-soft)"><td class="c">✓</td><td class="c">✗</td><td class="c"><b>21.67</b></td><td class="c"><b>0.676</b></td><td class="c"><b>23.46</b></td><td class="c"><b>0.0028</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><b>FID 从 32.99 降到 23.46（−29%），PSNR 从 19.89 升到 21.67</b>——辅助任务的收益是显著的。而 λ 的最优值在不同数据集上不同（CK8/18 用 λ=1，CD3 用 λ=3，因为 CD3 在 H&amp;E 中特征更不明显，需要更强的分割监督）。</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">范式 C · 把损失变成推理时的引导（不改训练） <span class="b bS">零风险</span></div>
+      <div class="v">EGSDE (NeurIPS 2022) · DPS · Loss-Guided Diffusion · Classifier Guidance</div>
+    </div>
+    <div><span class="b bHigh">推荐度 High</span></div>
+  </div>
+  <div class="cb">
+    <h5>机制</h5>
+    <div class="eq">dx = [ f(x,t) − g(t)² ( ∇<sub>x</sub>log p<sub>t</sub>(x) − λ·∇<sub>x</sub>L<sub>aux</sub>(x) ) ] dt + g(t) dw̄
+
+其中 ∇<sub>x</sub>log p<sub>t</sub>(x) = − ε<sub>θ</sub>(x,t) / √(1−ᾱ<sub>t</sub>)   ← 仍来自去噪损失</div>
+    <h5>关键优势</h5>
+    <ul>
+      <li><b>生成器训练完全不受影响</b>——ε<sub>θ</sub> 仍然是纯粹的 score 场。</li>
+      <li>引导项可<b>随时开关</b>，λ 可调 → <b>ablation 极其干净</b>。</li>
+      <li>EGSDE 用两个能量函数（content energy + style energy）做引导，<b>完全不训练生成器</b>。而 MIU-Diff 正是把它作为 H&amp;E→IHC 的 baseline 之一。</li>
+    </ul>
+    <div class="box warn">
+      <div class="bt">⚠️ 代价</div>
+      <p style="margin-bottom:0">① 需要额外训练能量函数（判别器）；② 推理变慢（每步要算损失梯度）；③ 引导强度需要调（EGSDE 用了时间衰减调度 <code>λ(t) = λ·(1−t/T)</code>——前期管风格、后期管内容）。</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">范式 D · 多任务共享主干 + 分离头</div>
+      <div class="v">StainDiffuser 的双 U-Net 设计 · DiffusionMTL</div>
+    </div>
+    <div><span class="b bMed">推荐度 Med</span></div>
+  </div>
+  <div class="cb">
+    <h5>架构</h5>
+    <pre><code>                  H&E
+                   │
+          ┌────────┴────────┐
+          ↓                 ↓
+   [共享 H&E Encoder]  ← 单一主干，两个任务共享
+          │  F₁..F₄
+     ┌────┴────┐
+     ↓         ↓
+[分割注意力]  [生成注意力]   ← 注意力矩阵各自独立，无参数共享
+     ↓         ↓
+[分割 U-Net] [生成 U-Net]   ← 两个独立扩散过程
+     ↓         ↓
+  分割掩膜    IHC
+
+损失: L = L_gen(φ) + λ·L_seg(θ)
+两个损失通过<b>共享 encoder</b> 间接互相影响</code></pre>
+    <h5>核心洞察</h5>
+    <p>论文强调：「任务通过共享的 H&amp;E 编码空间保持专业化同时互相连接，创造出的交互<b>超越了损失函数本身</b>」。也就是说——<b>真正让多任务生效的是共享表征，而不是损失相加。</b></p>
+    <p class="small">这解释了一个常见困惑：为什么有人加了辅助损失没效果？因为如果两个任务不共享表征，损失相加只会制造冲突，不会产生迁移。</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">范式 E · 把两个损失都变成扩散损失（双扩散） <span class="b bS">最优雅</span></div>
+      <div class="v">RDDM（Residual Denoising Diffusion Models, CVPR 2024）· Star-Diff 基于此</div>
+    </div>
+    <div><span class="b bHigh">推荐度 High</span></div>
+  </div>
+  <div class="cb">
+    <div class="box key">
+      <div class="bt">🎯 这是本报告最推荐你采用的结构</div>
+      <p style="margin:0">RDDM 把传统的单一去噪扩散过程<b>解耦为「残差扩散」+「噪声扩散」两个过程</b>，各自有自己的网络和损失。这样既实现了「结构」与「随机性」的分离，又<b>完全避免了辅助损失与去噪损失的冲突问题——因为两者都是合法的扩散损失</b>。</p>
+    </div>
+    <h5>前向过程</h5>
+    <div class="eq">x<sub>t</sub> = x₀ + ᾱ<sub>t</sub> · (I<sup>deg</sup> − x₀) + β̄<sub>t</sub> · ε
+       └────┘   └──────────────────┘   └────────┘
+        干净图      确定性残差（退化方向）    随机噪声</div>
+    <h5>两个网络、两个损失</h5>
+    <pre><code>残差 U-Net  r_θ :  预测「目标图 → 退化输入」的结构性差异
+噪声 U-Net  ε_θ :  预测随机高斯噪声
+
+两个损失都是 MSE 形式，<b>尺度天然匹配</b>，不存在方向冲突
+（因为残差是确定性的、噪声是随机的，二者在定义上就正交）</code></pre>
+    <h5>关键性质</h5>
+    <ul>
+      <li><b>残差优先确定性，噪声强调多样性</b> → 可统一「生成」与「复原」两类需求。</li>
+      <li>采样过程通过系数变换与 DDPM/DDIM <b>保持一致</b>，不破坏理论框架。</li>
+      <li>论文强调：「一个普通 U-Net，<b>只用 L1 损失、batch size = 1</b>，就能与 SOTA 图像复原方法竞争」——说明双扩散结构本身就很强。</li>
+      <li>代码：<a href="https://github.com/nachifur/RDDM">nachifur/RDDM</a>；Star-Diff（H&amp;E→IHC）即基于此，非官方复现见 <a href="https://github.com/anomredux/Star-Diff">anomredux/Star-Diff</a>。</li>
+    </ul>
+    <div class="box good">
+      <div class="bt">✅ 为什么这对你的项目特别合适</div>
+      <p style="margin-bottom:0">你的任务本质是「<b>保持结构 + 生成染色</b>」——这正好对应 RDDM 的「<b>残差（结构差异）+ 噪声（随机性）</b>」。<br>
+      把 PSPStain 的生成器换成 RDDM 式双扩散后：<br>
+      · 残差分支负责「H&amp;E 到 IHC 的结构性差异」<br>
+      · 噪声分支负责「切片间染色差异」<br>
+      · <b>两个损失都是扩散损失，不需要任何梯度手术</b><br>
+      然后 PSPStain 的 FOD / PCLS 作为<b>第三类损失</b>加上去时，你只需要处理它们与主损失的关系（用范式 B 的四件套）。</p>
+    </div>
+  </div>
+</div>
+
+<h3>4.1 六种范式对照表</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:14%">范式</th><th style="width:20%">机制</th><th class="c">对噪声损失<br>干扰</th><th class="c">实现难度</th><th class="c">ablation<br>干净度</th><th>代表工作</th></tr>
+</thead>
+<tbody>
+<tr><td><b>A · 条件输入</b></td><td>条件进网络输入，不进损失</td><td class="c"><span class="b bOk">无</span></td><td class="c"><span class="b bS">低</span></td><td class="c"><span class="b bHigh">高</span></td><td>ControlNet, T2I-Adapter, CFG, HistDiST</td></tr>
+<tr><td><b>E · 双扩散</b></td><td>两个合法的扩散损失并存</td><td class="c"><span class="b bOk">无</span></td><td class="c"><span class="b bB">中</span></td><td class="c"><span class="b bHigh">高</span></td><td>RDDM, Star-Diff</td></tr>
+<tr><td><b>C · 推理引导</b></td><td>损失只作用于采样</td><td class="c"><span class="b bOk">无（训练时）</span></td><td class="c"><span class="b bA">中</span></td><td class="c"><span class="b bHigh">高</span></td><td>EGSDE, DPS, Loss-Guided</td></tr>
+<tr><td><b>D · 多任务共享</b></td><td>共享主干 + 分离头 + 分离损失</td><td class="c"><span class="b bPar">中</span></td><td class="c"><span class="b bB">中高</span></td><td class="c"><span class="b bMed">中</span></td><td>StainDiffuser</td></tr>
+<tr><td><b>B · 辅助损失</b></td><td>x̂₀ 上的损失 + 门控 + 末期关闭</td><td class="c"><span class="b bBad">高（需保护）</span></td><td class="c"><span class="b bB">中</span></td><td class="c"><span class="b bMed">中</span></td><td>Lantern, MIU-Diff, DisDiff</td></tr>
+<tr><td><b>F · 分阶段替换</b></td><td>先纯去噪训完，再用辅助损失<b>替换</b>（而非相加）</td><td class="c"><span class="b bPar">低（但破坏理论保证）</span></td><td class="c"><span class="b bB">中</span></td><td class="c"><span class="b bMed">中</span></td><td>Diffusion Model with Perceptual Loss (arXiv 2401.00110)</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="card">
+  <div class="ch">
+    <div>
+      <div class="t">范式 F · 分阶段替换：不加，而是「替换 + 分阶段」</div>
+      <div class="v">Diffusion Model with Perceptual Loss（arXiv 2401.00110）· 用时间换冲突</div>
+    </div>
+    <div><span class="b bTl">机制参考</span> <span class="b bA">复现难度 ★★★</span></div>
+  </div>
+  <div class="cb">
+    <p>这篇论文的出发点和你完全一样：<em>「我想让扩散模型的输出满足某种额外目标（这里是感知质量），但直接加损失会有问题，怎么办？」</em> 它的答案是——<b>不加，而是替换，并且分阶段。</b></p>
+    <h5>两阶段流程</h5>
+    <div class="flow">
+      <div class="frow"><div class="fnode hl">阶段 1：MSE 去噪损失</div></div>
+      <div class="farrow">↓ 训练 60k 迭代（建立生成能力）</div>
+      <div class="frow"><div class="fnode am">复制并冻结该模型<br>作为「感知网络」</div></div>
+      <div class="farrow">↓</div>
+      <div class="frow"><div class="fnode pu">阶段 2：自感知损失 L_sp</div><div class="fnode">继续训练 50k 迭代<br><span class="small">（此时 MSE 损失已被替换掉）</span></div></div>
+    </div>
+    <h5>两个损失的定义</h5>
+    <div class="eq">阶段 1（MSE）:  L_mse = ‖ v̂_t − v_t ‖²
+
+阶段 2（自感知）:  L_sp = ‖ p*ˡ( x̂_{t′}, t′, c ) − p*ˡ( x_{t′}, t′, c ) ‖²</div>
+    <p>其中 <code>p*ˡ</code> 是<b>冻结的自身副本</b>在某一层 <code>l</code> 的输出特征，<code>t′</code> 是一个<b>重新采样的时间步</b>。</p>
+
+    <h5>★ 关键技巧：感知损失作用在哪里？</h5>
+    <div class="box pur">
+      <div class="bt">既不是噪声，也不是 x̂₀，而是「重加噪后的 x_{t′}」</div>
+      <ol style="margin-bottom:0">
+        <li>把预测的 <code>v̂</code> 转成 <code>x̂₀</code> 和 <code>ε̂</code>：<br>
+        <code>x̂₀ = √ᾱ_t · x_t − √(1−ᾱ_t) · v̂</code>，<code>ε̂ = √ᾱ_t · v̂ + √(1−ᾱ_t) · x_t</code></li>
+        <li>把真实 <code>x₀</code> 与预测 <code>x̂₀</code> <b>各自重新加噪到新的时间步 t′</b>：<br>
+        <code>x_{t′} = forward(x₀, ε, t′)</code>，<code>x̂_{t′} = forward(x̂₀, ε̂, t′)</code></li>
+        <li>比较两者的<b>特征</b>：<code>L_sp = ‖p*ˡ(x̂_{t′},t′,c) − p*ˡ(x_{t′},t′,c)‖²</code></li>
+      </ol>
+      <p style="margin:8px 0 0">论文指出：<em>「这里导出的 x̂_{t′} 等价于从时间步 t 到 t′ 的单步 DDIM 求解。」</em></p>
+    </div>
+    <p><b>为什么要这么做？</b>因为直接比较 <code>x̂₀</code> 与 <code>x₀</code> 在像素空间差异过大（尤其模型还没训好时），梯度会爆炸。先<b>重新加噪到 t′</b>，相当于把比较放到「与当前训练状态匹配的噪声水平」上——<b>这本质上是一种尺度对齐，与 Part 2.1 的结论一致</b>。如果你的辅助损失必须在噪声域比较，这就是标准做法。</p>
+
+    <h5>为什么用「自己」当感知网络？</h5>
+    <div class="box good">
+      <div class="bt">论文原文</div>
+      <p style="margin:0"><em>「我们强调这个设计有意避免引入任何外部组件，使我们能够把研究隔离在损失目标上。它也很实用，因为我们可以很容易地把已有的 MSE 扩散模型用它自己微调成 SP。」</em></p>
+    </div>
+    <p><b>对你的直接启发</b>：你可以用<strong>训练到一半的 PSPStain+扩散模型自己</strong>作为特征提取器来构造 PCLS 的原型一致性损失，而不必额外引入病理基础模型（UNI / CTransPath）。这样既省依赖，又保证特征空间的尺度与训练状态匹配。</p>
+
+    <h5>结果与教训</h5>
+    <div class="tbl-scroll">
+    <table>
+    <thead><tr><th style="width:30%">损失</th><th class="c">CFG</th><th class="c">步数</th><th class="c">FID ↓</th><th class="c">IS ↑</th></tr></thead>
+    <tbody>
+    <tr><td>L_mse</td><td class="c">—</td><td class="c">25</td><td class="c">32.68</td><td class="c">22.20</td></tr>
+    <tr><td><b>L_sp</b></td><td class="c">—</td><td class="c">25</td><td class="c"><span class="b bOk">25.89</span></td><td class="c">27.76</td></tr>
+    <tr><td>L_sp</td><td class="c">—</td><td class="c">50</td><td class="c">24.42</td><td class="c">28.07</td></tr>
+    <tr><td>L_mse</td><td class="c">7.5 + rescale</td><td class="c">25</td><td class="c"><b>18.67</b></td><td class="c">34.17</td></tr>
+    <tr><td>L_sp</td><td class="c">3.0</td><td class="c">25</td><td class="c">20.65</td><td class="c">33.49</td></tr>
+    </tbody>
+    </table>
+    </div>
+    <ul>
+      <li><b>L_sp 确实优于 L_mse</b>（25.89 vs 32.68，无引导）——「替换」是有效的。</li>
+      <li><b>但 L_sp 打不过 L_mse + CFG</b>（20.65 vs 18.67）。这很说明问题：<em>用损失追求感知质量，效率低于用「推理时引导」追求。</em> 这直接支撑 Part 4 的结论——<b>能做成条件/引导的，就别做成损失。</b></li>
+    </ul>
+
+    <h5>消融中的一个实用发现：特征层选择</h5>
+    <div class="tbl-scroll">
+    <table>
+    <thead><tr><th>特征层选择</th><th class="c">FID ↓</th><th class="c">IS ↑</th></tr></thead>
+    <tbody>
+    <tr><td>全部编码器层</td><td class="c">26.64</td><td class="c">26.89</td></tr>
+    <tr><td>全部解码器层</td><td class="c">42.42</td><td class="c">19.98</td></tr>
+    <tr><td>编码器 + midblock</td><td class="c">26.96</td><td class="c">27.24</td></tr>
+    <tr><td><b>只用 midblock</b></td><td class="c"><span class="b bOk">25.89</span></td><td class="c"><span class="b bOk">27.76</span></td></tr>
+    </tbody>
+    </table>
+    </div>
+    <p><b>只用 U-Net 的中间块（midblock）效果最好，解码器层最差（FID 42.42，差 64%）。</b>这提示：<em>辅助损失应该作用在「语义最抽象、最稳定」的层，而不是「最接近像素、最不稳定」的层。</em> 对你的 PCLS 挂载位置有直接指导意义。</p>
+
+    <div class="box warn">
+      <div class="bt">⚠️ 两个必须知道的代价</div>
+      <ul style="margin-bottom:0">
+        <li><b>论文自述局限</b>：<em>「SP 目标只是用来验证损失目标的效果，并非作为最终方案提出。」</em> 并建议损失目标「最终应该是被学习出来的」。</li>
+        <li><b>引入了新伪影</b>：感知网络用 kernel=3、stride=2 的卷积下采样，导致<b>网格状伪影</b>。这提醒你——<b>任何辅助损失都可能带来它自己的病灶</b>。</li>
+        <li><b>理论代价</b>：一旦进入阶段 2，网络就不再是严格意义的扩散模型（ε<sub>θ</sub> 不再是纯 score 估计器）。这是「用生成性换忠实度」的交易，必须明确。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s5"><span class="num">5</span>Part 5 · 实操细节清单（10 条）</h2>
+
+<p>如果你确定要加辅助损失，下面这 10 条是必须处理的细节。<b>按重要性排序。</b></p>
+
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th class="c" style="width:5%">#</th><th style="width:20%">细节</th><th style="width:34%">做法</th><th>为什么重要</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td class="c"><b>1</b></td><td><b>末期关闭辅助损失</b></td>
+  <td>在训练的最后 15–25% 关闭 w<sub>aux</sub>（cosine 衰减到 0）。Lantern 用 S3：Voxel 在 epoch 650/800 关闭，Laplacian 在 550/800。</td>
+  <td><b>收益最大的一条。</b>FPD 从 236.3 → 32.84（7× 改善）。原理：辅助梯度在训练后期从合作转为对抗。</td>
+</tr>
+<tr>
+  <td class="c"><b>2</b></td><td><b>作用在 x̂₀ 上，不在 ε 上</b></td>
+  <td>先用单步估计算出干净图：<code>x̂₀ = (x_t − √(1−ᾱ_t)·ε_θ)/√ᾱ_t</code>，辅助损失作用于 x̂₀。</td>
+  <td>辅助目标（"输出图要像 IHC"）定义在图像空间。作用在 ε 上则语义不明。</td>
+</tr>
+<tr>
+  <td class="c"><b>3</b></td><td><b>warmup + 门控</b></td>
+  <td>先纯去噪训练 20–50 epoch，再 cosine ramp up 辅助权重。<b>不要一开始就开</b>（Lantern S1 的 FPD 是 173.4）。</td>
+  <td>让去噪先"站稳"，再让辅助损失引导。</td>
+</tr>
+<tr>
+  <td class="c"><b>4</b></td><td><b>监控冲突角</b></td>
+  <td>每 N 步计算 <code>θ_conf = arccos(ĝ_d · ĝ_a)</code>，记录曲线。<br>&lt;90° 可常开；&gt;90° 必须门控。</td>
+  <td><b>这是判断"要不要做调度"的唯一客观依据。</b>Lantern 测到 92°–128°，所以它必须做调度。</td>
+</tr>
+<tr>
+  <td class="c"><b>5</b></td><td><b>梯度手术而非简单加权</b></td>
+  <td>优先 GradBlend（分离方向与幅度）；其次 PCGrad；<b>不要用简单的 <code>L1 + λL2</code></b>。</td>
+  <td>简单加权使 FPD 恶化数个数量级；PCGrad 也恶化 2–5×；GradBlend 是唯一无损的。</td>
+</tr>
+<tr>
+  <td class="c"><b>6</b></td><td><b>尺度归一化</b></td>
+  <td>把辅助损失归一到与去噪梯度可比的范围。Lantern 对 Laplacian 除以 <code>λ_max(L)² ≈ 95.5</code>（预计算缓存）。</td>
+  <td>未归一化的辅助损失会因算子增益而膨胀。论文明确说"这使辅助梯度与去噪梯度在同一尺度"。</td>
+</tr>
+<tr>
+  <td class="c"><b>7</b></td><td><b>用 v-prediction 而非 ε-prediction</b></td>
+  <td>v = √ᾱ<sub>t</sub>·ε − √(1−ᾱ<sub>t</sub>)·x₀</td>
+  <td>① 跨所有噪声水平的难度更均匀；② 数值更稳（无需除法）；③ 在 SNR→0 时不退化。<b>HistDiST 在 H&amp;E→IHC 上用的就是 v-prediction（γ=5）。</b></td>
+</tr>
+<tr>
+  <td class="c"><b>8</b></td><td><b>零终端 SNR</b></td>
+  <td>重标定噪声调度使 ᾱ<sub>T</sub> = 0。Lin et al. (WACV 2024) 指出常见调度「不强制最后一步 SNR 为零」，导致训练-推理不匹配。</td>
+  <td>训练时模型看到带信号的数据，推理时输入纯噪声 → 分布错配。HistDiST 采用了这一修复。</td>
+</tr>
+<tr>
+  <td class="c"><b>9</b></td><td><b>Min-SNR-γ 时间步加权</b></td>
+  <td><code>w_t = min{SNR(t), γ}</code>，γ=5（ε-pred 时为 <code>min{γ/SNR(t), 1}</code>）</td>
+  <td>缓解时间步之间的梯度冲突，收敛加速 3.4×。与辅助损失问题正交，但叠加使用效果更好。</td>
+</tr>
+<tr>
+  <td class="c"><b>10</b></td><td><b>稳健损失（Huber）</b></td>
+  <td>辅助损失用 Huber 而非 MSE，阈值 δ 设为该残差的预期尺度。</td>
+  <td>残差超过预期尺度的样本会<b>限制</b>其影响而非主导更新。Lantern 的 voxel loss 用 δ<sub>vox</sub>=1。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s6"><span class="num">6</span>Part 6 · 什么时候可以直接加</h2>
+
+<div class="box key">
+  <div class="bt">判据只有一条：冲突角</div>
+  <p style="margin:0">不是看损失的「类型」（像素损失 / 感知损失 / 对抗损失），而是看<b>它在你的具体设置下与去噪梯度的夹角</b>。同一个损失在不同任务上可能一个对齐、一个冲突。</p>
+</div>
+
+<div class="grid3">
+  <div class="mini">
+    <div class="mt" style="color:var(--green)">θ_conf &lt; 90° · 可以常开</div>
+    <p><b>特征</b>：损失约束的方向与「更准确地预测噪声」方向一致。</p>
+    <p><b>典型</b>：结构性/平滑性约束（Lantern 的 Laplacian 损失实测不敏感，FPD 23.5–26.0 跨调度不变）。</p>
+    <p class="small"><b>做法</b>：直接加，不需要门控或末期关闭。</p>
+  </div>
+  <div class="mini">
+    <div class="mt" style="color:var(--amber)">θ_conf ≈ 90° · 加了没用</div>
+    <p><b>特征</b>：两个目标正交，互不干扰。</p>
+    <p><b>含义</b>：辅助损失无法通过梯度路径影响去噪表征，等于白加。</p>
+    <p class="small"><b>做法</b>：考虑改用范式 A（做成条件输入）或范式 D（共享表征）。</p>
+  </div>
+  <div class="mini">
+    <div class="mt" style="color:var(--red)">θ_conf &gt; 90° · 必须保护</div>
+    <p><b>特征</b>：两个目标在参数空间里相互对抗。</p>
+    <p><b>典型</b>：像素级重建损失、逐体素残差损失（Lantern 实测 92°–128°）。</p>
+    <p class="small"><b>做法</b>：门控 + 末期关闭 + 梯度手术，三者都要。</p>
+  </div>
+</div>
+
+<div class="box warn">
+  <div class="bt">⚠️ 一个重要且反直觉的发现</div>
+  <p style="margin:0">Lantern 发现：<b>同一个损失的冲突程度会随训练过程变化。</b><br>
+  「The voxel gradient turns from <b>cooperative to opposing</b> over training.」（体素梯度在训练中从合作转为对抗。）<br>
+  → 这意味着：<b>训练早期测得的冲突角不能代表全程。</b>建议在整个训练过程中周期性记录冲突角曲线，而不是只测一次。<br>
+  → 也解释了为什么 S2（warmup 后一直开）反而比 S1（一开始就开）更差——因为 S2 让冲突损失在后期持续发挥作用。</p>
+</div>
+
+<h3 id="s6-2">6.2 常见误解澄清</h3>
+<div class="tbl-scroll">
+<table>
+<thead><tr><th style="width:32%">常见说法</th><th class="c" style="width:7%">判定</th><th>正确的理解</th></tr></thead>
+<tbody>
+<tr>
+  <td>「噪声预测损失最重要，所以它的权重应该最大。」</td>
+  <td class="c"><span class="b bBad">✗</span></td>
+  <td>不是权重问题。它是<b>唯一出现在采样公式里</b>的损失，其他损失只能通过修正 ε<sub>θ</sub> 间接起作用。它的「重要」是<b>结构性的</b>，不是<b>数值性的</b>。把 λ 设成 0.01 并不能改变这个事实。</td>
+</tr>
+<tr>
+  <td>「多个损失相加是扩散模型做条件生成的常规做法。」</td>
+  <td class="c"><span class="b bBad">✗</span></td>
+  <td>反了。现代条件扩散的<b>主流做法是条件注入（CFG / ControlNet / Cross-Attn / SPADE），损失始终只有一个</b>。损失相加只在「输出端硬约束」时才必要。</td>
+</tr>
+<tr>
+  <td>「辅助损失不收敛，说明这个损失设计得不好。」</td>
+  <td class="c"><span class="b bPar">△</span></td>
+  <td>有两种可能：① 损失本身有问题；② <b>它和去噪损失在打架，网络在两者之间找不到折中点</b>。第二种更常见。诊断方法：看 <code>cos(g_d, g_a)</code>，接近 180° 就是第二种。</td>
+</tr>
+<tr>
+  <td>「用 PCGrad / GradNorm 做梯度平衡就能解决冲突。」</td>
+  <td class="c"><span class="b bBad">✗</span></td>
+  <td><b>这是最危险的误解。</b>Lantern 实测：这些方法在扩散训练中把 FPD <b>放大 2–100 倍</b>。原因是它们强行拉平梯度范数，破坏了 score field 的尺度校准。梯度平衡方法是为「多个平级任务」设计的，而去噪任务是<b>尺度基准</b>，不是平级任务。</td>
+</tr>
+<tr>
+  <td>「辅助损失的权重 λ 设成 1 就行，反正会自动平衡。」</td>
+  <td class="c"><span class="b bBad">✗</span></td>
+  <td>StainDiffuser 实测：λ 从 0.1 到 10，PSNR 变化 <b>2.5 dB</b>（22.83 → 20.32），且最优 λ <b>随标记物变化</b>（CK8/18 用 1，CD3 用 3）。λ 是必须调的超参数。</td>
+</tr>
+<tr>
+  <td>「辅助损失加在噪声 ε̂ 上还是 x̂₀ 上，应该差不多。」</td>
+  <td class="c"><span class="b bBad">✗</span></td>
+  <td>差很多。ε̂ 是噪声域、x̂₀ 是图像域。所有像素级/物理级辅助损失都天然属于图像域，挂在 ε̂ 上会造成<b>尺度错配</b>，尤其在低噪声段辅助损失会完全支配优化。<b>永远优先挂 x̂₀。</b></td>
+</tr>
+<tr>
+  <td>「加了辅助损失，训练 loss 曲线更平滑了，说明有效。」</td>
+  <td class="c"><span class="b bBad">✗</span></td>
+  <td>loss 曲线平滑与生成质量<b>没有必然关系</b>。Lantern 的失败案例中训练 loss 是下降的，但 FPD 崩坏。判断标准应该是<b>生成样本的 FID + 梯度诊断</b>，不是训练 loss 曲线。</td>
+</tr>
+<tr>
+  <td>「扩散模型只能有一个损失，这是理论限制。」</td>
+  <td class="c"><span class="b bPar">△</span></td>
+  <td>没有这样的理论限制。StainDiffuser 成功用了两个损失（都是 ε-prediction 形式），范式 F 的分阶段替换也成功。限制是<b>工程性的</b>（梯度冲突、尺度失衡），不是<b>理论性的</b>。</td>
+</tr>
+<tr>
+  <td>「GAN 里能堆 6 个损失，扩散也应该能。」</td>
+  <td class="c"><span class="b bBad">✗</span></td>
+  <td>UNIStainNet 在 H&amp;E→IHC 上堆了 LPIPS + L1 + Edge + 对抗 + FM + DAB 共 6 项损失，每项都有边际贡献。<b>但它是 GAN，不受 score 场约束。</b>这个经验直接搬到扩散上会引发梯度冲突——这是这个方向最容易犯的错误。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s7"><span class="num">7</span>Part 7 · 病理领域的具体案例</h2>
+
+<p>上一节是通用原理。这一节看病理/医学图像领域<b>实际怎么做的</b>。</p>
+
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr>
+  <th style="width:14%">工作</th><th class="c">任务</th><th style="width:26%">损失组合</th><th class="c">范式</th><th>关键做法 / 结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>HistDiST</b><br><span class="small">2025</span></td><td class="c">H&amp;E→IHC</td>
+  <td><b>只有一个损失</b>：v-prediction（γ=5）</td>
+  <td class="c"><span class="b bS">A</span></td>
+  <td>双条件全部走 cross-attention（Phikon 特征）+ latent 拼接（VAE 编码的 H&amp;E）。<b>零额外损失，仍达 SOTA（MRA +28%）。</b>这是「把条件做成输入」的最强例证。</td>
+</tr>
+<tr>
+  <td><b>StainDiffuser</b><br><span class="small">2024/25</span></td><td class="c">H&amp;E→IHC</td>
+  <td>L<sub>gen</sub> + λ·L<sub>seg</sub>，λ=1 或 3<br><b>两个都是 ε-prediction 扩散损失</b></td>
+  <td class="c"><span class="b bA">B+D</span></td>
+  <td>关键技巧：<b>辅助任务（分割）也用扩散形式表述</b>——对分割掩膜加噪去噪。因此两个损失形式一致、尺度匹配、冲突小。共享 H&amp;E encoder 让两个任务真正产生表征迁移。ablation：FID 32.99→23.46（−29%）。</td>
+</tr>
+<tr>
+  <td><b>MIU-Diff</b><br><span class="small">2025</span></td><td class="c">非配对虚拟染色</td>
+  <td>去噪损失 + <b>局部对比损失 ℓ_PCL</b>（训练时）<br>+ MI 能量引导（推理时）</td>
+  <td class="c"><span class="b bA">B+C</span></td>
+  <td>把「训练时的辅助损失」和「推理时的引导」<b>分开处理</b>。ablation：去掉 MI 引导后 Hist 从 0.670 掉到 0.217（−68%）——说明引导项的收益极大，且因为它不参与训练，所以没有梯度冲突问题。</td>
+</tr>
+<tr>
+  <td><b>DisDiff</b><br><span class="small">NeurIPS 2023</span></td><td class="c">无监督解耦</td>
+  <td>L<sub>simple</sub>(ε<sub>θ</sub>) + λ·L<sub>dis</sub></td>
+  <td class="c"><span class="b bA">B</span></td>
+  <td>解耦损失通过<b>阻止子梯度场之间的信息泄漏</b>实现（对子场的表示做 stop-gradient 约束）。论文的 ablation 显示去掉后子场之间出现明显串扰。</td>
+</tr>
+<tr>
+  <td><b>DisDiff (MICCAI 2025)</b><br><span class="small">MRI 翻译</span></td><td class="c">多对比 MRI</td>
+  <td>去噪损失 + 解耦模块 + <b>content discriminator</b></td>
+  <td class="c"><span class="b bA">B</span></td>
+  <td>用额外的<b>判别器</b>（而非像素损失）来强制解剖一致性——判别器的梯度结构与去噪更兼容，冲突比逐像素损失小。</td>
+</tr>
+<tr>
+  <td><b>SynDiff</b><br><span class="small">TMI 2023</span></td><td class="c">非配对医学翻译</td>
+  <td>对抗扩散：条件扩散过程 + <b>对抗投影</b></td>
+  <td class="c"><span class="b bA">B</span></td>
+  <td>对抗损失不是简单相加，而是通过「对抗投影」修改反向转移的步长——本质上是<b>把对抗信号注入采样路径</b>，而不是污染 score 场。</td>
+</tr>
+<tr>
+  <td><b>Star-Diff / RDDM</b><br><span class="small">CVPR 2024</span></td><td class="c">H&amp;E→IHC</td>
+  <td><b>残差预测损失 + 噪声预测损失</b>（两个都是扩散损失）</td>
+  <td class="c"><span class="b bS">E</span></td>
+  <td>把去噪过程解耦为「确定性残差扩散」+「随机噪声扩散」，两个损失都是合法的扩散损失，<b>不存在冲突</b>。论文：普通 U-Net + 仅 L1 损失 + batch size 1 即可与 SOTA 竞争。</td>
+</tr>
+<tr>
+  <td><b>UNIStainNet</b><br><span class="small">ACM-BCB 2026</span></td><td class="c">H&amp;E→IHC</td>
+  <td>LPIPS + L1 + Edge + 对抗 + FM + DAB（<b>6 项损失</b>）</td>
+  <td class="c"><span class="b bC">非扩散</span></td>
+  <td>它是 GAN 而非扩散，<b>所以不受 score 场约束</b>，可以自由堆损失。ablation 显示每项都有边际贡献。<b>但不能把这个做法直接搬到扩散上</b>——这是最容易犯的错误。</td>
+</tr>
+<tr>
+  <td><b>ADD</b><br><span class="small">2023</span></td><td class="c">扩散蒸馏</td>
+  <td>蒸馏损失 + 对抗损失 + 分数蒸馏</td>
+  <td class="c"><span class="b bA">B</span></td>
+  <td>对抗损失在蒸馏框架下与去噪目标共存，因为蒸馏本身已经改变了训练目标的性质（从"学分布"变成"学教师输出"）。<b>不适用于从零训练的场景。</b></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box teal">
+  <div class="bt">💡 从这张表能看出的行业惯例</div>
+  <ol style="margin-bottom:0">
+    <li><b>做扩散 + 条件生成的高质量工作，大多选择「不加额外损失」</b>（HistDiST、ControlNet、CFG、InstructPix2Pix）。</li>
+    <li><b>要加辅助任务时，优先把辅助任务也表述为扩散损失</b>（StainDiffuser）或<b>用双扩散结构</b>（RDDM/Star-Diff）。</li>
+    <li><b>像素级的强约束尽量放到推理时做引导</b>（MIU-Diff、EGSDE），而不是训练时。</li>
+    <li><b>GAN 里堆损失的经验不能直接迁移到扩散</b>——UNIStainNet 的 6 项损失在 GAN 上有效，在扩散上会引发梯度冲突。</li>
+  </ol>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s8"><span class="num">8</span>Part 8 · 给你的 PSPStain + Diffusion 配方</h2>
+
+<div class="box key">
+  <div class="bt">你的具体处境</div>
+  <p style="margin:0">你有三个「想要」的约束，但只有一个是扩散损失：</p>
+  <div class="tbl-scroll" style="margin-top:10px">
+  <table style="min-width:0">
+    <thead><tr><th style="width:20%">约束</th><th style="width:26%">来源</th><th style="width:20%">性质</th><th>建议归入哪个范式</th></tr></thead>
+    <tbody>
+      <tr><td><b>噪声预测损失</b></td><td>扩散模型本身</td><td>生成器主损失</td><td><b>必须是主损失</b></td></tr>
+      <tr><td><b>FOD 光密度损失</b></td><td>PSPStain PALS</td><td>光密度域的逐区域重建约束</td><td><span class="b bA">范式 B</span>（需保护，可能冲突）</td></tr>
+      <tr><td><b>PCLS 原型一致性损失</b></td><td>PSPStain PCLS</td><td>特征空间的跨图语义对齐</td><td><span class="b bA">范式 B</span>（冲突可能较小）</td></tr>
+      <tr><td><b>结构条件 / stain token</b></td><td>你的解耦设计</td><td>条件，不是损失</td><td><span class="b bS">范式 A</span>（做成输入，零损失）</td></tr>
+      <tr><td><b>物理合规性（Beer-Lambert）</b></td><td>上一份报告</td><td>输出层结构约束</td><td><span class="b bS">范式 E / A</span>（做成输出头，不是损失）</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<h3>8.1 推荐的三阶段训练配方</h3>
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:12.5px;line-height:1.9">
+<b>Phase 0 · 结构改造（不做训练）</b>
+  · 生成器换成 RDDM 式双扩散（残差 U-Net + 噪声 U-Net）
+    → 这两个损失都是扩散损失，天然无冲突（范式 E）
+  · 结构条件 / stain token 做成 SPADE / FiLM / cross-attn 输入（范式 A）
+  · 物理合规性做成可微 Beer-Lambert 输出头（不是损失）
+  · 参数化改为 v-prediction；噪声调度改为零终端 SNR
+  · 加 Min-SNR-γ 加权（γ=5）
+
+<b>Phase 1 · 纯扩散预热（warmup）</b>
+  时长: 前 15–20% 的迭代
+  损失: L = L_residual + L_noise          ← 只有扩散损失
+  目的: 让模型先学会"生成"，站稳 score 场
+  ⚠️ 此阶段绝对不要加 FOD / PCLS
+
+<b>Phase 2 · 辅助损失渐入</b>
+  时长: 20% – 80%
+  损失: L = L_res + L_noise
+            + w(s) · [ λ_fod · L_FOD(x̂₀) + λ_pcl · L_PCLS(x̂₀) ]
+  其中 w(s) 为 cosine ramp，从 0 升到 1
+  同时: 周期性记录冲突角 θ_conf（每 500 步）
+
+<b>Phase 3 · 末期纯扩散（terminal denoising-only）</b>
+  时长: 最后 15–20%
+  损失: L = L_residual + L_noise          ← 关闭所有辅助损失
+  目的: 消除后期梯度冲突，恢复样本分布覆盖度
+  ⚠️ 这是 Lantern 收益最大的一条（FPD 236.3 → 32.84）
+</pre>
+</div>
+
+<h3>8.2 一个必须做的诊断实验（先做这个）</h3>
+<div class="box good">
+  <div class="bt">✅ 在正式训练前，用 1–2 小时测出冲突角</div>
+  <pre style="margin:8px 0 0"><code>步骤:
+  1. 用 Phase 1 的方式训一个小模型到基本收敛（或直接用已有 checkpoint）
+  2. 取一个 batch，做一次前向
+  3. 分别计算:
+        g_d = ∇_θ L_denoise        （去噪梯度）
+        g_a = ∇_θ L_FOD            （FOD 梯度）
+        g_p = ∇_θ L_PCLS           （PCLS 梯度）
+     ⚠️ 用 torch.autograd.grad(..., retain_graph=True) 分别取，不要用 backward
+  4. 计算冲突角:
+        θ_FOD  = arccos( ĝ_d · ĝ_a ) * 180/π
+        θ_PCLS = arccos( ĝ_d · ĝ_p ) * 180/π
+  5. 在训练过程中每 500 步重复一次，画曲线
+
+判读:
+  θ < 90°   → 可以常开，不需要末期关闭
+  θ ≈ 90°   → 该损失无效，考虑改成条件输入（范式 A）
+  θ > 90°   → 必须门控 + 末期关闭 + 考虑 GradBlend
+
+预期（基于 Lantern 的体素残差损失 92°–128°）:
+  FOD 是光密度域的逐区域约束，与像素/体素残差类似 → <b>预期 θ > 90°，需要保护</b>
+  PCLS 是特征空间的跨图对齐，作用在深层特征上 → <b>预期 θ 较小，但仍需实测</b></code></pre>
+</div>
+
+<h3 id="s8-3">8.3 三档实施方案</h3>
+<div class="tbl-scroll">
+<table>
+<thead>
+<tr><th style="width:14%">方案</th><th style="width:28%">做法</th><th class="c">风险</th><th class="c">预期收益</th><th>适用</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><b>最保守</b><br><span class="b bS">推荐先做</span></td>
+  <td>不加 FOD / PCLS。全部约束做成条件输入 + 输出头（范式 A + E）。只用扩散损失训练。</td>
+  <td class="c"><span class="b bOk">最低</span></td>
+  <td class="c"><span class="b bMed">Med</span></td>
+  <td><b>先拿到一个干净的扩散 baseline。</b>这本身就是一个可发表的对照，而且避免了所有冲突问题。</td>
+</tr>
+<tr>
+  <td><b>标准</b><br><span class="b bA">推荐主路线</span></td>
+  <td>在上述基础上，用三阶段配方加入 FOD + PCLS，先做冲突角诊断，用简单加权 + 门控 + 末期关闭（不引入 GradBlend）。</td>
+  <td class="c"><span class="b bPar">中</span></td>
+  <td class="c"><span class="b bHigh">High</span></td>
+  <td>这是最可能拿到「可归因的指标提升」的路线。每一步都可单独 ablation。</td>
+</tr>
+<tr>
+  <td><b>进阶</b></td>
+  <td>在标准方案基础上，用 GradBlend 替换简单加权；并对比 PCGrad / GradNorm / 简单加权作为 ablation。</td>
+  <td class="c"><span class="b bBad">中高</span></td>
+  <td class="c"><span class="b bMed">Med–High</span></td>
+  <td>如果你想把「梯度组合」本身作为一个贡献点。<b>「简单加权 vs GradBlend」的对比本身就是一张很有说服力的表</b>（可复刻 Lantern 的 Table 1）。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>8.4 一个额外的好处：这可以变成你的一个 ablation 亮点</h3>
+<div class="box pur">
+  <div class="bt">💡 论文写法建议</div>
+  <p>你可以在论文里加一张表，直接回答审稿人「为什么要这样组合损失」：</p>
+  <div class="tbl-scroll" style="margin-top:8px">
+  <table style="min-width:0">
+    <thead><tr><th>配置</th><th class="c">PSNR ↑</th><th class="c">SSIM ↑</th><th class="c">FID ↓</th><th class="c">DAB-KL ↓</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>扩散损失 only（Phase 0 架构）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>基线</td></tr>
+      <tr><td>+ 辅助损失，简单加权（全程开）</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>预期显著变差</td></tr>
+      <tr><td>+ 辅助损失，warmup 后开，全程保持</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>预期变差（Lantern S2 模式）</td></tr>
+      <tr style="background:var(--green-soft)"><td><b>+ 辅助损失，三阶段（末期关闭）</b></td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td><b>预期最好</b></td></tr>
+      <tr><td>+ GradBlend 替代加权</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td>进一步改善（可选）</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin:8px 0 0">这张表<b>不需要任何新模块</b>，只是训练调度的对比，但它能有力证明「你理解扩散训练的本质」。<b>成本极低，说服力极高。</b></p>
+
+  <p style="margin:14px 0 6px"><b>进阶建议：把「错误示范」也放进消融表。</b>审稿人最认可的消融设计是包含<b>故意的错误对照</b>——如果错误配置没有变差，说明你的实现有 bug，而不是「加损失没用」：</p>
+  <div class="tbl-scroll" style="margin-top:8px">
+  <table style="min-width:0">
+    <thead><tr><th style="width:8%" class="c">编号</th><th style="width:34%">配置</th><th style="width:26%">验证目的</th><th>预期</th></tr></thead>
+    <tbody>
+      <tr><td class="c"><b>M0</b></td><td>纯扩散去噪损失</td><td>基线</td><td>PSNR/SSIM 尚可，但 <b>FOD / PHV 差</b>——证明物理一致性不能靠纯扩散</td></tr>
+      <tr><td class="c"><b>M1</b></td><td>L_v + FOD（挂 <b>ε̂</b> 上）<span class="small"> 错误示范</span></td><td><b>验证「作用变量」的重要性</b></td><td><span class="b bBad">应明显差于 M2</span>——若不差，说明尺度设计有问题</td></tr>
+      <tr><td class="c"><b>M2</b></td><td>L_v + FOD（挂 <b>x̂₀</b> 上）</td><td>FOD 在正确位置是否有效</td><td><span class="b bOk">FOD / PHV 显著改善</span>，PSNR 不降</td></tr>
+      <tr><td class="c"><b>M3</b></td><td>M2 + PCLS（全程，无掩码）<span class="small"> 错误示范</span></td><td><b>验证「时间步掩码」的必要性</b></td><td><span class="b bBad">FID 应劣化</span>——复现 Lantern 的失败模式</td></tr>
+      <tr><td class="c"><b>M4</b></td><td>M2 + PCLS（t&lt;T/2，无收尾）</td><td>掩码单独的贡献</td><td>比 M3 好，但仍不如 M5</td></tr>
+      <tr style="background:var(--green-soft)"><td class="c"><b>M5</b></td><td>M2 + PCLS（掩码 + 收尾）<span class="small"> = 方案 B</span></td><td><b>完整方案</b></td><td><span class="b bOk">最优</span>：MRA / PSNR / FOD 三项同时改善</td></tr>
+      <tr><td class="c"><b>M6</b></td><td>方案 C（PCLS → 条件注入）</td><td><b>损失路线 vs 条件路线</b></td><td><span class="b bOk">预期最好</span>，且额外获得多标记物切换能力</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small" style="margin:8px 0 0">M1 与 M3 是<b>故意设计的错误示范</b>。它们的价值在于排除「实现 bug 被误读为科学结论」。每个消融必须同时报告三类指标：<b>生成质量</b>（PSNR/SSIM/LPIPS/FID）、<b>生物物理正确性</b>（FOD/PHV/DAB-KL/Pearson-r/IOD/MRA）、<b>梯度诊断</b>（cos_d / cos_a / cos_da / ratio）。第三类是你的机制证据——<b>Lantern 正是靠它把「我们的方法有效」从经验陈述升级为机制陈述</b>。</p>
+</div>
+
+<h3 id="s8-5">8.5 一个更强的方案：把 PCLS 从「损失」改造成「条件」</h3>
+
+<div class="card">
+  <div class="ch">
+    <div class="t">方案 C（进阶档）：PCLS → 双 SPADE 条件注入</div>
+    <div><span class="b bS">风险最低</span> <span class="b bPu">创新性最高</span></div>
+  </div>
+  <div class="cb">
+    <div class="box pur">
+      <div class="bt">核心洞察</div>
+      <p style="margin:0">PCLS 的本质是「让生成结果靠近某组蛋白表达原型」。这个约束<b>完全可以改写成条件注入</b>——把原型当成「目标蛋白类型的可学习 token」，通过 cross-attention 注入，或者当成「空间调制图」，通过 SPADE 注入。<b>这样损失仍然只有一个，梯度冲突问题从根上消失。</b></p>
+    </div>
+
+    <div class="flow">
+      <div class="frow">
+        <div class="fnode rd">原方案<br>PCLS 作为损失<br><span class="small">特征空间梯度冲突</span></div>
+        <div class="farrow" style="margin:0 12px;">→ 改造 →</div>
+        <div class="fnode gr">新方案<br>原型作为条件 token<br><span class="small">损失仍只有一个</span></div>
+      </div>
+    </div>
+
+    <h5>具体做法：双 SPADE 条件调制</h5>
+    <div class="eq">h′ = ( γ_struct(H&amp;E) + γ_stain(p_k) ) ⊙ ĥ + ( β_struct(H&amp;E) + β_stain(p_k) )
+
+其中 p_k 是第 k 个蛋白表达原型（HER2 / Ki67 / ER / PR）的可学习嵌入</div>
+    <ul>
+      <li><code>γ_struct, β_struct</code>：由 H&amp;E 图像生成，<b>空间维度</b>的调制——编码「组织结构」（细胞在哪里、形状如何）。</li>
+      <li><code>γ_stain, β_stain</code>：由原型嵌入 <code>p_k</code> 生成，<b>通道维度</b>的调制——编码「染色表达」（哪些通道表达、强度多少）。</li>
+      <li>训练时对 <code>p_k</code> 做随机 dropout（仿 CFG）；推理时可以通过调节 <code>p_k</code> 的插值来控制表达强度。</li>
+    </ul>
+
+    <div class="box good">
+      <div class="bt">✅ 为什么这个方案最好（四条理由）</div>
+      <ol style="margin-bottom:0">
+        <li><b>从结构上消除梯度冲突</b>：辅助约束不再是损失，而是输入。去噪损失是唯一损失，Part 2、Part 3 的所有风险都不存在。</li>
+        <li><b>自然实现你要的解耦</b>：空间调制 = 结构，通道调制 = 染色。这正是你前两份报告确立的「结构 ↔ 染色表达」解耦轴，而且是<b>用架构实现的，不是用损失实现的</b>——更可靠。</li>
+        <li><b>推理时获得额外控制能力</b>：原 PSPStain 是「H&amp;E → 固定一种 IHC」。改成条件注入后，<b>一个模型可以切换 HER2 / Ki67 / ER / PR</b>，甚至做原型插值生成「中间表达状态」——这是原方案做不到的，是真正的创新点。</li>
+        <li><b>与 CFG 天然兼容</b>：原型 dropout 训练后，推理时用引导尺度 s 控制表达强度，无需重训。</li>
+      </ol>
+    </div>
+
+    <div class="box warn">
+      <div class="bt">代价</div>
+      <p style="margin:0">改动量比标准方案大：需要改 U-Net 的调制层（引入 SPADE）、为原型设计嵌入层、改数据加载器以提供蛋白类型标签（<b>MIST 数据集有 HER2/Ki67/ER/PR 多标记物，天然支持</b>）。但这是唯一能同时满足「保留 PSPStain 核心思想」+「引入扩散」+「不牺牲生成质量」+「有真正创新」的方案。</p>
+    </div>
+  </div>
+</div>
+
+<h3 id="s8-6">8.6 训练循环伪代码（方案 B 用）</h3>
+<pre><code># ===== 配置 =====
+PRED_TYPE     = "v"        # v-prediction（尺度最均衡，见 Part 2.1）
+LAMBDA_FOD    = 0.1        # 从 0.1 开始网格搜索 {0.03, 0.1, 0.3, 1.0}
+LAMBDA_PCLS   = 0.05       # PCLS 是危险损失，起步要小
+PCLS_TMAX     = 0.5        # PCLS 只在 t &lt; T/2 生效
+FINETUNE_FRAC = 0.9        # 前 90% 迭代开辅助项，后 10% 纯去噪收尾
+
+# ===== 训练一步 =====
+x0  = batch_ihc                       # 真实 IHC（或 destain-restain 伪配对）
+he  = batch_he
+t   = randint(0, T);  eps = randn_like(x0)
+x_t = sqrt(alpha_bar[t]) * x0 + sqrt(1 - alpha_bar[t]) * eps
+
+# ---- 主损失：v-prediction ----
+v_true = sqrt(alpha_bar[t]) * eps - sqrt(1 - alpha_bar[t]) * x0
+v_pred = unet(x_t, t, cond=he)
+L_v    = mse(v_pred, v_true)
+
+# ---- 还原 x0 估计（辅助损失一律作用在 x_hat_0 上！）----
+x_hat0 = sqrt(alpha_bar[t]) * x_t - sqrt(1 - alpha_bar[t]) * v_pred
+x_hat0 = x_hat0.clamp(-1, 1)          # ★ 必须 clamp，否则早期会爆炸
+
+# ---- 辅助损失 1：FOD（友好损失，全程开启）----
+od_pred = -torch.log((x_hat0 + 1) / 2 + 1e-6)   # ★ 转光密度域，必须加 eps
+od_true = -torch.log((x0     + 1) / 2 + 1e-6)
+L_fod   = l1(od_pred, od_true)
+
+# ---- 辅助损失 2：PCLS（危险损失，限时 + 归一化）----
+mask = (t &lt; PCLS_TMAX * T).float()
+if mask.sum() &gt; 0:
+    f_pred = unet.midblock_features(x_t, t, cond=he)   # ★ 只取 midblock
+    L_pcls = prototype_consistency(f_pred, prototypes, protein_type)
+    L_pcls = L_pcls / (ema_norm_pcls + 1e-8)           # 量级归一化
+    sched  = 1.0 if step &lt; FINETUNE_FRAC * total_steps else 0.0
+    L_pcls = LAMBDA_PCLS * sched * mask.mean() * L_pcls
+else:
+    L_pcls = 0.0
+
+# ---- 总损失 ----
+L = L_v + LAMBDA_FOD * L_fod + L_pcls
+L.backward(); optimizer.step()
+
+# ===== 诊断（每 100 步记录）=====
+# cos_d  = cos(g_denoise, g_denoise_prev)   # 去噪梯度自相关，期望 &gt; 0.6
+# cos_a  = cos(g_aux, g_aux_prev)           # 辅助梯度自相关，&lt; 0.3 要警惕
+# cos_da = cos(g_denoise, g_aux)            # 冲突角，&gt; 150° 触发门控
+# ratio  = ||g_aux|| / ||g_denoise||        # 期望在 [0.1, 5] 内
+</code></pre>
+
+<div class="box stop">
+  <div class="bt">⚠️ 代码里三个最容易踩的坑</div>
+  <ol style="margin-bottom:0">
+    <li><b><code>x_hat0</code> 必须 clamp</b>。早期 <code>x̂₀</code> 估计可能严重越界，直接进 <code>log()</code> 会 NaN。<b>这是「辅助损失挂 x̂₀」时最常见的崩溃原因。</b></li>
+    <li><b>OD 转换要加 eps</b>。Beer–Lambert 的 <code>−log(I/I₀)</code> 在 I→0 时发散，必须加 <code>1e-6</code> 保护。</li>
+    <li><b>PCLS 的特征必须取 midblock</b>，不要取解码器浅层（依据范式 F 的消融，FID 差 64%）。</li>
+  </ol>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s9"><span class="num">9</span>Part 9 · 决策流程图</h2>
+
+<div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;font-size:12.5px;line-height:1.85">
+                  ┌─────────────────────────────┐
+                  │ 我有一个想加入的约束（条件/损失）│
+                  └──────────────┬──────────────┘
+                                 ↓
+                  ┌─────────────────────────────┐
+                  │ 它能做成网络输入吗？          │
+                  │ (latent 拼接 / SPADE / FiLM  │
+                  │  / cross-attn / CFG)        │
+                  └──────┬───────────────┬──────┘
+                         │ 能            │ 不能
+                         ↓               ↓
+        ┌────────────────────────┐   ┌──────────────────────────┐
+        │ <b>范式 A：做成条件输入</b>   │   │ 它能做成输出层的结构约束吗？│
+        │ 零额外损失             │   │ (如 Beer-Lambert 前向头)   │
+        │ ✅ 最安全，优先选这个   │   └──────┬──────────┬────────┘
+        └────────────────────────┘          │ 能       │ 不能
+                                            ↓          ↓
+                          ┌──────────────────────┐  ┌────────────────────┐
+                          │ <b>范式 E：做成输出头</b>  │  │ 它必须是一个损失吗？ │
+                          │ 零额外损失            │  └─────┬────────┬─────┘
+                          └──────────────────────┘        │ 是     │
+                                                          ↓        │
+                        ┌──────────────────────────────────┐      │
+                        │ <b>先测冲突角 θ_conf</b>              │      │
+                        │ θ = arccos(ĝ_d · ĝ_a)           │      │
+                        └──────┬───────────┬───────────┬───┘      │
+                               │           │           │          │
+                          θ &lt; 90°     θ ≈ 90°     θ &gt; 90°      │
+                               ↓           ↓           ↓          │
+                    ┌──────────────┐ ┌─────────┐ ┌──────────────┐ │
+                    │ 可直接常开    │ │ 无效     │ │ 必须保护      │ │
+                    │ 不需调度      │ │ 改走 A   │ │ ↓            │ │
+                    └──────────────┘ └─────────┘ │ ① x̂₀ 上计算   │ │
+                                                 │ ② warmup     │ │
+                                                 │ ③ <b>末期关闭</b> │ │
+                                                 │ ④ GradBlend  │ │
+                                                 └──────────────┘ │
+                                                                  ↓
+                                          ┌──────────────────────────────┐
+                                          │ 考虑改成<b>推理时引导</b>（范式 C）│
+                                          │ 训练完全不受影响，ablation 干净 │
+                                          └──────────────────────────────┘
+</pre>
+</div>
+
+<h3>9.1 一句话总结整份报告</h3>
+<div class="box key">
+  <div class="bt">📌</div>
+  <p style="margin:0">噪声预测损失的重要性在于<b>它是唯一让网络保持"生成模型"身份的项</b>——采样器无条件信任 ε<sub>θ</sub> 是合法的 score 场。<br>
+  辅助损失可以加，但必须遵守一条铁律：<b>不能让辅助损失改变"网络往哪个方向走"，只能让它微调"走得多快"以及在什么时候参与。</b><br>
+  实践上按优先级：<b>能做成条件的就做成条件（范式 A）→ 能做成输出结构的就做成输出结构（范式 E）→ 必须加损失时就上「x̂₀ + 门控 + 末期关闭 + 梯度保护」四件套（范式 B）→ 或者干脆挪到推理时引导（范式 C）。</b></p>
+</div>
+
+<!-- ================================================================= -->
+<h2 id="s10"><span class="num">10</span>附录 · 参考文献与可信度声明</h2>
+
+<h3>10.1 核心文献</h3>
+
+<h5>损失组合与梯度冲突（最直接相关）</h5>
+<ol class="small" style="line-height:1.85">
+<li>Ahmad FY, Venkataswamy V, Fox G. <b>Lantern: Conflict-Aware Gradient Blending for Physics-Guided Diffusion Models in Calorimeter Simulation</b>. arXiv 2026. 2607.25060 · <a href="https://github.com/Aaheer17/lantern-kdd27">code</a><br>
+<span class="small">→ 本报告 Part 3 的核心证据来源。受控实验：唯一变量是梯度组合规则。</span></li>
+<li>Hang T, Gu S, Li C, Bao J, Chen D, Hu H, Geng X, Guo B. <b>Efficient Diffusion Training via Min-SNR Weighting Strategy</b>. ICCV 2023. arXiv:2303.09556 · <a href="https://github.com/TiankaiHang/Min-SNR-Diffusion-Training">code</a></li>
+<li>Choi J, Lee J, Shin C, Kim S, Kim H, Yoon S. <b>Perception Prioritized Training of Diffusion Models (P2 weighting)</b>. CVPR 2022. arXiv:2204.00227 · <a href="https://github.com/jychoi118/P2-weighting">code</a></li>
+<li>Park B, Woo S, et al. <b>Denoising Task Routing for Diffusion Models (DTR)</b>. ICLR 2024. arXiv:2310.07138</li>
+<li>Lin S, Liu B, Li J, Yang X. <b>Common Diffusion Noise Schedules and Sample Steps are Flawed</b>. WACV 2024. arXiv:2305.08891</li>
+<li>Kumar D, Väth P, Gregorová M. <b>Loss Functions in Diffusion Models: A Comparative Study</b>. arXiv 2025. 2507.01516 · <a href="https://github.com/dibyanshu100/LFDM">code</a></li>
+<li>Song J, Zhang Q, Yin H, Mardani M, Cullen JM, Vahdat A, Chen J, Liu S. <b>Loss-Guided Diffusion Models for Plug-and-Play Controllable Generation</b>. ICML 2023</li>
+</ol>
+
+<h5>多任务梯度方法（被 Lantern 作为基线对比）</h5>
+<ol class="small" start="8" style="line-height:1.85">
+<li>Yu T, Kumar S, Gupta A, Levine S, Hausman K, Finn C. <b>Gradient Surgery for Multi-Task Learning (PCGrad)</b>. NeurIPS 2020</li>
+<li>Chen Z, Badrinarayanan V, Lee CY, Rabinovich A. <b>GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks</b>. ICML 2018</li>
+<li>Liu L, Li Y, Kuang Z, Xue J, Chen Y, Yang Z, Liao X, Zhang W. <b>Towards Impartial Multi-task Learning (IMTL-G)</b>. ICLR 2021</li>
+<li>Liu B, Liu X, Jin X, Stone P, Liu Q. <b>Conflict-Averse Gradient Descent for Multi-task Learning (CAGrad)</b>. NeurIPS 2021</li>
+<li>Kendall A, Gal Y, Cipolla R. <b>Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics</b>. CVPR 2018</li>
+</ol>
+
+<h5>条件注入 / 无额外损失的方案</h5>
+<ol class="small" start="13" style="line-height:1.85">
+<li>Ho J, Salimans T. <b>Classifier-Free Diffusion Guidance</b>. arXiv 2022. 2207.12598</li>
+<li>Zhang L, Rao A, Agrawala M. <b>Adding Conditional Control to Text-to-Image Diffusion Models (ControlNet)</b>. ICCV 2023</li>
+<li>Mou C, Wang X, Xie L, Wu Y, Zhang J, Qi Z, Shan Y. <b>T2I-Adapter</b>. arXiv 2023</li>
+<li>Brooks T, Holynski A, Efros AA. <b>InstructPix2Pix: Learning to Follow Image Editing Instructions</b>. CVPR 2023</li>
+<li>Park T, Liu MY, Wang TC, Zhu JY. <b>Semantic Image Synthesis with Spatially-Adaptive Normalization (SPADE)</b>. CVPR 2019</li>
+<li>Perez E, Strub F, de Vries H, Dumoulin V, Courville A. <b>FiLM: Visual Reasoning with a General Conditioning Layer</b>. AAAI 2018</li>
+</ol>
+
+<h5>医学 / 病理领域的具体案例</h5>
+<ol class="small" start="19" style="line-height:1.85">
+<li>Großkopf E, Bundele V, Hosseinzadeh M, Lensch HPA. <b>HistDiST: Histopathological Diffusion-based Stain Transfer</b>. arXiv 2025. 2505.06793 · <a href="https://github.com/ErikGro/HistDiST">code</a></li>
+<li>Kataria T, Knudsen B, Elhabian SY. <b>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</b>. arXiv 2024/2025. 2403.11340</li>
+<li>Liu A, Wang X, Cai J, Li C. <b>Score-based Diffusion Model for Unpaired Virtual Histology Staining (MIU-Diff)</b>. arXiv 2025. 2506.23184</li>
+<li>Yang T, Wang Y, Lv Y, Zheng N. <b>DisDiff: Unsupervised Disentanglement of Diffusion Probabilistic Models</b>. NeurIPS 2023. arXiv:2301.13721 · <a href="https://github.com/ThomasMrY/DisDiff">code</a></li>
+<li>Zhang Y, Yu Z, Zhang X, et al. <b>DisDiff: Disentanglement Diffusion Network for MR Imaging Translation</b>. MICCAI 2025</li>
+<li>Özbey M, Dalmaz O, Dar SU, et al. <b>Unsupervised Medical Image Translation with Adversarial Diffusion Models (SynDiff)</b>. IEEE TMI 2023 · <a href="https://github.com/icon-lab/SynDiff">code</a></li>
+<li>Liu J, Wang Q, Fan H, Wang Y, Tang Y, Qu L. <b>Residual Denoising Diffusion Models (RDDM)</b>. CVPR 2024. arXiv:2308.13712 · <a href="https://github.com/nachifur/RDDM">code</a></li>
+<li>Saurav JR, et al. <b>UNIStainNet</b>. ACM-BCB 2026. arXiv:2603.12716（<b>GAN 非扩散</b>，6 项损失）</li>
+<li>Sauer A, Lorenz D, Blattmann A, Rombach R. <b>Adversarial Diffusion Distillation (ADD)</b>. arXiv 2023. 2311.17042</li>
+</ol>
+
+<h5>基础</h5>
+<ol class="small" start="28" style="line-height:1.85">
+<li>Ho J, Jain A, Abbeel P. <b>Denoising Diffusion Probabilistic Models</b>. NeurIPS 2020</li>
+<li>Song J, Meng C, Ermon S. <b>Denoising Diffusion Implicit Models (DDIM)</b>. ICLR 2021</li>
+<li>Song Y, Sohl-Dickstein J, Kingma DP, Kumar A, Ermon S, Poole B. <b>Score-Based Generative Modeling through Stochastic Differential Equations</b>. ICLR 2021</li>
+<li>Salimans T, Ho J. <b>Progressive Distillation for Fast Sampling of Diffusion Models</b>（v-prediction 的提出）. ICLR 2022</li>
+<li>Karras T, Aittala M, Aila T, Laine S. <b>Elucidating the Design Space of Diffusion-Based Generative Models (EDM)</b>. NeurIPS 2022</li>
+</ol>
+
+<h3>10.2 可信度声明</h3>
+<div class="box warn">
+  <div class="bt">⚠️ 请在使用本报告数据前阅读</div>
+  <ul style="margin-bottom:0">
+    <li><b>Lantern 的结论跨领域。</b>它的实验在<b>量热器模拟</b>（高能物理）上完成，不是医学图像。但它的受控设计（唯一变量 = 梯度组合规则）使得结论<b>关于优化器行为而非关于数据领域</b>。其具体数值（FPD 等）不应直接迁移到病理任务，但<b>趋势（通用多任务方法失败、末期关闭有效、冲突角 &gt; 90°）是可迁移的</b>。</li>
+    <li><b>Lantern 的 venue</b>：arXiv 编号 2607.25060 对应 2026 年 7 月；代码仓库名为 <code>lantern-kdd27</code>，推测为 KDD 投稿。请以最终出版信息为准。</li>
+    <li><b>Lantern 的超参是经验的</b>：角度阈值（120°/150°）、幅度下限（0.05）、调度关闭时刻均为经验设定，论文自述「未做理论推导」。使用时需要针对你的任务重新调。</li>
+    <li><b>StainDiffuser 的 λ 最优值因数据集而异</b>（CK8/18 用 λ=1，CD3 用 λ=3），说明「损失权重」没有通用最优值，必须逐任务调。</li>
+    <li><b>Min-SNR 的 γ=5</b> 是在图像生成任务上验证的默认值；跨领域使用建议在 γ ∈ {1, 5, 10} 中做一次小规模扫描。</li>
+    <li><b>本报告 Part 8 的配方</b>（三阶段 + 冲突角诊断）是本报告基于文献的<b>工程综合</b>，不是某一篇论文的原文方案。其中「三阶段」来自 Lantern，「x̂₀ 上计算」来自 Lantern/MIU-Diff，「GradBlend」来自 Lantern，「v-pred + 零终端 SNR」来自 HistDiST 与 Lin et al.。</li>
+    <li><b>所有论文指标</b>来自作者自报结果，未做独立复现。</li>
+  </ul>
+</div>
+
+<hr>
+<p class="small" style="text-align:center;margin-top:30px">
+本报告由 WorkBuddy AI 基于公开文献检索生成 · 检索日期 2026-10-01<br>
+配套报告：<code>HE2IHC_Diffusion_Disentanglement_Report.html</code>（解耦学习）· <code>HE2IHC_Physical_Fidelity_and_Trustworthiness_Report.html</code>（物理合规性）<br>
+<b>核心结论：辅助损失可以加，但必须保护噪声预测损失的主导地位——末期关闭是最容易被忽略、收益最大的一条。</b>
+</p>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H&E→IHC 虚拟染色：频域条件注入与 Diffusion 文献综述</title>
+<style>
+:root{
+  --bg:#f7f8fa;
+  --panel:#ffffff;
+  --panel-2:#fbfcfd;
+  --ink:#16202c;
+  --ink-2:#3d4c5c;
+  --ink-3:#6b7a8c;
+  --line:#e3e8ee;
+  --line-2:#eef2f6;
+  --accent:#0f6f8f;
+  --accent-2:#0d5a75;
+  --accent-soft:#e8f3f7;
+  --loss:#b45309;
+  --loss-bg:#fef4e6;
+  --mod:#7c3aed;
+  --mod-bg:#f4efff;
+  --cond:#047857;
+  --cond-bg:#e8f7f1;
+  --dom:#1d4ed8;
+  --dom-bg:#ebf1ff;
+  --warn:#b91c1c;
+  --warn-bg:#fdeeee;
+  --ok:#047857;
+  --ok-bg:#e9f7f1;
+  --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.88em;background:#eef2f6;padding:1px 5px;border-radius:4px;color:#0b3b4d}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:264px minmax(0,1fr);max-width:1500px;margin:0 auto;gap:0}
+nav.toc{
+  position:sticky;top:0;height:100vh;overflow-y:auto;padding:28px 16px 60px 28px;
+  border-right:1px solid var(--line);background:var(--panel);
+}
+nav.toc h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 8px;font-weight:700}
+nav.toc h4:first-child{margin-top:0}
+nav.toc a{display:block;font-size:13px;color:var(--ink-2);padding:4px 8px;border-radius:6px;line-height:1.45}
+nav.toc a:hover{background:var(--accent-soft);color:var(--accent-2);text-decoration:none}
+nav.toc .brand{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.35;margin-bottom:4px}
+nav.toc .brand small{display:block;font-weight:500;font-size:11.5px;color:var(--ink-3);letter-spacing:0;margin-top:6px}
+main{padding:34px 52px 120px;max-width:1120px;min-width:0}
+
+/* hero */
+header.hero{
+  background:linear-gradient(135deg,#0d5a75 0%,#0f6f8f 45%,#158a9c 100%);
+  color:#fff;border-radius:14px;padding:34px 38px;margin-bottom:34px;
+  box-shadow:0 10px 30px rgba(13,90,117,.16);
+}
+header.hero .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.82;font-weight:700}
+header.hero h1{margin:10px 0 12px;font-size:29px;line-height:1.32;font-weight:800;letter-spacing:-.01em}
+header.hero p{margin:0;opacity:.93;font-size:14.5px;max-width:74ch}
+header.hero .meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+header.hero .meta span{
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);
+  padding:4px 11px;border-radius:999px;font-size:12px;font-weight:600;
+}
+
+/* headings */
+h2{
+  font-size:22px;font-weight:800;letter-spacing:-.01em;margin:56px 0 6px;
+  padding-bottom:10px;border-bottom:2px solid var(--ink);scroll-margin-top:20px;
+}
+h2 .num{color:var(--accent);font-family:var(--mono);font-size:17px;margin-right:10px;font-weight:700}
+h3{font-size:17px;font-weight:750;margin:34px 0 10px;color:var(--ink);scroll-margin-top:20px}
+h4{font-size:14.5px;font-weight:700;margin:22px 0 8px;color:var(--ink-2)}
+p{margin:10px 0}
+ul,ol{margin:10px 0;padding-left:22px}
+li{margin:5px 0}
+.lede{font-size:15.5px;color:var(--ink-2);margin-top:10px}
+
+/* cards */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+.card.tight{padding:16px 18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1180px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* callouts */
+.callout{border-radius:var(--radius);padding:16px 18px;margin:16px 0;border-left:4px solid;font-size:14.5px}
+.callout .t{font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;display:block}
+.callout.key{background:var(--accent-soft);border-color:var(--accent)}
+.callout.key .t{color:var(--accent-2)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn)}
+.callout.warn .t{color:var(--warn)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok)}
+.callout.ok .t{color:var(--ok)}
+.callout.neutral{background:#f2f5f8;border-color:#94a3b8}
+.callout.neutral .t{color:#475569}
+
+/* badges */
+.badge{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:5px;text-transform:uppercase;vertical-align:middle;white-space:nowrap}
+.b-loss{background:var(--loss-bg);color:var(--loss);border:1px solid #f0d3a8}
+.b-mod{background:var(--mod-bg);color:var(--mod);border:1px solid #ddd0fb}
+.b-cond{background:var(--cond-bg);color:var(--cond);border:1px solid #bfe8d8}
+.b-dom{background:var(--dom-bg);color:var(--dom);border:1px solid #c7d6fb}
+.b-both{background:#eef2f6;color:#334155;border:1px solid #d5dde6}
+.b-ana{background:#f5f5f4;color:#57534e;border:1px solid #e0ddd9}
+.b-none{background:#f8fafc;color:#94a3b8;border:1px solid #e6ebf1}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px;line-height:1.55}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line-2);vertical-align:top}
+th{background:#f2f5f8;font-weight:700;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);position:sticky;top:0;z-index:2;white-space:nowrap}
+tbody tr:hover{background:#fafcfd}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+td.ctr{text-align:center}
+.win{color:#b91c1c;font-weight:800}
+.lose{color:#047857;font-weight:600}
+.dim{color:var(--ink-3)}
+caption{caption-side:top;text-align:left;font-size:12.5px;color:var(--ink-3);padding:12px 14px 0;font-weight:600}
+.tbl-note{font-size:12px;color:var(--ink-3);margin:-8px 0 20px;padding-left:2px}
+
+/* paper cards */
+.paper{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);margin:16px 0;overflow:hidden}
+.paper > .ph{padding:14px 18px;background:var(--panel-2);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+.paper > .ph .ttl{font-weight:750;font-size:15px;flex:1;min-width:260px}
+.paper > .ph .venue{font-size:11.5px;font-weight:700;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase}
+.paper > .pb{padding:14px 18px}
+.paper dl{display:grid;grid-template-columns:118px 1fr;gap:4px 14px;margin:0;font-size:13.5px}
+.paper dt{color:var(--ink-3);font-weight:650;font-size:12.5px;padding-top:2px}
+.paper dd{margin:0}
+.paper .linkrow{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.paper .linkrow a{font-family:var(--mono);font-size:11.5px}
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.stat .v{font-size:22px;font-weight:800;font-family:var(--mono);letter-spacing:-.02em;line-height:1.2}
+.stat .l{font-size:11.5px;color:var(--ink-3);margin-top:5px;font-weight:600;line-height:1.4}
+.stat.up .v{color:#b91c1c}
+.stat.dn .v{color:#047857}
+.stat.n .v{color:var(--accent-2)}
+
+/* svg figures */
+figure{margin:22px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-size:12.5px;color:var(--ink-3);margin-top:12px;text-align:left;padding-top:10px;border-top:1px dashed var(--line)}
+
+/* misc */
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#eef2f6;color:var(--ink-2);margin:0 4px 4px 0}
+.mono{font-family:var(--mono);font-size:12.5px}
+hr{border:none;border-top:1px solid var(--line);margin:32px 0}
+.small{font-size:12.5px;color:var(--ink-3)}
+footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-3)}
+.toplink{font-size:12px;color:var(--ink-3)}
+.toc-toggle{display:none}
+@media(max-width:1000px){
+  .wrap{grid-template-columns:1fr}
+  nav.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:20px}
+  main{padding:24px 20px 80px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="brand">频域条件注入<br>文献综述<small>H&amp;E → IHC（HER2-DAB）· 条件潜扩散 · 2026-09-28</small></div>
+  <h4>结论</h4>
+  <a href="#p1">Part 1 · Executive Summary</a>
+  <a href="#p2">Part 2 · 文献地图</a>
+  <h4>证据</h4>
+  <a href="#p3">Part 3 · 核心论文详表</a>
+  <a href="#p3b">Part 3b · 病理域性能对照</a>
+  <a href="#p4">Part 4 · FFT vs DCT vs DWT</a>
+  <a href="#p4b">Part 4b · Phase vs Amplitude</a>
+  <a href="#p4c">Part 4c · H&amp;E→IHC 差异落在哪</a>
+  <a href="#p4c2" class="sub">4.4.1 "能量搬迁"的理论依据</a>
+  <a href="#p4d">Part 4d · 蛋白表达的频域建模</a>
+  <h4>设计</h4>
+  <a href="#p5">Part 5 · 实现方案（4×64×64）</a>
+  <a href="#p6">Part 6 · Gate 设计</a>
+  <a href="#p6b">Part 6b · Timestep × Frequency</a>
+  <a href="#p7">Part 7 · F1→F2→F3→F4 路线</a>
+  <h4>风险</h4>
+  <a href="#p8">Part 8 · Top 5 Risks</a>
+  <a href="#p8b">Part 8b · 失败案例手册</a>
+  <a href="#p9">Part 9 · 最终推荐</a>
+  <a href="#app">附录 · 完整文献索引</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <div class="kicker">Literature Review · 频域条件注入</div>
+  <h1>H&amp;E → IHC（HER2-DAB）虚拟染色：<br>频域信息作为 Condition 注入扩散 U-Net 的可行性与设计</h1>
+  <p>面向无严格配准的 BCI 数据、冻结 VAE + 4×64×64 latent + v-prediction、UNet 在 32px / 16px 注入、无 cross-attention、无 CFG 的现有架构。回答一个核心问题：<strong>把 H&amp;E condition 从普通 latent 换成结构化多尺度频域 condition，是否值得做、该怎么做、风险在哪。</strong></p>
+  <div class="meta">
+    <span>检索文献 60+ 篇</span>
+    <span>深读 30+ 篇原文</span>
+    <span>覆盖 4 个方向</span>
+    <span>含性能数字对照表</span>
+  </div>
+</header>
+
+<!-- ============ PART 1 ============ -->
+<h2 id="p1"><span class="num">Part 1</span>Executive Summary：频域 condition 是否值得做？</h2>
+
+<div class="callout key">
+  <span class="t">一句话结论</span>
+  <strong>值得做，而且这是目前文献里真实存在的空白。</strong>但必须改变一个默认假设：<strong>不要"复用 H&amp;E 的低频"</strong>，而应该<strong>用 H&amp;E 的结构去生成 DAB 自己的低频</strong>。现有最强的频域条件工作（FGDM）明确声明其方法<strong>不适用于 H&amp;E→IHC 这类"两端频谱都不同"的跨模态任务</strong>——这一点必须正面处理，否则整个设计在理论上站不住。
+</div>
+
+<h3>1.1 三个必须知道的事实</h3>
+
+<div class="grid3">
+  <div class="card tight">
+    <div class="badge b-cond">事实 1</div>
+    <h4 style="margin-top:8px">频域"作为条件"确实存在，但极度稀疏</h4>
+    <p class="small" style="margin-bottom:0">在 60+ 篇检索到的文献里，真正把<strong>频域系数作为条件注入扩散网络</strong>的只有 4 篇：<span class="mono">cWDM</span>（通道拼接）、<span class="mono">UGDiff</span>（小波条件预测高频）、<span class="mono">HDW-SR</span>（稀疏交叉注意力）、<span class="mono">ResQu</span>（四元小波 → SFT）。<strong>没有任何一篇在虚拟染色任务上做过这件事。</strong></p>
+  </div>
+  <div class="card tight">
+    <div class="badge b-loss">事实 2</div>
+    <h4 style="margin-top:8px">"频域=损失" 是主流，"频域=条件" 是少数派</h4>
+    <p class="small" style="margin-bottom:0">Diffusion-4K、LWD、SC-Flow、FRAMER 全部走 <strong>Loss / Loss-Masking</strong> 路线，且 LWD 作者<strong>明确撰文反对</strong>把频域条件直接注入 encoder（理由是模块化、零推理开销）。这是你必须在 related work 里正面回应的最强反方立场。</p>
+  </div>
+  <div class="card tight">
+    <div class="badge b-warn" style="background:var(--warn-bg);color:var(--warn);border-color:#f0c6c6">事实 3</div>
+    <h4 style="margin-top:8px">在 HER2 虚拟染色上，GAN 目前仍然赢 Diffusion</h4>
+    <p class="small" style="margin-bottom:0">HER2match（MICCAI 2025）结论：<em>"Overall, GANs outperform DMs across all metrics"</em>，只有 BBDM 能打平。而 diffusion 被反复证实的弱点正是<strong>高频重建不足</strong>。这就是频域干预最有力的动机。</p>
+  </div>
+</div>
+
+<h3>1.2 理论障碍已经被移除——但要用正确的引文</h3>
+
+<p>"扩散模型天然先低频后高频，所以对抗这个先验是徒劳的"——这个反对意见曾经成立，现在已经被证伪。链条是这样的：</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">环节</th><th>主张</th><th style="width:230px">状态</th></tr></thead>
+<tbody>
+<tr><td><strong>Rissanen et al.</strong><br><span class="small">ICLR 2023</span></td><td>热方程前向过程 → 不同频率以不同速率衰减 → 扩散本身隐含 coarse-to-fine 归纳偏置。这是整条脉络的起点。</td><td><span class="badge b-cond">公认</span> 概念性证据</td></tr>
+<tr><td><strong>Sander Dieleman</strong><br><span class="small">博客 2024-09</span></td><td>自然图像 RAPSD ∝ f<sup>−α</sup>（实测 α̂=2.454），噪声谱平坦 → 加噪即渐进低通 → 反过程≈谱自回归。<strong>给出了可直接使用的 f<sub>max</sub>(t) 工具。</strong></td><td><span class="badge b-ana">作者本人大量保留</span> 明确声明"仅期望意义成立""对音频完全不成立"</td></tr>
+<tr><td><strong>DCTdiff Thm 5.1</strong><br><span class="small">ICML 2025</span></td><td>用 Itô 等距给出形式化证明：E[|x̂<sub>t</sub>(ω)|²] = |x̂<sub>0</sub>(ω)|² + ∫|g|²ds。低频先被学会是数学结论。</td><td><span class="badge b-cond">形式化证明</span></td></tr>
+<tr><td><strong>Falck et al.</strong><br><span class="small">arXiv 2505.11278, 2025-05</span></td><td><strong>关键反驳：这个层级不是必然，而是一个选择。</strong>换成有色噪声（EqualSNR，Σ<sub>ii</sub>=c·C<sub>i</sub>）后所有频率 SNR 相等，没有层级，性能相当甚至更好。</td><td><span class="badge b-cond">权威反驳</span> 这是你该引用的那篇</td></tr>
+<tr><td><strong>Wang &amp; Pehlevan</strong><br><span class="small">NeurIPS 2025 Spotlight</span></td><td><strong>对你的架构最关键的一条：</strong>谱偏置在 MLP/线性网络中成立（τ ∝ λ<sup>−1</sup>），但<strong>"Convolutional U-Nets display rapid near-simultaneous emergence of many modes"</strong>——局部卷积<strong>定性改变</strong>了学习动力学。</td><td><span class="badge b-ana">同侪评审</span> 反对把频带调度硬编码进条件</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <span class="t">由此得出的设计红线</span>
+  证据<strong>不支持</strong>把"高频带在高 t 注入、低频带在低 t 注入"这类硬编码调度写进条件设计。它支持的是：<strong>(a) 让 gate 成为 t 的一个"温和、可学习"的函数</strong>（先例：DiT adaLN-Zero、TASR）；<strong>(b) 在高 t 阶段不要过度约束高频内容</strong>——那正是标准调度被证明会劣化高频的区域（Falck 的频带分类器实验：DDPM 生成的高频有 99–100% 可被判别为假，EqualSNR 只有 10–16%）。
+</div>
+
+<h3>1.3 一个必须正面处理的领域冲突</h3>
+
+<p>FGDM（TMI 2023）是"频域条件"最经典的工作，它的核心假设是：<em>"若两个域之间的差异主要集中在中间频段，就可以从源图像提取高频作为结构先验，让只在目标域训练的扩散模型去填补中间频段的空缺。"</em></p>
+
+<p>但作者在 Limitations 里<strong>自己写明</strong>：该假设对 <strong>MR→CT 这类低频和高频都差异巨大的任务不成立</strong>，并建议"先把低频和高频在模态间转换，再让 FGDM 填补中间频率"。</p>
+
+<div class="callout warn">
+  <span class="t">H&amp;E → HER2-DAB 正好落在 FGDM 说它会失败的那一类</span>
+  H&amp;E 的低频内容是<strong>伊红胞质 + 苏木素细胞核 + 组织密度</strong>；DAB 的低频内容是<strong>白色透明背景 + 棕色膜性信号</strong>。两者低频不匹配。因此：
+  <ul style="margin-bottom:0">
+    <li><strong>不能</strong>照搬 FGDM 的"复用源低频 + 复用源高频 + 生成中间频段"。</li>
+    <li><strong>应该</strong>反过来：用 H&amp;E 的高频（核轮廓、膜边界、腺体边缘）作为结构先验，让模型<strong>自行生成 DAB 的低频色原分布</strong>。</li>
+    <li>HDW-SR 的<strong>非对称设计</strong>（HF-源 ↔ LF-目标）恰好是这个方向——这是本次检索里最贴合你问题的一个机制。</li>
+  </ul>
+</div>
+
+<h3>1.4 值得做，但必须同时上这三件事</h3>
+
+<div class="grid3">
+  <div class="card tight">
+    <div class="badge b-cond">① 条件</div>
+    <p class="small" style="margin:8px 0 0"><strong>非对称频域条件</strong>：H&amp;E 的 HF 子带 → 条件分支；目标 DAB 的 LF 由模型生成。用可学习的变换（或至少可学习的 band 权重），不要用固定 Sobel/Canny。</p>
+  </div>
+  <div class="card tight">
+    <div class="badge b-loss">② 损失</div>
+    <p class="small" style="margin:8px 0 0"><strong>径向 PSD 对数 MSE</strong>（SC-Flow 式）。证据很硬：SC-Flow 不加谱损失时生成 PSD 衰减到 GT 的 <strong>1/100</strong>。纯条件设计解决不了"扩散系统性丢高频能量"这个问题。</p>
+  </div>
+  <div class="card tight">
+    <div class="badge b-mod">③ 前置</div>
+    <p class="small" style="margin:8px 0 0"><strong>先修 VAE</strong>。LWD 的 scale-consistency 损失（Flux-VAE rFID 0.73→0.50）与 FA-VAE 的频域补偿解码器是同一个问题的两个独立解法。VAE 已经压掉的高频，你拿 DWT 分解出来只是噪声。</p>
+  </div>
+</div>
+
+<h3>1.5 你现有的实验记录，放回文献坐标里是什么位置</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>你的观测</th><th>文献中的对应证据</th><th>解读</th></tr></thead>
+<tbody>
+<tr>
+  <td>edge cross-correlation ≈ 0.005~0.02<br><span class="small">H&amp;E 与 IHC 几乎无像素级对齐</span></td>
+  <td>CCPL（2025）在 BCI 上报告最优方法的 <strong>PCC 仅 0.2441</strong>；MIST-HER2 上仅 0.1388。BCI 数据集原论文自述：<em>"some positions cannot achieve pixel-level alignment"</em>。</td>
+  <td><strong>这是 serial-section 数据的固有性质，不是你 pipeline 的缺陷。</strong>而且现在这已经是一个可发表的 framing（STN/MMAsia'25、DGR/Nat Commun 2026、HAPS、MIU-Diff、UNIStainNet 都在这个框架下工作）。</td>
+</tr>
+<tr>
+  <td>adapter lr 1e-4 → |W|≈0.001（未激活）<br>lr 1e-3 → |W| 0.19→0.43，但 FID 109.75→125.96、DAB corr 0.439→0.244</td>
+  <td>ControlNet 的 zero-conv 设计动机完全一致：<em>"harmful noise cannot influence the hidden states… eliminating random noise as gradients in the initial training steps"</em>。而 E1 的结果说明<strong>无约束的强注入会摧毁预训练 backbone</strong>。</td>
+  <td>你正在手工寻找的那个"条件强度旋钮"，正是文献里的 <strong>gate / conditioning scale</strong>。这验证了 F2 的方向，也说明<b>不应该靠调 lr 来调条件强度</b>（第 18 节的判断是对的）。</td>
+</tr>
+<tr>
+  <td>baseline DAB corr = 0.439</td>
+  <td>UNIStainNet（BCI）报告的 <strong>DAB Pearson-r = 0.867</strong>、DAB-KL 0.482；但那是 SPADE-UNet + 冻结 UNI 基础模型 + 多尺度 Sobel 边缘编码器 + 非配对判别器的结果。</td>
+  <td>0.439 与 0.867 之间有很大的提升空间，但差距<strong>不只来自频域</strong>。做 F1 时务必把"频域"与"基础模型条件"分开归因——否则会被质疑增益来源。</td>
+</tr>
+<tr>
+  <td>baseline FID = 109.75</td>
+  <td>PSPStain 在 BCI 上被第三方复现的 FID 是 <strong>45.7</strong>（UNIStainNet 引 Qiu et al. 2025）或 <strong>48.42</strong>（CCPL 2025）。</td>
+  <td><strong>FID 口径不一致。</strong>UNIStainNet 已明确记录：ASP 在 MIST-HER2 上的 FID 在不同论文里是 <strong>51.4 / 89.3 / 177</strong>（>3× 差距）。<strong>跨论文 FID 不可直接比较</strong>，你必须在同一口径下重跑 baseline。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============ PART 2 ============ -->
+<h2 id="p2"><span class="num">Part 2</span>文献地图</h2>
+
+<p class="lede">先建立分类轴。文献里"频域"这个词被用在四种完全不同的地方，混淆它们是这个方向最常见的错误。<strong>你的提案落在最不拥挤的那一格。</strong></p>
+
+<figure>
+<svg viewBox="0 0 680 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="频域在扩散模型中的四种角色分类图">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <text x="12" y="22" font-size="13" font-weight="700" fill="#16202c" font-family="sans-serif">频域在扩散/翻译网络中的四种角色</text>
+  <text x="12" y="40" font-size="11" fill="#6b7a8c" font-family="sans-serif">横轴 = 频域信号在流水线中的介入位置；颜色 = 分类</text>
+
+  <!-- row labels -->
+  <text x="12" y="86" font-size="11.5" font-weight="700" fill="#b45309" font-family="sans-serif">① LOSS</text>
+  <text x="12" y="102" font-size="10" fill="#6b7a8c" font-family="sans-serif">监督信号</text>
+
+  <text x="12" y="166" font-size="11.5" font-weight="700" fill="#7c3aed" font-family="sans-serif">② MODULATION</text>
+  <text x="12" y="182" font-size="10" fill="#6b7a8c" font-family="sans-serif">特征加权</text>
+
+  <text x="12" y="246" font-size="11.5" font-weight="700" fill="#047857" font-family="sans-serif">③ CONDITION</text>
+  <text x="12" y="262" font-size="10" fill="#6b7a8c" font-family="sans-serif">输入条件</text>
+
+  <text x="12" y="326" font-size="11.5" font-weight="700" fill="#1d4ed8" font-family="sans-serif">④ DOMAIN</text>
+  <text x="12" y="342" font-size="10" fill="#6b7a8c" font-family="sans-serif">扩散空间</text>
+
+  <!-- lane backgrounds -->
+  <rect x="120" y="66" width="548" height="48" rx="7" fill="#fef4e6"/>
+  <rect x="120" y="146" width="548" height="48" rx="7" fill="#f4efff"/>
+  <rect x="120" y="226" width="548" height="48" rx="7" fill="#e8f7f1"/>
+  <rect x="120" y="306" width="548" height="48" rx="7" fill="#ebf1ff"/>
+
+  <!-- lane 1 LOSS -->
+  <rect x="134" y="74" width="126" height="32" rx="6" fill="#ffffff" stroke="#f0d3a8"/>
+  <text x="144" y="94" font-size="11" fill="#b45309" font-family="sans-serif">Focal Freq Loss</text>
+  <rect x="268" y="74" width="120" height="32" rx="6" fill="#ffffff" stroke="#f0d3a8"/>
+  <text x="278" y="94" font-size="11" fill="#b45309" font-family="sans-serif">Diffusion-4K</text>
+  <rect x="396" y="74" width="112" height="32" rx="6" fill="#ffffff" stroke="#f0d3a8"/>
+  <text x="406" y="94" font-size="11" fill="#b45309" font-family="sans-serif">LWD · SC-Flow</text>
+  <rect x="516" y="74" width="140" height="32" rx="6" fill="#ffffff" stroke="#f0d3a8"/>
+  <text x="526" y="94" font-size="11" fill="#b45309" font-family="sans-serif">FRAMER（+gate）</text>
+
+  <!-- lane 2 MODULATION -->
+  <rect x="134" y="154" width="120" height="32" rx="6" fill="#ffffff" stroke="#ddd0fb"/>
+  <text x="144" y="174" font-size="11" fill="#7c3aed" font-family="sans-serif">FcaNet · GFNet</text>
+  <rect x="262" y="154" width="126" height="32" rx="6" fill="#ffffff" stroke="#ddd0fb"/>
+  <text x="272" y="174" font-size="11" fill="#7c3aed" font-family="sans-serif">AFFNet · FreqFusion</text>
+  <rect x="396" y="154" width="112" height="32" rx="6" fill="#ffffff" stroke="#ddd0fb"/>
+  <text x="406" y="174" font-size="11" fill="#7c3aed" font-family="sans-serif">FreeU · FCDM</text>
+  <rect x="516" y="154" width="140" height="32" rx="6" fill="#ffffff" stroke="#ddd0fb"/>
+  <text x="526" y="174" font-size="11" fill="#7c3aed" font-family="sans-serif">3D-WLDM · TPDM</text>
+
+  <!-- lane 3 CONDITION -->
+  <rect x="134" y="234" width="120" height="32" rx="6" fill="#ffffff" stroke="#bfe8d8"/>
+  <text x="144" y="254" font-size="11" fill="#047857" font-family="sans-serif">FGDM · DDWM</text>
+  <rect x="262" y="234" width="112" height="32" rx="6" fill="#ffffff" stroke="#bfe8d8"/>
+  <text x="272" y="254" font-size="11" fill="#047857" font-family="sans-serif">cWDM · UGDiff</text>
+  <rect x="382" y="234" width="112" height="32" rx="6" fill="#ffffff" stroke="#bfe8d8"/>
+  <text x="392" y="254" font-size="11" fill="#047857" font-family="sans-serif">HDW-SR · ResQu</text>
+  <rect x="502" y="234" width="154" height="32" rx="6" fill="#d7f0e5" stroke="#0f9b6c" stroke-width="2"/>
+  <text x="512" y="254" font-size="11" font-weight="700" fill="#047857" font-family="sans-serif">★ 你的方案</text>
+
+  <!-- lane 4 DOMAIN -->
+  <rect x="134" y="314" width="120" height="32" rx="6" fill="#ffffff" stroke="#c7d6fb"/>
+  <text x="144" y="334" font-size="11" fill="#1d4ed8" font-family="sans-serif">WaveDiff · WDM</text>
+  <rect x="262" y="314" width="112" height="32" rx="6" fill="#ffffff" stroke="#c7d6fb"/>
+  <text x="272" y="334" font-size="11" fill="#1d4ed8" font-family="sans-serif">DCTdiff · Med-D3CG</text>
+  <rect x="382" y="314" width="112" height="32" rx="6" fill="#ffffff" stroke="#c7d6fb"/>
+  <text x="392" y="334" font-size="11" fill="#1d4ed8" font-family="sans-serif">FADM · ResShift</text>
+  <rect x="502" y="314" width="154" height="32" rx="6" fill="#ffffff" stroke="#c7d6fb"/>
+  <text x="512" y="334" font-size="11" fill="#1d4ed8" font-family="sans-serif">Falck EqualSNR（调度）</text>
+
+  <text x="12" y="382" font-size="10.5" fill="#6b7a8c" font-family="sans-serif">③ 这一格最稀疏：全文献仅 4 篇，且无一篇用于病理虚拟染色 → 空白可claim</text>
+</svg>
+<figcaption>图 1 · 频域在扩散模型中的四种角色。你的提案（★）位于最不拥挤的一格，且是唯一一个"频域条件 × 病理虚拟染色 × 无配准"三者交集为空的位置。</figcaption>
+</figure>
+
+<h3>2.1 六大类文献分布</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:170px">类别</th><th>代表工作</th><th style="width:78px">频域角色</th><th style="width:210px">对你的价值</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>1. Frequency Loss</strong><br><span class="small">输出频谱约束</span></td>
+  <td>Focal Frequency Loss（ICCV'21）· Diffusion-4K（CVPR'25）· LWD（2025）· SC-Flow（2026）· HDW-SR 的 L<sub>HE</sub></td>
+  <td><span class="badge b-loss">Loss</span></td>
+  <td><strong>必做对照。</strong>LWD 明确反对条件路线；SC-Flow 证明不加谱损失时 PSD 崩到 1/100</td>
+</tr>
+<tr>
+  <td><strong>2. Feature Frequency Modulation</strong><br><span class="small">内部特征频域加权</span></td>
+  <td>FcaNet（ICCV'21）· GFNet（NeurIPS'21）· AFNO（ICLR'22）· AFFNet（ICCV'23）· FreqFusion（TPAMI'24）· FSNet（TPAMI'24）· FreeU（CVPR'24）· FCDM（NN'24）</td>
+  <td><span class="badge b-mod">Mod</span></td>
+  <td><strong>零成本或极低成本</strong>的可插拔模块。FreeU 已在 <span class="mono">diffusers</span> 里，验证成本几乎为零</td>
+</tr>
+<tr>
+  <td><strong>3. Frequency Condition</strong><br><span class="small">频域信号作为网络输入</span></td>
+  <td><strong>FGDM</strong>（TMI'23）· <strong>DDWM</strong>（KBS'25）· <strong>cWDM</strong>（2024）· <strong>HDW-SR</strong>（2026）· <strong>ResQu</strong>（IJCNN'25）· Med-D3CG（ESWA'26）· UGDiff（TMM'25）· FreDiff（Neurocomputing'25）</td>
+  <td><span class="badge b-cond">Cond</span></td>
+  <td><strong>你的主战场。</strong>只有 8 篇，架构词汇表齐全，但<strong>验证严重不足</strong></td>
+</tr>
+<tr>
+  <td><strong>4. Wavelet Diffusion</strong><br><span class="small">小波作为扩散空间</span></td>
+  <td>WaveDiff（CVPR'23）· WDM（2024）· cWDM · FADM（J.Imaging'25）· Med-D3CG · ResShift（NeurIPS'23）· DCTdiff（ICML'25）</td>
+  <td><span class="badge b-dom">Domain</span></td>
+  <td>效率路线（4–8× 显存/算力下降）。但 WDM 有一个对你很重要的<strong>负面结果</strong>（见 Part 8）</td>
+</tr>
+<tr>
+  <td><strong>5. Medical Translation</strong><br><span class="small">医学跨模态翻译</span></td>
+  <td>FGDM · FDDM（2024）· FADM · 3D-WLDM（2025）· cWDM · SynDiff（TMI'23）· ContourDiff（MELBA'25）· SC-Flow · One-to-Many LDM（MICCAI'25）</td>
+  <td><span class="badge b-cond">Cond</span>+<span class="badge b-dom">Dom</span></td>
+  <td>机制最可迁移的一类。SynDiff/ContourDiff 是你该报的<strong>非配对 baseline</strong></td>
+</tr>
+<tr>
+  <td><strong>6. Pathology / Virtual Staining</strong><br><span class="small">病理虚拟染色</span></td>
+  <td>UNIStainNet（2026）· HistDiST（GCPR'25）· HistDiT（ICPR'26）· Star-Diff（CBM'25）· StainDiffuser（2024）· MIU-Diff（2025）· CCPL（2025）· PSPStain（MICCAI'24）· HER2match（MICCAI'25）· DGR（Nat Commun'26）</td>
+  <td><span class="badge b-none">无频域</span></td>
+  <td><strong>关键发现：这一整类里没有任何一篇使用傅里叶/小波/DCT。</strong>这既是空白，也意味着你必须自己承担所有验证成本</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout ok">
+  <span class="t">可 claim 的空白（精确定义）</span>
+  在全文献范围内，<strong>没有</strong>任何工作同时做到：(a) 把<strong>源模态的小波子带作为条件</strong>注入 (b) <strong>潜空间扩散 U-Net</strong>，用于 (c) <strong>H&amp;E→IHC 虚拟染色</strong>，并带 (d) <strong>timestep-aware 频带加权</strong>，在 (e) <strong>无配准 serial sections</strong> 上验证。
+  <br>最近的邻居分别是：FGDM/DDWM（频域条件，但 CT 家族、非潜空间、非病理）、cWDM（小波条件 + 潜空间，但 MRI、配对、静态条件）、HDW-SR（高频交叉注意力 + 时序衰减，但自然图像超分）、Med-D3CG（小波差域，但放射、配对）、StainDiffuser（H&amp;E→IHC，但完全无频域）。
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<h2 id="p3"><span class="num">Part 3</span>核心论文详表：方法细节 + 性能数字</h2>
+
+<p class="lede">按"与你问题的相关度"排序，而非按发表年份。每篇给出：频域变换 → 角色分类 → 注入位置 → <strong>可对比的性能数字</strong> → 关键消融 → 对你的直接含义。<strong>标 <span class="badge b-ana">未核实</span> 的数字表示原文付费墙或未能读到结果表，不要直接引用。</strong></p>
+
+<h3>3.1 第一梯队：直接可迁移（频域条件 × 扩散）</h3>
+
+<div class="paper">
+  <div class="ph">
+    <span class="ttl">HDW-SR · High-Frequency Guided Diffusion Model based on Wavelet Decomposition</span>
+    <span class="venue">arXiv 2511.13175 · 2025-11（标注 CVPR 2026）</span>
+    <span class="badge b-cond">Cond</span><span class="badge b-loss">+Loss</span>
+  </div>
+  <div class="pb">
+    <dl>
+      <dt>代码</dt><dd><span class="dim">"available after acceptance"，检索时未放出</span></dd>
+      <dt>任务</dt><dd>单图超分（自然图像，DIV2K / RealSR / DrealSR，4×）——<strong>非医学，但机制是本次检索中最可迁移的条件设计</strong></dd>
+      <dt>频域变换</dt><dd><strong>Haar DWT，3 级</strong>（j=1,2,3），每级给 LL + LH + HL + HH；用小波下采样<strong>替换 U-Net 的 CNN/池化下采样</strong></dd>
+      <dt>角色</dt><dd><strong>条件为主</strong>：PreSR 图像的<strong>高频子带 x̃<sup>j,H</sup></strong> 通过<strong>稀疏交叉注意力（DFA）</strong>注入；<code>Q = x_t^{j,LL}</code>（噪声图的低频），<code>K,V = x̃^{j,H}</code>（PreSR 图的高频）。<br>辅助损失：<code>L_HE = ‖X̃−X̃_θ‖₂ + ‖X̃−X̃_θ‖₁</code>，总损失 <code>L = β·L_HE + (1−β)·L_HA</code>，<strong>β = 0.2</strong></dd>
+      <dt>注入位置</dt><dd>残差扩散去噪网络的 <strong>encoder 内部</strong>（扩散跑在残差 ΔX = Y − PreSR 上），<strong>逐级</strong>注入（E_j）</dd>
+      <dt>多尺度/时序/门控</dt><dd>多尺度 <strong>是</strong>；时序感知 <strong>是，且是本文最巧妙的一点</strong>——<strong>上采样阶段从外部高频先验 x̃<sup>j,H</sup> 切换回扩散图自身的高频 x_t^{j,H}</strong>，因为后期步骤过度依赖先验会"amplifies pseudo-details and distorts textures"；门控 <strong>是</strong>——Dynamic Thresholding Block（DTB），用 Otsu 式动态阈值 <code>k* = argmax_k σ_B²(k)</code> 生成硬掩码</dd>
+      <dt>性能数字</dt><dd>DIV2K 4×：<strong>PSNR 24.52 / SSIM 0.6162 / LPIPS 0.2823</strong>（DiT-SR 24.31/0.6074/0.2913；OSEDiff 23.72/0.6108/0.2941）<br>RealSR：<strong>25.71 / 0.7428 / 0.2672</strong>（DiT-SR 25.31/0.7337/0.2863）<br>DrealSR：PSNR 28.43，LPIPS 0.2960（最优）</dd>
+      <dt>关键消融</dt><dd><strong>β 极其敏感</strong>：β=0.2 → 24.52；<strong>β=0.1 → 18.39（崩塌）</strong>；β=0.3 → 23.29；<strong>β=0.5 → 10.30（完全崩塌）</strong>。<br>组件：CNN+DFA 25.16 → <strong>DWT+DFA+HE-Net 25.71</strong>；去掉 HE-Net 高频引导（DWT+DFA HA-Net）→ <strong>24.39</strong>（−1.32 dB）；DWT+SwinT 22.15。<br>DTB vs Top-K：25.71 vs 25.37 PSNR，且 <strong>134 vs 172 GFLOPs</strong>（更省）</dd>
+      <dt>对你的含义</dt><dd>① <strong>非对称设计</strong>（HF-源 ↔ LF-目标）正是 H&amp;E→IHC 需要的方向；② <strong>"后期必须衰减外部高频先验"</strong>是可量化的设计约束；③ 频域损失权重 <strong>β 在 0.2→0.5 之间会崩塌</strong>——如果 F1 之后加频域损失，这是必须先做的敏感性扫描</dd>
+    </dl>
+    <div class="linkrow">
+      <a href="https://arxiv.org/abs/2511.13175" target="_blank" rel="noopener">arxiv.org/abs/2511.13175</a>
+    </div>
+  </div>
+</div>
+
+<div class="paper">
+  <div class="ph">
+    <span class="ttl">FGDM · Zero-shot Medical Image Translation via Frequency-Guided Diffusion Models</span>
+    <span class="venue">IEEE TMI 2023 · DOI 10.1109/TMI.2023.3325703</span>
+    <span class="badge b-cond">Cond</span>
+  </div>
+  <div class="pb">
+    <dl>
+      <dt>代码</dt><dd><a href="https://github.com/Kent0n-Li/FGDM" target="_blank" rel="noopener">github.com/Kent0n-Li/FGDM</a>（另有复现 <a href="https://github.com/fatwir/Frequency-Guided-Diffusion-Model" target="_blank" rel="noopener">fatwir/FGDM</a>）</dd>
+      <dt>任务</dt><dd>Zero-shot <strong>CBCT→CT</strong>（头颈 in-distribution，肺 OOD，OARs OOD）；跨机构 MR（NFBS→ABCs）。192×192 2D 切片。<strong>训练时完全看不到源域数据</strong></dd>
+      <dt>频域变换</dt><dd>用 <strong>2D 傅里叶</strong>做分析（推导每个频率的 SNR），但<strong>实际实现的两个滤波器是</strong>：<br>· <strong>低通 = 前向扩散过程本身</strong>（截断到 T̃=4 步）——论文证明 <code>S_t = √α_t·I + √(1−α_t)·Z</code>，截断即低通<br>· <strong>高通 = Sobel 算子</strong>（阈值 η）<br>核心理论：自然图像 PSD ∝ k/‖(u,v)‖<sup>a</sup>（a&gt;1），白噪声 PSD 平坦 ⇒ <code>SNR_t ∝ 1/t</code> ⇒ <strong>高频先被破坏</strong></dd>
+      <dt>角色</dt><dd><strong>纯条件。</strong>源图的<strong>高频图 H_η</strong> 作为反向过程的条件输入：<code>p_θ(s_{t−1} | s_t, HPF_η(c₀))</code>；源图的低频由前向扩散初始化提供。模型被训练去<strong>生成缺失的中间频段</strong></dd>
+      <dt>注入位置</dt><dd>整个反向扩散过程；backbone = Denoising Diffusion GAN（ICLR'22），<strong>&lt;8 步采样</strong>（~0.2 s/图 vs SDEdit ~9 s）。<strong>无频域损失</strong>（只有对抗 + SRKL）</dd>
+      <dt>多尺度/时序/门控</dt><dd>多尺度 <strong>否</strong>；时序感知 <strong>是</strong>——T̃ 决定保留多少低频，是推理期旋钮；门控：HPF 阈值 η 是空间硬阈值</dd>
+      <dt>性能数字</dt><dd>头颈 CBCT→CT：<strong>FID 24.0 / PSNR 27.8 / SSIM 0.908 / Freq-MSE 400</strong><br>（CycleGAN 47.6/22.5/0.844；SDEdit 33.2/24.8/0.830；SynDiff 49.0/26.0/0.902；EGSDE 41.9/22.6/0.800）<br><strong>肺 OOD（零样本、无微调）：FID 42.4 / PSNR 28.4 / SSIM 0.906</strong>（SDEdit 81.5；EGSDE 101.0）——<strong>OOD 结果优于 in-distribution</strong><br>OARs OOD：FID 94.8（CycleGAN 118.0，RegGAN 271.0）<br>跨机构 MR：FID 59.3 / PSNR 21.2 / SSIM 0.805（CycleGAN 86.4）</dd>
+      <dt>关键消融</dt><dd><strong>这是全文最重要的一张表：</strong><br>· 去掉<strong>低</strong>频引导 → FID 30.2 / SSIM <strong>0.890</strong><br>· 去掉<strong>高</strong>频引导 → FID 38.2 / SSIM <strong>0.748</strong><br>· 完整 → <strong>FID 24.0 / SSIM 0.908</strong><br><strong>⇒ 高频条件是承重构件</strong>（SSIM 掉 0.16），低频主要影响 FID。<br>η 扫描：η=5→26.9；<strong>η=10→24.0（最优）</strong>；η=15→25.1；η=20→30.1；η=25→34.6<br>T̃ 扫描：T̃=1→26.1；T̃=3→25.0；<strong>T̃=4→24.0（最优）</strong>；T̃=5→26.7</dd>
+      <dt>局限（作者自述）</dt><dd><strong>① 假设源/目标差异集中在中间频段，低频和高频两端相似。</strong>② <strong>明确预期在 MR→CT 上失败</strong>，因为两端频谱都差异巨大；作者建议"先把低频和高频在模态间转换，再让 FGDM 填补中间频率"。③ 只测了 Diffusion-GAN backbone，DDPM backbone 下的频域引导精度未评估</dd>
+      <dt>对你的含义</dt><dd><span class="badge" style="background:var(--warn-bg);color:var(--warn);border:1px solid #f0c6c6">最重要的一条警告</span> 局限 ② 直接命中你的任务。<strong>不要照搬"复用源低频"的设计。</strong>但 η/T̃ 的扫描方法论、以及"高频条件主导 SSIM"的结论，可以直接迁移为你的实验协议</dd>
+    </dl>
+    <div class="linkrow">
+      <a href="https://arxiv.org/abs/2304.02742" target="_blank" rel="noopener">arxiv.org/abs/2304.02742</a>
+    </div>
+  </div>
+</div>
+
+<div class="paper">
+  <div class="ph">
+    <span class="ttl">ResQu · Quaternion Wavelet-Conditioned Diffusion Models for Image Super-Resolution</span>
+    <span class="venue">IJCNN 2025 · arXiv 2505.00334</span>
+    <span class="badge b-cond">Cond</span><span class="badge b-mod">+Mod</span>
+  </div>
+  <div class="pb">
+    <dl>
+      <dt>代码</dt><dd><a href="https://github.com/Fascetta/ResQu" target="_blank" rel="noopener">github.com/Fascetta/ResQu</a></dd>
+      <dt>任务</dt><dd>真实世界图像超分（DIV2K-Val / RealSR / DRealSR，4×，128→512）。<strong>这是文献中最接近你提案的架构先例</strong></dd>
+      <dt>频域变换</dt><dd><strong>四元小波变换（QWT）</strong> via QUAVE：实数 DWT × 沿 x/y/xy 三个方向的 Hilbert 变换 → 4 个四元子带 → <strong>16 个实数子带</strong>。关键设计：<strong>不用全部 16 个</strong>，QUAVE 只从信息量最大的子带提取特征。选择 QWT 而非实数 DWT 的理由（原文）：<em>"DWT lacks translation invariance and phase information preservation"</em></dd>
+      <dt>角色</dt><dd><strong>条件 + 特征调制（本文核心贡献）</strong>：<br>① QUAVE 产生四元小波嵌入<br>② <strong>与小波嵌入与 timestep embedding 拼接</strong> → 统一条件向量 <code>b ∈ ℝ^{1024}</code><br>③ 专用编码器 <code>δ_θ</code><strong>镜像 U-Net encoder 架构</strong> → 多尺度条件嵌入<br>④ 通过 <strong>SFT（Spatial Feature Transform）</strong> 注入冻结去噪 U-Net 的中间特征图<br>⑤ 损失<strong>只有标准去噪目标</strong>，无频域损失</dd>
+      <dt>注入位置</dt><dd>多尺度 SFT；<strong>SD VAE 与 U-Net backbone 全部冻结</strong>，只训 δ_θ 和 CFW 模块；QUAVE 单独预训练（DIV2K+Flickr2K+OST，45k 步）</dd>
+      <dt>时序感知</dt><dd><strong>是，且是最可迁移的设计细节</strong>：<code>δ_θ</code> 按已知噪声调度<strong>动态调整条件强度</strong>——早期（低 SNR、latent 噪声大）提供<strong>强引导</strong>以保住结构完整性；后期（高 SNR、latent 已细化）<strong>降低影响</strong>，让模型专注细节。<strong>这是"学习出来的时变条件强度"</strong>，机制上等价于 FDDM 手写的 (T_s−t)/T_s 衰减，但可学习</dd>
+      <dt>训练配置</dt><dd>RTX A6000 48GB，AdamW，lr 5e-5，<strong>batch 6</strong>，14k iters</dd>
+      <dt>性能数字</dt><dd>DIV2K-Val：<strong>PSNR 25.21</strong>（RealSR 24.62，LDM 20.58）；SSIM 0.645（ResShift 0.7323 最优）；LPIPS 0.4161（FeMaSR 0.3126 最优）；FID 25.43（StableSR 24.44 最优）<br>RealSR：<strong>PSNR 26.45</strong>（RealSR 25.56）；SSIM 0.7627（BSRGAN 0.7651）；LPIPS 0.3215（R-ESRGAN+ 0.2524）<br>DRealSR：<strong>PSNR 29.69 / SSIM 0.8211</strong>（均最优）<br>零样本 ShipSpotting：ResQu SSIM 0.611 / PSNR 22.01 / FID 14.63 vs SR3（全量训练）0.569/21.07/16.59</dd>
+      <dt>关键消融</dt><dd><strong>你最需要的那个消融，本文没有做</strong>：没有对比"四元小波条件 vs 普通实数小波条件 vs 无条件"。QWT 优于 DWT 的主张只有定性论证（相位保持、平移不变），<strong>未做消融，视为未证实</strong>。CFW 消融：自训 CFW 在 PSNR/SSIM 上全面优于 StableSR 的 CFW（RealSR 24.98 vs 23.26），但 FID 略差（134 vs 129）</dd>
+      <dt>对你的含义</dt><dd>① 验证了三个设计选择：<strong>小波嵌入与 timestep embedding 拼接</strong>、<strong>多尺度 SFT 注入</strong>、<strong>条件强度随时间衰减</strong>；② <strong>两个警告</strong>：(i) 缺最关键的消融——没人证明小波条件优于"直接用原始图像做条件"（ControlNet / 通道拼接）；(ii) <strong>保真度换感知质量</strong>——ResQu 在三个数据集的 PSNR 全胜，但 <strong>LPIPS/FID 一次都没赢</strong>。对 HER2 评分（看膜性染色的感知真实度，而非与失配 GT 的像素误差）来说，<strong>这是反方向的取舍</strong>，必须提前设计好评估体系</dd>
+    </dl>
+    <div class="linkrow">
+      <a href="https://arxiv.org/abs/2505.00334" target="_blank" rel="noopener">arxiv.org/abs/2505.00334</a>
+    </div>
+  </div>
+</div>
+
+<div class="paper">
+  <div class="ph">
+    <span class="ttl">cWDM · Conditional Wavelet Diffusion Models for Cross-Modality 3D Medical Image Synthesis</span>
+    <span class="venue">arXiv 2411.17203 · BraTS 2024 Challenge</span>
+    <span class="badge b-cond">Cond</span><span class="badge b-dom">+Domain</span>
+  </div>
+  <div class="pb">
+    <dl>
+      <dt>代码</dt><dd><a href="https://github.com/pfriedri/cwdm" target="_blank" rel="noopener">github.com/pfriedri/cwdm</a></dd>
+      <dt>任务</dt><dd>3D 跨模态 MR 合成（缺失模态填补），BraTS 2024，1251 训练 / 219 验证，155×240×240</dd>
+      <dt>频域变换</dt><dd><strong>单级 3D DWT</strong> → <code>x ∈ ℝ^{8 × D/2 × H/2 × W/2}</code>（1 低频 + 7 细节子带）。<strong>用小波变换替换 LDM 的 autoencoder</strong>（训练无关的降维）。<span class="dim">小波族未在文中指明</span></dd>
+      <dt>角色</dt><dd><strong>纯条件，通过通道拼接（Palette 式）</strong>：<br><code>c = DWT(C₁) ⊕ DWT(C₂) ⊕ DWT(C₃) ∈ ℝ^{24×…}</code><br><code>X_t = x_t ⊕ c ∈ ℝ^{32×…}</code>（8 噪声通道 + 24 条件通道）<br><strong>注意：条件图像本身也被 DWT 分解</strong>——这才是"频域信息作为条件"的正确表述形式，且成本极低</dd>
+      <dt>注入位置</dt><dd>U-Net 输入层，<strong>每个去噪步</strong>都拼接。无交叉注意力、无逐块调制</dd>
+      <dt>多尺度/时序/门控</dt><dd>多尺度 <strong>否</strong>（单级小波，固定 2× 降采样）；时序感知：网络被 t 条件化，但<strong>条件 c 在所有 timestep 恒定</strong>；门控 <strong>无</strong></dd>
+      <dt>性能数字</dt><dd>BraTS 2024 验证集：T1 <strong>MSE 1.65e-3 / PSNR 29.74 / SSIM 0.956</strong>；T1ce 2.85e-3/27.31/0.936；T2 2.43e-3/28.86/0.952；FLAIR 2.25e-3/27.83/0.935；<strong>随机模态 1.82e-3/28.72/0.946</strong><br><span class="badge b-ana">注意</span> <strong>无 FID，无 baseline 对比表</strong>，测试集指标待组织方评分</dd>
+      <dt>关键消融</dt><dd>跳跃连接：<strong>拼接 &gt; 相加</strong>（29.14 vs 28.99 PSNR，且 <strong>172 s vs 283 s</strong>）<br>基础通道数：<strong>C=64 优于 C=96</strong>（质量更好、显存/时间更省：9,578 MB / 172 s vs 13,434 MB / 320 s）<br>线性 vs 余弦 β 调度：相当。最优格子：concat + cosine + C64 → MSE 1.62e-3 / PSNR 29.06 / SSIM 0.948<br><strong>无频带级消融</strong></dd>
+      <dt>训练配置</dt><dd>1.2M iters，Adam，lr 1e-5，batch 1，单张 A100-40GB，T=1000，线性 β 1e-4→0.02，C=64</dd>
+      <dt>对你的含义</dt><dd><strong>本次检索中最可迁移的架构。</strong>三条具体教训：① <strong>条件信号也要做小波分解，不只分解目标</strong>；② <strong>拼接优于相加</strong>（可直接复用）；③ <strong>1.2M iters / batch 1 / 单卡 A100 / C=64 是实验室可承受的算力配置</strong>。它的弱点（无 FID、无 baseline、4 个独立模型、单级）恰好是你可以改进的地方：<strong>把条件做成多尺度 + 子带选择性</strong></dd>
+    </dl>
+    <div class="linkrow">
+      <a href="https://arxiv.org/abs/2411.17203" target="_blank" rel="noopener">arxiv.org/abs/2411.17203</a>
+    </div>
+  </div>
+</div>
+
+<h3>3.2 第二梯队：频域作为 Loss / Modulation（必须做对照）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="min-width:130px">论文</th><th style="width:64px">年份/venue</th><th style="width:78px">频域角色</th>
+  <th style="min-width:150px">频域机制</th><th style="min-width:230px">性能数字</th><th style="min-width:180px">关键消融 / 对你的含义</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>WaveDiff</strong><br><span class="small">Wavelet Diffusion Models</span><br><a href="https://arxiv.org/abs/2211.16152" target="_blank" rel="noopener">2211.16152</a> · <a href="https://github.com/VinAIResearch/WaveDiff" target="_blank" rel="noopener">code</a></td>
+  <td>CVPR 2023</td>
+  <td><span class="badge b-dom">Dom</span><span class="badge b-loss">+Loss</span><span class="badge b-mod">+Mod</span></td>
+  <td>Haar DWT + IWT，扩散直接跑在小波空间（12 通道 = 4 子带 × 3 通道）。三个模块：频率感知上/下采样块、频率瓶颈块、频率残差连接。L1 子带重建损失 λ=1</td>
+  <td>CelebA-HQ 256：<strong>FID 5.94</strong>（DDGAN 7.64），0.79 s vs 1.73 s<br>CelebA-HQ 512：<strong>6.40</strong>（DDGAN 8.43）<br>LSUN-Church 256：<strong>5.06</strong>（DDGAN 5.25），1.54 s vs 3.42 s<br>算力：256 分辨率 <strong>FLOPs 28.54G vs 70.82G</strong>，MEM 1.07G vs 3.21G<br>CIFAR-10 4NFE：FID 4.01（DDGAN 3.75），<strong>2.5× 更快</strong></td>
+  <td><strong>渐进式上采样严重失败</strong>：2 级上采样 FID <strong>13.11 vs 5.94</strong>，归因于条件分布不匹配 <code>p(x_hi | x_lo)</code>。<span class="badge" style="background:var(--warn-bg);color:var(--warn);border:1px solid #f0c6c6">直接警告</span> 这是文献里唯一一次"多尺度小波"尝试，结果失败——如果你计划做 Condition Pyramid（Stage 7），必须先处理这个风险</td>
+</tr>
+<tr>
+  <td><strong>FDDM</strong><br><span class="small">Frequency-Decoupled Diffusion</span><br><a href="https://arxiv.org/abs/2311.12070" target="_blank" rel="noopener">2311.12070</a></td>
+  <td>2024</td>
+  <td><span class="badge b-cond">Cond</span></td>
+  <td><strong>重要更正：不用 FFT/DCT/DWT。</strong>用 blue noise（PSD ∝ f）让前向过程近似低通 + 拉普拉斯金字塔融合。双路反向：隐式概率模型（确定性，σ_t=0）负责<strong>低频</strong>，显式 DDPM 负责<strong>高频</strong>。CT 边界图（Sobel）作为额外条件输入，阈值 (T_s−t)/T_s <strong>逐步归零</strong></td>
+  <td>脑 MR→CT：<strong>FID 25.86 / SSIM 0.9089 / MSE 12345 / MAE 28.51</strong><br>（CycleGAN 62.41/0.8704/17999.9/39.26；UNIT 49.71/0.8912/17454/37.03；SynDiff 70.54/0.8503/42668/59.75）<br>骨盆 MR→CT：<strong>FID 29.20 / SSIM 0.9117 / MAE 22.25</strong><br>全部显著 p&lt;0.05（Wilcoxon）<br><span class="badge b-ana">未报告</span> PSNR 与 LPIPS 全文未报告</td>
+  <td>双路消融：去掉低频（隐式）路 → FID 稳定但 SSIM/MSE/MAE 劣化（<strong>解剖结构受损</strong>）；去掉高频（显式）路 → FID 劣化最多（<strong>真实感受损</strong>）；完整 25.86。<br><strong>两条路各修不同的错误模式。</strong>前向步数 T_s 即低通截止：100→28.25；<strong>300→25.51</strong>；600→27.10；900→37.36（SSIM 崩到 0.767）</td>
+</tr>
+<tr>
+  <td><strong>LWD</strong><br><span class="small">Latent Wavelet Diffusion</span><br><a href="https://arxiv.org/abs/2506.00433" target="_blank" rel="noopener">2506.00433</a> · <a href="https://github.com/LuigiSigillo/LatentWaveletDiffusion" target="_blank" rel="noopener">code</a></td>
+  <td>2025<br><span class="small">（repo 标注 ICLR 2026）</span></td>
+  <td><span class="badge b-loss">Loss</span><span class="badge b-mod">Mask</span></td>
+  <td>latent 上单级 Haar DWT，高频能量 → 显著性图 A_wavelet → <strong>时变二值掩码</strong> <code>M_t(i,j)=1 iff T·(A_wavelet+ℓ) ≥ t</code>，逐元素门控 flow-matching 损失。每个位置至少受 ℓT 步监督，高频区域受更多步。<strong>ℓ = 0.3</strong>。另加 VAE scale-consistency 谱损失</td>
+  <td>2K 生成（HPD prompts）：<strong>FID 32.88 / LPIPS 0.6336</strong>（URAE 35.25/0.6717；SDEdit 35.59/0.6456；FLUX-1.dev 37.58/0.6371）→ FID 最高降 7%、LPIPS 降 6%<br>SD3-F16 2K：43.82 → <strong>38.74</strong><br>VAE 消融：Flux-VAE rFID 0.73 → <strong>0.50</strong>，PSNR 27.18 → <strong>28.14</strong><br>训练：LWD+URAE @2048 <strong>4 h / 2k iters / batch 1</strong>；@4096 24 h。<strong>推理零额外开销</strong></td>
+  <td><span class="badge" style="background:var(--warn-bg);color:var(--warn);border:1px solid #f0c6c6">最强反方立场</span> 原文明确写：<em>"Unlike recent approaches that inject frequency conditioning directly into the encoder, our formulation decouples signal regularization and generation… This preserves architectural modularity"</em>。<strong>你必须在 related work 里正面回应这一条</strong>，而不是忽略。<br>另一个可复用的东西：<strong>VAE scale-consistency 损失</strong>——"确保 DWT 捕捉到的高频激活对应真实结构，而不是编码噪声"</td>
+</tr>
+<tr>
+  <td><strong>Diffusion-4K</strong><br><a href="https://arxiv.org/abs/2503.18352" target="_blank" rel="noopener">2503.18352</a> · <a href="https://github.com/zhang0jhon/diffusion-4k" target="_blank" rel="noopener">code</a></td>
+  <td>CVPR 2025</td>
+  <td><span class="badge b-loss">Loss</span></td>
+  <td>latent 上 Haar DWT，<strong>小波损失 L_WLF</strong>：对预测速度与目标<strong>同时</strong>做 DWT 后算 MSE。模型无关（可替换任意扩散模型的回归目标）。单级，<strong>无子带差异化加权</strong>（只有单一 w_t）</td>
+  <td>2048²：SD3-F16 FID <strong>43.82 → 40.18</strong>（CLIPScore 31.50→34.04）；Flux-F16 <strong>50.57 → 39.49</strong>（CLIP 30.41→34.41）<br>4096²（SD3）：CLIPScore 33.12 → 34.14（仅微调）→ <strong>34.40（WLF）</strong>；GLCM 0.73→0.74→<strong>0.77</strong><br>推理 4096²（A100）：SD3-F16-WLF 31.3 GB / 1.16 s per step；Flux-F16-WLF 50.4 GB / 2.42 s<br>训练：12B 模型约 <strong>2,000 A100 GPU-hours</strong></td>
+  <td><strong>评估方法论的关键一击</strong>：作者测得 <strong>GLCM Score 与人类判断的 SRCC 0.75 / PLCC 0.77</strong>，而 MUSIQ 只有 0.36/0.41、MANIQA 只有 0.20/0.26——<strong>FID 甚至没被当作充分指标报告</strong>。<br>对你有直接方法论含义：<strong>不要只用 PSNR/SSIM/FID 评估 H&amp;E→IHC</strong>。另外"无子带差异化加权"是 LWD 和本文都留下的空白</td>
+</tr>
+<tr>
+  <td><strong>SC-Flow</strong><br><span class="small">Spectral Consistent Flow</span><br><a href="https://arxiv.org/abs/2607.10627" target="_blank" rel="noopener">2607.10627</a></td>
+  <td>2026<br><span class="small">MICCAI 风格</span></td>
+  <td><span class="badge b-loss">Loss</span><span class="badge b-mod">+Mod</span><span class="badge b-cond">+Cond</span></td>
+  <td>3D FFT → <strong>径向分箱 PSD</strong>（旋转不变，<strong>B=24 最优</strong>，试过 12/24/48/96，96 不稳定）→ 可学习逐带增益 g_b → 连续增益图。谱损失 <code>L_spec = Σ_b w_b (log P̂ − log P)</code>（对数差使乘性偏差变为加性、尺度不变）。增益由 <code>[φ(x̂₀), φ(x₁)]</code> 经 MLP 预测（条件依赖源模态）</td>
+  <td>1-NFE 3D 翻译，8 任务 / 4 数据集 / 8 模态（ADNI、A4、NACC、synthRAD2025）<br>NACC MRI→FDG-PET：<strong>MAE 1.77 / RMSE 4.34 / PSNR 27.41 / SSIM 93.30</strong>（MeanFlow 1-NFE 的 MAE 低 &gt;20%、PSNR 高 &gt;2.5 dB）<br>下游：F1 +11.45（NACC-FDG），AUC +24.04（A4-Tau）</td>
+  <td><strong>硬证据</strong>：<em>不加 L_spec 时生成 PSD 衰减到 ground truth 的 1/100。</em><br>消融：无扩散项/无 SCC/无 L → PSNR 21.97；仅加 SCC → 24.25；<strong>完整 → 27.41</strong>（SCC 单独贡献 ~+2.3 dB）<br><strong>含义</strong>：纯条件设计解决不了"扩散系统性丢高频能量"，谱损失是补丁。这条应该写进你的 F3</td>
+</tr>
+<tr>
+  <td><strong>FCDM</strong><br><span class="small">Frequency Compensated Diffusion</span><br><a href="https://arxiv.org/abs/2308.10510" target="_blank" rel="noopener">2308.10510</a></td>
+  <td>Neural Networks 2024</td>
+  <td><span class="badge b-mod">Mod</span></td>
+  <td><strong>无 FFT/DCT/DWT。</strong>Frequency Compensation Block = <strong>固定（不可学习）高斯低通核组</strong> k∈{3,5,7}、σ∈{1,2,4}，构成 DoG 式带通/高通：<code>s′ = [s, s−s₃, s₃−s₅, s₅−s₇]</code>，再做<strong>可学习加权平均</strong>。插入 U-Net 的<strong>跳跃连接</strong>，把中高频从浅层传到深层</td>
+  <td>I-Haze：<strong>PSNR 17.346 / SSIM 0.823 / MUSIQ 68.792 / NIQE 3.817</strong>（MSBDN 16.988；DF SSIM 0.754）<br>O-Haze：<strong>17.389 / 0.802</strong>（D4 16.922 / DF 0.700）<br>Dense-Haze：<strong>13.157 / 0.487</strong>（Retinex 12.278/0.430）<br>Nh-Haze：<strong>14.167 / 0.622</strong>（D4 13.129）<br>RTTS（无参考）：MUSIQ <strong>58.218</strong> / NIQE 2.968</td>
+  <td>动机原话：<em>"The spectral bias of deep networks hinders the higher frequency modes in Gaussian vectors from being learned and hence impairs the reconstruction of image details."</em><br>消融：裸 DDPM SSIM 0.536 → +FCB 0.747 → +HazeAug 0.812 → <strong>两者 0.823</strong>。<strong>即使单个高通核（k=7,σ=10）也把 SSIM 从 0.536 拉到 0.731</strong>；核数 M=3 后收益饱和<br><strong>含义</strong>：这是最干净、几乎零成本的"U-Net 特征频域调制"单元（只有 W 可学）。可放在 decoder skip 上抑制 H&amp;E 外观渗漏</td>
+</tr>
+<tr>
+  <td><strong>FreeU / FreeU V2</strong><br><a href="https://arxiv.org/abs/2309.11497" target="_blank" rel="noopener">2309.11497</a> · <a href="https://github.com/ChenyangSi/FreeU" target="_blank" rel="noopener">code</a></td>
+  <td>CVPR 2024 Oral</td>
+  <td><span class="badge b-mod">Mod</span></td>
+  <td><strong>零训练、零参数、零推理开销。</strong>backbone 分支：结构相关缩放 α_l 施加在<strong>前一半通道</strong>（避免过平滑）；skip 分支：<strong>FFT 径向低通掩码</strong> β=s_l (r&lt;r_thresh) else 1，<strong>压低 skip 的低频</strong>。在 decoder 每个 concat 阶段施加。V2 = 结构自适应缩放图取代常数因子</td>
+  <td><span class="badge b-ana">未报告 FID</span> 全文<strong>没有任何 FID/IS</strong>。唯一数字是 35 人偏好实验：<br>SD 图文对齐 <strong>14.12% → 85.88%</strong>；图像质量 <strong>14.66% → 85.34%</strong><br>ModelScope 视频对齐 15.29% → 84.71%；质量 14.33% → 85.67%<br>超参（来自 README 非论文）：SD1.5 <span class="mono">b1=1.5,b2=1.6,s1=0.9,s2=0.2</span></td>
+  <td>诊断结论（原文）：skip 特征"carry a large amount of high-frequency information"，增大 b 会"suppress high-frequency components"。<br>消融：常数缩放 → <em>"pronounced oversmoothing of textures and undesirable color oversaturation"</em>。<br><strong>含义</strong>：已在 <span class="mono">diffusers</span> 里（<code>FreeU</code>/<code>FreeU_V2</code> 节点），<strong>验证成本≈0</strong>，建议作为 F1 的免费对照。但<strong>不要引用它的数字</strong>（无 FID），只引机制和消融</td>
+</tr>
+<tr>
+  <td><strong>DCTdiff</strong><br><a href="https://arxiv.org/abs/2412.15032" target="_blank" rel="noopener">2412.15032</a> · <a href="https://github.com/forever208/DCTdiff" target="_blank" rel="noopener">code</a></td>
+  <td>ICML 2025</td>
+  <td><span class="badge b-dom">Dom</span></td>
+  <td>Block 2D DCT（JPEG 式：RGB→YCbCr→色度下采样→block DCT→zigzag 截断）。<strong>无 VAE</strong>，完全在 DCT 空间建模。两个 DCT 派生组件：Entropy-Consistent Scaling、SNR Scaling</td>
+  <td>UViT vs DCTdiff（DDIM）：CIFAR-10 NFE100 <strong>6.23 → 5.02</strong>；<strong>NFE10 <span class="win">81.67 → 12.45</span></strong>；CelebA64 NFE10 224.21 → <strong>67.78</strong>；FFHQ128 NFE100 13.87 → <strong>8.22</strong><br>高分辨率（DPM-Solver）：FFHQ 512 latent 10.89 vs <strong>DCTdiff 7.07</strong>；AFHQ 512 latent 10.86 vs <strong>8.76</strong>（<strong>且无 VAE</strong>）<br>训练：<strong>最高快 2.5×</strong>；AFHQ512 只需 1/4 训练成本（133 vs 575 GFLOPs）<br>推理 AFHQ512 NFE10：<strong>4.8 min vs latent UViT 7.9 min</strong></td>
+  <td>Theorem 5.1：用 Itô 等距<strong>形式化证明了"扩散即谱自回归"</strong>（对 DCT 也成立）。<br>Theorem 5.2：<strong>DCT 上采样 FID 9.79 vs 双线性/双三次 12.53</strong>。<br><strong>EBFR 明确把"医学图像"列为高频细节任务</strong>，主张给高频分配更多容量。<br>DCT 上的无损压缩：256² 4×、512² 7.11×<br><strong>含义</strong>：DCT 是合法的扩散域，且 <strong>低 NFE 优势巨大</strong>（虚拟染色推理预算紧张时很关键）</td>
+</tr>
+<tr>
+  <td><strong>FouriScale</strong><br><a href="https://arxiv.org/abs/2403.12963" target="_blank" rel="noopener">2403.12963</a> · <a href="https://github.com/LeonHLJ/FouriScale" target="_blank" rel="noopener">code</a></td>
+  <td>ECCV 2024</td>
+  <td><span class="badge b-mod">Mod</span></td>
+  <td>对下采样与卷积做傅里叶分析。<strong>Theorem 3.1</strong>：<code>DFT(Down_s(F)) = (1/s²)Σ F_{i,j}(u,v)</code>——步长 s 下采样把频谱<strong>切成 s×s 块并平均</strong>，所以理想核必须频谱周期性重复 → 用<strong>膨胀卷积</strong>；再加<strong>低通掩码</strong>（σ 是调制系数而非完全消除）。<strong>退火调度</strong>：前 S_init 步用理想核，之后逐步衰减回原始 U-Net</td>
+  <td>SDXL 4× 1024²：FIDr <strong>49.46 → 33.89</strong>（Vanilla 49.81）<br>6.25×：SDXL 55.03 → <strong>44.13</strong>；SD1.5 37.71 → <strong>30.27</strong><br>16× 2048²：SDXL 84.58 → <strong>56.66</strong>；SD2.1 40.91 → <strong>39.49</strong><br>SDXL 16× 推理：ScaleCrafter 577 s vs <strong>FouriScale 540 s</strong>（单 A100）</td>
+  <td>消融（SD2.1 → 2048²）：完整 <strong>39.49</strong>；去 guidance 43.75；<strong>去 guidance 且去滤波 46.74</strong> → 低通滤波是更关键的组件。<br><strong>SDXL 需要更温和的滤波（σ=0.6）</strong>，因为 SDXL 本身已能处理尺度变化——"越强越好"是错的。<br><strong>含义</strong>：① 下采样的频谱折叠解释了不同放大倍数下小波条件该长什么样（病理 WSI 多倍率训练的真实问题）；② <strong>退火调度</strong>是"频域干预随时间关闭"的已验证模板</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">上表中 <span class="badge b-ana">未报告</span> / <span class="badge b-ana">未核实</span> 标记的项，请勿直接引用为事实。</p>
+
+<h3>3.3 第三梯队：医学跨模态翻译（机制参考 + baseline）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="min-width:120px">论文</th><th style="width:90px">年份/venue</th><th style="width:70px">角色</th>
+  <th style="min-width:170px">频域机制</th><th style="min-width:230px">性能数字</th><th style="min-width:160px">对你的含义</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>FADM</strong><br><span class="small">Frequency-Aware Diffusion for MRI</span><br><a href="https://www.mdpi.com/2313-433X/11/5/152" target="_blank" rel="noopener">J. Imaging 11(5):152</a> · <a href="https://github.com/Rain-Alley/FADM" target="_blank" rel="noopener">code</a></td>
+  <td>2025<br>MDPI J. Imaging</td>
+  <td><span class="badge b-cond">Cond</span><span class="badge b-mod">+Mod</span><span class="badge b-dom">+Dom</span></td>
+  <td>单级 2D Haar DWT，<strong>直接在波域做扩散</strong>（面积仅 1/4）。<strong>三种角色同时用</strong>：<br>· 条件：X_t 与条件图 y 的小波子带<strong>每个 timestep</strong> 融合<br>· 域：噪声加在小波系数上<br>· 调制：① 小波下采样层<strong>替换每个 encoder 层的 stride conv</strong>；② <strong>HFSM</strong> 高频特征监督模块——交叉注意力，<code>Q=Conv(X_hl+X_hh+X_lh)</code>（来自条件图），<code>K,V=Conv(feature map)</code></td>
+  <td>BraTS：<strong>PSNR +2.1 dB、SSIM +2.7%、FID 比 I2SB 低 3.75</strong><br>1.5T→3T MPRAGE（70 例、27,300 配对切片）：矢状/冠状明显更好，<strong>轴位仅与 I2SB 相当</strong><br>消融（矢状）：仅小波变换 = 只有效率收益、质量中性；<strong>+小波下采样层 PSNR 29.061 → 30.948</strong>；+HFSM 质量提升但<strong>显存 13.252 → 15.496 GB</strong>；完整 <strong>PSNR 31.898 / SSIM 0.951</strong></td>
+  <td>作者自述局限：<strong>小波边界伪影会被跨 timestep 的重复施加放大</strong>；肿瘤-组织界面在 IWT 后难恢复；仅 2D 无层间一致性；需配对数据。<br><strong>含义</strong>：HFSM 的交叉注意力（Q 来自高频子带）是"用高频做条件"的现成模块；但<strong>注意"跨 timestep 重复施加小波会放大边界伪影"</strong>这条——它是 F2 gate 的额外理由</td>
+</tr>
+<tr>
+  <td><strong>3D-WLDM</strong><br><a href="https://arxiv.org/abs/2507.11557" target="_blank" rel="noopener">2507.11557</a> · <a href="https://github.com/hmm823/3D-Wavelet-Latent-Diffusion-Model" target="_blank" rel="noopener">code</a></td>
+  <td>2025<br>arXiv</td>
+  <td><span class="badge b-mod">Mod</span></td>
+  <td><strong>3D DWT/IDWT，两级</strong>，由 Wavelet Residual Module（WRM，分组卷积）处理。<strong>关键：WRM 放在 VAE encoder/decoder 内部，不在扩散 U-Net 里。</strong>扩散条件是 MR latent</td>
+  <td>全身 MR→CT（268 例，私有多中心）：<br><strong>PSNR 25.33 / SSIM 0.81 / MAE 47.28 / NCC 0.97</strong><br>（ControlNet 22.64/0.73/66.72/0.95；CycleGAN 23.44/0.79/55.04/0.96；StableDM-2D 22.59/0.71/67.52/0.95；DDPM 21.35/0.60/101.04/0.93）<br>下游分割 Dice：脾 <strong>64.2 → 81.4</strong>，肾 63.3→75.9，肝 85.6→89.7，胃 55.7→71.1，椎体 69.8→80.1</td>
+  <td>消融：Vanilla 23.02 → <strong>+WRM 24.65（+1.63 dB）</strong> → +SMD 25.02 → +DSCA <strong>25.33</strong>。WRM 被归因于<strong>骨骼/骨小梁细节</strong>恢复。<br><strong>含义</strong>：① 频域模块放在 <strong>VAE 而非 U-Net</strong> 也是一条可行路线（与 FA-VAE/LWD 的 VAE 修复思路一致）；② <strong>下游分割指标比 PSNR 更有说服力</strong>——你的 HER2 评分一致性同理</td>
+</tr>
+<tr>
+  <td><strong>Med-D3CG</strong><br><a href="https://www.sciencedirect.com/science/article/pii/S095741742503266X" target="_blank" rel="noopener">ESWA 298(B):129651</a> · <a href="https://github.com/ZgzTTTer/Med-D3CG" target="_blank" rel="noopener">code</a></td>
+  <td>2026<br>ESWA</td>
+  <td><span class="badge b-dom">Dom</span><span class="badge b-cond">Cond</span></td>
+  <td><strong>差域小波扩散。</strong>源与目标都 DWT 分解（1 低频 + 多高频）→ 多通道张量。<strong>模型建模的是"目标与条件特征图的子带残差"</strong>，不是目标本身。<code>输出 = IDWT(重建残差 ⊕ 条件特征图)</code></td>
+  <td><span class="badge b-ana">未核实</span> 付费墙。仅定性声称在 SynthRAD2023 <strong>骨盆</strong>与 <strong>HMIFD</strong> 上 SOTA，脑部 <strong>LPIPS 最优</strong>、FID 有竞争力。指标 = LPIPS、FID（<strong>无 PSNR/SSIM/Dice</strong>）</td>
+  <td>作者自述局限：<strong>当模态差异很小时（如 CBCT→CT 或同模态跨扫描仪）简单残差减法不足</strong>；DWT 引入信息损失。<br><strong>含义</strong>：这是最干净的"分解源 → 条件 → 只预测 delta"架构。<strong>注意它失败的场景是"模态差异小"</strong>——而 H&amp;E→IHC 是"外观差异大、结构共享"，恰好是它擅长的方向</td>
+</tr>
+<tr>
+  <td><strong>SynDiff</strong><br><a href="https://arxiv.org/abs/2207.08208" target="_blank" rel="noopener">2207.08208</a> · <a href="https://github.com/icon-lab/SynDiff" target="_blank" rel="noopener">code</a></td>
+  <td>TMI 2023</td>
+  <td><span class="badge b-none">无频域</span></td>
+  <td>完全非配对对抗扩散。源条件对抗投影器（大步长 k=250，T/k=4 步）+ 非扩散循环一致性模块</td>
+  <td>IXI T2→T1：<strong>PSNR 30.42 / SSIM 94.77</strong>（cGAN 29.22/93.46；UNIT-DDPM 24.01/86.59）<br>BRATS T2→T1：28.90/93.79；骨盆 T2→CT：<strong>26.86/87.94</strong>（UNIT 26.10/86.40）<br>平均比 GAN 高 +1.4~2.2 dB，<strong>比常规 DDPM 高 +5.7 dB</strong><br>FID 30.75 vs ℓ1-projector 141.22<br>推理 <strong>0.182 s</strong> vs DDPM 85.77 s；显存 2.12 GB</td>
+  <td>消融：无对抗损失 PSNR 崩到 17.69；无循环损失 26.18；非扩散模块单独 28.53。<strong>循环一致性质量是关键依赖。</strong><br>局限：<strong>CT→MRI 对所有方法都失败</strong>（CT 中软组织信息稀少）——翻译不是对称的。<br><strong>含义</strong>：标准非配对 baseline，你的论文应该报</td>
+</tr>
+<tr>
+  <td><strong>ContourDiff</strong><br><a href="https://arxiv.org/abs/2403.10786" target="_blank" rel="noopener">2403.10786</a> · <a href="https://github.com/mazurowski-lab/ContourDiff" target="_blank" rel="noopener">code</a></td>
+  <td>MELBA 2025</td>
+  <td><span class="badge b-none">无频域</span></td>
+  <td>源图的 <strong>Canny 轮廓</strong>（域不变解剖表示）在每个采样步拼接作为空间约束；图像空间扩散（非潜空间）；SCGD 加相邻切片通道（P_adj ≤ 0.5）</td>
+  <td>分割 DSC（翻译图→真实 MRI）：腰椎 <strong>0.705</strong>（GcGAN 0.554，CycleGAN 0.484，<strong>FGDM 0.455</strong>，上界 0.748）；L-SPIDER 泛化 <strong>0.655</strong>（GcGAN 0.580，FGDM 0.411）；髋/大腿 <strong>0.769</strong>（CycleGAN 0.535，<strong>FGDM 0.074</strong>）<br>前景 FID：腰椎 126.35（最优）<br>零样本 T2→T1 DSC 0.778（CycleGAN 0.714）</td>
+  <td>消融：<strong>去掉轮廓 DSC 崩塌（0.264 vs 0.705）</strong>——轮廓条件几乎承担了全部结构工作。<br>效率：50 DDIM 步，<strong>1.592 s/切片</strong>，峰值训练显存 12.06 GB，约 5 h<br>局限：需手工调 Canny 阈值；严格像素级轮廓对齐可能<strong>抑制临床有意义的形变</strong>；<strong>16.92% 切片出现过亮背景</strong>（采样不稳定）<br><strong>含义</strong>：<strong>频域条件的直接竞争对手</strong>。FGDM 在髋/大腿上 DSC 只有 0.074——说明纯频域条件在结构保持上可以非常脆弱。<strong>你的实验必须包含 ContourDiff 类结构条件作为对照</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+<!-- ============ PART 3b ============ -->
+<h2 id="p3b"><span class="num">Part 3b</span>病理域性能对照：可直接对比的数字</h2>
+
+<div class="callout warn">
+  <span class="t">先读这条警告，再读表</span>
+  <strong>跨论文的病理指标数字不可直接比较。</strong>UNIStainNet 原文记录了这个问题：<strong>ASP 在 MIST-HER2 上的 FID 在不同论文里分别是 51.4 / 89.3 / 177</strong>——超过 3× 的差距。原因包括测试划分不同（BCI 有 977 / 995 / 1000 / 500 多种划分）、预处理分辨率不同（256 / 512 / 1024，UNIStainNet 自己的消融显示 MIST FID 在 ×512 时 30.0、×1024 时 40.3）、以及 FID 参考分布不同。
+  <br><br><strong>操作建议：建表时逐格标注来源论文，不要只写方法名。真正的对比必须在你自己重跑的 pipeline 上做。</strong>
+</div>
+
+<h3>3b.1 BCI 数据集（你的数据集）—— HER2-DAB，H&amp;E → IHC</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="min-width:140px">方法</th><th style="width:64px">类型</th><th style="width:52px">频域</th>
+  <th class="num">PSNR↑</th><th class="num">SSIM↑</th><th class="num">FID↓</th><th class="num">KID↓</th><th class="num">LPIPS↓</th>
+  <th style="min-width:150px">其他指标</th><th style="width:110px">来源</th>
+</tr></thead>
+<tbody>
+<tr><td>CycleGAN</td><td>GAN·非配对</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">16.20 / 17.22 / 15.98</td><td class="num">0.373 / 0.44 / 0.372</td><td class="num">188.33</td><td class="num">—</td><td class="num">0.624</td><td class="small">—</td><td class="small">BCI'22 / Star-Diff / HistDiT</td></tr>
+<tr><td>pix2pix (resnet)</td><td>GAN·配对</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">19.33 / 17.90 / 17.08</td><td class="num">0.440 / 0.52 / 0.303</td><td class="num">160.39 / 296.20</td><td class="num">—</td><td class="num">0.769</td><td class="small">—</td><td class="small">BCI'22 / Star-Diff / HistDiT</td></tr>
+<tr><td>Pyramid pix2pix</td><td>GAN·配对</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">21.160 / 18.94 / 19.61</td><td class="num">0.477 / 0.54 / 0.397</td><td class="num">167.40 / 161.39</td><td class="num">—</td><td class="num">0.466</td><td class="small">Acc 0.63 / SFS 0.71</td><td class="small">BCI'22 / Star-Diff / HistDiT</td></tr>
+<tr><td>ASP</td><td>GAN·对比学习</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">17.87</td><td class="num">0.5025 / 0.5032</td><td class="num">54.72 / 65.1 / 45.7</td><td class="num">9.9 / 30.4</td><td class="num">—</td><td class="small">PCC 0.2609 / MRA 0.058</td><td class="small">CCPL / HistDiST / UNIStainNet</td></tr>
+<tr><td><strong>PSPStain</strong><br><span class="small">（你的 baseline 家族）</span></td><td>GAN·语义保持</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">18.65</td><td class="num">0.4600 / 0.433</td><td class="num"><strong>48.42 / 45.7</strong></td><td class="num">30.4</td><td class="num">—</td><td class="small">PCC 0.2187</td><td class="small">CCPL / UNIStainNet</td></tr>
+<tr><td>ODA-GAN</td><td>GAN</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">—</td><td class="num">0.473</td><td class="num">59.3</td><td class="num">10.1</td><td class="num">—</td><td class="small">DAB-KL 2.933</td><td class="small">UNIStainNet</td></tr>
+<tr><td>PASB（Schrödinger bridge）</td><td>扩散</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">—</td><td class="num">0.426</td><td class="num">43.6</td><td class="num">9.6</td><td class="num">—</td><td class="small">—</td><td class="small">UNIStainNet</td></tr>
+<tr><td>CCPL</td><td>GAN·跨通道</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num win">20.42</td><td class="num win">0.5280</td><td class="num">57.81</td><td class="num">—</td><td class="num">—</td><td class="small">PCC 0.2441</td><td class="small">CCPL'25</td></tr>
+<tr><td>MDCL</td><td>扩散</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">—</td><td class="num">0.5029</td><td class="num">51.2</td><td class="num">13</td><td class="num">—</td><td class="small">MRA 0.084</td><td class="small">HistDiST</td></tr>
+<tr><td>Star-Diff（RDDM）</td><td>扩散·残差</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num win">21.30</td><td class="num">0.53</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="small">Acc 0.68 / <strong>SFS 0.74</strong></td><td class="small">Star-Diff</td></tr>
+<tr><td>HistDiST</td><td>LDM·SD1.5</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">—</td><td class="num">0.4693</td><td class="num win">34.2</td><td class="num">5.6</td><td class="num">—</td><td class="small">MRA 0.218</td><td class="small">HistDiST</td></tr>
+<tr><td>HistDiT</td><td>LDM·DiT</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num win">21.43</td><td class="num">0.4769</td><td class="num">49.15</td><td class="num">—</td><td class="num win">0.412</td><td class="small">MSE 891.5 / <strong>SCM 0.540</strong></td><td class="small">HistDiT</td></tr>
+<tr style="background:#e8f7f1"><td><strong>UNIStainNet</strong><br><span class="small">SPADE-UNet + 冻结 UNI</span></td><td>GAN·基础模型</td><td class="ctr"><span class="badge b-none">无</span></td><td class="num">—</td><td class="num win">0.541</td><td class="num win">34.6</td><td class="num">6.5</td><td class="num">—</td><td class="small"><strong>DAB-KL 0.482 · Pearson-r 0.867</strong></td><td class="small">UNIStainNet'26</td></tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">" / " 分隔表示不同来源报告了不同数值，顺序与末列"来源"一致。红色 = 该列最优，绿色 = 该列最差。<strong>病理域当前最优 FID ≈ 34，最优 SSIM ≈ 0.54，最优 PSNR ≈ 21.4。你的 baseline FID 109.75 明显高于文献口径，说明 FID 计算协议不同。</strong></p>
+
+<h4>BCI 上唯一有临床意义的对照：病理医生盲测</h4>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>指标</th><th>数值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>医生 1 与真实 IHC 的一致性</td><td class="num"><strong>37.5%</strong></td><td rowspan="2">BCI 数据集原论文（Liu et al., 2022）：2 位病理医生在 40 对（真实/生成打乱共 80 张）上诊断。作者结论：<em>"there is still a long way to go for current methods before clinical application"</em></td></tr>
+<tr><td>医生 2 与真实 IHC 的一致性</td><td class="num"><strong>40.0%</strong></td></tr>
+<tr><td>HER2 3+（高表达）识别</td><td class="num dim">所有方法都困难</td><td>原文：3+ 是"all methods are difficult to accurately identify the cancer area"的区域。HistDiT 的分级指标也单调劣化：PSNR 22.49（0+）→ 23.22（1+）→ 20.40（2+）→ <strong>18.33（3+）</strong>；SSIM 0.517 → 0.405</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">对你的 HER2 agreement 指标的含义</span>
+  <strong>你的 HER2 agreement 需要分层报告，不能只报一个总体值。</strong>文献一致显示 3+ 是最难的区间（BCI 原论文、HistDiT 的分级退化、UNIStainNet 的失败案例集中在坏死区 44.4% / 脂肪 25.9%）。报一个聚合值会掩盖最重要的失败模式。
+</div>
+
+<h3>3b.2 MIST 数据集（HER2 / Ki67 / ER / PR）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="min-width:130px">方法</th><th class="num">HER2 FID↓</th><th class="num">HER2 KID↓</th><th class="num">HER2 SSIM↑</th><th class="num">Ki67 FID↓</th><th class="num">ER FID↓</th><th class="num">PR FID↓</th><th style="width:120px">来源</th></tr></thead>
+<tbody>
+<tr><td>pix2pix</td><td class="num">251.75</td><td class="num">—</td><td class="num">0.0788</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="small">CCPL</td></tr>
+<tr><td>ASP</td><td class="num">51.4 / 50.13</td><td class="num">12.4</td><td class="num">0.2004 / 0.1971</td><td class="num">51.0</td><td class="num">41.4</td><td class="num">44.8</td><td class="small">HistDiST / CCPL / UNIStainNet</td></tr>
+<tr><td>ControlNet</td><td class="num">36.9</td><td class="num">6.9</td><td class="num">0.1813</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="small">HistDiST</td></tr>
+<tr><td>PSPStain</td><td class="num">46.47</td><td class="num">—</td><td class="num">0.1874</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="small">CCPL</td></tr>
+<tr><td>CCPL</td><td class="num">46.15</td><td class="num">—</td><td class="num">0.1998</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="small">CCPL</td></tr>
+<tr><td>HistDiST</td><td class="num">36.9</td><td class="num">3.8</td><td class="num">0.2059</td><td class="num win">28.05</td><td class="num win">31.3</td><td class="num win">33.7</td><td class="small">HistDiST</td></tr>
+<tr><td>HistDiT</td><td class="num">59.30</td><td class="num">—</td><td class="num">0.211</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="small">HistDiT</td></tr>
+<tr style="background:#e8f7f1"><td><strong>UNIStainNet</strong></td><td class="num win">34.5</td><td class="num win">2.2</td><td class="num win">0.229</td><td class="num win">27.2</td><td class="num win">29.2</td><td class="num win">29.0</td><td class="small">UNIStainNet'26</td></tr>
+<tr><td>MIU-Diff</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="small">PSNR 14.368 / VIF 0.611 / Hist 0.670 / IOD −1.146</td></tr>
+</tbody>
+</table>
+</div>
+<p class="tbl-note">HistDiT 在 MIST-HER2 上 FID 59.30 实际上<strong>差于 ASP 的 54.28</strong>，但论文表格标注 HistDiT 最优——这是原文内部的一处不一致，引用时注意。UNIStainNet 的训练分辨率消融：MIST FID 在 ×512 时 30.0、×1024 时 40.3，说明分辨率对指标影响巨大。</p>
+
+<h3>3b.3 其他病理域（结肠 / Patch Camelyon / 通用）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="min-width:150px">方法</th><th>任务 / 数据</th><th>性能数字</th><th style="width:100px">频域</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>StainDiffuser</strong><br><a href="https://arxiv.org/abs/2403.11340" target="_blank" rel="noopener">2403.11340</a></td>
+  <td>H&amp;E→IHC，结肠（溃疡性结肠炎），CK8/18 + CD3，92 WSI，128×128 评估</td>
+  <td>CK8/18：<strong>PSNR 21.67 / SSIM 0.676 / FID 23.46 / KID 0.0028</strong><br>CD3：<strong>PSNR 20.64 / SSIM 0.633 / FID 15.83 / KID 0.0012</strong><br>（CycleGAN 20.4/0.66/23.85；Pix2Pix 19.22/0.555/57.04；BBDM 20.47/0.65/33.31；EGSDE 15.02/0.311/112.4）<br><span class="badge b-ana">未报告</span> 无 LPIPS</td>
+  <td class="ctr"><span class="badge b-none">无</span></td>
+</tr>
+<tr>
+  <td><strong>Hybrid GAN（频域+空间域）</strong><br><a href="https://link.springer.com/article/10.1186/s12859-025-06057-9" target="_blank" rel="noopener">BMC Bioinformatics 26:29</a></td>
+  <td>病理图像<strong>合成</strong>（非染色翻译），Patch Camelyon</td>
+  <td><strong>FID 41.8336 / KID 0.0151 / MAE 7.2831 / NIQE 4.9504</strong><br>（WaveDiff 48.7622/0.0204/6.6743/6.0625；StyleGAN2 47.4542/0.0231/7.0102/4.6916）<br><strong>消融：去掉谱滤波模块（SFM）→ FID 41.83 → 61.91</strong>（最致命的消融）</td>
+  <td class="ctr"><span class="badge b-mod">Mod</span></td>
+</tr>
+<tr>
+  <td><strong>SAWR · Stain-Aware Wavelet Regularization</strong><br><a href="https://arxiv.org/abs/2606.08745" target="_blank" rel="noopener">2606.08745</a></td>
+  <td>病理对抗净化（非染色翻译），但<strong>是本次检索里最强的病理小波方法</strong></td>
+  <td>多级 Haar 小波域正则，分层解耦对抗扰动与诊断结构。<strong>谱约束扩展到各个组织学通道</strong>（H 与 E 分别调控）。对抗鲁棒性<strong>提升最多 10.69%</strong>，同时保持纹理与谱保真</td>
+  <td class="ctr"><span class="badge b-loss">Loss</span></td>
+</tr>
+<tr>
+  <td><strong>DGR · Decoupled Generation &amp; Registration</strong><br><a href="https://www.nature.com/articles/s41467-026-71038-2" target="_blank" rel="noopener">Nat Commun 2026</a> · <a href="https://github.com/birkhoffkiki/DTR" target="_blank" rel="noopener">code</a></td>
+  <td>非配准鲁棒虚拟染色，5 数据集 4 任务（AF→H&amp;E、H&amp;E→PAS-AB、H&amp;E→mIHC、染色归一化）</td>
+  <td>AF→H&amp;E：<strong>PSNR 22.914（+4.4%）/ SSIM 0.766（+4.8%）/ LPIPS 0.159（−15.9%）/ FID 20.264（−12.0%）</strong><br>H&amp;E→mIHC：下游分类 UniToPatho +2.4%、GCHTID +1.2%；<strong>细胞核分割 Dice 0.422（最高）</strong><br><strong>失配鲁棒性：注入 5 级合成失配（旋转/平移/缩放），每级都优于所有 baseline，最严重失配下 PSNR 最多 +3.4 dB</strong><br>盲测：250 虚拟 + 250 化学 H&amp;E，专家判别准确率 <strong>~52.4%（接近随机）</strong></td>
+  <td class="ctr"><span class="badge b-none">无</span></td>
+</tr>
+<tr>
+  <td><strong>HAPS</strong>（评估指标）<br><a href="https://arxiv.org/html/2605.20362v1" target="_blank" rel="noopener">2605.20362</a></td>
+  <td>H&amp;E→HER2 图像相似度指标，522 对 / 31 WSI，与病理医生评分相关性</td>
+  <td>与医生判断的 Spearman ρ：<br><strong>HAPS（灰度）0.540</strong> · LPIPS(SqueezeNet) 0.485 · <strong>NCC 0.452</strong> · MS-SSIM 0.423 · <strong>PSNR 0.409</strong> · <strong>SSIM_w31 0.347</strong> · DISTS 0.297 · FSIM 0.291 · MI 0.261<br>用 HAPS 过滤 25% 失配样本：MIST FID <strong>100.03 → 96.52</strong></td>
+  <td class="ctr"><span class="badge b-ana">Retinex</span></td>
+</tr>
+<tr>
+  <td><strong>HER2match</strong>（benchmark）<br><a href="https://arxiv.org/abs/2506.18484" target="_blank" rel="noopener">2506.18484</a></td>
+  <td>同切片 H&amp;E→HER2（先 H&amp;E 染色 → 洗脱 → 同片 HER2），40× / 0.25 µm/px，21,172 对 1024² tile</td>
+  <td><strong>核心结论：<em>"Overall, GANs outperform DMs across all metrics for all datasets"</em></strong>，只有 BBDM 能打平。DDIB 与 Consistency Models "do not generate images with the corresponding tissue structures found in H&E staining"。最优模型 BCIstainer（GAN）。<br><strong>配准结论：<em>"All models trained on HER2match produced vastly improved visuals compared to the widely used consecutive-slide BCI dataset."</em></strong> 在 BCI 上训练对 SSIM/MS-SSIM/PSNR 有显著负作用</td>
+  <td class="ctr"><span class="badge b-none">无</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <span class="t">HER2match 对你项目的双重含义</span>
+  <strong>① 动机：</strong>GAN &gt; Diffusion 这个事实，正是"diffusion 高频重建不足"最有力的领域证据。你的频域干预如果不能在 HER2match 上缩小这个差距，贡献就弱。<br>
+  <strong>② 警告：</strong>配准对结果的影响<strong>大于模型选择</strong>。任何"改进"都必须在配准受控的 baseline 下验证，否则可能只是配准差异带来的假象。BCI 的失配是<strong>混淆变量</strong>，不是可以忽略的噪声。
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<!-- ============ PART 4 ============ -->
+<h2 id="p4"><span class="num">Part 4</span>FFT vs DCT vs DWT：结合原文证据的比较</h2>
+
+<p class="lede">不给你通用教科书知识——下面每一格都尽量挂到具体论文的实验结果上。</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="width:76px">方法</th><th style="min-width:180px">优点（有文献支撑）</th><th style="min-width:200px">缺点（有文献支撑）</th>
+  <th style="width:96px">空间局部性</th><th style="width:100px">计算成本</th><th style="min-width:190px">是否适合 H&amp;E→IHC</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>FFT</strong><br><span class="small">傅里叶</span></td>
+  <td>
+    · <strong>FGDM（TMI'23）用它做核心分析</strong>，推导出 SNR_t ∝ 1/t，是"高频先被破坏"的理论基础<br>
+    · <strong>FreeU（CVPR'24）</strong>用 FFT 径向掩码调制 skip 特征，是已验证有效的扩散 U-Net 频域干预<br>
+    · <strong>AFFNet（ICCV'23）消融中 FFT 最优（79.8 Top-1）</strong>，优于 DCT 79.6、小波 78.6、无变换 78.4<br>
+    · <strong>SC-Flow</strong> 用 FFT 径向 PSD 做损失，是"谱损失"最成熟的实现
+  </td>
+  <td>
+    · <strong>全局变换，无空间局部性</strong>——对"某处有腺体、某处是脂肪"这种空间异质结构不友好<br>
+    · FGDM 用 FFT 做分析，但<strong>实际实现的高通是 Sobel（空间域）</strong>，说明纯 FFT 条件不好落地<br>
+    · 频谱相位对微小位移极其敏感——对无配准数据是双刃剑
+  </td>
+  <td>无<br><span class="small">（全局）</span></td>
+  <td>低<br><span class="small">O(N log N)</span></td>
+  <td><strong>适合做损失，不适合单独做条件。</strong>径向 PSD 损失（SC-Flow 式）是当前证据最硬的用法；作为条件则丢失空间定位，而你的核心需求恰好是"逐样本空间关系"</td>
+</tr>
+<tr>
+  <td><strong>DCT</strong><br><span class="small">离散余弦</span></td>
+  <td>
+    · <strong>DCTdiff（ICML'25）证明 DCT 是合法的扩散域</strong>，且 <strong>低 NFE 优势巨大</strong>：CIFAR-10 10 步 FID <span class="win">81.67 → 12.45</span><br>
+    · <strong>FcaNet（ICCV'21）证明 GAP 是 DCT 的特例</strong>（只取 DC 项），用多谱 DCT 在<strong>同参数量同算力下</strong>稳定超过 SENet（ResNet-50 +0.71 Top-1）<br>
+    · <strong>DCT 上采样 FID 9.79 vs 双线性 12.53</strong>（DCTdiff Thm 5.2）<br>
+    · 实数、无相位、JPEG 生态成熟，工程实现最简单
+  </td>
+  <td>
+    · <strong>block DCT 有块效应</strong>，在病理图像上可能引入格子状伪影<br>
+    · 同样<strong>缺乏空间局部性</strong>（block 内局部，block 间不连续）<br>
+    · <strong>没有任何病理虚拟染色论文用过 DCT</strong>——零先例，风险自担
+  </td>
+  <td>弱<br><span class="small">（block 内）</span></td>
+  <td>低</td>
+  <td><strong>潜在的黑马，但先例为零。</strong>DCTdiff 的低 NFE 优势对 WSI 级推理预算很有价值；EBFR 明确把<strong>医学图像列为高频细节任务</strong>。但块效应是病理图像的已知风险</td>
+</tr>
+<tr style="background:#e8f7f1">
+  <td><strong>DWT</strong><br><span class="small">小波</span> ★</td>
+  <td>
+    · <strong>同时具有频率尺度与空间局部性</strong>——这是它相对 FFT/DCT 的决定性优势，也是你第 5 节判断"结构条件注入"的正确理由<br>
+    · <strong>多尺度天然对齐 U-Net 层级</strong>：64→32→16 恰好对应你的两个注入点<br>
+    · <strong>cWDM 已经验证"条件信号做 DWT + 通道拼接"可行</strong>（PSNR 29.74 / SSIM 0.956）<br>
+    · <strong>Falck et al.（2025）的关键理论支撑：U-Net 的平均池化与 Haar 小波投影共轭</strong>——DWT 子带就是 U-Net 分辨率的自然基<br>
+    · <strong>WaveDiff 证明小波域扩散能带来 2.5× 加速</strong>与 4–8× 显存下降<br>
+    · <strong>病理域已有成功先例</strong>：SAWR 的逐染色通道小波正则、BMC 混合 GAN 的谱滤波模块（去掉后 FID 41.83→61.91）
+  </td>
+  <td>
+    · <strong>WDM（3D 医学）的负面结果：把小波上下采样放进特征空间（WavU-Net）并没有提升</strong>（FID 0.259 vs 0.154），<strong>与 2D 自然图像文献相反</strong><br>
+    · <strong>WaveDiff 的渐进式多尺度小波上采样失败</strong>（FID 13.11 vs 5.94）<br>
+    · <strong>FADM 报告小波边界伪影会被跨 timestep 重复施加放大</strong><br>
+    · <strong>AFFNet 消融中小波是最差的变换</strong>（78.6 vs FFT 79.8）<br>
+    · 固定小波基不够灵活——FSNet 原文：<em>"wavelet transform… is not flexible enough to select the most informative frequency component"</em>
+  </td>
+  <td><strong>有</strong><br><span class="small">（时频联合）</span></td>
+  <td>低–中<br><span class="small">（可忽略）</span></td>
+  <td><strong>你的首选。</strong>理由是空间局部性 + U-Net 层级对齐 + 病理域先例。但必须<strong>正面处理三个负面结果</strong>：不要把上下采样放进特征空间、不要做渐进多尺度、注意边界伪影。<br><strong>关键改良方向：用可学习小波（FADM/One-to-Many 式）或让 band 权重可学，而不是固定基 + 固定权重</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">结论：DWT 是对的，但要"软化"它</span>
+  文献的净信号是：<strong>固定小波基 + 固定权重是弱点所在，不是小波本身。</strong>三条证据一致指向同一方向：
+  <ul style="margin-bottom:0">
+    <li><strong>FSNet（TPAMI）</strong>：固定小波切分"不够灵活，无法选出最有信息量的频率成分" → 提出动态、内容感知的多分支频带分解</li>
+    <li><strong>AFFNet（ICCV）</strong>：把固定变换换成<strong>可学习的逐通道、逐频率、逐实例掩码</strong>，小波 → FFT 的提升是 +1.2 Top-1</li>
+    <li><strong>One-to-Many LDM（MICCAI'25）</strong>：同时用<strong>可学习 DWT</strong>（局部频率）+ <strong>可学习 FFT</strong>（全局谱），做交叉注意力融合；去掉 Adaptive Frequency 模块 → MAE +15.95%、PSNR −10.2%</li>
+  </ul>
+  <strong>落地建议：F1 第一版保持固定 Haar DWT（变量最少），但把"band 权重是否可学"作为 F3 的消融项；如果 F1 只带来很小增益，优先怀疑固定基而不是频域方向本身。</strong>
+</div>
+
+<h3>4.1 小波重点问题逐条回答（对应你 Prompt 第八节）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:34px">#</th><th style="width:210px">问题</th><th>回答</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>各频带表示什么</strong></td><td><code>LL</code> = 低频近似（大尺度组织布局、腺体轮廓、组织密度、整体染色强度）；<code>LH</code> = 水平细节（垂直方向的边缘）；<code>HL</code> = 垂直细节（水平方向的边缘）；<code>HH</code> = 对角细节（高频纹理、细胞核染色质颗粒、扫描仪噪声）。<span class="badge b-ana">推断</span> 具体到病理图像哪个 band 承载什么，<strong>没有找到直接实证的论文</strong>——这是一个你可以在 F3 顺手做掉的实验</td></tr>
+<tr><td>2</td><td><strong>为什么这样分</strong></td><td>Haar 基的四个滤波器是正交的、可完美重建的。数学上 <code>L=(1/√2)[1,1]</code>、<code>H=(1/√2)[−1,1]</code>，步长 2。<strong>Falck et al. 指出 U-Net 的平均池化与 Haar 小波投影共轭</strong>——这意味着 DWT 子带不是外部强加的分解，而是<strong>与 U-Net 自身分辨率层级同构的基</strong>。这是选择 DWT 最强的理论理由</td></tr>
+<tr><td>3</td><td><strong>是否全部使用</strong></td><td>文献<strong>没有共识，且这是一个明确的空白</strong>。cWDM 用全部 8 个 3D 子带（统一权重）；ResQu <strong>刻意只用信息量最大的子带</strong>（QUAVE 学习式选择）；F1 的 ablation（全频带 vs 去掉 HH）文献里没人做过。HDW-SR 的 DTB（Otsu 动态阈值）和 AFFNet 的逐频率掩码都指向"应该选，而不是全用"</td></tr>
+<tr><td>4</td><td><strong>是否递归对 LL 再做 DWT</strong></td><td>你的设计（64→32→16，两级）<strong>有先例支持</strong>：HDW-SR 用 3 级、3D-WLDM 用 2 级。但要注意 <strong>WaveDiff 的渐进式多尺度上采样失败了</strong>（FID 13.11 vs 5.94，归因于 p(x_hi|x_lo) 不匹配）。你的用法不同——你不是"逐级生成"，而是"把不同级作为不同尺度的条件"，<strong>风险较低但不能假定安全</strong></td></tr>
+<tr><td>5</td><td><strong>是否自然形成多尺度</strong></td><td><strong>是。</strong>这是小波相对 FFT/DCT 的核心优势。两级 DWT 给出 32px 与 16px 两个自然尺度，与你的两个注入点完全吻合</td></tr>
+<tr><td>6</td><td><strong>是否与 U-Net feature scale 对齐</strong></td><td><strong>对齐，且是理论支持的。</strong><code>z_HE ∈ ℝ^{4×64×64}</code> → 一级 DWT → 4 子带各 <code>4×32×32</code> → 二级 DWT → 各 <code>4×16×16</code>。<strong>64→32→16 精确对应 UNet 的 32px / 16px 注入点。</strong>Falck 的 Haar ↔ average pooling 共轭结论给了这一步理论正当性</td></tr>
+<tr><td>7</td><td><strong>实现方式</strong></td><td>无参数、可完美重建。<code>pytorch_wavelets</code> 或手写 4 个 stride-2 conv 核（WaveDiff 与 Diffusion-4K 都用后者，实现最简）。<strong>WaveDiff/WDM 的负面经验：不要在特征空间做小波上下采样；不要在小波域预测噪声（会产生棋盘伪影）</strong></td></tr>
+<tr><td>8</td><td><strong>参数量</strong></td><td><strong>DWT 本身 0 参数。</strong>参数量全在 projection 上。你的目标是 <code>C_32 ∈ ℝ^{128×32×32}</code>、<code>C_16 ∈ ℝ^{256×16×16}</code>。用 1×1 conv 从 16 通道到 128/256 通道，参数量约 <code>16×128 + 128×256 ≈ 3.5 万</code>——<strong>与 WaveDiff 的 33M 级别 backbone 相比完全可忽略</strong>。参考：AFFNet 的频域掩码分支只加 +0.3M（&lt;6%）、+0.2G FLOPs（~15%）</td></tr>
+<tr><td>9</td><td><strong>是否需要额外训练目标</strong></td><td><strong>频域分解本身不需要。</strong>但有两件事强烈建议做：<br>① <strong>VAE 侧</strong>：LWD 的 scale-consistency 损失（Flux-VAE rFID 0.73→0.50），保证 latent 的高频内容有意义而非编码噪声<br>② <strong>输出侧</strong>：SC-Flow 式径向 PSD 对数 MSE——不加时生成 PSD 衰减到 GT 的 <strong>1/100</strong><br><strong>但 F1 第一轮应关闭 FSS</strong>（你的第 11 节判断正确：频域条件 + 频域损失同时开会导致实验无法解释）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="p4b">4.2 Phase vs Amplitude（对应你 Prompt 第十节）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:130px">问题</th><th>文献证据</th><th style="width:100px">证据强度</th></tr></thead>
+<tbody>
+<tr><td><strong>amplitude 包含什么</strong></td><td>各频率分量的能量/对比度。SC-Flow 直接在<strong>径向分箱的 PSD（即 amplitude²）</strong>上做损失并取得显著效果（PSNR 21.97 → 27.41）。Focal Frequency Loss 同样在幅度谱上做动态加权。</td><td><span class="badge b-cond">多篇论文归纳</span></td></tr>
+<tr><td><strong>phase 包含什么</strong></td><td><strong>ResQu 原文明确主张</strong>：选择四元小波而非实数 DWT 的理由是 <em>"DWT lacks translation invariance and phase information preservation"</em>——即相位保留是选 QWT 的核心动机。但 <strong>ResQu 没有做 DWT vs QWT 的消融</strong>，所以"相位有帮助"这一主张在本文中<strong>未经实验验证</strong>。</td><td><span class="badge b-ana">单篇主张，未消融</span></td></tr>
+<tr><td><strong>哪个更保留空间位置</strong></td><td><span class="badge b-ana">推断</span> 相位对空间位置更敏感——这正是它同时是优势和风险的原因。对<strong>无配准</strong>数据，相位敏感可能是<strong>负面的</strong>：H&amp;E 与 IHC 的相位本就不该匹配。<strong>没有找到直接实证"相位 vs 幅度在无配准翻译任务上的对比"的论文。</strong></td><td><span class="badge b-ana">推断，无实证</span></td></tr>
+<tr><td><strong>有没有论文实验证明</strong></td><td><strong>没有找到。</strong>这是本次检索中最明确的一个证据缺口。ResQu 是唯一涉及相位的频域条件工作，且它没做消融。</td><td><span class="badge" style="background:var(--warn-bg);color:var(--warn);border:1px solid #f0c6c6">空白</span></td></tr>
+<tr><td><strong>当前任务是否应保留 phase</strong></td><td><span class="badge b-ana">我的推断</span> <strong>F1 第一版不应该引入复相位。</strong>理由：① 你的数据无配准，相位不匹配是常态；② 引入复谱会显著增加实现复杂度与调试难度，而 F1 的目标是"变量最少"；③ DWT 的子带本身已经包含了方向性信息（LH/HL/HH），不需要额外相位。<strong>把"是否引入相位"放到 Stage 5 之后再考虑。</strong></td><td><span class="badge b-ana">推断</span></td></tr>
+<tr><td><strong>是否应该使用 complex spectrum</strong></td><td><span class="badge b-ana">推断</span> 不建议。GFNet/AFNO 用复数权重是<strong>全局滤波器</strong>的语境（学一个与输入无关的复权重），与"用频域做条件"是不同问题。若要做可学习频域条件，<strong>AFFNet 式实值掩码</strong>（<code>X̂ = F⁻¹[M(F(X)) ⊙ F(X)]</code>）更简单且已被验证</td><td><span class="badge b-ana">推断</span></td></tr>
+<tr><td><strong>不要把"低频负责结构、高频负责纹理"当无条件事实</strong></td><td><strong>这一条你的 Prompt 说得对，文献也支持这个谨慎态度。</strong>具体来说：<br>· <strong>FDG（2025）</strong>的实验结论是：<strong>低频引导支配全局结构与条件对齐，高频引导主要提升视觉保真度</strong>——这是有实验支撑的版本<br>· <strong>但 FGDM 的消融给出了相反方向的权重</strong>：去掉高频引导 SSIM 0.908→<strong>0.748</strong>（结构崩塌），去掉低频引导 SSIM 只掉到 0.890。在 CBCT→CT 上<strong>高频条件才是结构承重件</strong><br>· <strong>两者不矛盾</strong>：FGDM 的"高频"是 Sobel 边缘（结构信息），FDG 的"低频引导"是 CFG 的全局结构对齐。<strong>关键词"结构"在两边指的不是同一个东西。</strong><br><span class="badge b-ana">结论</span> 必须区分：<strong>论文明确结论 / 多篇论文归纳 / 你自己的推断</strong>，这三者在"频率-语义"映射上分歧很大</td><td><span class="badge b-cond">有实证但互相冲突</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>4.3 Frequency Condition vs Frequency Loss（对应你 Prompt 第十六节）</h3>
+
+<div class="grid2">
+  <div class="card">
+    <div class="badge b-loss">Frequency Loss</div>
+    <h4>作用：约束"输出频谱是否合理"</h4>
+    <p class="small">机制：<code>G(x) → 频谱约束</code>。在损失函数里对生成结果的频谱（或小波系数）施加惩罚。</p>
+    <p class="small"><strong>代表</strong>：Focal Frequency Loss（ICCV'21）、Diffusion-4K 的 L_WLF、LWD 的时变掩码、SC-Flow 的径向 PSD 损失、HDW-SR 的 L_HE。</p>
+    <p class="small"><strong>硬证据</strong>：SC-Flow 不加谱损失时生成 PSD 衰减到 GT 的 <strong>1/100</strong>。Diffusion-4K 的 L_WLF 在 4096² 上全面优于"仅微调"（CLIPScore 34.40 vs 34.14、GLCM 0.77 vs 0.74）。</p>
+    <p class="small"><strong>风险</strong>：权重极其敏感。HDW-SR：β=0.2 → PSNR 24.52，<strong>β=0.5 → 10.30（崩塌）</strong>。</p>
+  </div>
+  <div class="card">
+    <div class="badge b-cond">Frequency Condition</div>
+    <h4>作用：决定"结构信息怎样进入 UNet"</h4>
+    <p class="small">机制：<code>H&amp;E → UNet feature</code>。在输入侧提供结构化的频域条件，让网络在生成时"知道"该把 DAB 放在哪。</p>
+    <p class="small"><strong>代表</strong>：FGDM（Sobel 高频 + 前向扩散低通）、cWDM（DWT 拼接）、HDW-SR（高频稀疏交叉注意力）、ResQu（四元小波 → SFT）。</p>
+    <p class="small"><strong>硬证据</strong>：FGDM 去掉高频条件 → SSIM 0.908→0.748；cWDM 拼接条件 → PSNR 29.74 / SSIM 0.956；ContourDiff 去掉轮廓条件 → DSC 0.705→0.264。</p>
+    <p class="small"><strong>风险</strong>：条件质量受限于滤波器/变换本身；可能与扩散先验冲突（HDW-SR 必须在后期衰减）。</p>
+  </div>
+</div>
+
+<div class="callout key">
+  <span class="t">为什么这两个机制解决的问题不同</span>
+  <strong>Frequency Loss 修的是"能量分配"问题</strong>：扩散模型（尤其白噪声前向过程）系统性地欠拟合高频，输出会过于平滑或丢失细节纹理。这是一个<strong>统计性的、全局的</strong>问题，用损失项直接纠正。<br><br>
+  <strong>Frequency Condition 修的是"信息传递"问题</strong>：模型不知道该把 DAB 放在哪、该跟随 H&amp;E 的哪一部分结构。这是一个<strong>条件性的、逐样本的</strong>问题，必须靠输入侧的结构化条件解决。<br><br>
+  <strong>两者不可互相替代。</strong>证据：ResQu 有频域条件但<strong>没有任何频域损失</strong>，结果是在三个数据集上 PSNR 全胜（结构保真）但 <strong>LPIPS/FID 一次都没赢</strong>（感知质量）。反过来，LWD 有频域损失但<strong>刻意拒绝频域条件</strong>，在 2K 生成上 FID 降 7%。<strong>它们各自解决了问题的一半。</strong>
+</div>
+
+<div class="callout ok">
+  <span class="t">什么时候该用哪个</span>
+  <table style="margin:8px 0 0;background:transparent">
+    <thead><tr><th style="background:transparent;padding-left:0">场景</th><th style="background:transparent">选择</th></tr></thead>
+    <tbody>
+      <tr><td>模型输出模糊/过平滑，但空间布局是对的</td><td><strong>加 Frequency Loss</strong>（谱能量问题）</td></tr>
+      <tr><td>输出清晰但 DAB 位置与 H&amp;E 结构无关，逐样本相关性低</td><td><strong>加 Frequency Condition</strong>（信息传递问题）</td></tr>
+      <tr><td>两者都有问题</td><td>分阶段加：先条件（F1/F2），再损失（F3），<strong>绝不同时开</strong></td></tr>
+      <tr><td>你的情况（DAB corr 0.439、无配准、逐样本关系不稳）</td><td><strong>先做 Condition。</strong>你的核心痛点是"生成 DAB 与输入 H&amp;E 的空间关系不稳定"，这是信息传递问题</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 id="p4c">4.4 H&amp;E→IHC 的频域差异落在哪里？（对照 FGDM 的 CBCT→CT 结论）</h3>
+
+<p class="lede">FGDM 用"逐频点 MSE"统计证明：<strong>CBCT 与 CT 的差异集中在中间频率，低频与高频两端几乎相同</strong>——这正是它"复用两端、生成中间"机制成立的前提。那么 H&amp;E 与 IHC 呢？</p>
+
+<div class="callout warn">
+  <span class="t">先给结论：方向是相反的，而且文献里没有实测</span>
+  <strong>① 没有任何论文做过这个分析。</strong>UNIStainNet 全文不含任何频率/频谱讨论（我逐节核对过）；虚拟染色的综述类文献也没有；TDKstain 把 IHC 分解为"DAB mask + nuclei map"，但那是空间域分解，不是频域分析。<strong>这是一个真空，也是一个你可以顺手做掉的小贡献。</strong><br>
+  <strong>② 机制上，两类任务的差异性质根本不同</strong>，所以不能外推 FGDM 的结论。
+</div>
+
+<h4>为什么 CBCT→CT 的差异在中频，而 H&amp;E→IHC 不是</h4>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">维度</th><th>CBCT → CT</th><th>H&amp;E → IHC（HER2-DAB）</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>差异的物理来源</strong></td>
+  <td><strong>采集几何与物理</strong>：散射线、射束硬化、投影截断。这些是平滑的、中尺度的伪影与偏移</td>
+  <td><strong>染色化学</strong>：色原体不同（伊红 vs DAB），以及"哪些结构被着色"不同</td>
+</tr>
+<tr>
+  <td><strong>两端频谱为何相似</strong></td>
+  <td>组织本身的<strong>衰减系数几乎相同</strong>——低频（组织轮廓、大器官边界）与高频（骨小梁纹理）由同一物理量决定</td>
+  <td><strong>两端都不相似。</strong>低频：H&amp;E 有大量伊红充盈的胞质/间质（暗、高光密度），IHC 背景近乎透明（亮）。高频：H&amp;E 每个细胞核都有染色质纹理，DAB 只有稀疏的膜性细线</td>
+</tr>
+<tr>
+  <td><strong>差异能否被限制在一个频带</strong></td>
+  <td><strong>能</strong>——散射/硬化核本身是带限的平滑算子</td>
+  <td><strong>不能。</strong>染色差异在空间域主要是<strong>逐像素（pointwise）的强度/颜色重映射</strong>；而逐点运算在频域等价于<strong>卷积</strong>，会把能量摊到<strong>所有</strong>频率上</td>
+</tr>
+<tr>
+  <td><strong>共享最多的频带</strong></td>
+  <td>两端（低频 + 高频）</td>
+  <td><strong>中频</strong>——组织构筑（腺体/导管轮廓、间质边界、细胞密度模式）来自<strong>同一块组织的连续切片</strong>，是两者共同的解剖底图</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">最关键的一条机制：H&amp;E 与 IHC 共享苏木素通道</span>
+  这不是类比，是染色流程的事实：
+  <ul style="margin-bottom:0">
+    <li><strong>H&amp;E = 苏木素（Hematoxylin，细胞核，蓝紫）+ 伊红（Eosin，胞质与间质，粉红）</strong></li>
+    <li><strong>IHC = 苏木素复染（Hematoxylin counterstain，细胞核，蓝紫）+ DAB（目标蛋白，棕色）</strong>——标准 IHC 协议都要做苏木素复染</li>
+  </ul>
+  <strong>⇒ 两幅图的核（苏木素）通道是同一套信号</strong>；真正的差异是<strong>「伊红 ↔ DAB」的置换</strong>。TDKstain 把 IHC 拆成 "DAB masks + nuclei maps"，正好对应这个二分。<br><br>
+  而这个置换在频域上是<strong>一次跨频带的能量搬迁</strong>：
+  <table style="margin:10px 0 0;background:transparent">
+    <thead><tr><th style="background:transparent;padding-left:0">色原体</th><th style="background:transparent">空间形态</th><th style="background:transparent">频域位置</th></tr></thead>
+    <tbody>
+      <tr><td><strong>伊红</strong></td><td>广泛、弥散，充盈胞质与胶原间质，覆盖大片区域</td><td><strong>低频</strong>（能量大、平滑）</td></tr>
+      <tr><td><strong>DAB（HER2）</strong></td><td>稀疏、细线状，仅沿表达细胞的膜分布（1–2 µm 宽）</td><td><strong>高频</strong>（能量小、锐利）</td></tr>
+      <tr><td><strong>苏木素</strong></td><td>每个细胞核都染色，5–10 µm 的团块 + 染色质内部纹理</td><td><strong>中频 → 高频</strong>（两者共享）</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h4 id="p4c2">4.4.1 "跨频带的能量搬迁"到底是什么？——先把理论依据说清楚</h4>
+
+<div class="callout warn">
+  <span class="t">先做两点自我更正</span>
+  <strong>① "跨频带的能量搬迁"是我自己的描述性用词，不是文献里的既有理论名。</strong>它背后站着的确实是标准定理，但这个说法本身请勿当作术语引用。<br>
+  <strong>② 方向不要搞反。</strong>我说的是<strong>「中频差异最小（共享最多）、两端差异大」</strong>；而<strong>「两端共享、中频差异大」是 FGDM 在 CBCT→CT 上的结论</strong>，两者正好相反。混淆方向会直接导致设计做反。
+</div>
+
+<p>下面把"能量搬迁"拆成三层，每层标注证据等级。</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">层次</th><th>内容</th><th style="width:120px">证据等级</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>第 1 层<br>信号处理定理</strong><br><span class="small">严格成立，教科书内容</span></td>
+  <td>
+    <strong>① 维纳–辛钦定理（Wiener–Khinchin）：</strong><code>PSD(f) = ℱ[ 自相关函数 ]</code>。<br>
+    ⇒ <strong>图像的功率谱形状由它的空间自相关决定</strong>。<br><br>
+    <strong>② 相关长度 ↔ 频谱重心：</strong>空间自相关长度<strong>大</strong>（结构平滑、成片）⇒ 能量集中在<strong>低频</strong>；自相关长度<strong>小</strong>（结构细、稀疏、高对比）⇒ 能量集中在<strong>高频</strong>。<br>
+    ⇒ 这正是"伊红 → 低频、DAB → 高频"的严格版本：<strong>伊红是成片弥散的（相关长度大），DAB 是细线稀疏的（相关长度小）</strong>。<br><br>
+    <strong>③ 帕塞瓦尔定理（Parseval）：</strong>同一幅图的空间域能量 = 频域能量。<br>
+    ⇒ 所以变化的不是"总量"，而是<strong>能量的分布</strong>——这就是"搬迁"这个比喻的来源（注意：它只保证同一幅图内守恒，<strong>不保证 H&amp;E 与 IHC 之间守恒</strong>，所以严格说应叫"频谱重心位移"）。
+  </td>
+  <td><span class="badge b-cond">标准定理</span><br><span class="small">无需引用特定论文</span></td>
+</tr>
+<tr>
+  <td><strong>第 2 层<br>为什么染色差异无法带限</strong></td>
+  <td>
+    如果 H&amp;E→IHC 的差异是一个<strong>线性逐点映射</strong> <code>y = a·x + b</code>，那它在频域只是把谱整体缩放，<strong>可以带限</strong>。但它不是：<br>
+    · <strong>RGB → 光密度是取对数</strong>（Beer–Lambert：<code>OD = −log(I/I₀)</code>），是非线性；<br>
+    · 多种色原体在 OD 空间相加，反向（OD → RGB）是<strong>指数</strong>；<br>
+    · <strong>DAB 甚至不遵守 Beer–Lambert</strong>（其光密度与浓度不是线性关系）；<br>
+    · <strong>最关键</strong>：两种染色的<strong>空间图案本身就不同</strong>（自相关函数不同 ⇒ 第 1 层的 PSD 形状不同）。这一条与"逐点映射"无关，是<strong>结构性</strong>的差异。<br>
+    ⇒ <strong>无记忆非线性会生成新的频率成分</strong>（谐波），所以染色差异在原理上<strong>无法被限制在一个频带里</strong>。
+  </td>
+  <td><span class="badge b-cond">非线性部分为数学事实</span><br><span class="small">DAB 非 Beer–Lambert 见 EPFL BIOP 教学 wiki（非同行评审）</span></td>
+</tr>
+<tr>
+  <td><strong>第 3 层<br>差异落在哪个频带</strong></td>
+  <td>
+    把第 1、2 层套到 H&amp;E→IHC 上，得到"浴缸形"（两端高、中间低）的预测。<strong>这一层是我的推断，没有任何实测支持。</strong>
+  </td>
+  <td><span class="badge b-ana">我的推断</span><br><span class="small">全文献空白</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">一个必须纠正的推理跳跃："差异大" ≠ "不可复用"</span>
+  我前面说"两端差异大、中频差异小"，然后说"低频不可复用、结构可用"——<strong>这两句话之间其实跳了一步</strong>。因为<strong>净差异谱无法区分两种情况</strong>：
+  <ul>
+    <li><strong>"源有、目标没有"</strong>（H&amp;E 的伊红能量 → 必须被<strong>移除</strong>）</li>
+    <li><strong>"目标有、源没有"</strong>（IHC 的 DAB 膜细节 → 必须被<strong>新增</strong>）</li>
+  </ul>
+  <strong>这两种情况的净 MSE 都很大，但处理方式完全相反。</strong>所以真正的判据不是"差异大小"，而是<strong>「这一频段上，两者承载的是不是同一份内容」</strong>：
+  <div class="tbl-wrap" style="margin:12px 0 0">
+  <table>
+    <thead><tr><th style="width:70px">频带</th><th>H&amp;E 有吗</th><th>IHC 有吗</th><th style="width:110px">内容相同吗</th><th style="width:170px">正确操作</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>低频</strong></td>
+        <td>有（伊红充盈胞质/间质）</td>
+        <td>有（近乎透明背景 + 棕色斑块）</td>
+        <td><strong>不同</strong></td>
+        <td><span class="badge" style="background:var(--warn-bg);color:var(--warn);border:1px solid #f0c6c6">必须替换</span> 源低频不可复用</td>
+      </tr>
+      <tr style="background:#e9f7f1">
+        <td><strong>中频</strong></td>
+        <td>有（核密度、腺体/导管轮廓）</td>
+        <td>有（同一组织的同一结构）</td>
+        <td><strong>相同</strong></td>
+        <td><span class="badge b-cond">可以复用</span> 这正是条件该用的部分</td>
+      </tr>
+      <tr>
+        <td><strong>高频</strong></td>
+        <td>有（每个核的染色质纹理）</td>
+        <td>有（核纹理<strong>共享</strong> + DAB 膜细节<strong>新增</strong>）</td>
+        <td><strong>部分相同 + 部分新增</strong></td>
+        <td><span class="badge b-mod">部分复用</span> 核纹理可用；DAB 膜细节必须生成</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <br><strong>⇒ 结论修正：高频"净差异大"并不妨碍你把 H&amp;E 的高频核纹理当作条件</strong>——因为那部分内容是共享的，净差异大是因为 IHC 在此处<strong>另外新增了</strong> DAB 膜信号。这也说明我之前那条"苏木素衍生的结构在两端都成立"是对的，只是理由要说清楚。
+</div>
+
+<div class="callout neutral">
+  <span class="t">方法论警告：不要只看净差异曲线</span>
+  FGDM 的 Fig. 2 只画了<strong>成对 MSE 随频率的曲线</strong>，它同样无法区分"移除"与"新增"。所以更信息量更大的做法是<strong>分别画出两条 PSD 曲线</strong>（H&amp;E 的径向平均 PSD 与 IHC 的径向平均 PSD），看它们在哪些频段<strong>分叉</strong>——这比一条差异曲线能多回答一个问题：<strong>是源多了，还是目标多了。</strong>
+</div>
+
+<h4>预测的频谱差异曲线（推断，可检验）</h4>
+
+<div class="callout note">
+  <span class="t">以下是我的推断，不是文献结论</span>
+  综合上述机制，H&amp;E 与 IHC 的逐频点差异应当是<strong>"浴缸形"</strong>——<strong>两端高、中间低</strong>，与 FGDM 在 CBCT→CT 上测到的<strong>"倒 U 形"（中间高、两端低）正好相反</strong>：
+  <ul style="margin-bottom:0">
+    <li><strong>最低频（DC 附近）差异最大</strong>：整体光密度分布完全不同（H&amp;E 全局偏暗，IHC 背景近白），加上伊红的大尺度能量消失</li>
+    <li><strong>低频差异大</strong>：H&amp;E 的间质/胞质是大片平滑的粉色区域，IHC 对应区域接近透明</li>
+    <li><strong>中频差异最小</strong>：腺体轮廓、导管边界、细胞密度模式——同一组织的解剖底图，两者共享最多</li>
+    <li><strong>高频差异再次变大</strong>：H&amp;E 是普遍的核染色质纹理，DAB 是稀疏的膜性细线 + 颗粒沉积，纹理生成机制完全不同</li>
+  </ul>
+</div>
+
+<div class="callout warn">
+  <span class="t">这对你的 F1 设计意味着什么——比"FGDM 假设不成立"更精确</span>
+  FGDM 的机制是 <strong>「复用两端 + 生成中间」</strong>。而 H&amp;E→IHC 的差异分布是<strong>倒过来的</strong>：<strong>中间恰恰是已经共享的部分，两端恰恰是断掉的部分。</strong>
+  <br><br>所以正确的设计方向是<strong>反的</strong>：
+  <ul style="margin-bottom:0">
+    <li><strong>可以放心用作条件的</strong>：由苏木素通道衍生的结构（核位置、核密度、染色质纹理、组织构筑）——<strong>它在两端都成立</strong></li>
+    <li><strong>必须丢弃、不能复用的</strong>：H&amp;E 中由<strong>伊红</strong>贡献的低频内容（大片粉色胞质/间质）。目标 DAB 的低频背景分布（近透明 + 棕色斑块）必须由模型<strong>自己生成</strong></li>
+    <li><strong>必须让模型生成的</strong>：DAB 的高频膜性细节（细线、颗粒）——这部分在 H&amp;E 中<strong>根本不存在</strong>，不是"被破坏了"，而是<strong>信息不在源图里</strong></li>
+  </ul>
+  <strong>⇒ 落到你的 DWT 方案上：LL 子带里混合了「苏木素结构」与「伊红大区域」两种成分，前者可用、后者有害。这正好解释了为什么 F1-ab（全频带 vs 去 HH）之外，你还应该加一个 <code>LL-only</code> 的对照——如果纯低频反而变差，很可能就是伊红低频在污染条件。</strong>
+</div>
+
+<h4>一个很便宜、且能变成论文贡献的验证实验</h4>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:130px">步骤</th><th>做法</th><th style="width:180px">为什么这样做</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>① 测频谱</strong></td>
+  <td><strong>不要</strong>直接照搬 FGDM 的成对逐频点 MSE——BCI 的 H&amp;E/IHC 有 10–50 px 失配（UNIStainNet 原文给出的量级），成对差异会被配准误差污染。<br><strong>改用</strong>：分别对 H&amp;E 图集与 IHC 图集计算<strong>径向平均功率谱（radially averaged PSD）</strong>，比较两条曲线的形状与斜率。<strong>这个做法完全不需要配对，因此免疫失配。</strong></td>
+  <td>UNIStainNet 明确指出 consecutive-section 的 10–50 px 失配会让像素级指标不可靠；径向 PSD 是旋转/平移不变的统计量</td>
+</tr>
+<tr>
+  <td><strong>② 验证推断</strong></td>
+  <td>预期看到：H&amp;E 的 PSD 在低频段显著高于 IHC（伊红的贡献），而 IHC 的 PSD 在高频段的相对衰减更陡（缺少普遍性的核纹理）。<br>若想更严格，可在<strong>配准后的子集</strong>上再补一张成对逐频点 MSE 图，看是否呈浴缸形</td>
+  <td>FGDM 的 Fig.2 是这一分析的标准范式；你的版本如果形状相反，就是一个干净的反例证据</td>
+</tr>
+<tr>
+  <td><strong>③ 做频带掩蔽实验</strong></td>
+  <td>在 <span class="term">z_HE</span> 上做 DWT 后，<strong>只把 LL 子带置零</strong>（或只把 LL 换成高斯模糊版），重跑 baseline，看 DAB corr 是否上升。<br>这是<strong>零训练成本的诊断</strong>，可以直接告诉你"伊红低频是否在污染条件"</td>
+  <td>对应上面"LL 里混了两种成分"的判断。如果置零 LL 反而变好，就直接证实了</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout ok">
+  <span class="t">为什么这个分析值得写进论文</span>
+  <ol style="margin-bottom:0">
+    <li><strong>它正面回答了审稿人最可能问的问题</strong>："FGDM 自己说低频与高频差异大的任务不适用，你凭什么用频域条件？"——你的回答是："我们实测了 H&amp;E→IHC 的频谱差异分布，发现它与 CBCT→CT 方向相反（浴缸形而非倒 U 形），因此我们采用<strong>非对称</strong>频域条件设计（只用源图结构相关的子带，低频背景交由模型生成），而非 FGDM 的三分法。"</li>
+    <li><strong>它是一个可发表的独立发现</strong>：目前没有任何工作给出 H&amp;E↔IHC 的频谱差异刻画。</li>
+    <li><strong>它直接指导 F1-ab 的频带选择</strong>，而不是靠猜。</li>
+  </ol>
+</div>
+
+<p class="small">证据分级：<strong>「IHC 使用苏木素复染」「伊红染胞质与间质」「DAB 是膜性色原体」「Beer–Lambert 色反卷积适用于两者」「UNIStainNet 消融显示空间条件不可或缺（去条件 Pearson-r 0.937→0.681、FID 30.0→40.1）」为有实证的事实</strong>；<strong>「浴缸形曲线」「伊红→DAB 是低频到高频的能量搬迁」为我的推断</strong>，需实验验证；<strong>「H&amp;E↔IHC 的逐频点频谱差异」在全文献中为空白</strong>。</p>
+
+<h2 id="p4d"><span class="num">Part 4d</span>蛋白表达的频域建模：先分开“在哪里”与“有多强”</h2>
+
+<div class="callout warn">
+  <span class="t">先给最重要的结论</span>
+  <strong>蛋白表达不是一个频率变量。</strong>在 IHC 里，DAB 的光密度（OD/FOD）是蛋白表达量的像素域代理；频域变换描述的是这个表达图案的<strong>空间尺度、边界锐度、局部重复性与纹理统计</strong>。因此不能把“高频能量大”直接解释成“蛋白表达高”，也不能把“某频带差异大”直接解释成“应该把这个频带搬过去”。<br><br>
+  正确的分解是：<strong>表达位置/占据率 M(x)</strong> × <strong>表达强度 A(x)</strong> × <strong>表达形态 G(x)</strong>。频域主要补充 G 与 M 的多尺度描述，OD/FOD 主要量化 A；最终 DAB 必须在空间域落到合理位置。
+</div>
+
+<h3>4d.1 先纠正“高频 = 蛋白表达”的简化说法</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:160px">说法</th><th>判断</th><th style="width:180px">更准确的表述</th></tr></thead>
+<tbody>
+<tr>
+  <td>“DAB 膜染色是高频，所以高频就是蛋白表达”</td>
+  <td><strong>过度简化。</strong>高频只说明空间变化快/边界细；它不告诉你化学浓度是多少，也不告诉你发生在哪个细胞。</td>
+  <td><strong>高频可以描述 DAB 膜样形态的锐度与厚度</strong>，但表达量仍需 OD/FOD；位置仍需空间 mask / morphology。</td>
+</tr>
+<tr>
+  <td>“DAB 越深，频域能量越大，蛋白越多”</td>
+  <td><strong>不成立。</strong>一块宽而均匀的深棕色区域可能主要增加 DC/低频能量；一条很薄但很深的膜线可能增加高频能量。两者蛋白表达量可能不同，也可能相同。</td>
+  <td><strong>把强度与形态分开量化：</strong>OD/FOD = 强度；覆盖率/连通域 = 位置与占据；DWT/局部 PSD = 形态与尺度。</td>
+</tr>
+<tr>
+  <td>“频谱幅度可以恢复蛋白表达位置”</td>
+  <td><strong>不成立。</strong>全局 Fourier magnitude 丢失空间相位，平移后的图像幅度谱几乎不变。</td>
+  <td><strong>需要相位、局部小波系数或空间域 mask</strong>。DWT 比全局 FFT 更适合作为局部结构条件，但也不能替代位置预测。</td>
+</tr>
+<tr>
+  <td>“H&amp;E 与 IHC 的净频谱差异大，所以该频带不可用”</td>
+  <td><strong>不成立。</strong>净差异无法区分“源有目标无”与“目标有源无”；两者都产生大 MSE，但一个应抑制，一个应生成。</td>
+  <td>先做<strong>色原体/通道分解</strong>，再判断某频带是否承载共享形态；不要只看总 RGB 频谱。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>4d.2 正确的观测空间：先做 OD / stain channel，再做频域</h3>
+
+<p>RGB 图像的频谱把“染色化学差异”和“空间结构差异”混在一起。对 H&amp;E→IHC，第一步不应是直接对 RGB 做 FFT，而应先转换到<strong>光密度（optical density, OD）与染色通道</strong>：</p>
+
+<div class="eq"><div class="body">OD_C(x) = −log<sub>10</sub>( I_C(x) / I<sub>0,C</sub> )</div><div class="no">PSPStain Eq. 1</div></div>
+<div class="eq"><div class="body">H&amp;E → { OD<sub>H</sub>(x), OD<sub>E</sub>(x) };&nbsp;&nbsp;&nbsp; H-DAB IHC → { OD<sub>H</sub>(x), OD<sub>DAB</sub>(x) }</div></div>
+
+<p>PSPStain 的 FOD 正是在 DAB 通道上做像素域操作：</p>
+
+<div class="eq"><div class="body">FOD(x) = [ OD<sub>DAB</sub>(x) ]<sup>α</sup>,&nbsp;&nbsp;&nbsp; α=1.8（PSPStain 最优消融）</div><div class="no">PSPStain Eq. 2</div></div>
+
+<p>FOD 的作用是压低弱背景、突出较强 DAB 阳性区域；它不是频域特征。PSPStain 后续在<strong>全图平均、FOD 直方图、16 个空间块</strong>上做 MLPA，目的是分别约束整体表达量、表达强度分布与区域表达量。这个思想应该保留，但可以增加一条频域支路。</p>
+
+<div class="callout key">
+  <span class="t">推荐的通道优先级</span>
+  <ol style="margin-bottom:0">
+    <li><strong>最优先：OD<sub>H</sub> / H 通道</strong>——作为 H&amp;E 与 IHC 共享的核/组织结构先验，而不是直接使用 RGB 高频。</li>
+    <li><strong>目标监督：OD<sub>DAB</sub> / FOD</strong>——监督蛋白表达强度与表达量；这一部分仍然以像素/空间统计为主。</li>
+    <li><strong>频域支路：对 OD<sub>H</sub>、FOD 或预测的 DAB mask 做 DWT / 局部 PSD</strong>——描述局部尺度、边界与膜样形态，不能单独承担表达位置或表达量。</li>
+  </ol>
+</div>
+
+<h3>4d.3 一个更严谨的蛋白表达生成模型</h3>
+
+<p>与其让网络直接学习“频域中的蛋白表达”，不如把目标拆成三个可解释量：</p>
+
+<div class="eq"><div class="body">Y<sub>DAB</sub>(x) = M<sub>expr</sub>(x) · A<sub>expr</sub>(x) · G<sub>mem</sub>(x) + ε(x)</div></div>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">变量</th><th>含义</th><th>像素域指标</th><th>频域可补充的指标</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>M<sub>expr</sub>(x)</strong><br>表达位置/占据率</td>
+  <td>哪个细胞、哪个细胞膜、哪个区域应该出现 DAB</td>
+  <td>soft mask、阳性面积比例、细胞级/膜级连通域、局部窗口表达概率</td>
+  <td>低频：区域覆盖率；中频：细胞/腺体密度；<strong>但不能用全局频谱恢复位置</strong></td>
+</tr>
+<tr>
+  <td><strong>A<sub>expr</sub>(x)</strong><br>表达强度</td>
+  <td>DAB 光密度、染色深浅、蛋白量代理</td>
+  <td>OD、FOD、mean/top-10% OD、H-score 相关统计、IOD</td>
+  <td>只做<strong>条件统计</strong>：不同强度区域的局部 PSD；不能把频谱能量直接当浓度</td>
+</tr>
+<tr>
+  <td><strong>G<sub>mem</sub>(x)</strong><br>表达形态</td>
+  <td>膜性、连续性、厚度、颗粒性、边缘锐度</td>
+  <td>膜宽、边缘强度、连通性、曲率、细胞级形态指标</td>
+  <td><strong>DWT LH/HL/HH、局部频谱斜率、带能量比</strong>：这是频域最有价值的位置</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p>这个分解也解释了为什么“高频部分 = 细胞核 + 蛋白表达”不够准确：<strong>细胞核结构可以从 H&amp;E 提供，DAB 蛋白表达的强度与位置却需要网络从 H&amp;E 形态、数据先验和蛋白监督中推断</strong>；频域只能帮助网络判断“该表达图案应当具有什么空间尺度与边界形态”。</p>
+
+<h3>4d.4 频域可以如何真正帮助 FOD，而不是替代 FOD</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">用途</th><th>推荐定义</th><th>解决什么问题</th><th>不能解决什么</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>频域约束</strong></td>
+  <td>对生成的 <span class="term">FOD<sub>pred</sub></span> 或 DAB mask 做多尺度 DWT，约束各空间块的<strong>带能量比例</strong>、局部谱斜率、LH/HL 方向性与 HH/边缘能量</td>
+  <td>防止输出过平滑、膜边界过厚/过碎、生成纹理尺度不合理</td>
+  <td>不能指定某个细胞哪一段膜阳性；不能独立确定 DAB 强度的绝对值</td>
+</tr>
+<tr>
+  <td><strong>频域条件注入</strong></td>
+  <td>从 H&amp;E 的 <span class="term">OD<sub>H</sub></span> / morphology map 做两级 DWT，注入 32px/16px hidden stream；输入是共享结构条件，不是直接复制 H&amp;E 的 RGB 频谱</td>
+  <td>把核位置、细胞密度、腺体/组织构筑的多尺度结构传给 diffusion UNet</td>
+  <td>不能凭空从 H&amp;E 频谱中读取不存在的 HER2 蛋白表达</td>
+</tr>
+<tr>
+  <td><strong>跨域频域统计</strong></td>
+  <td>分别计算 H&amp;E 与 IHC 的<strong>每通道径向 PSD</strong>、局部带能量分布；不要先把未配准的两图做逐像素 Fourier MSE</td>
+  <td>发现两个域在结构尺度、纹理尺度、背景染色上的统计差异</td>
+  <td>不能证明源能量“搬迁”到目标；不能替代配对空间监督</td>
+</tr>
+<tr>
+  <td><strong>频域-空间一致性</strong></td>
+  <td>计算预测 DAB 与 H&amp;E 结构图之间的<strong>局部窗口 cross-spectrum / coherence</strong>，或在 DWT 空间对共享结构子带做局部相关</td>
+  <td>检查表达图是否跟随合理的组织结构，而不是只匹配全局频谱</td>
+  <td>不能把 H&amp;E 的所有高频纹理都强行复制到 DAB</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>4d.5 推荐的“频域蛋白表达”实验路线</h3>
+
+<div class="callout ok">
+  <span class="t">建议不要直接做“频域 FOD”，而做四组分阶段实验</span>
+  这样可以回答频域到底改善了<strong>表达量、表达位置还是表达形态</strong>。
+</div>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:70px">阶段</th><th style="width:220px">新增变量</th><th>具体设计</th><th style="width:210px">必须观察</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>P0</strong></td>
+  <td>OD/FOD 基准</td>
+  <td>保持 PSPStain 的 FOD/MLPA：mean OD、FOD histogram、16-block FOD；不要引入频域。</td>
+  <td>FOD、IOD、DAB corr、HER2 分级一致性；确认蛋白量基线稳定。</td>
+</tr>
+<tr>
+  <td><strong>P1</strong></td>
+  <td>结构频域条件</td>
+  <td>对 <span class="term">OD<sub>H</sub></span> 而非 RGB 做两级 Haar DWT；LL/LH/HL/HH → projection → 32px/16px hidden injection。扩散目标仍在原 latent 域。</td>
+  <td>DAB corr、128/32px block corr、核/腺体结构；同时检查 H&amp;E stain texture 是否渗入 DAB。</td>
+</tr>
+<tr>
+  <td><strong>P2</strong></td>
+  <td>表达量 + 频域形态约束</td>
+  <td>在 P0/P1 之外，加入预测 DAB/FOD 的<strong>局部 DWT band-stat loss</strong>：每个 16/32px block 比较 band-energy ratio，不直接比较未配准的相位/系数。</td>
+  <td>FOD/IOD 是否保持；膜连续性、膜宽、碎裂率、局部 PSD；不要只看 FID。</td>
+</tr>
+<tr>
+  <td><strong>P3</strong></td>
+  <td>空间-频域耦合</td>
+  <td>预测 <span class="term">M<sub>expr</sub></span> 与 <span class="term">A<sub>expr</sub></span> 两个头：mask 负责位置，FOD 负责强度；频域只约束 mask 边界/膜形态和多尺度统计。</td>
+  <td>分开报告位置指标与强度指标：mask Dice/coverage、FOD/IOD、HER2 H-score/agreement。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>4d.6 最小可行公式：一个比“频域 FOD”更稳妥的损失</h3>
+
+<p>建议先不要定义一个叫“频域蛋白量”的单一标量，而定义<strong>局部、归一化、带通的形态统计约束</strong>：</p>
+
+<div class="eq"><div class="body">r<sub>b,s,k</sub>(Y) = E<sub>block b</sub>[ | W<sub>s,k</sub>(Y) |² ] / ( Σ<sub>k′∈{LL,LH,HL,HH}</sub> E<sub>block b</sub>[ | W<sub>s,k′</sub>(Y) |² ] + ε )</div></div>
+
+<div class="eq"><div class="body">L<sub>band-shape</sub> = Σ<sub>b,s,k</sub> w<sub>b,s,k</sub> · ρ( r<sub>b,s,k</sub>( FOD<sub>pred</sub> ), r<sub>b,s,k</sub>( FOD<sub>real</sub> ) )</div></div>
+
+<p>其中 <span class="term">W<sub>s,k</sub></span> 是第 <span class="term">s</span> 层、第 <span class="term">k</span> 个 DWT 子带，<span class="term">b</span> 是空间块，<span class="term">ρ</span> 建议先用 Huber 或 log-ratio loss。<strong>关键是比较局部的归一化带能量比例，而不是比较未配准图像的绝对系数或全图总能量。</strong></p>
+
+<div class="callout warn">
+  <span class="t">这个损失仍然不能单独约束 DAB 位置</span>
+  如果只比较 <span class="term">r<sub>b,s,k</sub></span>，模型可能在同一个块内把膜信号放错细胞，但仍然得到相似的频带统计。因此必须与<strong>空间 mask / 局部结构关系 / FOD block-level supervision</strong>配合；频域项只能是形态正则，不是位置监督的替代品。
+</div>
+
+<h3>4d.7 对你当前 F1/F2 的具体修改建议</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>当前设计</th><th>建议保留/修改</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>对 <span class="term">z_HE</span> 直接做 DWT</td><td><strong>优先改成对 OD<sub>H</sub> 或 morphology map 做 DWT</strong>；同时保留 raw latent DWT 作为消融。</td><td>直接对 RGB/latent 做频域分解会把伊红染色外观与共享结构混在一起；OD<sub>H</sub> 更接近共享核结构。</td></tr>
+<tr><td>F1 全频带 LL+LH+HL+HH</td><td>保留为 baseline；新增 <strong>H-channel only / LL-only / LH+HL / all-band</strong>。</td><td>真正要验证的是“共享结构频带”而不是“所有频带越多越好”。</td></tr>
+<tr><td>F2 scalar gate</td><td>保留；但记录 gate 对各子带输出的贡献，后续再做 band gate。</td><td>gate 解决条件强度，不解决蛋白强度；不能把 γ 解释成 HER2 表达量。</td></tr>
+<tr><td>FSS 频谱损失</td><td>F1/F2 继续关闭；后续优先对 <strong>DAB/FOD 预测图</strong>做局部 band-shape loss，而不是对 RGB 输出做全局频谱 MSE。</td><td>频域应约束 DAB 形态统计，FOD/OD 仍约束表达量。</td></tr>
+<tr><td>HER2 agreement</td><td>新增三类指标：<strong>量</strong>（IOD/FOD/H-score）、<strong>位置</strong>（mask/局部相关）、<strong>形态</strong>（膜连续性/膜宽/频带比例）。</td><td>否则无法知道频域改善的是蛋白表达量、位置还是纹理。</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">最终研究判断</span>
+  当前最有价值的创新点不是“在频域中直接量化蛋白表达”，因为<strong>蛋白量是 OD/FOD 的像素/光学量，频域没有天然的蛋白浓度坐标</strong>。更稳妥、也更有理论闭环的表述是：<br><br>
+  <strong>用 OD/FOD 量化“表达了多少”，用空间 mask 约束“表达在哪里”，用 DWT/局部频谱约束“表达图案的尺度、边界与膜性形态”，并用 H&amp;E 的共享结构频域特征作为 diffusion condition。</strong><br><br>
+  这比“蛋白表达被搬迁到频域”准确；它也把 PSPStain 的 FOD 与你的 Frequency Condition 分工清楚地连接起来了。
+</div>
+
+<div class="callout neutral">
+  <span class="t">文献依据与证据边界</span>
+  <ul style="margin-bottom:0">
+    <li><strong>PSPStain（MICCAI 2024）</strong>：FOD 是 DAB 的像素域 OD<sup>α</sup>（α=1.8），MLPA 用平均、直方图、16 块空间统计约束蛋白表达；论文没有把 FOD 定义成频域量。</li>
+    <li><strong>FDIT（ICCV 2021）</strong>：作者把高频视为结构/identity 的实用 proxy，并同时使用像素域与 Fourier 频谱损失；但作者也没有证明“所有蛋白表达都在高频”，且只用全局频谱不能恢复位置。</li>
+    <li><strong>UNIStainNet（2026）</strong>：空间条件去掉后 Pearson-r 0.937→0.681、FID 30.0→40.1，说明蛋白生成需要密集空间条件；论文没有频域分析。</li>
+    <li><strong>因此目前没有直接文献证明</strong>：某个 DWT/FFT 子带的能量可以作为 HER2 蛋白浓度的充分统计量。这个命题必须通过你自己的 OD/FOD、mask、局部频谱三者联合实验来验证。</li>
+  </ul>
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<!-- ============ PART 5 ============ -->
+<h2 id="p5"><span class="num">Part 5</span>Frequency Condition 实现方案（结合 4×64×64 / 32px / 16px）</h2>
+
+<p class="lede">这一节把文献里的设计词汇表落到你的具体张量上。<strong>所有数字都是按你的架构算出来的</strong>，不是抄来的。</p>
+
+<h3>5.1 张量流（精确 shape）</h3>
+
+<figure>
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="频域条件分支的张量流示意">
+  <defs>
+    <marker id="ar2" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <text x="12" y="20" font-size="12.5" font-weight="700" fill="#16202c" font-family="sans-serif">频域条件分支张量流</text>
+
+  <!-- z_HE -->
+  <rect x="12" y="120" width="96" height="46" rx="7" fill="#eef2f6" stroke="#cbd5e1"/>
+  <text x="60" y="139" font-size="11" font-weight="700" fill="#334155" text-anchor="middle" font-family="sans-serif">z_HE</text>
+  <text x="60" y="155" font-size="10" fill="#64748b" text-anchor="middle" font-family="monospace">4×64×64</text>
+
+  <line x1="108" y1="143" x2="146" y2="143" stroke="#64748b" stroke-width="1.4" marker-end="url(#ar2)"/>
+
+  <!-- DWT1 -->
+  <rect x="148" y="112" width="72" height="62" rx="7" fill="#e8f3f7" stroke="#7fb8cc"/>
+  <text x="184" y="136" font-size="10.5" font-weight="700" fill="#0d5a75" text-anchor="middle" font-family="sans-serif">DWT₁</text>
+  <text x="184" y="152" font-size="9.5" fill="#0d5a75" text-anchor="middle" font-family="monospace">无参数</text>
+  <text x="184" y="165" font-size="9.5" fill="#0d5a75" text-anchor="middle" font-family="monospace">stride 2</text>
+
+  <line x1="220" y1="143" x2="258" y2="143" stroke="#64748b" stroke-width="1.4" marker-end="url(#ar2)"/>
+
+  <!-- F32 -->
+  <rect x="260" y="86" width="112" height="40" rx="7" fill="#fbfcfd" stroke="#cbd5e1"/>
+  <text x="316" y="104" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle" font-family="sans-serif">F₃₂ = [LL₁,LH₁,HL₁,HH₁]</text>
+  <text x="316" y="118" font-size="10" fill="#64748b" text-anchor="middle" font-family="monospace">16×32×32</text>
+
+  <!-- F16 (from LL1) -->
+  <rect x="260" y="164" width="112" height="40" rx="7" fill="#fbfcfd" stroke="#cbd5e1"/>
+  <text x="316" y="182" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle" font-family="sans-serif">F₁₆ = [LL₂,LH₂,HL₂,HH₂]</text>
+  <text x="316" y="196" font-size="10" fill="#64748b" text-anchor="middle" font-family="monospace">16×16×16</text>
+
+  <!-- DWT2 note -->
+  <path d="M230 150 Q246 176 258 180" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3 2" marker-end="url(#ar2)"/>
+  <text x="232" y="196" font-size="9" fill="#94a3b8" font-family="sans-serif">DWT₂(LL₁)</text>
+
+  <line x1="372" y1="106" x2="410" y2="106" stroke="#64748b" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <line x1="372" y1="184" x2="410" y2="184" stroke="#64748b" stroke-width="1.4" marker-end="url(#ar2)"/>
+
+  <!-- projections -->
+  <rect x="412" y="82" width="92" height="48" rx="7" fill="#e8f7f1" stroke="#7fc9ac"/>
+  <text x="458" y="101" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle" font-family="sans-serif">P₃₂</text>
+  <text x="458" y="116" font-size="10" fill="#047857" text-anchor="middle" font-family="monospace">16 → 128</text>
+
+  <rect x="412" y="160" width="92" height="48" rx="7" fill="#e8f7f1" stroke="#7fc9ac"/>
+  <text x="458" y="179" font-size="10.5" font-weight="700" fill="#047857" text-anchor="middle" font-family="sans-serif">P₁₆</text>
+  <text x="458" y="194" font-size="10" fill="#047857" text-anchor="middle" font-family="monospace">16 → 256</text>
+
+  <line x1="504" y1="106" x2="542" y2="106" stroke="#64748b" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <line x1="504" y1="184" x2="542" y2="184" stroke="#64748b" stroke-width="1.4" marker-end="url(#ar2)"/>
+
+  <!-- adapters -->
+  <rect x="544" y="82" width="124" height="48" rx="7" fill="#f4efff" stroke="#c4b0f5"/>
+  <text x="606" y="101" font-size="10.5" font-weight="700" fill="#7c3aed" text-anchor="middle" font-family="sans-serif">A₃₂ (zero-init)</text>
+  <text x="606" y="116" font-size="10" fill="#7c3aed" text-anchor="middle" font-family="monospace">Δh₃₂ · γ₃₂</text>
+
+  <rect x="544" y="160" width="124" height="48" rx="7" fill="#f4efff" stroke="#c4b0f5"/>
+  <text x="606" y="179" font-size="10.5" font-weight="700" fill="#7c3aed" text-anchor="middle" font-family="sans-serif">A₁₆ (zero-init)</text>
+  <text x="606" y="194" font-size="10" fill="#7c3aed" text-anchor="middle" font-family="monospace">Δh₁₆ · γ₁₆</text>
+
+  <!-- UNet levels -->
+  <rect x="148" y="232" width="520" height="46" rx="7" fill="#f2f5f8" stroke="#cbd5e1"/>
+  <text x="408" y="252" font-size="11" font-weight="700" fill="#334155" text-anchor="middle" font-family="sans-serif">UNet hidden stream（只改 hidden，不动 skip）</text>
+  <text x="408" y="268" font-size="10.5" fill="#475569" text-anchor="middle" font-family="monospace">h'₃₂ = h₃₂ + γ₃₂·Δh₃₂      h'₁₆ = h₁₆ + γ₁₆·Δh₁₆</text>
+
+  <path d="M606 130 L606 226" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3 2" marker-end="url(#ar2)"/>
+  <path d="M606 208 L606 226" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3 2"/>
+
+  <text x="12" y="292" font-size="10" fill="#6b7a8c" font-family="sans-serif">注：z_HE 仍走原有的 8 通道 concat 路径；频域分支是**加性残差**，与 concat 路径互补而非替代</text>
+</svg>
+<figcaption>图 2 · 频域条件分支。参数全在 P 与 A 上（DWT 本身 0 参数）。<strong>关键：A 的最后一层 zero-init，保证 hot-start 时 Δh ≡ 0，不污染 base_v@7000。</strong></figcaption>
+</figure>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>步骤</th><th>操作</th><th>输入 shape</th><th>输出 shape</th><th>参数量</th><th>MACs（前向）</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>一级 Haar DWT（4 个 stride-2 conv 核）</td><td class="mono">4×64×64</td><td class="mono">4×(4×32×32)</td><td class="num">0</td><td class="num">≈1.0 M</td></tr>
+<tr><td>2</td><td>通道拼接 → F₃₂</td><td class="mono">4×32×32 ×4</td><td class="mono">16×32×32</td><td class="num">0</td><td class="num">0</td></tr>
+<tr><td>3</td><td>二级 DWT（对 LL₁）</td><td class="mono">4×32×32</td><td class="mono">4×(4×16×16)</td><td class="num">0</td><td class="num">≈0.26 M</td></tr>
+<tr><td>4</td><td>通道拼接 → F₁₆</td><td class="mono">4×16×16 ×4</td><td class="mono">16×16×16</td><td class="num">0</td><td class="num">0</td></tr>
+<tr><td>5</td><td>P₃₂（轻量：1×1 → DW3×3 → 1×1）</td><td class="mono">16×32×32</td><td class="mono">128×32×32</td><td class="num">≈20.0 k</td><td class="num">≈19.9 M</td></tr>
+<tr><td>6</td><td>P₁₆（轻量：1×1 → DW3×3 → 1×1）</td><td class="mono">16×16×16</td><td class="mono">256×16×16</td><td class="num">≈72.7 k</td><td class="num">≈9.5 M</td></tr>
+<tr><td>7</td><td>A₃₂（DW3×3 → 1×1，末层 zero-init）</td><td class="mono">128×32×32</td><td class="mono">128×32×32</td><td class="num">≈17.8 k</td><td class="num">≈17.8 M</td></tr>
+<tr><td>8</td><td>A₁₆（DW3×3 → 1×1，末层 zero-init）</td><td class="mono">256×16×16</td><td class="mono">256×16×16</td><td class="num">≈68.4 k</td><td class="num">≈8.4 M</td></tr>
+<tr style="background:#e8f7f1"><td colspan="4"><strong>合计（轻量版）</strong></td><td class="num win"><strong>≈179 k</strong></td><td class="num win"><strong>≈56 M MACs</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="grid2">
+  <div class="card tight">
+    <h4>轻量版 vs 完整版（参数量对照）</h4>
+    <table style="margin:0;font-size:12.5px">
+      <thead><tr><th style="background:transparent;padding-left:0">配置</th><th class="num" style="background:transparent">P₃₂+P₁₆</th><th class="num" style="background:transparent">A₃₂+A₁₆</th><th class="num" style="background:transparent">总计</th></tr></thead>
+      <tbody>
+        <tr><td>轻量（1×1 + DW3×3）</td><td class="num">92.7 k</td><td class="num">86.1 k</td><td class="num"><strong>179 k</strong></td></tr>
+        <tr><td>中等（3×3 + 1×1）</td><td class="num">138 k</td><td class="num">820 k</td><td class="num">958 k</td></tr>
+        <tr><td>完整（两层 3×3）</td><td class="num">1.05 M</td><td class="num">1.48 M</td><td class="num">2.53 M</td></tr>
+      </tbody>
+    </table>
+    <p class="small" style="margin-bottom:0">参考：AFFNet 的频域掩码分支只加 <strong>+0.3 M（&lt;6%）</strong>；T2I-Adapter 整体 <strong>77 M</strong>；ControlNet 是 UNet 编码器的完整副本（<strong>+23% 显存、+34% 时间</strong>）。</p>
+  </div>
+  <div class="card tight">
+    <h4>显存与算力（V100 32GB 可行性）</h4>
+    <ul class="small" style="margin-bottom:0">
+      <li>最大中间张量：<span class="mono">128×32×32</span> FP16 ≈ <strong>0.26 MB</strong>；<span class="mono">256×16×16</span> ≈ <strong>0.13 MB</strong></li>
+      <li>频域分支总激活 ≈ <strong>0.5 MB</strong>——相对 UNet 主干的 <strong>GB 级</strong>激活完全可忽略</li>
+      <li>额外 MACs ≈ <strong>56 M</strong>（轻量版）——你的 UNet 是 <span class="mono">block_out_channels=(128,256,256,512)</span>、64×64 latent，主干量级在 <strong>数十 GFLOPs</strong>，占比 <strong>&lt;0.2%</strong></li>
+      <li>结论：<strong>V100 32GB + FP16 + GradScaler 完全无压力</strong>，iteration time 增加可忽略（预期 &lt;1%）</li>
+      <li>唯一需要注意：<strong>P 与 A 用 FP16 时做 GroupNorm 要小心</strong>——建议 P 里的 norm 用 <span class="mono">GroupNorm(8, C)</span> 并保持 FP32 统计</li>
+    </ul>
+  </div>
+</div>
+
+<h3>5.2 Hot-start 兼容性（从 base_v@7000 继续训练）</h3>
+
+<div class="callout key">
+  <span class="t">这是 F1 能否成功的第一道门槛</span>
+  E1 的失败（FID 109.75→125.96、DAB corr 0.439→0.244）已经证明：<strong>任何在起点就扰动 backbone 的新分支都会破坏已经学好的 diffusion prior</strong>。频域分支必须做到<strong>在 step 0 对 hidden stream 完全无影响</strong>。三条强制要求：
+  <ol style="margin-bottom:0">
+    <li><strong>A₃₂ / A₁₆ 的最后一层（输出层）weight 与 bias 全部 zero-init</strong>——ControlNet 的 zero-conv 设计，原文：<em>"Zero convolutions protect this backbone by eliminating random noise as gradients in the initial training steps"</em>。这样 Δh ≡ 0，h' = h，前向完全等价于 base_v@7000。</li>
+    <li><strong>DWT 无参数</strong>——不会引入任何随机初始化噪声。这是 DWT 相对"可学习小波"的一个 hot-start 优势（FADM/One-to-Many 用可学习小波，但你从 hot-start 出发，第一版应该用固定基）。</li>
+    <li><strong>频域分支是加性残差</strong>，不动 skip connection。你的第 7 节判断正确——第一版只改 hidden。参考：<strong>cWDM 的消融显示"拼接 &gt; 相加"用于条件输入</strong>，但那是"条件输入通道"的语境；对"特征残差注入"，加性 + zero-init 是 ControlNet/T2I-Adapter/FreeU 的一致做法。</li>
+  </ol>
+</div>
+
+<div class="callout warn">
+  <span class="t">与 ControlNet 的关键差异——这决定你的 γ 可以很小</span>
+  在 ControlNet 里，zero-conv <strong>是唯一的条件路径</strong>，所以它必须"爆发式收敛"（原文：<em>"sudden convergence phenomenon… usually in less than 10K optimization steps"</em>）。<strong>你的情况不同</strong>：<span class="mono">z_t ‖ z_HE</span> 的 8 通道 concat 路径<strong>已经承载了 H&amp;E 条件</strong>。频域分支是<strong>在已有条件之上的加性精修</strong>。
+  <br><br><strong>两个直接后果：</strong>
+  <ul style="margin-bottom:0">
+    <li>γ_max = 0.1 <strong>不会导致模型"忽略条件"</strong>——因为 concat 路径还在。这给 F2 的小 γ 提供了安全边际。</li>
+    <li><strong>F1 的正确 ablation 基线是 "γ ≡ 0"（频域分支惰性），而不是"完全无 H&amp;E 条件"。</strong>这两者差别巨大，别搞混。</li>
+  </ul>
+</div>
+
+<h3>5.3 Model A / B / C 对比（对应你 Prompt 第十七节）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="width:70px">模型</th><th style="width:210px">结构</th><th>表达力</th><th>空间保持</th><th>频率选择性</th><th class="num">参数量</th><th>训练稳定性</th><th>V100 成本</th><th>Hot-start</th><th>主要失效模式</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>Model A</strong><br><span class="small">你现在的</span></td>
+  <td class="mono" style="font-size:11.5px">z_HE → Spatial Adapter</td>
+  <td>中。单一尺度的整体 latent，模型<strong>没有显式区分不同尺度结构</strong>（你的第 3 节判断）</td>
+  <td><strong>好</strong>。latent 本身保留完整空间信息</td>
+  <td><strong>无</strong>。无法选择性地只用某频段</td>
+  <td class="num">基准</td>
+  <td>已有实测：lr 1e-4 太弱（|W|≈0.001）、lr 1e-3 失控</td>
+  <td>最低</td>
+  <td>已验证可 hot-start</td>
+  <td>条件强度只能靠 lr 调，<strong>无法解耦"条件是否重要"与"注入多强"</strong></td>
+</tr>
+<tr style="background:#f8fcfa">
+  <td><strong>Model B</strong><br><span class="small">F1</span></td>
+  <td class="mono" style="font-size:11.5px">z_HE → DWT → Frequency Adapter</td>
+  <td>中–高。多尺度 + 方向性（LH/HL/HH），但仍是固定基</td>
+  <td>中–高。<strong>小波同时有频率与空间局部性</strong>（相对 FFT/DCT 的核心优势）</td>
+  <td><strong>有</strong>（若 band 权重可学则为"强"）</td>
+  <td class="num">+0.18 M<br><span class="small">（轻量版）</span></td>
+  <td>预期优于 A：zero-init + 无参数 DWT ⇒ 起点完全惰性</td>
+  <td>+&lt;1% iteration time</td>
+  <td><strong>好</strong>（DWT 无随机初始化）</td>
+  <td>① 小波边界伪影（FADM 报告会被跨 timestep 放大）；② 固定基可能选不出最有用的频段（FSNet 的批评）；③ <strong>可能只是"换了个表示"，没有本质增益</strong>——这是最需要警惕的</td>
+</tr>
+<tr style="background:#f8fcfa">
+  <td><strong>Model C</strong><br><span class="small">F2</span></td>
+  <td class="mono" style="font-size:11.5px">z_HE → DWT → Freq Adapter → Gate</td>
+  <td>同 B，但<strong>注入强度成为可学习量</strong></td>
+  <td>同 B</td>
+  <td>同 B + <strong>强度维度</strong></td>
+  <td class="num">+2 个 scalar<br><span class="small">（≈ 0）</span></td>
+  <td><strong>最好</strong>：有界 gate 提供与 E1 失败模式对应的显式保护</td>
+  <td>同 B</td>
+  <td>最好（γ₀ 可精确设为 0.01）</td>
+  <td>① <strong>有界 gate 的 sigmoid 参数化会削弱梯度</strong>（见 6.2，这是最容易踩的坑）；② 常数 γ 被证据认为次优（应做 γ(t)）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<!-- ============ PART 6 ============ -->
+<h2 id="p6"><span class="num">Part 6</span>Gate 设计</h2>
+
+<h3>6.1 四种 Gate 的文献定位</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="width:120px">Gate 类型</th><th style="min-width:150px">形式</th><th style="min-width:200px">文献先例与数字</th><th style="width:120px">成本</th><th style="min-width:150px">何时用</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>① Scalar</strong><br><span class="small">（你 F2 第一版）</span></td>
+  <td class="mono" style="font-size:11.5px">h' = h + γ·Δh<br>γ 一个标量</td>
+  <td><strong>LayerScale（ICCV'21）</strong>：深度 36 的 ViT <strong>不加 LayerScale 直接训练失败（69.9%），加了是 80.5%</strong>。<strong>ReZero（UAI'21）</strong>：α₀=0 使网络初始为恒等映射，收敛速度 <strong>1.56×</strong>（8,800 vs 13,690 iters）。<br><strong>DiT adaLN-Zero（ICCV'23）</strong>：FID <span class="win">19.47</span> vs adaLN 25.21 vs cross-attn 26.14 vs in-context 35.24</td>
+  <td class="num">+2 参数<br>+0 算力</td>
+  <td><strong>F2 第一版必须用这个</strong>——变量最少，可解释性最强（γ₃₂/γ₁₆ 的比值直接告诉你模型依赖哪个尺度）</td>
+</tr>
+<tr>
+  <td><strong>② Per-layer / Per-channel</strong></td>
+  <td class="mono" style="font-size:11.5px">γ 是向量或对角矩阵</td>
+  <td><strong>LayerScale 用的是 per-channel 对角矩阵</strong>，不是标量。消融：深度 18 时 per-channel zero-init 81.5 vs scalar ReZero 80.1。<br><strong>注意</strong>：Spectral Gating Networks 的消融显示 <strong>scalar gate 比 channel-wise gate 低 2.5 分（79.0 vs 81.5）</strong></td>
+  <td class="num">+数百参数</td>
+  <td>F2 有效后再升级。但对 2 个注入点来说，per-channel 的自由度可能<strong>过大</strong>（容易过拟合）</td>
+</tr>
+<tr>
+  <td><strong>③ Band gate</strong><br><span class="small">g_LL, g_LH, g_HL, g_HH</span></td>
+  <td class="mono" style="font-size:11.5px">每个频带一个 γ</td>
+  <td><strong>最接近的先例是 AFFNet（ICCV'23）</strong>：可学习掩码是 <strong>逐通道 × 逐频率 × 逐实例</strong>的，<strong>+0.3 M 参数（&lt;6%）换 +1.9 Top-1</strong>。<br><strong>FSNet（TPAMI）</strong>明确指出固定小波切分"不够灵活"</td>
+  <td class="num">+数千参数</td>
+  <td>对应你的 Stage 5。这是<strong>回答"HH 是否有负迁移"的机制</strong>——比事后消融更有说服力</td>
+</tr>
+<tr>
+  <td><strong>④ Timestep-aware</strong><br><span class="small">γ(t)</span></td>
+  <td class="mono" style="font-size:11.5px">γ = f(t, γ_max)</td>
+  <td><strong>证据最强的一类。</strong><br>· <strong>DiT adaLN</strong>：把 γ/β 从 t 与 c 的嵌入回归出来<br>· <strong>TASR（ACM MM'25）</strong>：<strong>sigmoid 有界 α ∈ [0,1]</strong>，行为是"早期高 α（保真 LR 条件）、后期低 α（让 SD 生成细节）"。消融：去掉 timestep 条件 → LPIPS 0.3762→0.3965、MANIQA 0.6007→0.5856<br>· <strong>CFG 时序调度（2025）</strong>：ω=9、NFE=10 时 ImageReward <strong>0.223 → 0.932</strong>、FID <strong>38.99 → 30.26</strong>——仅靠让强度随 t 变化<br>· <strong>ResQu / FDDM / HDW-SR / FouriScale / DiffuseHigh 全部做了时序衰减</strong></td>
+  <td class="num">+几十参数</td>
+  <td><strong>F2 的第二版。</strong>成本几乎为零但证据最一致。<strong>形状建议"弱–强–弱"（中段最强），不要单调递减</strong>——Beta Sampling（WACV'25）测得谱变化率随 t 呈 <strong>U 形</strong>，不是单调</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="p6gate">6.2 有界 Gate 的一个具体陷阱（这是最容易踩的坑）</h3>
+
+<div class="callout warn">
+  <span class="t">σ(a) 参数化会让你在起点几乎没有梯度</span>
+  <p>你的设计是 <code>γ = γ_max · σ(a)</code>，<code>γ_max = 0.1</code>，初始化使 <code>γ ≈ 0.01</code>。算一下梯度：</p>
+  <div class="tbl-wrap" style="margin:10px 0">
+  <table>
+    <thead><tr><th>参数化</th><th>求解 a₀</th><th class="num">dγ/da 在 γ₀=0.01 处</th><th>相对倍数</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">γ = a（无界线性）</td><td class="mono">a₀ = 0.01</td><td class="num win">1.000</td><td>1×</td></tr>
+      <tr style="background:#e9f7f1"><td class="mono">γ = γ_max·tanh(a)</td><td class="mono">a₀ = atanh(0.1) = 0.1003</td><td class="num win">0.0990</td><td><strong>11× 优于 σ</strong></td></tr>
+      <tr style="background:#fdeeee"><td class="mono">γ = γ_max·σ(a)</td><td class="mono">a₀ = logit(0.1) = −2.197</td><td class="num lose">0.0090</td><td><strong>1×（最差）</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="margin-bottom:0">推导：<code>dγ/da = γ_max·σ(a)·(1−σ(a)) = 0.1 × 0.1 × 0.9 = 0.009</code>。而 <code>tanh</code> 在原点附近导数为 1，所以 <code>dγ/da = 0.1 × (1 − 0.01) = 0.099</code>。<strong>在同一个 γ₀ 下，tanh 给出的梯度是 sigmoid 的 11 倍。</strong>
+  <br><br><strong>为什么这很危险：</strong>ControlNet/ReZero 里"起点梯度小"是可以接受的，因为<strong>分支本身是精确零，只有 gate 在动</strong>。你的情况不同——<strong>gate 的参数 a 与频域分支的权重是同时冷启动的</strong>。如果 a 的梯度只有 0.009，而 γ 又需要在前几千步内从 0.01 长到有意义的值，你会看到"频域分支看起来没被激活"的假象，然后误判"频域没用"。</p>
+</div>
+
+<div class="grid2">
+  <div class="card tight">
+    <div class="badge b-cond">推荐 1</div>
+    <h4>用 tanh 而不是 sigmoid</h4>
+    <p class="small" style="margin-bottom:0"><code>γ_l = γ_max · tanh(a_l)</code>，<code>γ_max = 0.1</code>，<code>a_l</code> 初始化为 <code>atanh(0.1) ≈ 0.1</code>。梯度提升 11×，且仍然严格有界 <code>(−γ_max, γ_max)</code>。
+    <br><span class="small"><strong>注意</strong>：<code>γ_max·σ(a)</code> 只是<strong>渐近逼近</strong> γ_max 而永远达不到；如果 0.1 是"应该可达的上限"，<code>tanh</code> 或 <code>clamp</code> 更干净。</span></p>
+  </div>
+  <div class="card tight">
+    <div class="badge b-cond">推荐 2</div>
+    <h4>γ_max = 0.1 有文献锚定</h4>
+    <p class="small" style="margin-bottom:0">LayerScale 用 <strong>ε = 0.1</strong>（深度 ≤18）、10⁻⁵（深度 24）、10⁻⁶（深度 36）。ReZero 的<strong>学出来的 |α| 收敛到 ≈1/L</strong>（12 层 0.0898、64 层 0.0185）。你只有 2 个注入点，L≈2–4，所以平衡点 γ ~ 0.1–0.25 是正确量级。<strong>γ_max = 0.1 是保守且可辩护的。</strong></p>
+  </div>
+</div>
+
+<div class="callout neutral">
+  <span class="t">关于"有界"的论证强度——请诚实引用</span>
+  本次检索中，<strong>唯一一个明确论证"有界 gate 优于无界"的是 TASR（ACM MM'25）</strong>，而它的理由是<strong>约束优化空间以阻止 reward hacking</strong>（直接对 ControlNet 施加质量奖励会导致"奇怪羽毛""天上的人眼"等 reward hacking；sigmoid 把 α 限制在 0–1 使 hacking 的最优点不可达）。<strong>这不是"有界 ⇒ 训练稳定"意义上的动力学等距论证。</strong>
+  <br><br>另一个是 <strong>Spectral Gating Networks</strong> 的 homotopy consistency 定理（Thm 3.1）：初始化时谱分支幅度为 O(ε)，使 <code>∇_{θ_base}L⁽⁰⁾ = ∇_{θ_base}L_MLP⁽⁰⁾ + O(ε)</code>——<strong>即模型在起点继承基础网络的优化行为，逐步把容量分配给谱特征</strong>。这个论证比"有界更安全"更严谨，如果你要写 related work，引这个。
+</div>
+
+<h3>6.3 你 F2 的日志建议（在你第 19 节基础上补充）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">记录项</th><th>定义</th><th>为什么重要</th></tr></thead>
+<tbody>
+<tr><td class="mono">γ₃₂, γ₁₆</td><td>两个 gate 的当前值</td><td>直接读出"模型依赖哪个尺度"。你的预期（16px 语义尺度需要更强控制）需要数据验证</td></tr>
+<tr><td class="mono">ρ_l = RMS(Δh_l)/RMS(h_l)</td><td>条件残差相对幅度</td><td><strong>这是判断"频域分支是否真的在起作用"的关键量。</strong>如果 ρ 一直在 0.001 量级，说明 gate 卡在 0.01 没动 → 回去看 6.2 的梯度问题</td></tr>
+<tr><td class="mono">‖W_adapter‖</td><td>原有 adapter 的权重范数</td><td>与 E1 的 0.189→0.434 对比，判断是否又出现过强注入</td></tr>
+<tr><td class="mono">a_l</td><td><strong>gate 的原始参数</strong>（不是 γ）</td><td><strong>新增。</strong>如果 γ 不动，你需要立刻区分是"a 不动"还是"a 在动但 tanh/σ 把它压住了"。只记 γ 会看不出来</td></tr>
+<tr><td class="mono">per-band 能量比</td><td>‖Δh‖ 在各频带的投影</td><td>对应 Stage 5 的预备。如果 HH 的能量一直很小，说明模型自己在做频带选择</td></tr>
+<tr><td>验证指标</td><td>DAB corr / 128px / 32px corr / FID / DAB MAE / HER2 agreement</td><td><strong>必须分层（按 HER2 0/1+/2+/3+）</strong>——文献一致显示 3+ 是失败区间</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="p6b">6.4 Timestep × Frequency：证据现状（对应你 Prompt 第十二节）</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="min-width:170px">主张</th><th style="min-width:230px">证据 / 来源</th><th style="width:130px">状态</th></tr></thead>
+<tbody>
+<tr>
+  <td>标准 DDPM 先破坏高频，反过程在<strong>期望意义</strong>上低频→高频</td>
+  <td>Rissanen（ICLR'23）、Dieleman（2024）、Falck（2025）三方都同意</td>
+  <td><span class="badge b-cond">广泛共识</span></td>
+</tr>
+<tr>
+  <td>这个层级是"近似谱自回归"</td>
+  <td>Dieleman 本人大量保留：仅期望意义、拐点不锐、τ 取值随意、<strong>对音频完全不成立</strong></td>
+  <td><span class="badge b-cond">描述被接受，但作者自己hedge</span></td>
+</tr>
+<tr>
+  <td><strong>这个层级是必然的吗？</strong></td>
+  <td><strong>Falck et al.（arXiv 2505.11278）：不是。</strong>EqualSNR（有色噪声，所有频率 SNR 相等）性能相当甚至更好：<strong>LSUN-Church <span class="win">19.42 vs DDPM 22.05–40.31</span></strong>。层级是"白噪声 + 数据服从幂律谱"两个条件的产物，两者都可以改</td>
+  <td><span class="badge b-ana">有争议，权威反驳</span></td>
+</tr>
+<tr>
+  <td><strong>这个层级对高频有害吗？</strong></td>
+  <td><strong>Falck 的频带分类器实验（最强硬证据）：</strong>判别生成图与真实图的频带分类器，DDPM 的<strong>真阳率 99% / 100% / 100%</strong>（5%/15%/25% 频带），EqualSNR 只有 <strong>13% / 16% / 10%</strong>。⇒ <strong>DDPM 生成的高频几乎可以被完美识别为假</strong></td>
+  <td><span class="badge b-cond">有量化支持</span></td>
+</tr>
+<tr>
+  <td>谱变化率随 t 单调递减（低频早、高频晚）</td>
+  <td><strong>Beta Sampling（WACV'25）实测是 U 形</strong>：早期低频、中期变化小、<strong>后期高频</strong>。基于此的 Beta 采样：ADM-G 4 步 <strong>FID <span class="win">138.66 → 31.64</span></strong>。但 SD 上结果混合（20 步 uniform 14.57 → Beta 15.10，反而更差）⇒ <strong>最优分配依赖模型/数据</strong></td>
+  <td><span class="badge b-cond">有实证，非单调</span></td>
+</tr>
+<tr>
+  <td><strong>在卷积 U-Net 的学习表示里，低频真的先学会吗？</strong></td>
+  <td><strong>Wang &amp; Pehlevan（NeurIPS'25 Spotlight）：</strong>理论给出普适反方差谱律 <code>τ ∝ λ⁻¹</code>，但在扩展到深度线性网络与循环全宽卷积后指出——<em>"weight sharing merely multiplies learning rates… whereas local convolution introduces a qualitatively different bias"</em>，实验上 <em>"<strong>Convolutional U-Nets… display rapid near-simultaneous emergence of many modes</strong>"</em></td>
+  <td><span class="badge b-ana">同侪评审，对你的架构最相关</span></td>
+</tr>
+<tr>
+  <td>反过来做（先高频）可行吗</td>
+  <td><strong>FlippedSNR 失败</strong>（Falck）；<strong>Beta(2,5) 崩到 FID ≈ 417</strong>（Beta Sampling）</td>
+  <td><span class="badge" style="background:var(--warn-bg);color:var(--warn);border:1px solid #f0c6c6">已被否定</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">对你的设计的净含义</span>
+  证据<strong>不支持</strong>把"高频带在高 t 注入、低频带在低 t 注入"这种硬编码调度写进条件设计。它<strong>支持</strong>两件事：
+  <ol style="margin-bottom:0">
+    <li><strong>让 gate 成为 t 的温和、可学习函数</strong>（先例：DiT adaLN-Zero、TASR、CFG 时序调度）。<strong>形状取"弱–强–弱"（中段最强）</strong>，因为 Beta Sampling 测到谱变化率是 U 形。</li>
+    <li><strong>在高 t 阶段不要过度约束高频内容</strong>——那正是标准调度被证明劣化高频的区域（Falck 的 99–100% 真阳率）。</li>
+  </ol>
+  <br>还有一个对你特别重要的推论：<strong>既然卷积 U-Net 的频带涌现接近同时（Wang &amp; Pehlevan），"多尺度小波条件天然对齐 U-Net 层级"这个论证就不应被当作强论据。</strong>它仍然是<strong>合理的工程选择</strong>（shape 对齐、参数少），但<strong>不要声称它有"顺应网络固有频率层级"的理论优势</strong>。
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<!-- ============ PART 7 ============ -->
+<h2 id="p7"><span class="num">Part 7</span>F1 → F2 → F3 → F4 实验路线</h2>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="width:64px">阶段</th><th style="width:190px">唯一变量</th><th style="min-width:250px">配置</th><th style="min-width:200px">成功判据</th><th style="width:140px">失败则说明</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>F0</strong><br><span class="small">前置</span></td>
+  <td>VAE 侧频谱修复<br><span class="small">（可选但强烈建议）</span></td>
+  <td>LWD 式 scale-consistency 损失微调 VAE：<code>α‖D(E(z_down)) − x_down‖²</code>。<br>参考效果：Flux-VAE rFID <strong>0.73 → 0.50</strong>，PSNR 27.18 → 28.14。<br>或者按 FA-VAE 在 decoder 加频域补偿模块</td>
+  <td>重建 rFID 明显下降；<strong>DWT(z_HE) 的高频子带不是压缩噪声</strong>（可视化验证）</td>
+  <td>如果 VAE 已经把 DAB 相关的高频压掉了，<strong>F1 之后的所有结论都会被污染</strong>——这是必须先排除的混杂</td>
+</tr>
+<tr style="background:#f8fcfa">
+  <td><strong>F1</strong><br><span class="small">核心</span></td>
+  <td><strong>只把 condition 表示换成 2 级 Haar DWT 频域表示</strong></td>
+  <td>起点 <code>base_v@7000</code>；condition = 2 级 Haar DWT；注入 32px + 16px；<strong>只改 hidden，不动 skip</strong>；<strong>无 gate</strong>（<code>h' = h + Δh</code>）；PALS 0.1 / CTPC 0 / FSS 0 / NCE 0；backbone lr 1e-4；adapter lr 用 E1b 稳定值；<strong>A 的末层 zero-init</strong>；fast val 3000 步</td>
+  <td>DAB corr <strong>0.439 → ≥0.45</strong>；128px corr 不明显下降；FID 不明显恶化。<br><strong>同时检查 ρ_l 是否从 0 明显上升</strong>（否则是分支没激活，不是频域无效）</td>
+  <td>若 FID 明显恶化 / block corr 下降 / DAB corr 不升反降 → <strong>不是"频域没用"，而是当前频域条件设计有问题</strong>（固定基？投影太强？注入点不对？）</td>
+</tr>
+<tr>
+  <td><strong>F1-ab</strong><br><span class="small">消融</span></td>
+  <td>频带子集</td>
+  <td><strong>F1-A</strong>：LL+LH+HL+HH（全频带）<br><strong>F1-B</strong>：LL+LH+HL（去掉 HH）<br>建议<strong>追加</strong> <strong>F1-C</strong>：LL only（纯低频近似）——文献里没人做过，成本极低</td>
+  <td>如果 <strong>F1-B &gt; F1-A</strong>，说明高频（HH）存在<strong>负迁移</strong>——H&amp;E 的染色纹理/扫描噪声被带入 IHC。这与 StainDiffuser 的警告一致：GAN 把"domain-specific information in high-frequency texture features"藏起来导致幻觉</td>
+  <td>如果三者差异都在噪声范围内 → <strong>频域分解的"分带"本身没有贡献</strong>，增益可能只来自"多了一层 adapter"。此时应回到 Model A 做参数量匹配对照</td>
+</tr>
+<tr>
+  <td><strong>F2</strong><br><span class="small">门控</span></td>
+  <td><strong>只加 2 个标量 bounded gate</strong></td>
+  <td><code>h'_l = h_l + γ_l·Δh_l</code>，<strong>第一版只设 γ₃₂、γ₁₆ 两个标量</strong>。<br><strong>不要一次加</strong> frequency-band gate / channel gate / timestep-aware gate / attention gate。<br>建议参数化：<code>γ_l = γ_max·tanh(a_l)</code>，<code>γ_max = 0.1</code>，<code>a_l ← atanh(0.1)</code>（见 6.2 的梯度分析）</td>
+  <td>F1=0.45 → <strong>F2=0.47</strong>，同时 FID 不明显恶化、128px/32px corr 不下降、DAB MAE 不恶化、不出现碎裂。<br><strong>额外检查</strong>：γ₃₂ 与 γ₁₆ 的收敛值比值——是否验证了"16px 语义尺度需要更强控制"</td>
+  <td>若 F2 ≈ F1 → <strong>条件强度不是瓶颈</strong>，回到频域表示本身找问题（而不是继续加 gate 复杂度）</td>
+</tr>
+<tr>
+  <td><strong>F2-b</strong><br><span class="small">门控升级</span></td>
+  <td>γ 的函数形式</td>
+  <td>对比：① 常数 γ；② <code>γ(t)</code> 用现有 timestep embedding 经 adaLN 回归（TASR/DiT 式），<strong>形状取"弱–强–弱"</strong>；③ 无界线性 γ（验证有界是否真的必要）</td>
+  <td><code>γ(t)</code> 明显优于常数 γ。参考量级：CFG 时序调度在 NFE=10 时 ImageReward 0.223→0.932、FID 38.99→30.26</td>
+  <td>若常数 γ ≈ γ(t) → 说明该任务对条件强度的时序不敏感，省掉这部分复杂度</td>
+</tr>
+<tr>
+  <td><strong>F3</strong><br><span class="small">频域损失</span></td>
+  <td><strong>只加一个频域损失</strong></td>
+  <td><strong>注意：F3 必须关闭 F1/F2 的频域条件，或至少做成 2×2 因子设计</strong>（条件开/关 × 损失开/关），否则无法归因。<br>建议 SC-Flow 式<strong>径向 PSD 对数 MSE</strong>（<code>L = Σ_b w_b (log P̂_b − log P_b)</code>，B=24 径向箱）。<br><strong>β 权重必须做敏感性扫描</strong></td>
+  <td>FID 下降且 <strong>DAB corr 不下降</strong>。硬性参照：SC-Flow 不加谱损失时生成 PSD 衰减到 GT 的 <strong>1/100</strong></td>
+  <td>若 β 稍大就崩 → 与 HDW-SR 一致（β=0.2→24.52、<strong>β=0.5→10.30</strong>）。此时改用 LWD 式<strong>时变掩码</strong>（只在高频区域多给监督步数，而不是全局加权）</td>
+</tr>
+<tr>
+  <td><strong>F4</strong><br><span class="small">扩展</span></td>
+  <td>多尺度注入点</td>
+  <td>从 32/16 扩到 <strong>64/32/16</strong>（或 64/32/16/8）。<br><strong>理由</strong>：32px/16px 是 latent 最粗的两级，而 HER2 评分依赖的<strong>细胞核纹理与膜性染色细节在 64px latent 及以上</strong>。ControlNet 注入 12 个 encoder 块 + 1 mid，T2I-Adapter 注入 4 级</td>
+  <td>加入 64px 注入点后，DAB corr 或 32px block corr 进一步改善</td>
+  <td>若扩大注入面无效而提高 γ_max 有效 → 说明是<strong>强度</strong>问题；反之若扩大有效 → 是<strong>覆盖</strong>问题。<strong>文献倾向后者</strong>（ControlNet 消融："ControlNet-lite is not strong enough"）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout key">
+  <span class="t">F1/F2 完成后不要立刻堆模块——你的第 21 节判断正确</span>
+  下一阶段才考虑 <strong>Registration-tolerant Spatial Loss</strong>，因为完整模型的职责分工要清楚：
+  <div class="tbl-wrap" style="margin:10px 0 0">
+  <table>
+    <thead><tr><th style="width:200px">模块</th><th>作用</th><th style="width:150px">文献对应</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Frequency Condition</strong></td><td>H&amp;E 结构<strong>怎样</strong>进入 UNet</td><td>cWDM / HDW-SR / ResQu</td></tr>
+      <tr><td><strong>Gate</strong></td><td>条件注入<strong>多强</strong></td><td>TASR / DiT adaLN-Zero / LayerScale</td></tr>
+      <tr><td><strong>Spatial Loss</strong></td><td>DAB <strong>应该在哪里</strong></td><td>DGR（Nat Commun'26）/ ContourDiff / UNIStainNet 的 H&amp;E 轴边缘损失</td></tr>
+      <tr><td><strong>MLPA / FOD</strong></td><td>蛋白表达<strong>应该有多少</strong></td><td>PSPStain 的 FOD map / CCPL 的 FOD 统计一致性 / TDKstain 的 DAB mask</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="callout neutral">
+  <span class="t">建议补充：把"非配准容忍损失"作为 F1 的并行对照</span>
+  文献里已经有一条<strong>比频域更直接命中你的问题</strong>的路线，而且证据很硬：
+  <ul style="margin-bottom:0">
+    <li><strong>UNIStainNet 的损失套件</strong>：L1 <strong>只在 64px 算</strong>、LPIPS 在 128/256 算（降低分辨率使失配变成亚像素）、<strong>边缘损失算在"生成图 vs 输入 H&amp;E"轴上</strong>（这对是像素对齐的！）、<strong>非条件判别器</strong>（条件判别器会把空间不一致学成"真实"）。消融：去掉全部空间条件 → FID 30.0→40.1、Pearson-r 0.937→0.681</li>
+    <li><strong>DGR（Nat Commun 2026）</strong>：把生成与配准<strong>解耦</strong>——R1 配准降噪 + R2 位置一致性对抗约束。<strong>注入 5 级合成失配后每级都最优，最严重失配下 PSNR 最多 +3.4 dB</strong></li>
+    <li><strong>STN in the loss path（MMAsia'25）</strong>：可微配准模块放在损失路径里对齐 GT-IHC 与生成-IHC</li>
+  </ul>
+  <strong>建议</strong>：把这三条中的至少一条作为 F1 的<strong>并行对照</strong>，否则你无法回答审稿人最可能问的问题——"你的增益是频域带来的，还是仅仅因为多了一个结构条件？"
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<!-- ============ PART 8 ============ -->
+<h2 id="p8"><span class="num">Part 8</span>Top 5 Risks</h2>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="width:36px">#</th><th style="width:170px">风险</th><th style="min-width:230px">Warning（早期预警信号）</th><th style="min-width:210px">Validation（如何验证）</th><th style="min-width:210px">Fallback（回退方案）</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>R1</strong></td>
+  <td><strong>增益来自参数量，而不是频域</strong><br><span class="small">最容易被审稿人击中的一点</span></td>
+  <td>频域 adapter 参数量明显大于原 spatial adapter；DAB corr 提升的同时 FID 也明显改善（说明是整体容量提升）</td>
+  <td><strong>Parameter-matched baseline</strong>：把原 spatial adapter 的参数量调到与频域版一致，重跑。<br>再加一个 <strong>Model A'</strong>：把频域分支的输入从 DWT 子带换成"同样通道数的原始 latent 复制/随机投影"（<strong>消融掉频域信息但保留容量</strong>）</td>
+  <td>如果 parameter-matched baseline 追平 → 说明增益不是频域的。<strong>此时要么降低频域版参数（轻量版 179k），要么正面承认"结构化表示 + 更多容量"共同贡献</strong>。不要含糊过去</td>
+</tr>
+<tr>
+  <td><strong>R2</strong></td>
+  <td><strong>高频负迁移：H&amp;E 的染色纹理 / 扫描噪声被搬进 DAB</strong><br><span class="small">StainDiffuser 明确警告的失效模式</span></td>
+  <td>生成图的 DAB 区域出现与 H&amp;E 同位置的细碎纹理；<strong>HH 子带的 ρ_l 异常大</strong>；视觉上"伊红味道"渗进棕色通道；DAB MAE 不降反升</td>
+  <td>① <strong>F1-B vs F1-A</strong>（去 HH）——如果去 HH 更好，直接证实；② 对生成图做 <strong>DAB 通道分离（Beer–Lambert 色反卷积）</strong>，检查非 DAB 通道是否残留 H&amp;E 纹理；③ 参考 Falck 的<strong>频带分类器</strong>：训一个判别"生成 vs 真实"的频带分类器，看高频真阳率</td>
+  <td>① 关闭 HH（只用 LL+LH+HL）；② 改用<strong>可学习 band 权重</strong>让模型自己压低 HH（Stage 5）；③ 加 <strong>SAWR 式逐染色通道小波正则</strong>——对 H 与 DAB 通道分别施加谱约束</td>
+</tr>
+<tr>
+  <td><strong>R3</strong></td>
+  <td><strong>频域条件破坏空间定位</strong><br><span class="small">ContourDiff 的数据是硬证据</span></td>
+  <td>128px / 32px block corr 下降；DAB corr 上升但块级相关下降（说明只有全局统计对上了，局部结构没对上）；生成图出现"结构合理但位置漂移"的 DAB</td>
+  <td>分层看：<strong>全局 corr vs 128px vs 32px</strong>。如果只有全局上升、块级下降，就是典型的"频域丢了空间定位"。<br>另做<strong>局部窗口相关</strong>（local-window correlation）而不是全局相关</td>
+  <td>① 减小频域分支的影响面（只注入 32px 或只注入 16px）；② 换成<strong>带空间局部性的注入</strong>（DWT 本身有局部性，但 projection 用 3×3 而非 1×1）；③ <strong>把 FGDM 式"空间高通图"作为对照</strong>（Sobel 边缘保留空间定位）</td>
+</tr>
+<tr>
+  <td><strong>R4</strong></td>
+  <td><strong>低频只学到 dataset prior</strong><br><span class="small">对无配准数据尤其危险</span></td>
+  <td>生成的 DAB 在不同 H&amp;E 输入下高度相似；<strong>γ 的收敛值差异很小</strong>（说明 gate 没在学样本相关内容）；DAB corr 提升但 per-sample 方差下降</td>
+  <td><strong>Per-sample 分析</strong>：固定 seed，换不同 H&amp;E 输入，测生成 DAB 的差异度。如果 LL 子带主导且输出几乎不变 → 低频在学先验。<br>参考 FDDM 的消融：去掉低频路径 FID 稳定但 SSIM/MSE/MAE 劣化——<strong>说明低频路径主要影响解剖保真，而非真实感</strong></td>
+  <td>① 提高 LH/HL/HH 的权重；② 用<strong>差域</strong>（Med-D3CG 式：预测子带残差而非目标本身）——<strong>这直接命中"不要复用源低频"的原则</strong>；③ 引入 non-alignment-aware 的 per-sample 损失</td>
+</tr>
+<tr>
+  <td><strong>R5</strong></td>
+  <td><strong>小波分解改变 latent 分布，与 diffusion objective 冲突</strong></td>
+  <td>训练初期 loss 尖峰；<strong>FADM 报告的"小波边界伪影被跨 timestep 重复施加放大"</strong>；生成图出现 32px / 16px 尺度的格状伪影；ρ_l 剧烈震荡</td>
+  <td>① 可视化 <code>DWT(z_HE)</code> 的各子带，确认不是噪声；② 单独跑"只加 DWT 分解、投影恒等映射"的版本，看是否有伪影；③ <strong>WDM 的教训：不要在小波域预测噪声</strong>（会产生棋盘伪影），保持 v-prediction 在原始 latent 域</td>
+  <td>① 保持 <strong>v-prediction 在原 latent 域</strong>，DWT 只用于条件侧，不改变扩散目标域；② 用 <strong>zero-padding 而非循环边界</strong>减少边界伪影；③ 加 <strong>F1 时暂时不做多尺度</strong>（WaveDiff 的渐进多尺度 FID 13.11 vs 5.94 是明确警告）</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="p8b">8.1 失败案例手册（对应你 Prompt 第二十节）</h3>
+
+<p class="lede">下面每条都尽量挂到<strong>文献里已经真实发生过的负面结果</strong>上，而不是凭空推测。</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+  <th style="width:150px">失效模式</th><th style="min-width:200px">早期预警</th><th style="min-width:220px">验证方法</th><th style="min-width:200px">回退方案</th><th style="width:130px">文献依据</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><strong>高频 H&amp;E stain texture 被迁移</strong></td>
+  <td>DAB 区域出现 H&amp;E 同位置的细碎纹理；HH 的能量占比持续偏高</td>
+  <td>Beer–Lambert 色反卷积分离 H / DAB 通道，检查 H 通道是否残留结构；对生成图做 H&amp;E 分类器测试</td>
+  <td>关闭 HH（F1-B）；或加 SAWR 式逐染色通道小波正则</td>
+  <td class="small">StainDiffuser 警告 GAN 把"domain-specific information in high-frequency texture features"藏起来导致幻觉</td>
+</tr>
+<tr>
+  <td><strong>Scanner noise</strong></td>
+  <td>生成图高频出现与组织无关的周期性/条纹纹理；FID 在真实数据上恶化</td>
+  <td>对 H&amp;E 做频谱分析，标出扫描仪特有的频率尖峰；检查 DWT 子带是否复现这些尖峰</td>
+  <td>① 在 DWT 前做轻度低通（但注意 FGDM 的 η 扫描显示过度滤波会让 FID 恶化到 34.6）；② 用可学习 band 权重自动压低；③ <strong>只保留 LH/HL（方向性边缘）而去掉 HH（各向同性噪声）</strong></td>
+  <td class="small">FGDM 的 η 敏感性；FCDM 用固定高斯核而非学习核的设计理由</td>
+</tr>
+<tr>
+  <td><strong>Frequency condition 破坏空间定位</strong></td>
+  <td>全局 corr 升、块级 corr 降；DAB 位置整体漂移</td>
+  <td>全局 vs 128px vs 32px 分层对比；local-window correlation</td>
+  <td>减小影响面；projection 改 3×3；改用 Sobel 空间高通作为对照</td>
+  <td class="small">ContourDiff：去掉轮廓条件 DSC 0.705→<strong>0.264</strong>；FGDM 在髋/大腿上 DSC 仅 <strong>0.074</strong></td>
+</tr>
+<tr>
+  <td><strong>低频只学到 dataset prior</strong></td>
+  <td>不同输入生成高度相似的 DAB；γ 收敛值差异极小</td>
+  <td>固定 seed 换输入，测输出差异度；per-sample corr 的方差</td>
+  <td>提高细节带权重；改用<strong>差域预测</strong>（Med-D3CG 式）；加 per-sample 结构损失</td>
+  <td class="small">FDDM 消融：去掉低频路径 FID 稳定但 SSIM/MSE/MAE 劣化</td>
+</tr>
+<tr>
+  <td><strong>Serial-section mismatch 主导结果</strong></td>
+  <td>任何改动都"效果不明显"；不同 seed 的方差大于方法间差异</td>
+  <td><strong>配准受控实验</strong>：在 HER2match 或人工对齐子集上重跑；注入 5 级合成失配（DGR 协议）看指标衰减曲线</td>
+  <td>① 换用非配准容忍指标（DAB corr / 块级 corr / HAPS / SFS）；② 加低分辨率损失（UNIStainNet 的 L1@64px）；③ 引入 DGR 式解耦生成与配准</td>
+  <td class="small">HER2match：<em>"All models trained on HER2match produced vastly improved visuals compared to the widely used consecutive-slide BCI dataset"</em>；BCI 原论文自述"some positions cannot achieve pixel-level alignment"</td>
+</tr>
+<tr>
+  <td><strong>高频造成碎裂</strong></td>
+  <td>DAB 信号出现斑点状/碎裂分布；HER2 分级向极端偏移</td>
+  <td>分层看 HER2 0/1+/2+/3+ 的指标；做 DAB 连通域分析</td>
+  <td>降低高频条件强度；加<strong>平滑先验</strong>（如 total variation 或局部一致性损失）；F2 的 gate 天然是回退手段</td>
+  <td class="small">HDW-SR：过度依赖高频先验会"amplifies pseudo-details and distorts textures"，因此必须在上采样阶段切换回图像自身高频</td>
+</tr>
+<tr>
+  <td><strong>频域模块计算过大</strong></td>
+  <td>iteration time 明显上升；显存吃紧</td>
+  <td>实测每步时间与峰值显存（你的第 9 节已要求记录）</td>
+  <td><strong>本方案基本不会触发</strong>：轻量版仅 179k 参数、56 M MACs、&lt;1 MB 激活。若用了 QUAVE 式四元小波（ResQu 的路线）则成本会显著上升——ResQu 被 48GB A6000 限制到 batch 6</td>
+  <td class="small">ControlNet +23% 显存 / +34% 时间；ResQu batch 6；FreQfusion 吞吐 26.5→23.0 FPS</td>
+</tr>
+<tr>
+  <td><strong>Wavelet decomposition 改变 latent distribution</strong></td>
+  <td>训练初期 loss 尖峰；出现 32px/16px 尺度格状伪影</td>
+  <td>可视化各子带；跑"DWT + 恒等投影"的对照；检查是否在小波域做了预测</td>
+  <td>DWT 只用于<strong>条件侧</strong>，扩散目标保持原始 latent 域；zero-padding 边界；F1 不做多尺度</td>
+  <td class="small"><strong>WDM：在小波域预测噪声 → 棋盘伪影</strong>（改预测 x₀）；<strong>WDM 的 WavU-Net 在小波特征空间做上下采样没有提升</strong>（FID 0.259 vs 0.154）；<strong>WaveDiff 渐进多尺度 FID 13.11 vs 5.94</strong></td>
+</tr>
+<tr>
+  <td><strong>频域条件与 diffusion objective 冲突</strong></td>
+  <td>FID 与 DAB corr 同时恶化；ρ_l 震荡不收敛</td>
+  <td>单独跑"频域条件 + 无其他改动"的隔离实验；对照 F1 与 baseline 的 loss 曲线</td>
+  <td>① 降低 γ_max；② 让 γ 随时间衰减（HDW-SR / FouriScale 的退火）；③ <strong>退回 LWD 式"频域只作用于损失，不作用于条件"</strong>——这是文献里最强的反方方案，也是必须做的对照</td>
+  <td class="small">LWD 作者明确反对条件路线；FouriScale 需要退火（前 S_init 步用理想核，之后衰减回原始 U-Net）；DiffuseHigh 的 δ=15 比 δ=5 差 0.45 FID</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<!-- ============ PART 9 ============ -->
+<h2 id="p9"><span class="num">Part 9</span>最终推荐</h2>
+
+<div class="callout key">
+  <span class="t">如果现在只能实现一个频域模块，应该实现什么？</span>
+  <p style="font-size:15.5px;margin-bottom:8px"><strong>实现「H&amp;E 的两级 Haar DWT → 轻量 projection → 加性残差注入 UNet 的 32px 与 16px hidden stream」这一个模块，不 gate、不频域损失、不做多尺度。</strong></p>
+  <p style="margin-bottom:0">这就是你的 <strong>F1</strong>。理由是它是<strong>变量最少、hot-start 最安全、可归因性最强</strong>的一步：DWT 无参数 + A 末层 zero-init ⇒ 起点前向等价于 base_v@7000；一次只改 condition representation 一个变量 ⇒ 无论结果好坏都能明确解释。</p>
+</div>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:150px">决策项</th><th style="width:210px">推荐</th><th>理由与具体数字</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>FFT / DWT / DCT</strong></td>
+  <td><strong>DWT（Haar）</strong></td>
+  <td>
+    ① <strong>空间局部性</strong>是 FFT/DCT 没有的，而你的核心需求是"逐样本空间关系"；<br>
+    ② <strong>shape 天然对齐</strong>：64→32→16 精确对应两个注入点；<br>
+    ③ <strong>Falck et al. 指出 U-Net 的平均池化与 Haar 小波投影共轭</strong>——这是最强的理论支撑；<br>
+    ④ <strong>病理域已有先例</strong>（SAWR 逐染色通道小波正则；BMC 混合 GAN 的谱滤波模块，去掉后 FID 41.83→61.91）；<br>
+    ⑤ <strong>hot-start 友好</strong>：0 参数，不引入随机初始化；<br>
+    ⑥ 若后续要做可学习版本，AFFNet 的消融显示 FFT（79.8）&gt; DCT（79.6）&gt; 小波（78.6），差距仅 1.2 分——<strong>不值得为这 1.2 分放弃空间局部性</strong>
+  </td>
+</tr>
+<tr>
+  <td><strong>哪些频带</strong></td>
+  <td><strong>第一版：全部 4 个 band</strong>（LL+LH+HL+HH），但<strong>记录各 band 的能量占比</strong><br><br>F1-ab 立刻做：<strong>全频带 / 去 HH / 仅 LL</strong></td>
+  <td>
+    文献里<strong>没有人做过这个消融</strong>（这是你可以贡献的一个小实验）。<br>
+    已知的相反证据：cWDM 用全部 8 个子带统一权重；ResQu 刻意只选信息量大的子带；FGDM 的高频条件主导 SSIM（去高频 0.908→0.748）；FDG 认为低频支配结构。<br>
+    <strong>我的判断</strong>：<strong>LH/HL（方向性边缘）最可能是承重的</strong>——它们对应膜边界与腺体轮廓，正是 HER2 评分看的结构；<strong>HH 最可能负迁移</strong>（各向同性高频 ≈ 染色纹理 + 扫描噪声）。<span class="badge b-ana">推断，需 F1-ab 验证</span>
+  </td>
+</tr>
+<tr>
+  <td><strong>哪个 UNet 层</strong></td>
+  <td><strong>第一版：32px + 16px（你的原计划）</strong><br><br>F4 时扩到 <strong>64/32/16</strong></td>
+  <td>
+    第一版保持 32/16 是为了变量最少。<strong>但必须知道这是一个真实的局限</strong>：32px/16px 是 latent 最粗的两级，而 <strong>HER2 评分依赖的细胞核纹理与膜性染色细节在 64px latent 及以上</strong>。<br>
+    文献参照：ControlNet 注入 12 个 encoder 块 + 1 mid；T2I-Adapter 注入 4 级（64/32/16/8）；HDW-SR 逐级注入。<br>
+    <strong>如果 F1 增益微弱，优先怀疑"注入点太粗"，而不是"频域没用"。</strong>ControlNet 的消融明确显示浅层轻量注入"is not strong enough"
+  </td>
+</tr>
+<tr>
+  <td><strong>是否 Gate</strong></td>
+  <td><strong>F1 不加，F2 加两个标量</strong><br><br>参数化用 <code>γ = γ_max·tanh(a)</code>，<code>γ_max=0.1</code>，<code>a₀ = atanh(0.1)</code></td>
+  <td>
+    理由是你第 8 节的判断（正确）：<strong>第一轮必须先回答"频域 condition 本身有没有价值"</strong>，否则无法区分频域表示与门控机制的贡献。<br>
+    F2 用 tanh 而非 sigmoid 的理由见 <strong>6.2</strong>：同 γ₀=0.01 下 tanh 的梯度是 σ 的 <strong>11 倍</strong>（0.099 vs 0.009）。<br>
+    γ_max=0.1 由 LayerScale（ε=0.1）与 ReZero（学出的 |α|≈1/L）锚定
+  </td>
+</tr>
+<tr>
+  <td><strong>是否 frequency loss</strong></td>
+  <td><strong>F1/F2 关闭（你的第 11 节判断正确）</strong><br><br>F3 单独加，且<strong>必须做因子设计</strong></td>
+  <td>
+    FSS 关闭的理由你已经写清楚了：频域条件 + 频域损失同时开会无法解释。<br>
+    但要知道<strong>纯条件设计留下了一个已知缺口</strong>：<strong>SC-Flow 证明不加谱损失时生成 PSD 衰减到 GT 的 1/100</strong>。所以 F3 不是可选项，而是必须排进路线。<br>
+    <strong>F3 的 β 必须扫敏感性</strong>：HDW-SR 在 β=0.2→24.52 与 β=0.5→10.30 之间完全崩塌
+  </td>
+</tr>
+<tr>
+  <td><strong>参数规模</strong></td>
+  <td><strong>轻量版 ≈ 179 k</strong>（1×1 + DW3×3 结构）<br>或<strong>中等版 ≈ 958 k</strong>（3×3 + 1×1）<br><br>必须与原 spatial adapter 做 <strong>parameter-matched</strong></td>
+  <td>
+    DWT 本身 0 参数，全部参数在 P 与 A。<br>
+    参照系：AFFNet 的频域掩码分支 +0.3 M（&lt;6% 参数）换 +1.9 Top-1；T2I-Adapter 整体 77 M。<br>
+    <strong>你的第 9 节判断是对的</strong>：如果频域版参数量远大于原版，性能提升不能归因于频域。<strong>建议第一版直接用轻量版（179 k），把参数优势彻底排除掉</strong>
+  </td>
+</tr>
+<tr>
+  <td><strong>V100 可行性</strong></td>
+  <td><strong>完全可行，开销可忽略</strong></td>
+  <td>
+    额外激活 &lt; <strong>1 MB</strong>（vs UNet 主干 GB 级）<br>
+    额外 MACs ≈ <strong>56 M</strong>（vs 主干数十 GFLOPs，&lt;0.2%）<br>
+    额外参数 <strong>179 k</strong>（vs 主干 33 M 量级）<br>
+    预期 iteration time 增加 <strong>&lt;1%</strong><br>
+    <strong>对比</strong>：ControlNet 是 +23% 显存 / +34% 时间；ResQu 因四元小波被限制到 batch 6；FreeU 是零开销但无 FID 证据。<br>
+    <strong>你的 F1 在算力上几乎免费——这是选择这个方案的一个重要实际理由</strong>
+  </td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.1 最终研究目标的回答</h3>
+
+<div class="callout ok">
+  <span class="t">对于无严格配准的 BCI H&amp;E→IHC 条件扩散，频域结构化 H&amp;E condition 是否能够比普通 spatial latent condition 更有效地把组织结构信息传递到 diffusion UNet？</span>
+  <p><strong>基于文献的判断：有条件地"是"，但目前没有任何直接证据。</strong></p>
+  <ul>
+    <li><strong>支持的一面</strong>：① 频域条件在高频结构传递上被证明是承重的（FGDM 去高频 SSIM 0.908→0.748）；② 无配准场景下频域条件有独特优势——FGDM/DDWM <strong>训练时完全看不到源域数据</strong>仍能跨机构泛化，且 FGDM 的 <strong>OOD 肺 CT 结果（PSNR 28.4 / SSIM 0.906）优于 in-distribution 头颈（27.8 / 0.908）</strong>；③ 病理域里显式谱建模已被证明有效（BMC 混合 GAN 去掉谱滤波模块 FID 41.83→61.91）。</li>
+    <li><strong>风险的一面</strong>：① <strong>FGDM 自己的理论假设（两端频谱相似）在 H&amp;E→IHC 上不成立</strong>，必须改用非对称设计；② <strong>ResQu 显示小波条件买的是保真度，不是感知质量</strong>（三个数据集 PSNR 全胜，LPIPS/FID 一次没赢），而 HER2 评分恰恰依赖感知真实度；③ <strong>没有人做过"频域条件 vs 原始图像条件"的参数量匹配消融</strong>——ResQu 缺这个消融，cWDM 缺 baseline，这是文献的真空。</li>
+    <li><strong>结论</strong>：这是一个<strong>真实且可辩护的研究空白</strong>，但<strong>增益不是先验保证的</strong>。F1 的设计必须做到"无论结果好坏都能明确解释"，F1-ab 与 parameter-matched baseline 是<strong>不可省略</strong>的两步。</li>
+  </ul>
+</div>
+
+<div class="callout warn">
+  <span class="t">最后一条：评估体系必须同时改</span>
+  如果你只报 PSNR/SSIM/FID，<strong>即使频域条件真的有效，你也证明不了</strong>。文献给出的三条硬约束：
+  <ol style="margin-bottom:0">
+    <li><strong>PSNR/SSIM 在跨染色任务上几乎不可信</strong>：HAPS 实测与病理医生判断的 Spearman ρ——SSIM_w31 <strong>0.347</strong>、PSNR <strong>0.409</strong>；唯一撑得住的经典指标是 <strong>NCC（0.452）</strong>，因为它对强度/对比度不变。</li>
+    <li><strong>FID 在高频细节上几乎无相关性</strong>：Diffusion-4K 实测 GLCM Score 与人类判断 SRCC <strong>0.75</strong>，而 MUSIQ 0.36、MANIQA 0.20。</li>
+    <li><strong>下游任务一致性比像素指标更有说服力</strong>：3D-WLDM 报 Dice（脾 64.2→81.4）；ContourDiff 报翻译图→真实 MR 的 DSC；SC-Flow 报 F1/AUC。<strong>你的对应物是分层（0/1+/2+/3+）的 HER2 评分一致性。</strong></li>
+  </ol>
+  <br><strong>建议的最小指标集</strong>：DAB corr（全局 + 分块 128/32px）+ DAB MAE + <strong>分层 HER2 agreement</strong> + FID（同口径重跑）+ <strong>GLCM 纹理丰富度</strong>（或 HAPS）+ <strong>Falck 式频带分类器真阳率</strong>（直接测"生成的高频是不是假的"）。
+</div>
+
+<p class="toplink"><a href="#p1">↑ 返回顶部</a></p>
+
+<!-- ============ APPENDIX ============ -->
+<h2 id="app"><span class="num">附录</span>完整文献索引</h2>
+
+<p class="lede">按频域角色分组。<span class="badge b-loss">L</span>=Loss · <span class="badge b-mod">M</span>=Modulation · <span class="badge b-cond">C</span>=Condition · <span class="badge b-dom">D</span>=Domain · <span class="badge b-ana">A</span>=Analysis · <span class="badge b-none">—</span>=无频域</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th style="width:60px">角色</th><th style="min-width:260px">论文</th><th style="width:120px">年份 / Venue</th><th style="min-width:190px">链接</th><th style="width:78px">代码</th></tr></thead>
+<tbody>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>HDW-SR: High-Frequency Guided Diffusion Model based on Wavelet Decomposition</td><td>2025 / arXiv（标注 CVPR 2026）</td><td class="mono" style="font-size:11px">arxiv.org/abs/2511.13175</td><td class="ctr small">未放出</td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>FGDM: Zero-shot Medical Image Translation via Frequency-Guided Diffusion Models</td><td>2023 / IEEE TMI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2304.02742</td><td class="ctr small"><a href="https://github.com/Kent0n-Li/FGDM" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span><span class="badge b-mod">M</span></td><td>ResQu: Quaternion Wavelet-Conditioned Diffusion Models for Image SR</td><td>2025 / IJCNN</td><td class="mono" style="font-size:11px">arxiv.org/abs/2505.00334</td><td class="ctr small"><a href="https://github.com/Fascetta/ResQu" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span><span class="badge b-dom">D</span></td><td>cWDM: Conditional Wavelet Diffusion Models for Cross-Modality 3D Medical Image Synthesis</td><td>2024 / BraTS Challenge</td><td class="mono" style="font-size:11px">arxiv.org/abs/2411.17203</td><td class="ctr small"><a href="https://github.com/pfriedri/cwdm" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>DDWM: Denoising Diffusion Wavelet Models for Zero-shot Medical Image Translation</td><td>2025 / Knowledge-Based Systems</td><td class="mono" style="font-size:11px">doi.org/10.1016/j.knosys.2025.113800</td><td class="ctr small">未找到</td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span><span class="badge b-dom">D</span></td><td>FADM: Frequency-Aware Diffusion Model for Multi-Modal MRI Image Synthesis</td><td>2025 / J. Imaging 11(5):152</td><td class="mono" style="font-size:11px">mdpi.com/2313-433X/11/5/152</td><td class="ctr small"><a href="https://github.com/Rain-Alley/FADM" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span><span class="badge b-dom">D</span></td><td>Med-D3CG: wavelet-based diffusion in the difference domain</td><td>2026 / Expert Systems with Applications</td><td class="mono" style="font-size:11px">doi.org/10.1016/j.eswa.2025.129651</td><td class="ctr small"><a href="https://github.com/ZgzTTTer/Med-D3CG" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>UGDiff: High Frequency Matters — Uncertainty Guided Image Compression with Wavelet Diffusion</td><td>2025 / IEEE TMM</td><td class="mono" style="font-size:11px">arxiv.org/abs/2407.12538</td><td class="ctr small"><a href="https://github.com/hejiaxiang1/Wavelet-Diffusion" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>FreDiff: Frequency-conditional diffusion model for low-light image enhancement</td><td>2025 / Neurocomputing 654</td><td class="mono" style="font-size:11px">doi.org/10.1016/j.neucom.2025.131383</td><td class="ctr small"><a href="https://github.com/JunhaoWang17/Frediff" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>High-Fidelity Unified One-to-Many Medical Image Synthesis via Text-Conditioned Latent Diffusion</td><td>2025 / MICCAI</td><td class="mono" style="font-size:11px">papers.miccai.org/miccai-2025/0413-Paper1178.html</td><td class="ctr small"><a href="https://github.com/zyj15416/One-to-Many-Medical-Image-Synthesis" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-loss">L</span></td><td>LWD: Latent Wavelet Diffusion — Enabling 4K Image Synthesis for Free</td><td>2025 / arXiv（repo 标注 ICLR 2026）</td><td class="mono" style="font-size:11px">arxiv.org/abs/2506.00433</td><td class="ctr small"><a href="https://github.com/LuigiSigillo/LatentWaveletDiffusion" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-loss">L</span></td><td>Diffusion-4K: Ultra-High-Resolution Image Synthesis with Latent Diffusion Models</td><td>2025 / CVPR</td><td class="mono" style="font-size:11px">arxiv.org/abs/2503.18352</td><td class="ctr small"><a href="https://github.com/zhang0jhon/diffusion-4k" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-loss">L</span><span class="badge b-cond">C</span><span class="badge b-mod">M</span></td><td>SC-Flow: Spectral Consistent Flow for One-step 3D Medical Image Translation</td><td>2026 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2607.10627</td><td class="ctr small">未找到</td></tr>
+<tr><td class="ctr"><span class="badge b-loss">L</span><span class="badge b-mod">M</span></td><td>FRAMER: Frequency-Aligned Self-Distillation with Adaptive Modulation</td><td>2026 / CVPR（camera-ready）</td><td class="mono" style="font-size:11px">arxiv.org/abs/2512.01390</td><td class="ctr small">项目页</td></tr>
+<tr><td class="ctr"><span class="badge b-loss">L</span></td><td>Focal Frequency Loss for Image Reconstruction and Synthesis</td><td>2021 / ICCV</td><td class="mono" style="font-size:11px">openaccess.thecvf.com（Jiang et al.）</td><td class="ctr small"><a href="https://github.com/EndlessSora/focal-frequency-loss" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-loss">L</span></td><td>SAWR: Stain-Aware Wavelet Regularization（病理，对抗净化）</td><td>2026 / BMVC</td><td class="mono" style="font-size:11px">arxiv.org/abs/2606.08745</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-loss">L</span></td><td>Wu et al.: Wavelet-Improved Score-Based Generative Model for Medical Imaging</td><td>2024 / IEEE TMI 43(3)</td><td class="mono" style="font-size:11px">doi.org/10.1109/TMI.2023.3325824</td><td class="ctr small"><a href="https://zenodo.org/record/8266123" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>FreeU: Free Lunch in Diffusion U-Net</td><td>2024 / CVPR Oral</td><td class="mono" style="font-size:11px">arxiv.org/abs/2309.11497</td><td class="ctr small"><a href="https://github.com/ChenyangSi/FreeU" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>FCDM: Frequency Compensated Diffusion Model for Real-scene Dehazing</td><td>2024 / Neural Networks</td><td class="mono" style="font-size:11px">arxiv.org/abs/2308.10510</td><td class="ctr small"><a href="https://github.com/W-Jilly/frequency-compensated-diffusion-model-pytorch" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>AFFNet: Adaptive Frequency Filters As Efficient Global Token Mixers</td><td>2023 / ICCV</td><td class="mono" style="font-size:11px">arxiv.org/abs/2307.14008</td><td class="ctr small"><a href="https://github.com/sunpro108/AdaptiveFrequencyFilters" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>FcaNet: Frequency Channel Attention Networks</td><td>2021 / ICCV</td><td class="mono" style="font-size:11px">arxiv.org/abs/2012.11879</td><td class="ctr small"><a href="https://github.com/cfzd/FcaNet" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>GFNet: Global Filter Networks for Image Classification</td><td>2021 / NeurIPS</td><td class="mono" style="font-size:11px">arxiv.org/abs/2107.00645</td><td class="ctr small"><a href="https://github.com/raoyongming/GFNet" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>AFNO: Adaptive Fourier Neural Operators</td><td>2022 / ICLR</td><td class="mono" style="font-size:11px">arxiv.org/abs/2111.13587</td><td class="ctr small"><a href="https://github.com/NVlabs/AFNO-transformer" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>FreqFusion: Frequency-aware Feature Fusion for Dense Image Prediction</td><td>2024 / IEEE TPAMI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2408.12879</td><td class="ctr small"><a href="https://github.com/Linwei-Chen/FreqFusion" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>FSNet: Image Restoration via Frequency Selection</td><td>2024 / IEEE TPAMI</td><td class="mono" style="font-size:11px">doi.org/10.1109/TPAMI.2023.3330416</td><td class="ctr small"><a href="https://github.com/c-yn/FSNet" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>FouriScale: A Frequency Perspective on Training-Free High-Resolution Image Synthesis</td><td>2024 / ECCV</td><td class="mono" style="font-size:11px">arxiv.org/abs/2403.12963</td><td class="ctr small"><a href="https://github.com/LeonHLJ/FouriScale" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>3D-WLDM: 3D Wavelet Latent Diffusion Model for Whole-Body MR-to-CT</td><td>2025 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2507.11557</td><td class="ctr small"><a href="https://github.com/hmm823/3D-Wavelet-Latent-Diffusion-Model" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>TPDM: Texture-preserving diffusion model for CBCT-to-CT synthesis</td><td>2025 / Medical Image Analysis</td><td class="mono" style="font-size:11px">doi.org/10.1016/j.media.2024.103362</td><td class="ctr small"><a href="https://github.com/zzc623/TPDM-CBCT2CT" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>GL2T-Diff: Medical image translation via spatial-frequency fusion diffusion models</td><td>2026 / CVIU 263</td><td class="mono" style="font-size:11px">doi.org/10.1016/j.cviu.2025.104586</td><td class="ctr small"><a href="https://github.com/puzzlesong8277/GL2T-Diff" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>Hybrid GAN Based on Frequency and Spatial Domain for Histopathological Image Synthesis</td><td>2025 / BMC Bioinformatics 26:29</td><td class="mono" style="font-size:11px">doi.org/10.1186/s12859-025-06057-9</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>DWFI-GAN: Multi-modal medical image synthesis via dual-branch wavelet encoding</td><td>2026 / Artificial Intelligence in Medicine</td><td class="mono" style="font-size:11px">doi.org/10.1016/j.artmed.2025.103287</td><td class="ctr small"><a href="https://github.com/xuefengjia227/DWFI-GAN" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-dom">D</span></td><td>WaveDiff: Wavelet Diffusion Models are fast and scalable Image Generators</td><td>2023 / CVPR</td><td class="mono" style="font-size:11px">arxiv.org/abs/2211.16152</td><td class="ctr small"><a href="https://github.com/VinAIResearch/WaveDiff" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-dom">D</span></td><td>WDM: 3D Wavelet Diffusion Models for High-Resolution Medical Image Synthesis</td><td>2024 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2402.19043</td><td class="ctr small"><a href="https://github.com/pfriedri/wdm-3d" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-dom">D</span></td><td>DCTdiff: Intriguing Properties of Image Generative Modeling in the DCT Space</td><td>2025 / ICML</td><td class="mono" style="font-size:11px">arxiv.org/abs/2412.15032</td><td class="ctr small"><a href="https://github.com/forever208/DCTdiff" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-dom">D</span><span class="badge b-cond">C</span></td><td>FDDM: Unsupervised Medical Image Translation with a Frequency-Decoupled Diffusion Model</td><td>2024 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2311.12070</td><td class="ctr small">未找到</td></tr>
+<tr><td class="ctr"><span class="badge b-dom">D</span></td><td>ResShift: Efficient Diffusion Model for Image Super-resolution by Residual Shifting</td><td>2023 / NeurIPS</td><td class="mono" style="font-size:11px">arxiv.org/abs/2307.12348</td><td class="ctr small">✓</td></tr>
+<tr><td class="ctr"><span class="badge b-dom">D</span></td><td>SinDDM: A Single Image Denoising Diffusion Model<br><span class="small">（注意：并非频域工作，"sinusoidal" 指位置编码）</span></td><td>2023 / ICML</td><td class="mono" style="font-size:11px">arxiv.org/abs/2211.16582</td><td class="ctr small"><a href="https://github.com/fallenshock/SinDDM" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-ana">A</span></td><td>Generative Modelling With Inverse Heat Dissipation（谱自回归脉络起点）</td><td>2023 / ICLR</td><td class="mono" style="font-size:11px">arxiv.org/abs/2206.13397</td><td class="ctr small"><a href="https://github.com/AaltoML/generative-inverse-heat-dissipation" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-ana">A</span></td><td>Falck et al.: A Fourier Space Perspective on Diffusion Models<br><span class="small">（EqualSNR 反驳谱自回归必然性）</span></td><td>2025 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2505.11278</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-ana">A</span></td><td>Wang &amp; Pehlevan: An Analytical Theory of Spectral Bias in the Learning Dynamics of Diffusion Models<br><span class="small">（卷积 U-Net 频带接近同时涌现）</span></td><td>2025 / NeurIPS Spotlight</td><td class="mono" style="font-size:11px">arxiv.org/abs/2503.03206</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-ana">A</span></td><td>Beta Sampling is All You Need（谱变化率随 t 呈 U 形）</td><td>2025 / WACV</td><td class="mono" style="font-size:11px">arxiv.org/abs/2407.12173</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-ana">A</span></td><td>Dieleman: Diffusion is spectral autoregression（博客，非同行评审）</td><td>2024 / Blog</td><td class="mono" style="font-size:11px">sander.ai/2024/09/02/spectral-autoregression.html</td><td class="ctr small">Colab</td></tr>
+<tr><td class="ctr"><span class="badge b-ana">A</span></td><td>FDG: Guidance in the Frequency Domain Enables High-Fidelity Sampling at Low CFG Scales</td><td>2025 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2506.19713</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td><strong>UNIStainNet: Foundation-Model-Guided Virtual Staining of H&amp;E to IHC</strong></td><td>2026 / ACM-BCB</td><td class="mono" style="font-size:11px">arxiv.org/abs/2603.12716</td><td class="ctr small"><a href="https://github.com/facevoid/UNIStainNet" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>HistDiST: Histopathological Diffusion-based Stain Transfer</td><td>2025 / DAGM GCPR</td><td class="mono" style="font-size:11px">arxiv.org/abs/2505.06793</td><td class="ctr small">未找到</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>HistDiT: Structure-Aware Latent Conditional Diffusion Transformer</td><td>2026 / ICPR</td><td class="mono" style="font-size:11px">arxiv.org/abs/2604.08305</td><td class="ctr small">未找到</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>Star-Diff: Restoration Diffusion for Diagnostic-Consistent Virtual IHC</td><td>2025 / Computers in Biology and Medicine</td><td class="mono" style="font-size:11px">arxiv.org/abs/2508.02528</td><td class="ctr small"><a href="https://github.com/anomredux/Star-Diff" target="_blank" rel="noopener">非官方</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>MIU-Diff: Score-based Diffusion Model for Unpaired Virtual Histology Staining</td><td>2025 / arXiv + Springer</td><td class="mono" style="font-size:11px">arxiv.org/abs/2506.23184</td><td class="ctr small">未放出</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>StainDiffuser: MultiTask Diffusion Model for Virtual Staining</td><td>2024 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2403.11340</td><td class="ctr small">未放出</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td><strong>PSPStain: Pathological Semantics-Preserving Learning for H&amp;E-to-IHC</strong><br><span class="small">（你的 baseline 家族）</span></td><td>2024 / MICCAI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2407.03655</td><td class="ctr small"><a href="https://github.com/ccitachi/PSPStain" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>CCPL: Cross-Channel Perception Learning for H&amp;E-to-HER2-IHC</td><td>2025 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2506.07559</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>ASP + MIST: Adaptive Supervised PatchNCE</td><td>2023 / MICCAI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2303.06193</td><td class="ctr small"><a href="https://github.com/lifangda01/AdaptiveSupervisedPatchNCE" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>BCI Benchmark + Pyramid pix2pix（<strong>你的数据集原论文</strong>）</td><td>2022 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2204.11425</td><td class="ctr small"><a href="https://bupt-ai-cz.github.io/BCI_for_GrandChallenge/" target="_blank" rel="noopener">数据</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>HER2match: GANs vs. Diffusion Models for virtual staining</td><td>2025 / MICCAI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2506.18484</td><td class="ctr small">数据</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>DGR: Decoupled Generation and Registration for misalignment-resistant virtual staining</td><td>2026 / Nature Communications</td><td class="mono" style="font-size:11px">doi.org/10.1038/s41467-026-71038-2</td><td class="ctr small"><a href="https://github.com/birkhoffkiki/DTR" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>HAPS: Rethinking Image Similarity for Virtual Staining（评估指标）</td><td>2026 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2605.20362</td><td class="ctr small">—</td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>TDKstain: Task-Specific Domain Knowledge for HER2 Scoring</td><td>2024 / MICCAI</td><td class="mono" style="font-size:11px">github.com/balball/TDKstain</td><td class="ctr small"><a href="https://github.com/balball/TDKstain" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>SynDiff: Unsupervised Medical Image Translation with Adversarial Diffusion Models</td><td>2023 / IEEE TMI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2207.08208</td><td class="ctr small"><a href="https://github.com/icon-lab/SynDiff" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-none">—</span></td><td>ContourDiff: Unpaired Medical Image Translation with Structural Consistency</td><td>2025 / MELBA</td><td class="mono" style="font-size:11px">arxiv.org/abs/2403.10786</td><td class="ctr small"><a href="https://github.com/mazurowski-lab/ContourDiff" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>ControlNet: Adding Conditional Control to Text-to-Image Diffusion Models</td><td>2023 / ICCV Best Paper</td><td class="mono" style="font-size:11px">arxiv.org/abs/2302.05543</td><td class="ctr small"><a href="https://github.com/lllyasviel/ControlNet" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>T2I-Adapter: Learning Adapters to Dig out More Controllable Ability</td><td>2024 / AAAI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2302.08453</td><td class="ctr small"><a href="https://github.com/TencentARC/T2I-Adapter" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-cond">C</span></td><td>SPADE: Semantic Image Synthesis with Spatially-Adaptive Normalization</td><td>2019 / CVPR Oral</td><td class="mono" style="font-size:11px">arxiv.org/abs/1903.07291</td><td class="ctr small"><a href="https://github.com/NVlabs/SPADE" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>LayerScale / CaiT: Going deeper with Image Transformers</td><td>2021 / ICCV</td><td class="mono" style="font-size:11px">arxiv.org/abs/2103.17239</td><td class="ctr small"><a href="https://github.com/facebookresearch/deit" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>ReZero is All You Need: Fast Convergence at Large Depth</td><td>2021 / UAI</td><td class="mono" style="font-size:11px">arxiv.org/abs/2003.04887</td><td class="ctr small"><a href="https://github.com/majumderrishav/ReZero" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>DiT / adaLN-Zero: Scalable Diffusion Models with Transformers</td><td>2023 / ICCV</td><td class="mono" style="font-size:11px">arxiv.org/abs/2212.09748</td><td class="ctr small"><a href="https://github.com/facebookresearch/DiT" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-mod">M</span></td><td>TASR: Timestep-Aware Diffusion Model for Image Super-Resolution<br><span class="small">（sigmoid 有界 gate 的直接先例）</span></td><td>2025 / ACM MM</td><td class="mono" style="font-size:11px">arxiv.org/abs/2412.03355</td><td class="ctr small"><a href="https://github.com/SleepyLin/TASR" target="_blank" rel="noopener">✓</a></td></tr>
+<tr><td class="ctr"><span class="badge b-ana">A</span></td><td>Stage-wise Dynamics of Classifier-Free Guidance in Diffusion Models<br><span class="small">（条件强度随 t 变化的最强证据）</span></td><td>2025 / arXiv</td><td class="mono" style="font-size:11px">arxiv.org/abs/2509.22007</td><td class="ctr small">—</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>未核实 / 仅作线索的条目（不要作为事实引用）</h3>
+<ul class="small">
+<li><strong>Med-D3CG</strong> 的数值结果与消融（付费墙）；<strong>DDWM</strong> 的数值、小波族、消融；<strong>TPDM</strong> 的频域角色、数值、消融；<strong>GL2T-Diff</strong> 数值；<strong>DWFI-GAN</strong> 数值；<strong>Wu et al.</strong> 的小波细节与指标；<strong>DisC-Diff</strong> 的逐任务数值；<strong>Rissanen et al.</strong> 的 FID 数值。</li>
+<li><strong>T2I-Adapter</strong> 的 FID/CLIP 表（v1 预印本无结果表）。</li>
+<li><strong>FSNet</strong> 的 baseline 差值（官方 README 只给绝对数值）。</li>
+<li><strong>BAM-Net</strong>（arXiv 2404.06022）、"Spectral Gating via Damped Oscillations"（Springer 2026）、<strong>FFTGate</strong>（Elsevier 2026）、<strong>CDG</strong>（CVPR 2026）——仅从检索片段出现，未核实原文。</li>
+<li><strong>SinDDM</strong> 常被误引为频域工作——它的 "sinusoidal" 指的是 timestep/scale 的正弦位置编码，多尺度结构是<strong>空间图像金字塔</strong>，不是频率分解。<strong>不要把它当作频域文献引用。</strong></li>
+<li><strong>FDDM</strong> 常被误认为用了 FFT/DCT/DWT——实际上用的是 blue noise（PSD ∝ f）+ 拉普拉斯金字塔，<strong>没有任何频域变换</strong>。</li>
+<li><strong>FreeU 是 CVPR 2024，不是 ICLR 2024</strong>；且全文<strong>没有任何 FID/IS</strong>，只有 35 人偏好实验。</li>
+</ul>
+
+<footer>
+  <p><strong>报告生成：</strong>2026-09-28 · 基于公开文献检索与原文核对（arXiv HTML/PDF、出版商页面、官方代码仓库）。</p>
+  <p><strong>使用说明：</strong>标 <span class="badge b-ana">未核实</span> / <span class="badge b-ana">推断</span> 的内容请勿直接作为事实引用。所有性能数字均标注了来源论文；<strong>跨论文的数字不可直接比较</strong>（见 Part 3b 开头的警告）。</p>
+  <p><strong>建议的引用优先级：</strong>CVPR / ICCV / ECCV / NeurIPS / ICLR / AAAI → MICCAI → IEEE TMI → Medical Image Analysis → 高质量 arXiv → PMC/PubMed。避免博客与二手总结（本报告中 Dieleman 的博客已在对应位置明确标注为非同行评审）。</p>
+</footer>
+
+</main>
+</div><!-- /.wrap -->
+</body>
+</html>

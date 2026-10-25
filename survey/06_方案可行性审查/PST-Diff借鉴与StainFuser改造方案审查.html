@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PST-Diff 借鉴与 StainFuser 改造方案审查 · H&amp;E→HER2-IHC</title>
+<style>
+:root{--bg:#fff;--soft:#f7f8fa;--softer:#fbfcfd;--border:#e4e7ec;--strong:#cdd3dc;--text:#171a1f;--text2:#3d444d;--muted:#6b7480;--blue:#1a56db;--blueSoft:#eaf0fd;--green:#0d7a3f;--greenSoft:#e6f5ec;--amber:#9a6200;--amberSoft:#fdf3e2;--red:#c22a2a;--redSoft:#fdeceb;--purple:#6b32c9;--purpleSoft:#f1ebfd;--teal:#0a6f78;--tealSoft:#e3f4f6;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}.wrap{display:flex;max-width:1560px;margin:0 auto}nav.toc{width:300px;flex:0 0 300px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:25px 18px 60px 25px;border-right:1px solid var(--border);background:var(--softer)}nav.toc .brand{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--blue);text-transform:uppercase;margin-bottom:4px}nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}nav.toc a{display:block;color:var(--text2);text-decoration:none;font-size:13px;padding:5px 9px;border-radius:6px;border-left:2px solid transparent}nav.toc a:hover{background:#eef0f3;color:var(--blue)}nav.toc a.l1{font-weight:650;margin-top:9px;color:var(--text)}nav.toc a.l2{padding-left:20px;font-size:12.5px;color:var(--muted)}main{flex:1;min-width:0;padding:34px 46px 120px;max-width:1220px}header.doc{border-bottom:2px solid var(--strong);padding-bottom:22px;margin-bottom:30px}header.doc .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}header.doc h1{font-size:30px;line-height:1.35;margin:10px 0 12px;letter-spacing:-.01em}header.doc .desc{font-size:14.5px;color:var(--muted);margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.meta span{font-size:12px;background:#eef0f3;border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:20px}h2{font-size:23px;margin:52px 0 16px;padding-bottom:9px;border-bottom:2px solid var(--blue)}h2 .num{color:var(--blue);font-weight:800;margin-right:8px}h3{font-size:17px;margin:30px 0 10px}h3:before{content:"▍";color:var(--blue);margin-right:6px;font-size:14px}h4{font-size:15px;margin:22px 0 8px}p{margin:9px 0}ul,ol{margin:9px 0 9px 22px;padding:0}li{margin:5px 0}a{color:var(--blue)}code{font-family:var(--mono);font-size:12.5px;background:#eef0f3;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#8a2f2f}.box{border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:18px 0;background:var(--soft)}.box .bt{font-weight:700;font-size:13.5px;margin-bottom:6px;letter-spacing:.02em}.key{background:var(--blueSoft);border-color:#c2d4f7}.key .bt{color:var(--blue)}.good{background:var(--greenSoft);border-color:#c2e4cf}.good .bt{color:var(--green)}.warn{background:var(--amberSoft);border-color:#f0dcb4}.warn .bt{color:var(--amber)}.stop{background:var(--redSoft);border-color:#f4cfcc}.stop .bt{color:var(--red)}.teal{background:var(--tealSoft);border-color:#b8e2e7}.teal .bt{color:var(--teal)}.pur{background:var(--purpleSoft);border-color:#d9c9f7}.pur .bt{color:var(--purple)}.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12.4px;min-width:780px}thead th{background:#f2f4f7;text-align:left;padding:9px 10px;font-weight:700;border-bottom:2px solid var(--strong);white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:1}td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}tbody tr:nth-child(even){background:var(--softer)}tbody tr:hover{background:var(--blueSoft)}td.c,th.c{text-align:center}.b{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;line-height:1.6}.high{background:var(--greenSoft);color:var(--green);border:1px solid #b7e0c7}.medium{background:var(--amberSoft);color:var(--amber);border:1px solid #f0dcb4}.low{background:#eef0f3;color:var(--muted);border:1px solid var(--strong)}.bad{background:var(--redSoft);color:var(--red);border:1px solid #f4cfcc}.blue{background:var(--blueSoft);color:var(--blue);border:1px solid #c2d4f7}.purple{background:var(--purpleSoft);color:var(--purple);border:1px solid #d9c9f7}.tealb{background:var(--tealSoft);color:var(--teal);border:1px solid #b8e2e7}.card{border:1px solid var(--border);border-radius:11px;margin:18px 0;overflow:hidden;background:#fff}.card .ch{background:#f2f4f7;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}.card .title{font-weight:700;font-size:15px;line-height:1.45}.card .v{font-size:12px;color:var(--muted);margin-top:3px}.card .body{padding:8px 18px 16px}.card .body p{font-size:13.5px;margin:6px 0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{border:1px solid var(--border);border-radius:9px;padding:13px 15px;background:var(--softer)}.mini .mt{font-weight:700;font-size:13.5px;margin-bottom:5px}.mini p{font-size:12.8px;margin:4px 0;color:var(--text2)}pre{background:#f8f9fb;border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:15px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#22262c;margin:14px 0}pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}.small{font-size:12.5px;color:var(--muted)}.formula{background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:14px 0;font-family:Georgia,"Times New Roman",serif;font-size:16px;text-align:center;overflow-x:auto}.foot{margin-top:60px;padding-top:18px;border-top:2px solid var(--strong);font-size:12px;color:var(--muted)}@media(max-width:900px){nav.toc{display:none}main{padding:22px 18px 90px}header.doc h1{font-size:23px}.grid2{grid-template-columns:1fr}}@media print{nav.toc{display:none}main{padding:0;max-width:none}h2{break-before:page}.card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+<div class="brand">PST-Diff × StainFuser</div>
+<div class="sub">H&amp;E→HER2-IHC<br>方案迁移审查 · 2026-10-07</div>
+<a class="l1" href="#s0">0 · 先说结论</a>
+<a class="l1" href="#s1">1 · PST-Diff 到底做了什么</a>
+<a class="l2" href="#s1-1">1.1 真实数据与配对假设</a>
+<a class="l2" href="#s1-2">1.2 AAM / LT / CFG 的真实位置</a>
+<a class="l1" href="#s2">2 · 与当前 StainFuser 的逐格对账</a>
+<a class="l1" href="#s3">3 · 三个模块逐项判定</a>
+<a class="l2" href="#s3-1">3.1 AAM：原则可搬，不加双模型</a>
+<a class="l2" href="#s3-2">3.2 LT：不能照搬 latent L2</a>
+<a class="l2" href="#s3-3">3.3 CFG：最值得借，但通道≠频率</a>
+<a class="l1" href="#s4">4 · 推荐的改造后模型</a>
+<a class="l2" href="#s4-1">4.1 最小改动路线</a>
+<a class="l2" href="#s4-2">4.2 浓度域主线</a>
+<a class="l1" href="#s5">5 · 时间步×通道引导设计</a>
+<a class="l1" href="#s6">6 · 实验路线与止损条件</a>
+<a class="l1" href="#s7">7 · 不能从 PST-Diff 直接推出的结论</a>
+<a class="l1" href="#s8">8 · 参考与核实边界</a>
+</nav>
+<main>
+<header class="doc">
+<div class="kicker">方案可行性审查 · 直接相关先例</div>
+<h1>PST-Diff 借鉴与 StainFuser 改造路线<br>—— 从 Fourier CFG 到浓度/通道引导</h1>
+<p class="desc">对象：IEEE TMI 2024 的 PST-Diff 与当前「冻结 HHE U-Net + 冻结原始 ControlNet + 23.1K condition-LoRA + 冻结 VAE」模型。重点不是复述论文，而是判断：哪些机制能迁移、哪些前提不成立、当前模型应该先改哪里。</p>
+<div class="meta"><span>PST-Diff · IEEE TMI 2024 · DOI 10.1109/TMI.2024.3430825</span><span>读原文 14 页</span><span>当前模型说明已对账</span><span>结论先行 · 改动成本/可复现性</span><span>2026-10-07</span></div>
+</header>
+
+<h2 id="s0"><span class="num">0</span>先说结论</h2>
+
+<div class="box key">
+<div class="bt">一句话判定</div>
+<p><b>PST-Diff 值得借，但不要照着它把当前模型改成「双扩散模型 + LT + Fourier CFG」。</b>真正值得迁移的是一个更窄的原则：<b>源结构与目标染色不应在所有去噪时间步、所有条件通道上以同样强度注入</b>。在你的模型里，这个原则最适合落成：</p>
+<p class="formula"><b>早期/高噪声：保持 H&amp;E 结构条件为主；后期/低噪声：逐步放大 marker-expression 条件。</b></p>
+<p>第一版不改 VAE、不改 SD2.1 RGB latent、不加第二套 U-Net；只做<b>条件内容清理 + timestep gate + 零初始化 marker token</b>。浓度域的 <code>C_H/C_DAB</code> 分阶段引导放到第二阶段，等当前 RGB-latent baseline 先通过泄漏门禁。</p>
+</div>
+
+<div class="scroll"><table>
+<thead><tr><th>模块</th><th>对 PST-Diff 的准确理解</th><th>迁移到当前模型的判定</th><th>改动成本</th><th>可复现性</th></tr></thead>
+<tbody>
+<tr><td><b>AAM</b></td><td>源域→latent 用 local attention；latent→目标用 global attention。它是<strong>两个方向/两套扩散网络的非对称注意力</strong>，不只是「H&amp;E 权重大、IHC 权重小」</td><td><span class="b high">成立但要收窄</span>：借「结构路径/表达路径不对称」，不要加双 U-Net。当前 ControlNet + cross-attention 已有粗粒度的两路径雏形</td><td>低–中</td><td><span class="b high">高</span></td></tr>
+<tr><td><b>LT</b></td><td>把 HE latent 映射到 IHC latent；用 patch-wise paired latent L2 训练 <code>F(x_A^l)≈x_B^l</code></td><td><span class="b medium">有条件成立</span>：非配对/弱配对下不能照搬 latent L2；当前单 U-Net 也没有两个独立域 latent 可直接迁移</td><td>中–高</td><td><span class="b low">中–低</span></td></tr>
+<tr><td><b>CFG</b></td><td>采样期间对去噪图的 Fourier 低/高频分量做分阶段投影：t=700–400 低频，t=400–0 高频边缘</td><td><span class="b high">最值得借</span>：换成 semantic/channel-time gate；但<strong>浓度通道不是 Fourier 频率</strong>，不能把 <code>C_H</code> 直接称为「高频」</td><td>低（门控）/高（生成空间）</td><td><span class="b high">高（门控）</span></td></tr>
+</tbody>
+</table></div>
+
+<div class="box stop">
+<div class="bt">当前模型必须先守住的红线</div>
+<p>当前推理调用仍把 <code>tgt_latents</code> 同时送入 ControlNet 的 <code>encoder_hidden_states</code> 与 U-Net。若它来自真实配对 IHC，那么模型可能直接读取目标外观甚至空间信息。<b>在这个 T1/T2/T3 泄漏门禁通过前，任何 PST 风格 CFG 改善都不能解释为「结构/表达机制有效」。</b></p>
+</div>
+
+<h2 id="s1"><span class="num">1</span>PST-Diff 到底做了什么</h2>
+
+<h3 id="s1-1">1.1 真实数据与配对假设：它不是严格非配对先例</h3>
+<p>论文题目与任务确实直接对应 H&amp;E→IHC。PST-Diff 使用两个独立训练的扩散模型，通过 DDIB / probability-flow ODE 把源域映射到噪声 latent，再从噪声 latent 反向生成目标域。它的实验包含：</p>
+<ul>
+<li><b>BCI：</b>3,896 对训练、120 对测试；作者把它描述为同一肿瘤样本的连续切片，一张 HE、一张 HER2-IHC。</li>
+<li><b>ACROBAT：</b>100 位患者、200 张 WSI，用于跨数据集泛化；包含 HE 与 ER/PGR/HER2/KI67 等多 marker。</li>
+<li><b>LT 训练：</b>论文明确写的是用 <b>patch-wise paired HE/IHC</b> latent 训练 LT，200,000 steps，batch size 8，256×256 patch。</li>
+</ul>
+<div class="box warn"><div class="bt">对你最重要的边界</div><p>论文说「不需要严格结构化配对数据」，更准确的意思是：它不要求 pixel-perfect registration，但它仍然使用了<strong>patch-wise paired 的 latent 监督</strong>。这不能直接证明它在你的真实 non-paired / weak-paired 设定下成立。尤其 LT 的 <code>||F(z_HE)-z_IHC||²</code>，在没有实例对应时是不可辨识的。</p></div>
+
+<h3 id="s1-2">1.2 三个模块的真实位置</h3>
+<div class="scroll"><table>
+<thead><tr><th>阶段</th><th>PST-Diff 的操作</th><th>它解决的问题</th><th>不是它解决的问题</th></tr></thead>
+<tbody>
+<tr><td>源域编码</td><td>HE diffusion 的 forward / reverse，源侧使用 priority local attention</td><td>尽量把局部病理结构写入 source implicit latent</td><td>不等于显式分离 H/E/DAB；也不保证实例级 IHC 表达可辨识</td></tr>
+<tr><td>跨域 latent</td><td>LT：<code>z_HE → F(z_HE) → z_IHC-like</code></td><td>缓解直接把两个域 latent 当成同一坐标系的偏置</td><td>没有 paired latent 监督时不能靠 L2 自己发现正确对应</td></tr>
+<tr><td>目标生成</td><td>IHC diffusion 的 reverse；target 侧使用 priority global attention</td><td>偏向全局目标染色统计与色彩分布</td><td>它并没有把 DAB 浓度作为显式生成变量</td></tr>
+<tr><td>采样 CFG</td><td>对每步 denoised image 的 Fourier 分量做 source-image 条件投影</td><td>补回多步采样中丢失的源结构</td><td>它不是训练 loss；不能替代真实表达约束</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s2"><span class="num">2</span>与当前 StainFuser 的逐格对账</h2>
+
+<pre><code>PST-Diff:
+HE image ──source diffusion/local attention──&gt; z_HE ──LT──&gt; z_IHC-like
+                                                            │
+                                             target diffusion/global attention
+                                                            │
+                                                Fourier CFG during sampling
+                                                            ▼
+                                                         IHC RGB
+
+当前 StainFuser:
+H&amp;E RGB ──fixed H/E deconv──&gt; [C_H, C_H, C_E] ──ControlNet──&gt; multi-scale residual
+                                                                     │
+IHC/reference latent ──Linear(4,1024)──&gt; cross-attention K/V ───────┤
+                                                                     ▼
+              frozen HHE U-Net + frozen SD2.1 VAE + 23.1K condition-LoRA ──&gt; RGB IHC
+</code></pre>
+
+<div class="scroll"><table>
+<thead><tr><th>设计轴</th><th>PST-Diff</th><th>当前模型</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td>生成主干</td><td>两个 domain-specific diffusion models</td><td>一个 HHE U-Net + 一个 ControlNet，主体冻结</td><td>不要为了复现 PST 而加第二个完整 U-Net；复杂度与可复现性都不划算</td></tr>
+<tr><td>源结构</td><td>源侧 local attention + 后期 CFG</td><td>HHE 进入 ControlNet，多尺度 residual；当前所有 timestep 基本同一入口</td><td><b>这里最适合加入 timestep gate</b></td></tr>
+<tr><td>目标表达</td><td>目标域 diffusion 的 global attention + target distribution</td><td><code>tgt_latents</code> 进入 cross-attn；推理时可能不存在合法 IHC reference</td><td><b>先换成 marker token，不能把 target latent 原样留下</b></td></tr>
+<tr><td>跨域对齐</td><td>paired latent L2 的 LT</td><td>没有显式 LT；ControlNet residual 与 U-Net latent 直接耦合</td><td>只借「加适配器」概念，不搬 paired latent L2</td></tr>
+<tr><td>采样约束</td><td>Fourier projection</td><td>目前没有 sampling-time structure projection</td><td>可先做条件门控；literal CFG 放到浓度域路线</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s3"><span class="num">3</span>三个模块逐项判定</h2>
+
+<h3 id="s3-1">3.1 AAM：原则可搬，但不要加「双模型」</h3>
+<div class="box good"><div class="bt">判定：成立但要收窄</div><p>PST 的 AAM 真正利用的是「源域编码需要局部、精确；目标域生成需要全局、灵活」这一不对称性。当前模型恰好已有两个不同槽位：<b>ControlNet = H&amp;E 结构</b>，<b>cross-attention = target/marker 表达</b>。因此你不需要再堆一层 AAM；需要把这两个槽位的语义清掉，再给它们不同的 timestep 权重。</p></div>
+<ul>
+<li><b>源结构侧：</b>保留 H&amp;E condition 的局部卷积与多尺度 residual；不要让它被目标 token 覆盖。</li>
+<li><b>表达侧：</b>把 <code>tgt_latents</code> 换成可学习 HER2 marker token；token 只表达「我要生成 HER2/DAB」，不携带某张 IHC 的空间布局。</li>
+<li><b>不建议：</b>复制 PST 的两套 local/global U-Net。你的当前 ControlNet 主干已经能保住结构，新增完整模型只会扩大显存、训练与归因成本。</li>
+</ul>
+
+<h3 id="s3-2">3.2 LT：不能照搬 latent L2</h3>
+<div class="box stop"><div class="bt">判定：有条件成立；当前阶段不应实现为 PST-LT</div><p>PST-LT 的监督是 <code>F(z_HE)≈z_IHC</code>。在你的 non-paired / weak-paired 场景中，任意 HE latent 都可能对应多个合理 IHC 表达，直接 latent L2 会把「跨样本差异」误当成模型误差。它会把模型拉向数据集平均 latent，而不是学到 marker-specific biology。</p></div>
+<p>如果以后真的需要 latent adapter，正确的收窄版本是：</p>
+<ol>
+<li>输入只使用 H&amp;E structure latent/feature 与 marker token，绝不输入配对 IHC latent。</li>
+<li>训练目标改为<strong>分布级</strong>与<strong>语义级</strong>约束：固定队列级 stain matrix 下的 DAB/FOD 均值、20-bin 直方图、组织区域 ranking；而不是实例 latent L2。</li>
+<li>adapter 零初始化，且记录 adapter 输出 RMS；其幅度不能无界地抢走 noise MSE。</li>
+<li>只有当 Stage 1 证明「去掉 target latent 后仍能保持结构并产生合理表达」，才进入 adapter 消融。</li>
+</ol>
+
+<h3 id="s3-3">3.3 CFG：最值得借，但「通道 ≠ 频率」</h3>
+<div class="box key"><div class="bt">判定：成立；推荐先做「timestep-conditioned semantic guidance」，不要先做 Fourier</div><p>PST-CFG 的可迁移抽象是：<b>不同信息成分在 reverse process 的不同阶段注入</b>。但 Fourier low/high 是数学上的空间频率；<code>C_H</code>、<code>C_DAB</code> 是染色/语义分量。一个 DAB 图同时包含低频的整体阳性比例、中频的腺体分布和高频的膜边界。<b>所以「C_DAB = 中频」不成立。</b></p></div>
+<div class="scroll"><table>
+<thead><tr><th>你的直觉</th><th>需要修正的地方</th><th>可保留的工程含义</th></tr></thead>
+<tbody>
+<tr><td><code>C_H</code> = 高频结构</td><td>它是 hematoxylin 语义通道，不是 Fourier 高频；核边缘通常高频，但组织布局也有低频成分</td><td>早期优先保证 <code>C_H</code> / H&amp;E morphology，后期仍保留非零结构底座</td></tr>
+<tr><td><code>C_DAB</code> = 中频表达</td><td>DAB 同时有全局、区域与膜级尺度，且 H&amp;E 中没有真实 <code>C_DAB</code></td><td>后期提高 marker-expression token 与 DAB 相关 loss 的权重；不能从 H&amp;E 直接复制 DAB</td></tr>
+<tr><td>背景/整体染色 = 低频</td><td>大体正确，但受白点、scanner、stain matrix 影响</td><td>用队列级 M 与全局 histogram/FOD 约束，不用逐图自由标定</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="s4"><span class="num">4</span>推荐的改造后模型</h2>
+
+<h3 id="s4-1">4.1 推荐路线 A：当前 RGB-latent 模型的最小 PST 借鉴</h3>
+<div class="box good"><div class="bt">这是现在应该做的主线：改动小、可回退、归因清楚</div><p>保持 SD2.1 RGB latent、冻结 VAE、冻结主体 ControlNet/U-Net，只改「条件的语义」与「条件的时间调度」。这不是 PST-Diff 的复制，而是把 PST 的不对称原则映射到你已有的两条条件路径。</p></div>
+<pre><code>H&amp;E RGB
+  └─ fixed H/E deconvolution ─&gt; h=C_H, e=C_E
+       └─ keep 3-channel contract: [g_H(r)·h, g_H(r)·h, g_E(r)·e]
+                                      │
+                                      ▼
+                         frozen ControlNet + condition-LoRA
+                                      │
+HER2 marker token ── zero-init projector ──&gt; cross-attention K/V
+                                      │
+                                      ▼
+                    frozen HHE U-Net ──&gt; SD2.1 latent ── frozen VAE ──&gt; RGB IHC
+</code></pre>
+<p>这里先保留当前的三通道接口 <code>[C_H,C_H,C_E]</code>，因为首层是硬编码 3 通道，且已有 LoRA/ControlNet 权重可复用。新增的第一步不是改成三通道生成空间，而是给这三个输入加一个<strong>固定语义分组的 gate</strong>：</p>
+<pre><code>r = timestep / T                    # r≈1: 早期高噪声，r≈0: 后期低噪声
+cond_t = concat([
+    g_struct(r) * C_H,
+    g_struct(r) * C_H,
+    g_expr(r)   * C_E,
+], dim=1)
+
+# cross-attention 不再吃 tgt_latents，而吃零初始化的 HER2 token
+marker_t = g_expr(r) * marker_token
+</code></pre>
+<div class="box warn"><div class="bt">为什么先不把第三个 H 换成 C_res</div><p><code>C_res</code> 是你生成浓度空间的推荐第三轴，但当前这里是<strong>预训练 ControlNet 的输入接口</strong>。立刻换内容会增加归因变量，而且 <code>C_res</code> 有符号，必须重新设计归一化。第一版先保持 <code>[H,H,E]</code> 的形状和数值契约；等 gate 实验通过，再做 <code>[H,E,res]</code> 作为独立消融，不能混在第一版里。</p></div>
+
+<h3 id="s4-2">4.2 主线路线 B：浓度域的 PST-inspired 版本</h3>
+<p>如果 Stage 1 证明 RGB latent 的结构/表达解耦仍然不够，再进入你原本的浓度域主线：</p>
+<pre><code>H&amp;E ── fixed M_HE ──&gt; C_H, C_E ── structure condition
+                                  │
+HER2 token ───────────────────────┤
+                                  ▼
+     diffusion / flow matching directly predicts Z
+     Z = [C_H, C_DAB, C_res]      # C_H/C_DAB nonnegative; C_res signed
+                                  │
+                  fixed/learnable M_IHC + Beer-Lambert
+                                  ▼
+                                RGB IHC
+</code></pre>
+<p>这里 PST-CFG 才能真正变成「通道投影」而不是把 RGB 傅里叶分量硬解释成染色成分：</p>
+<ul>
+<li><b>早期：</b>对 <code>C_H</code> 与结构条件给高权重，保护核/组织布局；不是把 <code>C_H</code> 当作 Fourier 高频。</li>
+<li><b>中期：</b>引入 HER2 marker token 与 DAB 的全局分布约束，先确定阳性量级。</li>
+<li><b>后期：</b>提高 DAB 局部/区域 ranking 与膜边缘细节的权重；<code>C_H</code> 保持一个非零 floor，避免后期结构漂移。</li>
+<li><b>全程：</b>用 BL 正演保证输出能回到 RGB；<code>C_res</code> 加向零收缩，不能 clamp 成非负。</li>
+</ul>
+<div class="box stop"><div class="bt">这条路线的代价</div><p>它不是当前 LoRA 的小改动。当前 SD2.1 VAE 是冻结的 RGB latent 解码器；把输出改成浓度图意味着换生成空间/解码器，当前 23.1K LoRA 不能直接作为最终权重继续用。<b>因此它是阶段 2，不是现在立刻做的 patch。</b></p></div>
+
+<h2 id="s5"><span class="num">5</span>时间步 × 通道引导设计</h2>
+
+<h3>5.1 建议的第一版门控函数</h3>
+<p>不要复制 PST 的绝对步数 700–400。PST 使用 T=1000，而当前 StainFuser 的 scheduler、采样步数和 timestep index 可能不同。统一使用归一化时间 <code>r=t/T</code>，再做小范围消融。</p>
+<pre><code># r=1 is early/noisy, r=0 is late/clean
+# first-pass values are starting points, not claims of optimality
+g_struct(r) = 0.35 + 0.65 * sigmoid((r - 0.55) / 0.10)
+g_expr(r)   = 0.20 + 0.80 * sigmoid((0.45 - r) / 0.10)
+
+# implication:
+# early: g_struct≈1, g_expr≈0.2
+# late:  g_struct≈0.35, g_expr≈1
+</code></pre>
+<p><b>为什么结构要有 floor=0.35：</b>后期虽然应该增加表达细节，但 HER2 膜形态依赖 H&amp;E 的伊红/胞质结构；把结构条件降到 0 会让后期 DAB 自由生成并可能漂移。<b>为什么表达不从 0 开始：</b>全局染色风格不必等到最后一刻才出现，否则 late-stage gate 可能只会把局部棕色硬贴上去。</p>
+
+<h3>5.2 在当前代码中最小的实现位置</h3>
+<div class="scroll"><table>
+<thead><tr><th>位置</th><th>改法</th><th>优点</th><th>风险</th></tr></thead>
+<tbody>
+<tr><td>ControlNet 输入前</td><td>对 <code>[C_H,C_H,C_E]</code> 做 <code>[g_H·h,g_H·h,g_E·e]</code></td><td>3 通道不变；已有 checkpoint 可载入；最小改动</td><td>只能做输入级不对称，不能精确拆分多尺度 residual</td></tr>
+<tr><td>marker token projector</td><td>用 <code>g_expr(t)</code> 乘 token；projector 零初始化</td><td>把目标表达与结构条件分开；推理不再需要 IHC reference</td><td>必须先解决当前 <code>tgt_latents</code> 泄漏；需要训练 token/projector</td></tr>
+<tr><td>ControlNet residual 分支</td><td>拆成 structure residual / expression residual 后分别 gate</td><td>最接近 PST 的不对称路径</td><td>中高改动；需重新定义 residual 分解，不能只按 down-block 层名猜语义</td></tr>
+<tr><td>sampling-time literal projection</td><td>把 denoised output 做 <code>C_H</code>/Fourier projection，再回到 latent</td><td>最像 PST-CFG</td><td>当前 RGB VAE 往返昂贵且会引入 VAE 误差；<code>x̂0</code> 梯度在高噪声端有 SNR 风险</td></tr>
+</tbody>
+</table></div>
+<p><b>推荐顺序：</b>输入前 gate → marker token gate → residual branch gate → 浓度域 literal projection。不要倒过来。</p>
+
+<h2 id="s6"><span class="num">6</span>实验路线与止损条件</h2>
+
+<div class="box stop"><div class="bt">P0：先做当前模型的泄漏门禁，必须在 PST 借鉴之前完成</div><p>固定同一 H&amp;E、同一 seed、同一 sampler，只改变 <code>target_path</code>：T1 配对 IHC、T2 无关 IHC、T3 纯灰/常量参考。若 T1≫T2≈T3，目标 latent 的空间/颜色泄漏成立，必须先移除 <code>tgt_latents</code>；若 T1≈T2≈T3，说明该通道影响小，但仍不应把它当作合法推理输入。</p></div>
+
+<div class="scroll"><table>
+<thead><tr><th>阶段</th><th>Arm</th><th>只改变什么</th><th>主判据</th><th>通过后做什么</th><th>失败止损</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>T1/T2/T3</td><td>只改 reference latent</td><td>输出差异与结构/染色指标</td><td>确定是否移除 target latent</td><td>泄漏未排除，不做任何 PST gate</td></tr>
+<tr><td>1</td><td>A baseline</td><td>当前模型，无 timestep gate</td><td>固定 5 样本，作上限/对照</td><td>保留所有中间日志</td><td>若 baseline 不稳定，先修现有训练/采样</td></tr>
+<tr><td>1</td><td>B structure gate</td><td>只启用 <code>g_struct</code></td><td>H&amp;E→输出的 nuclei/membrane DICE、结构 SS、黑团比例</td><td>判断结构门控是否有独立收益</td><td>结构下降或 clamp 增加，回退 gate</td></tr>
+<tr><td>1</td><td>C expression gate</td><td>只启用 <code>g_expr</code> / marker token</td><td>DAB FOD 均值/20-bin histogram、H-score ordinal/Spearman</td><td>判断表达路径是否真的被激活</td><td>只变成整片棕色而 ranking 不升，停止加大 gate</td></tr>
+<tr><td>1</td><td>D both</td><td>B+C 叠加</td><td>五层指标：结构、语义、物理、临床、伪影</td><td>进入多 seed 验证</td><td>结构和表达不能同时成立，回到 B/C 分诊</td></tr>
+<tr><td>2</td><td>浓度域 CFG</td><td>换生成空间 + BL renderer + channel-time schedule</td><td>BL consistency + DAB ranking + downstream DICE</td><td>作为论文主线候选</td><td>若生成空间不稳，停在路线 A，不能盲目加模块</td></tr>
+</tbody>
+</table></div>
+
+<h3>6.1 必须记录的量</h3>
+<ul>
+<li>每个 timestep 的 <code>g_struct</code>、<code>g_expr</code>、ControlNet residual RMS、marker token RMS/grad norm。</li>
+<li>每个输出的 decoder clamp fraction、<code>x0_pred_min/max</code>、latent 每通道 1%/99% 分位。</li>
+<li>结构：nuclei/membrane segmentation DICE、H&amp;E 与生成图的结构 SS/边缘一致性；不能只报 PSNR。</li>
+<li>表达：固定队列级 stain matrix 下的 DAB FOD 全局均值、20-bin histogram、区域 ranking、H-score/临床分级一致性。</li>
+<li>伪影：AQuA 或暗块/黑团检测器，黑团比例独立于 FID/PSNR 报告。</li>
+</ul>
+
+<h2 id="s7"><span class="num">7</span>不能从 PST-Diff 直接推出的结论</h2>
+<div class="box warn"><div class="bt">四个不能偷换的等号</div>
+<ol>
+<li><b>「PST 的 Fourier CFG 有效」≠「C_H/C_DAB 是频率」</b>。前者是空间频率投影，后者是染色语义分解；可以借调度原则，不能借名词。</li>
+<li><b>「PST 用 LT」≠「非配对 latent L2 可行」</b>。PST 的 LT 有 patch-wise paired HE/IHC 监督；你的 non-paired coupling 不可辨识。</li>
+<li><b>「PST 保结构」≠「HER2 实例级表达正确」</b>。PST 自己报告的是 SS、LC、VIF、Hist 与 IHC Profiler 0.72；没有医生盲评，也没有把 DAB spatial ranking / FOD distribution 与 H-score 作为训练约束。</li>
+<li><b>「论文声称可泛化」≠「当前 23.1K LoRA 已经有效」</b>。当前 LoRA 的五样本推理图尚未生成，不能用训练 loss 代替结果。</li>
+</ol></div>
+
+<p>此外，本轮在作者公开 GitHub 主页上没有找到 PST-Diff 官方训练仓库或 checkpoint。作者后续的 <b>StainExpert</b> 有公开代码，采用 multi-expert、text+visual guidance、SD-Turbo 与参数高效训练，但它不是 PST-Diff 的复现代码，不能把它当作 PST 的实现补足。</p>
+
+<h2 id="s8"><span class="num">8</span>参考与核实边界</h2>
+<div class="scroll"><table>
+<thead><tr><th>材料</th><th>本轮核实内容</th><th>等级</th></tr></thead>
+<tbody>
+<tr><td><b>PST-Diff 原文 PDF</b></td><td>14 页全文；AAM、LT、CFG 公式与实验设置；BCI/ACROBAT 数字；消融与局限</td><td><span class="b high">一手原文</span></td></tr>
+<tr><td>IEEE 题录</td><td>PST-Diff，IEEE TMI 2024，DOI <code>10.1109/TMI.2024.3430825</code></td><td><span class="b high">一手题录</span></td></tr>
+<tr><td>作者 GitHub 主页</td><td>找到作者主页与后续 StainExpert，但未找到 PST-Diff 官方仓库</td><td><span class="b medium">公开主页检索</span></td></tr>
+<tr><td>当前模型状态</td><td><code>MODEL_STATUS_CURRENT.md</code>：当前结构、权重、HHE 条件、23.1K LoRA、训练/推理缺口</td><td><span class="b high">项目一手记录</span></td></tr>
+</tbody>
+</table></div>
+
+<div class="box teal"><div class="bt">最终建议</div><p><b>不要把 PST-Diff 当成「再加三个模块」的清单；把它当成一条时间轴设计原则。</b>你当前最合理的改动是：<b>移除/门禁 target latent → 用零初始化 HER2 token；保留 H&amp;E ControlNet；在 [C_H,C_H,C_E] 输入前加结构/表达 timestep gate；先做四臂固定样本实验。</b>只有这条路线证明「结构和表达都能独立改善」，才值得把同一原则下沉到 <code>Z=[C_H,C_DAB,C_res]</code> + Beer–Lambert 的生成空间。</p></div>
+
+<div class="foot"><p><b>PST-Diff 借鉴与 StainFuser 改造方案审查</b> · 2026-10-07 · 归入 <code>06_方案可行性审查/</code></p><p>本报告区分：论文真实做了什么、当前模型真实有什么、以及从前两者推导出的建议。凡写「推荐」的路线均给出门禁、评价指标与止损条件。</p></div>
+</main>
+</div>
+</body>
+</html>
