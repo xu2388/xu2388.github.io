@@ -39,6 +39,8 @@ JDBC 位于最底层，向上暴露 `Connection`、`PreparedStatement`、`Result
 
 第 1 步在现代驱动里通常可以省略。JDBC 4 引入了基于 `META-INF/services/java.sql.Driver` 的服务发现，驱动 jar 放进类路径后，`DriverManager` 会自动找到它。显式 `Class.forName("com.mysql.cj.jdbc.Driver")` 仍然常见，原因是老代码兼容、以及在某些容器里类加载器隔离导致 SPI 失效。两类写法都不是「必须」，关键是驱动版本与数据库版本匹配。
 
+`Class.forName` 的作用不只是「加载类」，它会执行驱动类的静态初始化块，而驱动正是在静态块里把自己注册进 `DriverManager`。这解释了为什么只写 `Class.forName` 而不 `newInstance` 也能生效，也解释了为什么类加载失败会直接抛 `ClassNotFoundException`：驱动 jar 根本没在运行时类路径上。Web 应用部署时，驱动 jar 应放在 `WEB-INF/lib` 或由容器提供，不能只放在 IDE 的编译路径里。
+
 ### 2.2 连接串的组成
 
 MySQL 的连接串形如：

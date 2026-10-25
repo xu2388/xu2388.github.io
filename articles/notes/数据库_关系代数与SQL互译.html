@@ -253,9 +253,9 @@ HAVING COUNT(*) &gt; (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM Student 
 <tr><td>与 $SC$ 自然连接</td><td>一千行、十万行</td><td>约一万行</td><td>人均选课数</td></tr>
 <tr><td>投影到 $(Sname,Cno)$</td><td>一万行、多列</td><td>一万行、两列</td><td>列数减少</td></tr>
 </table>
-<p>每一步的输出规模都能用上一节的元组数规则估出来。若某一步的输出突然放大到接近笛卡尔积，说明该处漏了连接条件或条件写错。这个检查比逐行读 SQL 更快发现错误：<strong>行数异常放大就是条件缺失的信号</strong>。反过来，若某一步输出骤减到接近零，则要怀疑条件过严，例如把 <code>OR</code> 写成了 <code>AND</code>，或把外连接写成了内连接。</p>
-<h2>八、五个完整对照</h2>
-<p>以下五例均基于供应库 $S(SNO,SNAME,STATUS,CITY)$、$P(PNO,PNAME,COLOR,WEIGHT)$、$J(JNO,JNAME,CITY)$、$SPJ(SNO,PNO,JNO,QTY)$，只给代数式与 SQL，不涉及题号。</p>
+<p>每一步的输出规模都能用 §2.3 的元组数规则估出来。若某一步的输出突然放大到接近笛卡尔积，说明该处漏了连接条件或条件写错。这个检查比逐行读 SQL 更快发现错误：<strong>行数异常放大就是条件缺失的信号</strong>。反过来，若某一步输出骤减到接近零，则要怀疑条件过严，例如把 <code>OR</code> 写成了 <code>AND</code>，或把外连接写成了内连接。</p>
+<h2>八、六个完整对照</h2>
+<p>以下六例均基于供应库 $S(SNO,SNAME,STATUS,CITY)$、$P(PNO,PNAME,COLOR,WEIGHT)$、$J(JNO,JNAME,CITY)$、$SPJ(SNO,PNO,JNO,QTY)$，只给代数式与 SQL，不涉及题号。</p>
 <h3>8.1 选择与投影的组合</h3>
 <p>「给工程 J1 供应过零件的供应商号」：</p>
 <p>$$ \pi_{SNO}\big(\sigma_{JNO=&#x27;J1&#x27;}(SPJ)\big). $$</p>

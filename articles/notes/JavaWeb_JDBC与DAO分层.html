@@ -40,6 +40,7 @@
 <tr><td>6</td><td>关闭资源</td><td><code>close()</code> 或 try-with-resources</td><td>顺序与打开顺序相反</td></tr>
 </table>
 <p>第 1 步在现代驱动里通常可以省略。JDBC 4 引入了基于 <code>META-INF/services/java.sql.Driver</code> 的服务发现，驱动 jar 放进类路径后，<code>DriverManager</code> 会自动找到它。显式 <code>Class.forName(&quot;com.mysql.cj.jdbc.Driver&quot;)</code> 仍然常见，原因是老代码兼容、以及在某些容器里类加载器隔离导致 SPI 失效。两类写法都不是「必须」，关键是驱动版本与数据库版本匹配。</p>
+<p><code>Class.forName</code> 的作用不只是「加载类」，它会执行驱动类的静态初始化块，而驱动正是在静态块里把自己注册进 <code>DriverManager</code>。这解释了为什么只写 <code>Class.forName</code> 而不 <code>newInstance</code> 也能生效，也解释了为什么类加载失败会直接抛 <code>ClassNotFoundException</code>：驱动 jar 根本没在运行时类路径上。Web 应用部署时，驱动 jar 应放在 <code>WEB-INF/lib</code> 或由容器提供，不能只放在 IDE 的编译路径里。</p>
 <h3>2.2 连接串的组成</h3>
 <p>MySQL 的连接串形如：</p>
 <pre><code>jdbc:mysql://localhost:3306/shop?useUnicode=true&amp;characterEncoding=UTF-8

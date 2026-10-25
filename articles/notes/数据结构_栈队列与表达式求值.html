@@ -113,6 +113,32 @@ int DeQueue(SqQueue *q, int *x) {
 }</code></pre>
 <p>这套约定下，队列最多存放 $MAXQ-1$ 个元素。若题目要求“表长 $m$ 的循环队列能存 $m$ 个元素”，就不能用牺牲单元的方案，而应增设 <code>size</code> 或 <code>tag</code>。判断“队满”时，先确认题目采用哪种约定，再看 <code>rear</code> 是指向队尾元素还是队尾的下一个空位；这两个细节一变，公式就整体改变。</p>
 <p>链队列则是另一种思路：<code>front</code> 指向队头节点，<code>rear</code> 指向队尾节点；入队在尾部接新节点，出队在头部删节点。队空条件为 <code>front == NULL</code>（若使用哑头节点，则为 <code>front-&gt;next == NULL</code>）。链队列没有假溢出，也没有固定容量，适合队列长度变化大的场景。</p>
+<h3>2.4 栈与队列的相互模拟</h3>
+<p>栈和队列的操作限制不同，但可以用两个栈模拟一个队列，也可以用两个队列模拟一个栈。这类题目的价值在于逼着人把“元素次序如何被反转”想清楚。</p>
+<p>用两个栈模拟队列：设 <code>in</code> 栈负责入队，<code>out</code> 栈负责出队。入队时把元素压入 <code>in</code>；出队时若 <code>out</code> 为空，就把 <code>in</code> 中的元素全部弹出并压入 <code>out</code>，这样 <code>in</code> 的栈顶变成 <code>out</code> 的栈底，最早进入的元素来到 <code>out</code> 的栈顶，再弹出即可。若 <code>out</code> 不为空，直接弹出 <code>out</code> 的栈顶。</p>
+<pre><code>typedef struct {
+    int in[100], out[100];
+    int topIn, topOut;
+} MyQueue;
+
+void Enqueue(MyQueue *q, int x) { q-&gt;in[++q-&gt;topIn] = x; }
+
+int Dequeue(MyQueue *q, int *x) {
+    if (q-&gt;topOut &lt; 0) {
+        while (q-&gt;topIn &gt;= 0) q-&gt;out[++q-&gt;topOut] = q-&gt;in[q-&gt;topIn--];
+    }
+    if (q-&gt;topOut &lt; 0) return 0;
+    *x = q-&gt;out[q-&gt;topOut--];
+    return 1;
+}</code></pre>
+<p>每个元素最多被从 <code>in</code> 搬到 <code>out</code> 一次，因此 $n$ 次操作的摊还时间为 $O(1)$，最坏单次为 $O(n)$。这个结构在“先进先出但只允许栈操作”的场景中很常见，例如用函数调用栈实现层序处理。</p>
+<p>用两个队列模拟栈：设 <code>q1</code> 为当前队列，<code>q2</code> 为辅助队列。入栈时直接把元素放入 <code>q1</code>；出栈时，把 <code>q1</code> 中除最后一个元素外的所有元素依次出队并放入 <code>q2</code>，剩下的最后一个元素就是栈顶，弹出它，然后交换 <code>q1</code> 与 <code>q2</code> 的角色。入栈 $O(1)$，出栈 $O(n)$。也可以反过来，入栈时就把次序调整好，使出栈 $O(1)$、入栈 $O(n)$。两种取舍取决于操作频率。</p>
+<table>
+<tr><th>模拟方向</th><th>结构</th><th>入操作</th><th>出操作</th><th>关键动作</th></tr>
+<tr><td>两栈模拟队列</td><td><code>in</code>、<code>out</code></td><td>$O(1)$</td><td>摊还 $O(1)$</td><td><code>out</code> 空时整体倒栈</td></tr>
+<tr><td>两队列模拟栈</td><td><code>q1</code>、<code>q2</code></td><td>$O(1)$</td><td>$O(n)$</td><td>留下最后一个元素</td></tr>
+<tr><td>两队列模拟栈</td><td><code>q1</code>、<code>q2</code></td><td>$O(n)$</td><td>$O(1)$</td><td>入栈时调整次序</td></tr>
+</table>
 <h2>三、栈操作序列的合法性</h2>
 <h3>3.1 问题模型</h3>
 <p>设入栈序列固定为 $1,2,\dots,n$，每个元素入栈后可以在任意时刻出栈，但必须遵守后进先出。问哪些出栈序列是合法的。例如 $n=3$ 时，$1,2,3$、$1,3,2$、$2,1,3$、$2,3,1$、$3,2,1$ 都合法，只有 $3,1,2$ 不合法：要最先弹出 $3$，必须先把 $1,2,3$ 全部压入，此时栈顶是 $3$，弹出后栈顶是 $2$，不可能越过 $2$ 先弹出 $1$。</p>
@@ -204,6 +230,7 @@ int DeQueue(SqQueue *q, int *x) {
 <p>转换规则：</p>
 <ol><li>操作数直接输出；</li><li>左括号入栈；</li><li>右括号：不断弹出栈顶运算符并输出，直到遇到左括号，左括号出栈但不输出；</li><li>其他运算符：当栈顶运算符的优先级高于当前运算符，或优先级相等且当前运算符是左结合时，弹出栈顶并输出；重复此过程后再把当前运算符入栈；</li><li>扫描结束后，把栈中剩余运算符依次弹出输出。</li></ol>
 <p>优先级从低到高为 <code>+</code>、<code>-</code> 低于 <code>*</code>、<code>/</code> 低于 <code>^</code>；<code>^</code> 是右结合，其余是左结合。</p>
+<p>实际实现时，操作数不一定只有一位。扫描到数字字符后，应继续读完整个数字（包括小数点和指数部分），把它作为一个整体输出；若只按字符处理，<code>12+3</code> 会被拆成 <code>1</code>、<code>2</code>、<code>+</code>、<code>3</code>，后缀变成 <code>1 2 + 3</code>，语义完全改变。一元负号也需要单独判断：当 <code>-</code> 出现在表达式开头、左括号之后或另一个运算符之后时，它是负号而不是减号，可以改写成 <code>0-</code> 的前缀形式，或在记号层面直接生成负数操作数。<code>3-(-5)</code> 与 <code>3-5</code> 只差一个负号，但后缀分别是 <code>3 5 - -</code>（把 <code>-5</code> 视为一个操作数时是 <code>3 -5 -</code>）与 <code>3 5 -</code>，不能混为一谈。</p>
 <p>以 $(3+4)\times 5-6$ 为例：</p>
 <table>
 <tr><th>读入</th><th>动作</th><th>输出</th><th>运算符栈</th></tr>
