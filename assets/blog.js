@@ -191,6 +191,12 @@
       });
     }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
     targets.forEach(function (el) { io.observe(el); });
+    // 兜底：2.5 秒后仍未触发的元素直接显示，避免任何情况下内容被永久隐藏
+    setTimeout(function () {
+      targets.forEach(function (el) {
+        if (!el.classList.contains("in")) { el.classList.add("in"); io.unobserve(el); }
+      });
+    }, 2500);
   }
 
   /* ---------- 导航高亮（首页锚点） ---------- */
@@ -215,6 +221,36 @@
     spy();
   }
 
+  /* ---------- 公式渲染（KaTeX，按需加载） ----------
+     文章里的 $...$ / $$...$$ 是 LaTeX。只在页面确实出现 $ 时才去 CDN 取 KaTeX，
+     取不到就原样保留，不影响阅读。 */
+  function initMath() {
+    var art = document.querySelector(".article");
+    if (!art || art.textContent.indexOf("$") === -1) return;
+    var V = "0.16.9", CDN = "https://cdn.jsdelivr.net/npm/katex@" + V + "/dist/";
+    var link = document.createElement("link");
+    link.rel = "stylesheet"; link.href = CDN + "katex.min.css";
+    document.head.appendChild(link);
+    function load(src, cb) {
+      var s = document.createElement("script");
+      s.src = src; s.onload = cb; s.onerror = function () { };
+      document.head.appendChild(s);
+    }
+    load(CDN + "katex.min.js", function () {
+      load(CDN + "contrib/auto-render.min.js", function () {
+        if (typeof renderMathInElement !== "function") return;
+        renderMathInElement(art, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false }
+          ],
+          throwOnError: false,
+          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+        });
+      });
+    });
+  }
+
   function boot() {
     initCanvas();
     initMobileNav();
@@ -223,6 +259,7 @@
     initTOC();
     initReveal();
     initNavSpy();
+    initMath();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

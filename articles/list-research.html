@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>研究文章 · 我的科研与学习档案</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">研究文章 · 7 篇</p>
+<nav class="site-nav"><a href="../index.html">首页</a><a class="active" href="../index.html#research">研究文章</a><a href="../index.html#notes">学习笔记</a><a href="../index.html#courses">课程笔记</a><a href="../index.html#essays">随笔</a><a href="../index.html#kb">知识库</a><a href="../index.html#papers">论文分享屋</a><a href="../index.html#archive">资料库</a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../index.html#about">关于这个档案</a><span>纯静态 · 零依赖 · GitHub Pages</span></div>
+</div></header>
+<main class="container">
+<nav class="crumbs"><a href="../index.html">首页</a> / 研究文章</nav>
+<h1 class="list-title">研究文章</h1>
+<p class="list-sub">虚拟染色主线的完整研究文章：问题、方法、实验与自我推翻，保留原始数据与结论。　共 7 篇</p>
+<ul class="article-list">
+<li>
+  <a href="001-虚拟染色主线.html">虚拟染色这一年：从扩散模型到 CUT，一条路我走死了又走活了</a><span class="date">2026-10-24</span><br />
+  <span class="tag">主线</span> <span class="tag">虚拟染色</span> <span class="tag">H&amp;E→IHC</span> <span class="tag">扩散模型</span> <span class="tag">CUT/GAN</span>
+  <span class="desc">我一年多虚拟染色研究的完整自述：从扩散模型起步、撞上「有色调无结构」、找扩散里的 CUT、因为训练成本转投 CUT-GAN、再到浓度域和逐像素跨图不可迁移的硬结论。保留了我自己的困惑、自我推翻和原始数据。</span>
+</li>
+<li>
+  <a href="002-逐像素跨图不可迁移.html">为什么 H&amp;E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据</a><span class="date">2026-10-24</span><br />
+  <span class="tag">主线</span> <span class="tag">归因</span> <span class="tag">逐像素跨图</span> <span class="tag">BCI数据集</span> <span class="tag">H-score</span>
+  <span class="desc">一份内部 M0 归因报告告诉我：H&amp;E 预测 DAB 在逐像素、跨图口径下根本不可学，不是模型没调好，是数据里没这个规律。本文保留全部硬数据（8px 输给常数 −16.3%、625 个平移全救不回、跨图块级 r≈0、22.5px 错位）和我当时的困惑。</span>
+</li>
+<li>
+  <a href="003-肾脏病理分割这条线.html">肾脏病理分割这条线：从&quot;急着交结果&quot;到&quot;回头磕边界&quot;的一次绕远路</a><span class="date">2026-10-24</span><br />
+  <span class="tag">研究</span> <span class="tag">病理分割</span> <span class="tag">病灶分割</span> <span class="tag">频域</span> <span class="tag">边界优化</span> <span class="tag">风格迁移</span>
+  <span class="desc">一开始我只是想复现个 SOTA 模型把 Masson/PAS/PASM 三染色的病灶分割结果交上去，结果这条线一路带我摸过 nnU-Net、GloPath、Swin-UNETR，又为扩数据拐进了文本驱动风格迁移，最后自己绕回起点，卡在边界模糊这个真问题上。本文按时间顺序留下完整的思路演变、我引用的每个模型的指标、我实测的那组 Dice/IoU，和一路的自我推翻。</span>
+</li>
+<li>
+  <a href="008-浓度空间Diffusion.html">从 RGB 到染料浓度域：H&amp;E→IHC 虚拟染色的物理可解释路线研究</a><span class="date">2026-10-24</span><br />
+  <span class="tag">虚拟染色</span> <span class="tag">浓度域</span> <span class="tag">扩散模型</span> <span class="tag">比尔-朗伯</span> <span class="tag">H&amp;E→IHC</span>
+  <span class="desc">本文论证虚拟染色的建模坐标应由 RGB 转向染料浓度域，提出仅在 DAB 浓度通道上做条件扩散、以 H/E 浓度为干净条件、经比尔-朗伯回投重建 IHC 的解耦路线，并给出可判定该路线成立与否的最小基线 M0 及其门禁式判据。</span>
+</li>
+<li>
+  <a href="009-对比学习与CUT.html">对比学习与 CUT：无配对染色翻译中的结构保持机制研究</a><span class="date">2026-10-24</span><br />
+  <span class="tag">对比学习</span> <span class="tag">CUT</span> <span class="tag">无配对翻译</span> <span class="tag">结构保持</span> <span class="tag">PatchNCE</span>
+  <span class="desc">本文从 InfoNCE 的互信息下界出发，将 CUT 的 PatchNCE 还原为&quot;以局部语义块替代全局像素&quot;的内容保持判据，论证其能容纳配准误差与几何形变却不约束染色量，故须由光密度域浓度监督与梯度边界监督补足。</span>
+</li>
+<li>
+  <a href="010-虚拟染色精读.html">虚拟染色关键工作精读：语义保持、扩散与对比学习三条路线</a><span class="date">2026-10-24</span><br />
+  <span class="tag">虚拟染色</span> <span class="tag">论文精读</span> <span class="tag">PSPStain</span> <span class="tag">扩散模型</span> <span class="tag">对比学习</span>
+  <span class="desc">以 PSPStain、MisalignResistantVS（DGR）与 StainBridge 三篇工作为锚点，论证虚拟染色的核心矛盾并非生成逼真度而是语义可判读性，并指出语义保持、生成式解耦与对比/解耦三条路线在错位条件下共同收敛于&quot;放弃逐点对应、转向集合级约束&quot;这一方法论内核。</span>
+</li>
+<li>
+  <a href="doubao-mbti-pipeline.html">MBTI 连续人格空间研究管线（阶段总览）</a><span class="date">2026-10-24</span><br />
+  <span class="tag">MBTI</span> <span class="tag">人格建模</span> <span class="tag">VAE</span> <span class="tag">研究设计</span> <span class="tag">豆包</span>
+  <span class="desc">我设计的一个研究项目：把 MBTI 从 16 类离散类型扩展成连续人格空间，X→Z→P(Z|M)→P(A|S,Z) 六道阶段闸门。这是阶段总览图，从豆包上传记录恢复。</span>
+</li>
+</ul>
+</main>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客 · 托管于 GitHub Pages</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

@@ -4,231 +4,179 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>我的科研与学习档案 · H&E→IHC 虚拟染色</title>
+  <meta name="description" content="一个本科生的虚拟染色研究档案：研究文章、学习教程、课程笔记与全部学习对话存档。" />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="container">
-      <h1 class="site-title">我的科研与学习档案</h1>
-      <p class="site-subtitle">一个本科生的虚拟染色探索 · 从大一到现在，问题与踩坑都留着</p>
-      <nav class="site-nav">
-        <a href="#research">研究</a>
-        <a href="#notes">学习笔记</a>
-        <a href="#essays">随笔</a>
-        <a href="#kb">知识库</a>
-        <a href="#archive">资料库</a>
-        <a href="#about">关于</a>
-      </nav>
+      <h1 class="site-title">科研与学习档案</h1>
+      <p class="site-subtitle">H&amp;E→IHC 虚拟染色 · 从大一到现在</p>
+      <nav class="site-nav"><a class="active" href="index.html">首页</a><a href="index.html#research">研究文章</a><a href="index.html#notes">学习笔记</a><a href="index.html#courses">课程笔记</a><a href="index.html#essays">随笔</a><a href="index.html#kb">知识库</a><a href="index.html#papers">论文分享屋</a><a href="index.html#archive">资料库</a><a href="index.html#about">关于</a></nav>
+<div class="side-foot"><a href="index.html#about">关于这个档案</a><span>纯静态 · 零依赖 · GitHub Pages</span></div>
+
+
     </div>
   </header>
 
   <main class="container">
-    <section class="hero">
-      <p>
-        这里是我一年多来的科研与学习记录，主线是 <b>H&amp;E → IHC 虚拟染色</b>——
-        用深度学习把普通病理切片"染"成免疫组化图。我没有把过程磨光：
-        当初怎么想的、后来怎么被数据打脸、哪些方案被否掉、为什么否，都原样留着。
+    <section class="page-lead" id="top">
+      <p class="lead-label">RESEARCH &amp; STUDY ARCHIVE · 2024 — 2026</p>
+      <h1>一年多的问题、踩坑与结论，都留在这里</h1>
+      <p class="lead-text">
+        主线是用深度学习把普通病理切片<strong>“染”</strong>成免疫组化图。过程没有磨光：
+        当初怎么想的、后来怎么被数据推翻、哪些方案被否掉、为什么否，都按原样保留，
+        每条结论尽量能溯源到具体对话。
       </p>
-      <p class="muted">
-        内容分几块：<a href="#research">研究文章</a>（深度长文）、
-        <a href="#notes">学习笔记</a>（课程原始笔记）、
-        <a href="#essays">随笔</a>（我写的科普）、
-        <a href="#kb">知识库</a>（全部学习对话，一条不丢）。
-        另有 <a href="#archive">资料库</a> 做全量审计与溯源。
-      </p>
-    </section>
-
-    <div class="stats">
-      <div class="stat"><span class="stat-num">15</span><span class="stat-label">篇 · 长文与教程</span></div>
-      <div class="stat"><span class="stat-num">270</span><span class="stat-label">条 · 学习对话全存档</span></div>
-      <div class="stat"><span class="stat-num">1&nbsp;年+</span><span class="stat-label">从大一到现在，没删过</span></div>
-    </div>
-
-    <section class="cards">
-      <a class="card" href="#research">
-        <span class="card-num">研究</span>
-        <span class="card-title">虚拟染色主线 · 逐像素跨图归因 · MBTI 建模</span>
-        <span class="card-desc">我手写的深度文章，保留原始数据、公式和自我推翻。</span>
-      </a>
-      <a class="card" href="#notes">
-        <span class="card-num">笔记</span>
-        <span class="card-title">课程原始笔记</span>
-        <span class="card-desc">JavaWeb 等课程的手写笔记，一条未删。</span>
-      </a>
-      <a class="card" href="#kb">
-        <span class="card-num">知识库</span>
-        <span class="card-title">全部学习对话（270 条）</span>
-        <span class="card-desc">按主题分组的问答存档，每条可溯源到原始档案。</span>
-      </a>
-      <a class="card" href="#essays">
-        <span class="card-num">随笔</span>
-        <span class="card-title">深度学习到底在干什么</span>
-        <span class="card-desc">我写的科普长文，讲本质而不是堆术语。</span>
-      </a>
+      <div class="stats">
+      <!-- STATS_START -->
+      <div class="stat"><span class="stat-num">7</span><span class="stat-label">篇 · 研究文章</span></div>
+      <div class="stat"><span class="stat-num">30</span><span class="stat-label">篇 · 笔记与教程</span></div>
+      <div class="stat"><span class="stat-num">368</span><span class="stat-label">条 · 学习对话存档</span></div>
+      <div class="stat"><span class="stat-num">27</span><span class="stat-label">篇 · 论文导读</span></div>
+      <!-- STATS_END -->
+      </div>
     </section>
 
     <!-- ARTICLES_START -->
 <section class="block" id="research">
-  <h2>研究文章</h2>
-  <ul class="article-list">
-  <li>
-    <a href="articles/001-虚拟染色主线.html">虚拟染色这一年：从扩散模型到 CUT，一条路我走死了又走活了</a><span class="date">2026-10-24</span><br />
-    <span class="tag">主线</span> <span class="tag">虚拟染色</span> <span class="tag">H&E→IHC</span> <span class="tag">扩散模型</span> <span class="tag">CUT/GAN</span>
-    <span class="desc">我一年多虚拟染色研究的完整自述：从扩散模型起步、撞上「有色调无结构」、找扩散里的 CUT、因为训练成本转投 CUT-GAN、再到浓度域和逐像素跨图不可迁移的硬结论。保留了我自己的困惑、自我推翻和原始数据。</span>
-  </li>
-  <li>
-    <a href="articles/002-逐像素跨图不可迁移.html">为什么 H&E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据</a><span class="date">2026-10-24</span><br />
-    <span class="tag">主线</span> <span class="tag">归因</span> <span class="tag">逐像素跨图</span> <span class="tag">BCI数据集</span> <span class="tag">H-score</span>
-    <span class="desc">一份内部 M0 归因报告告诉我：H&E 预测 DAB 在逐像素、跨图口径下根本不可学，不是模型没调好，是数据里没这个规律。本文保留全部硬数据（8px 输给常数 −16.3%、625 个平移全救不回、跨图块级 r≈0、22.5px 错位）和我当时的困惑。</span>
-  </li>
-  <li>
-    <a href="articles/003-肾脏病理分割这条线.html">肾脏病理分割这条线：从"急着交结果"到"回头磕边界"的一次绕远路</a><span class="date">2026-10-24</span><br />
-    <span class="tag">研究</span> <span class="tag">病理分割</span> <span class="tag">病灶分割</span> <span class="tag">频域</span> <span class="tag">边界优化</span> <span class="tag">风格迁移</span>
-    <span class="desc">一开始我只是想复现个 SOTA 模型把 Masson/PAS/PASM 三染色的病灶分割结果交上去，结果这条线一路带我摸过 nnU-Net、GloPath、Swin-UNETR，又为扩数据拐进了文本驱动风格迁移，最后自己绕回起点，卡在边界模糊这个真问题上。本文按时间顺序留下完整的思路演变、我引用的每个模型的指标、我实测的那组 Dice/IoU，和一路的自我推翻。</span>
-  </li>
-  <li>
-    <a href="articles/008-浓度空间Diffusion.html">从 RGB 到染料浓度域：H&E→IHC 虚拟染色的物理可解释路线研究</a><span class="date">2026-10-24</span><br />
-    <span class="tag">虚拟染色</span> <span class="tag">浓度域</span> <span class="tag">扩散模型</span> <span class="tag">比尔-朗伯</span> <span class="tag">H&E→IHC</span>
-    <span class="desc">本文论证虚拟染色的建模坐标应由 RGB 转向染料浓度域，提出仅在 DAB 浓度通道上做条件扩散、以 H/E 浓度为干净条件、经比尔-朗伯回投重建 IHC 的解耦路线，并给出可判定该路线成立与否的最小基线 M0 及其门禁式判据。</span>
-  </li>
-  <li>
-    <a href="articles/009-对比学习与CUT.html">对比学习与 CUT：无配对染色翻译中的结构保持机制研究</a><span class="date">2026-10-24</span><br />
-    <span class="tag">对比学习</span> <span class="tag">CUT</span> <span class="tag">无配对翻译</span> <span class="tag">结构保持</span> <span class="tag">PatchNCE</span>
-    <span class="desc">本文从 InfoNCE 的互信息下界出发，将 CUT 的 PatchNCE 还原为"以局部语义块替代全局像素"的内容保持判据，论证其能容纳配准误差与几何形变却不约束染色量，故须由光密度域浓度监督与梯度边界监督补足。</span>
-  </li>
-  <li>
-    <a href="articles/010-虚拟染色精读.html">虚拟染色关键工作精读：语义保持、扩散与对比学习三条路线</a><span class="date">2026-10-24</span><br />
-    <span class="tag">虚拟染色</span> <span class="tag">论文精读</span> <span class="tag">PSPStain</span> <span class="tag">扩散模型</span> <span class="tag">对比学习</span>
-    <span class="desc">以 PSPStain、MisalignResistantVS（DGR）与 StainBridge 三篇工作为锚点，论证虚拟染色的核心矛盾并非生成逼真度而是语义可判读性，并指出语义保持、生成式解耦与对比/解耦三条路线在错位条件下共同收敛于"放弃逐点对应、转向集合级约束"这一方法论内核。</span>
-  </li>
-  <li>
-    <a href="articles/doubao-mbti-pipeline.html">MBTI 连续人格空间研究管线（阶段总览）</a><span class="date">2026-10-24</span><br />
-    <span class="tag">MBTI</span> <span class="tag">人格建模</span> <span class="tag">VAE</span> <span class="tag">研究设计</span> <span class="tag">豆包</span>
-    <span class="desc">我设计的一个研究项目：把 MBTI 从 16 类离散类型扩展成连续人格空间，X→Z→P(Z|M)→P(A|S,Z) 六道阶段闸门。这是阶段总览图，从豆包上传记录恢复。</span>
-  </li>
+<div class="block-head">
+  <h2>研究文章<span class="count">7</span></h2>
+  <a class="more" href="articles/list-research.html">全部 7 篇 →</a>
+</div>
+<ul class="article-list">
+<li>
+  <a href="articles/001-虚拟染色主线.html">虚拟染色这一年：从扩散模型到 CUT，一条路我走死了又走活了</a><span class="date">2026-10-24</span><br />
+  <span class="tag">主线</span> <span class="tag">虚拟染色</span> <span class="tag">H&amp;E→IHC</span> <span class="tag">扩散模型</span> <span class="tag">CUT/GAN</span>
+  <span class="desc">我一年多虚拟染色研究的完整自述：从扩散模型起步、撞上「有色调无结构」、找扩散里的 CUT、因为训练成本转投 CUT-GAN、再到浓度域和逐像素跨图不可迁移的硬结论。保留了我自己的困惑、自我推翻和原始数据。</span>
+</li>
+<li>
+  <a href="articles/002-逐像素跨图不可迁移.html">为什么 H&amp;E 到 DAB 的逐像素预测做不出来：一份归因报告的硬数据</a><span class="date">2026-10-24</span><br />
+  <span class="tag">主线</span> <span class="tag">归因</span> <span class="tag">逐像素跨图</span> <span class="tag">BCI数据集</span> <span class="tag">H-score</span>
+  <span class="desc">一份内部 M0 归因报告告诉我：H&amp;E 预测 DAB 在逐像素、跨图口径下根本不可学，不是模型没调好，是数据里没这个规律。本文保留全部硬数据（8px 输给常数 −16.3%、625 个平移全救不回、跨图块级 r≈0、22.5px 错位）和我当时的困惑。</span>
+</li>
+<li>
+  <a href="articles/003-肾脏病理分割这条线.html">肾脏病理分割这条线：从&quot;急着交结果&quot;到&quot;回头磕边界&quot;的一次绕远路</a><span class="date">2026-10-24</span><br />
+  <span class="tag">研究</span> <span class="tag">病理分割</span> <span class="tag">病灶分割</span> <span class="tag">频域</span> <span class="tag">边界优化</span> <span class="tag">风格迁移</span>
+  <span class="desc">一开始我只是想复现个 SOTA 模型把 Masson/PAS/PASM 三染色的病灶分割结果交上去，结果这条线一路带我摸过 nnU-Net、GloPath、Swin-UNETR，又为扩数据拐进了文本驱动风格迁移，最后自己绕回起点，卡在边界模糊这个真问题上。本文按时间顺序留下完整的思路演变、我引用的每个模型的指标、我实测的那组 Dice/IoU，和一路的自我推翻。</span>
+</li>
 </ul>
 </section>
 <section class="block" id="courses">
-  <h2>课程与科研笔记</h2>
-  <ul class="article-list">
-  <li>
-    <a href="articles/notes-index.html">学习笔记 · 课程复习与科研整理（25 篇）</a><span class="date">2026-10-24</span><br />
-    <span class="tag">课程笔记</span> <span class="tag">学习</span> <span class="tag">复习</span>
-    <span class="desc">把大一大二专业课复习与科研对话整理成的系统学习笔记，按学科分组，正式书面整理，完整覆盖知识点。</span>
-  </li>
+<div class="block-head">
+  <h2>课程与科研笔记<span class="count">1</span></h2>
+  
+</div>
+<ul class="article-list">
+<li>
+  <a href="articles/notes-index.html">学习笔记 · 课程复习与科研整理（25 篇）</a><span class="date">2026-10-24</span><br />
+  <span class="tag">课程笔记</span> <span class="tag">学习</span> <span class="tag">复习</span>
+  <span class="desc">把大一大二专业课复习与科研对话整理成的系统学习笔记，按学科分组，正式书面整理，完整覆盖知识点。</span>
+</li>
 </ul>
 </section>
 <section class="block" id="notes">
-  <h2>学习笔记</h2>
-  <ul class="article-list">
-  <li>
-    <a href="articles/004-扩散与FlowMatching教程.html">扩散模型和 Flow Matching 到底在干什么：从一句"我不懂"到手推速度场</a><span class="date">2026-10-24</span><br />
-    <span class="tag">教程</span> <span class="tag">扩散模型</span> <span class="tag">Flow Matching</span> <span class="tag">生成模型</span> <span class="tag">学习笔记</span>
-    <span class="desc">这不是公式搬运，是我自己从'学习一个分布是什么意思呢我不懂'开始，一路问到能手推 Flow Matching 的完整记录。用狗图宇宙、开车导航、做汤这些我当初听懂的比喻，把生成模型到底在学什么、扩散和 Flow Matching 差在哪、以及它怎么接到我的虚拟染色任务上，从头讲明白。</span>
-  </li>
-  <li>
-    <a href="articles/005-VAE教程.html">VAE 到底在干什么：从"这个采样我不懂"到"SD 里的 VAE 只是个翻译官"</a><span class="date">2026-10-24</span><br />
-    <span class="tag">教程</span> <span class="tag">VAE</span> <span class="tag">变分自编码器</span> <span class="tag">潜空间</span> <span class="tag">Stable Diffusion</span> <span class="tag">学习笔记</span>
-    <span class="desc">我从两个特别具体的困惑学起 VAE：一是以为'潜变量是个四维向量'（其实是一张 4 通道小图），二是死活想不通'这个采样到底在采什么'。这篇就从自编码器一步步搭到 VAE，讲清那个采样为什么是 VAE 的灵魂，再接到 Stable Diffusion——原来 SD 里的 VAE 根本不负责生成，它只是个'翻译官'。最后落到我的染色任务上。</span>
-  </li>
-  <li>
-    <a href="articles/006-注意力与CrossAttention教程.html">注意力和 Cross-Attention 到底在干什么：从"查表"到"条件怎么进 UNet"</a><span class="date">2026-10-24</span><br />
-    <span class="tag">教程</span> <span class="tag">注意力机制</span> <span class="tag">Cross-Attention</span> <span class="tag">Transformer</span> <span class="tag">条件注入</span> <span class="tag">学习笔记</span>
-    <span class="desc">注意力是我啃过的第三块硬骨头（VAE、扩散/FM 之后）。这篇先把它还原成最朴素的一件事——'带着问题去查表'，讲清自注意力的 Q/K/V 和多头，再推到关键的分野：交叉注意力。正是它，让文本/结构条件能注入扩散 UNet，也正是 DeepSeek 给我'有色调无结构'开的药方。最后接回我的 HistDiST + Phikon 改造。</span>
-  </li>
-  <li>
-    <a href="articles/007-对比学习与CLIP教程.html">对比学习和 CLIP 到底在干什么：从"拉近推开"到"给染色换文本编码器"</a><span class="date">2026-10-24</span><br />
-    <span class="tag">教程</span> <span class="tag">对比学习</span> <span class="tag">CLIP</span> <span class="tag">Contrastive</span> <span class="tag">文本编码器</span> <span class="tag">CUT</span> <span class="tag">学习笔记</span>
-    <span class="desc">对比学习是我最晚搞懂、却回头发现到处都在用的东西：一半是我 SD 里把文字变成条件的 CLIP，一半是我 001/002 里保住结构的 CUT/PatchNCE。这篇从'把相似的拉近、把不相似的推开'这个最朴素的本质讲起，讲清 CLIP 怎么当文本编码器、为什么原生 CLIP 不懂病理、我为什么拍板换 CONCH，以及同一个思想怎么同时管住了'风格'和'结构'。</span>
-  </li>
-  <li>
-    <a href="articles/doubao-javaweb-notes.html">JavaWeb 手写笔记（课程学习存档）</a><span class="date">2026-10-24</span><br />
-    <span class="tag">JavaWeb</span> <span class="tag">HTML</span> <span class="tag">课程笔记</span> <span class="tag">豆包</span>
-    <span class="desc">我上传到豆包的 JavaWeb 手写笔记全文本，从 HTML 基础、标签、表单到后面的 Web 开发，是我课程学习的原始存档，一条未删。</span>
-  </li>
+<div class="block-head">
+  <h2>学习笔记 · 教程<span class="count">5</span></h2>
+  <a class="more" href="articles/list-notes.html">全部 5 篇 →</a>
+</div>
+<ul class="article-list">
+<li>
+  <a href="articles/004-扩散与FlowMatching教程.html">扩散模型和 Flow Matching 到底在干什么：从一句&quot;我不懂&quot;到手推速度场</a><span class="date">2026-10-24</span><br />
+  <span class="tag">教程</span> <span class="tag">扩散模型</span> <span class="tag">Flow Matching</span> <span class="tag">生成模型</span> <span class="tag">学习笔记</span>
+  <span class="desc">这不是公式搬运，是我自己从&#x27;学习一个分布是什么意思呢我不懂&#x27;开始，一路问到能手推 Flow Matching 的完整记录。用狗图宇宙、开车导航、做汤这些我当初听懂的比喻，把生成模型到底在学什么、扩散和 Flow Matching 差在哪、以及它怎么接到我的虚拟染色任务上，从头讲明白。</span>
+</li>
+<li>
+  <a href="articles/005-VAE教程.html">VAE 到底在干什么：从&quot;这个采样我不懂&quot;到&quot;SD 里的 VAE 只是个翻译官&quot;</a><span class="date">2026-10-24</span><br />
+  <span class="tag">教程</span> <span class="tag">VAE</span> <span class="tag">变分自编码器</span> <span class="tag">潜空间</span> <span class="tag">Stable Diffusion</span> <span class="tag">学习笔记</span>
+  <span class="desc">我从两个特别具体的困惑学起 VAE：一是以为&#x27;潜变量是个四维向量&#x27;（其实是一张 4 通道小图），二是死活想不通&#x27;这个采样到底在采什么&#x27;。这篇就从自编码器一步步搭到 VAE，讲清那个采样为什么是 VAE 的灵魂，再接到 Stable Diffusion——原来 SD 里的 VAE 根本不负责生成，它只是个&#x27;翻译官&#x27;。最后落到我的染色任务上。</span>
+</li>
+<li>
+  <a href="articles/006-注意力与CrossAttention教程.html">注意力和 Cross-Attention 到底在干什么：从&quot;查表&quot;到&quot;条件怎么进 UNet&quot;</a><span class="date">2026-10-24</span><br />
+  <span class="tag">教程</span> <span class="tag">注意力机制</span> <span class="tag">Cross-Attention</span> <span class="tag">Transformer</span> <span class="tag">条件注入</span> <span class="tag">学习笔记</span>
+  <span class="desc">注意力是我啃过的第三块硬骨头（VAE、扩散/FM 之后）。这篇先把它还原成最朴素的一件事——&#x27;带着问题去查表&#x27;，讲清自注意力的 Q/K/V 和多头，再推到关键的分野：交叉注意力。正是它，让文本/结构条件能注入扩散 UNet，也正是 DeepSeek 给我&#x27;有色调无结构&#x27;开的药方。最后接回我的 HistDiST + Phikon 改造。</span>
+</li>
 </ul>
 </section>
 <section class="block" id="essays">
-  <h2>随笔 · 科普</h2>
-  <ul class="article-list">
-  <li>
-    <a href="articles/深度学习到底在干什么.html">深度学习到底在干什么（初稿）</a><span class="date">2026-10-23</span><br />
-    <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
-    <span class="desc">作者 2026-10-23 写的第一版随笔：用大白话讲清深度学习本质在干什么，例子来自自己的虚拟染色踩坑。</span>
-  </li>
-  <li>
-    <a href="articles/深度学习到底在干什么_第二版.html">深度学习到底在干什么（定稿）</a><span class="date">2026-10-23</span><br />
-    <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
-    <span class="desc">作者偏好的定稿版本：一段一长句、逗号串到底的第一人称风格，讲清深度学习本质在干什么。</span>
-  </li>
+<div class="block-head">
+  <h2>随笔 · 科普<span class="count">2</span></h2>
+  
+</div>
+<ul class="article-list">
+<li>
+  <a href="articles/深度学习到底在干什么.html">深度学习到底在干什么（初稿）</a><span class="date">2026-10-23</span><br />
+  <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
+  <span class="desc">作者 2026-10-23 写的第一版随笔：用大白话讲清深度学习本质在干什么，例子来自自己的虚拟染色踩坑。</span>
+</li>
+<li>
+  <a href="articles/深度学习到底在干什么_第二版.html">深度学习到底在干什么（定稿）</a><span class="date">2026-10-23</span><br />
+  <span class="tag">科普</span> <span class="tag">深度学习</span> <span class="tag">随笔</span>
+  <span class="desc">作者偏好的定稿版本：一段一长句、逗号串到底的第一人称风格，讲清深度学习本质在干什么。</span>
+</li>
 </ul>
 </section>
 <section class="block" id="kb">
-  <h2>知识库 · 全部学习对话</h2>
-  <ul class="article-list">
-  <li>
-    <a href="articles/doubao-index.html">豆包知识库 · 学习与科研对话（98 条）</a><span class="date">2026-10-24</span><br />
-    <span class="tag">知识库</span> <span class="tag">豆包</span> <span class="tag">全量</span> <span class="tag">学习</span>
-    <span class="desc">豆包（Doubao）全部 98 条学习与科研对话的问答存档，按主题分组，一条不丢。每条可点进去看完整我问+AI回答，并附原始分享链接。</span>
-  </li>
-  <li>
-    <a href="articles/knowledge-index.html">知识库 · 全部学习对话（270 条）</a><span class="date">2026-10-24</span><br />
-    <span class="tag">知识库</span> <span class="tag">全量</span> <span class="tag">学习</span>
-    <span class="desc">把 DeepSeek 全部 270 条对话转成可浏览的问答存档，按主题分组，一条不丢。每条都可点进去看完整我问+AI回答，并链接回未删减的原始档案。</span>
-  </li>
+<div class="block-head">
+  <h2>知识库 · 全部学习对话<span class="count">2</span></h2>
+  
+</div>
+<ul class="article-list">
+<li>
+  <a href="articles/doubao-index.html">豆包知识库 · 学习与科研对话（98 条）</a><span class="date">2026-10-24</span><br />
+  <span class="tag">知识库</span> <span class="tag">豆包</span> <span class="tag">全量</span> <span class="tag">学习</span>
+  <span class="desc">豆包（Doubao）全部 98 条学习与科研对话的问答存档，按主题分组，一条不丢。每条可点进去看完整我问+AI回答，并附原始分享链接。</span>
+</li>
+<li>
+  <a href="articles/knowledge-index.html">知识库 · 全部学习对话（270 条）</a><span class="date">2026-10-24</span><br />
+  <span class="tag">知识库</span> <span class="tag">全量</span> <span class="tag">学习</span>
+  <span class="desc">把 DeepSeek 全部 270 条对话转成可浏览的问答存档，按主题分组，一条不丢。每条都可点进去看完整我问+AI回答，并链接回未删减的原始档案。</span>
+</li>
 </ul>
 </section>
 <section class="block" id="papers">
-  <h2>论文分享屋</h2>
-  <ul class="article-list">
-  <li>
-    <a href="articles/papers-index.html">论文分享屋 · 虚拟染色与病理影像调研导读</a><span class="date">2026-10-24</span><br />
-    <span class="tag">论文</span> <span class="tag">调研</span> <span class="tag">虚拟染色</span> <span class="tag">H&E→IHC</span> <span class="tag">导读</span>
-    <span class="desc">我调研过的虚拟染色 / 病理影像论文导读，按主题分组，每篇一句话总结 + 和我 H&E→IHC 主线的关系。PDF 都存在本地，这里做一份能检索的清单。</span>
-  </li>
+<div class="block-head">
+  <h2>论文分享屋<span class="count">1</span></h2>
+  
+</div>
+<ul class="article-list">
+<li>
+  <a href="articles/papers-index.html">论文分享屋 · 虚拟染色与病理影像调研导读</a><span class="date">2026-10-24</span><br />
+  <span class="tag">论文</span> <span class="tag">调研</span> <span class="tag">虚拟染色</span> <span class="tag">H&amp;E→IHC</span> <span class="tag">导读</span>
+  <span class="desc">我调研过的虚拟染色 / 病理影像论文导读，按主题分组，每篇一句话总结 + 和我 H&amp;E→IHC 主线的关系。PDF 都存在本地，这里做一份能检索的清单。</span>
+</li>
 </ul>
 </section>
 <section class="block" id="archive">
-  <h2>资料库 · 审计与清单</h2>
-  <ul class="article-list">
-  <li>
-    <a href="articles/agent_doubao_38441488527895298_m_0cwEYCURPAK.html">豆包会话 38441488527895298_m_0cwEYCURPAK</a><span class="date">2026-10-24</span><br />
-    <span class="tag">豆包</span> <span class="tag">agent会话</span>
-    <span class="desc">豆包会话 38441488527895298_m_0cwEYCURPAK</span>
-  </li>
-  <li>
-    <a href="articles/agent_doubao_38441598506485250_m_0cwEllhnCeX.html">豆包会话 38441598506485250_m_0cwEllhnCeX</a><span class="date">2026-10-24</span><br />
-    <span class="tag">豆包</span> <span class="tag">agent会话</span>
-    <span class="desc">豆包会话 38441598506485250_m_0cwEllhnCeX</span>
-  </li>
-  <li>
-    <a href="articles/deepseek_inventory.html">DeepSeek 对话全量清单（270 条）</a><span class="date">2026-10-24</span><br />
-    <span class="tag">清单</span> <span class="tag">覆盖率</span> <span class="tag">DeepSeek</span>
-    <span class="desc">270 个 DeepSeek 对话的逐条清单：ID、条数、时间范围、主题、对应原始档案文件名。每一条都分配了唯一编号，方便溯源到 raw_exports/deepseek_raw/。</span>
-  </li>
-  <li>
-    <a href="articles/doubao-agent-sessions.html">豆包 agent 会话存档</a><span class="date">2026-10-24</span><br />
-    <span class="tag">豆包</span> <span class="tag">agent会话</span> <span class="tag">MBTI</span>
-    <span class="desc">从豆包 agent 模式本地 trajectory 日志还原的研究会话存档，含 MBTI 连续人格空间建模的完整方案。</span>
-  </li>
-  <li>
-    <a href="articles/source_audit.html">资料源审计报告（阶段 A）</a><span class="date">2026-10-24</span><br />
-    <span class="tag">审计</span> <span class="tag">资料源</span> <span class="tag">覆盖率</span>
-    <span class="desc">记录本项目实际能访问的资料来源及其读取状态：DeepSeek 已全量、豆包本地资料已纳入、网页主聊天待导出。明确区分已读/部分读/读不到。</span>
-  </li>
+<div class="block-head">
+  <h2>资料库 · 审计与清单<span class="count">5</span></h2>
+  <a class="more" href="articles/list-archive.html">全部 5 篇 →</a>
+</div>
+<ul class="article-list">
+<li>
+  <a href="articles/deepseek_inventory.html">DeepSeek 对话全量清单（270 条）</a><span class="date">2026-10-24</span><br />
+  <span class="tag">清单</span> <span class="tag">覆盖率</span> <span class="tag">DeepSeek</span>
+  <span class="desc">270 个 DeepSeek 对话的逐条清单：ID、条数、时间范围、主题、对应原始档案文件名。每一条都分配了唯一编号，方便溯源到 raw_exports/deepseek_raw/。</span>
+</li>
+<li>
+  <a href="articles/doubao-agent-sessions.html">豆包 agent 会话存档</a><span class="date">2026-10-24</span><br />
+  <span class="tag">豆包</span> <span class="tag">agent会话</span> <span class="tag">MBTI</span>
+  <span class="desc">从豆包 agent 模式本地 trajectory 日志还原的研究会话存档，含 MBTI 连续人格空间建模的完整方案。</span>
+</li>
 </ul>
 </section>
   <!-- ARTICLES_END -->
 
     <section id="about" class="block">
-      <h2>关于</h2>
-      <p>
+      <div class="block-head"><h2>关于</h2></div>
+      <p class="lead-text">
         内容来自我和 AI 助手（DeepSeek、豆包、WorkBuddy）一年多的科研与学习对话，
-        由 WorkBuddy 整理。原则：<b>原始信息不删减、思考过程原样保留、每条结论尽量能溯源到具体对话</b>。
+        由 WorkBuddy 整理。原则：<strong>原始信息不删减、思考过程原样保留、每条结论尽量能溯源到具体对话</strong>。
       </p>
-      <p class="muted">
-        纯静态站点，零依赖，托管在 GitHub Pages。新增文章：把 Markdown 用 <code>md_to_html.py</code>
-        转成 <code>articles/</code> 下的页面，再跑 <code>build_index.py</code> 即可自动收录。
+      <p class="lead-text" style="margin-top:14px">
+        纯静态站点，零依赖，托管于 GitHub Pages。新增文章：把 Markdown 用
+        <code>md_to_html.py</code> 转成 <code>articles/</code> 下的页面，再跑
+        <code>build_index.py</code> 即可自动收录。
       </p>
     </section>
   </main>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>学习笔记 · 教程 · 我的科研与学习档案</title>
+<link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">学习笔记 · 教程 · 5 篇</p>
+<nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">研究文章</a><a class="active" href="../index.html#notes">学习笔记</a><a href="../index.html#courses">课程笔记</a><a href="../index.html#essays">随笔</a><a href="../index.html#kb">知识库</a><a href="../index.html#papers">论文分享屋</a><a href="../index.html#archive">资料库</a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../index.html#about">关于这个档案</a><span>纯静态 · 零依赖 · GitHub Pages</span></div>
+</div></header>
+<main class="container">
+<nav class="crumbs"><a href="../index.html">首页</a> / 学习笔记 · 教程</nav>
+<h1 class="list-title">学习笔记 · 教程</h1>
+<p class="list-sub">从具体困惑出发的教程：扩散与 Flow Matching、VAE、注意力、对比学习与 CLIP。　共 5 篇</p>
+<ul class="article-list">
+<li>
+  <a href="004-扩散与FlowMatching教程.html">扩散模型和 Flow Matching 到底在干什么：从一句&quot;我不懂&quot;到手推速度场</a><span class="date">2026-10-24</span><br />
+  <span class="tag">教程</span> <span class="tag">扩散模型</span> <span class="tag">Flow Matching</span> <span class="tag">生成模型</span> <span class="tag">学习笔记</span>
+  <span class="desc">这不是公式搬运，是我自己从&#x27;学习一个分布是什么意思呢我不懂&#x27;开始，一路问到能手推 Flow Matching 的完整记录。用狗图宇宙、开车导航、做汤这些我当初听懂的比喻，把生成模型到底在学什么、扩散和 Flow Matching 差在哪、以及它怎么接到我的虚拟染色任务上，从头讲明白。</span>
+</li>
+<li>
+  <a href="005-VAE教程.html">VAE 到底在干什么：从&quot;这个采样我不懂&quot;到&quot;SD 里的 VAE 只是个翻译官&quot;</a><span class="date">2026-10-24</span><br />
+  <span class="tag">教程</span> <span class="tag">VAE</span> <span class="tag">变分自编码器</span> <span class="tag">潜空间</span> <span class="tag">Stable Diffusion</span> <span class="tag">学习笔记</span>
+  <span class="desc">我从两个特别具体的困惑学起 VAE：一是以为&#x27;潜变量是个四维向量&#x27;（其实是一张 4 通道小图），二是死活想不通&#x27;这个采样到底在采什么&#x27;。这篇就从自编码器一步步搭到 VAE，讲清那个采样为什么是 VAE 的灵魂，再接到 Stable Diffusion——原来 SD 里的 VAE 根本不负责生成，它只是个&#x27;翻译官&#x27;。最后落到我的染色任务上。</span>
+</li>
+<li>
+  <a href="006-注意力与CrossAttention教程.html">注意力和 Cross-Attention 到底在干什么：从&quot;查表&quot;到&quot;条件怎么进 UNet&quot;</a><span class="date">2026-10-24</span><br />
+  <span class="tag">教程</span> <span class="tag">注意力机制</span> <span class="tag">Cross-Attention</span> <span class="tag">Transformer</span> <span class="tag">条件注入</span> <span class="tag">学习笔记</span>
+  <span class="desc">注意力是我啃过的第三块硬骨头（VAE、扩散/FM 之后）。这篇先把它还原成最朴素的一件事——&#x27;带着问题去查表&#x27;，讲清自注意力的 Q/K/V 和多头，再推到关键的分野：交叉注意力。正是它，让文本/结构条件能注入扩散 UNet，也正是 DeepSeek 给我&#x27;有色调无结构&#x27;开的药方。最后接回我的 HistDiST + Phikon 改造。</span>
+</li>
+<li>
+  <a href="007-对比学习与CLIP教程.html">对比学习和 CLIP 到底在干什么：从&quot;拉近推开&quot;到&quot;给染色换文本编码器&quot;</a><span class="date">2026-10-24</span><br />
+  <span class="tag">教程</span> <span class="tag">对比学习</span> <span class="tag">CLIP</span> <span class="tag">Contrastive</span> <span class="tag">文本编码器</span> <span class="tag">CUT</span> <span class="tag">学习笔记</span>
+  <span class="desc">对比学习是我最晚搞懂、却回头发现到处都在用的东西：一半是我 SD 里把文字变成条件的 CLIP，一半是我 001/002 里保住结构的 CUT/PatchNCE。这篇从&#x27;把相似的拉近、把不相似的推开&#x27;这个最朴素的本质讲起，讲清 CLIP 怎么当文本编码器、为什么原生 CLIP 不懂病理、我为什么拍板换 CONCH，以及同一个思想怎么同时管住了&#x27;风格&#x27;和&#x27;结构&#x27;。</span>
+</li>
+<li>
+  <a href="doubao-javaweb-notes.html">JavaWeb 手写笔记（课程学习存档）</a><span class="date">2026-10-24</span><br />
+  <span class="tag">JavaWeb</span> <span class="tag">HTML</span> <span class="tag">课程笔记</span> <span class="tag">豆包</span>
+  <span class="desc">我上传到豆包的 JavaWeb 手写笔记全文本，从 HTML 基础、标签、表单到后面的 Web 开发，是我课程学习的原始存档，一条未删。</span>
+</li>
+</ul>
+</main>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客 · 托管于 GitHub Pages</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

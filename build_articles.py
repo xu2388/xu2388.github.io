@@ -34,10 +34,11 @@ PAGE = """<!DOCTYPE html>
   </div>
 </header>
 <article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="{list_href}">{cat_label}</a></nav>
 <h1>{title}</h1>
-<div class="meta">{date} · 研究文章 · 整理自研究笔记</div>
+<div class="meta">{date} · {cat_label} · 整理自研究笔记</div>
 {body}
-<a class="back-link" href="../index.html#articles">← 返回首页</a>
+<a class="back-link" href="{list_href}">← 返回{cat_label}</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../assets/blog.js" defer></script>
@@ -62,6 +63,8 @@ def main():
                     k, v = ln.split(":", 1)
                     fm[k.strip()] = v.strip()
             body = text[m.end():]
+        # 去掉正文开头重复的一级标题（模板里已经渲染过一次）
+        body = re.sub(r"^\s*#\s+.*?\n", "", body, count=1)
         title = fm.get("title", os.path.splitext(os.path.basename(p))[0])
         date = fm.get("date", "2026-10-24")
         cat = fm.get("category", "研究")
@@ -72,9 +75,13 @@ def main():
             tags = []
         tags_j = json.dumps(tags, ensure_ascii=False)
         slug = os.path.splitext(os.path.basename(p))[0] + ".html"
+        CAT_LIST = {"研究": ("list-research.html", "研究文章"), "学习笔记": ("list-notes.html", "学习笔记"),
+                    "随笔": ("list-essays.html", "随笔"), "课程笔记": ("list-courses.html", "课程笔记")}
+        list_href, cat_label = CAT_LIST.get(cat, ("list-research.html", "研究文章"))
         page = PAGE.format(
             title=htmlmod.escape(title), title_j=j(title), date=date, cat=cat,
             tags_j=tags_j, summary_j=j(summary), body=render_md(body),
+            list_href=list_href, cat_label=cat_label,
         )
         open(os.path.join(OUT_DIR, slug), "w", encoding="utf-8").write(page)
         n += 1

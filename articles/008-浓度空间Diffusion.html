@@ -12,19 +12,18 @@
 <body>
 <header class="site-header">
   <div class="container">
-    <h1 class="site-title">科研博客</h1>
+    <h1 class="site-title">科研与学习档案</h1>
     <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
-    <nav class="site-nav">
-      <a href="../index.html#threads">研究方向</a>
-      <a href="../index.html#articles">文章</a>
-      <a href="../index.html#about">关于</a>
-    </nav>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">研究文章</a><a href="../index.html#notes">学习笔记</a><a href="../index.html#courses">课程笔记</a><a href="../index.html#essays">随笔</a><a href="../index.html#kb">知识库</a><a href="../index.html#papers">论文分享屋</a><a href="../index.html#archive">资料库</a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../index.html#about">关于这个档案</a><span>纯静态 · 零依赖 · GitHub Pages</span></div>
+
+
   </div>
 </header>
 <article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>从 RGB 到染料浓度域：H&amp;E→IHC 虚拟染色的物理可解释路线研究</h1>
 <div class="meta">2026-10-24 · 研究文章 · 整理自研究笔记</div>
-<h1>从 RGB 到染料浓度域：H&amp;E→IHC 虚拟染色的物理可解释路线研究</h1>
 <h2>摘要</h2>
 <p>虚拟染色以计算方法将 H&amp;E 切片映射为免疫组化切片，可规避试剂成本、周转时间与组织消耗。主流方法在 RGB 空间直接回归或做图像翻译，隐含&quot;像素颜色即建模对象&quot;的假设；但 RGB 三通道是多种染料吸收光谱的非线性叠加，同一 DAB 浓度在不同苏木精背景下呈不同色值，模型被迫同时隐式学习染料混合物理与生物学表达映射，样本效率与可解释性俱受损。本文主张将建模坐标迁移至染料浓度域：以比尔-朗伯定律为基础，将两模态分解为染料光学密度的线性组合，仅在 DAB 浓度单通道上施加条件扩散，H/E 浓度全程保持干净并作为条件，结果经染色矩阵与指数衰减回投重建 IHC RGB。本文给出完整推导、显式假设与可复现流程，并设计最小基线 M0，以三级对照、三级条件消融与两项反退化诊断构成判定体系，使&quot;浓度域 DAB 扩散能否工作&quot;可被证伪。</p>
 <h2>一、问题与背景</h2>
@@ -152,7 +151,7 @@ C_DAB,0 → 加噪 → C_DAB,t ─┘                                        │
 <p>M0 的职能是判定而非优化。合成任务探针已达 0.99 指标，不确定性收敛至唯一剩余问题：真实配对切片上，模型能否从 H&amp;E 推断应生成的 DAB 空间模式，该问题由 tiny-set 过拟合与 $U_0\to U_1\to U_2$ 消融回答，判据已在 §4.6 以互斥情形列出。若条件扩散严格优于无条件扩散，则 H 多尺度注入、蛋白估计器与真实 IHC 评分模型依次具备启动依据；若条件增益不显著，则须重审条件注入方式而非继续堆叠模块。以可证伪的门禁序列替代整体调参，是本文在方法之外试图确立的研究纪律。</p>
 <h2>参考文献</h2>
 <ol><li>Jeong J, et al. Stain normalization using score-based diffusion model through stain separation. <em>Computers in Biology and Medicine</em>, 2023, 152: 106335.</li><li>TT-SaD: Test-time stain adaptation with diffusion models for histopathology. <em>ECCV</em>, 2024.</li><li>Kang et al. Progressive H&amp;E-to-IHC translation in optical density space with DAB concentration and gradient losses. <em>arXiv:2511.01698</em>, 2025.</li><li>Ho J, Jain A, Abbeel P. Denoising diffusion probabilistic models. <em>NeurIPS</em>, 2020.</li><li>Song J, Meng C, Ermon S. Denoising diffusion implicit models. <em>ICLR</em>, 2021.</li><li>Wang Y, Yu J, Zhang J. Zero-shot image restoration using denoising diffusion null-space model. <em>ICLR</em>, 2023.</li><li>Ruifrok A C, Johnston D A. Quantification of histochemical staining by color deconvolution. <em>Analytical and Quantitative Cytology and Histology</em>, 2001, 23(4): 291–299.</li><li>Macenko M, et al. A method for normalizing histology slides for quantitative analysis. <em>ISBI</em>, 2009.</li></ol>
-<a class="back-link" href="../index.html#articles">← 返回首页</a>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../assets/blog.js" defer></script>

@@ -12,19 +12,18 @@
 <body>
 <header class="site-header">
   <div class="container">
-    <h1 class="site-title">科研博客</h1>
+    <h1 class="site-title">科研与学习档案</h1>
     <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
-    <nav class="site-nav">
-      <a href="../index.html#threads">研究方向</a>
-      <a href="../index.html#articles">文章</a>
-      <a href="../index.html#about">关于</a>
-    </nav>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../index.html#research">研究文章</a><a href="../index.html#notes">学习笔记</a><a href="../index.html#courses">课程笔记</a><a href="../index.html#essays">随笔</a><a href="../index.html#kb">知识库</a><a href="../index.html#papers">论文分享屋</a><a href="../index.html#archive">资料库</a><a href="../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../index.html#about">关于这个档案</a><span>纯静态 · 零依赖 · GitHub Pages</span></div>
+
+
   </div>
 </header>
 <article class="article">
+<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>虚拟染色关键工作精读：语义保持、扩散与对比学习三条路线</h1>
 <div class="meta">2026-10-24 · 研究文章 · 整理自研究笔记</div>
-<h1>虚拟染色关键工作精读：语义保持、扩散与对比学习三条路线</h1>
 <h2>摘要</h2>
 <p>虚拟染色（virtual staining）以苏木精—伊红（H&amp;E）染色图像为输入，合成免疫组化（IHC）图像，使一次制片同时承载形态学与分子层两类信息。本文以三篇代表性工作为锚点，对当前技术路线作批判性梳理：PSPStain 以病理语义保持为目标，通过焦点光学密度图（FOD）与原型一致性策略（PCLS）将监督对象由颜色迁移至蛋白表达强度，在 BCI-HER2 上取得 Pearson-R = 0.7553，为次优方法的 7.4 倍；MisalignResistantVS（DGR）以双配准网络将&quot;生成&quot;与&quot;配准&quot;解耦，在严重错位条件下较基线提升 3.47 dB，并报告病理医生盲辨准确率仅 52.4%；StainBridge 则将配准环节因子化为&quot;预处理 × 后端&quot;的组合空间，在 23 例肾活检全切片图像（WSI）上得出&quot;全开预处理反而最差&quot;、DeeperHistReg 独立初始化最优（CD = 46.9 μm）的反直觉结论。本文认为，三条路线表面上分别处理&quot;生成什么&quot;&quot;错位怎么办&quot;&quot;如何比较&quot;三个不同问题，实则在方法论上收敛于同一内核：当空间对应不可信时，约束必须从逐像素/逐块提升至原型、分布或几何参数的集合层级。据此，本文进一步论证像素指标（PSNR/SSIM）在本领域具有系统性误导性，并提出以&quot;结构保真—染色准确—可复现性—数据依赖&quot;四维口径替代单一指标族进行横向比较。</p>
 <p><strong>关键词</strong>：虚拟染色；病理语义保持；扩散模型；对比学习；图像配准；评价协议</p>
@@ -127,7 +126,7 @@
 <p>第三，评测协议须先于方法创新被确立。StainBridge 的&quot;全开预处理最差&quot;与 DeeperHistReg 独立初始化最优（CD = 46.9 μm）表明，流程环节的收益不满足单调叠加，配准设置的差异足以改变结论方向。在提出新方法之前先固定并公开协议，是结论可复现的前提。</p>
 <p>第四，报告指标应成组呈现。至少同时给出像素指标（PSNR/SSIM/FID）与临床相关性指标（Pearson-R、评分一致性），并注明错位对像素指标的影响。单一指标族的报告方式，在本领域已被证明具有系统性误导性。</p>
 <p>就实践而言，可操作的建议有三：把表达量而非颜色作为监督对象；把具有明确物理成因的误差源（形变、厚度差）提升为独立可优化变量，而非交由鲁棒损失吸收；在流程设计上避免预处理的无条件堆叠，每一环节的增益须在目标数据上单独验证。三项建议分别对应&quot;监督什么&quot;&quot;错位怎么办&quot;&quot;如何搭建流水线&quot;，恰好覆盖本文所论三个层次。</p>
-<a class="back-link" href="../index.html#articles">← 返回首页</a>
+<a class="back-link" href="list-research.html">← 返回研究文章</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../assets/blog.js" defer></script>
