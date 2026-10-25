@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>机器学习 · 集成学习 Boosting 与 Bagging</h1>
 <div class="meta">课程笔记 · 机器学习 · 整理自豆包对话 豆包对话 · 集成学习考试模拟题（含答案与讲解） / 机器学习知识点填空题合集 / 机器学习的期末复习</div>
-<h1>机器学习 · 集成学习 Boosting 与 Bagging</h1>
 <h2>一、概述：集成学习研究的核心问题</h2>
 <p>集成学习（ensemble learning）先按某种规则产生一组<strong>个体学习器</strong>（base learner），再用某种策略把它们的结果结合起来，得到一个性能通常更强的<strong>集成模型</strong>。原料把这一领域的核心问题概括为一句话：如何产生并结合「好而不同」的个体学习器。这里的「好」指个体学习器的错误率低于随机猜测（二分类即小于 $0.5$），「不同」指个体之间存在多样性，预测结果不完全一致。两个条件缺一不可：全部一样好的学习器结合后没有任何增益，全部很差的学畴器结合后仍然很差。</p>
 <p>按个体学习器的类型，集成可分为<strong>同质集成</strong>（全部是决策树、全部是神经网络等，个体称为基学习器）与<strong>异质集成</strong>（类型不同，个体直接称为组件学习器）。同质集成是主流，因为同一算法便于用重采样、特征子集、参数扰动制造差异；异质集成则靠模型族之间的归纳偏置差异制造多样性，调参成本更高。</p>
@@ -225,7 +223,7 @@
 <p>把全篇压成一条主线：集成有效的条件是「准」与「不同」，Bagging 用重采样制造不同、用平均削方差，Boosting 用重加权或负梯度制造「针对错误的不同」、用加法削偏差；AdaBoost 的权重有闭式解，GBDT 把它推广成函数空间的梯度下降，XGBoost 再用二阶信息与显式正则把每一步做得更稳。落地时先看数据规模与噪声水平，再看基学习器的偏差方差画像，最后才比较具体算法；顺序颠倒，调参只会放大错误。</p>
 <p>还有一条实践顺序值得记住：先用一个简单基线确认数据本身可学，再上一个基学习器看单模型上限，最后才用集成去逼近这个上限。若单模型在验证集上已经接近标签噪声决定的天花板，集成只会把噪声学得更像，不会带来真实收益。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 集成学习考试模拟题（含答案与讲解） / 机器学习知识点填空题合集 / 机器学习的期末复习</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/machine-learning.html">← 返回 机器学习</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

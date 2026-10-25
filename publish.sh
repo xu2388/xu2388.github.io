@@ -21,7 +21,7 @@ if [ "$DO_BUILD" = 1 ]; then
   python3 build_notes.py
   python3 build_knowledge_base.py
   python3 build_doubao_kb.py
-  python3 build_index.py
+  python3 build_site.py
   python3 fix_nav.py
 else
   echo "==> [1/3] 跳过构建"

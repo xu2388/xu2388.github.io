@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>虚拟染色关键论文精读（含 PSPStain）· 整理</h1>
 <div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 076_虚拟染色三篇论文精读总结.md（另含 073_PSPStain方法介绍.md）</div>
-<h1>虚拟染色关键论文精读（含 PSPStain）· 整理</h1>
 <blockquote>说明：本笔记的两份原始材料分别为一篇三论文精读任务的汇总记录与一份 PSPStain 摘要解读。原始 HTML 精读正文未随对话一并导出，故可核实的细节限于汇总表中给出的方法名、模块构成、关键数字与结论；凡原文未给出的公式、超参与逐段论述，本笔记不作补写，仅标注为待补，以避免臆造。</blockquote>
 <h2>一、研究背景与问题</h2>
 <p>H&amp;E 染色是病理诊断的常规起点，其信息维度限于细胞形态、组织构型与核浆比例；IHC 染色则在分子层面显示特定蛋白的表达水平与空间分布，是分型与用药决策的直接依据。然而 IHC 流程需额外切片、经历脱蜡、抗原修复、抗体孵育与显色等步骤，成本高、周期长，且对少量活检组织构成不可逆消耗。虚拟染色以 H&amp;E 为输入直接合成 IHC，使一次制片获得两类读片信息，因而具有明确的临床价值。</p>
@@ -73,7 +71,7 @@
 <p><strong>可借鉴之处</strong></p>
 <ol><li><strong>把&quot;表达量&quot;而非&quot;颜色&quot;作为监督对象。</strong> PSPStain 的 FOD 图与浓度域建模在物理上同源——光学密度与染料浓度近似线性，故表达强度可加、可比。这一中介层的引入，使损失函数具有物理含义，也使评价指标与临床口径对齐。对任何以浓度域为工作空间的方法，这是直接的支持性证据。</li><li><strong>错位应当被解耦，而非被损失函数吸收。</strong> DGR 的双配准结构提示：当某一误差源具有明确的物理成因（切片形变、厚度差），把它提升为独立的可优化变量，比在生成端用鲁棒损失折中更可控。PSPStain 的原型约束、弱配对方法的层/关系级约束，本质上都是&quot;绕开不可靠的空间对应&quot;，与解耦同属一种思路。</li><li><strong>原型级与关系级约束是抗错位的通用手段。</strong> 当逐点对应不可信时，约束集合的统计结构（原型分布、patch 相对相似度分布）仍可保持稳定。该范式在 PSPStain（原型）、Li 2024（JSD 关系分布）中被独立采用，可信度较高。</li><li><strong>评测协议必须先于方法创新被确立。</strong> StainBridge 的因子化框架说明，配准设置的差异足以改变结论方向。在提出新方法之前，先固定并公开评测协议（配准方式、划分粒度、指标集合），是保证结论可复现的前提。</li><li><strong>报告指标时应成组呈现。</strong> 至少同时给出像素指标（PSNR/SSIM/FID）与临床相关性指标（Pearson-R、评分一致性），并注明错位对像素指标的影响。单一指标族的报告方式，在本领域已被证明具有系统性误导性。</li><li><strong>待补事项。</strong> PSPStain 的 FOD 图具体构造、三尺度损失的权重与作用尺度、PCLS 的原型数量与更新方式；DGR 中 $R_1$、$R_2$ 的职责划分与损失形式；StainBridge 的预处理因子枚举与后端候选集。以上均需回到原文正文核实后补入。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/076_虚拟染色三篇论文精读总结.html">076_虚拟染色三篇论文精读总结.md</a>、<a href="../kb-doubao/073_PSPStain方法介绍.html">073_PSPStain方法介绍.md</a></p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>深度学习/神经网络 · 学习 · 科研与学习档案</title>
+<meta name="description" content="深度学习/神经网络的全部笔记（4 篇）。" />
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body class="hub hub--study">
+<header class="site-header">
+  <div class="container">
+    <div class="side-brand">
+      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
+      <div>
+        <h1 class="site-title">科研与学习档案</h1>
+        <p class="site-subtitle">Research &amp; Study Archive</p>
+      </div>
+    </div>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+    
+  </div>
+</header>
+
+<main class="container">
+
+<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../study.html">学习</a> <span>/</span> 深度学习/神经网络</nav>
+<header class="subj-head">
+  <p class="eyebrow">AI 与数据</p>
+  <h1>深度学习/神经网络</h1>
+  <p class="lede">CNN、RNN、注意力与训练细节 · 共 4 篇</p>
+</header>
+<ul class="article-list plain">
+<li><a href="../articles/notes/LSTM与GRU门控机制与训练实操.html">LSTM 与 GRU 的门控机制、BPTT 与梯度裁剪 · 学习笔记</a><span class="desc">围绕循环网络的门控单元本身展开：逐式给出 LSTM 遗忘门、输入门、输出门与候选状态的公式及逐元素含义，说明细胞状态加法通路为何能缓解梯度消失；对比 GRU 以更新门、重置门完成的三处结构简化；以时间步 T=3 的梯度累加为例推导 BPTT 中梯度连乘的来源，并整理 `clip_grad_norm_` 的裁剪阈值实践、朴素 RNN 与门控单元的对照实验设计，附字符级 LSTM 语言建模的实测训练日志与经核验的公开代码仓库清单。</span></li><li><a href="../articles/notes/Transformer组件详解.html">Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</a><span class="desc">把 Transformer 拆成六类可检验组件：给出 FFN 的升维—激活—降维公式，说明缩放点积注意力的投影、缩放因子与多头切分，写清解码器上三角置负无穷的掩码自注意力、以目标侧为 query、源侧为 key/value 的交叉注意力，以及残差与层归一化的串联次序；并给出 Base（512 维、8 头、FFN 内维 2048）与 Big（1024 维、16 头、FFN 内维 4096）两种配置对照。</span></li><li><a href="../articles/notes/RNN-LM.html">循环神经网络语言模型（RNN-LM）· 学习笔记</a><span class="desc">以“预测下一个词”为主线，梳理 RNN 语言模型的结构与交叉熵损失、Seq2Seq 编码器—解码器与注意力机制、束搜索与温度采样等解码策略、集成学习与训练流程，并说明其与 GPT 的演进关系。</span></li><li><a href="../articles/notes/扩散模型_DDIM采样与LCM加速.html">深度学习 · DDIM 采样与 LCM 加速</a><span class="desc">DDPM 的反向过程是马尔可夫链，一千步必须逐步走完，单张图要上千次网络前向。DDIM 用同一族边缘分布的非马尔可夫前向，把采样改写成可跳步的确定性更新，eta 控制随机性，五十步即可接近原质量。LCM 进一步用一致性映射把任意时刻的样本直接映到终点，蒸馏成二到八步；LCM-LoRA 以六千七百万参数挂到 SD1.5 上。本文给出更新公式、eta 与 CFG 的作用、步数预算估算和质量代价。</span></li>
+</ul>
+<div class="subj-foot">
+  <a class="back-link" href="../study.html">← 返回学习</a>
+</div>
+
+</main>
+
+<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

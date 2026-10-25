@@ -1,43 +1,70 @@
-# 科研博客 · 我的虚拟染色探索之路
+# 科研与学习档案
 
-从我和 AI 助手（DeepSeek、豆包、WorkBuddy）一年多的科研与学习对话里，整理出来的个人博客。
+从我和 AI 助手（DeepSeek、豆包、WorkBuddy）一年多的科研与学习对话里，整理出来的个人主页。
 纯静态 HTML + CSS，**零依赖**，可直接托管到 GitHub Pages / Vercel / 任意静态空间。
+
+## 信息架构
+
+三层，越点越具体：**首页 → 板块 → 学科/主题 → 文章**。
+
+```
+首页 index.html
+├── 科研 research.html
+│   ├── 研究文章     articles/list-research.html        18 篇
+│   ├── 论文精读     articles/list-readings.html        10 篇
+│   ├── 研究笔记     articles/list-research-notes.html  15 篇
+│   ├── 调研档案     articles/survey-catalog.html       80 份
+│   └── 论文导读     articles/papers-index.html         27 篇
+├── 学习 study.html
+│   ├── study/<学科>.html   20 门学科，每门一页
+│   ├── 教程         articles/list-tutorials.html
+│   └── 对话存档     articles/knowledge-index.html
+├── 随笔 essays.html
+└── 搜索 search.html        按标题即时筛选（索引 data/search-index.js）
+```
+
+配色上两个板块各有主色：**科研 = 青（teal）**，**学习 = 琥珀（amber）**，
+侧栏当前项、卡片描边、链接高亮都跟着板块走，翻页时不会分不清自己在哪。
 
 ## 目录结构
 
 ```
 科研博客/
-├── index.html                  首页（导语 + 各栏目预览 + 「全部 N 篇」入口，自动生成）
+├── index.html                  首页（两扇门 + 最近更新 + 关于，自动生成）
+├── research.html               科研板块页（自动生成）
+├── study.html                  学习板块页：20 门学科的卡片网格（自动生成）
+├── essays.html                 随笔（自动生成）
+├── search.html                 搜索页（自动生成，数据来自 data/search-index.js）
+├── study/                      每门学科一页（自动生成）
 ├── assets/
-│   ├── style.css               全站样式（Yilia 式浅色双栏：左侧固定目录 + 右侧内容）
-│   └── blog.js                 交互增强（侧栏粒子、移动端抽屉、悬浮目录、阅读进度、公式渲染）
-├── build_index.py              索引生成器：生成各栏目归档页 articles/list-*.html，并重建首页
-├── fix_nav.py                  统一全站左侧目录，按页面深度改写相对路径（每次构建后跑一次）
+│   ├── style.css               全站样式（左侧固定目录 + 右侧内容，明暗双主题）
+│   └── blog.js                 交互增强（侧栏搜索、标题搜索、抽屉导航、悬浮目录、公式渲染）
+├── site_model.py               学科注册表（学科名 → URL slug / 分组 / 一句话说明）
+├── build_site.py               站点生成器：首页、板块页、学科页、清单页、搜索索引
+├── fix_nav.py                  统一全站左侧目录 + 按页面归属高亮板块（每次构建后跑一次）
 ├── md_to_html.py               Markdown → 文章页转换器（内嵌 meta，供索引收录）
 ├── build_articles.py           articles_src/*.md → articles/*.html（长研究文章）
 ├── build_notes.py              notes/*.md → articles/notes/ + 笔记索引
 ├── build_knowledge_base.py     DeepSeek 270 条对话 → articles/kb/
 ├── build_doubao_kb.py          豆包 98 条对话 → articles/kb-doubao/
 ├── articles/
-│   ├── 001~003、008~010        研究文章（手写 / 由研究笔记升级）
+│   ├── 001~021                 研究文章与论文精读
 │   ├── 004~007                 学习笔记 · 教程（扩散/Flow Matching、VAE、注意力、对比学习）
-│   ├── list-*.html             各栏目归档页（自动生成）
-│   ├── notes/                  25 篇课程与科研笔记
+│   ├── list-*.html             各分类清单页（自动生成）
+│   ├── notes/                  学科笔记正文页（自动生成）
 │   ├── kb/                     DeepSeek 270 条问答页
 │   └── kb-doubao/              豆包 98 条问答页
-├── notes/                      笔记的 Markdown 源（带 frontmatter）
+├── notes/                      笔记的 Markdown 源（带 frontmatter，subject 决定归到哪门学科）
 ├── articles_src/               长研究文章的 Markdown 源
-├── data/                       审计与清单的 Markdown 源
+├── data/                       审计清单 + search-index.js + nav_counts.json
 └── raw_exports/                原始对话档案（未删减）
 ```
 
 ## 内容分层
 
-1. **研究文章**：深度长文，保留原始数据、公式、当时的困惑和自我推翻。
-2. **学习笔记 · 教程**：从具体困惑出发的教程，讲清机制并接回主线。
-3. **课程与科研笔记**：大一到大二专业课复习 + 科研整理，正式书面，按学科分组。
-4. **知识库**：DeepSeek 270 条 + 豆包 98 条学习对话的问答存档，可溯源到原始档案。
-5. **论文分享屋 / 资料库**：论文导读清单、全量审计与溯源。
+1. **科研**：研究文章（长文，保留原始数据与自我推翻）、论文精读、研究笔记、调研档案、论文导读。
+2. **学习**：按 20 门学科归档的专业课笔记（每门一页）、系列教程、全部学习对话存档。
+3. **随笔 / 资料库**：科普长文；全量审计与溯源。
 
 ## 本地启动
 
@@ -50,32 +77,39 @@ python3 -m http.server 8000
 ## 构建流程（改完内容跑这一串）
 
 ```bash
+./publish.sh            # 构建 + 提交 + 推送，一条命令
+```
+
+单独构建时：
+
+```bash
 python3 build_articles.py        # 如有新的 articles_src/*.md
 python3 build_notes.py           # 如有新的 notes/*.md
-python3 build_index.py           # 生成归档页 + 重建首页（含数据条）
-python3 fix_nav.py               # 统一左侧目录的相对路径（必须在 build_index 之后）
+python3 build_knowledge_base.py  # 如需重建 DeepSeek 对话
+python3 build_doubao_kb.py       # 如需重建豆包对话
+python3 build_site.py            # 首页 / 板块页 / 学科页 / 清单页 / 搜索索引
+python3 fix_nav.py               # 统一左侧目录的相对路径（必须在 build_site 之后）
 ```
 
-## 新增一篇文章
+## 新增一篇内容
+
+**学科笔记**（会同时出现在「学习 → 某学科」页和搜索里）：
 
 ```bash
-# 方式一：从 Markdown 转
-python3 md_to_html.py <你的.md> <分类:研究/随笔/知识库/资料库> "<标题>" "<日期>" "<标签逗号分隔>" "<一句话摘要>"
-
-# 方式二：手写 HTML（在 <head> 里放一段 <script id="meta" type="application/json">{...}</script> 描述 title/date/tags/category/summary）
-
-# 最后重建索引
-python3 build_index.py && python3 fix_nav.py
+# 在 notes/ 下新建 .md，frontmatter 里写清 title / subject / category / summary
+# subject 必须和 site_model.py 里登记的学科名一致，否则会落到「其他」
+python3 build_notes.py && python3 build_site.py && python3 fix_nav.py
 ```
 
-## 重新生成知识库
-
-对话放进 `raw_exports/deepseek_raw/` 后：
+**长文章 / 随笔**：
 
 ```bash
-python3 build_knowledge_base.py   # 重建 articles/kb/ 和 knowledge-index.html
-python3 build_index.py            # 刷新首页
+python3 md_to_html.py <你的.md> <分类:研究/随笔/学习笔记/资料库> "<标题>" "<日期>" "<标签逗号分隔>" "<一句话摘要>"
+python3 build_site.py && python3 fix_nav.py
 ```
+
+> 分类决定它归到哪个板块、哪张卡片：`研究` → 科研，`学习笔记` → 学习，`随笔` → 随笔。
+> 带 `论文精读` 标签的会自动进「科研 → 论文精读」这一栏。
 
 ## 部署到 GitHub Pages
 
@@ -107,4 +141,3 @@ git push -u origin main
 之后每次改完内容，`git push` 一次就会自动重新部署。所有链接都是相对路径，放在仓库子目录下也能正常跳转。
 
 > **关于 `raw_exports/`（17M 原始对话存档）**：它会随仓库一起被推上去，技术上能通过直接猜 URL 访问到，但网站里没有任何链接指向它。如果你不想让它公开，告诉我，我可以把它从发布内容里摘掉（本地仍保留）。
-

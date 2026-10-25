@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>Java Swing 实战 · 一个简易浏览器的设计与实现</h1>
 <div class="meta">课程笔记 · JavaWeb · 整理自豆包对话 豆包对话 · Java Swing 简易浏览器实现与课设汇报</div>
-<h1>Java Swing 实战 · 一个简易浏览器的设计与实现</h1>
 <h2>一、为什么值得单独记一篇</h2>
 <p>Java 桌面程序在课程里常被拆成三块互不相干的知识：IO 流、网络编程、GUI。但一个「在地址栏输入网址、能显示网页、能前进后退、能另存为」的简易浏览器，恰好把三块拧成一股绳——GUI 负责交互，网络负责取页，IO 负责落盘，再加一条线程纪律把它们粘起来。</p>
 <p>这篇笔记只做 GUI + 网络 + 项目组织这条实战线。至于字节流与字符流的分层装配、<code>Thread</code>/<code>Runnable</code>/<code>synchronized</code> 这些流与线程 API 的细节，前面《Java IO 流与多线程》笔记已经系统讲过，这里只在项目实际用到时简述并回指；继承、多态、集合与泛型的系统性讲解则属于《Java 面向对象》那篇，不重复。</p>
@@ -311,7 +309,7 @@ worker.execute();</code></pre>
 <ol><li><strong>界面装配用 <code>BorderLayout</code> 分五区</strong>，记住同一区重复 <code>add</code> 只保留最后一个；</li><li><strong>事件模型是「源—事件—监听器」三件套</strong>，Lambda 只是注册糖，字段要在监听触发前就绪；</li><li><strong>网络取页三条路</strong>：显示走 <code>setPage</code>、保真走 <code>URL.openStream()</code> 字节流、源码走 <code>HttpURLConnection</code> 字符流并显式处理 charset；</li><li><strong><code>JEditorPane</code> 只认 HTML 3.2</strong>，现代网页渲染不出来是能力边界，用提示兜底而非谎称成功；</li><li><strong>只有 EDT 能改 UI</strong>：耗时进 <code>SwingWorker.doInBackground</code>，更新在 <code>done</code> 回 EDT，入口用 <code>SwingUtilities.invokeLater</code>；</li><li><strong>流用 try-with-resources、异常给可见提示、子窗用 <code>dispose</code></strong>。</li></ol>
 <p>流与线程的 API 细节见《Java IO 流与多线程》；若要走向真正的网页浏览，把内置渲染换成成熟内核是自然的下一步。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · Java Swing 简易浏览器实现与课设汇报</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/javaweb.html">← 返回 JavaWeb</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

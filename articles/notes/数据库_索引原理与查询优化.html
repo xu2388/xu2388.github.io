@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>数据库 · 索引原理与查询优化</h1>
 <div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 豆包对话 · 聚簇索引与唯一索引辨析 / SQL 中 IN 与 EXISTS 的区别 / EXISTS 与 IN 查询对比 / Django 查询优化与执行计划</div>
-<h1>数据库 · 索引原理与查询优化</h1>
 <h2>一、概述：索引是一笔交易</h2>
 <p>索引（index）是为加速检索而建立的辅助数据结构，由 DBMS 自动维护。这句话里藏着两个容易被忽略的词：<strong>辅助</strong>与<strong>维护</strong>。辅助意味着索引不改变查询语义，只改变访问路径；维护意味着每次插入、删除、更新都要同步改动索引，写越多、索引越贵。</p>
 <p>因此「加索引」从来不是无条件的优化，而是一笔交易：用写放大与存储空间，换读时的定位能力。判断这笔交易是否划算，需要三样东西——知道索引长什么样（结构）、知道查询能用到索引的哪一段（匹配规则）、知道优化器实际选了什么路径（执行计划）。三样缺一，就只能靠背结论，而结论在数据分布变化后往往失效。</p>
@@ -275,7 +273,7 @@ WHERE EXISTS (SELECT 1 FROM SC WHERE SC.Sno = s.Sno AND SC.Cno = &#x27;1&#x27;);
 </table>
 <p>把全文压成一条判断链：先问「这条查询要读哪些行、哪些列」，据此判断能否用索引定位（最左前缀）、能否不回表（覆盖）；再问「优化器会不会选它」，用执行计划核对 <code>key</code>、<code>rows</code>、<code>Extra</code>；最后问「快了是不是真的」，用对照实验与可解释的指标收尾。索引的物理结构决定了可能的上限，最左前缀决定了可用的范围，执行计划决定了实际的选择，三者层层收窄，任何一层跳过都会得到「看起来对、换数据就错」的结论。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 聚簇索引与唯一索引辨析 / SQL 中 IN 与 EXISTS 的区别 / EXISTS 与 IN 查询对比 / Django 查询优化与执行计划</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/database.html">← 返回 数据库/MySQL</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

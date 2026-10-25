@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>研究笔记 · 科研与学习档案</title>
+<meta name="description" content="研究过程中的专题笔记：概念、推导、实验设置与踩坑记录。" />
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body class="hub">
+<header class="site-header">
+  <div class="container">
+    <div class="side-brand">
+      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
+      <div>
+        <h1 class="site-title">科研与学习档案</h1>
+        <p class="site-subtitle">Research &amp; Study Archive</p>
+      </div>
+    </div>
+    <nav class="site-nav"><a href="../index.html">首页</a><a class="active" href="../research.html">科研<span class="n">18</span></a><a href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+    
+  </div>
+</header>
+
+<main class="container">
+
+<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../research.html">科研</a> <span>/</span> 研究笔记</nav>
+<header class="list-head">
+  <p class="eyebrow">NOTES</p>
+  <h1>研究笔记</h1>
+  <p class="lede">研究过程中的专题笔记：概念、推导、实验设置与踩坑记录。　共 15 篇</p>
+</header>
+<ul class="article-list">
+<li><a href="../articles/notes/DCLGAN论文解读.html">DCLGAN（双对比学习无配对翻译）· 论文解读</a><span class="date">2026-10-24</span><span class="desc">DCLGAN 以对偶双向生成器配合两套域独立的编码器与投影头，用多层 PatchNCE 替代循环一致性约束，并通过域内相似度损失构成 SimDCL 变体，解决单嵌入难以建模域间鸿沟与语义分割任务的模式崩溃问题。</span></li>
+<li><a href="../articles/notes/ODA-GAN.html">ODA-GAN（正交解耦对齐）· 方法梳理</a><span class="date">2026-10-24</span><span class="desc">ODA-GAN 以冻结 UNI 与 Grad-CAM 产生弱监督掩膜，用 O-MLP 将病理特征正交拆为染色相关与形态相关两支，再以对抗损失、双流 PatchNCE 与多层 MMD 域对齐共同训练，实现无配对 H&amp;E→IHC 虚拟染色。</span></li>
+<li><a href="../articles/notes/医学图像染色转换综述.html">医学图像染色转换 · 相关工作综述</a><span class="date">2026-10-24</span><span class="desc">按监督强度与约束空间将 H&amp;E→IHC 虚拟染色的现有工作归为全监督像素回归、无配对对比学习、弱配对错位鲁棒、病理语义保持、物理浓度域建模与评测基础设施六族，逐族梳理代表工作、核心机制与优缺点，并归纳可引用的对比链与研究空位。</span></li>
+<li><a href="../articles/notes/医学影像实验室Linux工具链.html">医学影像实验室上机路线 · DICOM 转换、FSL、CUDA、Slurm 与 nnUNet</a><span class="date">2026-10-25</span><span class="desc">面向实验室共享 GPU 服务器的上机操作路线，按「账号与环境准备 → DICOM 转 NIfTI → 预处理与配准 → GPU 侧依赖 → 排队与训练 → 容器化」的顺序，整理 dcm2niix 与 find 批量转换写法、FSL 的 bet/flirt/fast 分工、CUDA 与 cuDNN、PyTorch 安装通道的版本对应、Slurm 的 sbatch 关键参数、nnUNet 规划预处理与训练的命令顺序，以及 Docker/Singularity 镜像片段，并保留权限、软件源、pip 受限等真实卡点。</span></li>
+<li><a href="../articles/notes/基于分数的无配对虚拟染色.html">基于分数的无配对虚拟组织学染色 · 方法梳理</a><span class="date">2026-10-24</span><span class="desc">MIU-Diff 以全局互信息引导的能量函数在表征空间分离组织结构与染色特征，配合时间步定制的反向扩散实现染色强度可控，并以局部互信息对比学习约束细胞级结构一致，从而在无配对 H&amp;E–IHC 数据上完成虚拟染色。</span></li>
+<li><a href="../articles/notes/多尺度注意力.html">多尺度注意力机制 · 论文论述与整理</a><span class="date">2026-10-24</span><span class="desc">梳理多尺度注意力的综述与理论文献脉络，逐层推导 Haar 小波变换的卷积化实现（正/逆变换与正交性），并以 SegNeXt 的 MSCA 为例说明多分支带状深度卷积如何在 O(n) 复杂度下同时获得多尺度感受野与空间注意力。</span></li>
+<li><a href="../articles/notes/对比学习与CUT思路.html">对比学习与 CUT：无配对染色翻译的结构保持 · 研究笔记</a><span class="date">2026-10-24</span><span class="desc">从 InfoNCE 出发梳理 PatchNCE 与 CUT 的单侧无配对翻译框架，说明其在病理 H&amp;E→IHC 任务中如何以块级对比约束组织结构，并讨论 ASP 自适应监督、DAB 浓度与梯度边界三类互补监督，以及由 GAN 迁移至光密度域扩散的可行路径。</span></li>
+<li><a href="../articles/notes/服务器与实验实录.html">服务器、训练与实验 · 长对话整理</a><span class="date">2026-10-25</span><span class="desc">记录 HE→IHC 虚拟染色浓度域扩散模型的服务器训练与诊断过程，梳理噪声调度的四类问题及代表性文献，报告时间步损失诊断的实测结果（早期损失仅为晚期的 0.28 倍）、Beta(2,2) 重采样实验的损失轨迹，并据此修正研究假设、确定 M0→M1→M2 的分阶段路线与论文叙事。</span></li>
+<li><a href="../articles/notes/浓度空间Diffusion.html">H&amp;E→IHC 浓度空间 Diffusion 的最小可运行实现 · 研究笔记</a><span class="date">2026-10-24</span><span class="desc">以比尔-朗伯定律为物理基础，把 H&amp;E 与 IHC 分解为染料浓度图，仅在 DAB 浓度通道上做条件扩散并以 H/E 浓度作为干净条件，最后经染色矩阵回投重建 IHC RGB，据此设计可判定该路线是否成立的最小基线 M0。</span></li>
+<li><a href="../articles/notes/病理_肾脏染色类型与形态学术语.html">病理 · 肾脏染色类型与形态学术语</a><span class="date">2026-10-25</span><span class="desc">从显色化学出发区分 H&amp;E、PAS、PASM、Masson 与 IHC：前两者靠染料与糖类的化学反应，PASM 靠银沉积，Masson 靠分子量与大分子亲和差异，IHC 靠抗体定位。再按肾小球、肾小管、间质、血管四条线列出各染色的表现，解释系膜增生、基底膜增厚、硬化、纤维化、炎细胞浸润的判读含义与读片顺序，最后说明 Camelyon17 五个域为何全是 H&amp;E 却仍构成域偏移。</span></li>
+<li><a href="../articles/notes/虚拟染色_HistDiT与HISTDIST架构对比.html">虚拟染色 · HistDiT 与 HISTDIST 架构对比</a><span class="date">2026-10-25</span><span class="desc">两个名字相近的病理扩散模型，结构路线不同。HistDiT 把 H&amp;E 经 VAE 压到 64×64 潜空间，切成 1024 个 token 当作空间条件，用交叉注意力锁结构，语义条件经 AdaLN 调制注入，主干是 DiT。HISTDIST 走潜扩散加双条件（病理自监督 ViT 全局特征与 VAE 潜码），关键是 v-prediction、重标定噪声调度与 DDIM 反演。本文比较 patchify 与 UNet 的取舍、条件注入位置的差异、结构保持与染色准确的侧重，并估算显存与步数代价。</span></li>
+<li><a href="../articles/notes/虚拟染色_染色归一化方法谱系.html">虚拟染色 · 染色归一化方法谱系</a><span class="date">2026-10-25</span><span class="desc">染色差异来自染液批次、扫描仪响应与切片厚度，表现为同一组织在不同域下的颜色漂移。本文按物理假设的强弱梳理归一化谱系：Reinhard 只做 Lab 三通道均值方差匹配；Macenko 在光密度空间用 SVD 取前两个主方向并按极角分位数定染料向量；Vahadane 改用带 L1 稀疏与非负约束的 NMF，并把源图密度图配目标染料基重构，从机制上保住结构；BeerLaNet 把 NMF 展开成可训练网络，去掉模板依赖。末段讨论归一化与虚拟染色的分工、评价指标的选择与五类常见陷阱。</span></li>
+<li><a href="../articles/notes/虚拟染色_轻量染色转换模型综述.html">虚拟染色 · 轻量染色转换模型综述</a><span class="date">2026-10-25</span><span class="desc">按「参数量从千到亿」的顺序梳理五个染色转换模型。StainNet 用三层 1×1 卷积加蒸馏，约一千参数，像素级映射不碰空间结构；BeerLaNet 把稀疏非负分解展开成十层网络，去掉模板依赖；AGMDT 借相邻切片做弱配对，用邻域形变场监督单个模型输出三种特殊染色；StainFuser 以条件潜扩散加零卷积锁结构，靠两百万 NST 合成对训练；StainPrompt 冻结扩散主干，只在推理时优化视觉提示。末段给出对照表与转向扩散的原因。</span></li>
+<li><a href="../articles/notes/虚拟染色论文精读.html">虚拟染色关键论文精读（含 PSPStain）· 整理</a><span class="date">2026-10-24</span><span class="desc">对 PSPStain、MisalignResistantVS（DGR）、StainBridge 三篇工作逐篇梳理问题、方法、贡献与局限，并据 PSPStain 的摘要级材料复原其 PALS 与 PCLS 两个模块的设计逻辑与实测指标。</span></li>
+<li><a href="../articles/notes/论文写作与研究内容.html">论文写作与研究内容 · 长对话整理</a><span class="date">2026-10-24</span><span class="desc">围绕《国家安全教育》课程论文，从总体国家安全观的理论框架出发确立&quot;具身智能安全风险传导与协同治理&quot;选题，逐节完成摘要、引言、文献综述与四章正文，并系统梳理论文格式、参考文献著录与语言规范，其间反复暴露并修正了案例真实性与文献可核查性问题。</span></li>
+</ul>
+<div class="subj-foot"><a class="back-link" href="../index.html">← 返回首页</a></div>
+
+</main>
+
+<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

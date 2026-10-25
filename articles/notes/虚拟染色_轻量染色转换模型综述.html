@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>虚拟染色 · 轻量染色转换模型综述</h1>
 <div class="meta">学习笔记 · 虚拟染色/科研 · 整理自豆包对话 豆包对话 · StainNet 模型及解决问题 / BeerLaNet 模型介绍 / AGMDT 模型介绍 / StainFuser 模型介绍 / StainPrompt模型损失函数</div>
-<h1>虚拟染色 · 轻量染色转换模型综述</h1>
 <h2>一、概述：为什么先看轻量模型</h2>
 <p>染色转换模型的谱系很容易被讲成「GAN 时代到扩散时代」的线性进步史，但真实的工程选择比这复杂。一个模型能不能用，取决于四件事同时成立：参数量装得下、推理扛得住全切片、训练数据凑得齐、结构不被改坏。轻量模型正是在这四条约束下长出来的：它们未必是效果最好的，但往往是最先能落地的，而且它们的失败模式最能说明问题出在架构的哪一层。</p>
 <p>本文按参数量从千级到亿级的顺序，梳理五个模型：StainNet（约一千参数）、BeerLaNet（十位到百位可学习参数）、AGMDT（GAN，千万级）、StainFuser（潜扩散，亿级）、StainPrompt（冻结主干，只优化提示）。五个模型的输入输出并不完全同类：有的做同一染色类型的外观归一化，有的做 H&amp;E 到特殊染色的类型转换。这个区别决定了它们的评价方式，也决定了后面为什么要转向扩散。</p>
@@ -171,7 +169,7 @@
 </table>
 <p>五个模型连起来看，是一条「约束从架构退到损失、能力从归一化扩到生成、成本从毫秒涨到秒」的线。每一次能力扩张都伴随着成本上升，而成本最终由采样步数决定。所以下一篇要讨论的不是更大的模型，而是更少的步数：DDIM 如何把一千步压到五十步，LCM 又如何压到三到四步。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · StainNet 模型及解决问题 / BeerLaNet 模型介绍 / AGMDT 模型介绍 / StainFuser 模型介绍 / StainPrompt模型损失函数</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

@@ -36,6 +36,118 @@
     nav.insertAdjacentElement("afterend", btn);
   }
 
+  /* ---------- 侧栏搜索框 ----------
+     由 JS 注入而不是写死在每页 HTML 里：相对路径从导航第一个链接反推，
+     这样根目录页（index.html）和 articles/notes/ 下的深层页都不用各写一份。 */
+  function navPrefix() {
+    var a = document.querySelector(".site-nav a");
+    if (!a) return "";
+    return (a.getAttribute("href") || "index.html").replace(/index\.html.*$/, "");
+  }
+  function initSideSearch() {
+    var nav = document.querySelector(".site-nav");
+    if (!nav || document.querySelector(".side-search")) return;
+    var prefix = navPrefix();
+    var wrap = document.createElement("div");
+    wrap.className = "side-search";
+    wrap.innerHTML =
+      '<form role="search" action="' + prefix + 'search.html">' +
+      '<input type="search" name="q" placeholder="搜索标题…" aria-label="搜索文章标题" autocomplete="off" />' +
+      '<button type="submit" aria-label="搜索">⌕</button></form>';
+    nav.parentNode.insertBefore(wrap, nav);
+  }
+
+  /* ---------- 搜索页：标题即时筛选 ---------- */
+  function initSearchPage() {
+    var input = document.getElementById("search-q");
+    if (!input) return;
+    var data = window.SEARCH_INDEX || [];
+    var list = document.getElementById("search-results");
+    var cnt = document.getElementById("search-count");
+    var hint = document.getElementById("search-hint");
+    var total = document.getElementById("search-total");
+    var def = document.getElementById("search-default");
+    if (total) total.textContent = data.length;
+
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    }
+    function mark(text, q) {
+      var i = text.toLowerCase().indexOf(q);
+      if (i < 0) return esc(text);
+      return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + q.length)) + "</mark>" + esc(text.slice(i + q.length));
+    }
+
+    function render(raw) {
+      var q = (raw || "").trim().toLowerCase();
+      if (def) def.hidden = !!q;
+      if (!q) {
+        list.innerHTML = "";
+        cnt.textContent = "";
+        if (hint) hint.hidden = false;
+        return;
+      }
+      if (hint) hint.hidden = true;
+      var hits = data.filter(function (it) {
+        return String(it.t || "").toLowerCase().indexOf(q) >= 0;
+      });
+      hits.sort(function (a, b) {
+        var ai = a.t.toLowerCase().indexOf(q), bi = b.t.toLowerCase().indexOf(q);
+        if (ai !== bi) return ai - bi;
+        return String(b.d || "").localeCompare(String(a.d || ""));
+      });
+      cnt.textContent = hits.length ? hits.length + " 条" : "无结果";
+      if (!hits.length) {
+        list.innerHTML = '<li class="search-empty">没有标题包含「' + esc(raw.trim()) + '」的内容。换个关键词试试，或到 <a href="study.html">学习</a> / <a href="research.html">科研</a> 里逐层浏览。</li>';
+        return;
+      }
+      list.innerHTML = hits.map(function (it) {
+        return '<li><a href="' + it.u + '">' + mark(it.t, q) + "</a>" +
+          '<span class="sr-meta"><i class="badge ' + badgeClass(it.s) + '">' + esc(it.s) + "</i>" +
+          "<span>" + esc(it.g || "") + "</span>" +
+          '<span class="sr-date">' + esc(it.d || "") + "</span></span></li>";
+      }).join("");
+    }
+    function badgeClass(s) {
+      return { "科研": "b-research", "学习": "b-study", "随笔": "b-essay", "资料库": "b-archive" }[s] || "b-study";
+    }
+
+    var q0 = "";
+    try { q0 = new URLSearchParams(location.search).get("q") || ""; } catch (e) { }
+    if (q0) input.value = q0;
+    render(q0);
+
+    var timer;
+    input.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        render(input.value);
+        try {
+          var u = new URL(location.href);
+          if (input.value.trim()) u.searchParams.set("q", input.value.trim());
+          else u.searchParams.delete("q");
+          history.replaceState(null, "", u);
+        } catch (e) { }
+      }, 90);
+    });
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+
+  /* ---------- 全局「/」跳到搜索 ---------- */
+  function initSlashSearch() {
+    if (document.getElementById("search-q")) return;
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      var t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      e.preventDefault();
+      location.href = navPrefix() + "search.html";
+    });
+  }
+
   /* ---------- 侧边栏画布粒子（配色随主题） ---------- */
   function initCanvas() {
     var header = document.querySelector(".site-header");
@@ -287,14 +399,18 @@
 
   function boot() {
     initThemeToggle();
+    initSideSearch();
     initCanvas();
     initMobileNav();
     initProgress();
     initBackTop();
     initTOC();
-    initReveal();
+    /* 入场动画已关闭：列表项先 opacity:0 再等 IntersectionObserver，
+       在慢网络或某些渲染环境下会出现「内容短暂不可见」，对纯文字归档得不偿失。 */
     initNavSpy();
     initMath();
+    initSearchPage();
+    initSlashSearch();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

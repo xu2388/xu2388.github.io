@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>操作系统/Linux · 用户权限与 ACL</h1>
 <div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · Linux权限、ACL及进程程序相关题目解答 / Linux用户与用户组知识点解答 / 远程控制桌面教程</div>
-<h1>操作系统/Linux · 用户权限与 ACL</h1>
 <h2>一、概述：权限模型回答的三个问题</h2>
 <p>权限系统只回答三件事：谁（身份）、对什么（对象类型）、能做哪一类操作（读、写、执行）。Linux 传统模型把身份压缩成三类——属主、属组、其他，把操作压缩成三位——r、w、x，因此表达力有限；ACL 是在不推翻这三类槽位的前提下，给单个用户或单个组加例外，并用 mask 给例外封顶。本文按「解码权限串 → 推导默认权限 → 特殊位与进程身份 → ACL → 继承与最小权限」的顺序展开。</p>
 <p>与已有笔记的分工需要先讲清。《操作系统与 Shell 脚本》给的是命令清单与题目层面的特殊位速算，重点在「会敲、会判」；本文补的是模型、匹配顺序与可复核的推导，重点在「为什么这样判」。《Linux 本地存储管理》讲磁盘、分区、LVM 到挂载，本文只讲挂载点之上的访问控制，不重复 inode、分区表与 fstab。</p>
@@ -347,7 +345,7 @@ setfacl -m d:u::rwx,d:g::rwx,d:o::---,d:m::rwx 项目目录/共享</code></pre>
 </table>
 <p>权限系统的复杂度来自一个矛盾：既要让大多数情况用三个槽位快速判定，又要让少数例外能精确表达。传统三位是快路径，ACL 是慢路径，mask 是慢路径的保险丝；把这三层分开看，就不会再把叠加当成规则，也不会把 <code>s</code> 与 <code>S</code>、<code>t</code> 与 <code>T</code> 读错。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · Linux权限、ACL及进程程序相关题目解答 / Linux用户与用户组知识点解答 / 远程控制桌面教程</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

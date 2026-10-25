@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>区块链与比特币原理 · 区块结构、共识与篡改成本</h1>
 <div class="meta">课程笔记 · 区块链/分布式 · 整理自豆包对话 豆包对话 · 比特币区块结构与区块链篡改分析 / 比特币四年减半说法的由来分析 / 区块链比特币知识点讲解</div>
-<h1>区块链与比特币原理 · 区块结构、共识与篡改成本</h1>
 <h2>一、概述：80 字节如何锁住全部历史</h2>
 <p>一个比特币区块由区块头与区块体组成。区块体装着几百到几千笔交易，大小以兆字节计；区块头固定 80 字节，只有六个字段。所有「不可篡改」「最长链」「难度」「轻节点验证」的讨论，最终都落在这 80 字节上：默克尔根把区块体压缩成一个摘要，父哈希把上一个区块压缩成一个摘要，时间戳给出时序，Bits 给出目标，Nonce 给出工作量证明的解。区块哈希再对整个头部做一次双重 SHA256，成为下一个区块的父哈希。</p>
 <p>本文按「结构 → 默克尔树 → 工作量证明 → 分叉 → 追上概率 → 攻击成本 → 难度与减半 → 轻节点」的顺序展开。重点不是背诵六个字段的名字，而是理解每个字段<strong>改变了什么、谁有权改、改了以后谁会发现</strong>。第四节起会给出可手算的概率与成本模型，并在第十一节集中勘误原料中的三处数值与口径问题。</p>
@@ -231,7 +229,7 @@ reward   = 50 / (2 ** halvings)   # 以 BTC 计</code></pre>
 <p>共识层用累计工作量最大链处理自然分叉，用确认数把概率风险量化。第六节的赌徒破产模型给出核心结论：落后 $k$ 块被追平的概率是 $(\alpha/\beta)^k$，算力越接近一半，衰减越慢；51% 不是「瞬间成功」，而是「期望时间有限」。第七节把攻击成本拆成硬件、电力、机会成本三块，说明算力控制的是历史选择权，不是签名伪造权。</p>
 <p>发行层用 210000 块的计数规则把减半与时间解耦，用等比级数把总量锁在 2100 万，用整数聪截断把实际发行压到 20 999 999.9769。难度调整每 2016 块把出块速率拉回 10 分钟，但只能锚定长期均值，且自身带有约 2.23% 的统计噪声。最后，轻节点用默克尔路径与区块头换来轻量验证，代价是把交易合法性的判断外包给算力多数——理解这一点，才能正确使用「SPV 已验证」这句话。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 比特币区块结构与区块链篡改分析 / 比特币四年减半说法的由来分析 / 区块链比特币知识点讲解</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/blockchain.html">← 返回 区块链/分布式</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

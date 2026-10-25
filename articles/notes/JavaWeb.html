@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>JavaWeb · 学习笔记</h1>
 <div class="meta">课程笔记 · JavaWeb · 整理自豆包对话 007_javaweb自学.md</div>
-<h1>JavaWeb · 学习笔记</h1>
 <h2>一、概述</h2>
 <p>JavaWeb 指以 Java 技术构建、通过浏览器访问的 Web 应用。其运行基础是 <strong>B/S（Browser/Server，浏览器/服务器）架构</strong>：客户端只需浏览器，业务逻辑与数据集中在服务器端，浏览器与服务器之间通过 <strong>HTTP 协议</strong>通信。</p>
 <p>一个 JavaWeb 项目由三类资源构成：</p>
@@ -395,7 +393,7 @@ public class ServletDemo3 extends HttpServlet {
 <h2>四、小结</h2>
 <ol><li>HTML 负责结构，由文档声明、<code>head</code>、<code>body</code> 构成；标签分单标签与双标签，表格依靠 <code>tr</code>/<code>td</code> 与 <code>colspan</code>、<code>rowspan</code> 完成布局，表单依靠 <code>form</code> 与各类 <code>input</code> 收集数据，其中同组单选与多选的 <code>name</code> 必须一致。</li><li>CSS 负责表现，语法为“选择器 + 声明块”；四种引入方式中，外链式因彻底分离、可复用、可缓存而成为工程标准，导入式因加载顺序缺陷被淘汰；常用选择器为标签、类、id 与通配符。</li><li>JavaScript 由 ECMAScript、DOM、BOM 组成；DOM 提供 <code>getElementById</code>、<code>getElementsByName</code> 等定位方法，BOM 以 <code>window</code> 为核心提供弹窗、定时器与加载事件；函数名区分大小写，事件绑定分内联与 DOM 两种。</li><li>XML 用于存储与传输数据，声明必须在首行，标签自定义且严格闭合，全文档唯一根元素；DTD 以元素、属性、频次符号约束结构，XSD 以 XML 语法描述约束，支持丰富数据类型、正则与命名空间，是当前主流。</li><li>C/S 与 B/S 的根本差异在于客户端形态与业务部署位置；B/S 以免安装、易升级、中间层访问数据库的优势成为 Web 应用的标准架构。</li><li>HTTP 基于 TCP、请求—响应、无状态；1.1 以持久连接解决 1.0 的短连接开销；请求消息为“请求行 + 请求头 + 请求体”，响应消息为“状态行 + 响应头 + 空行 + 响应体”；GET 与 POST 的差异在参数位置与长度限制，而非加密与否。</li><li>Tomcat 是 Servlet 容器，负责解析 HTTP 并调度 Servlet；<code>request</code> 承载请求数据，<code>response</code> 承载响应数据，<code>service()</code> 按请求方式分派到 <code>doGet</code> 或 <code>doPost</code>，输出前设置字符集是避免乱码的关键。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/007_javaweb自学.html">007_javaweb自学.md</a></p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/javaweb.html">← 返回 JavaWeb</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

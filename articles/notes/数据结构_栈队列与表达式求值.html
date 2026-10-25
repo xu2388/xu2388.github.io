@@ -12,11 +12,10 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>数据结构与算法 · 栈、队列与表达式求值</h1>
@@ -178,6 +177,7 @@ int Dequeue(MyQueue *q, int *x) {
     return depth == 0;
 }</code></pre>
 <p>这段代码同时检查了“不空弹”和“最终为空”。若题目还要求 <code>I</code> 与 <code>O</code> 的总数各为 $n$，再增加两个计数即可。</p>
+<p>若栈的容量上限为 $m$，合法条件还要加上“任意前缀中 <code>I</code> 的个数减去 <code>O</code> 的个数不超过 $m$”，因为栈深不能超过容量。判定时把 <code>depth</code> 与 $m$ 比较即可：一旦 <code>depth &gt; m</code> 就失败。这个条件在“用一个容量有限的栈处理输入”的题目中经常出现，容易被漏掉。前缀条件、容量条件、最终归零三者合起来，才完整描述了一个有界栈能执行的操作串。</p>
 <h3>3.3 Catalan 计数</h3>
 <p>长度为 $2n$ 的合法操作串，或 $n$ 个元素的合法出栈序列，数量为第 $n$ 个 Catalan 数：</p>
 <p>$$ C_n=\frac{1}{n+1}\binom{2n}{n}=\binom{2n}{n}-\binom{2n}{n+1}. $$</p>
@@ -316,6 +316,39 @@ ExprNode *BuildExprTree(char *tok[], int n) {
     }
     return 0;
 }</code></pre>
+<h3>5.4 双栈直接求中缀表达式的值</h3>
+<p>中缀表达式也可以不转后缀，直接用两个栈求值：一个操作数栈，一个运算符栈。扫描到操作数就压入操作数栈；扫描到运算符，就先弹出运算符栈中所有“优先级更高，或优先级相等且当前运算符左结合”的运算符，对操作数栈顶的两个数求值并把结果压回，然后再把当前运算符入栈；遇到左括号直接入栈，遇到右括号则不断求值直到弹出左括号；扫描结束后把剩余运算符全部求值。</p>
+<pre><code>int Precedence(char op) {
+    if (op == &#x27;+&#x27; || op == &#x27;-&#x27;) return 1;
+    if (op == &#x27;*&#x27; || op == &#x27;/&#x27;) return 2;
+    if (op == &#x27;^&#x27;) return 3;
+    return 0;                      /* &#x27;(&#x27; */
+}
+
+void Apply(StackInt *num, char op) {
+    int b = PopInt(num), a = PopInt(num);
+    switch (op) {
+        case &#x27;+&#x27;: PushInt(num, a + b); break;
+        case &#x27;-&#x27;: PushInt(num, a - b); break;
+        case &#x27;*&#x27;: PushInt(num, a * b); break;
+        case &#x27;/&#x27;: PushInt(num, a / b); break;
+    }
+}</code></pre>
+<p>对 $(3+4)\times 5-6$，扫描过程如下。</p>
+<table>
+<tr><th>读入</th><th>操作数栈</th><th>运算符栈</th><th>说明</th></tr>
+<tr><td><code>(</code></td><td>空</td><td><code>(</code></td><td>左括号入栈</td></tr>
+<tr><td><code>3</code></td><td><code>3</code></td><td><code>(</code></td><td>操作数入栈</td></tr>
+<tr><td><code>+</code></td><td><code>3</code></td><td><code>( +</code></td><td>栈顶是左括号，直接入栈</td></tr>
+<tr><td><code>4</code></td><td><code>3 4</code></td><td><code>( +</code></td><td>操作数入栈</td></tr>
+<tr><td><code>)</code></td><td><code>7</code></td><td>空</td><td>弹出 <code>+</code> 求值，弹出左括号</td></tr>
+<tr><td><code>*</code></td><td><code>7</code></td><td><code>*</code></td><td>入栈</td></tr>
+<tr><td><code>5</code></td><td><code>7 5</code></td><td><code>*</code></td><td>操作数入栈</td></tr>
+<tr><td><code>-</code></td><td><code>35</code></td><td><code>-</code></td><td><code>*</code> 优先级高，先求值再入栈</td></tr>
+<tr><td><code>6</code></td><td><code>35 6</code></td><td><code>-</code></td><td>操作数入栈</td></tr>
+<tr><td>结束</td><td><code>29</code></td><td>空</td><td>弹出 <code>-</code> 求值</td></tr>
+</table>
+<p>双栈法与“转后缀再求值”本质相同，只是把“生成后缀”和“对后缀求值”合并成了一遍。它的好处是不需要保存完整后缀序列；坏处是运算符优先级和括号的处理集中在一个循环里，边界条件更容易写错。若表达式需要反复求值，先转成后缀或表达式树更划算；若只求一次，双栈法更省空间。</p>
 <h2>六、栈与递归</h2>
 <h3>6.1 递归调用栈</h3>
 <p>递归函数每调用一次，系统就在调用栈上压入一个栈帧，保存参数、局部变量和返回地址。递归返回时弹出栈帧，恢复上一层的工作现场。以阶乘为例：</p>
@@ -350,6 +383,18 @@ ExprNode *BuildExprTree(char *tok[], int n) {
 <h3>6.3 递归转非递归</h3>
 <p>递归转非递归一般有三条路。第一，尾递归可以直接改成循环，例如阶乘、二分查找。第二，用显式栈模拟系统栈，把参数、局部状态和“返回到哪一步”打包成栈元素，适合二叉树遍历、迷宫求解。第三，若问题本质是“按层处理”，改用队列，例如广度优先搜索。</p>
 <p>深度优先搜索与栈的对应关系尤其典型：每访问一个节点，把它尚未访问的邻居压栈；弹出时继续深入。广度优先搜索则把邻居放入队列，保证按距离逐层扩展。两者的代码骨架几乎相同，差别只在“后进先出”还是“先进先出”。</p>
+<h3>6.4 典型应用场景</h3>
+<table>
+<tr><th>场景</th><th>使用结构</th><th>原因</th></tr>
+<tr><td>括号匹配、表达式求值</td><td>栈</td><td>最近遇到的左括号或运算符最先被处理</td></tr>
+<tr><td>函数调用、递归</td><td>系统栈</td><td>后调用的函数先返回</td></tr>
+<tr><td>深度优先搜索</td><td>栈</td><td>沿一条路径走到底再回退</td></tr>
+<tr><td>广度优先搜索、层序遍历</td><td>队列</td><td>按距离或层次依次扩展</td></tr>
+<tr><td>生产者消费者缓冲区</td><td>队列</td><td>先产生的数据先被消费</td></tr>
+<tr><td>撤销操作、浏览器后退</td><td>栈</td><td>最近的操作最先被撤销</td></tr>
+<tr><td>打印任务、消息排队</td><td>队列</td><td>先到先服务</td></tr>
+</table>
+<p>这些场景的共同点是“待处理集合”的次序决定了算法行为。选择栈还是队列，本质上是在选择“最新优先”还是“最早优先”。一旦把这一点说清楚，代码结构就只剩下“如何入集合、如何出集合、集合空时怎么办”三个问题。</p>
 <h2>七、链表多项式加法</h2>
 <h3>7.1 表示</h3>
 <p>一元多项式可以写成系数与指数二元组的线性表。若按指数递减排列，并用带头节点的单链表存储，则每个节点保存一个非零项：</p>
@@ -402,6 +447,7 @@ ExprNode *BuildExprTree(char *tok[], int n) {
 </table>
 <p>以 $A=3x^4+2x^2+1$、$B=5x^3-2x^2+4x$ 为例，合并过程为：$4&gt;3$，接 $3x^4$；$3&gt;2$，接 $5x^3$；$2=2$，系数和为 $0$，两个节点都释放；$0&lt;1$，接 $4x$；$B$ 走完，接 $A$ 剩余的 $1$。结果为 $3x^4+5x^3+4x+1$。</p>
 <p>原料中的代码在“$pa$ 的指数大于 $pb$”时把 $pb$ 接到结果链，这与“按指数递减归并”的方向相反；在系数和不为零的分支里，只把 $pa$ 接到结果链并前移，却没有释放已经被消费的 $pb$，导致 $pb$ 节点既不在结果链中、也不在输入链中，形成内存泄漏。更隐蔽的问题是：若随后继续用 <code>pb</code> 比较，已消费的节点会被再次接入，结果链出现重复项。修正的关键不是记住某一行，而是维护“每个节点最终属于哪条链”的不变量：要么留在输入链等待处理，要么进入结果链，要么被释放，三者必居其一。</p>
+<p>若系数用浮点数存储，判断“和为零”不宜直接写 <code>sum != 0</code>，而应设一个很小的容差 $\varepsilon$，当 $|sum|&lt;\varepsilon$ 时视为零。浮点加法可能产生 $10^{-17}$ 量级的舍入误差，直接与零比较会把本应抵消的项保留下来，结果多出一个几乎为零的项。</p>
 <h2>八、常见误区与原料勘误</h2>
 <table>
 <tr><th>误区或原料错误</th><th>正确结论</th><th>说明</th></tr>
@@ -438,7 +484,7 @@ ExprNode *BuildExprTree(char *tok[], int n) {
 </table>
 <p>栈、队列、表达式和递归看似分散，实际上都在处理“顺序”与“嵌套”两个维度。栈擅长嵌套：括号、表达式、递归、深度优先搜索，都是“后遇到的事情先处理”。队列擅长顺序：层序遍历、广度优先搜索、任务调度，都是“先遇到的事情先处理”。把这两个维度分清，再复杂的模拟题也可以拆成“当前状态”“待处理集合”“下一步动作”三部分，代码自然就写得出来。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 栈与队列学习及实践 / 逆波兰表达式求值 / 括号配对判断 / 判断栈操作序列合法性 / 分析多项式链表代码</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/data-structures.html">← 返回 数据结构与算法</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

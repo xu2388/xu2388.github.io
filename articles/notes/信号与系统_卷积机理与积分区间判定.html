@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>信号与系统 · 卷积机理与积分区间判定</h1>
 <div class="meta">课程笔记 · 信号与系统 · 整理自豆包对话 豆包对话 · 信号与系统卷积与采样复习</div>
-<h1>信号与系统 · 卷积机理与积分区间判定</h1>
 <h2>一、概述</h2>
 <p>卷积是线性时不变（LTI）系统分析的统一工具：只要知道系统的单位冲激响应 $h(t)$，任意输入 $x(t)$ 的零状态输出都由卷积给出。它同时是后续傅里叶分析、采样定理与系统设计的共同基础——时域卷积对应频域相乘，正是频域滤波的理论依据；采样后频谱的周期延拓，也由卷积性质直接导出。</p>
 <p>本文围绕一条主线展开：<strong>卷积计算的难点不在积分本身，而在积分区间从哪里来</strong>。绝大多数习题卡住的原因，是无法把 $\int_{-\infty}^{+\infty}$ 化为有限定积分。本文给出的解法是把阶跃函数当作&quot;时间剪刀&quot;，由两个阶跃条件联立锁定区间，再套用四步法计算。</p>
@@ -239,7 +237,7 @@
 <ol><li><strong>奈奎斯特条件的不等号</strong>：原料表述为 $\omega_s&gt;2\omega_m$，教材与既有笔记多写作 $\omega_s\ge2\omega_m$。临界相等时两频谱恰好相接而不重叠，按&quot;大于等于&quot;理解更稳妥，本文统一采用 $\ge$。</li><li><strong>算例一与算例二的解析结果</strong>：均用数值积分在多个 $t$ 值上独立复算，与解析式偏差在 $10^{-4}$ 量级（积分步长所致），确认无误。</li><li><strong>逆卷积验证算例</strong>：由 $Y(s)/H(s)=1/s$ 反得 $f(t)=u(t)$，与算例二中阶跃响应的来源互相印证，自洽。</li><li><strong>尺度变换带宽结论</strong>：用 $\mathrm{sinc}$ 带限信号数值计算频谱，确认截止点落在 $3\omega_m$ 处，&quot;卷积后带宽取小&quot;的结论成立。</li></ol>
 <p>除上述不等号的宽严差异外，未发现原料存在算术或推导错误。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 信号与系统卷积与采样复习</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/signals-systems.html">← 返回 信号与系统</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

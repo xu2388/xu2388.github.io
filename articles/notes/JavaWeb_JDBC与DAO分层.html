@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>JavaWeb · JDBC 与 DAO 分层</h1>
 <div class="meta">课程笔记 · JavaWeb · 整理自豆包对话 豆包对话 · 数据库连接类型讲解 / JavaWeb 自学 / 带数据库的论坛系统部署方案 / Java 课程设计浏览器实现讲解 / 功能流程及工作流描述</div>
-<h1>JavaWeb · JDBC 与 DAO 分层</h1>
 <h2>一、概述：JDBC 在 B/S 架构中的位置</h2>
 <p>原料在讲 B/S 架构时给出了一条清晰的链路：浏览器通过 HTTP 访问 Web 服务器，Web 服务器内部的 Servlet、JSP 处理业务逻辑，再通过 JDBC 访问数据库服务器。原文的标注是「Web服务器 ←JDBC→ 数据库」，并把 JDBC 定义为「Java 程序连接数据库的技术」。这句话点出了 JDBC 的定位：它不负责页面、不负责业务规则，只负责让 Java 代码执行 SQL 并取回结果。</p>
 <p>从分层角度看，一次请求的路径是：</p>
@@ -425,11 +423,12 @@ Integer ageOrNull = rs.wasNull() ? null : age;</code></pre>
 <tr><td>异常怎么处理</td><td>回滚后向上抛，按 <code>SQLState</code> 转业务异常</td></tr>
 </table>
 <p>把这八行落实到代码，就是一个可维护的 JDBC 数据访问层；剩下的是参数调优与数据库特性适配，而不是另一套理论。</p>
+<p>需要补充的是，JDBC 只解决「Java 如何执行 SQL」，不解决「SQL 写得好不好」。索引是否命中、连接是否被长事务占住、锁的粒度是否过大，这些属于数据库设计与 SQL 优化，JDBC 层面只能观测与暴露，不能替代。把 <code>EXPLAIN</code> 的结果与慢查询日志纳入日常检查，比在 Java 代码里反复调整池参数更有效。</p>
 <h3>9.1 一条可执行的练习路径</h3>
 <p>先脱离 Web 容器，在 <code>main</code> 方法里跑通「建表 → 插入 → 查询 → 更新 → 删除」，确认驱动、连接串、字符集都正确。然后引入 <code>PreparedStatement</code>，用一段故意构造的注入输入对比 <code>Statement</code> 与占位符的结果差异，理解「数据与结构分离」不是口号。接着把连接获取抽到 <code>DataSource</code>，观察池的借出与归还；再用两个 DAO 方法模拟转账，故意在中间抛异常，验证 <code>rollback</code> 确实把两边都恢复。最后把这段代码搬进 Servlet 或 Controller，用浏览器触发，观察一次请求从 HTTP 到 SQL 的完整路径。</p>
-<p>每一步都只引入一个新变量：先证明「能连」，再证明「能防注入」，再证明「事务能回滚」，最后才谈分层。顺序反过来，一旦出错就很难判断是驱动、SQL、事务还是分层的问题。</p>
+<p>每一步都只引入一个新变量：先证明「能连」，再证明「能防注入」，再证明「事务能回滚」，最后才谈分层。顺序反过来，一旦出错就很难判断是驱动、SQL、事务还是分层的问题。练习时不要求一次写全，能把每一步的失败现象与原因对应起来，比背下 API 签名更具参考价值；能把失败复现出来，才算真正掌握。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 数据库连接类型讲解 / JavaWeb 自学 / 带数据库的论坛系统部署方案 / Java 课程设计浏览器实现讲解 / 功能流程及工作流描述</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/javaweb.html">← 返回 JavaWeb</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

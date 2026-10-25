@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>论文精读 · 科研与学习档案</title>
+<meta name="description" content="逐篇拆解的文献：方法、结构约束、评价口径与和本方向的关系。" />
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body class="hub">
+<header class="site-header">
+  <div class="container">
+    <div class="side-brand">
+      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
+      <div>
+        <h1 class="site-title">科研与学习档案</h1>
+        <p class="site-subtitle">Research &amp; Study Archive</p>
+      </div>
+    </div>
+    <nav class="site-nav"><a href="../index.html">首页</a><a class="active" href="../research.html">科研<span class="n">18</span></a><a href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+    
+  </div>
+</header>
+
+<main class="container">
+
+<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../research.html">科研</a> <span>/</span> 论文精读</nav>
+<header class="list-head">
+  <p class="eyebrow">READINGS</p>
+  <h1>论文精读</h1>
+  <p class="lede">逐篇拆解的文献：方法、结构约束、评价口径与和本方向的关系。　共 10 篇</p>
+</header>
+<ul class="article-list">
+<li><a href="../articles/011-DGR抗错位虚拟染色精读.html">DGR：面向错位鲁棒的虚拟染色——论文深度解读</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span><span class="desc">解读 DGR（Misalignment-Resistant Virtual Staining）如何用解耦与区域对齐放弃逐点对应，在配准误差下仍保持结构可判读，并讨论其对本项目结构控制路线的可借鉴之处。</span></li>
+<li><a href="../articles/012-StarDiff复原扩散精读.html">Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span><span class="desc">解读 Star-Diffusion 如何针对复染（special stains）设计扩散框架，梳理其结构约束与染色控制策略，并评估其思路在浓度域路线中的可移植性。</span></li>
+<li><a href="../articles/013-PSPStain语义保持精读.html">PSPStain：病理语义保持的虚拟染色——论文深度解读</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span><span class="desc">解读 PSPStain 如何以病理语义保持为核心目标组织训练与评价，覆盖其语义监督设计、数据策略与指标体系，作为语义可判读性路线的代表作分析。</span></li>
+<li><a href="../articles/014-PST-Diff结构约束精读.html">PST-Diff：病理结构约束的扩散染色——论文深度解读</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">H&amp;E→IHC</span><span class="desc">逐式解读 PST-Diff 如何把结构约束嵌入扩散采样：以条件频率引导（CFG）按频率分阶段注入 H&amp;E 结构、用不对称注意力分离结构与外观、以潜空间距离项约束配对，并讨论该路线在错位数据与结构-染色权衡上的边界与可借鉴之处。</span></li>
+<li><a href="../articles/017-病理潜扩散的条件注入连读.html">条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">条件注入</span> <span class="tag">潜空间</span><span class="desc">StainDiffuser 与 StainFuser 分别回答「条件从哪一层进入扩散模型」：前者在像素空间 DDPM 上以共享 H&amp;E 编码器加分割辅助分支，把目标细胞定位先验做成仅训练期生效的多任务约束（染色损失加 λ 倍分割损失）；后者在 Stable Diffusion 潜空间同时注入双条件——目标风格经 VAE 编码作交叉注意力的键值，源形态经零初始化卷积逐层加性嵌入。本文连读两篇，给出六维横向对照与数值核实清单（剔除三处不可采信项），并提出「注入位置决定推理输入、配对需求与语义上限」这一核心判断。</span></li>
+<li><a href="../articles/018-DiNof归一化流与扩散融合.html">DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">归一化流</span> <span class="tag">扩散模型</span> <span class="tag">流匹配</span> <span class="tag">生成模型</span><span class="desc">DiNof 把 SDE 型扩散与 Glow 类可逆归一化流串联成两段式生成过程：前向前半程随机加噪、后半程由归一化流确定性映射到高斯分布，采样因而只需约 600 步并在 CIFAR-10 上把 FID 从同架构纯扩散的 4.29 压到 2.01，同时保留精确似然的可算性。本文精读其分段机制、联合训练与 Tm 消融，把流/混合生成与纯扩散并列为两条路线，并评估其对虚拟染色少步采样与密度可算诉求的迁移价值。</span></li>
+<li><a href="../articles/019-DUST双染色扩散精读.html">DUST：双染色嵌入与动态双头扩散的统一染色转换 —— 论文精读</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">扩散模型</span> <span class="tag">组织病理学</span> <span class="tag">染色转换</span><span class="desc">把 H&amp;E、MT、PAS、PASM 四种肾病理染色的 12 个互转方向收进同一个 DDPM：源域与目标域用整数向量 r 双编码（源记 1、目标记 2）作为条件，输出头由 3 通道扩到 9 通道，同时预测噪声、原图与逐通道融合权重，再以三项 MSE（噪声、重建、后验均值）联合训练。概念验证循环 H&amp;E→MT→PASM→PAS→H&amp;E 上平均 FID 约 42、KID 约 0.02，优于 CycleGAN（H&amp;E→MT 为 54.03）与 Palette（87.35）。</span></li>
+<li><a href="../articles/020-UMDST多染色统一转换精读.html">UMDST：无监督多染色图像转换的统一框架 —— 论文精读</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">虚拟染色</span> <span class="tag">染色转换</span> <span class="tag">无监督</span> <span class="tag">肾脏病理</span><span class="desc">针对肾脏病理「每种染色对各建一个模型」的成本困境，UMDST（AAAI 2022）用单一非配对 GAN 同时支持 H&amp;E、MAS、PAS、PASM 四种染色之间的任意转换：风格引导归一化（SGN）以目标域风格仿射因子平衡内容与风格，多风格编码（MSE）把染色标签映射为可学习风格码，改进独热标签（δ=0.05）进一步解锁混合染色与对比度调节；ANHIR 数据集上 CSS 达 0.682 / 0.674 / 0.600（MAS / PAS / PASM），五位病理医生评分 ER=4.4（与 UGATIT 持平）。</span></li>
+<li><a href="../articles/021-VisionMamba状态空间骨干精读.html">Vision Mamba：把状态空间模型做成视觉骨干——线性复杂度与病理图像的适配性</a><span class="date">2026-10-25</span><span class="tag">论文精读</span> <span class="tag">状态空间模型</span> <span class="tag">Mamba</span> <span class="tag">视觉骨干</span> <span class="tag">病理图像</span><span class="desc">Vim 用选择性状态空间模型替代自注意力：连续 SSM 经零阶保持离散化成 h_t = exp(ΔA)h_{t-1} + ΔBx_t，其中 Δ、B、C 由当前 patch 特征线性生成，使状态的记住/遗忘随内容而变；再靠双向扫描 + 每路前置 Conv1d 与 ViT 式分类头，把序列建模开销从 4MD² + 2M²D 降到 8MDN。论文报告 Vim-Ti 在 ImageNet-1K 达 76.1%、1248×1248 批推理比 DeiT 快 2.8 倍且省 86.8% 显存、ADE20K mIoU 41.0。对千兆像素级、patch 序列动辄上千万的 WSI 而言，这条线性路线直击病理大模型的实际瓶颈。</span></li>
+<li><a href="../articles/010-虚拟染色精读.html">虚拟染色关键工作精读：语义保持、扩散与对比学习三条路线</a><span class="date">2026-10-24</span><span class="tag">虚拟染色</span> <span class="tag">论文精读</span> <span class="tag">PSPStain</span> <span class="tag">扩散模型</span> <span class="tag">对比学习</span><span class="desc">以 PSPStain、MisalignResistantVS（DGR）与 StainBridge 三篇工作为锚点，论证虚拟染色的核心矛盾并非生成逼真度而是语义可判读性，并指出语义保持、生成式解耦与对比/解耦三条路线在错位条件下共同收敛于&quot;放弃逐点对应、转向集合级约束&quot;这一方法论内核。</span></li>
+</ul>
+<div class="subj-foot"><a class="back-link" href="../index.html">← 返回首页</a></div>
+
+</main>
+
+<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>对比学习与 CUT：无配对染色翻译的结构保持 · 研究笔记</h1>
 <div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 048_对比学习思路.md</div>
-<h1>对比学习与 CUT：无配对染色翻译的结构保持 · 研究笔记</h1>
 <h2>一、研究背景与问题</h2>
 <p>虚拟染色（virtual staining）的目标是以计算方式把一张 H&amp;E 染色切片映射为对应的 IHC 染色切片，从而绕开抗体试剂成本、24–48 小时周转时间与连续切片带来的组织消耗。该任务的监督条件天然残缺：同一块组织的 H&amp;E 与 IHC 取自相邻切片，经过独立染色、独立扫描，二者既非同一物理切片，也无法做到像素级配准。因此主流方案把它建模为无配对图像翻译（unpaired image-to-image translation），而非像素回归。</p>
 <p>无配对翻译的核心矛盾在于&quot;内容保持&quot;如何定义。CycleGAN 一系以循环一致性约束双向映射，要求 $F(G(x))\approx x$、$G(F(y))\approx y$，等价于强制域间映射为双射。该约束在纹理迁移上有效，却几乎不允许物体几何形变，且为保证重建保真会牺牲生成多样性。CUT（Contrastive Unpaired Translation, ECCV 2020）给出另一条路径：放弃反向生成器与循环损失，改用块级对比学习（PatchNCE）在特征空间约束&quot;输入块与其生成结果对应块&quot;的互信息，约束粒度由全局像素降为局部语义块，因而同时容纳纹理变换与几何形变。</p>
@@ -65,7 +63,7 @@
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>正样本定义决定监督性质</strong>。同图异视图为正样本 → 自监督；生成块与 GT 同位置块为正样本 → 监督。后者精度更高，但把配准误差直接引入损失，必须配套自适应加权。</li><li><strong>负样本来源决定成本结构</strong>。图内负样本无需大 batch，也不引入外部负样本的粘连副作用，是病理小样本场景的务实选择。</li><li><strong>对比损失的适用边界应写进方法陈述</strong>。ASP 只保证结构保真，不约束染色质量；把它与 DAB 浓度损失混为一谈，会在方法描述上产生实质错误。</li><li><strong>物理量优于像素量</strong>。DAB-CF 在解混后的浓度通道上做 MSE，比在 RGB 上做 MSE 更不易被颜色漂移干扰，且与比尔-朗伯定律一致，可解释性更强。</li><li><strong>H&amp;E 与 IHC 的染料组分不对应</strong>。IHC 不含伊红，输出不应出现 H&amp;E 式粉红胞质；IHC 苏木素仅作浅复染，核应为淡灰蓝而非浓蓝紫。这条生物学事实同时可作为生成伪影的判据。</li><li><strong>膜结构属于&quot;待生成&quot;而非&quot;待保持&quot;</strong>。H&amp;E 中细胞膜不可见，高频膜边界不能由源图直接拷贝，只能由核排布推断，故高频约束应按 DAB 阳性区域加权，而非全图统一施加。</li><li><strong>监督与骨架可分离</strong>。同一组结构/浓度/边界监督既可置于渐进 GAN，也可置于 OD 域扩散；后者可省去分阶段冻结，但需处理辅助损失与扩散损失的梯度冲突。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/048_对比学习思路.html">048_对比学习思路.md</a></p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>区块链/分布式 · 学习 · 科研与学习档案</title>
+<meta name="description" content="区块链/分布式的全部笔记（3 篇）。" />
+<link rel="stylesheet" href="../assets/style.css" />
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body class="hub hub--study">
+<header class="site-header">
+  <div class="container">
+    <div class="side-brand">
+      <a class="side-avatar" href="../index.html" aria-label="回到首页">RS</a>
+      <div>
+        <h1 class="site-title">科研与学习档案</h1>
+        <p class="site-subtitle">Research &amp; Study Archive</p>
+      </div>
+    </div>
+    <nav class="site-nav"><a href="../index.html">首页</a><a href="../research.html">科研<span class="n">18</span></a><a class="active" href="../study.html">学习<span class="n">75</span></a><a href="../essays.html">随笔<span class="n">2</span></a><a href="../search.html">搜索</a></nav>
+<div class="side-foot"><a href="../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+    
+  </div>
+</header>
+
+<main class="container">
+
+<nav class="crumbs"><a href="../index.html">首页</a> <span>/</span> <a href="../study.html">学习</a> <span>/</span> 区块链/分布式</nav>
+<header class="subj-head">
+  <p class="eyebrow">系统与分布式</p>
+  <h1>区块链/分布式</h1>
+  <p class="lede">共识、账本与一致性 · 共 3 篇</p>
+</header>
+<ul class="article-list plain">
+<li><a href="../articles/notes/区块链_区块结构共识与篡改成本.html">区块链与比特币原理 · 区块结构、共识与篡改成本</a><span class="desc">区块头只有 80 字节，却通过默克尔根、父哈希、时间戳、难度目标与随机数把交易、历史与算力绑定在一起。本文拆解区块头字段与默克尔树，演算 Bits 到目标哈希的换算与难度定义，说明最长链规则与自然分叉的处理，推导落后 k 个区块被追上的赌徒破产概率，估算 51% 攻击的硬件与电力成本，并厘清难度调整、减半、2100 万上限与轻节点 SPV 的能力边界。</span></li><li><a href="../articles/notes/区块链与比特币原理.html">区块链与比特币原理 · 区块结构、哈希链接与脚本系统</a><span class="desc">以比特币为样本梳理区块链底层结构：区块头六个字段中的版本号、父区块哈希、默克尔根、时间戳、难度目标与 Nonce 各司其职，父哈希把区块逐个密码学绑定，改动任一历史区块都会使其后全部区块校验失败；默克尔树以交易哈希为叶子两两上推，支撑轻节点校验；UTXO 由锁定脚本与解锁脚本在栈式虚拟机中配对验证；工作量证明靠穷举 Nonce 使双重 SHA256 落入目标哈希，难度每 2016 块自动回调；四年减半由 21 万块乘以 10 分钟目标间隔推得，属理论近似。</span></li><li><a href="../articles/notes/区块链_比特币脚本与UTXO模型.html">区块链与比特币原理 · 比特币脚本与 UTXO 模型</a><span class="desc">比特币账本没有余额字段，只有一串未花费交易输出。本文从 UTXO 与账户模型的差别讲起，拆开交易的输入输出、找零与手续费计算，逐步演算 P2PKH 在栈式虚拟机中的执行过程，比较 P2PK、P2PKH、P2SH、多签与 CLTV/CSV 时间锁脚本的锁定条件，说明签名承诺范围 SIGHASH 的四种类型，并解释脚本为何刻意保持非图灵完备。</span></li>
+</ul>
+<div class="subj-foot">
+  <a class="back-link" href="../study.html">← 返回学习</a>
+</div>
+
+</main>
+
+<footer class="site-footer"><div class="container"><span>科研与学习档案 · 纯静态 · GitHub Pages</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

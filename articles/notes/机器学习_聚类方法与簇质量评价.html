@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>机器学习 · 聚类方法与簇质量评价</h1>
 <div class="meta">课程笔记 · 机器学习 · 整理自豆包对话 豆包对话 · 机器学习第9章聚类试卷 / 聚类章节考试模拟题与讲解 / 聚类算法讲解 / 解释高斯聚类 / 聚类方法性能对比 / 聚类方法对比实验结果 / 轴承故障无监督聚类检测报告</div>
-<h1>机器学习 · 聚类方法与簇质量评价</h1>
 <h2>一、概述：聚类与分类的任务差别</h2>
 <p>聚类的形式化描述（原料口径）：样本集 $D=\{x_1,\dots,x_m\}$，每个 $x_i$ 是 $n$ 维特征向量且<strong>不带类别标记</strong>；算法把 $D$ 划分为 $k$ 个互不相交的簇 $\{C_l\}$，满足 $C_{l&#x27;}\cap C_l=\varnothing\ (l&#x27;\neq l)$ 且 $D=\bigcup_{l=1}^{k}C_l$，结果是一个长度为 $m$ 的簇标记向量 $\lambda=(\lambda_1,\dots,\lambda_m)$。与分类的差别有两点：分类要学「样本 $\to$ 已知标记」的映射，类别预先定义；聚类不需标记，只揭示样本内在分布，<strong>簇对应的概念语义要由使用者事后命名，算法无法自动确定</strong>。这条分界线贯穿全文：评价聚类要么靠外部参考模型，要么靠簇自身几何。</p>
 <h2>二、距离与相似度度量</h2>
@@ -245,7 +243,7 @@
 </table>
 <p>全部方法都在同一目标上做工——簇内紧、簇间分，差别只在&quot;用什么代表簇&quot;（点、分布、密度连通区域、层次树）与&quot;用什么方式划分&quot;（硬指派、软概率、合并、扩张）；评价侧的分工是：内部指标只回答几何好不好看，外部指标才回答簇的语义对不对，0.6351 轮廓系数配 0.0531 ARI 就是混淆两者的代价。本文重跑四道算例并勘误六处，正是为了把&quot;参考答案&quot;与&quot;按公式可验证的事实&quot;分开。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 机器学习第9章聚类试卷 / 聚类章节考试模拟题与讲解 / 聚类算法讲解 / 解释高斯聚类 / 聚类方法性能对比 / 聚类方法对比实验结果 / 轴承故障无监督聚类检测报告</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/machine-learning.html">← 返回 机器学习</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

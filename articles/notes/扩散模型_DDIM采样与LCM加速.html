@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>深度学习 · DDIM 采样与 LCM 加速</h1>
 <div class="meta">学习笔记 · 深度学习/神经网络 · 整理自豆包对话 豆包对话 · DDIM 采样器实现与注释 / LCM-LoRA SDv1-5 加速插件介绍 / 比较不同扩散模型</div>
-<h1>深度学习 · DDIM 采样与 LCM 加速</h1>
 <h2>一、概述：慢在哪个环节</h2>
 <p>扩散模型的训练是一次前向加一次反向，成本与普通网络相当；慢的是推理。以 $T=1000$ 的 DDPM 为例，生成一张图要从纯噪声出发，依次调用一千次去噪网络。若再开启分类器无关引导，每次调用要跑条件与无条件两条分支，前向次数翻到两千。按单次前向十毫秒估算，一张 $512\times512$ 的图要二十秒，一张全切片切出一万个 patch 就要五十多小时。这个成本决定了扩散模型在病理这种「大图 + 多图」场景里能不能落地。</p>
 <p>加速有两条完全不同的思路。第一条是<strong>不改模型，只改采样器</strong>：DDIM 发现反向过程不必是马尔可夫链，只要保持边缘分布不变，就可以一次跨多步，把一千步压到五十步，模型权重一个都不用动。第二条是<strong>改模型，把多步能力蒸馏进少步</strong>：一致性模型与 LCM 训练一个网络，让它把任意时刻的带噪样本直接映射到终点，几步就能出图。两条思路可以叠加：先用 DDIM 把日常推理压到五十步，再用 LCM-LoRA 把批量任务压到四步。</p>
@@ -177,7 +175,7 @@
 </table>
 <p>把这一篇压成一句话：DDIM 用「同一族边缘分布」换来了跳步的自由，LCM 用「重新训练」换来了跨越整条轨迹的自由，两者的共同前提都是「网络已经学会了去噪」。这也解释了为什么加速不能无限做下去：当步数低到网络没有足够的机会去修正错误时，任何采样技巧都救不回来，只能靠蒸馏把「修正能力」提前编译进权重。而编译是有损的，损失的那部分，恰好是病理图像最看重的高频细节。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · DDIM 采样器实现与注释 / LCM-LoRA SDv1-5 加速插件介绍 / 比较不同扩散模型</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/deep-learning.html">← 返回 深度学习/神经网络</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

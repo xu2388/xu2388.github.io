@@ -1,32 +1,43 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-把全站左侧目录（.site-nav）统一成同一套，并按页面所在深度改写相对路径。
+"""统一全站左侧目录，并按页面所在深度改写相对路径。
 
-为什么需要：文章页在 articles/ 下，原来导航写的是 "#research" 这种锚点，
-在文章页里根本不存在对应元素，点了没反应。这个脚本按深度补 ../ 前缀。
+信息架构改成「首页 / 科研 / 学习 / 随笔 / 搜索」之后，文章页在 articles/ 下，
+导航必须按深度补 ../ 前缀，且要根据页面所属板块高亮对应项。
 
 幂等：可以反复运行。
 用法：python3 fix_nav.py
 """
 import os
 import re
+import json
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SKIP_DIRS = {".git", "raw_exports", "node_modules", ".github"}
 
-# (显示名, 相对站点的路径)
+# (显示名, 相对站点的路径, 计数键)
 NAV = [
-    ("首页", "index.html"),
-    ("科研", "index.html#research"),
-    ("学习", "index.html#learning"),
-    ("随笔", "index.html#essays"),
-    ("关于", "index.html#about"),
+    ("首页", "index.html", None),
+    ("科研", "research.html", "research"),
+    ("学习", "study.html", "study"),
+    ("随笔", "essays.html", "essays"),
+    ("搜索", "search.html", None),
 ]
 
-# 列表页 → 当前应高亮的导航项
-LIST_GROUP = {"research": "科研", "papers": "科研", "notes": "学习", "courses": "学习",
-              "kb": "学习", "essays": "随笔"}
+# articles/list-*.html → 所属板块
+LIST_GROUP = {
+    "research": "科研", "readings": "科研", "research-notes": "科研",
+    "survey": "科研", "papers": "科研", "archive": "科研",
+    "tutorials": "学习", "notes": "学习", "courses": "学习", "kb": "学习",
+    "essays": "随笔",
+}
+
+# 文章分类 → 所属板块
+CATEGORY_GROUP = {
+    "研究": "科研", "调研": "科研", "论文": "科研", "资料库": "科研",
+    "学习笔记": "学习", "课程笔记": "学习", "知识库": "学习",
+    "随笔": "随笔",
+}
 
 THEME_INIT = ('<script id="theme-init">try{var t=localStorage.getItem("theme");'
               'if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";'
@@ -34,19 +45,15 @@ THEME_INIT = ('<script id="theme-init">try{var t=localStorage.getItem("theme");'
 
 NAV_RE = re.compile(r'<nav class="site-nav">.*?</nav>', re.DOTALL)
 TITLE_RE = re.compile(r'<h1 class="site-title">.*?</h1>', re.DOTALL)
-SITE_TITLE = "我的个人博客"
-
-
-LIST_FILE = {"研究文章": "list-research.html", "学习笔记": "list-notes.html", "课程笔记": "list-courses.html",
-             "随笔": "list-essays.html", "知识库": "list-kb.html", "论文分享屋": "list-papers.html",
-             "资料库": "list-archive.html"}
+SUB_RE = re.compile(r'<p class="site-subtitle">.*?</p>', re.DOTALL)
+META_RE = re.compile(r'<script id="meta" type="application/json">(.*?)</script>', re.DOTALL)
+SITE_TITLE = "科研与学习档案"
+SITE_SUB = "Research &amp; Study Archive"
 
 
 def _load_counts():
-    import json
-    path = os.path.join(ROOT, "data", "nav_counts.json")
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(os.path.join(ROOT, "data", "nav_counts.json"), encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -55,21 +62,13 @@ def _load_counts():
 def build_nav(prefix, active=None):
     counts = _load_counts()
     parts = []
-    for label, path in NAV:
+    for label, path, key in NAV:
         badge = ""
-        if "#" in path:
-            gid = path.split("#")[1]
-            n = counts.get(gid)
-            if n:
-                badge = '<span class="n">%d</span>' % n
-        # 在某个栏目的归档页上，当前栏目直接指向归档页本身，而不是首页锚点
-        if active and label == active and label in LIST_FILE:
-            href = prefix + "articles/" + LIST_FILE[label]
-            parts.append('<a class="active" href="%s">%s%s</a>' % (href, label, badge))
-            continue
-        href = prefix + path
-        cls = ' class="active"' if active and label == active else ""
-        parts.append('<a%s href="%s">%s%s</a>' % (cls, href, label, badge))
+        n = counts.get(key) if key else None
+        if n:
+            badge = '<span class="n">%d</span>' % n
+        cls = ' class="active"' if active == label else ""
+        parts.append('<a%s href="%s%s">%s%s</a>' % (cls, prefix, path, label, badge))
     return '<nav class="site-nav">%s</nav>' % "".join(parts)
 
 
@@ -80,6 +79,52 @@ def build_foot(prefix):
         '<span class="fine">纯静态 · GitHub Pages</span>'
         '</div>' % prefix
     )
+
+
+def active_for(relpath, text):
+    """按页面相对路径判断当前板块。"""
+    parts = relpath.split(os.sep)
+    depth = len(parts) - 1
+    fn = parts[-1]
+
+    if depth == 0:
+        return {
+            "index.html": "首页", "research.html": "科研", "study.html": "学习",
+            "essays.html": "随笔", "search.html": "搜索",
+        }.get(fn)
+
+    if depth == 1 and parts[0] == "study":
+        return "学习"
+
+    m = re.match(r"list-([a-z-]+)\.html$", fn)
+    if m:
+        return LIST_GROUP.get(m.group(1))
+
+    if depth == 1 and parts[0] == "articles":
+        meta = META_RE.search(text)
+        if meta:
+            try:
+                cat = json.loads(meta.group(1)).get("category", "")
+            except Exception:
+                cat = ""
+            if cat in CATEGORY_GROUP:
+                return CATEGORY_GROUP[cat]
+
+    if depth >= 2 and parts[0] == "articles":
+        if parts[1] == "notes":
+            meta = META_RE.search(text)
+            if meta:
+                try:
+                    cat = json.loads(meta.group(1)).get("category", "")
+                except Exception:
+                    cat = ""
+                if cat == "研究":
+                    return "科研"
+            return "学习"
+        if parts[1] in ("kb", "kb-doubao"):
+            return "学习"
+
+    return None
 
 
 def main():
@@ -99,17 +144,13 @@ def main():
                 text = f.read()
             if not NAV_RE.search(text):
                 continue
-            # 列表页按文件名高亮当前栏目（不依赖页面里已有的 class）
-            active = None
-            m = re.match(r"list-([a-z]+)\.html$", fn)
-            if m:
-                active = LIST_GROUP.get(m.group(1))
-            elif depth == 0 and fn == "index.html":
-                active = "首页"
+            active = active_for(os.path.relpath(path, ROOT), text)
             # 先清掉旧的侧栏页脚，保证幂等
             text = re.sub(r'<div class="side-foot">.*?</div>', "", text, flags=re.DOTALL)
-            # 统一站名（各页原来叫「科研博客 · 知识库」等，不统一）
+            # 统一站名
             text = TITLE_RE.sub('<h1 class="site-title">%s</h1>' % SITE_TITLE, text, count=1)
+            # 侧栏副标题各页原本各不相同，统一成站名下方的一行英文
+            text = SUB_RE.sub('<p class="site-subtitle">%s</p>' % SITE_SUB, text, count=1)
             # 确保 <head> 里有主题预置脚本（避免暗色用户首帧闪白）
             if 'id="theme-init"' not in text:
                 text = text.replace("</head>", THEME_INIT + "\n</head>", 1)

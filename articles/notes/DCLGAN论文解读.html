@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>DCLGAN（双对比学习无配对翻译）· 论文解读</h1>
 <div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 003_DCLGAN论文解读，现在已经不看了.md</div>
-<h1>DCLGAN（双对比学习无配对翻译）· 论文解读</h1>
 <h2>一、研究背景与问题</h2>
 <p>论文《Dual Contrastive Learning for Unsupervised Image-to-Image Translation》发表于 CVPR 2021 Workshop，作者来自澳大利亚联邦科学与工业研究组织 DATA61 与澳大利亚国立大学。模型命名为 DCLGAN（Dual Contrastive Learning GAN），并附一带变体 SimDCL，任务为无配对无监督图像翻译。</p>
 <p>该工作的问题意识来自对两条技术路线的批评。</p>
@@ -61,7 +59,7 @@
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>约束粒度决定能力边界</strong>。全局像素级循环约束保证可逆性，代价是禁止形变；局部块级对比约束只要求语义块对应，因而容纳形变。选择哪一种，取决于任务是否需要改变几何结构。</li><li><strong>&quot;解耦&quot;一词需限定层级</strong>。DCLGAN 解耦的是两个域的特征提取器，而非单图的内容与风格。写作时若混用 MUNIT 式表述，会造成方法定位错误。</li><li><strong>共享编码器的适用条件</strong>。当两域差异有限（如不同染色强度）时共享参数可提供正则；当两域差异巨大（照片↔标签、H&amp;E↔IHC）时，共享嵌入会成为瓶颈，独立编码器更稳。</li><li><strong>投影头不是可有可无的细节</strong>。对比学习作用于投影后的嵌入空间而非编码器原始输出，这一层可学习变换直接决定正负样本的可分性。</li><li><strong>底层像素层应剔除</strong>。$1\times1$ RGB 层携带的噪声大于信息，纳入对比会拖慢收敛；这一结论对任何以特征块为单位的对比损失都具参考价值。</li><li><strong>模式崩溃可由分布层面的损失缓解</strong>。SimDCL 的域内 L1 相似约束本质上是在要求生成分布覆盖真实分布，思路可迁移至扩散模型的多样性诊断。</li><li><strong>对本课题的迁移价值</strong>。若在病理 H&amp;E→IHC 中沿用双编码器思路，可把 X 域嵌入用于提取 H&amp;E 的组织形态、Y 域嵌入用于提取 IHC 的染色与蛋白表达；但需注意 DCLGAN 的 PatchNCE 只保证结构与纹理对应，不约束染料浓度，染色正确性仍须由光密度域的浓度监督补足。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/003_DCLGAN论文解读，现在已经不看了.html">003_DCLGAN论文解读，现在已经不看了.md</a></p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

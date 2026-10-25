@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>Linux 本地存储管理 · 分区、LVM、文件系统与挂载</h1>
 <div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · Linux本地存储管理知识点总结</div>
-<h1>Linux 本地存储管理 · 分区、LVM、文件系统与挂载</h1>
 <h2>一、概述</h2>
 <p>本文是 Linux 本地存储管理课程的系统笔记。存储管理是 Linux 运维中最成体系的一条操作链：</p>
 <pre><code>物理磁盘 → 分区（MBR/GPT） → PV → VG → LV → 格式化（mkfs） → 挂载（mount/fstab） → 权限与配额（chmod/quota） → 备份（tar/dd/crontab）</code></pre>
@@ -275,7 +273,7 @@ repquota -augv             # 全文件系统配额汇总</code></pre>
 <h2>十二、总结要点</h2>
 <p>存储管理知识链可以压缩为四句话。<strong>分区层</strong>：MBR 首扇区 446+64+2 的结构决定 4 个主分区上限，GPT 以备份分区表和 LBA 寻址突破限制；fdisk 对 MBR、gdisk 对 GPT、parted 通用。<strong>卷管理层</strong>：PV→VG→LV 三层加默认 4 MB 的 PE 是在线扩缩容的基础，扩容两条命令 <code>lvextend</code> 与 <code>resize2fs</code> 缺一不可，缩容则须卸载在先、文件系统先缩。<strong>挂载层</strong>：手动 mount/umount，开机靠 fstab 六字段并以 <code>mount -a</code> 当场验证，busy 时 <code>fuser -ck</code> 解占用；查看容量 df 管分区、du 管目录。<strong>权限与运维层</strong>：八进制与符号两套写法分别对应 chmod 与整体赋值、增量调整，chown 管归属，umask 决定新对象默认权限但减法有边界、以按位取反为准；quota 以「软告警、硬封顶、宽限 7 天」约束用量；备份链条上 tar 打包压缩、cp -a 保属性、dd 到扇区、crontab 定时驱动脚本，构成日常运维的完整闭环。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · Linux本地存储管理知识点总结</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

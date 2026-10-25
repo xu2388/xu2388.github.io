@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>算法与数据结构 · 学习笔记</h1>
 <div class="meta">课程笔记 · 数据结构与算法 · 整理自豆包对话 017_算法.md</div>
-<h1>算法与数据结构 · 学习笔记</h1>
 <h2>一、概述</h2>
 <p>本笔记围绕四组相互关联的内容展开：<strong>堆与优先队列</strong>（结构、复杂度、C++ 实现）、<strong>平衡二叉树的旋转判据</strong>（平衡因子与高度）、<strong>二分查找的区间不变式</strong>（三种写法与边界技巧）、<strong>动态规划的状态设计</strong>（0-1 背包的暴力搜索、二维 DP 与一维滚动数组）。</p>
 <p>四者的共同主题是&quot;用结构约束换取操作效率&quot;：堆用完全二叉树的偏序约束把取最值降为 $O(1)$、把插入删除降为 $O(\log n)$；AVL 树用平衡因子约束把查找稳定在 $O(\log n)$；二分查找用有序性把查找降为 $O(\log n)$；动态规划用状态定义消除重叠子问题，把指数级搜索降为多项式时间。</p>
@@ -172,7 +170,7 @@ for (int i = 0; i &lt; n; ++i)
 <h2>四、小结</h2>
 <p>堆以完全二叉树的数组表示实现 $O(1)$ 取最值、$O(\log n)$ 插入删除、$O(n)$ 建堆，是优先队列的首选实现；<code>priority_queue</code> 通过三个模板参数把元素类型、底层容器、比较规则暴露给使用者。AVL 树以平衡因子为判据，通过四种旋转维持 $O(\log n)$ 的高度。二分查找的关键不在背代码，而在保持&quot;区间定义—循环条件—边界更新&quot;三者自洽。0-1 背包则展示了从指数级搜索到二维 DP、再到一维滚动数组的完整优化链条，倒序遍历是保证&quot;每件物品仅用一次&quot;的核心。</p>
 <p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/017_算法.html">017_算法.md</a></p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/data-structures.html">← 返回 数据结构与算法</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

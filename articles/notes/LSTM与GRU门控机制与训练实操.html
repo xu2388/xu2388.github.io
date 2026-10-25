@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>LSTM 与 GRU 的门控机制、BPTT 与梯度裁剪 · 学习笔记</h1>
 <div class="meta">课程笔记 · 深度学习/神经网络 · 整理自豆包对话 豆包对话 · RNN、GRU、LSTM经典代码GitHub地址</div>
-<h1>LSTM 与 GRU 的门控机制、BPTT 与梯度裁剪 · 学习笔记</h1>
 <h2>一、概述</h2>
 <p>本博客已有《循环神经网络语言模型（RNN-LM）》一文处理解言建模、Seq2Seq 与解码策略；本文不重复那部分内容，而是把焦点收在<strong>循环单元自身的结构与训练实操</strong>上：LSTM 与 GRU 内部的门控公式、细胞状态为何能缓解梯度消失、沿时间反向传播（BPTT）中梯度如何累加与衰减，以及梯度裁剪的用法与局限。</p>
 <p>原料来自课程学习与复现过程中的一系列问答对话，涉及第 6 章四个循环网络实验（基础 RNN 记忆实验、梯度爆炸实验、LSTM 记忆对比实验、双向 LSTM 文本分类）、GRU 与 LSTM 的结构对照，以及笔者自己动手训练的字符级与 token 级 LSTM 语言模型日志。所有公式、超参数与训练数值均取自原料，原料未给出的一律不补；原料自身存在矛盾之处（如日志中的学习率）按可自证的一侧记录并说明。</p>
@@ -110,7 +108,7 @@ optimizer.step()</code></pre>
 <h2>九、总结要点</h2>
 <ol><li>LSTM 用拼接输入分四路算出 $f_t,i_t,\tilde{c}_t,o_t$，再以 $c_t=f_t\odot c_{t-1}+i_t\odot\tilde{c}_t$、$h_t=o_t\odot\tanh(c_t)$ 完成更新；$\odot$ 的逐元素性质决定了门控是逐维度的比例控制。</li><li>细胞状态的加法通路使梯度回传主要乘以遗忘门而非反复矩阵连乘，从结构上缓解梯度消失；朴素 RNN 的消失/爆炸分界取决于循环权重 $W$ 的特征值。</li><li>GRU 以更新门绑定新旧记忆、以重置门调节历史依赖、去掉输出门与独立细胞状态，参数约省 1/3，适合小数据快速基线，LSTM 在长窗口场景上限更高。</li><li>BPTT 的本质是共享权重下各时间步梯度的累加：$T=3$ 的例子里 $V$ 的梯度是三项直接贡献之和，$W$ 的梯度则含层层回传的三项，连乘次数随序列长度线性增长。</li><li><code>clip_grad_norm_</code> 按范数上限等比缩放梯度，只治爆炸不治消失；实操中需配合梯度范数监控、教师强制、dropout、早停与困惑度/bpc 评估。</li><li>实测日志说明结构层面的改进不自动等于好结果：学习率调度缺陷、过大词表与过拟合仍会使门控模型的实际产出严重劣化，训练记录的每个数值都应回看核对。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · RNN、GRU、LSTM经典代码GitHub地址</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/deep-learning.html">← 返回 深度学习/神经网络</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

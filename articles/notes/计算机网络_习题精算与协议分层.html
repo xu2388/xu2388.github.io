@@ -12,11 +12,10 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>计算机网络 · 子网划分、滑动窗口与协议分层精算</h1>
@@ -303,7 +302,7 @@
 <h2>十三、小结</h2>
 <ol><li>时延类计算的全部难度都压在口径上：$t_s$ 随数据量与带宽变，$t_p$ 只随距离与传播速率变，$N$ 与 $k$ 决定流水线重叠多少，$2^{m}-2$ 里的两个 2 各减掉网络地址与广播地址，而旧规则还会在子网数上再减一次。把每个数的单位与来源写清，错处基本都能自查出来。</li><li>通用式 $T=(N+k-1)t_s+k\,t_p$ 对电路交换退化为「一次发送加全程传播」，对报文交换退化为「$k$ 次整报文发送」，三者同表并列后，切分单位的收益一目了然。</li><li>差错控制层面，CRC 长除只能逐步异或验证，余数位数必须补满 $r$ 位；奇偶校验只数 1 的个数；两者都不能纠错，能纠一位错的是海明码，冗余位由 $2^{r}\ge k+r+1$ 定。</li><li>窗口与拥塞层面，序号上界来自重叠反例而非经验，TCP 可用字节数是「取小再减在途量」，SYN 与 FIN 各占一个序号；慢开始与拥塞避免的边界是 $\text{ssthresh}$，超时与三重复确认的差别只在「归 1」还是「折半起步」。</li><li>方法论：凡参数不全的题目，只写方法与所需输入，不补典型值；凡与定义复核不符的得数，保留原值并并列差异原因，这比直接抄一个「正确答案」更有复用价值。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：课程整理笔记中的计算型考点，逐条按定义复核后重述</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/network.html">← 返回 计算机网络</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

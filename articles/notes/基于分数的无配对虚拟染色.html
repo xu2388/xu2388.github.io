@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>基于分数的无配对虚拟组织学染色 · 方法梳理</h1>
 <div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 060_基于分数的无配对虚拟组织学染色模型.md</div>
-<h1>基于分数的无配对虚拟组织学染色 · 方法梳理</h1>
 <h2>一、研究背景与问题</h2>
 <p>论文《Score-based Diffusion Model for Unpaired Virtual Histology Staining》（Anran Liu、Xiaofei Wang、Jing Cai、Chao Li 等；香港理工大学医疗科技及资讯学系、剑桥大学临床神经科学系、邓迪大学、剑桥应用数学与理论物理系；arXiv:2506.23184v1，2025 年 6 月 29 日）提出模型 MIU-Diff，任务是 H&amp;E→IHC 的无配对虚拟染色。</p>
 <p>临床动因明确：H&amp;E 染色可视化组织形态，但对诊断标志物缺乏特异性；IHC 提供蛋白靶向染色，却受组织可得性与抗体特异性限制。虚拟染色以计算方式把 H&amp;E 图像翻译为对应 IHC 图像并保持组织结构，是高效生成 IHC 的可行途径。</p>
@@ -69,7 +67,7 @@
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>解耦存在层级差异，写作须限定</strong>。显式解耦（网络拆为 content/style 双分支）与隐式解耦（以损失或能量函数约束表征）在实现、可解释性与可复现性上完全不同，不可笼统称为&quot;解耦扩散&quot;。</li><li><strong>能量引导是&quot;不改主干&quot;的约束接口</strong>。把任务约束写成能量项并取其负梯度加入采样分数，可在冻结预训练模型的前提下注入领域知识，代价是每步额外的梯度开销。</li><li><strong>互信息可作为解耦的可微准则</strong>。以 $I(s;c)$ 最小化替代&quot;两支特征正交&quot;的手工约束，理论上更贴近&quot;信息不重叠&quot;的本意；但估计质量决定实际效果。</li><li><strong>时间步是可控性的天然旋钮</strong>。扩散的分阶段特性使&quot;早期定结构、后期定表观&quot;成为可实现的控制策略，无需额外的条件分支。</li><li><strong>非对齐数据的结构约束应作用于局部语义而非像素</strong>。局部 MI 对比与自适应加权 PatchNCE 是同一问题的两种解法，前者放宽配对假设，后者保留配对但降权。</li><li><strong>无配对是该方法相对显式双分支方案的主要优势</strong>。StainBridge、StainDiffuser 均依赖配对数据，而临床中严格配对的 H&amp;E–IHC 极难获取，这一差异在方法选型时权重很高。</li><li><strong>对本课题的启示</strong>：若拟在扩散框架内做&quot;结构—蛋白&quot;解耦，可借鉴其&quot;全局约束管分离、局部约束管对应&quot;的双层结构；但若目标是把染色侧表征落到可解释的物理量（如 DAB 浓度场），仍需在能量项中引入光密度域约束，因为互信息只能保证&quot;分离&quot;，不能保证&quot;符合比尔-朗伯显色规律&quot;。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/060_基于分数的无配对虚拟组织学染色模型.html">060_基于分数的无配对虚拟组织学染色模型.md</a></p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

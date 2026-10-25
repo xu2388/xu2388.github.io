@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>数字图像处理 · 小波变换与多尺度分析</h1>
 <div class="meta">课程笔记 · 数字图像处理 · 整理自豆包对话 豆包对话 · 基于小波卷积的医学图像分割模型对比实验报告</div>
-<h1>数字图像处理 · 小波变换与多尺度分析</h1>
 <h2>一、概述：傅里叶之后为什么还要小波</h2>
 <p>傅里叶变换把信号拆成一组全局的正弦波，回答「有哪些频率、各占多强」，却不回答「这个频率在什么时候出现」。对平稳信号这足够了；对图像这种处处有突变、边缘只占少数像素的信号，全局频谱把一条边缘的能量摊到所有频率上，位置信息被积分掉。短时傅里叶变换（STFT）加窗找回局部性，但窗宽固定：窗窄则时间分辨率高、频率分辨率低，窗宽则相反，而且这个取舍对所有频率一视同仁。小波变换让窗宽随频率变化——高频用窄窗、低频用宽窗——从而在同一个变换里兼顾「哪里」与「多快」。</p>
 <p>本文的写作口径需要先说明：原料中关于小波的唯一材料是一份医学图像分割实验报告，它给出了小波卷积的工程细节与实验数字，但没有小波数学推导。因此第二至七节的公式、定义与算例按数字图像处理通行教材口径整理（连续小波、多分辨率分析、Mallat 快速算法、Haar 变换、阈值去噪），第八节的实验数据来自原料报告，第九节讨论与金字塔、UNet 的关系。凡原料数值与复算不符之处，在第十节集中勘误。</p>
@@ -282,7 +280,7 @@
 <p>Haar 的 4 点算例说明分解只是换基：$[4,6,10,12]\to[16,-6,-1.4142,-1.4142]$，能量 296 不变，重构逐点还原。二维可分离变换把图像拆成 LL、LH、HL、HH 四个子带，$4\times4$ 斜坡图的算例给出 $HH=0$、$LH=-2$、$HL=-4$，直观展示「线性结构被压缩成常数」。阈值去噪利用稀疏性，在系数域杀小留大，硬阈值保幅、软阈值保连续，通用阈值 $T=\sigma\sqrt{2\ln N}$ 给出一个可复现的起点。</p>
 <p>小波卷积把 DWT/IDWT 塞进分割网络，用可逆下采样换掉池化，用子带卷积换更大的有效感受野。实验报告显示它在充分微调后带来约 0.6 个百分点的 Dice 提升、参数量几乎不变，但收敛慢、对插入方式敏感，且小数据上的优势需要更多重复实验支撑。把这条工程线索放回经典框架，会发现它与高斯/拉普拉斯金字塔、UNet 的跳跃连接是同一件事的不同实现：都在回答「如何在缩小尺寸的同时，不丢掉边缘与位置」。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 基于小波卷积的医学图像分割模型对比实验报告</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/image-processing.html">← 返回 数字图像处理</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

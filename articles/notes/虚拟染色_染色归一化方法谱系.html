@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>虚拟染色 · 染色归一化方法谱系</h1>
 <div class="meta">学习笔记 · 虚拟染色/科研 · 整理自豆包对话 豆包对话 · 跨域医学组织学自适应染色归一化 / 染色归一化论文探讨 / 结构保留颜色归一化</div>
-<h1>虚拟染色 · 染色归一化方法谱系</h1>
 <h2>一、概述：归一化要解决的到底是什么</h2>
 <p>虚拟染色的输入端几乎总是 H&amp;E。同一块组织，在不同医院、不同染液批次、不同扫描仪下拍出来的 H&amp;E，颜色可以差到让病理医生一眼看出「这不是同一台机器拍的」。对这种差异，工程上有两条应对路线：一条是把颜色拉到统一基准，图像内容不变，称为染色归一化；另一条是直接换一种染色，称为虚拟染色。两条路线的物理前提相同，都在比尔-朗伯定律的框架内讨论颜色，但目标不同：归一化只改外观，虚拟染色要凭空补出源图里不存在的分子信息。</p>
 <p>归一化之所以值得单独成篇，是因为它同时扮演三个角色。第一，它是虚拟染色最便宜的基线：任何生成模型只要把输入先归一化到目标域，跨域指标往往就能涨一截。第二，它是结构条件的来源：染料浓度图与染色颜色解耦，浓度图只编码组织结构，天然适合当生成模型的空间约束。第三，它是评价虚拟染色时的干扰项：如果生成图与真值图的颜色差异主要来自染色批次，那么 FID、SSIM 这类指标测到的可能只是归一化的好坏，而不是生成能力。</p>
@@ -163,7 +161,7 @@
 </table>
 <p>把这条谱系压成一句话：所有方法都在估计同一个低秩结构 $V\approx SD^{\top}$，差别只在估计 $S$ 的手段（统计量、角度、稀疏非负、可学习展开）与使用 $S$ 的方式（替换、缩放、当条件）。手段越物理，对数据的假设越硬，失效时的表现也越可预测；手段越数据驱动，适应性越强，可解释性与可复现性越弱。选型的第一步不是比较指标，而是先回答：这批数据的颜色差异，主要来自染料、扫描仪，还是组织构成。三者对应的补丁完全不同。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 跨域医学组织学自适应染色归一化 / 染色归一化论文探讨 / 结构保留颜色归一化</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

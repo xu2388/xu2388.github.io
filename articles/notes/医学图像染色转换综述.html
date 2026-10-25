@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a class="active" href="../../research.html">科研<span class="n">18</span></a><a href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>医学图像染色转换 · 相关工作综述</h1>
 <div class="meta">研究 · 虚拟染色/科研 · 整理自豆包对话 034_医学图像染色转换相关研究工作.md</div>
-<h1>医学图像染色转换 · 相关工作综述</h1>
 <h2>一、研究背景与问题</h2>
 <p>免疫组化（IHC）在分子层面特异性显示蛋白表达，是肿瘤分型、分级与用药决策的依据；其流程涉及脱蜡、抗原修复、抗体孵育、显色等多步操作，耗时、耗材且消耗有限组织。虚拟染色以计算方式将 H&amp;E 映射为 IHC，使一次切片同时提供形态学与分子层面信息，因而成为计算病理的高关注方向。</p>
 <p>该任务的困难不在图像生成本身，而在<strong>监督信号的定义</strong>，可归纳为三重矛盾。</p>
@@ -107,7 +105,7 @@
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>以监督粒度作为综述的组织轴。</strong> 像素 → patch → 层 → 原型/浓度，这条轴同时刻画&quot;如何应对错位&quot;与&quot;如何逼近临床语义&quot;，比按网络类型分类更具解释力。</li><li><strong>对齐度的评估量必须与染色信号解耦。</strong> ASP 用生成 IHC 与真实 IHC 的特征相似度评估对齐，会被阳性强度污染；Li 2024 改用 H&amp;E 与连续 IHC 的 Pearson 相关，因 H&amp;E 不含 DAB 而更干净。该&quot;用什么量做可信度打分&quot;的选择可迁移至其他弱监督场景。</li><li><strong>域内关系约束优于跨域逐点约束。</strong> WPCC 匹配 IHC 内部 patch 的相对相似分布而非跨域特征距离，这类关系级约束对错位天然免疫，值得复用。</li><li><strong>外挂约束需正视目标冲突。</strong> CUT-GDC 以固定 $\lambda$ 平衡特征对比与像素梯度，未分析二者梯度可能相互抵消；若在自有方法中引入多类约束，冲突检测与调和是可主张的创新点。</li><li><strong>浓度域的价值在于线性化。</strong> TT-SaD 迁至 OD 是为把非线性逆问题变为线性以支持投影式一致性；该动机与&quot;在浓度域做生成&quot;不同，引用时须区分。</li><li><strong>文献编号需逐条核实。</strong> 已知错误：Jeong 2023 被误标为 arXiv:2505.10993（该号为综述），真实出处为 <em>Comput Biol Med</em> 152:106335；arXiv:2403.09302 实为 StainFuser；Li Yueheng 的 MICCAI 2024 论文曾被误记为 Jiahan Li、Yicong Li。此类错误在 related work 中代价极高，宜建立独立核对表。</li><li><strong>可主张的研究空位。</strong> 现有工作或止于归一化、或止于分类域适配、或以浓度损失作辅助正则，尚无&quot;仅对单染料通道做条件扩散、H/E 浓度保持干净、经比尔-朗伯回投重建 RGB&quot;的端到端解耦方案；该组合可作为方法主张的立足点，其成立与否可由最小基线实验先行判定。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：<a href="../kb-doubao/034_医学图像染色转换相关研究工作.html">034_医学图像染色转换相关研究工作.md</a></p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/research-notes.html">← 返回 虚拟染色/科研</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

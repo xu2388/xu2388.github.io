@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>操作系统/Linux · 远程连接与文件传输</h1>
 <div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · SFTP连接配置详解 / 远程控制桌面教程 / SSH 远程连接与 IPv6 排错 / 类似WinSCP软件开发难度 / 服务器用户操作手册</div>
-<h1>操作系统/Linux · 远程连接与文件传输</h1>
 <h2>一、概述：三种需求，一条链路</h2>
 <p>远程使用一台 Linux 主机，需求通常只有三类：要一个终端敲命令，要传文件，要一个图形桌面。三者的底层往往都是同一条 SSH 连接，区别在于上层跑的是 shell、sftp 子系统，还是被隧道转发的桌面协议。把这条链路看清楚，配置就不会散成一堆互不相干的技巧。</p>
 <p>本文不写任何真实地址。主机名统一用 <code>host</code> 或 <code>jump-host</code>，用户名用 <code>user</code>，端口用 <code>port</code> 或环境变量表示，本地目录统一写 <code>项目目录</code>，远端目录也写 <code>项目目录</code>。凡是要填写具体值的地方，都应由使用者按自己的环境替换，而不是从文章里抄一个看起来像真的地址。</p>
@@ -355,7 +353,7 @@ ssh -p &quot;$PORT&quot; user@host &quot;mv 项目目录/数据.csv.part 项目�
 </table>
 <p>远程连接的配置项很多，但判断标准只有三条：身份有没有被正确验证，数据有没有完整到达，暴露面有没有超出必要。把这三条套到密钥、传输与隧道上，具体选项就有了取舍依据；遇到报错时，也能先判断是「连不上」「进不去」还是「传不对」，而不是在配置文件里盲目改参数。</p>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · SFTP连接配置详解 / 远程控制桌面教程 / SSH 远程连接与 IPv6 排错 / 类似WinSCP软件开发难度 / 服务器用户操作手册</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

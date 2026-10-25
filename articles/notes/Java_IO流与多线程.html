@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>Java IO 流与多线程 · 学习笔记</h1>
 <div class="meta">课程笔记 · JavaWeb · 整理自豆包对话 豆包对话 · Java IO 操作题目答案与解析</div>
-<h1>Java IO 流与多线程 · 学习笔记</h1>
 <h2>一、概述</h2>
 <p>本文围绕 Java 核心语言的两条主线展开：其一为 <strong>IO 流体系</strong>，解决程序与外部世界（文件、内存、网络、控制台）之间的数据传输；其二为 <strong>多线程</strong>，解决单序执行流无法兼顾并发任务的问题。两条主线在「管道流用于线程间通信」「<code>synchronized</code> 与 <code>StringBuffer</code> 的线程安全」等处交汇。</p>
 <p>原始材料是本校一套课程作业与期末复习题的逐题解答，题量很大且大量以「选项—标准答案」形式堆叠。笔记已把题目本身剥离，仅抽取题目背后的知识点按逻辑重排，不复现题干、题号、选项与任何「答案对应关系」；涉及校名、人名处一律泛化。学习过程中几处易混淆点（如 <code>start()</code> 与 <code>run()</code>、同步方法的锁对象、字符数与字节数）在正文单列标注。</p>
@@ -229,7 +227,7 @@ pool.shutdown();                    // 不再接收新任务，待已提交任�
 <h2>五、总结要点</h2>
 <ol><li>IO 流按处理单元（字节 / 字符）、流向（输入 / 输出）、角色（节点 / 处理）三维分类；四个抽象基类是 <code>InputStream</code>、<code>OutputStream</code>、<code>Reader</code>、<code>Writer</code>。</li><li>节点流直连数据源，处理流包装节点流以增强；缓冲流靠减少设备交互次数提速，靠 <code>flush()</code> / <code>close()</code> 落盘；转换流 <code>InputStreamReader</code> / <code>OutputStreamWriter</code> 在指定字符集下打通字节与字符，是中文乱码的解法。</li><li><code>File</code> 只管路径不管内容；<code>SequenceInputStream</code> 顺序串联输入流；管道流用于线程间通信且不可同线程收发；<code>RandomAccessFile</code> 独立于流体系、靠指针随机读写，模式有 <code>r</code> / <code>rw</code> / <code>rws</code> 等；<code>PrintStream</code> 与 <code>System.setIn/setOut/setErr</code> 实现标准流重定向。</li><li>序列化靠 <code>Serializable</code>、<code>ObjectOutputStream.writeObject</code> / <code>ObjectInputStream.readObject</code>（返回 <code>Object</code> 需强转）；<code>transient</code> 跳过字段，<code>serialVersionUID</code> 标识版本，序列化不继承、同一对象靠句柄只存一份。</li><li>多线程两种创建方式中 <code>Runnable</code> 更解耦；务必 <code>start()</code> 非 <code>run()</code>；带返回值用 <code>Callable</code> + <code>FutureTask</code>，<code>get()</code> 阻塞取结果。</li><li>生命周期五态（新建 / 就绪 / 运行 / 阻塞 / 死亡）对应 JDK 的六枚举；<code>sleep</code> / <code>join</code> / <code>yield</code> / 优先级常量（<code>MIN</code>=1、<code>NORM</code>=5、<code>MAX</code>=10）控制调度，守护线程随前台线程耗尽而亡。</li><li><code>synchronized</code> 是线程安全核心：锁须共享同对象、读计算写整体入锁、同步方法锁 <code>this</code>；<code>wait</code> / <code>notify</code> / <code>notifyAll</code> 在同步区内通信；<code>sleep</code> / <code>yield</code> 不放锁，<code>wait</code> 放锁。线程池以复用线程降低开销，为通用补充。</li><li><code>StringBuffer</code> 因加锁线程安全而较慢，<code>StringBuilder</code> 无锁而快，单线程拼接优先后者。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · Java IO 操作题目答案与解析</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/javaweb.html">← 返回 JavaWeb</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>

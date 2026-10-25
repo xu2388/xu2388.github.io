@@ -6,6 +6,7 @@ frontmatter: title / subject / category(课程笔记|学习笔记|研究) / sour
 """
 import os, re, glob, html as htmlmod
 from build_knowledge_base import render_md
+from site_model import subject_slug
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 NOTES_DIR = os.path.join(ROOT, "notes")
@@ -56,7 +57,7 @@ PAGE = """<!DOCTYPE html>
 <div class="meta">{cat} · {subject} · 整理自豆包对话 {source}</div>
 {body}
 <p class="muted" style="margin-top:28px">原始对话：{source_links}</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/{slug}.html">← 返回 {subject}</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
@@ -97,10 +98,13 @@ def main():
         source = fm.get("source", "")
         summary = fm.get("summary", "")
         slug = os.path.splitext(os.path.basename(p))[0] + ".html"
+        # 正文开头的 "# 标题" 会和模板里的 <h1> 重复，去掉一行
+        body_md = re.sub(r"^\s*#\s+" + re.escape(title) + r"\s*\n+", "", body, count=1)
         page = PAGE.format(
             title=htmlmod.escape(title), title_json=esc_json(title),
             cat=cat, subject=subject, summary_json=esc_json(summary),
-            body=render_md(body), source=htmlmod.escape(source), source_links=source_links(source),
+            body=render_md(body_md), source=htmlmod.escape(source), source_links=source_links(source),
+            slug=subject_slug(subject),
         )
         open(os.path.join(OUT_DIR, slug), "w", encoding="utf-8").write(page)
         entries.append({"title": title, "slug": slug, "subject": subject, "cat": cat,

@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-科研博客索引生成器
+【已停用】科研博客索引生成器（旧版）
 
-做三件事：
-1. 扫描 articles/*.html，读取内嵌的 <script id="meta"> JSON 元数据；
-2. 为每个栏目生成独立的归档页 articles/list-<id>.html（完整列表）；
-3. 重建首页的文章区：每个栏目只放前 N 条 + 「全部 N 篇 →」链接，
-   并刷新首页的数据条（<!-- STATS_START --> ... <!-- STATS_END -->）。
-
-用法：python3 build_index.py
+信息架构重做后，首页 / 科研 / 学习 / 学科页 / 清单页 / 搜索索引统一由 build_site.py 生成。
+本文件仅作历史参考保留，直接运行只会打印提示并退出，不会改动任何页面。
 """
 import json
 import re
@@ -298,4 +293,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    print("build_index.py 已停用：首页、板块页与清单页现在由 build_site.py 生成。")
+    print("请运行：python3 build_site.py && python3 fix_nav.py")
+    raise SystemExit(0)

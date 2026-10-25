@@ -12,16 +12,14 @@
 </head>
 <body>
 <header class="site-header"><div class="container">
-<h1 class="site-title">我的个人博客</h1>
-<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
-<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">18</span></a><a href="../../index.html#learning">学习<span class="n">89</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<h1 class="site-title">科研与学习档案</h1>
+<p class="site-subtitle">Research &amp; Study Archive</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../research.html">科研<span class="n">18</span></a><a class="active" href="../../study.html">学习<span class="n">75</span></a><a href="../../essays.html">随笔<span class="n">2</span></a><a href="../../search.html">搜索</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
 </div></header>
 <article class="article">
 <h1>Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</h1>
 <div class="meta">课程笔记 · 深度学习/神经网络 · 整理自豆包对话 豆包对话 · 神经网络构成要素讲解</div>
-<h1>Transformer 组件详解 · FFN、掩码自注意力、交叉注意力与残差归一化</h1>
 <h2>一、概述</h2>
 <p>本笔记只做一件事：把 Transformer 拆成若干可以单独检验的组件，逐个给出公式、张量维度与执行次序。循环神经网络语言模型、Seq2Seq 编码器—解码器、注意力机制的历史动机与束搜索等解码策略已在《循环神经网络语言模型（RNN-LM）》一篇中展开，本文不再重复，只处理其内部构件。</p>
 <p>需要说明的是，本笔记所依据的材料是一次课程幻灯片的逐页讲解记录，幻灯片图像本身并不可得。因此凡属&quot;必须看图才讲得通&quot;的内容（图示连线、热力图、架构框图的空间排布），本文只用一句话概括结论，不补写图内细节；凡是 AI 回答中自足成立的公式、结构说明与配置数值，才完整收录。材料末尾关于课程报名、选题推荐与师生往来的部分与主题无关，一律不取。</p>
@@ -191,7 +189,7 @@ return y                            # 送线性层 + Softmax</code></pre>
 <h2>参考文献</h2>
 <ol><li>Vaswani A., Shazeer N., Parmar N., et al. Attention Is All You Need. NeurIPS 2017. 表 3 给出 Base 与 Big 两种配置的 $N$、$d_{model}$、$d_{ff}$、$h$、$d_k$ 与参数量。裸链接：https://arxiv.org/abs/1706.03762 ；会议版 PDF：https://papers.neurips.cc/paper/7181-attention-is-all-you-need.pdf</li><li>课程幻灯片《Components of Neural Networks / Feed-Forward Layer / Attention / Transformer》逐页讲解记录（豆包对话，193 条消息），本文公式、结构说明与配置数值均取自该记录的文字部分；幻灯片图像不可得，依赖图示的内容未予收录。</li></ol>
 <p class="muted" style="margin-top:28px">原始对话：豆包对话 · 神经网络构成要素讲解</p>
-<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+<a class="back-link" href="../study/deep-learning.html">← 返回 深度学习/神经网络</a>
 </article>
 <footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
