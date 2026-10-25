@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍</title>
+<meta name="description" content="DiNof 把 SDE 型扩散与 Glow 类可逆归一化流串联成两段式生成过程：前向前半程随机加噪、后半程由归一化流确定性映射到高斯分布，采样因而只需约 600 步并在 CIFAR-10 上把 FID 从同架构纯扩散的 4.29 压到 2.01，同时保留精确似然的可算性。本文精读其分段机制、联合训练与 Tm 消融，把流/混合生成与纯扩散并列为两条路线，并评估其对虚拟染色少步采样与密度可算诉求的迁移价值。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍","date":"2026-10-25","tags":["论文精读", "归一化流", "扩散模型", "流匹配", "生成模型"],"category":"研究","summary":"DiNof 把 SDE 型扩散与 Glow 类可逆归一化流串联成两段式生成过程：前向前半程随机加噪、后半程由归一化流确定性映射到高斯分布，采样因而只需约 600 步并在 CIFAR-10 上把 FID 从同架构纯扩散的 4.29 压到 2.01，同时保留精确似然的可算性。本文精读其分段机制、联合训练与 Tm 消融，把流/混合生成与纯扩散并列为两条路线，并评估其对虚拟染色少步采样与密度可算诉求的迁移价值。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>DiNof：归一化流与扩散的混合生成——采样效率与似然可算性的取舍</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 论文精读</div>
 <blockquote><strong>论文</strong>：<em>Diffusion Models with Deterministic Normalizing Flow Priors</em> <strong>作者</strong>：Mohsen Zand, Ali Etemad, Michael Greenspan <strong>发表</strong>：<strong>TMLR 2024</strong>；arXiv:2309.01274（v1 提交于 2023-09-03，v2 修订于 2025-03-23） <strong>代码</strong>：https://github.com/MohsenZand/DiNof <strong>方法名</strong>：<strong>DiNof</strong>（<strong>Di</strong>ffusion with <strong>N</strong>ormalizing flow <strong>p</strong>ri<strong>o</strong>r<strong>f</strong>rame<strong>w</strong>ork，带归一化流先验的扩散模型）</blockquote>
 <blockquote><strong>核实声明</strong>：本文写作时已逐项对照 arXiv:2309.01274v2 正文，核实了论文标题、作者、发表刊物、代码仓库，以及全部结构常数（$L=3$、$K=16$、隐藏通道 256、$\gamma=0.16/0.17$、$T_m=0.6$）与 FID/IS 数值（2.01、4.29、13.43、2.10、7.11、7.22、7.23、46.60 等）。原始对话中出现、但在论文里找不到对应出处的数字（例如「去噪步数可减至 50-200」「提速 5-20 倍」「纯归一化流 FID 大于 10」）一律不采用；涉及笔者自行推演的内容均以「笔者推测」显式标注。</blockquote>
 <hr />
@@ -133,7 +136,7 @@
 <h2>参考文献</h2>
 <ol><li>Zand M, Etemad A, Greenspan M. Diffusion Models with Deterministic Normalizing Flow Priors. <em>TMLR</em>, 2024. arXiv:2309.01274. https://arxiv.org/abs/2309.01274 （代码：https://github.com/MohsenZand/DiNof）</li><li>Zhang Q, Chen Y. Diffusion Normalizing Flow. <em>NeurIPS</em>, 2021. arXiv:2110.07579. https://arxiv.org/abs/2110.07579</li><li>Kingma D P, Dhariwal P. Glow: Generative Flow with Invertible 1x1 Convolutions. <em>NeurIPS</em>, 2018. arXiv:1807.03039. https://arxiv.org/abs/1807.03039</li><li>Song Y, Sohl-Dickstein J, Kingma D P, Kumar A, Ermon S, Poole B. Score-Based Generative Modeling through Stochastic Differential Equations. <em>ICLR</em>, 2021. arXiv:2011.13456. https://arxiv.org/abs/2011.13456</li><li>Vahdat A, Kreis K, Kautz J. Score-Based Generative Modeling in Latent Space. <em>NeurIPS</em>, 2021.（arXiv 编号本次未核实，故仅列刊物与标题）</li><li>Kim D, Na B, Kwon S J, Lee D, Kang W, Moon I-C. Maximum Likelihood Training of Implicit Nonlinear Diffusion Model. 2022.（编号与刊物以 DiNof 引文为准，本次未单独核实）</li><li>Ho J, Jain A, Abbeel P. Denoising Diffusion Probabilistic Models. <em>NeurIPS</em>, 2020.</li><li>Lipman Y, Chen R T Q, Ben-Hamu H, Nickel M, Le M. Flow Matching for Generative Modeling. <em>ICLR</em>, 2023. arXiv:2210.02747. https://arxiv.org/abs/2210.02747</li></ol>
 <p>（参考文献 1-4、7、8 的标题与作者均已对照 arXiv 页面核实；5、6 两条仅核实于 DiNof 论文引文列表，属二手来源，已作显著标注。）</p>
-<a class="back-link" href="list-research.html">← 返回研究文章</a>
+<a class="back-link" href="list-readings.html">← 返回论文精读</a>
 </article>
 <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>

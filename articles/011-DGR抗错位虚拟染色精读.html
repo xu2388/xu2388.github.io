@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DGR：面向错位鲁棒的虚拟染色——论文深度解读</title>
+<meta name="description" content="解读 DGR（Misalignment-Resistant Virtual Staining）如何用解耦与区域对齐放弃逐点对应，在配准误差下仍保持结构可判读，并讨论其对本项目结构控制路线的可借鉴之处。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"DGR：面向错位鲁棒的虚拟染色——论文深度解读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "H&E→IHC"],"category":"研究","summary":"解读 DGR（Misalignment-Resistant Virtual Staining）如何用解耦与区域对齐放弃逐点对应，在配准误差下仍保持结构可判读，并讨论其对本项目结构控制路线的可借鉴之处。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>DGR：面向错位鲁棒的虚拟染色——论文深度解读</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 论文精读</div>
 <blockquote><strong>论文</strong>：<em>Generative AI for Misalignment-Resistant Virtual Staining to Accelerate Histopathology Workflows</em> <strong>作者</strong>：Jiabo Ma†, Wenqiang Li†, Jinbang Li, Ziyi Liu, Linshan Wu, Fengtao Zhou, Li Liang, Ronald Cheong Kin Chan, Terence T. W. Wong, Hao Chen*（香港科技大学、南方医科大学南方医院、香港中文大学等） <strong>发表</strong>：arXiv:2509.14119v1 [cs.CV]，2025-09-17 <strong>代码</strong>：&lt;https://github.com/birkhoffkiki/DTR&gt; <strong>方法名</strong>：<strong>DGR</strong>（<strong>D</strong>ecoupled <strong>G</strong>eneration and <strong>R</strong>egistration，生成与配准解耦）</blockquote>
 <hr />
 <h2>0. 先澄清一个命名问题</h2>
@@ -312,7 +315,7 @@
 <ul><li><strong>论文</strong>：arXiv:2509.14119v1（2025-09-17）</li><li><strong>代码与权重</strong>：&lt;https://github.com/birkhoffkiki/DTR&gt;</li><li><strong>数据集</strong>：</li><li>HEMIT：&lt;https://github.com/BianChang/HEMIT-DATASET&gt;</li><li>A2H（StainNet）：&lt;https://github.com/khtao/StainNet&gt;</li><li>AF2HE：&lt;https://github.com/TABLAB-HKUST/U-Frame（可能需要申请）&gt;</li><li>HE2PAS-AB / HE2PAS-AB-EXT：来自香港威尔斯亲王医院，因隐私原因不公开，需联系通讯作者</li><li><strong>伦理审批</strong>：香港科技大学 HAREC，编号 HREP-2024-0212</li></ul>
 <hr />
 <p><em>本文为论文解读博客，所有图表均截取自原论文（arXiv:2509.14119）。</em></p>
-<a class="back-link" href="list-research.html">← 返回研究文章</a>
+<a class="back-link" href="list-readings.html">← 返回论文精读</a>
 </article>
 <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>

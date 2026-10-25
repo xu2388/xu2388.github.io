@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>从零实现浓度空间扩散基线 M0：H&amp;E→IHC 虚拟染色的最小可行实践</title>
+<meta name="description" content="本文给出 H&E→IHC 虚拟染色最小可行基线 M0 的完整实现方案：以比尔-朗伯定律将两模态解混为染料浓度，仅在 DAB 单通道上做 v-参数化条件扩散、H/E 浓度全程保持干净作为条件，经 DDIM 百步采样与物理回投重建 IHC；并配套四道工程闸门、三级 baseline 与 U0→U1→U2 条件消融判据，使\"浓度空间扩散能否工作\"成为可证伪的问题。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"从零实现浓度空间扩散基线 M0：H&E→IHC 虚拟染色的最小可行实践","date":"2026-10-25","tags":["虚拟染色", "扩散模型", "浓度域", "Beer-Lambert", "实践教程"],"category":"研究","summary":"本文给出 H&E→IHC 虚拟染色最小可行基线 M0 的完整实现方案：以比尔-朗伯定律将两模态解混为染料浓度，仅在 DAB 单通道上做 v-参数化条件扩散、H/E 浓度全程保持干净作为条件，经 DDIM 百步采样与物理回投重建 IHC；并配套四道工程闸门、三级 baseline 与 U0→U1→U2 条件消融判据，使\"浓度空间扩散能否工作\"成为可证伪的问题。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>从零实现浓度空间扩散基线 M0：H&amp;E→IHC 虚拟染色的最小可行实践</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 研究文章</div>
 <h2>摘要</h2>
 <p>虚拟染色的核心争议不在&quot;能否生成逼真的图像&quot;，而在&quot;生成对象应当定义在何种表示空间&quot;。本文记录最小可行基线 M0（Concentration-space Diffusion Baseline）的完整实现方案：以比尔-朗伯定律为物理基础，将 H&amp;E 与 IHC 分别解混为染料光学密度浓度；仅以 DAB 单通道作为扩散目标，H/E 浓度全程保持干净并作为条件；以 v-参数化训练一个小型 U-Net，经 DDIM 百步采样得到生成浓度，再经染色矩阵与指数衰减回投重建 IHC RGB。方案刻意排除了预训练潜空间、VAE、ControlNet 与一切辅助损失，目的是先回答一个可证伪的问题：浓度空间 DAB 扩散能否工作。本文同时给出四道工程闸门（重建自检、八项 sanity check、tiny-set 过拟合、条件增益检验）、三级 baseline 与 $U_0\to U_1\to U_2$ 条件消融链，以及条件复制与方差塌缩两项反退化诊断，供复现与批判。</p>
 <p><strong>关键词</strong>：虚拟染色；浓度域扩散；v-参数化；条件扩散；比尔-朗伯定律；最小可行基线</p>

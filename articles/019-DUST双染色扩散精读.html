@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DUST：双染色嵌入与动态双头扩散的统一染色转换 —— 论文精读</title>
+<meta name="description" content="把 H&E、MT、PAS、PASM 四种肾病理染色的 12 个互转方向收进同一个 DDPM：源域与目标域用整数向量 r 双编码（源记 1、目标记 2）作为条件，输出头由 3 通道扩到 9 通道，同时预测噪声、原图与逐通道融合权重，再以三项 MSE（噪声、重建、后验均值）联合训练。概念验证循环 H&E→MT→PASM→PAS→H&E 上平均 FID 约 42、KID 约 0.02，优于 CycleGAN（H&E→MT 为 54.03）与 Palette（87.35）。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"DUST：双染色嵌入与动态双头扩散的统一染色转换 —— 论文精读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "组织病理学", "染色转换"],"category":"研究","summary":"把 H&E、MT、PAS、PASM 四种肾病理染色的 12 个互转方向收进同一个 DDPM：源域与目标域用整数向量 r 双编码（源记 1、目标记 2）作为条件，输出头由 3 通道扩到 9 通道，同时预测噪声、原图与逐通道融合权重，再以三项 MSE（噪声、重建、后验均值）联合训练。概念验证循环 H&E→MT→PASM→PAS→H&E 上平均 FID 约 42、KID 约 0.02，优于 CycleGAN（H&E→MT 为 54.03）与 Palette（87.35）。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>DUST：双染色嵌入与动态双头扩散的统一染色转换 —— 论文精读</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 论文精读</div>
 <blockquote><strong>论文</strong>：<em>Versatile Stain Transfer in Histopathology Using a Unified Diffusion Framework</em> <strong>作者</strong>：Xudong Yan、Mingze Yuan、Yao Lu、Ying Zhang、Zifan Chen、Peng Bao、Zehua Li、Bin Dong、Li Yang、Li Zhang、Fangxu Zhou（北京大学、北京大学第一医院） <strong>发表</strong>：<strong>2025 IEEE 22nd International Symposium on Biomedical Imaging (ISBI)</strong>，pp. 1–5，DOI：10.1109/ISBI60581.2025.10980971（经 Crossref 核对，题名与作者一致） <strong>预印本</strong>：bioRxiv，DOI：10.1101/2024.11.23.624680，2024-11-23 发布（经 Crossref 核对） <strong>arXiv 编号</strong>：本文未检得该工作的 arXiv 版本，故不提供编号 <strong>官方代码</strong>：正文与参考文献均未给出开源地址；GitHub 检索亦未找到对应仓库，早前笔记记录的某仓库链接经访问返回 404，已弃用 <strong>方法名</strong>：<strong>DUST</strong>（<strong>D</strong>iffusion-based <strong>U</strong>nified framework for versatile <strong>S</strong>tain <strong>T</strong>ransfer）</blockquote>
 <hr />
 <h2>〇、一句话概括</h2>
@@ -186,7 +189,7 @@
 <tr><td>对话中 DDPM 进入定量对比、笔记中「LPIPS 降低 23%」</td><td>均不成立：DDPM 仅见于图 2 定性对比，原文未使用 LPIPS</td></tr>
 </table>
 <p><em>本文为论文精读。原文事实与数值均取自 ISBI 2025 正式版 PDF；标注「笔者判断」「本文推演」的段落属本文观点，不属于原论文结论。</em></p>
-<a class="back-link" href="list-research.html">← 返回研究文章</a>
+<a class="back-link" href="list-readings.html">← 返回论文精读</a>
 </article>
 <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>

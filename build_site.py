@@ -505,17 +505,6 @@ def main():
               "list-research-notes.html", "科研")
     page_list("教程", "从一个具体困惑出发，把机制讲到能自己推一遍。", tutorials,
               "list-tutorials.html", "学习")
-    page_list("学科笔记 · 全部",
-              "按学科归档的专业课笔记，一页看完；按学科浏览见「学习」页。",
-              sorted(course_notes, key=lambda n: (subject_sort_key(n["subject"]), n["title"])),
-              "list-courses.html", "学习")
-    page_list("随笔", "自己写的科普长文，讲本质，不堆术语。", essays, "list-essays.html", "随笔")
-    page_list("调研档案", "整批文献调研的原始档案。",
-              [a for a in arts if a["category"] == "调研"], "list-survey.html", "科研")
-    page_list("论文导读", "读过并留档的论文清单。",
-              [a for a in arts if a["category"] == "论文"], "list-papers.html", "科研")
-    page_list("学习笔记 · 教程", "从具体困惑出发的教程与整理。", tutorials,
-              "list-notes.html", "学习")
 
     # 搜索索引（.js 而不是 .json：双击本地文件打开也能用）
     idx = []

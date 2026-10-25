@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读</title>
+<meta name="description" content="StainDiffuser 与 StainFuser 分别回答「条件从哪一层进入扩散模型」：前者在像素空间 DDPM 上以共享 H&E 编码器加分割辅助分支，把目标细胞定位先验做成仅训练期生效的多任务约束（染色损失加 λ 倍分割损失）；后者在 Stable Diffusion 潜空间同时注入双条件——目标风格经 VAE 编码作交叉注意力的键值，源形态经零初始化卷积逐层加性嵌入。本文连读两篇，给出六维横向对照与数值核实清单（剔除三处不可采信项），并提出「注入位置决定推理输入、配对需求与语义上限」这一核心判断。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "条件注入", "潜空间"],"category":"研究","summary":"StainDiffuser 与 StainFuser 分别回答「条件从哪一层进入扩散模型」：前者在像素空间 DDPM 上以共享 H&E 编码器加分割辅助分支，把目标细胞定位先验做成仅训练期生效的多任务约束（染色损失加 λ 倍分割损失）；后者在 Stable Diffusion 潜空间同时注入双条件——目标风格经 VAE 编码作交叉注意力的键值，源形态经零初始化卷积逐层加性嵌入。本文连读两篇，给出六维横向对照与数值核实清单（剔除三处不可采信项），并提出「注入位置决定推理输入、配对需求与语义上限」这一核心判断。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>条件从哪里进去：StainDiffuser 与 StainFuser 的潜扩散条件注入连读</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 论文精读</div>
 <blockquote><strong>论文一</strong>：<em>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</em> <strong>作者</strong>：Tushar Kataria, Beatrice Knudsen, Shireen Y. Elhabian <strong>发表</strong>：arXiv 预印本，arXiv:2403.11340（v1 提交于 2024-03，v2 修订于 2025-05，eess.IV / cs.CV） <strong>任务</strong>：H&amp;E→IHC 虚拟染色（CD3、CK8/18 两种标志物），像素空间双分支 DDPM  <strong>论文二</strong>：<em>StainFuser: Controlling Diffusion for Faster Neural Style Transfer in Multi-Gigapixel Histology Images</em> <strong>作者</strong>：Robert Jewsbury, Ruoyu Wang, Abhir Bhalerao, Nasir Rajpoot, Quoc Dang Vu <strong>发表</strong>：arXiv 预印本，arXiv:2403.09302（v1 提交于 2024-03，v2 修订于 2024-07，eess.IV） <strong>代码</strong>：https://github.com/r-j96/stainfuser （已核对存在） <strong>任务</strong>：病理染色归一化（风格迁移），基于预训练 Stable Diffusion 的条件潜扩散  两篇的发表信息经 arXiv 摘要页逐条核对；StainFuser 在原料中曾被称为「MICCAI 2024」，该会议归属未能在核对页面确认，本文按 arXiv 预印本引用。</blockquote>
 <hr />
 <h2>一、为什么「条件注入位置」是虚拟染色扩散的核心分歧</h2>
@@ -120,7 +123,7 @@
 <p><strong>对笔者研究主线的直接启示</strong>：StainFuser 的双通路分工（统计型条件走注意力、对齐型条件走零卷积加性）是一套可以直接搬用的注入语法。把它接到 H&amp;E→IHC 上，一个具体的改造设想是：H&amp;E 的 H/E 浓度图走 ZeroConv 加性通路做结构锚，目标标志物的<strong>光密度统计量</strong>（而非参考图像）投影成序列走交叉注意力——条件的最后一环从「代理语义」换成「物理量」，正是对盲区一的正面回答。此为方案设想，非两篇论文内容。</p>
 <hr />
 <h2>六、局限与下一步</h2>
-<p><strong>本文的诚实边界。</strong> 本次连读以两条豆包对话为原料、以 arXiv v2 正文为核实基准；核实通过 web 抓取完成，未逐页复现论文表格与消融（如 StainFuser 论文正文口径下 NST 对比的完整计时表），第五、六节的机制归因与改造设想均为笔者判断，已逐处标注。两篇发表信息按 arXiv 预印本记录，其正式会议/期刊归属未核实。</p>
+<p><strong>本文的诚实边界。</strong> 本次连读以早期讨论记录为线索、以 arXiv v2 正文为核实基准；核实通过 web 抓取完成，未逐页复现论文表格与消融（如 StainFuser 论文正文口径下 NST 对比的完整计时表），第五、六节的机制归因与改造设想均为笔者判断，已逐处标注。两篇发表信息按 arXiv 预印本记录，其正式会议/期刊归属未核实。</p>
 <p><strong>任务层面的错位。</strong> 严格说，StainDiffuser 做虚拟染色、StainFuser 做染色归一化，并非同一基准上的竞争者；本文将其连读，是因为两篇在「条件注入」这一机制维度上恰好构成互补的两极（训练期软约束 vs 推理期双硬通路），对照本身成立，指标横向排名则不成立，第四节表格因此不含跨论文对比分数。</p>
 <p><strong>下一步。</strong> 其一，在本地按核实结论复跑 StainDiffuser 的 $\lambda$ 消融，验证「形态模糊标志物需要更大分割权重」能否在小规模自有数据上复现；其二，把 StainFuser 的零卷积 + 交叉注意力语法移植到浓度空间扩散基线（008/015 两篇的 M0 路线），比较加性通路与拼接通路的结构保持差异；其三，为「注入位置的语义上限」建立可判定实验：同一注入架构下，分别以参考图像、阈值 mask、光密度统计量作条件，观察蛋白表达类指标的响应——该项实验设计待完成，本文不下结论。</p>
 <hr />
@@ -128,7 +131,7 @@
 <ol><li>Kataria T., Knudsen B., Elhabian S.Y. <em>StainDiffuser: MultiTask Dual Diffusion Model for Virtual Staining</em>. arXiv:2403.11340 (v2, 2025-05)。链接：https://arxiv.org/abs/2403.11340 （题名、作者经 arXiv 摘要页核对；正式发表 venue 未核实）</li><li>Jewsbury R., Wang R., Bhalerao A., Rajpoot N., Vu Q.D. <em>StainFuser: Controlling Diffusion for Faster Neural Style Transfer in Multi-Gigapixel Histology Images</em>. arXiv:2403.09302 (v2, 2024-07)。链接：https://arxiv.org/abs/2403.09302 ；代码仓库 https://github.com/r-j96/stainfuser （题名、作者、仓库存在性经核对；「MICCAI 2024」归属未核实，不采用）</li><li>Ho J., Jain A., Abbeel P. <em>Denoising Diffusion Probabilistic Models</em>. arXiv:2006.11239。链接：https://arxiv.org/abs/2006.11239 （题名、作者经核对）</li><li>Rombach R., Blattmann A., Lorenz D., Esser P., Ommer B. <em>High-Resolution Image Synthesis with Latent Diffusion Models</em>. arXiv:2112.10752。链接：https://arxiv.org/abs/2112.10752 （题名、作者经核对；StainFuser 的 LDM/VAE 基础）</li><li>Zhang L., Rao A., Agrawala M. <em>Adding Conditional Control to Text-to-Image Diffusion Models</em>. arXiv:2302.05543。链接：https://arxiv.org/abs/2302.05543 （题名、作者及零卷积机制经核对；StainFuser 论文明确引用其零卷积做法）</li></ol>
 <hr />
 <p><em>本文为公开研究长文，两篇论文的事实性陈述均以 arXiv v2 正文核对为准；原料中未通过核实的数值已逐条剔除并在第四节列表说明。</em></p>
-<a class="back-link" href="list-research.html">← 返回研究文章</a>
+<a class="back-link" href="list-readings.html">← 返回论文精读</a>
 </article>
 <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>

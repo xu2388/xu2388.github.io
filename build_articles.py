@@ -1,14 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """把 articles_src/*.md（完整研究文章，带 frontmatter）转成 articles/*.html 站点文章页。
+
 frontmatter: title / date / tags(JSON 数组) / summary / category / source
+
+页面骨架与 build_notes.py 保持一致（同一套顶栏、页脚、衬线字体），
+所以这个脚本跑完不需要 fix_nav.py 再补一遍。
 """
-import os, re, glob, json, html as htmlmod
+import os
+import re
+import glob
+import json
+import html as htmlmod
+
 from build_knowledge_base import render_md
+from fix_nav import build_header, build_footer
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(ROOT, "articles_src")
 OUT_DIR = os.path.join(ROOT, "articles")
+
+FONT_LINK = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com" />\n'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
+    'family=Noto+Serif+SC:wght@400;600&display=swap" />'
+)
 
 PAGE = """<!DOCTYPE html>
 <html lang="zh-CN">
@@ -16,38 +33,32 @@ PAGE = """<!DOCTYPE html>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>{title}</title>
+<meta name="description" content="{summary_j}" />
 <link rel="stylesheet" href="../assets/style.css" />
+{font}
 <script id="meta" type="application/json">
 {{"title":"{title_j}","date":"{date}","tags":{tags_j},"category":"{cat}","summary":"{summary_j}"}}
 </script>
+<script id="theme-init">try{{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}}catch(e){{}}</script>
 </head>
 <body>
-<header class="site-header">
-  <div class="container">
-    <h1 class="site-title">科研博客</h1>
-    <p class="site-subtitle">H&amp;E → IHC 虚拟染色 · 研究文章</p>
-    <nav class="site-nav">
-      <a href="../index.html#threads">研究方向</a>
-      <a href="../index.html#articles">文章</a>
-      <a href="../index.html#about">关于</a>
-    </nav>
-  </div>
-</header>
+{header}
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="{list_href}">{cat_label}</a></nav>
 <h1>{title}</h1>
-<div class="meta">{date} · {cat_label} · 整理自研究笔记</div>
+<div class="meta">写于 {date} · {cat_label}</div>
 {body}
 <a class="back-link" href="{list_href}">← 返回{cat_label}</a>
 </article>
-<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+{footer}
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>
 """
 
+
 def j(s):
     return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+
 
 def main():
     files = sorted(glob.glob(os.path.join(SRC_DIR, "*.md")))
@@ -75,17 +86,30 @@ def main():
             tags = []
         tags_j = json.dumps(tags, ensure_ascii=False)
         slug = os.path.splitext(os.path.basename(p))[0] + ".html"
-        CAT_LIST = {"研究": ("list-research.html", "研究文章"), "学习笔记": ("list-notes.html", "学习笔记"),
-                    "随笔": ("list-essays.html", "随笔"), "课程笔记": ("list-courses.html", "课程笔记")}
-        list_href, cat_label = CAT_LIST.get(cat, ("list-research.html", "研究文章"))
+
+        CAT_LIST = {
+            "研究": ("list-research.html", "研究文章", "科研"),
+            "学习笔记": ("list-tutorials.html", "教程", "学习"),
+            "随笔": ("list-essays.html", "随笔", "随笔"),
+            "课程笔记": ("list-courses.html", "课程笔记", "学习"),
+        }
+        list_href, cat_label, active = CAT_LIST.get(cat, ("list-research.html", "研究文章", "科研"))
+        # 带「论文精读」标签的归到精读清单
+        if cat == "研究" and "论文精读" in tags:
+            list_href, cat_label = "list-readings.html", "论文精读"
+
         page = PAGE.format(
             title=htmlmod.escape(title), title_j=j(title), date=date, cat=cat,
             tags_j=tags_j, summary_j=j(summary), body=render_md(body),
             list_href=list_href, cat_label=cat_label,
+            font=FONT_LINK,
+            header=build_header("../", active),
+            footer=build_footer("../"),
         )
         open(os.path.join(OUT_DIR, slug), "w", encoding="utf-8").write(page)
         n += 1
     print(f"研究文章：{n} 篇 -> articles/")
+
 
 if __name__ == "__main__":
     main()

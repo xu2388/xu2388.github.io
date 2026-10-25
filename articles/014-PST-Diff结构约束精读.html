@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PST-Diff：病理结构约束的扩散染色——论文深度解读</title>
+<meta name="description" content="逐式解读 PST-Diff 如何把结构约束嵌入扩散采样：以条件频率引导（CFG）按频率分阶段注入 H&E 结构、用不对称注意力分离结构与外观、以潜空间距离项约束配对，并讨论该路线在错位数据与结构-染色权衡上的边界与可借鉴之处。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"PST-Diff：病理结构约束的扩散染色——论文深度解读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "H&E→IHC"],"category":"研究","summary":"逐式解读 PST-Diff 如何把结构约束嵌入扩散采样：以条件频率引导（CFG）按频率分阶段注入 H&E 结构、用不对称注意力分离结构与外观、以潜空间距离项约束配对，并讨论该路线在错位数据与结构-染色权衡上的边界与可借鉴之处。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>PST-Diff：病理结构约束的扩散染色——论文深度解读</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 论文精读</div>
 <blockquote><strong>论文</strong>：<em>PST-Diff: Achieving High-Consistency Stain Transfer by Diffusion Models With Pathological and Structural Constraints</em> <strong>作者</strong>：Yufang He*, Zeyu Liu*, Mingxin Qi, Shengwei Ding, Peng Zhang, Fan Song, Chenbin Ma, Huijie Wu, Ruxin Cai, Youdan Feng, Haonan Zhang, Tianyi Zhang, Guanglei Zhang*（*共同一作；*通讯） <strong>单位</strong>：北京航空航天大学 生物与医学工程学院 / 北京生物医学工程高精尖创新中心；山西大学计算机与信息技术学院 <strong>发表</strong>：IEEE Transactions on Medical Imaging (TMI), Vol. 43, No. 10, pp. 3634–3647, Oct. 2024；2024-07-18 在线 <strong>DOI</strong>：10.1109/TMI.2024.3430825 ｜ <strong>PubMed</strong>：39024079 ｜ <strong>IEEE 编号</strong>：10601703 <strong>方法名</strong>：<strong>PST-Diff</strong>（<strong>P</strong>athological <strong>S</strong>tain <strong>T</strong>ransfer <strong>Diff</strong>usion Model） <strong>关键词</strong>：Virtual Staining, Stain Transfer, Diffusion Models, Schrödinger Bridge, HER2-IHC</blockquote>
 <hr />
 <h2>0. 一句话概括</h2>
@@ -353,7 +356,7 @@
 <ul><li><strong>论文（IEEE Xplore）</strong>：https://ieeexplore.ieee.org/document/10601703 ｜ DOI: 10.1109/TMI.2024.3430825</li><li><strong>本地 PDF</strong>：<code>~/Downloads/从现在开始发论文(1)/01_虚拟染色_核心★/PST-Diff_Achieving_High-Consistency_Stain_Transfer_by_Diffusion_Models_With_Pathological_and_Structural_Constraints.pdf</code>（14 页全文，本精读即基于此）</li><li><strong>PubMed</strong>：https://pubmed.ncbi.nlm.nih.gov/39024079/</li><li><strong>数据集</strong>：</li><li><strong>BCI</strong>（Breast Cancer Immunohistochemical）：https://bupt-ai-cz.github.io/BCI/</li><li><strong>ACROBAT</strong>（multi-stain breast cancer WSI）：Weitz et al., Sci. Data 10:562, 2023</li><li><strong>代码</strong>：<strong>论文未给出官方仓库地址。</strong> 作者公开主页上未找到 PST-Diff 的训练代码或 checkpoint。作者<strong>后续</strong>的 <strong>StainExpert</strong> 有公开代码（multi-expert + text/visual guidance + SD-Turbo + 参数高效训练），但<strong>它不是 PST-Diff 的复现代码</strong>，不能当作 PST-Diff 的实现补足。（这一判断与调研档案中《PST-Diff 借鉴与 StainFuser 改造方案审查》的核实结论一致。）</li><li><strong>关键前作（本方法的直接依赖）</strong>：</li><li><strong>DDIB</strong>（Dual Diffusion Implicit Bridges, Su et al. 2022, arXiv:2203.08382）—— 本文的<strong>基线</strong>，也是被&quot;打叉&quot;的那个做法</li><li><strong>DDIM</strong>（Song et al. 2020, arXiv:2010.02502）—— 确定性采样，$\eta=0$ 的理论来源</li><li><strong>ILVR</strong>（Choi et al. ICCV 2021）—— <strong>CFG 的直接灵感来源</strong>（原文：&quot;inspired by [39]&quot;）</li><li><strong>ADM</strong>（Dhariwal &amp; Nichol, NeurIPS 2021）—— 本文的预训练模型来源</li><li><strong>I²SB / DSBM</strong>（Schrödinger Bridge 系）—— SB 引入扩散的思路来源</li><li><strong>同任务对照工作</strong>：</li><li><strong>Star-Diff</strong>（arXiv:2508.02528）—— 像素空间复原路线，见本系列 <code>star_diff_blog/</code></li><li><strong>DGR</strong>（arXiv:2509.14119, Nat. Commun. 2026）—— 抗错位路线，见本系列 <code>dgr_blog/</code></li><li><strong>PSPStain</strong>（MICCAI 2024）—— 本课题的 baseline，非配对 + 病理语义约束，见本系列 <code>pspstain_blog/</code></li></ul>
 <hr />
 <p><em>本文是基于论文原文（IEEE TMI 2024，14 页全文）的深度解读。第 7.3、8 节为我的判断，已明确标注。表格数字均从 PDF 位图表格逐格核对（表格在原文中以图片形式嵌入，文本层不可抽取）。原始论文版权归 IEEE 及原作者所有。</em></p>
-<a class="back-link" href="list-research.html">← 返回研究文章</a>
+<a class="back-link" href="list-readings.html">← 返回论文精读</a>
 </article>
 <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>

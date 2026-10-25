@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>从 RGB 到染料浓度域：H&amp;E→IHC 虚拟染色的物理可解释路线研究</title>
+<meta name="description" content="本文论证虚拟染色的建模坐标应由 RGB 转向染料浓度域，提出仅在 DAB 浓度通道上做条件扩散、以 H/E 浓度为干净条件、经比尔-朗伯回投重建 IHC 的解耦路线，并给出可判定该路线成立与否的最小基线 M0 及其门禁式判据。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"从 RGB 到染料浓度域：H&E→IHC 虚拟染色的物理可解释路线研究","date":"2026-10-24","tags":["虚拟染色", "浓度域", "扩散模型", "比尔-朗伯", "H&E→IHC"],"category":"研究","summary":"本文论证虚拟染色的建模坐标应由 RGB 转向染料浓度域，提出仅在 DAB 浓度通道上做条件扩散、以 H/E 浓度为干净条件、经比尔-朗伯回投重建 IHC 的解耦路线，并给出可判定该路线成立与否的最小基线 M0 及其门禁式判据。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>从 RGB 到染料浓度域：H&amp;E→IHC 虚拟染色的物理可解释路线研究</h1>
-<div class="meta">2026-10-24 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-24 · 研究文章</div>
 <h2>摘要</h2>
 <p>虚拟染色以计算方法将 H&amp;E 切片映射为免疫组化切片，可规避试剂成本、周转时间与组织消耗。主流方法在 RGB 空间直接回归或做图像翻译，隐含&quot;像素颜色即建模对象&quot;的假设；但 RGB 三通道是多种染料吸收光谱的非线性叠加，同一 DAB 浓度在不同苏木精背景下呈不同色值，模型被迫同时隐式学习染料混合物理与生物学表达映射，样本效率与可解释性俱受损。本文主张将建模坐标迁移至染料浓度域：以比尔-朗伯定律为基础，将两模态分解为染料光学密度的线性组合，仅在 DAB 浓度单通道上施加条件扩散，H/E 浓度全程保持干净并作为条件，结果经染色矩阵与指数衰减回投重建 IHC RGB。本文给出完整推导、显式假设与可复现流程，并设计最小基线 M0，以三级对照、三级条件消融与两项反退化诊断构成判定体系，使&quot;浓度域 DAB 扩散能否工作&quot;可被证伪。</p>
 <h2>一、问题与背景</h2>

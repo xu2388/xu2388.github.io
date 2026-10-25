@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>潜空间扩散该预测什么：从 x-prediction、流匹配到病理模态转移的表示改造</title>
+<meta name="description" content="潜空间扩散有三个可独立改动的旋钮：表示空间、预测目标、条件注入。ε、x₀、v 只是同一目标在不同噪声水平上的加权差异，三者对 x₀ 误差的隐含加权之比为 α²:1:σ²；x₀-预测在原生像素上可行靠的是流形假设，潜空间压缩掩盖而非解决容量问题。而病理模态转移缺配对切片，目标模态作条件只能约束分布、给不出像素级对应，前两个旋钮的改造因此无法单独兑现。原料中的论文编号与指标已逐条联网核实，不符者列入勘误。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"潜空间扩散该预测什么：从 x-prediction、流匹配到病理模态转移的表示改造","date":"2026-10-25","tags":["扩散模型", "潜空间", "流匹配", "x-prediction", "虚拟染色"],"category":"研究","summary":"潜空间扩散有三个可独立改动的旋钮：表示空间、预测目标、条件注入。ε、x₀、v 只是同一目标在不同噪声水平上的加权差异，三者对 x₀ 误差的隐含加权之比为 α²:1:σ²；x₀-预测在原生像素上可行靠的是流形假设，潜空间压缩掩盖而非解决容量问题。而病理模态转移缺配对切片，目标模态作条件只能约束分布、给不出像素级对应，前两个旋钮的改造因此无法单独兑现。原料中的论文编号与指标已逐条联网核实，不符者列入勘误。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>潜空间扩散该预测什么：从 x-prediction、流匹配到病理模态转移的表示改造</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 研究文章</div>
 <blockquote><strong>一句话概括</strong>：潜空间扩散可改造的地方不止「把计算搬到潜空间」这一处；表示空间、预测目标、条件注入是三个能分开动的旋钮，而病理模态转移真正的瓶颈是没有配对切片，这使前两个旋钮的一切优化都无法单独兑现。</blockquote>
 <h2>一、背景与问题</h2>
 <p>任务设定来自肾穿刺活检的常规制片流程。同一块组织在不同染色下强调的结构并不相同：Masson 三色把胶原纤维染成蓝或绿、胞质与肌纤维染成红，主要看纤维化；PAS 用过碘酸氧化基底膜与系膜基质中的糖蛋白，呈紫红；PASM 用六胺银把基底膜染成黑。临床上这几张切片是分别制备的，因而常常出现「需要做 PAS 时只剩 Masson」的情况。大创项目要做的，是从一张 Masson 图像合成对应的 PAS 或 PASM 图像，用计算手段补上缺失的模态。</p>

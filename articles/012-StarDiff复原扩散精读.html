@@ -4,7 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读</title>
+<meta name="description" content="解读 Star-Diffusion 如何针对复染（special stains）设计扩散框架，梳理其结构约束与染色控制策略，并评估其思路在浓度域路线中的可移植性。" />
 <link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
 <script id="meta" type="application/json">
 {"title":"Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读","date":"2026-10-25","tags":["论文精读", "虚拟染色", "扩散模型", "H&E→IHC"],"category":"研究","summary":"解读 Star-Diffusion 如何针对复染（special stains）设计扩散框架，梳理其结构约束与染色控制策略，并评估其思路在浓度域路线中的可移植性。"}
 </script>
@@ -19,9 +23,8 @@
   </div>
 </header>
 <article class="article">
-<nav class="crumbs"><a href="../index.html">首页</a> / <a href="list-research.html">研究文章</a></nav>
 <h1>Star-Diffusion：面向复染虚拟染色的扩散方法——论文深度解读</h1>
-<div class="meta">2026-10-25 · 研究文章 · 整理自研究笔记</div>
+<div class="meta">写于 2026-10-25 · 论文精读</div>
 <blockquote><strong>论文</strong>：<em>From Pixels to Pathology: Restoration Diffusion for Diagnostic-Consistent Virtual IHC</em> <strong>作者</strong>：Jingsong Liu, Xiaofeng Deng, Han Li, Azar Kazemi, Christian Grashei, Gesa Wilkens, Xin You, Tanja Groll, Nassir Navab, Carolin Mogler, Peter J. Schüffler*（慕尼黑工业大学病理研究所 / CAMP / MCML / MDSI 等） <strong>发表</strong>：arXiv:2508.02528v1 [eess.IV]，2025-08-04；Preprint submitted to Elsevier <strong>方法名</strong>：<strong>Star-Diff</strong>（<strong>St</strong>aining restoration <strong>Diff</strong>usion），配套指标 <strong>SFS</strong>（Semantic Fidelity Score） <strong>关键词</strong>：Virtual Staining, Breast Cancer, Diffusion Model, Staining Restoration</blockquote>
 <hr />
 <h2>0. 一句话概括</h2>
@@ -270,7 +273,7 @@
 <ul><li><strong>论文（arXiv）</strong>：https://arxiv.org/abs/2508.02528 ｜ HTML 版：https://arxiv.org/html/2508.02528v1</li><li><strong>本地 PDF</strong>：<code>~/Desktop/Star-Diff.pdf</code></li><li><strong>数据集</strong>：BCI Challenge Dataset（Breast Cancer Immunohistochemical image generation），4,870 对图块 / 51 对 WSI</li><li><strong>代码</strong>：论文未在正文给出官方仓库地址。已知社区有独立复现实现（MIT 许可），提供训练/采样/评估命令与 BCI 配置，但<strong>非官方</strong>，且复现结果与论文存在差距（详见本系列 R5 报告）</li><li><strong>相关前作</strong>：</li><li><strong>RDDM</strong>（Residual Denoising Diffusion Models, CVPR 2024）—— Star-Diff 残差思想的来源</li><li><strong>PST-Diff</strong>（IEEE TMI 2024）—— 另一个扩散虚拟染色工作，本文的扩散基线</li><li><strong>Pix2Pix-Pyramid / BCI</strong>（CVPR 2022）—— BCI 数据集与金字塔 Pix2Pix 基线</li><li><strong>PSPStain</strong>（MICCAI 2024）—— 本课题的 baseline，同任务不同路线（非配对 + 病理语义约束）</li></ul>
 <hr />
 <p><em>本文是基于论文原文的深度解读，含作者观点与我的补充评论（第 7.3、8 节为我的判断，已明确标注）。原始论文版权归原作者所有（CC BY 4.0）。</em></p>
-<a class="back-link" href="list-research.html">← 返回研究文章</a>
+<a class="back-link" href="list-readings.html">← 返回论文精读</a>
 </article>
 <footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
