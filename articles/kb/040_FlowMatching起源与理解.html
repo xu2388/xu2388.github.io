@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>FlowMatching起源与理解</h1>
@@ -513,7 +493,7 @@ print(&quot;实验三完成！&quot;)</code></pre>
 <hr />
 <p>既然决定让 AI 写，你不需要把整个 Markdown 文档全部粘贴进去（那会浪费输入 Token）。你需要的是<strong>“精准的指令 + 关键约束”</strong>。</p>
 <p>你可以直接把下面这段<strong>“万能 Prompt（指令）”</strong>复制给 DeepSeek（通义千问、Kimi 同样适用）：</p>
-<blockquote><strong>Prompt 指令：</strong> “请根据以下要求，为我生成一份完整的、可直接运行的 Python 实验代码，用于学习 Flow Matching：  1. <strong>实验目标</strong>：实现二维点云变形。数据准备阶段，用 <code>sklearn</code> 生成 2000 个点的‘月牙形’作为目标分布，用高斯分布（圆形）作为初始分布。 2. <strong>核心算法</strong>：使用 Conditional Flow Matching (CFM)。网络结构用一个 3 层 MLP，输入是 <code>(x, y, t)</code>，输出是 <code>(vx, vy)</code>。时间 <code>t</code> 需要使用正弦位置编码 (Positional Encoding)。 3. <strong>训练逻辑</strong>：实现 Simulation-free 训练。随机采样时间 <code>t ~ Uniform(0,1)</code>，构造线性插值路径 <code>x_t = (1-t)<em>x0 + t</em>x1</code>，损失函数为 MSE（预测速度 与 真实速度 <code>x1-x0</code> 的差异）。 4. <strong>推理采样</strong>：用欧拉方法（Euler Method）从初始点出发迭代 100 步，生成最终结果。 5. <strong>输出要求</strong>：代码要包含完整导入、数据加载、模型定义、训练循环、采样函数，以及最后用 matplotlib 绘制变形过程（t=0, 0.25, 0.5, 0.75, 1.0 的散点图）。请确保代码可直接运行，并提供必要的注释。”</blockquote>
+<blockquote><strong>Prompt 指令：</strong> “请根据以下要求，为我生成一份完整的、可直接运行的 Python 实验代码，用于学习 Flow Matching：  1. <strong>实验目标</strong>：实现二维点云变形。数据准备阶段，用 <code>sklearn</code> 生成 2000 个点的‘月牙形’作为目标分布，用高斯分布（圆形）作为初始分布。 2. <strong>核心算法</strong>：使用 Conditional Flow Matching (CFM)。网络结构用一个 3 层 MLP，输入是 <code>(x, y, t)</code>，输出是 <code>(vx, vy)</code>。时间 <code>t</code> 需要使用正弦位置编码 (Positional Encoding)。 3. <strong>训练逻辑</strong>：实现 Simulation-free 训练。随机采样时间 <code>t ~ Uniform(0,1)</code>，构造线性插值路径 <code>x_t = (1-t)*x0 + t*x1</code>，损失函数为 MSE（预测速度 与 真实速度 <code>x1-x0</code> 的差异）。 4. <strong>推理采样</strong>：用欧拉方法（Euler Method）从初始点出发迭代 100 步，生成最终结果。 5. <strong>输出要求</strong>：代码要包含完整导入、数据加载、模型定义、训练循环、采样函数，以及最后用 matplotlib 绘制变形过程（t=0, 0.25, 0.5, 0.75, 1.0 的散点图）。请确保代码可直接运行，并提供必要的注释。”</blockquote>
 <hr />
 <p>第一次生成的代码可能因为版本号（比如 <code>sklearn</code> 的接口变化）跑不通，<strong>不用慌</strong>，这是 AI 写代码的正常现象。</p>
 <p>这时候，你只需要<strong>把报错信息（红色的 Traceback）全选复制</strong>，然后发给它，加上一句：</p>

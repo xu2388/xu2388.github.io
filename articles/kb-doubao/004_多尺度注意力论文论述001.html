@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>多尺度注意力论文论述001</h1>
@@ -126,20 +117,20 @@
 <p>先回到一维信号，看懂1D怎么还原，2D就是同理扩展。</p>
 <p>1D Haar有两个归一化的核：</p>
 <ul><li>低通：$h_L = \frac{1}{\sqrt{2}}[1,\ 1]$</li><li>高通：$h_H = \frac{1}{\sqrt{2}}[1,\ -1]$</li></ul>
-<p>输入两个像素 $[x_1,\ x_2]$，步长为2做卷积，得到两个系数： $$ \begin{align<em>} LL &amp;= \frac{1}{\sqrt{2}}(x_1 + x_2) \quad \text{（低频系数）} \\ HH &amp;= \frac{1}{\sqrt{2}}(x_1 - x_2) \quad \text{（高频系数）} \end{align</em>} $$ 👉 本质：把2个原始值，投影到两个正交的基向量上，得到2个系数。</p>
+<p>输入两个像素 $[x_1,\ x_2]$，步长为2做卷积，得到两个系数： $$ \begin{align*} LL &amp;= \frac{1}{\sqrt{2}}(x_1 + x_2) \quad \text{（低频系数）} \\ HH &amp;= \frac{1}{\sqrt{2}}(x_1 - x_2) \quad \text{（高频系数）} \end{align*} $$ 👉 本质：把2个原始值，投影到两个正交的基向量上，得到2个系数。</p>
 <p>还原就是反过来：<strong>用两个系数，分别乘以对应的基向量，再相加</strong>。 $$ \text{还原信号} = LL \times h_L + HH \times h_H $$</p>
-<p>代入计算验证： $$ \begin{align<em>} \text{第1位} &amp;= LL\cdot\frac{1}{\sqrt{2}} + HH\cdot\frac{1}{\sqrt{2}} \\ &amp;= \frac{1}{\sqrt{2}}\cdot\frac{x_1+x_2}{\sqrt{2}} + \frac{1}{\sqrt{2}}\cdot\frac{x_1-x_2}{\sqrt{2}} \\ &amp;= \frac{x_1+x_2}{2} + \frac{x_1-x_2}{2} = x_1 \\[6pt] \text{第2位} &amp;= LL\cdot\frac{1}{\sqrt{2}} + HH\cdot\left(-\frac{1}{\sqrt{2}}\right) \\ &amp;= \frac{x_1+x_2}{2} - \frac{x_1-x_2}{2} = x_2 \end{align</em>} $$ 完美还原出原始的 $x_1$ 和 $x_2$。</p>
+<p>代入计算验证： $$ \begin{align*} \text{第1位} &amp;= LL\cdot\frac{1}{\sqrt{2}} + HH\cdot\frac{1}{\sqrt{2}} \\ &amp;= \frac{1}{\sqrt{2}}\cdot\frac{x_1+x_2}{\sqrt{2}} + \frac{1}{\sqrt{2}}\cdot\frac{x_1-x_2}{\sqrt{2}} \\ &amp;= \frac{x_1+x_2}{2} + \frac{x_1-x_2}{2} = x_1 \\[6pt] \text{第2位} &amp;= LL\cdot\frac{1}{\sqrt{2}} + HH\cdot\left(-\frac{1}{\sqrt{2}}\right) \\ &amp;= \frac{x_1+x_2}{2} - \frac{x_1-x_2}{2} = x_2 \end{align*} $$ 完美还原出原始的 $x_1$ 和 $x_2$。</p>
 <p>👉 关键：<strong>分解和合成用的是同一组基（同一个核）</strong>，正交性保证了“投影→再组合”能无损还原。</p>
 <hr />
 <h2>二、2D图像：一个2×2小块的完整还原过程</h2>
 <p>2D就是把1D的逻辑扩展到行和列两个方向，4个核对应4个正交的2D基。我们拿一个2×2的像素块完整走一遍。</p>
 <p>设原始2×2图像块为： $$ X = \begin{bmatrix} a &amp; b \\ c &amp; d \end{bmatrix} $$</p>
 <p>四个2D Haar核（和你图里完全一致）： $$ f_{LL}=\frac12\begin{bmatrix}1&amp;1\\1&amp;1\end{bmatrix},\ f_{LH}=\frac12\begin{bmatrix}1&amp;-1\\1&amp;-1\end{bmatrix},\ f_{HL}=\frac12\begin{bmatrix}1&amp;1\\-1&amp;-1\end{bmatrix},\ f_{HH}=\frac12\begin{bmatrix}1&amp;-1\\-1&amp;1\end{bmatrix} $$</p>
-<p>正变换就是<strong>每个核和原图做对应元素相乘再求和</strong>（2×2卷积，步长2，刚好一个块输出一个值）： $$ \begin{align<em>} X_{LL} &amp;= \frac12(a + b + c + d) \quad \text{低频近似} \\ X_{LH} &amp;= \frac12(a - b + c - d) \quad \text{垂直边缘} \\ X_{HL} &amp;= \frac12(a + b - c - d) \quad \text{水平边缘} \\ X_{HH} &amp;= \frac12(a - b - c + d) \quad \text{对角纹理} \end{align</em>} $$</p>
+<p>正变换就是<strong>每个核和原图做对应元素相乘再求和</strong>（2×2卷积，步长2，刚好一个块输出一个值）： $$ \begin{align*} X_{LL} &amp;= \frac12(a + b + c + d) \quad \text{低频近似} \\ X_{LH} &amp;= \frac12(a - b + c - d) \quad \text{垂直边缘} \\ X_{HL} &amp;= \frac12(a + b - c - d) \quad \text{水平边缘} \\ X_{HH} &amp;= \frac12(a - b - c + d) \quad \text{对角纹理} \end{align*} $$</p>
 <p>这一步之后，1个2×2的块，变成了4个标量系数，对应四张半尺寸特征图里的一个像素。</p>
 <p>还原公式和1D逻辑完全一样：<strong>每个系数 × 它对应的核，然后四个矩阵全部加起来</strong>。 $$ \text{还原块} = X_{LL}\cdot f_{LL} + X_{LH}\cdot f_{LH} + X_{HL}\cdot f_{HL} + X_{HH}\cdot f_{HH} $$</p>
-<p>我们来算左上角的位置（第一行第一列），验证是不是等于 $a$： $$ \begin{align<em>} \text{位置(1,1)} &amp;= X_{LL}\cdot\frac12 + X_{LH}\cdot\frac12 + X_{HL}\cdot\frac12 + X_{HH}\cdot\frac12 \\ &amp;= \frac12\big(X_{LL} + X_{LH} + X_{HL} + X_{HH}\big) \end{align</em>} $$</p>
-<p>把上面四个系数代入进去： $$ \begin{align<em>} \text{分子和} = &amp;\ (a+b+c+d) + (a-b+c-d) \\ + &amp;\ (a+b-c-d) + (a-b-c+d) \\ = &amp;\ 4a \end{align</em>} $$</p>
+<p>我们来算左上角的位置（第一行第一列），验证是不是等于 $a$： $$ \begin{align*} \text{位置(1,1)} &amp;= X_{LL}\cdot\frac12 + X_{LH}\cdot\frac12 + X_{HL}\cdot\frac12 + X_{HH}\cdot\frac12 \\ &amp;= \frac12\big(X_{LL} + X_{LH} + X_{HL} + X_{HH}\big) \end{align*} $$</p>
+<p>把上面四个系数代入进去： $$ \begin{align*} \text{分子和} = &amp;\ (a+b+c+d) + (a-b+c-d) \\ + &amp;\ (a+b-c-d) + (a-b-c+d) \\ = &amp;\ 4a \end{align*} $$</p>
 <p>所以： $$ \text{位置(1,1)} = \frac12 \cdot \frac{4a}{2} = a $$</p>
 <p>完全和原图左上角相等。同理可以算出另外三个位置分别等于 $b、c、d$，整个2×2块被<strong>无损还原</strong>。</p>
 <p>👉 这就是最核心的本质： 四个特征图里<strong>同一位置的四个值</strong>，分别乘上自己的卷积核模板，再叠加到一起，就变回了原图里对应的2×2像素区域。</p>

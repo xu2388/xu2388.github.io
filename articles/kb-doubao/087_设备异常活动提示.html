@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>设备异常活动提示</h1>
@@ -73,7 +64,7 @@
 <blockquote>这个方程没有$\sum\pi(a|s)$，因为不再按旧策略随机选动作，直接挑最好的。</blockquote>
 <hr />
 <h2>3. 最优Q函数 $Q_*(s,a)$</h2>
-<p>$$ Q_<em>(s,a) = \mathbb{E}\big[R_{t+1} + \gamma \max_{a&#x27;} Q(s_{t+1},a&#x27;) \mid S_t = s,A_t = a\big] $$ $Q_</em>(s,a)$：<strong>在状态$s$，强行执行动作$a$，之后全程使用最优策略能获得的总期望回报</strong></p>
+<p>$$ Q_*(s,a) = \mathbb{E}\big[R_{t+1} + \gamma \max_{a&#x27;} Q(s_{t+1},a&#x27;) \mid S_t = s,A_t = a\big] $$ $Q_*(s,a)$：<strong>在状态$s$，强行执行动作$a$，之后全程使用最优策略能获得的总期望回报</strong></p>
 <p>拆解：</p>
 <ol><li>在$s$执行动作$a$，拿到即时奖励$R_{t+1}$，跳转到$s_{t+1}$</li><li>到了$s_{t+1}$之后，<strong>选能让Q最大的动作$a&#x27;$</strong>，取$\max_{a&#x27;}Q(s_{t+1},a&#x27;)$</li><li>乘以折扣$\gamma$，整体求期望</li></ol>
 <p>✅ Q-learning 算法的核心就是迭代求解这个$Q_*$贝尔曼最优方程！</p>
@@ -89,7 +80,7 @@
 <ul><li>$V_\pi(s)$：按你固定的下棋套路（策略$\pi$），当前局面$s$最后能赢多少分。</li><li>$V_*(s)$：当前局面$s$，<strong>走最优招法</strong>，能拿到的最高分。</li><li>$Q_*(s,a)$：现在局面$s$，<strong>这一步强制走动作a</strong>，之后每一步都下最优棋，最终能拿多少分。</li></ul>
 <hr />
 <p>如果你需要，我可以：</p>
-<ol><li>写出这3个公式的完整<strong>数学推导</strong>；</li><li>或者给对应的LaTeX代码；</li><li>或者举一个格子世界的数字例子，代入计算一遍$V_\pi,V_<em>,Q_</em>$。你想要哪个？</li></ol>
+<ol><li>写出这3个公式的完整<strong>数学推导</strong>；</li><li>或者给对应的LaTeX代码；</li><li>或者举一个格子世界的数字例子，代入计算一遍$V_\pi,V_*,Q_*$。你想要哪个？</li></ol>
 <p class="muted" style="margin-top:28px">原始档案：<code>raw_exports/doubao_share_raw/087_设备异常活动提示.md</code>　·　分享链接：<a href="https://www.doubao.com/thread/a08abcc9b998e">https://www.doubao.com/thread/a08abcc9b998e</a></p>
 <a class="back-link" href="../doubao-index.html">← 返回豆包索引</a>
 </article>

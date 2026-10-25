@@ -13,25 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>提取Linux问题列表</h1>
@@ -373,8 +354,8 @@ echo &quot;sum = $sum;    max = $max    min = $min&quot;</code></pre>
 <h2>五、总结</h2>
 <table>
 <tr><th>问题点</th><th>原脚本</th><th>是否正确</th><th>说明</th></tr>
-<tr><td><code>while</code> 后空格</td><td><code>while[$i</code></td><td>❌</td><td>必须有空格</td></tr>
-<tr><td><code>[</code> 内空格</td><td><code>[$i -lt 100]</code></td><td>❌</td><td>应为 <code>[ $i -lt 100 ]</code></td></tr>
+<tr><td><code>while</code> 后空格</td><td><code>while[$i</code> | ❌ | 必须有空格</td></tr>
+<tr><td><code>[</code> 内空格</td><td><code>[$i -lt 100]</code> | ❌ | 应为 <code>[ $i -lt 100 ]</code></td></tr>
 <tr><td><code>do</code> 单独一行</td><td>有</td><td>✅</td><td>不需要分号</td></tr>
 <tr><td><code>if</code> 内空格</td><td>正确</td><td>✅</td><td>脚本中 <code>if [ $max -lt $x ]</code> 是对的</td></tr>
 <tr><td>分号使用</td><td>没有额外分号</td><td>✅</td><td>多行写法不需要分号</td></tr>
@@ -529,7 +510,7 @@ echo &quot;sum = $sum;    max = $max    min = $min&quot;</code></pre>
 <table>
 <tr><th>序号</th><th>功能</th><th>说明</th></tr>
 <tr><td>1</td><td><strong>命令解释器</strong></td><td>接收用户输入的命令，解析并执行。包括内部命令（如 <code>cd</code>、<code>echo</code>）和外部命令（在 PATH 中查找可执行文件）。</td></tr>
-<tr><td>2</td><td><strong>通配符扩展</strong></td><td>将 <code><em></code>、<code>?</code>、<code>[ ]</code> 等通配符展开为匹配的文件名列表，再传递给命令。例如 <code>ls </em>.txt</code> 会先展开成 <code>ls a.txt b.txt</code>。</td></tr>
+<tr><td>2</td><td><strong>通配符扩展</strong></td><td>将 <code>*</code>、<code>?</code>、<code>[ ]</code> 等通配符展开为匹配的文件名列表，再传递给命令。例如 <code>ls *.txt</code> 会先展开成 <code>ls a.txt b.txt</code>。</td></tr>
 <tr><td>3</td><td><strong>重定向</strong></td><td>改变命令的输入/输出方向：&lt;br&gt; - <code>&gt;</code> 覆盖输出&lt;br&gt; - <code>&gt;&gt;</code> 追加输出&lt;br&gt; - <code>&lt;</code> 重定向输入&lt;br&gt; - <code>2&gt;</code> 错误输出&lt;br&gt; - <code>&amp;&gt;</code> 所有输出</td></tr>
 <tr><td>4</td><td><strong>管道</strong></td><td>用 `</td><td><code> 将一个命令的输出作为下一个命令的输入。例如 </code>ls -l</td><td>grep &quot;txt&quot;`。</td></tr>
 <tr><td>5</td><td><strong>变量与环境管理</strong></td><td>支持用户自定义变量、环境变量（如 <code>PATH</code>）、预定义特殊变量（如 <code>$?</code>、<code>$$</code>）。用 <code>export</code> 导出为环境变量。</td></tr>

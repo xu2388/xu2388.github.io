@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>浏览器设计报告通俗解释</h1>
@@ -559,23 +539,23 @@ javax.swing.JDialog
 <p>保持现有的连续序号，但<strong>在表格里插入分组标题行</strong>，用合并单元格区分模块，干净又不打断顺序。</p>
 <table>
 <tr><th>序号</th><th>包路径</th><th>文件名</th><th>功能描述</th><th>代码行数</th></tr>
-<tr><td><em><strong>1</strong></em></td><td><strong>程序入口</strong></td></tr>
+<tr><td><em><strong>1</strong></em></td><td><strong>程序入口</strong></td><td></td><td></td><td></td></tr>
 <tr><td>1</td><td>com.browser</td><td>Main.java</td><td>程序入口，初始化FlatLaf和DJ Native Swing</td><td>~50</td></tr>
-<tr><td><em><strong>2</strong></em></td><td><strong>数据层（model + db）</strong></td></tr>
+<tr><td><em><strong>2</strong></em></td><td><strong>数据层（model + db）</strong></td><td></td><td></td><td></td></tr>
 <tr><td>2</td><td>com.browser.db</td><td>DatabaseManager.java</td><td>SQLite数据库连接管理和表初始化</td><td>~150</td></tr>
 <tr><td>3</td><td>com.browser.model</td><td>Bookmark.java</td><td>书签实体类</td><td>~80</td></tr>
 <tr><td>4</td><td>com.browser.model</td><td>BrowsingHistory.java</td><td>浏览历史实体类</td><td>~80</td></tr>
 <tr><td>5</td><td>com.browser.model</td><td>User.java</td><td>用户实体类</td><td>~60</td></tr>
-<tr><td><em><strong>3</strong></em></td><td><strong>业务逻辑层（service + history）</strong></td></tr>
+<tr><td><em><strong>3</strong></em></td><td><strong>业务逻辑层（service + history）</strong></td><td></td><td></td><td></td></tr>
 <tr><td>6</td><td>com.browser.history</td><td>HistoryManager.java</td><td>前进/后退历史管理（双栈实现）</td><td>~100</td></tr>
 <tr><td>7</td><td>com.browser.service</td><td>BookmarkService.java</td><td>书签服务（CRUD）</td><td>~120</td></tr>
 <tr><td>8</td><td>com.browser.service</td><td>HistoryService.java</td><td>历史记录服务</td><td>~100</td></tr>
 <tr><td>9</td><td>com.browser.service</td><td>PreferenceService.java</td><td>偏好设置服务</td><td>~80</td></tr>
 <tr><td>10</td><td>com.browser.service</td><td>UserService.java</td><td>用户服务（登录/注册）</td><td>~100</td></tr>
-<tr><td><em><strong>4</strong></em></td><td><strong>搜索模块</strong></td></tr>
+<tr><td><em><strong>4</strong></em></td><td><strong>搜索模块</strong></td><td></td><td></td><td></td></tr>
 <tr><td>11</td><td>com.browser.search</td><td>SearchEngine.java</td><td>搜索引擎，Bing结果解析</td><td>~120</td></tr>
 <tr><td>12</td><td>com.browser.search</td><td>SearchResult.java</td><td>搜索结果模型</td><td>~60</td></tr>
-<tr><td><em><strong>5</strong></em></td><td><strong>用户界面层（ui）</strong></td></tr>
+<tr><td><em><strong>5</strong></em></td><td><strong>用户界面层（ui）</strong></td><td></td><td></td><td></td></tr>
 <tr><td>13</td><td>com.browser.ui</td><td>BrowserFrame.java</td><td>浏览器主窗口（核心）</td><td>~1200</td></tr>
 <tr><td>14</td><td>com.browser.ui</td><td>EdgeCard.java</td><td>Edge风格卡片组件</td><td>~80</td></tr>
 <tr><td>15</td><td>com.browser.ui</td><td>EdgeSearchBar.java</td><td>Edge风格搜索栏</td><td>~100</td></tr>
@@ -584,7 +564,7 @@ javax.swing.JDialog
 <tr><td>18</td><td>com.browser.ui</td><td>EdgeSidebar.java</td><td>设置侧边栏</td><td>~150</td></tr>
 <tr><td>19</td><td>com.browser.ui</td><td>ErrorPage.java</td><td>错误页面</td><td>~100</td></tr>
 <tr><td>20</td><td>com.browser.ui</td><td>SourceCodeViewer.java</td><td>源代码查看器</td><td>~150</td></tr>
-<tr><td><em><strong>6</strong></em></td><td><strong>工具层（util）</strong></td></tr>
+<tr><td><em><strong>6</strong></em></td><td><strong>工具层（util）</strong></td><td></td><td></td><td></td></tr>
 <tr><td>21</td><td>com.browser.util</td><td>DeepSeekTheme.java</td><td>主题常量定义</td><td>~150</td></tr>
 <tr><td>22</td><td>com.browser.util</td><td>PageSaver.java</td><td>页面保存工具</td><td>~120</td></tr>
 <tr><td>23</td><td>com.browser.util</td><td>RoundedButton.java</td><td>圆角按钮组件</td><td>~60</td></tr>

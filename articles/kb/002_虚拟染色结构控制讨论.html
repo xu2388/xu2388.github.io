@@ -13,25 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>虚拟染色结构控制讨论</h1>
@@ -192,7 +173,7 @@
 <p><strong>2. 核心创新：双组件自适应加权</strong></p>
 <p>在得到标准的逐patch损失后，ASP才开始生效。它通过两个组件来动态调整每个patch的权重[reference:6][reference:7]：</p>
 <ul><li><strong>查找函数（Lookup Function）</strong>：根据正样本相似度 <code>l_pos</code> 来评估该patch的可靠性。提供 <code>top</code>、<code>linear</code>、<code>bell</code>、<code>uniform</code> 四种映射函数。例如，<code>linear</code> 函数会为正相似度分配权重，而<strong>负相似度（很可能未对齐）的patch则获得零权重</strong>。</li><li><strong>时间调度器（Scheduler）</strong>：控制训练过程中权重从“均匀”向“质量感知”的<strong>过渡</strong>。提供 <code>sigmoid</code>、<code>linear</code>、<code>lambda</code>、<code>zero</code> 四种策略。训练早期所有patch权重均等，后期才逐渐降低不可靠patch的权重。</li></ul>
-<p>最终，每个patch的权重由调度器因子 <code>p</code> 在均匀权重 <code>w0</code> 和查找函数权重 <code>w1</code> 之间插值得到：<code>w = p <em> w0 + (1 - p) </em> w1</code>，随后归一化以维持损失尺度[reference:8]。</p>
+<p>最终，每个patch的权重由调度器因子 <code>p</code> 在均匀权重 <code>w0</code> 和查找函数权重 <code>w1</code> 之间插值得到：<code>w = p * w0 + (1 - p) * w1</code>，随后归一化以维持损失尺度[reference:8]。</p>
 <ul><li><strong>直接查找</strong>：在克隆的仓库中，搜索类名 <strong><code>AdaptiveSupervisedPatchNCELoss</code></strong>，即可找到完整的实现。</li><li><strong>关键参数</strong>：关注 <code>asp_loss_mode</code> 这个参数，它通常以字符串格式（如 <code>lambda_linear</code>）同时配置调度器和查找函数，使得整个机制无需修改代码即可切换[reference:9]。</li><li><strong>激活条件</strong>：ASP损失仅在 <code>lambda_asp &gt; 0</code> 时才会被激活并加入总损失计算中[reference:10]。</li></ul>
 <p>需要注意，该仓库的ASP损失是作为CPT（Contrastive Paired Translation）框架的一部分实现的，其计算依赖于成对的数据流（<code>real_B</code> 与 <code>fake_B</code>），与你当前基于CUT的非配对设定在数据管道上需要做适配[reference:11]。</p>
 <div class="record"><span class="tag">我问</span><p>那么后续一些基于ASP的框架做的一些HE，iHC的虚拟染色的工作有哪些呢</p></div>

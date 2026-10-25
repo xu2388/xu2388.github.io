@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>实现最小可运行的H&amp;E→IHC浓度空间Diffusion</h1>
@@ -48,9 +39,9 @@
 <ol><li>M0 的核心网络</li></ol>
 <p>这里不要 SD1.5。 不要 VAE。 不要 latent。 直接： UNet2DModel\boxed{ UNet2DModel } 使用： from diffusers import UNet2DModel 官方 UNet2DModel 原生支持自定义输入输出 channel、timestep embedding、ResNet blocks 和 attention。( https://huggingface.co/docs/diffusers/main/api/models?utm_source=chatgpt.com )</p>
 <ol><li>M0 的输入</li></ol>
-<p>模型实际输入： Xt=[CDABt,CHHE,CEHE]X_t= [ C_{DAB}^{t}, C_H^{HE}, C_E^{HE} ] 所以： in_channels=3\boxed{in\_channels=3} 其中： channel 0 = noisy DAB channel 1 = H concentration from HE channel 2 = E concentration from HE</p>
+<p>模型实际输入： Xt=[CDABt,CHHE,CEHE]X_t= [ C_{DAB}^{t}, C_H^{HE}, C_E^{HE} ] 所以： in_channels=3\boxed{in_channels=3} 其中： channel 0 = noisy DAB channel 1 = H concentration from HE channel 2 = E concentration from HE</p>
 <ol><li>M0 的输出</li></ol>
-<p>只预测： CDAB\boxed{C_{DAB}} 所以： out_channels=1\boxed{out\_channels=1} 不要输出： H DAB E RGB 只输出： DAB diffusion prediction</p>
+<p>只预测： CDAB\boxed{C_{DAB}} 所以： out_channels=1\boxed{out_channels=1} 不要输出： H DAB E RGB 只输出： DAB diffusion prediction</p>
 <ol><li>M0 U-Net 建议结构</li></ol>
 <p>第一版用： UNet2DModel(     sample_size=128,     in_channels=3,     out_channels=1,      down_block_types=(         &quot;DownBlock2D&quot;,         &quot;DownBlock2D&quot;,         &quot;AttnDownBlock2D&quot;,         &quot;AttnDownBlock2D&quot;,     ),      up_block_types=(         &quot;AttnUpBlock2D&quot;,         &quot;AttnUpBlock2D&quot;,         &quot;UpBlock2D&quot;,         &quot;UpBlock2D&quot;,     ),      block_out_channels=(         64,         128,         256,         256,     ),      layers_per_block=2,      attention_head_dim=8,      norm_num_groups=32,      act_fn=&quot;silu&quot;, ) 这不是 SD1.5，而是： small concentration-domain diffusion U-Net 这样 4060 比较容易跑。 官方文档也明确支持这种自定义 in_channels/out_channels 和多尺度 block 配置。( https://huggingface.co/docs/diffusers/main/api/models?utm_source=chatgpt.com )</p>
 <ol><li>Diffusion 采用 v-prediction</li></ol>

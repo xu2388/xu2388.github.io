@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>决策树方法讲解</h1>
@@ -69,7 +49,7 @@
 <p><strong>例子：</strong> 还是“有房”这个特征（2个取值）： \[ IV = -\left( \frac{6}{15} \log_2 \frac{6}{15} + \frac{9}{15} \log_2 \frac{9}{15} \right) = 0.971 \]</p>
 <p><strong>如果是“身份证号”特征（15个取值）：</strong> \[ IV = -\sum_{i=1}^{15} \frac{1}{15} \log_2 \frac{1}{15} = \log_2 15 \approx 3.91 \] （取值越多，IV值越大）</p>
 <h4>第二步：计算增益率</h4>
-<p>\[ \text{Gain\_ratio}(D, A) = \frac{\text{Gain}(D, A)}{IV(A)} \]</p>
+<p>\[ \text{Gain_ratio}(D, A) = \frac{\text{Gain}(D, A)}{IV(A)} \]</p>
 <p><strong>例子（有房）：</strong> \[ \text{增益率} = \frac{0.42}{0.971} \approx 0.43 \]</p>
 <p><strong>例子（身份证号）：</strong> 虽然信息增益可能接近0.971，但除以 \( IV \approx 3.91 \) 后，增益率会远小于0.43。</p>
 <p><strong>注意：</strong> C4.5算法实际使用时，并不是直接选增益率最大的特征，而是先找出<strong>信息增益高于平均水平的特征</strong>，再从这些特征中选<strong>增益率最高</strong>的，这样既避免了偏向多值，也避免了极端情况下（IV非常小导致增益率膨胀）的误导。</p>
@@ -81,10 +61,10 @@
 <p><strong>沿用上面的例子（9是，6否）：</strong> \[ \text{Gini} = 1 - \left( \frac{9}{15} \right)^2 - \left( \frac{6}{15} \right)^2 = 1 - 0.36 - 0.16 = 0.48 \]</p>
 <h4>特征划分下的基尼指数</h4>
 <p>对于特征 \( A \)，基尼指数是各分支基尼值的加权平均。CART算法会选择<strong>基尼指数最小</strong>的特征作为划分点。</p>
-<p>\[ \text{Gini\_index}(D, A) = \sum_{i=1}^{n} \frac{|D_i|}{|D|} \text{Gini}(D_i) \]</p>
+<p>\[ \text{Gini_index}(D, A) = \sum_{i=1}^{n} \frac{|D_i|}{|D|} \text{Gini}(D_i) \]</p>
 <p><strong>例子（有房）：</strong></p>
 <ul><li>“有房”分支：6样本（全是是），\( \text{Gini}=0 \)。</li><li>“无房”分支：9样本（3是，6否），\( \text{Gini}=1-(1/3)^2-(2/3)^2=0.444 \)。</li></ul>
-<p>\[ \text{Gini\_index} = \frac{6}{15} \times 0 + \frac{9}{15} \times 0.444 = 0.267 \]</p>
+<p>\[ \text{Gini_index} = \frac{6}{15} \times 0 + \frac{9}{15} \times 0.444 = 0.267 \]</p>
 <p><strong>如果是“身份证号”：</strong> 每个分支只有一个样本，基尼值都是0，加权平均后基尼指数为0，模型会选择它。因此<strong>基尼指数也存在偏向多值特征的问题</strong>，但由于CART通常生成二叉树，且会限制树深度或进行剪枝，在实际应用中影响相对可控。</p>
 <hr />
 <table>

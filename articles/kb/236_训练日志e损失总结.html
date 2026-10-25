@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>训练日志e损失总结</h1>
@@ -104,7 +84,7 @@
 <hr />
 <h2>二、推荐的损失权重设置</h2>
 <ul><li><strong>使各子损失的数值乘上权重后的量级相近</strong>，避免某一项主导优化。</li><li>由于噪声损失（n）在 Stage 2 中本身数值很小（~0.01），需要较大的权重才能与 e（~0.7）和 vae（~0.25）平衡。</li><li>若使用总损失：  </li></ul>
-<p><code>Loss_total = w_n <em> n + w_e </em> e + w_vae * vae</code></p>
+<p><code>Loss_total = w_n * n + w_e * e + w_vae * vae</code></p>
 <table>
 <tr><th>阶段</th><th>w_n (噪声)</th><th>w_e (边缘)</th><th>w_vae (VAE)</th><th>说明</th></tr>
 <tr><td><strong>Stage 1</strong></td><td>1.0</td><td>1.0</td><td>1.0</td><td>三部分贡献量级相近（n 初始 ~1.0，e ~0.7，vae ~0.6）</td></tr>
@@ -149,7 +129,7 @@ loss = torch.exp(-log_w_n) * n_loss + log_w_n \
 <hr />
 <h2>针对您的情况的具体建议</h2>
 <p>假设在 Stage 2 中：</p>
-<ul><li>n ≈ 0.01, e ≈ 0.7, vae ≈ 0.25  </li><li>若希望去噪贡献最大，可以设置权重使得 <code>w_n <em> n ≈ 1.0</code>，同时让 <code>w_e </em> e</code> 和 <code>w_vae * vae</code> 在 0.5~1.0 之间。</li></ul>
+<ul><li>n ≈ 0.01, e ≈ 0.7, vae ≈ 0.25  </li><li>若希望去噪贡献最大，可以设置权重使得 <code>w_n * n ≈ 1.0</code>，同时让 <code>w_e * e</code> 和 <code>w_vae * vae</code> 在 0.5~1.0 之间。</li></ul>
 <table>
 <tr><th>子损失</th><th>原始值</th><th>推荐权重</th><th>加权后值</th></tr>
 <tr><td>n</td><td>0.01</td><td><strong>100</strong></td><td>1.0</td></tr>
@@ -196,10 +176,10 @@ loss = torch.exp(-log_w_n) * n_loss + log_w_n \
 <ul><li>计算图像在 x、y 方向的梯度（Sobel 算子），对梯度图施加 L1 或 L2 损失。</li><li>直接监督边缘强度和方向，非常适合增强边缘清晰度。</li><li>公式：<code>loss_grad = |∇_x pred - ∇_x gt| + |∇_y pred - ∇_y gt|</code>。</li></ul>
 <ul><li>通过傅里叶变换，在高频分量上施加损失，鼓励模型保留高频细节。</li><li>可以使用 L1 损失在幅度谱上，或加权高频区域。</li></ul>
 <ul><li>添加一个判别器，判断生成的边缘（或重建图像）是否真实。</li><li>能有效提升边缘的真实感和锐利度，但训练更复杂，需要平衡 GAN 训练。</li></ul>
-<ul><li>将上述几种损失组合，例如 <code>loss_edge = λ1 <em> perceptual + λ2 </em> gradient</code>。</li><li>兼顾结构和像素级约束。</li></ul>
+<ul><li>将上述几种损失组合，例如 <code>loss_edge = λ1 * perceptual + λ2 * gradient</code>。</li><li>兼顾结构和像素级约束。</li></ul>
 <hr />
 <h2>如何集成到现有框架</h2>
-<ul><li><strong>替换</strong>：直接在损失计算中，用新的损失函数替换原有的边缘损失项。</li><li><strong>保留原有损失项</strong>：可以并行添加，如 <code>total_loss = w_n <em> n + w_e </em> new_edge_loss + w_vae * vae</code>。</li><li><strong>调整权重</strong>：新损失的量级可能与原边缘损失不同，需重新调权，建议从较小权重开始逐步增加。</li><li><strong>阶段切换</strong>：可以在 Stage 1 使用原有损失，Stage 2 切换到新损失；或全程使用新损失。</li></ul>
+<ul><li><strong>替换</strong>：直接在损失计算中，用新的损失函数替换原有的边缘损失项。</li><li><strong>保留原有损失项</strong>：可以并行添加，如 <code>total_loss = w_n * n + w_e * new_edge_loss + w_vae * vae</code>。</li><li><strong>调整权重</strong>：新损失的量级可能与原边缘损失不同，需重新调权，建议从较小权重开始逐步增加。</li><li><strong>阶段切换</strong>：可以在 Stage 1 使用原有损失，Stage 2 切换到新损失；或全程使用新损失。</li></ul>
 <hr />
 <h2>注意事项</h2>
 <ul><li><strong>计算成本</strong>：感知损失、频域损失等会引入额外计算，需评估显存和时间。</li><li><strong>超参数敏感</strong>：新损失可能需要调整学习率和权重，建议做小范围实验。</li><li><strong>与 VAE 重建的平衡</strong>：新损失强化边缘后，要确保 VAE 重建损失不会因此崩溃（例如边缘清晰但颜色失真）。</li><li><strong>数据集规模</strong>：138 张图片小数据集，对抗性损失容易过拟合，需谨慎。</li></ul>

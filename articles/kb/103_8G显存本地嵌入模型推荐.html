@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>8G显存本地嵌入模型推荐</h1>
@@ -89,7 +69,7 @@
 <p>Qwen3-8B 官方原版模型体积较大（FP16 精度约16GB），为了让它在8GB显存上流畅运行，需要 <code>Int4</code> 量化版。获取方式主要有两种：</p>
 <table>
 <tr><th>途径</th><th>主要地址</th><th>说明</th></tr>
-<tr><td><strong>方式一</strong></td><td><strong>[</strong>Hugging Face<strong>: <code>tensorblock/Qwen_Qwen3-8B-GGUF</code></strong>](https://huggingface.co/tensorblock/Qwen_Qwen3-8B-GGUF)[reference:0]</td><td>TensorBlock 提供了该模型的完整 GGUF 量化版本集合[reference:1]。你可以直接通过以下指令下载 <code>Q4_K_M</code> 版本[reference:2]：&lt;br&gt;<code>huggingface-cli download tensorblock/Qwen_Qwen3-8B-GGUF --local-dir ./qwen3-8b-gguf --local-dir-use-symlinks False --include=&#x27;<em>Q4_K</em>gguf&#x27;</code></td></tr>
+<tr><td><strong>方式一</strong></td><td><strong>[</strong>Hugging Face<strong>: <code>tensorblock/Qwen_Qwen3-8B-GGUF</code></strong>](https://huggingface.co/tensorblock/Qwen_Qwen3-8B-GGUF)[reference:0]</td><td>TensorBlock 提供了该模型的完整 GGUF 量化版本集合[reference:1]。你可以直接通过以下指令下载 <code>Q4_K_M</code> 版本[reference:2]：&lt;br&gt;<code>huggingface-cli download tensorblock/Qwen_Qwen3-8B-GGUF --local-dir ./qwen3-8b-gguf --local-dir-use-symlinks False --include=&#x27;*Q4_K*gguf&#x27;</code></td></tr>
 <tr><td><strong>方式二</strong></td><td><strong>自行转换</strong></td><td>你也可以先下载完整的官方模型，再使用 <code>llama.cpp</code> 的 <code>convert.py</code> 工具自行转换为 GGUF 格式[reference:3]。</td></tr>
 </table>
 <p>除了加速访问Hugging Face，国内也有不少平台直接提供了下载途径：</p>

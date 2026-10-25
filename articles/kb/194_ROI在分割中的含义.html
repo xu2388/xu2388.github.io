@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>ROI在分割中的含义</h1>
@@ -966,7 +946,7 @@ CUDA_VISIBLE_DEVICES=0 python3 IS2D_main.py \
 <p>高频分支的引导至关重要，需要显式“告诉”模型它的目标是什么。</p>
 <ul><li><strong>1) 边缘图生成</strong>：自动化地从数据集的标注Mask中，实时生成对应的边界图(Ground Truth Edge Map)。</li><li><strong>2) 辅助损失函数</strong>：在高频分支的输出和生成的边缘图之间，应用一个损失函数（如<code>BCEWithLogitsLoss</code>或<code>Boundary Loss</code>[reference:17]）。这会是一个强有力的监督信号，强制模型专注于学习图像中的高频细节[reference:18][reference:19]。</li></ul>
 <p>一个好的训练策略，是释放网络潜力的关键。</p>
-<ul><li><strong>1) 损失函数组合</strong>：采用多任务学习策略[reference:20][reference:21]。最终总损失 = <code>λ₁ <em> (主分割损失) + λ₂ </em> (高频分支辅助损失)</code>。</li><li>主分割损失：使用<code>Dice Loss</code>结合<code>Boundary Loss</code>可以显著提升模型对边界的敏感度[reference:22][reference:23][reference:24]。</li><li>辅助损失：主要用于梯度回传，指导高频分支学习。</li><li><strong>2) 消融实验</strong>：这是工作完整性的关键。为了充分证明网络各功能模块的必要性，应设计几组对比实验：</li><li><strong>实验A</strong>：MSCWNet原始配置</li><li><strong>实验B (A + Dual-Path)</strong>：仅加入解耦与融合模块</li><li><strong>实验C (A + Edge Loss)</strong>：仅加入边缘监督损失</li><li><strong>实验D (A + Dual-Path + Edge Loss)</strong>：完整模型</li></ul>
+<ul><li><strong>1) 损失函数组合</strong>：采用多任务学习策略[reference:20][reference:21]。最终总损失 = <code>λ₁ * (主分割损失) + λ₂ * (高频分支辅助损失)</code>。</li><li>主分割损失：使用<code>Dice Loss</code>结合<code>Boundary Loss</code>可以显著提升模型对边界的敏感度[reference:22][reference:23][reference:24]。</li><li>辅助损失：主要用于梯度回传，指导高频分支学习。</li><li><strong>2) 消融实验</strong>：这是工作完整性的关键。为了充分证明网络各功能模块的必要性，应设计几组对比实验：</li><li><strong>实验A</strong>：MSCWNet原始配置</li><li><strong>实验B (A + Dual-Path)</strong>：仅加入解耦与融合模块</li><li><strong>实验C (A + Edge Loss)</strong>：仅加入边缘监督损失</li><li><strong>实验D (A + Dual-Path + Edge Loss)</strong>：完整模型</li></ul>
 <p>通过比对每组提升，可以为你的创新点提供直接有力的性能论据。</p>
 <p>要把这个工作升华成学术成果，可以准备以下论述角度。</p>
 <ul><li><strong>科学问题的提炼</strong>：从“肾脏病理图像边界到底模糊在哪？”出发，证明传统模型在处理此类任务时，缺乏明确的策略来分离和强化高低频信息，从而造成误检和漏检[reference:25]。</li><li><strong>方法论创新</strong>：对比传统方法的“隐式耦合学习”，阐述你提出的“<strong>显式解耦-并行挖掘-自适应融合</strong>”频域信息处理新范式。</li><li><strong>结果展示</strong>：除了传统的Dice和IoU，强烈建议引入<strong>边界IoU (Boundary IoU)</strong>、<strong>Hausdorff距离</strong>等更敏感的指标来定量评估边缘。同时，对比改进前后的Grad-CAM热力图，直观展示你的模型对<strong>边缘区域</strong>的关注度是如何显著提升的。</li></ul>
@@ -1495,7 +1475,7 @@ prob = morph_close(prob, kernel_size=3)</code></pre>
 <p>高频分支的引导至关重要，需要显式“告诉”模型它的目标是什么。</p>
 <ul><li><strong>1) 边缘图生成</strong>：自动化地从数据集的标注Mask中，实时生成对应的边界图(Ground Truth Edge Map)。</li><li><strong>2) 辅助损失函数</strong>：在高频分支的输出和生成的边缘图之间，应用一个损失函数（如<code>BCEWithLogitsLoss</code>或<code>Boundary Loss</code>）。这会是一个强有力的监督信号，强制模型专注于学习图像中的高频细节。</li></ul>
 <p>一个好的训练策略，是释放网络潜力的关键。</p>
-<ul><li><strong>1) 损失函数组合</strong>：采用多任务学习策略。最终总损失 = <code>λ₁ <em> (主分割损失) + λ₂ </em> (高频分支辅助损失)</code>。</li><li>主分割损失：使用<code>Dice Loss</code>结合<code>Boundary Loss</code>可以显著提升模型对边界的敏感度。</li><li>辅助损失：主要用于梯度回传，指导高频分支学习。</li><li><strong>2) 消融实验</strong>：这是工作完整性的关键。为了充分证明网络各功能模块的必要性，应设计几组对比实验：</li><li><strong>实验A</strong>：MSCWNet原始配置</li><li><strong>实验B (A + Dual-Path)</strong>：仅加入解耦与融合模块</li><li><strong>实验C (A + Edge Loss)</strong>：仅加入边缘监督损失</li><li><strong>实验D (A + Dual-Path + Edge Loss)</strong>：完整模型</li></ul>
+<ul><li><strong>1) 损失函数组合</strong>：采用多任务学习策略。最终总损失 = <code>λ₁ * (主分割损失) + λ₂ * (高频分支辅助损失)</code>。</li><li>主分割损失：使用<code>Dice Loss</code>结合<code>Boundary Loss</code>可以显著提升模型对边界的敏感度。</li><li>辅助损失：主要用于梯度回传，指导高频分支学习。</li><li><strong>2) 消融实验</strong>：这是工作完整性的关键。为了充分证明网络各功能模块的必要性，应设计几组对比实验：</li><li><strong>实验A</strong>：MSCWNet原始配置</li><li><strong>实验B (A + Dual-Path)</strong>：仅加入解耦与融合模块</li><li><strong>实验C (A + Edge Loss)</strong>：仅加入边缘监督损失</li><li><strong>实验D (A + Dual-Path + Edge Loss)</strong>：完整模型</li></ul>
 <p>通过比对每组提升，可以为你的创新点提供直接有力的性能论据。</p>
 <p>要把这个工作升华成学术成果，可以准备以下论述角度。</p>
 <ul><li><strong>科学问题的提炼</strong>：从“肾脏病理图像边界到底模糊在哪？”出发，证明传统模型在处理此类任务时，缺乏明确的策略来分离和强化高低频信息，从而造成误检和漏检。</li><li><strong>方法论创新</strong>：对比传统方法的“隐式耦合学习”，阐述你提出的“<strong>显式解耦-并行挖掘-自适应融合</strong>”频域信息处理新范式。</li><li><strong>结果展示</strong>：除了传统的Dice和IoU，强烈建议引入<strong>边界IoU (Boundary IoU)</strong>、<strong>Hausdorff距离</strong>等更敏感的指标来定量评估边缘。同时，对比改进前后的Grad-CAM热力图，直观展示你的模型对<strong>边缘区域</strong>的关注度是如何显著提升的。</li></ul>
@@ -2107,7 +2087,7 @@ class HWD(nn.Module):
 <ol><li><strong>LL (低频)</strong>: 保存图像的轮廓和结构信息，是整个 2x2 区域的均值。本质保留主体的低信息量骨架。</li><li><strong>LH (水平高频)</strong>: 捕捉水平方向的边缘和纹理（如水平走向的肾小球边界）。</li><li><strong>HL (垂直高频)</strong>: 捕捉垂直方向的边缘和纹理（肾小管管腔）。</li><li><strong>HH (对角线高频)</strong>: 捕捉对角线方向的高频细节，以及微小的组织颗粒噪声。</li></ol>
 <p>这一阶段，<strong>特征图的空间分辨率 (H, W) 下降为原来的一半 \( \frac{H}{2}, \frac{W}{2} \)</strong>。虽然空间上变“小”了，但所有的信息都被编码进了四个不同的子带中。从通道维度看，<strong>原本 C 个通道的特征图，现在变成了 Cx4 个通道</strong>，这正是你看到的“通道数膨胀”现象[reference:1]。</p>
 <h4>步骤二：特征表示学习——信息压缩，通道数变<code>C_out</code></h4>
-<p>步骤一输出的通道数是原先的 4 倍，这个维度无法直接用于后续网络，因此需要HWD模块中一个<strong>可学习的 1x1 卷积层</strong>（即逐点卷积）来调控[reference:2]。输入 <code>[B, C<em>4, H/2, W/2]</code>，1x1 卷积的卷积核数量等于你希望输出的通道数 <code>C_out</code>（通常通过 <code>self.conv = nn.Conv2d(in_ch </em> 4, out_ch, kernel_size=1)</code> 进行维度对齐[reference:3]）。</p>
+<p>步骤一输出的通道数是原先的 4 倍，这个维度无法直接用于后续网络，因此需要HWD模块中一个<strong>可学习的 1x1 卷积层</strong>（即逐点卷积）来调控[reference:2]。输入 <code>[B, C*4, H/2, W/2]</code>，1x1 卷积的卷积核数量等于你希望输出的通道数 <code>C_out</code>（通常通过 <code>self.conv = nn.Conv2d(in_ch * 4, out_ch, kernel_size=1)</code> 进行维度对齐[reference:3]）。</p>
 <p>这个卷积层在训练过程中，<strong>自主地、有选择性地</strong>学习整合 <code>C*4</code> 个通道的信息，<strong>动态组合</strong>四种频率成分以形成对当前器官检测、病灶分割最有利的特征表征，相当于在网络没有正确分类时调整权重保留高频细节抑制无效噪声。最终它输出的特征图尺寸就是 <code>[B, C_out, H/2, W/2]</code>。</p>
 <p>将这个逻辑放进你的 SD 改造工程中：</p>
 <ul><li><strong>位置</strong>：替换 <code>Diffusers</code> 库中 <code>Downsample2D</code> 类下的步长为 2 的卷积层。</li><li><strong>做法</strong>：用 <code>nn.Conv2d(in_ch * 4, out_ch, kernel_size=1)</code> 保证输出维度与 SD 后续模块 <code>in_ch</code> 期望完全一致。</li><li><strong>资源</strong>：<code>pytorch_wavelets</code> 库可能引入额外计算开销，通道数膨胀的深层特征可能会<strong>对GPU显存造成更大压力</strong>（建议使用混合精度训练或更小的batch size缓解）。</li></ul>
@@ -2518,7 +2498,7 @@ class Down_wt(nn.Module):
 <p>在工作区搜索 &#x27;**/<em>log</em>.txt&#x27;</p>
 <p>HistDiST-main 自动运行 在终端查看</p>
 <p>$ python unet_with_hwd.py</p>
-<p>WARNING[XFORMERS]: xFormers can&#x27;t load C++/CUDA extensions. xFormers was built for: PyTorch 2.4.0+cu118 with CUDA 1108 (you have 2.7.1+cu118) Python  3.12.4 (you have 3.12.7) Please reinstall xformers (see https://github.com/facebookresearch/xformers#installing-xformers) Memory-efficient attention, SwiGLU, sparse and more won&#x27;t be available. Set XFORMERS_MORE_DETAILS=1 for more details A matching Triton is not available, some optimizations will not be enabled Traceback (most recent call last): File &quot;D:\anaconda3\Lib\site-packages\xformers\__init__.py&quot;, line 57, in _is_triton_available import triton  # noqa ^^^^^^^^^^^^^ ModuleNotFoundError: No module named &#x27;triton&#x27; W0502 15:00:31.118000 3940 site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs. WARNING: All log messages before absl::InitializeLog() is called are written to STDERR I0000 00:00:1777705235.200701   37148 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable <code>TF_ENABLE_ONEDNN_OPTS=0</code>. WARNING: All log messages before absl::InitializeLog() is called are written to STDERR I0000 00:00:1777705239.023237   37148 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable <code>TF_ENABLE_ONEDNN_OPTS=0</code>. Traceback (most recent call last): File &quot;D:\寒假把干出结题\HistDiST-main\unet_with_hwd.py&quot;, line 9, in &lt;module&gt; from diffusers.models.unet_2d_blocks import CrossAttnDownBlock2D, DownBlock2D ModuleNotFoundError: No module named &#x27;diffusers.models.unet_2d_blocks&#x27;</p>
+<p>WARNING[XFORMERS]: xFormers can&#x27;t load C++/CUDA extensions. xFormers was built for: PyTorch 2.4.0+cu118 with CUDA 1108 (you have 2.7.1+cu118) Python  3.12.4 (you have 3.12.7) Please reinstall xformers (see https://github.com/facebookresearch/xformers#installing-xformers) Memory-efficient attention, SwiGLU, sparse and more won&#x27;t be available. Set XFORMERS_MORE_DETAILS=1 for more details A matching Triton is not available, some optimizations will not be enabled Traceback (most recent call last): File &quot;D:\anaconda3\Lib\site-packages\xformers__init__.py&quot;, line 57, in _is_triton_available import triton  # noqa ^^^^^^^^^^^^^ ModuleNotFoundError: No module named &#x27;triton&#x27; W0502 15:00:31.118000 3940 site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs. WARNING: All log messages before absl::InitializeLog() is called are written to STDERR I0000 00:00:1777705235.200701   37148 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable <code>TF_ENABLE_ONEDNN_OPTS=0</code>. WARNING: All log messages before absl::InitializeLog() is called are written to STDERR I0000 00:00:1777705239.023237   37148 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable <code>TF_ENABLE_ONEDNN_OPTS=0</code>. Traceback (most recent call last): File &quot;D:\寒假把干出结题\HistDiST-main\unet_with_hwd.py&quot;, line 9, in &lt;module&gt; from diffusers.models.unet_2d_blocks import CrossAttnDownBlock2D, DownBlock2D ModuleNotFoundError: No module named &#x27;diffusers.models.unet_2d_blocks&#x27;</p>
 <p>已切换到新请求</p>
 <p>15:00 用户2877824442</p>
 <p>那么在替换的时候遇到了哪些问题，你的解决方案是什么</p>

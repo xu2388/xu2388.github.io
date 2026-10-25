@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>DDIM反演用途介绍</h1>
@@ -215,7 +195,7 @@ loss_edge = mse(gradient(pred), gradient(target))  # 梯度约束</code></pre>
 <h2>3️⃣ 损失函数联合优化（需要少量微调）</h2>
 <p>如果你有自己的扩散模型（或正在微调），可以在训练目标中加入<strong>结构‑文本一致性损失</strong>：</p>
 <ul><li><strong>结构损失</strong>：SSIM 或梯度一致性（保留几何）</li><li><strong>文本对齐损失</strong>：CLIP 相似度或定向引导损失（保留语义）</li><li><strong>联合训练</strong>：  </li></ul>
-<p><code>total_loss = diffusion_loss + λ1 <em> structure_loss + λ2 </em> clip_loss</code></p>
+<p><code>total_loss = diffusion_loss + λ1 * structure_loss + λ2 * clip_loss</code></p>
 <p>这样模型会学到：生成的图像既要符合文本，又要保持与输入结构（如分割图）的一致性。</p>
 <h2>4️⃣ 推理时干预（无需训练，较新方法）</h2>
 <ul><li><strong>PAG (Perp-Attention Guidance)</strong>：通过对比有/无文本引导的注意力图，只在高频区域应用文本修正，低频区域保持原结构。  </li></ul>

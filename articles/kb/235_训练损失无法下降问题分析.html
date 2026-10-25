@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>训练损失无法下降问题分析</h1>
@@ -1957,7 +1937,7 @@ high = 150</code></pre>
 <hr />
 <h2>3. 自适应阈值方法（可选）</h2>
 <p>如果不同 Masson 图像的整体亮度/对比度差异较大，固定阈值可能导致某些图像边缘过密或过疏。此时可采用自适应方法：</p>
-<ul><li><strong>Otsu 大津法</strong>：自动计算全局阈值，然后按比例设置高低阈值（如 <code>low = 0.5 <em> otsu_thresh</code>, <code>high = 2 </em> otsu_thresh</code>）。</li><li><strong>基于图像统计</strong>：计算梯度幅值的百分位数（如取 70% 分位数作为高阈值，30% 作为低阈值）。</li></ul>
+<ul><li><strong>Otsu 大津法</strong>：自动计算全局阈值，然后按比例设置高低阈值（如 <code>low = 0.5 * otsu_thresh</code>, <code>high = 2 * otsu_thresh</code>）。</li><li><strong>基于图像统计</strong>：计算梯度幅值的百分位数（如取 70% 分位数作为高阈值，30% 作为低阈值）。</li></ul>
 <p>但考虑到您的数据已经过归一化到 [-1,1] 且成像条件相对一致（同种染色、同扫描仪），固定阈值通常足够稳定。</p>
 <hr />
 <h2>4. 训练时的处理方式</h2>
@@ -6012,7 +5992,7 @@ vae.eval()</code></pre>
     if mse == 0:
         return float(&#x27;inf&#x27;)
     return 20 * torch.log10(2.0 / torch.sqrt(mse))</code></pre>
-<p>这里 <code>img1</code> 和 <code>img2</code> 是像素范围在 <code>[-1,1]</code> 的张量，最大可能的像素差是 2，所以 <code>2.0</code> 是正确的最大值。但公式应该用 <code>MAX^2 / MSE</code> 的平方根，即 <code>20 <em> log10(MAX / sqrt(MSE))</code>，也就是 <code>20 </em> log10(2.0 / sqrt(MSE))</code>。但这里写的是 <code>2.0 / torch.sqrt(mse)</code>，实际上 <code>torch.sqrt(mse)</code> 是 RMSE，所以 <code>2.0 / RMSE</code> 没有取对数？代码里用了 <code>20 * torch.log10(2.0 / torch.sqrt(mse))</code>，这是正确的：<code>2.0 / sqrt(mse)</code> 是 <code>MAX / RMSE</code>，取以10为底的对数再乘20就是 PSNR。但这里 <code>mse</code> 是标量，<code>torch.sqrt(mse)</code> 是标量，没问题。</p>
+<p>这里 <code>img1</code> 和 <code>img2</code> 是像素范围在 <code>[-1,1]</code> 的张量，最大可能的像素差是 2，所以 <code>2.0</code> 是正确的最大值。但公式应该用 <code>MAX^2 / MSE</code> 的平方根，即 <code>20 * log10(MAX / sqrt(MSE))</code>，也就是 <code>20 * log10(2.0 / sqrt(MSE))</code>。但这里写的是 <code>2.0 / torch.sqrt(mse)</code>，实际上 <code>torch.sqrt(mse)</code> 是 RMSE，所以 <code>2.0 / RMSE</code> 没有取对数？代码里用了 <code>20 * torch.log10(2.0 / torch.sqrt(mse))</code>，这是正确的：<code>2.0 / sqrt(mse)</code> 是 <code>MAX / RMSE</code>，取以10为底的对数再乘20就是 PSNR。但这里 <code>mse</code> 是标量，<code>torch.sqrt(mse)</code> 是标量，没问题。</p>
 <p><strong>但是</strong>，在 <code>validate_and_save_images</code> 中，计算每个图像的 PSNR 时，用的是：</p>
 <pre><code>psnr = compute_psnr(images[i:i+1], recon[i:i+1])</code></pre>
 <p>这里的 <code>images</code> 和 <code>recon</code> 都是 <code>[-1,1]</code> 范围，没问题。</p>

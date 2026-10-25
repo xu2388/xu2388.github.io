@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>SDXL与SD1.5架构区别解析</h1>
@@ -301,14 +281,14 @@ def style_sampling(z_T, style_text_emb, model, scheduler, num_steps=50, guidance
 <ul><li><strong>如果你对目标风格图 \(z_s\) 加噪</strong>  </li></ul>
 <p>模型的去噪目标变成重建目标风格图本身。损失函数是 \(||\epsilon - \epsilon_\theta(z_t, t, c_{style})||^2\)，其中 \(z_t\) 是由 \(z_s\) 加噪得来。 这等同于告诉模型：在有风格文本的条件下，你应当生成出一张与 \(z_s\) 高度一致的图像。这样，模型学习到的映射是 <strong>文本→风格图像</strong>，即标准的文生图范式。</p>
 <p><strong>那么，内容结构约束又怎么加入？</strong> 内容图 \(z_c\) 在这里的作用不再是扩散目标，而是通过额外的损失项（频域 loss、MINE loss）来<strong>约束生成结果的底层结构</strong>。也就是说，训练时：</p>
-<ul><li>扩散损失 \(L_{diff}\) 让模型学会生成风格图像。</li><li>同时，我们要求去噪过程中预测出的 \(\hat{z}_0\)（即 \(pred\_z0\)）在频域低频分量和互信息上与内容图 \(z_c\) 保持一致。</li></ul>
+<ul><li>扩散损失 \(L_{diff}\) 让模型学会生成风格图像。</li><li>同时，我们要求去噪过程中预测出的 \(\hat{z}_0\)（即 \(pred_z0\)）在频域低频分量和互信息上与内容图 \(z_c\) 保持一致。</li></ul>
 <p><strong>关键点</strong>：由于扩散损失将模型拉向风格图，而频域+MINE 损失又将预测结果拉向内容图的结构，最终模型学会的是 <strong>在风格分布上满足内容结构约束的折中映射</strong>。这正是我们想要的条件风格迁移模型。</p>
 <p>如果你用内容图加噪，则扩散损失本身就会把模型拉向内容图，此时再多加结构约束就完全多余，而且风格只能作为微小扰动注入，效果会很差。</p>
 <p>因此，<strong>训练时必须是目标风格图加噪，内容图仅作为约束条件</strong>。这也和 ControlNet、T2I-Adapter 等结构化生成方法的思想一致：扩散目标仍取自目标数据分布，结构信息通过条件信号注入。</p>
 <hr />
 <h2>2. 频域部分是否需要修改模型结构</h2>
 <p>你提到“需要在理解频域概念的基础上，做一些自己的改动或者参考现有的在 SD1.5 上使用频域的例子”。</p>
-<p>不一定。 当前方案是把频域约束作为<strong>损失函数</strong>直接施加在潜伏空间上（即对 \(\hat{z}_0\) 和 \(z_c\) 做 FFT 后计算低频相位/幅度损失）。这种方式<strong>不需要改动 U-Net 架构</strong>，属于训练目标层面的正则化。 优势是即插即用，不会破坏预训练权重的生成能力，适合快速验证和实验。 缺点也很明显：损失引导的力量是间接的，尤其在生成初期噪声很大时，\(pred\_z0\) 的估计很不准确，结构约束可能失效。</p>
+<p>不一定。 当前方案是把频域约束作为<strong>损失函数</strong>直接施加在潜伏空间上（即对 \(\hat{z}_0\) 和 \(z_c\) 做 FFT 后计算低频相位/幅度损失）。这种方式<strong>不需要改动 U-Net 架构</strong>，属于训练目标层面的正则化。 优势是即插即用，不会破坏预训练权重的生成能力，适合快速验证和实验。 缺点也很明显：损失引导的力量是间接的，尤其在生成初期噪声很大时，\(pred_z0\) 的估计很不准确，结构约束可能失效。</p>
 <p>如果你希望<strong>更强、更直接的结构保持</strong>，可以考虑对 U-Net 进行轻微的结构修改，将内容图的结构信息显式注入，常见范式有：</p>
 <ul><li><strong>频域特征注入模块</strong>  </li></ul>
 <p>像 ϕ-PD（Phase-Driven）等工作，在 U-Net 的某些跨注意力层或跳连层，将内容图的频率特征（如相位谱经过可学习变换）与当前特征融合。这相当于给模型提供了一个“硬”的结构提示，而不是靠软性损失去约束。在 SD1.5 上可以加一个很小的 adapter，只微调 adapter 参数，冻结原来的 U-Net。</p>
@@ -387,7 +367,7 @@ loss = -(joint_T.mean() - self.log_mean_exp)</code></pre>
 <ol><li>证明高维连续随机变量之间的互信息可以通过对神经网络进行梯度下降来估计。</li><li>提出 MINE（Mutual Information Neural Estimator），具有以下性质：线性可扩展到任意维度、可反向传播训练、强一致性。</li><li>基于 Donsker-Varadhan 表示的互信息下界：</li></ol>
 <p>\[ I(X;Y) \ge \sup_{\theta \in \Theta} \mathbb{E}_{P_{XY}}[T_\theta] - \log \mathbb{E}_{P_X \otimes P_Y}[e^{T_\theta}] \]</p>
 <p><strong>关键实现细节</strong>（你在上轮回复中已经提到的）：</p>
-<ul><li>使用<strong>指数移动平均（EMA）</strong> 来稳定 \(\log \mathbb{E}[e^T]\) 的估计。因为在小批量中，\(\mathbb{E}[e^T]\) 的方差非常大，直接用 batch 均值会导致严重的数值波动。原论文建议维护一个历史均值：<code>EMA_mean = decay <em> EMA_mean + (1 - decay) </em> batch_mean</code>，然后用平滑后的值计算归一化项。</li><li>统计网络 \(T_\theta\) 可以使用任意的神经网络结构。</li></ul>
+<ul><li>使用<strong>指数移动平均（EMA）</strong> 来稳定 \(\log \mathbb{E}[e^T]\) 的估计。因为在小批量中，\(\mathbb{E}[e^T]\) 的方差非常大，直接用 batch 均值会导致严重的数值波动。原论文建议维护一个历史均值：<code>EMA_mean = decay * EMA_mean + (1 - decay) * batch_mean</code>，然后用平滑后的值计算归一化项。</li><li>统计网络 \(T_\theta\) 可以使用任意的神经网络结构。</li></ul>
 <p><strong>（1）MINE 改进对抗训练生成模型</strong>（原始论文实验部分）</p>
 <p>MINE 原论文在实验中展示了 MINE 可以用于<strong>最大化或最小化互信息</strong>。在生成模型中，它被用于改善对抗训练——通过最大化生成样本与隐变量之间的互信息，防止模式坍塌（mode collapse）。这与你在风格迁移中“最大化 \(z_0\) 与 \(z_c\) 之间的互信息”有直接的方法论对应。</p>
 <p><strong>（2）InfoBridge：扩散桥的互信息估计</strong></p>

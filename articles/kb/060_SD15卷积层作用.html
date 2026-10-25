@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>SD15卷积层作用</h1>
@@ -52,7 +32,7 @@
 <p>为了彻底分清这两个维度，我们可以这样拆解：</p>
 <p>卷积层的输出通道数<strong>完全取决于你定义了多少个卷积核（Filters/Kernels）</strong>。</p>
 <ul><li><strong>例子中的图</strong>：输入是 <code>4</code> 通道，输出是 <code>320</code> 通道。这是因为它用了 <strong>320 个不同的 3x3 卷积核</strong>。每一个卷积核都会提取一种特征，生成一个通道。</li><li><strong>结论</strong>：改变 <code>kernel_size</code> 和 <code>stride</code> 根本无法改变输出通道数，通道数只在定义卷积层时通过参数（如 <code>out_channels=320</code>）决定。</li></ul>
-<p>输出图像的高（H）和宽（W）遵循一个核心公式： \[ Output\_Size = \frac{Input\_Size - Kernel\_Size + 2 \times Padding}{Stride} + 1 \]</p>
+<p>输出图像的高（H）和宽（W）遵循一个核心公式： \[ Output_Size = \frac{Input_Size - Kernel_Size + 2 \times Padding}{Stride} + 1 \]</p>
 <p>根据你对 k（卷积核大小）和 s（步长）的搭配，会有以下三种典型情况：</p>
 <ul><li><strong>【情况一：尺寸不变】</strong></li><li><strong>搭配</strong>：<code>k=3</code>, <code>stride=1</code>, <strong>必须搭配 <code>padding=1</code></strong>。</li><li><strong>结果</strong>：输入 64x64，输出依然 64x64。</li><li><em>对应到图中</em>：图中 <code>Conv_in (4,320,k=3)</code> 明确写了 <code>k=3</code>，输入/输出尺寸也是 <code>[2, 4, 64, 64]</code> 到 <code>[2, 320, 64, 64]</code>。说明它是用了 <code>stride=1</code> 和 <code>padding=1</code> 才能保持空间大小不变。</li></ul>
 <ul><li><strong>【情况二：尺寸减半（下采样）】</strong></li><li><strong>搭配</strong>：<code>k=2</code> 或 <code>k=3</code>, <strong><code>stride=2</code></strong> (通常搭配 <code>padding=1</code>)。</li><li><strong>结果</strong>：64x64 会变成 32x32。很多神经网络（包括 SD1.5 后面下采样模块）就是利用这种搭配来缩小特征图，提取全局特征。</li></ul>
@@ -182,7 +162,7 @@ class ResnetBlock2D(nn.Module):
 <ul><li><strong>输入</strong>：<code>[2, 320, 64, 64]</code></li><li><strong>输出</strong>：<code>[2, 320, 32, 32]</code></li><li><strong>结论</strong>：<strong>通道数（320）死死咬住没变，但是高度和宽度直接减半了。</strong>（像素点从 64×64=4096 个，骤降到 32×32=1024 个）。</li></ul>
 <p>在 SD1.5 的标准实现中，它并没有使用复杂的池化（Pooling），而是直接使用了一个 <strong>步长（Stride）为 2 的 3×3 卷积</strong>。</p>
 <ul><li><strong>具体参数</strong>：<code>kernel_size=3, stride=2, padding=1</code></li><li><strong>数学验证</strong>：我们可以套用之前说过的尺寸计算公式：</li></ul>
-<p>\[ Output\_Size = \frac{64 - 3 + 2 \times 1}{2} + 1 = \frac{63}{2} + 1 = 31.5 + 1 = 32.5 \] 在计算机代码的实际运算中，整数除法会把 31.5 取整为 31，再加 1，<strong>刚好等于 32</strong>。这种精确的尺寸减半正是 SD 模型设计的巧妙之处。</p>
+<p>\[ Output_Size = \frac{64 - 3 + 2 \times 1}{2} + 1 = \frac{63}{2} + 1 = 31.5 + 1 = 32.5 \] 在计算机代码的实际运算中，整数除法会把 31.5 取整为 31，再加 1，<strong>刚好等于 32</strong>。这种精确的尺寸减半正是 SD 模型设计的巧妙之处。</p>
 <p><em>(注：在图像处理中，“步长 Stride”其实就是卷积核每次跳过的像素格数。之前 Stride=1 是一个格子一个格子移动，而现在 Stride=2 是一次跳过两个格子，所以输出的图像大小就自然缩小了一半。)</em></p>
 <p>你是不是觉得，刚才用卷积和注意力好不容易把 <code>64x64</code> 的细节弄清楚了，现在突然要把画面压缩一半，不会丢失细节吗？ 这里有两个极其重要的设计考量：</p>
 <ul><li><strong>① 减少计算量，节省显存（最核心目的）</strong></li></ul>
@@ -332,7 +312,7 @@ image.save(&quot;output.png&quot;)</code></pre>
 <ul><li><strong>论文名称</strong>：<strong>《High-Resolution Image Synthesis with Latent Diffusion Models》</strong>（CVPR 2022，即原始 Stable Diffusion 论文）</li><li><strong>核心作者</strong>：Robin Rombach 等（Stability AI 团队）</li><li><strong>对 Inpaint 的贡献（第 3.2 节）</strong>：</li></ul>
 <p>这篇论文在提出 LDM（潜在扩散模型）时，就已经把<strong>“局部重绘（Inpainting）”</strong>作为一个官方标准的应用场景进行了定义。为了解决这个问题，作者提出了<strong>通道条件输入（Channel-wise conditioning）</strong>。 <em>   <strong>直观解释</strong>：标准的 SD1.5 输入只有 <code>[B, 4, H, W]</code>（4通道的潜变量）。在这篇论文的指引下，模型被改造为接收 <strong><code>[B, 5, H, W]</code></strong>（多出来的 1 个通道专门用来放<strong>掩码 Mask</strong>）。 </em>   后面 Stability AI 发布的 <code>runwayml/stable-diffusion-inpainting</code> 权重，正是基于这个理论基础，在 LAION 数据集上<strong>额外专门微调（Fine-tune）了这多出的 1 个通道参数</strong>。</p>
 <ul><li><strong>论文名称</strong>：<strong>《RePaint: Inpainting using Denoising Diffusion Probabilistic Models》</strong>（CVPR 2022）</li><li><strong>核心作者</strong>：Andreas Lugmayr 等</li><li><strong>对保持结构的贡献</strong>：</li></ul>
-<p>如果你还记得我上一条回复中提到的那个数学公式：<code>新噪点图 = 原图潜变量 <em> (1 - 掩码) + 带噪潜变量 </em> 掩码</code>。 这个完美的“图像保真”数学操作，<strong>并不是 SD 开发者凭空想出来的，而是严格出自这篇 <code>RePaint</code> 论文</strong>。 这篇论文论证了：<strong>即使不使用专门重训练的 5 通道模型，只要你掌握了这个“强制混合（Mask Mixing）”去噪算法，普通的 SD 模型也能实现 100% 保留未掩码区域细节的修复。</strong></p>
+<p>如果你还记得我上一条回复中提到的那个数学公式：<code>新噪点图 = 原图潜变量 * (1 - 掩码) + 带噪潜变量 * 掩码</code>。 这个完美的“图像保真”数学操作，<strong>并不是 SD 开发者凭空想出来的，而是严格出自这篇 <code>RePaint</code> 论文</strong>。 这篇论文论证了：<strong>即使不使用专门重训练的 5 通道模型，只要你掌握了这个“强制混合（Mask Mixing）”去噪算法，普通的 SD 模型也能实现 100% 保留未掩码区域细节的修复。</strong></p>
 <hr />
 <p>基于这两篇论文，你在实际操作时，其实面临<strong>两种不同的路径</strong>：</p>
 <ol><li><strong>路径 A：使用官方微调模型</strong>（<code>runwayml/stable-diffusion-inpainting</code> 权重）</li></ol>

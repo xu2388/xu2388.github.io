@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>HistDiST基于SD改进</h1>
@@ -118,7 +98,7 @@
 <p>但这里有一个<strong>至关重要的架构分水岭</strong>需要先明确：<strong>VAE使用掩码的方式，和U-Net使用掩码的方式，有本质的不同。</strong> 如果混用，会导致模型崩溃。</p>
 <p>针对你的目标，我给出<strong>最稳妥且最高效</strong>的两阶段落地方案：</p>
 <p><strong>核心原则</strong>：<strong>绝对不要</strong>把掩码图作为输入通道（Concat）送进VAE的编码器！</p>
-<ul><li><strong>为什么？</strong> 如果你把掩码和RGB图拼接成 <code>[3+1=4通道]</code> 输入，VAE会学会“利用掩码来辅助重建”。在推理（Inference）时，你没有真实掩码（除非你用分割模型现跑，但会有误差），一旦掩码缺失或不准，解码器会直接崩溃，输出大量伪影。</li><li><strong>正确做法（行业黄金标准）</strong>：使用 <strong>掩码加权重建损失（Mask-Weighted Reconstruction Loss）</strong>。</li><li>在计算 VAE 的 Loss（MSE 和 Perceptual Loss）时，将你的肾小球掩码（二值图，肾小球区域为1，背景为0）作为<strong>空间权重</strong>。</li><li>公式：<code>Loss_total = Loss_MSE <em> (1 + α </em> Mask) + Loss_Perceptual <em> (1 + β </em> Mask)</code>。</li><li>这样，VAE 的架构保持原样（输入仍是RGB 3通道，输出仍是4通道潜空间），但<strong>梯度回传时，肾小球区域的像素误差会被放大（例如乘以 5~10 倍）</strong>。这会强迫编码器把肾小球区域的细小纹理（如基底膜、毛细血管腔）压缩进那 4 个通道的特征图中，而背景区域稍微模糊一点也没关系。</li></ul>
+<ul><li><strong>为什么？</strong> 如果你把掩码和RGB图拼接成 <code>[3+1=4通道]</code> 输入，VAE会学会“利用掩码来辅助重建”。在推理（Inference）时，你没有真实掩码（除非你用分割模型现跑，但会有误差），一旦掩码缺失或不准，解码器会直接崩溃，输出大量伪影。</li><li><strong>正确做法（行业黄金标准）</strong>：使用 <strong>掩码加权重建损失（Mask-Weighted Reconstruction Loss）</strong>。</li><li>在计算 VAE 的 Loss（MSE 和 Perceptual Loss）时，将你的肾小球掩码（二值图，肾小球区域为1，背景为0）作为<strong>空间权重</strong>。</li><li>公式：<code>Loss_total = Loss_MSE * (1 + α * Mask) + Loss_Perceptual * (1 + β * Mask)</code>。</li><li>这样，VAE 的架构保持原样（输入仍是RGB 3通道，输出仍是4通道潜空间），但<strong>梯度回传时，肾小球区域的像素误差会被放大（例如乘以 5~10 倍）</strong>。这会强迫编码器把肾小球区域的细小纹理（如基底膜、毛细血管腔）压缩进那 4 个通道的特征图中，而背景区域稍微模糊一点也没关系。</li></ul>
 <p>这是你计划中最棒的一步！在 Diffusion U-Net 中注入掩码，是让模型知道“哪里是肾小球，哪里是背景”的绝佳方式。你有两种主流选择，我强烈推荐<strong>方案A</strong>：</p>
 <ul><li><strong>方案A（推荐）：作为额外的条件通道（类似 InstructPix2Pix 的思路）</strong></li><li>HistDiST 已经把 H&amp;E 的 VAE 潜变量（4通道）和噪声拼接作为 U-Net 输入（共8通道）。</li><li>你可以<strong>再增加一个通道</strong>，把掩码下采样到潜空间尺寸（对于 608 输入，下采样8倍后是 <code>76x76</code>）。</li><li>最终 U-Net 输入变成：<code>[噪声(4通道) + H&amp;E潜变量(4通道) + 掩码(1通道)] = 9通道</code>。</li><li><strong>操作</strong>：将掩码图缩放到 <code>[B, 1, 76, 76]</code>（二值，0/1），直接拼在输入层后面。这告诉 U-Net：“请重点处理这 1 个通道对应区域的特征”。</li></ul>
 <ul><li><strong>方案B（备选）：作为 Cross-Attention 的语义嵌入</strong></li><li>把掩码通过一个小型 MLP 映射成一个 embedding，像 Phikon 特征一样注入 U-Net 的 Cross-Attention 层。但这不如方案A直接，因为空间位置信息会在映射中减弱。</li></ul>
@@ -141,7 +121,7 @@
 <p><strong>🚨 风险警告：</strong> HistDiST（以及Stable Diffusion）的U-Net是在<strong>SD-VAE的特定潜空间分布</strong>上预训练好的。如果你把VAE微调得太“猛”（比如把肾小球权重设到10倍），VAE输出的潜空间分布（均值和方差）会发生偏移。等你去训练U-Net时，你会发现U-Net死活不收敛，因为它不认识这个“新潜空间”了。</p>
 <p>既然架构不变，你的操作极其简单，只需要<strong>在计算Loss时做手脚</strong>：</p>
 <ol><li><strong>冻结编码器前几层（可选）</strong>：为了不破坏预训练好的通用纹理特征（如细胞核边缘、染色质），你可以把VAE编码器的前2层下采样模块冻结（学习率设为0），只微调编码器最后几层和解码器。</li><li><strong>实施掩码加权的MSE损失</strong>：</li></ol>
-<ul><li>将你的肾小球掩码（<code>[B,1,608,608]</code>）通过平均池化下采样到 VAE 解码器输出的尺寸（同样是 <code>[B,1,608,608]</code>，因为VAE输出就是原图大小）。</li><li>计算像素级MSE损失后，乘以权重图：<code>Loss = (MSE <em> (1 + α </em> Mask)).mean()</code>。<strong>强烈建议 α 不要超过 2.0</strong>（比如设为0.5~1.0），这样肾小球区域的重要性只比背景高一点点，避免潜空间剧烈漂移。</li></ul>
+<ul><li>将你的肾小球掩码（<code>[B,1,608,608]</code>）通过平均池化下采样到 VAE 解码器输出的尺寸（同样是 <code>[B,1,608,608]</code>，因为VAE输出就是原图大小）。</li><li>计算像素级MSE损失后，乘以权重图：<code>Loss = (MSE * (1 + α * Mask)).mean()</code>。<strong>强烈建议 α 不要超过 2.0</strong>（比如设为0.5~1.0），这样肾小球区域的重要性只比背景高一点点，避免潜空间剧烈漂移。</li></ul>
 <ol><li><strong>保留KL散度</strong>：VAE的KL Loss不要动，保持原权重。它负责约束潜空间的正则化，绝对不能去掉。</li></ol>
 <hr />
 <p>因为架构不变，代表：</p>
@@ -540,7 +520,7 @@ total_loss = (mse_weight * weighted_mse) + (lpips_weight * lpips_loss) + (kl_wei
 <p><strong>你的理解完全准确，一语道破了 SD 1.5 文本控制的核心机制！</strong></p>
 <p>我来帮你把这块技术细节拆解清楚，并直接关联到你正在做的 HistDiST 项目上：</p>
 <p>你提到的“全局注意力块”，在学术上称为 <strong>交叉注意力（Cross-Attention）层</strong>。它的工作原理极其精妙：</p>
-<ul><li><strong>Q（Query，查询）来自图像</strong>：由 U-Net 中间层的图像特征图（<code>H x W x C</code>）通过线性变换生成。</li><li><strong>K（Key，键）和 V（Value，值）来自文本</strong>：由 CLIP 提取的文本嵌入（<code>77 x 768</code>）通过线性变换生成。</li><li><strong>交互公式</strong>：<code>Attention(Q, K, V) = softmax(Q<em>K^T / sqrt(d)) </em> V</code>。</li><li><strong>直观理解</strong>：图像特征（Q）去“询问”文本特征（K）：“哪里该出现猫？哪里该出现狗？”文本特征把位置信息（V）告诉图像。<strong>这就让 U-Net 学会了在指定的空间区域（比如画面左侧）生成指定的内容（比如肾小球）</strong>。</li></ul>
+<ul><li><strong>Q（Query，查询）来自图像</strong>：由 U-Net 中间层的图像特征图（<code>H x W x C</code>）通过线性变换生成。</li><li><strong>K（Key，键）和 V（Value，值）来自文本</strong>：由 CLIP 提取的文本嵌入（<code>77 x 768</code>）通过线性变换生成。</li><li><strong>交互公式</strong>：<code>Attention(Q, K, V) = softmax(Q*K^T / sqrt(d)) * V</code>。</li><li><strong>直观理解</strong>：图像特征（Q）去“询问”文本特征（K）：“哪里该出现猫？哪里该出现狗？”文本特征把位置信息（V）告诉图像。<strong>这就让 U-Net 学会了在指定的空间区域（比如画面左侧）生成指定的内容（比如肾小球）</strong>。</li></ul>
 <p>HistDiST <strong>完美继承并偷换了这一核心机制</strong>。虽然它基于 SD 1.5，但它<strong>完全抛弃了 CLIP 文本嵌入</strong>（因为你不需要用中文或英文写提示词）。</p>
 <ul><li><strong>偷梁换柱</strong>：HistDiST 并没有改动 Cross-Attention 的数学公式，而是把 <code>K</code> 和 <code>V</code> 的输入源从 <code>CLIP文本向量</code> 换成了 <strong>Phikon 提取的形态学特征</strong>。</li><li><strong>效果</strong>：原本 U-Net 是听文本的“指挥”去画图，现在变成了听 Phikon 的“指挥”——Phikon 告诉 U-Net：“这里的 H&amp;E 形态像肾小球毛细血管袢，请生成对应的 IHC 阳性信号”。</li></ul>
 <p>你注意到这个细节了吗？HistDiST 用了<strong>双重控制</strong>：</p>

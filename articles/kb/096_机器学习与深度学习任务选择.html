@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>机器学习与深度学习任务选择</h1>
@@ -2399,7 +2379,7 @@ demo.launch()</code></pre>
 <hr />
 <h2>一、VAE 的核心原理（简单回顾）</h2>
 <ul><li><strong>编码器</strong>：输入信号 \(x\)（4096维），输出两个向量：均值 \(\mu\) 和对数方差 \(\log\sigma^2\)（维度均为 <code>latent_dim</code>，例如 32）。</li><li><strong>重参数化</strong>：从正态分布中采样 \(z = \mu + \sigma \odot \epsilon\)，其中 \(\epsilon \sim \mathcal{N}(0, I)\)。这一步让梯度可以回传。</li><li><strong>解码器</strong>：将 \(z\) 映射回重构信号 \(\hat{x}\)（维度与输入相同）。</li><li><strong>损失函数</strong>（关键）：</li></ul>
-<p>\[ \mathcal{L} = \underbrace{\text{Reconstruction Loss}}_{\text{交叉熵 或 MSE}} + \underbrace{\beta \cdot \text{KL Divergence}}_{\text{正则项}} \] - <strong>重构损失</strong>：衡量原始输入 \(x\) 与重构 \(\hat{x}\) 的差异。对于连续信号（如振动幅值），通常使用 <strong>MSE</strong>；但如果将信号归一化到 [0,1] 并视为“像素强度”，也可以使用 <strong>二值交叉熵</strong>（Binary Cross Entropy）。你提到的“交叉熵”就用于这里。 - <strong>KL 散度</strong>：使编码分布 \(\mathcal{N}(\mu, \sigma^2)\) 逼近标准正态分布。其解析形式可以直接计算，无需采样。公式为： \[ \text{KL} = -\frac{1}{2} \sum_{j=1}^{\text{latent\_dim}} \left( 1 + \log(\sigma_j^2) - \mu_j^2 - \sigma_j^2 \right) \] - \(\beta\) 是一个超参数（通常 =1，但有时调整以平衡重构和正则化）。</p>
+<p>\[ \mathcal{L} = \underbrace{\text{Reconstruction Loss}}_{\text{交叉熵 或 MSE}} + \underbrace{\beta \cdot \text{KL Divergence}}_{\text{正则项}} \] - <strong>重构损失</strong>：衡量原始输入 \(x\) 与重构 \(\hat{x}\) 的差异。对于连续信号（如振动幅值），通常使用 <strong>MSE</strong>；但如果将信号归一化到 [0,1] 并视为“像素强度”，也可以使用 <strong>二值交叉熵</strong>（Binary Cross Entropy）。你提到的“交叉熵”就用于这里。 - <strong>KL 散度</strong>：使编码分布 \(\mathcal{N}(\mu, \sigma^2)\) 逼近标准正态分布。其解析形式可以直接计算，无需采样。公式为： \[ \text{KL} = -\frac{1}{2} \sum_{j=1}^{\text{latent_dim}} \left( 1 + \log(\sigma_j^2) - \mu_j^2 - \sigma_j^2 \right) \] - \(\beta\) 是一个超参数（通常 =1，但有时调整以平衡重构和正则化）。</p>
 <hr />
 <h2>二、VAE 架构设计（用于你的轴承数据）</h2>
 <ul><li>输入 <code>x</code>：形状 <code>(batch_size, 4096)</code>（原始振动信号）</li><li>输出 <code>x_recon</code>：相同形状</li></ul>
@@ -2712,7 +2692,7 @@ class VAE(nn.Module):
 <ul><li>作用：让解码器能准确还原输入信号。</li><li>选择：对于 [0,1] 范围的连续信号，使用 <strong>二进制交叉熵（BCE）</strong> 效果优于 MSE。</li><li>公式：  </li></ul>
 <p>\[ \mathcal{L}_{\text{BCE}} = -\sum_{i=1}^{4096} \left[ x_i \log \hat{x}_i + (1-x_i) \log(1-\hat{x}_i) \right] \] 可以理解为将每个维度的数值看作伯努利分布的参数。</p>
 <ul><li>作用：迫使编码分布 <code>q(z|x) ~ N(μ, σ²)</code> 接近标准正态分布 <code>p(z) ~ N(0,1)</code>。</li><li>闭式解（无需采样）：</li></ul>
-<p>\[ \mathcal{L}_{\text{KL}} = -\frac{1}{2} \sum_{j=1}^{\text{latent\_dim}} \left(1 + \log(\sigma_j^2) - \mu_j^2 - \sigma_j^2 \right) \]</p>
+<p>\[ \mathcal{L}_{\text{KL}} = -\frac{1}{2} \sum_{j=1}^{\text{latent_dim}} \left(1 + \log(\sigma_j^2) - \mu_j^2 - \sigma_j^2 \right) \]</p>
 <p>\[ \mathcal{L} = \mathcal{L}_{\text{BCE}} + \beta \cdot \mathcal{L}_{\text{KL}} \]</p>
 <ul><li><code>β</code> 通常设为 1（标准 VAE）。如果希望获得更解耦的表示，可以增大 β（β-VAE）。</li></ul>
 <pre><code>def loss_vae(recon_x, x, mu, log_var, beta=1.0):
@@ -6338,7 +6318,7 @@ X_test_scaled = scaler.transform(X_test_emb)</code></pre>
 <ul><li>我们希望编码器输出的分布 \(q(z|x)\)（给定输入 \(x\) 时 \(z\) 的条件分布）<strong>尽可能接近</strong>预设的先验分布 \(p(z)\)（通常取标准正态分布 \(N(0,I)\)）。</li><li>我们无法直接让 \(q(z|x)\) 等于 \(p(z)\)，但可以通过<strong>最小化 KL 散度</strong>来实现：</li></ul>
 <p>\[ \min D_{KL}\big(q(z|x) \parallel p(z)\big) \]</p>
 <ul><li>由于 \(p(z)\) 是已知的高斯分布，\(q(z|x)\) 也被设定为高斯分布（输出均值 \(\mu\) 和对数方差 \(\log\sigma^2\)），所以 KL 散度可以写出<strong>解析表达式</strong>（不需要采样）：</li></ul>
-<p>\[ D_{KL} = -\frac{1}{2}\sum_{j=1}^{\text{latent\_dim}} \left(1 + \log(\sigma_j^2) - \mu_j^2 - \sigma_j^2\right) \]</p>
+<p>\[ D_{KL} = -\frac{1}{2}\sum_{j=1}^{\text{latent_dim}} \left(1 + \log(\sigma_j^2) - \mu_j^2 - \sigma_j^2\right) \]</p>
 <ul><li>在训练时，把这个 KL 项加到损失函数里，梯度下降就会<strong>迫使</strong> \(q(z|x)\) 向 \(p(z)\) 靠拢。</li></ul>
 <ul><li>最终，对于所有输入 \(x\)，它们的编码分布都被“拉”向同一个标准正态分布。这导致潜在空间 \(z\) 变得<strong>连续、填满、光滑</strong>（没有空洞），方便生成和插值。</li><li>但代价是：不同类别的 \(z\) 可能会被挤压到一起，从而<strong>丢失判别信息</strong>（这正是你实验中 \(\beta=2.0\) 时聚类效果差的原因）。</li></ul>
 <hr />

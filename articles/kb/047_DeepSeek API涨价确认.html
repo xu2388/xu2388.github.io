@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>DeepSeek API涨价确认</h1>
@@ -81,12 +61,12 @@
 <ul><li><strong>MiniMax M3</strong>：根据评测机构Morph的研究，它在保证高性能（SWE-bench编码测试超过80%[reference:0][reference:1]）的同时，价格非常有竞争力（$0.60/$2.40每百万tokens[reference:2]），被认为是“<strong>最佳价值</strong>”模型[reference:3][reference:4]。</li><li><strong>小米 MiMo V2.5 Pro</strong>：它最大的优势是<strong>超长上下文（1M tokens）</strong>[reference:5][reference:6]，且价格固定（$1/$3每百万tokens）[reference:7][reference:8]。对于需要处理长文档的业务来说，性价比极高[reference:9][reference:10]。</li><li><strong>月之暗面 Kimi K2.6</strong>：如果使用场景是包含大量重复提示词的Agent或编程工作流，它的<strong>缓存命中价格（$0.07/百万tokens）</strong>[reference:11][reference:12]极具吸引力，能大幅降低成本[reference:13][reference:14]。</li><li><strong>阿里巴巴 Qwen3 Max</strong>：在DeepSeek之下，它常被视为<strong>通用生产环境的最佳性价比</strong>选择[reference:15][reference:16]，输出价格为$3.90/百万tokens[reference:17]，支持262K上下文[reference:18][reference:19]，能力均衡。</li><li><strong>智谱 GLM-5</strong>：定价$3.20/百万tokens输出[reference:20]，支持200K上下文[reference:21]，在需要<strong>复杂推理</strong>（如结构化思维链）的任务中表现出色[reference:22][reference:23]。</li></ul>
 <p>为了让你更直观地比较，这里是它们的关键数据对比：</p>
 <table>
-<tr><th>模型</th><th>输出价格 ($/MTok)</th><th>上下文窗口</th><th>核心优势与适用场景</th></tr>
-<tr><td><strong>MiniMax M3</strong></td><td><strong>$2.40</strong>[reference:24]</td><td>-</td><td><strong>综合最佳价值</strong>，在编码等任务上性能与价格平衡得最好[reference:25][reference:26]。</td></tr>
-<tr><td><strong>小米 MiMo V2.5 Pro</strong></td><td><strong>$3.00</strong>[reference:27][reference:28]</td><td><strong>1M</strong>[reference:29][reference:30]</td><td><strong>超长文档/代码库处理</strong>，长上下文场景下的性价比之王[reference:31][reference:32]。</td></tr>
-<tr><td><strong>月之暗面 Kimi K2.6</strong></td><td><strong>$3.20</strong>[reference:33]</td><td>-</td><td><strong>Agent/编程工作流</strong>，缓存命中价格极低（$0.07/MTok）[reference:34][reference:35]。</td></tr>
-<tr><td><strong>智谱 GLM-5</strong></td><td><strong>$3.20</strong>[reference:36]</td><td>200K[reference:37]</td><td><strong>复杂推理任务</strong>，在结构化思维链方面表现最强[reference:38][reference:39]。</td></tr>
-<tr><td><strong>阿里巴巴 Qwen3 Max</strong></td><td><strong>$3.90</strong>[reference:40]</td><td>262K[reference:41][reference:42]</td><td><strong>通用生产环境</strong>，能力均衡，适合大多数日常业务需求[reference:43][reference:44]。</td></tr>
+<tr><th>模型</th><th>输出价格 ($/MTok) | 上下文窗口 | 核心优势与适用场景</th></tr>
+<tr><td><strong>MiniMax M3</strong></td><td><strong>$2.40</strong>[reference:24] | - | <strong>综合最佳价值</strong>，在编码等任务上性能与价格平衡得最好[reference:25][reference:26]。</td></tr>
+<tr><td><strong>小米 MiMo V2.5 Pro</strong></td><td><strong>$3.00</strong>[reference:27][reference:28] | <strong>1M</strong>[reference:29][reference:30] | <strong>超长文档/代码库处理</strong>，长上下文场景下的性价比之王[reference:31][reference:32]。</td></tr>
+<tr><td><strong>月之暗面 Kimi K2.6</strong></td><td>**$3.20**[reference:33] | - | **Agent/编程工作流**，缓存命中价格极低（$0.07/MTok）[reference:34][reference:35]。</td></tr>
+<tr><td><strong>智谱 GLM-5</strong></td><td><strong>$3.20</strong>[reference:36] | 200K[reference:37] | <strong>复杂推理任务</strong>，在结构化思维链方面表现最强[reference:38][reference:39]。</td></tr>
+<tr><td><strong>阿里巴巴 Qwen3 Max</strong></td><td><strong>$3.90</strong>[reference:40] | 262K[reference:41][reference:42] | <strong>通用生产环境</strong>，能力均衡，适合大多数日常业务需求[reference:43][reference:44]。</td></tr>
 </table>
 <blockquote><strong>请注意</strong>：以上价格主要为2026年5-6月的数据[reference:45][reference:46][reference:47]，且多为输出价格。实际API调用费用是输入+输出之和，并受缓存等因素影响。</blockquote>
 <p>所以，“性价比第二”并没有一个唯一的答案。最明智的策略是根据你的具体需求来选择：</p>
@@ -108,13 +88,13 @@
 <ul><li><strong>Grok 4.1 Fast</strong>：输出价<strong>$0.50/百万tokens</strong>[reference:14]，综合得分<strong>68分</strong>[reference:15]。价格合理，性能不俗，是性价比很高的选择。</li><li><strong>GPT-4o mini</strong>：输出价<strong>$0.60/百万tokens</strong>[reference:16]，综合得分<strong>49分</strong>[reference:17]。作为OpenAI的轻量级模型，是入门和高频调用的经济之选。</li></ul>
 <p>下表整理了上述模型的关键数据，方便你对比：</p>
 <table>
-<tr><th>模型</th><th>综合得分</th><th>输出价格 ($/百万tokens)</th><th>核心优势与适用场景</th></tr>
-<tr><td><strong>DeepSeek V4 Flash (Max)</strong></td><td>76[reference:18]</td><td><strong>$0.28</strong>[reference:19]</td><td><strong>性价比之王</strong>，成本极致[reference:20]</td></tr>
-<tr><td><strong>MiniMax M3</strong></td><td><strong>78</strong>[reference:21]</td><td>$1.20[reference:22]</td><td><strong>综合性价比第二</strong>，适合通用任务[reference:23]</td></tr>
-<tr><td><strong>智谱 GLM-5</strong></td><td>~50[reference:24]</td><td>~$3.20</td><td><strong>编程与Agent任务</strong>顶尖[reference:25][reference:26]</td></tr>
-<tr><td><strong>Kimi K3</strong></td><td>74.7[reference:27]</td><td>$15.00[reference:28]</td><td><strong>综合性能极强</strong>，前端代码第一[reference:29]</td></tr>
-<tr><td><strong>Grok 4.1 Fast</strong></td><td>68[reference:30]</td><td><strong>$0.50</strong>[reference:31]</td><td><strong>高性价比</strong>，价格接近DS[reference:32]</td></tr>
-<tr><td><strong>GPT-4o mini</strong></td><td>49[reference:33]</td><td>$0.60[reference:34]</td><td><strong>经济适用</strong>，适合高频调用[reference:35]</td></tr>
+<tr><th>模型</th><th>综合得分</th><th>输出价格 ($/百万tokens) | 核心优势与适用场景</th></tr>
+<tr><td><strong>DeepSeek V4 Flash (Max)</strong></td><td>76[reference:18]</td><td><strong>$0.28</strong>[reference:19] | <strong>性价比之王</strong>，成本极致[reference:20]</td></tr>
+<tr><td><strong>MiniMax M3</strong></td><td><strong>78</strong>[reference:21]</td><td>$1.20[reference:22] | <strong>综合性价比第二</strong>，适合通用任务[reference:23]</td></tr>
+<tr><td><strong>智谱 GLM-5</strong></td><td>~50[reference:24]</td><td>~$3.20 | <strong>编程与Agent任务</strong>顶尖[reference:25][reference:26]</td></tr>
+<tr><td><strong>Kimi K3</strong></td><td>74.7[reference:27]</td><td>$15.00[reference:28] | <strong>综合性能极强</strong>，前端代码第一[reference:29]</td></tr>
+<tr><td><strong>Grok 4.1 Fast</strong></td><td>68[reference:30]</td><td><strong>$0.50</strong>[reference:31] | <strong>高性价比</strong>，价格接近DS[reference:32]</td></tr>
+<tr><td><strong>GPT-4o mini</strong></td><td>49[reference:33]</td><td>$0.60[reference:34] | <strong>经济适用</strong>，适合高频调用[reference:35]</td></tr>
 </table>
 <blockquote><strong>请注意</strong>：以上价格和得分主要基于2026年7-8月的第三方评测数据[reference:36][reference:37][reference:38]，实际API价格可能变动，请以各厂商官网为准。</blockquote>
 <p>所以，没有绝对的“第二”，但有最适合你需求的“第二”：</p>

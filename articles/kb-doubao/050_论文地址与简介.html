@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>论文地址与简介</h1>
@@ -685,7 +676,7 @@ stain_matrix = np.array([
 <ol><li>如果$x$来自完全真实：$p_g(x)=0$，则$D^*(x)=1$；判别器认为是真。</li><li>如果$x$完全来自生成造假：$p_{data}(x)=0$，则$D^*(x)=0$；判别器识别为假。</li><li>如果 $p_{data}(x)=p_g(x)$（生成分布和真实分布完全重合，GAN达到理想纳什均衡），则 $D^*(x)=0.5$，判别器完全分不出真假。</li></ol>
 <blockquote>👉 这是GAN理论最重要结论：<strong>给定G，最优D由真实分布和生成分布的比值直接给出</strong>。</blockquote>
 <h2>3、代入最优判别器，目标等价为JS散度</h2>
-<p>把最优判别器$D^<em>$代入$V(D,G)$，化简之后： $$ V(G,D^</em>) = 2\cdot JSD\big(p_{data}\;\|\; p_g\big)-\log 4 $$</p>
+<p>把最优判别器$D^*$代入$V(D,G)$，化简之后： $$ V(G,D^*) = 2\cdot JSD\big(p_{data}\;\|\; p_g\big)-\log 4 $$</p>
 <p>JS散度用来<strong>衡量两个概率分布之间距离</strong>：</p>
 <ul><li>$JSD=0$：$p_{data}$与$p_g$完全一模一样，生成效果完美；</li><li>$JSD=\log2$：两个分布完全没有重叠，距离最远。</li></ul>
 <blockquote>原始GAN的本质：<strong>训练等价于最小化真实分布$p_{data}$和生成分布$p_g$之间的JS散度</strong>。</blockquote>

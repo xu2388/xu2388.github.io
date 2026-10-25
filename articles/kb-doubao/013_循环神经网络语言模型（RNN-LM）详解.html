@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>循环神经网络语言模型（RNN-LM）详解</h1>
@@ -1641,8 +1632,8 @@
 <p>PPT开头回顾了<strong>贝叶斯规则（Bayes&#x27; Rule）</strong>，这是反向解码的数学基石： $$ p(y|x) = \frac{1}{p(x)} p(x|y) p(y) $$</p>
 <table>
 <tr><th>符号</th><th>含义</th><th>通俗解释</th></tr>
-<tr><td>**$p(y</td><td>x)$**</td><td><strong>后验概率 (Posterior)</strong></td><td><strong>最终目标</strong>：源句 $x$ 翻译成目标句 $y$ 的概率（即我们想要的好翻译）</td></tr>
-<tr><td>**$p(x</td><td>y)$**</td><td><strong>似然概率 (Likelihood)</strong></td><td><strong>正向模型</strong>：目标句 $y$ 翻回源句 $x$ 的概率（也就是你之前学的 <strong>R2L反向翻译模型</strong>）</td></tr>
+<tr><td><strong>$p(y|x)$</strong></td><td><strong>后验概率 (Posterior)</strong></td><td><strong>最终目标</strong>：源句 $x$ 翻译成目标句 $y$ 的概率（即我们想要的好翻译）</td></tr>
+<tr><td><strong>$p(x|y)$</strong></td><td><strong>似然概率 (Likelihood)</strong></td><td><strong>正向模型</strong>：目标句 $y$ 翻回源句 $x$ 的概率（也就是你之前学的 <strong>R2L反向翻译模型</strong>）</td></tr>
 <tr><td><strong>$p(y)$</strong></td><td><strong>先验概率 (Prior)</strong></td><td><strong>语言模型</strong>：目标句 $y$ 本身符合语言习惯的概率（单语数据训练）</td></tr>
 <tr><td><strong>$p(x)$</strong></td><td><strong>证据 (Evidence)</strong></td><td>常数，不影响候选排序，可忽略</td></tr>
 </table>
@@ -1674,7 +1665,7 @@
 <table>
 <tr><th>模型类型</th><th>作用</th><th>对应知识点</th></tr>
 <tr><td><strong>regular model（常规模型）</strong></td><td>基础L2R正向翻译模型，提供翻译的基础概率评分</td><td>你最开始学的Seq2Seq翻译模型</td></tr>
-<tr><td><strong>inverse model（反向模型）</strong></td><td>目标语→源语的反向翻译模型，校验翻译的准确性</td><td>上一页的Inverse Decoding中的$p(x</td><td>y)$</td></tr>
+<tr><td><strong>inverse model（反向模型）</strong></td><td>目标语→源语的反向翻译模型，校验翻译的准确性</td><td>上一页的Inverse Decoding中的$p(x|y)$</td></tr>
 <tr><td><strong>right-to-left model（从右到左模型）</strong></td><td>反向生成的R2L模型，评估句子的全局连贯性</td><td>之前学的R2L Inference/Reranking</td></tr>
 <tr><td><strong>language model（语言模型）</strong></td><td>单语目标语模型，评估句子的语法流畅度</td><td>Inverse Decoding中的$p(y)$</td></tr>
 </table>
@@ -1719,7 +1710,7 @@
 <h2>二、MERT 的核心逻辑：「逐个优化，穷举试错」</h2>
 <p>PPT 里的三句话，我给你翻译成大白话：</p>
 <p><strong>一次只调一个权重，其他权重固定不动。</strong></p>
-<ul><li>比如先固定 $\lambda_2, \lambda_3$ 不变，只改 $\lambda_1$，找到让翻译效果最好的 $\lambda_1^*$</li><li>再固定 $\lambda_1^<em>, \lambda_3$ 不变，只改 $\lambda_2$，找到最优的 $\lambda_2^</em>$</li><li>最后固定 $\lambda_1^<em>, \lambda_2^</em>$，只改 $\lambda_3$，找到最优的 $\lambda_3^*$</li><li>循环迭代几次，直到权重不再变化，就得到了全局最优权重</li></ul>
+<ul><li>比如先固定 $\lambda_2, \lambda_3$ 不变，只改 $\lambda_1$，找到让翻译效果最好的 $\lambda_1^*$</li><li>再固定 $\lambda_1^*, \lambda_3$ 不变，只改 $\lambda_2$，找到最优的 $\lambda_2^*$</li><li>最后固定 $\lambda_1^*, \lambda_2^*$，只改 $\lambda_3$，找到最优的 $\lambda_3^*$</li><li>循环迭代几次，直到权重不再变化，就得到了全局最优权重</li></ul>
 <blockquote>类比：你调奶茶甜度，先固定奶量和冰量，只调糖，找到最甜的；再固定糖和冰，只调奶，找到最香的；最后固定糖和奶，只调冰，找到最爽的。</blockquote>
 <p><strong>试不同的权重值，看它怎么改变候选翻译的排序。</strong></p>
 <ul><li>我们用基础模型生成了一个「N-best候选列表」（比如Top10个翻译）</li><li>改一个权重 $\lambda$，相当于给不同候选的「总分」做了调整，排序就会变</li><li>我们要找的，是<strong>让「最好的翻译」排到第1名</strong>的那个权重值</li></ul>
@@ -1734,14 +1725,14 @@
 <tr><td>B（差翻译）</td><td>85</td><td>95</td></tr>
 </table>
 <p>总分为：$\text{Score} = \lambda \cdot \text{正向} + (1-\lambda) \cdot \text{反向}$</p>
-<ul><li>当 $\lambda=0.6$：A得分= $0.6<em>90+0.4</em>80=86$，B得分= $0.6<em>85+0.4</em>95=89$ → <strong>B排第1（错了）</strong></li><li>当 $\lambda=0.7$：A得分= $0.7<em>90+0.3</em>80=87$，B得分= $0.7<em>85+0.3</em>95=88$ → <strong>B还是第1</strong></li><li>当 $\lambda=0.75$：A得分= $0.75<em>90+0.25</em>80=87.5$，B得分= $0.75<em>85+0.25</em>95=87.5$ → <strong>临界点，排序翻转</strong></li><li>当 $\lambda=0.8$：A得分= $0.8<em>90+0.2</em>80=88$，B得分= $0.8<em>85+0.2</em>95=87$ → <strong>A排第1（对了）</strong></li></ul>
+<ul><li>当 $\lambda=0.6$：A得分= $0.6*90+0.4*80=86$，B得分= $0.6*85+0.4*95=89$ → <strong>B排第1（错了）</strong></li><li>当 $\lambda=0.7$：A得分= $0.7*90+0.3*80=87$，B得分= $0.7*85+0.3*95=88$ → <strong>B还是第1</strong></li><li>当 $\lambda=0.75$：A得分= $0.75*90+0.25*80=87.5$，B得分= $0.75*85+0.25*95=87.5$ → <strong>临界点，排序翻转</strong></li><li>当 $\lambda=0.8$：A得分= $0.8*90+0.2*80=88$，B得分= $0.8*85+0.2*95=87$ → <strong>A排第1（对了）</strong></li></ul>
 <p>你看：</p>
 <ul><li>只有 $\lambda=0.75$ 这个临界点会改变排序</li><li>我们只需要试这个点，就能找到最优权重（比如0.8），让好翻译排第一</li><li>其他区间排序都不变，根本不用试</li></ul>
 <hr />
 <h2>四、MERT 的完整执行步骤（工程落地版）</h2>
 <ol><li><strong>准备数据</strong>：用开发集（验证集）的源句，生成每个句子的N-best候选翻译列表，标注好「哪个是好翻译」（用参考译文做标准）</li><li><strong>初始化权重</strong>：给所有模型权重设初始值（比如全1）</li><li><strong>逐个优化权重</strong>：</li></ol>
 <ul><li>固定其他所有权重，只改当前权重 $\lambda_i$</li><li>枚举所有可能改变候选排序的「阈值点」</li><li>计算每个阈值对应的开发集翻译错误率（比如BLEU分数、词错误率）</li><li>选择错误率最低的 $\lambda_i^*$ 作为当前权重的最优值</li></ul>
-<ol><li><strong>循环迭代</strong>：重复步骤3，直到所有权重都优化完成，且错误率不再下降</li><li><strong>最终权重</strong>：得到最优权重 $\lambda_1^<em>, \lambda_2^</em>, ...$，用于测试集的重排序</li></ol>
+<ol><li><strong>循环迭代</strong>：重复步骤3，直到所有权重都优化完成，且错误率不再下降</li><li><strong>最终权重</strong>：得到最优权重 $\lambda_1^*, \lambda_2^*, ...$，用于测试集的重排序</li></ol>
 <hr />
 <h2>五、MERT 的核心优势</h2>
 <p>✅ <strong>计算量极小</strong>：只试临界点，不用穷举所有权重，哪怕10个模型也能快速跑完 ✅ <strong>直接优化翻译指标</strong>：不是优化「概率损失」，而是直接优化我们关心的<strong>BLEU分数、错误率</strong>，完全贴合任务目标 ✅ <strong>鲁棒性强</strong>：不依赖模型结构，不管是RNN、Transformer，还是多模型融合，都能用 ✅ <strong>工业界标准</strong>：是机器翻译、语音识别等序列生成任务中，调重排序权重的<strong>经典标准方法</strong></p>
@@ -1934,11 +1925,11 @@
 <tr><th>符号</th><th>含义</th><th>大白话</th></tr>
 <tr><td>$R(y)$</td><td>翻译 $y$ 的<strong>贝叶斯风险</strong></td><td>这个翻译的「总风险/总错误」</td></tr>
 <tr><td>$\sum_{y&#x27; \in \mathcal{Y}}$</td><td>对所有候选翻译 $y&#x27;$ 求和</td><td>遍历我们生成的所有N-best/采样候选</td></tr>
-<tr><td>$p(y&#x27;</td><td>x)$</td><td>候选 $y&#x27;$ 的模型概率</td><td>给这个候选加权重：概率高的候选影响更大</td></tr>
+<tr><td>$p(y&#x27;|x)$</td><td>候选 $y&#x27;$ 的模型概率</td><td>给这个候选加权重：概率高的候选影响更大</td></tr>
 <tr><td>$d(y, y&#x27;)$</td><td>$y$ 和 $y&#x27;$ 的距离（COMET/BLEU）</td><td>两个翻译的相似度</td></tr>
 </table>
 <p><strong>$R(y)$ 就是翻译 $y$ 相对于「所有其他高概率候选」的「加权平均距离」</strong>。</p>
-<ul><li>我们的目标：**找到让 $R(y)$ 最小的那个 $y^*$**</li></ul>
+<ul><li>我们的目标：<strong>找到让 $R(y)$ 最小的那个 $y^*$</strong></li></ul>
 <p>$$ y^* = \arg\min_{y \in \mathcal{Y}} R(y) $$</p>
 <ul><li>对应我们之前的空间直觉：<strong>$R(y)$ 最小 = 这个点在「高概率簇的中心」，和所有其他点的平均距离最近，风险最低</strong></li></ul>
 <hr />

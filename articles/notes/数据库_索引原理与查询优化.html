@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>数据库 · 索引原理与查询优化</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"数据库 · 索引原理与查询优化","date":"2026-10-24","tags":["课程笔记","数据库/MySQL"],"category":"课程笔记","summary":"索引以写代价换取定位能力，B+ 树因高扇出、数据集中在叶子、叶子成链而适配磁盘。InnoDB 以主键建聚簇索引，二级索引叶子存主键，取整行需回表，查询列全在索引内即覆盖索引。复合索引按最左前缀匹配，范围列会截断后续列；列上函数、隐式转换、前导通配符是失效写法。IN 与 EXISTS 差别在值匹配与存在判断，NOT IN 遇空值整体为空。执行计划看扫描行数与回表次数，优化是否成立须对照实验验证。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>数据库 · 索引原理与查询优化</h1>
+<div class="meta">课程笔记 · 数据库/MySQL · 整理自豆包对话 豆包对话 · 聚簇索引与唯一索引辨析 / SQL 中 IN 与 EXISTS 的区别 / EXISTS 与 IN 查询对比 / Django 查询优化与执行计划</div>
+<h1>数据库 · 索引原理与查询优化</h1>
+<h2>一、概述：索引是一笔交易</h2>
+<p>索引（index）是为加速检索而建立的辅助数据结构，由 DBMS 自动维护。这句话里藏着两个容易被忽略的词：<strong>辅助</strong>与<strong>维护</strong>。辅助意味着索引不改变查询语义，只改变访问路径；维护意味着每次插入、删除、更新都要同步改动索引，写越多、索引越贵。</p>
+<p>因此「加索引」从来不是无条件的优化，而是一笔交易：用写放大与存储空间，换读时的定位能力。判断这笔交易是否划算，需要三样东西——知道索引长什么样（结构）、知道查询能用到索引的哪一段（匹配规则）、知道优化器实际选了什么路径（执行计划）。三样缺一，就只能靠背结论，而结论在数据分布变化后往往失效。</p>
+<p><strong>素材边界。</strong> 原始对话直接支撑的内容包括：聚簇索引与二级索引的物理差别、回表、页分裂、一张表只能有一个聚簇索引、唯一索引与聚簇索引分属两个维度；<code>IN</code> 与 <code>EXISTS</code> 的驱动方向、相关与非相关子查询、<code>NOT IN</code> 的空值陷阱、<code>EXISTS</code> 子查询的列清单不影响结果；以及「用 <code>EXPLAIN</code> 分析执行计划、用 <code>SHOW PROCESSLIST</code> 看正在执行的语句」这一运维口径。B+ 树的内部结构、最左前缀的完整规则、执行计划各字段的含义，对话未展开，本文按通用实现补齐，并在涉及原料判断处标注。</p>
+<h2>二、B+ 树为什么适合磁盘</h2>
+<h3>2.1 先把「慢」定位到随机 I/O</h3>
+<p>磁盘与内存的差距不在带宽，而在<strong>寻道</strong>。一次随机读要移动磁头、等待旋转，耗时以毫秒计；而顺序读一旦定位，后续页几乎不额外付费。数据库因此把存储单位做成「页」（InnoDB 默认 16KB），一次 I/O 读一整页，并尽量让逻辑上相邻的数据在物理上也相邻。</p>
+<p>索引结构的选择标准随之变成两条：<strong>树要矮</strong>（减少 I/O 次数）、<strong>范围查要连续</strong>（把随机变顺序）。二叉搜索树在两个标准上都不合格：每个结点只有两个分支，$n$ 条记录树高约 $\log_2 n$，百万行就是二十层，二十次随机 I/O 无法接受。</p>
+<h3>2.2 从 B 树到 B+ 树</h3>
+<p>B 树是多路平衡查找树，一个结点存多个键和多条记录，树高降到 $\log_m n$。B+ 树在 B 树上做三处改造：</p>
+<table>
+<tr><th>改造</th><th>具体做法</th><th>带来的好处</th></tr>
+<tr><td>非叶结点只存键与指针</td><td>不存数据行</td><td>单页容纳的键更多，扇出更大，树更矮</td></tr>
+<tr><td>所有数据只出现在叶子</td><td>内部结点仅作导航</td><td>每次查询的 I/O 次数稳定，不因命中位置而波动</td></tr>
+<tr><td>叶子结点用双向链表串联</td><td>按键盘大小顺序相连</td><td>范围查询与排序只需沿链扫描，随机变顺序</td></tr>
+</table>
+<p>第三点是 B+ 树相对 B 树最实质的优势。<code>BETWEEN</code>、<code>&gt;</code>、<code>ORDER BY</code> 这类操作在 B 树上仍需中序遍历、反复上下跳，在 B+ 树上则退化为「定位起点 + 沿叶子链右移」，正是磁盘最喜欢的访问模式。</p>
+<h3>2.3 扇出与树高的算术</h3>
+<p>设页大小 16KB，索引键为 8 字节整数，页内指针 6 字节，则一个非叶页可容纳约</p>
+<p>$$ \frac{16384}{8+6}\approx 1170 $$</p>
+<p>个键值对，即扇出约 1170。三层 B+ 树可索引的叶子页数约为 $1170^2\approx 1.37\times10^{6}$。若每行约 1KB（一页放 16 行），总行数约为</p>
+<p>$$ 1170^2\times 16\approx 2.19\times 10^{7}, $$</p>
+<p>即两千万行量级。这个估算的意义不在具体数字，而在结论：<strong>三到四次 I/O 足以定位两千万行中的任意一行</strong>。这也是「加索引能把查询从全表扫描降到常数级 I/O」这句常被滥用的说法背后的真实数量级。</p>
+<p>上述估算依赖三个假设：页大小 16KB、键 8 字节、每行 1KB。键变长（例如用 36 字节的 UUID）会显著降低扇出，树高上升；行变宽会减少每页行数，容量下降。这解释了后面两条工程建议的由来：<strong>主键尽量短，宽列不要放进索引</strong>。</p>
+<h3>2.4 与哈希索引的分工</h3>
+<p>哈希索引按哈希值定位，等值查询是 $O(1)$，但不支持范围查询与排序，且哈希冲突要额外处理。InnoDB 的自适应哈希索引由引擎自行决定是否为热点页建哈希，用户无法干预。需要范围与排序的场景只能用有序结构，这是 B+ 树成为默认选择的根本原因。</p>
+<h2>三、聚簇索引与二级索引</h2>
+<h3>3.1 两种物理形态</h3>
+<p>原料给出的对照可以直接作为骨架：</p>
+<table>
+<tr><th>索引类型</th><th>物理形态</th><th>一张表可有几个</th><th>查询代价</th></tr>
+<tr><td>聚簇索引</td><td>数据行按索引键物理排序，叶子存整行</td><td>唯一</td><td>定位即得整行，不需回表</td></tr>
+<tr><td>非聚簇索引（二级索引、辅助索引）</td><td>独立目录结构，叶子存索引键值与主键</td><td>可以有多个</td><td>先取主键值，再回表取整行</td></tr>
+</table>
+<p>聚簇索引把「索引」与「表」合二为一：叶子结点就是数据行，找到键就找到了整行。原料的类比很贴切——书架上的书按图书编号物理摆放，编号就是聚簇索引，书本就是数据行；前台那叠「书名到编号」的目录卡片是二级索引，按书名找书必须先查卡片拿到编号，再去书架取书。<strong>拿编号去书架取书这一步，就是回表</strong>。</p>
+<h3>3.2 InnoDB 选谁做聚簇索引</h3>
+<p>原料给出的规则是：主键默认就是聚簇索引；若没有主键，选第一个非空唯一索引；再没有则生成隐藏的 <code>rowid</code>。这条规则解释了两个常见现象：</p>
+<ul><li>建表不设主键并不会「没有聚簇索引」，而是多了一个用户看不见的 6 字节列，二级索引里存的也是它，无法用于业务查询，等于白白多一次回表。</li><li>把一张业务表的唯一键设得很长（例如身份证号），所有二级索引都要复制这份长键，空间与比较开销同步放大。</li></ul>
+<h3>3.3 回表为什么贵</h3>
+<p>二级索引的叶子只给出主键，取其余列必须再走一次聚簇索引。这一次访问是<strong>按主键随机定位</strong>，若结果行散落在不同页，就是若干次随机 I/O。更麻烦的是它发生在「已经筛完之后」：优化器先按二级索引找到一批主键，再逐条回表，行数越多，随机 I/O 越多。</p>
+<p>因此有一种反直觉的现象：<strong>走二级索引的查询可能比全表扫描更慢</strong>。当过滤条件的选择性很差（例如命中三成行），二级索引带来的是「大量随机回表」，而全表扫描是「一次顺序扫完」。优化器会用统计信息估算代价，若判断回表代价过高，会主动放弃索引——这不是索引失效，而是成本选择。</p>
+<h3>3.4 页分裂与主键选择</h3>
+<p>聚簇索引按主键排序存放，插入位置由主键值决定。若主键是随机值（UUID、随机字符串），新行会随机落入已有页中间，页满时触发<strong>页分裂</strong>：把一页拆成两页，挪走一半记录，并更新上层指针。频繁分裂造成三个后果：写入放大、页内空隙增多（空间利用率下降）、逻辑相邻的行在物理上被打散（范围扫描退化）。</p>
+<p>自增主键则总是追加到最右页，页填满后开新页，分裂少、顺序好。这是「自增主键优于随机主键」的真实理由，与「自增更好看」无关。反过来，若业务必须用随机标识，可以把它设为唯一索引而非主键，另设一个自增列作聚簇键。</p>
+<h2>四、唯一索引与聚簇索引：两个维度</h2>
+<h3>4.1 原料的辨析</h3>
+<p>原料反复强调的一句话值得原样保留：<strong>唯一索引按「约束功能」划分，聚簇索引按「物理存储方式」划分，两者不是互斥关系</strong>。一个索引可以同时是聚簇索引与唯一索引，主键在 InnoDB 中就是这种情形。</p>
+<table>
+<tr><th>对比维度</th><th>唯一索引</th><th>聚簇索引</th></tr>
+<tr><td>分类维度</td><td>逻辑约束（值不许重复）</td><td>物理存储（数据按什么顺序放）</td></tr>
+<tr><td>核心作用</td><td>保证列或列组合唯一</td><td>决定数据行的物理顺序</td></tr>
+<tr><td>叶子内容</td><td>非聚簇时存主键或行指针</td><td>完整数据行</td></tr>
+<tr><td>数量</td><td>可以有多个</td><td>只能有一个</td></tr>
+<tr><td>对写入的影响</td><td>插入重复值报错</td><td>改动聚簇键可能引发页分裂</td></tr>
+</table>
+<h3>4.2 两处需要修正的说法</h3>
+<p>原料称「标准 SQL 中唯一索引允许 1 个 NULL」，这与标准不符。SQL 标准把空值视为互不相等，因此<strong>唯一约束下允许多个空值</strong>；限制为「只允许一个空值」的是 SQL Server 的实现选择，MySQL 允许多个空值。这条差异在迁移数据库时会造成真实故障：同一张表在 SQL Server 上只能插一条空值记录，在 MySQL 上可以插多条。</p>
+<p>另一处是原料的示例代码，它声称「MySQL 中可指定非主键列作为聚簇索引（仅 InnoDB 支持）」，随后又自注「实际 MySQL 中还是会以主键为聚簇索引」。后一句才是事实：<strong>InnoDB 不支持用户指定聚簇索引列</strong>，聚簇索引只能是主键，或退化为主键缺失时的首个非空唯一索引、隐藏 rowid。示例代码在 MySQL 上只是把 <code>Phone</code> 建成唯一二级索引，并没有改变聚簇结构。可显式指定聚簇索引的是 SQL Server（<code>CREATE CLUSTERED INDEX</code>），两者不可混谈。</p>
+<h2>五、覆盖索引与索引下推</h2>
+<h3>5.1 覆盖索引：不回表</h3>
+<p>若查询需要的全部列都出现在某个索引中，引擎读完索引即可返回，无需回表，这种索引称为<strong>覆盖索引</strong>。它不是一个独立的索引类型，而是「索引恰好覆盖了查询」的状态。</p>
+<pre><code>-- 表 student(id, sno, name, dept)，sno 上有唯一索引
+SELECT sno, name FROM student WHERE sno = &#x27;2024001&#x27;;
+-- 若索引为 (sno, name)，此查询被完全覆盖</code></pre>
+<p>执行计划中 <code>Extra</code> 出现 <code>Using index</code>，即表示覆盖。反之，<code>SELECT *</code> 几乎必然破坏覆盖，把一次索引扫描变成「索引扫描加 N 次回表」。</p>
+<p>覆盖索引还有第二种用法：<strong>为排序服务</strong>。若 <code>ORDER BY</code> 的列与索引前缀一致，引擎可沿索引顺序读，省去排序；<code>Extra</code> 中的 <code>Using filesort</code> 消失，即为证据。</p>
+<h3>5.2 索引下推</h3>
+<p>索引下推（Index Condition Pushdown，MySQL 5.6 起支持）把部分 <code>WHERE</code> 条件下推到存储引擎层，在回表之前先用索引中的列过滤。例如索引 <code>(dept, age)</code> 上执行</p>
+<pre><code>SELECT * FROM student WHERE dept = &#x27;CS&#x27; AND age &gt; 20 AND name LIKE &#x27;张%&#x27;;</code></pre>
+<p><code>name</code> 不在索引里，<code>age</code> 在。没有下推时，引擎要按 <code>dept</code> 找到全部记录并逐条回表，再判断 <code>age</code>；有下推时，<code>age &gt; 20</code> 在索引层就先筛掉一批，只对剩下的回表。执行计划中体现为 <code>Extra: Using index condition</code>。</p>
+<p>下推减少的是<strong>回表次数</strong>，不是索引扫描的行数。这个区别在评估优化效果时很关键：<code>rows</code> 可能没变，但实际 I/O 降低了。</p>
+<h3>5.3 延迟关联：把回表推迟到最后</h3>
+<p>分页查询是回表的典型受害者。<code>LIMIT 20 OFFSET 100000</code> 这类写法要先按二级索引取出十万零二十个主键，逐条回表，再丢弃前十万条——绝大部分回表是白做的。延迟关联的做法是先在索引里完成定位与分页，只把最终需要的少量主键拿去回表：</p>
+<pre><code>SELECT s.*
+FROM student s
+JOIN (
+    SELECT id FROM student
+    WHERE dept = &#x27;CS&#x27;
+    ORDER BY age
+    LIMIT 20 OFFSET 100000
+) t ON s.id = t.id;</code></pre>
+<p>内层子查询若被 <code>(dept, age)</code> 覆盖，就只扫索引、不回表；外层只用 20 个主键回表。代价是子查询可能被物化成临时表，<code>EXPLAIN</code> 中会出现 <code>DERIVED</code>，需要确认它确实走了覆盖索引而非全表扫描。这类改写是否成立，仍要回到执行计划验证，不能因为「听起来更优」就直接采用。</p>
+<h2>六、复合索引与最左前缀</h2>
+<h3>6.1 索引里的排序规则</h3>
+<p>复合索引 <code>(a, b, c)</code> 不是三棵独立的树，而是一棵按「先 a、a 相同再 b、b 相同再 c」排序的树。理解这一点，最左前缀就不需要背：</p>
+<table>
+<tr><th>查询条件</th><th>能否用索引定位</th><th>原因</th></tr>
+<tr><td><code>a = ?</code></td><td>能，用到 a</td><td>匹配最左列</td></tr>
+<tr><td><code>a = ? AND b = ?</code></td><td>能，用到 a、b</td><td>前缀连续</td></tr>
+<tr><td><code>a = ? AND b = ? AND c = ?</code></td><td>能，三列全用</td><td>完整前缀</td></tr>
+<tr><td><code>a = ? AND c = ?</code></td><td>部分，只用 a</td><td>c 之前缺 b，无法定位</td></tr>
+<tr><td><code>b = ?</code></td><td>不能定位</td><td>缺最左列，全局无序</td></tr>
+<tr><td><code>a = ? AND b &gt; ?</code></td><td>能，用到 a、b</td><td>b 用于范围</td></tr>
+<tr><td><code>a = ? AND b &gt; ? AND c = ?</code></td><td>范围截断，c 不能定位</td><td>范围之后的列在索引内不再全局有序</td></tr>
+</table>
+<p>最后一行是最容易错的：<code>b</code> 用了范围条件后，<code>c</code> 在「每个 b 值内部」才有秩序，无法在全表范围定位，因此只能用 <code>a</code>、<code>b</code> 做定位，<code>c</code> 至多在下推或覆盖时起作用。</p>
+<h3>6.2 等值在前、范围在后</h3>
+<p>由此得出一条设计规则：<strong>等值条件多的列放前面，范围条件列放后面</strong>。把 <code>(a, b, c)</code> 写成 <code>(a, c, b)</code> 时，<code>a = ? AND b &gt; ? AND c = ?</code> 反而能用满三列，因为范围列 <code>b</code> 被挪到了最后。索引列序应按「查询里等值条件的组合」设计，而不是按字段在业务上的重要性。</p>
+<h3>6.3 排序与分组</h3>
+<p><code>ORDER BY</code> 能借索引免除排序的条件是：排序列构成索引的<strong>最左前缀</strong>，且方向一致（或索引本身按降序建）。<code>GROUP BY</code> 同理，若分组列与索引前缀一致，可边扫描边分组，避免临时表。</p>
+<pre><code>-- 索引 (dept, age)
+SELECT id, name FROM student WHERE dept = &#x27;CS&#x27; ORDER BY age;
+-- dept 定值后，age 在索引内有序，可直接顺序读，无需 filesort</code></pre>
+<p>反例是 <code>ORDER BY age, name</code> 而索引只有 <code>(dept, age)</code>：<code>age</code> 相同的行内 <code>name</code> 无序，仍需排序。MySQL 8.0 起支持降序索引，<code>ORDER BY a ASC, b DESC</code> 这类混合方向才可能被索引满足。</p>
+<h3>6.4 一个复合索引还是几个单列索引</h3>
+<p>「每个条件列各建一个索引」是常见做法，但在多条件同时出现的查询里通常不如一个复合索引。原因是单列索引最多让优化器用上其中一个（或做索引合并，取交集后再回表），而复合索引能一次性把多个条件定位到很小的区间，回表次数显著更少。</p>
+<p>判断依据是<strong>查询模式的重复度</strong>：若 <code>a</code>、<code>b</code>、<code>c</code> 经常一起出现在 <code>WHERE</code> 中，建 <code>(a, b, c)</code>；若它们各自独立出现在不同查询里，才分别建单列索引。复合索引的最左列还能替代一个单列索引，因此 <code>(a, b, c)</code> 建好后通常不必再单独建 <code>(a)</code>——除非需要它来满足某个只查 <code>a</code> 且要求覆盖的场景。</p>
+<h2>七、索引失效的典型写法</h2>
+<p>「失效」有两层意思：<strong>用不上</strong>（结构上不匹配）与<strong>不用</strong>（优化器判断不划算）。前者可靠改写解决，后者要靠统计信息与成本分析。</p>
+<table>
+<tr><th>写法</th><th>失效原因</th><th>改写方向</th></tr>
+<tr><td><code>WHERE YEAR(created_at) = 2024</code></td><td>列被函数包裹，索引中存的是原值</td><td>改为 <code>created_at &gt;= &#x27;2024-01-01&#x27; AND created_at &lt; &#x27;2025-01-01&#x27;</code></td></tr>
+<tr><td><code>WHERE id + 1 = 100</code></td><td>列参与运算</td><td>把运算移到常量侧：<code>id = 99</code></td></tr>
+<tr><td><code>WHERE phone = 13800000000</code>（phone 为字符列）</td><td>隐式类型转换，列被转成数字</td><td>加引号：<code>phone = &#x27;13800000000&#x27;</code></td></tr>
+<tr><td><code>WHERE name LIKE &#x27;%张&#x27;</code></td><td>前导通配符无法定位起点</td><td>改为 <code>&#x27;张%&#x27;</code>；或另建反向索引/全文索引</td></tr>
+<tr><td><code>WHERE a = 1 OR b = 2</code>（b 无索引）</td><td>一侧无索引，只能全表扫描</td><td>两段查询 <code>UNION ALL</code>；或给 b 建索引</td></tr>
+<tr><td><code>WHERE b = 2</code>（索引为 <code>(a, b)</code>）</td><td>不满足最左前缀</td><td>调整索引列序或补建 <code>(b)</code></td></tr>
+<tr><td><code>WHERE status &lt;&gt; 1</code></td><td>取反后命中比例高，回表不划算</td><td>改为正向枚举；或建覆盖索引</td></tr>
+<tr><td><code>WHERE age IS NOT NULL</code></td><td>空值比例低时几乎命中全表</td><td>改用默认值，避免可空列做过滤</td></tr>
+</table>
+<p>三类「不是失效但常被误判」的情形需要澄清：</p>
+<ul><li><strong><code>LIKE &#x27;张%&#x27;</code> 仍可用索引</strong>，只是范围扫描后要逐条判断，代价高于等值。</li><li><strong><code>OR</code> 不必然失效</strong>。若两侧列都有索引，优化器可能用索引合并（index merge）；只有当一侧无索引时才退化为全表扫描。</li><li><strong><code>!=</code>、<code>NOT IN</code> 也不必然失效</strong>。是否走索引取决于命中比例与回表成本，命中大部分行时全表扫描更快，这是优化器的正确选择。</li></ul>
+<p>真正需要警惕的是<strong>统计信息失真</strong>：表数据量剧增、批量导入后未更新统计，优化器仍按旧基数估算，可能选错路径。此时问题不在 SQL 写法，而在统计信息的维护。</p>
+<p>隐式转换值得单独说明，因为它的触发条件不止「漏写引号」。当两列的字符集或排序规则不一致时，连接比较也会引发列侧的类型转换，索引同样用不上。这类问题在跨库同步、旧表新表混用的系统里很常见，症状是「单表查询很快，一连接就慢」，而 <code>EXPLAIN</code> 的 <code>key</code> 列显示为空。排查方法是核对两侧列的字符集与排序规则，而不是反复调索引顺序。</p>
+<h2>八、IN 与 EXISTS：语义与执行</h2>
+<h3>8.1 两种判断</h3>
+<p><code>IN</code> 是<strong>值匹配</strong>：外层值是否属于子查询给出的集合。<code>EXISTS</code> 是<strong>存在性判断</strong>：子查询是否有行，有则为真。原料的一句话概括很准确：<code>IN</code> 先查子查询得到结果集，再拿外层值去匹配；<code>EXISTS</code> 先取外层一行带进子查询，找到匹配即停。</p>
+<pre><code>-- IN：非相关子查询，子查询可独立算完
+SELECT Sno, Sname FROM Student
+WHERE Sno IN (SELECT Sno FROM SC WHERE Cno = &#x27;1&#x27;);
+
+-- EXISTS：相关子查询，内层引用外层 Student.Sno
+SELECT Sno, Sname FROM Student s
+WHERE EXISTS (SELECT 1 FROM SC WHERE SC.Sno = s.Sno AND SC.Cno = &#x27;1&#x27;);</code></pre>
+<h3>8.2 相关与非相关</h3>
+<p>子查询条件依赖外层值的叫<strong>相关子查询</strong>，不依赖的叫<strong>非相关子查询</strong>。这个区分比「IN 对 EXISTS」更基本：非相关子查询在逻辑上只算一次，相关子查询在逻辑上对外层每一行算一次。</p>
+<p>但「逻辑上一次」不等于「物理上一次」。现代优化器会把 <code>IN</code> 改写为<strong>半连接</strong>（semi-join）：只判断「是否匹配」，不产生重复行，也不必把子查询完整物化。改写后可选择半连接的具体算法（首次匹配即停、物化后查哈希、按连接列排序合并），<code>EXISTS</code> 与 <code>IN</code> 往往被归一到同一个计划。因此在 MySQL 5.6 之后，<strong>「子查询小用 IN、子查询大用 EXISTS」这条口诀经常给出错误预测</strong>。</p>
+<h3>8.3 NULL 为什么让 NOT IN 整体为空</h3>
+<p><code>NOT IN</code> 的展开式是合取：</p>
+<p>$$ x \notin \{x_1,\dots,x_n,\mathrm{NULL}\} \iff \bigwedge_{i=1}^{n}(x \ne x_i)\ \wedge\ (x \ne \mathrm{NULL}). $$</p>
+<p>末项恒为 UNKNOWN，合取式不可能为真，于是外层一行都选不出。注意限定条件：<strong>只有子查询结果含空值、且外层值不命中任何非空元素时，结果才整体为空</strong>；若外层值恰好等于某个非空元素，<code>NOT IN</code> 仍然为假（该行不入选），判断不受影响。<code>NOT EXISTS</code> 一侧，空值与任何学号都不相等，子查询自然为空，<code>NOT EXISTS</code> 为真，因此不受干扰。</p>
+<pre><code>-- 有风险：SC.Sno 若存在空值，结果可能整体为空
+SELECT Sno, Sname FROM Student
+WHERE Sno NOT IN (SELECT Sno FROM SC WHERE Cno = &#x27;1&#x27;);
+
+-- 稳健：显式关联，空值不干扰
+SELECT Sno, Sname FROM Student s
+WHERE NOT EXISTS (
+    SELECT 1 FROM SC WHERE SC.Sno = s.Sno AND SC.Cno = &#x27;1&#x27;
+);</code></pre>
+<p>第三种等价写法是左外连接加空值判断，语义清楚但可读性差：</p>
+<pre><code>SELECT s.Sno, s.Sname
+FROM Student s
+LEFT JOIN SC sc ON s.Sno = sc.Sno AND sc.Cno = &#x27;1&#x27;
+WHERE sc.Sno IS NULL;</code></pre>
+<h3>8.4 一个表结构层面的错误</h3>
+<p>原料记录了一处典型误写：把 <code>WHERE Cno = 1</code> 直接写在对 <code>Student</code> 的查询上。<code>Cno</code> 只存在于选课表 <code>SC</code>，学生表没有这一列，语句会直接报「列名无效」。这不是优化问题而是作用域问题：<strong>过滤条件只能引用当前 <code>FROM</code> 中出现过的关系的属性</strong>。正确写法必须先引入 <code>SC</code>，或用子查询、<code>EXISTS</code> 把 <code>SC</code> 带进来。这条提醒比任何性能口诀都更基础。</p>
+<h3>8.5 怎么选</h3>
+<p>判断依据不是「子查询大小」这种静态描述，而是执行计划：</p>
+<table>
+<tr><th>观察到的现象</th><th>倾向</th></tr>
+<tr><td>子查询结果去重后很小，且外层表巨大</td><td><code>IN</code> 或半连接均可，看 <code>rows</code> 估算</td></tr>
+<tr><td>内层连接列有索引，外层过滤后行数少</td><td><code>EXISTS</code> 首次匹配即停，通常更省</td></tr>
+<tr><td>子查询可能含空值</td><td>一律用 <code>NOT EXISTS</code></td></tr>
+<tr><td>两侧计划相同（<code>select_type</code> 均为 <code>SIMPLE</code>、<code>table</code> 顺序一致）</td><td>性能无差别，按可读性选</td></tr>
+</table>
+<p>原料「<code>EXISTS</code> 是 <code>NOT IN</code> 的绝对上位替代」这句话，在<strong>空值安全</strong>的意义上成立，在<strong>性能</strong>的意义上不成立：两者被优化器改写后可能完全同计划，也可能因驱动表选择不同而互有胜负。把它当作语义建议而非性能定律，才不会在评审时被一个反例问住。</p>
+<h2>九、读执行计划：看什么、不看什么</h2>
+<h3>9.1 主要字段</h3>
+<table>
+<tr><th>字段</th><th>含义</th><th>判读要点</th></tr>
+<tr><td><code>id</code></td><td>查询序号</td><td>相同则自上而下执行，不同则序号大的先执行</td></tr>
+<tr><td><code>select_type</code></td><td>查询类型</td><td><code>SIMPLE</code>、<code>PRIMARY</code>、<code>SUBQUERY</code>、<code>DEPENDENT SUBQUERY</code>、<code>DERIVED</code>、<code>UNION</code></td></tr>
+<tr><td><code>table</code></td><td>访问的表</td><td>注意 <code>derived</code> 与 <code>&lt;subquery&gt;</code> 这类临时结果</td></tr>
+<tr><td><code>type</code></td><td>访问方式</td><td>由好到差：<code>system</code>、<code>const</code>、<code>eq_ref</code>、<code>ref</code>、<code>range</code>、<code>index</code>、<code>ALL</code></td></tr>
+<tr><td><code>possible_keys</code></td><td>候选索引</td><td>有候选而 <code>key</code> 为空，说明优化器放弃了索引</td></tr>
+<tr><td><code>key</code></td><td>实际使用的索引</td><td>与预期不符时查统计信息与条件写法</td></tr>
+<tr><td><code>key_len</code></td><td>使用到的索引字节数</td><td>可反推复合索引用了几列</td></tr>
+<tr><td><code>ref</code></td><td>与索引比较的对象</td><td><code>const</code>、列名或函数结果</td></tr>
+<tr><td><code>rows</code></td><td>预估扫描行数</td><td>估算值，可能严重偏离实际</td></tr>
+<tr><td><code>filtered</code></td><td>过滤后剩余比例</td><td>与 <code>rows</code> 相乘得到参与下一步的行数</td></tr>
+<tr><td><code>Extra</code></td><td>补充信息</td><td><code>Using index</code>、<code>Using where</code>、<code>Using index condition</code>、<code>Using filesort</code>、<code>Using temporary</code></td></tr>
+</table>
+<h3>9.2 type 的阶梯</h3>
+<p><code>type</code> 常被当成「好坏排名」，这只在同等过滤条件下成立：</p>
+<ul><li><code>const</code>：主键或唯一索引等值命中至多一行，最理想。</li><li><code>eq_ref</code>：连接时被驱动表按唯一索引命中一行，常见于主键连接。</li><li><code>ref</code>：非唯一索引等值匹配，可能返回多行。</li><li><code>range</code>：索引范围扫描，<code>BETWEEN</code>、<code>&gt;</code>、<code>IN</code> 常见。</li><li><code>index</code>：扫整棵索引树，比 <code>ALL</code> 少读数据页，但仍是全量扫描。</li><li><code>ALL</code>：全表扫描。</li></ul>
+<p><code>index</code> 与 <code>ALL</code> 都读全量，差别只在读索引还是读表。若查询列被索引完全覆盖，<code>index</code> 可能就是最优解，而不是「比 <code>ALL</code> 好一点」。</p>
+<h3>9.3 Extra 里最该看懂的四条</h3>
+<table>
+<tr><th>Extra</th><th>含义</th><th>处理方向</th></tr>
+<tr><td><code>Using index</code></td><td>覆盖索引，不回表</td><td>保持，不必再加索引</td></tr>
+<tr><td><code>Using index condition</code></td><td>索引下推生效</td><td>说明部分条件下推到引擎层</td></tr>
+<tr><td><code>Using where</code></td><td>服务器层还要过滤</td><td>结合 <code>rows</code> 与 <code>filtered</code> 看过滤是否高效</td></tr>
+<tr><td><code>Using filesort</code></td><td>需要额外排序</td><td>考虑让排序列落入索引前缀</td></tr>
+<tr><td><code>Using temporary</code></td><td>用了临时表</td><td>常见于 <code>GROUP BY</code> 与 <code>DISTINCT</code>，检查分组列是否走索引</td></tr>
+</table>
+<h3>9.4 用 EXPLAIN ANALYZE 看真实值</h3>
+<p><code>EXPLAIN</code> 的 <code>rows</code> 是估算，估算可能错一个数量级。MySQL 8.0.18 起提供 <code>EXPLAIN ANALYZE</code>，输出每个算子的<strong>实际耗时、实际行数、循环次数</strong>：</p>
+<pre><code>EXPLAIN ANALYZE
+SELECT s.Sno, s.Sname
+FROM Student s
+WHERE EXISTS (SELECT 1 FROM SC WHERE SC.Sno = s.Sno AND SC.Cno = &#x27;1&#x27;);</code></pre>
+<p>判读时先比较「估算行数」与「实际行数」：差距大说明统计信息或条件相关性估计有误，此时任何基于 <code>rows</code> 的调优都不可靠。再看循环次数：嵌套循环下，内层算子被调用外层行数次，单次耗时乘以次数才是总代价——这正是「小表驱动大表」的量化依据。</p>
+<h3>9.5 一份计划的判读示例</h3>
+<p>设 <code>SC</code> 上有索引 <code>(Sno, Cno)</code>，<code>Student</code> 以 <code>Sno</code> 为主键，查询「选了 1 号课的学生姓名」。计划可能呈现为两行：</p>
+<table>
+<tr><th>id</th><th>table</th><th>type</th><th>key</th><th>rows</th><th>Extra</th></tr>
+<tr><td>1</td><td>s</td><td>ALL</td><td>NULL</td><td>10000</td><td>Using where</td></tr>
+<tr><td>1</td><td>sc</td><td>ref</td><td>idx_sno_cno</td><td>3</td><td>Using index</td></tr>
+</table>
+<p>读法是：外层全扫 <code>Student</code> 一万行（<code>type = ALL</code>），对每一行用 <code>(Sno, Cno)</code> 到 <code>SC</code> 里做等值探测，预估每次命中 3 行，内层因只取 <code>Sno</code>、<code>Cno</code> 而被索引覆盖（<code>Using index</code>）。总代价约为一万次索引探测加一次全表扫描。</p>
+<p>若把查询改成相关子查询、外层加了强的过滤条件（例如只查某个系），外层行数可能降到几百，同一计划的代价随之下降两个数量级——这说明<strong>同一条 SQL、同一个索引，代价主要由外层过滤后的行数决定</strong>。反过来，若外层无法过滤而 <code>SC</code> 极大，则应考虑从 <code>SC</code> 侧驱动，先按 <code>Cno = &#x27;1&#x27;</code> 取出学生号，再与 <code>Student</code> 做连接。驱动表的选择是执行计划里最值得干预的一环，而它取决于两边的过滤后行数，不取决于表的名字或书写顺序。</p>
+<h2>十、怎么判断一个优化是否真的成立</h2>
+<h3>10.1 把「优化」当成实验</h3>
+<p>一条可靠的判断链是：<strong>提出假设 → 固定变量 → 取对照 → 重复测量 → 解释差异</strong>。具体到索引调优：</p>
+<ol><li><strong>写清假设</strong>。例如「为 <code>SC(Sno, Cno)</code> 建复合索引后，该查询的回表次数下降，响应时间减少」。</li><li><strong>固定变量</strong>。同一份数据、同一台机器、同一参数、同一并发度；清空查询缓存或改用不会命中的参数，避免第二次变快只是因为缓存。</li><li><strong>取对照</strong>。加索引前后各跑多次，取中位数而非单次最优值；同时记录 <code>EXPLAIN ANALYZE</code> 的实际行数与耗时。</li><li><strong>换数据分布再验一次</strong>。选择性差的列在小数据上可能看起来有效，数据量上来后优化器会改选全表扫描。</li><li><strong>检查副作用</strong>。写入延迟、索引体积、备份时间是否变差。</li></ol>
+<h3>10.2 三类可观测指标</h3>
+<table>
+<tr><th>指标</th><th>来源</th><th>说明</th></tr>
+<tr><td>扫描行数</td><td><code>EXPLAIN</code> 的 <code>rows</code>、<code>EXPLAIN ANALYZE</code> 的 actual rows</td><td>最直接，反映「做了多少无用功」</td></tr>
+<tr><td>实际读页数</td><td><code>Handler_read_*</code> 状态变量、<code>Innodb_buffer_pool_read_requests</code></td><td>区分逻辑读与物理读，判断是否真的少了 I/O</td></tr>
+<tr><td>响应时间分布</td><td>慢查询日志、压测的 P95/P99</td><td>平均值会掩盖长尾，索引优化常体现在长尾</td></tr>
+</table>
+<p>只看「执行时间从 200ms 降到 20ms」是不够的：可能是缓存命中、可能是数据被预热、也可能是并发下降。<strong>必须能解释「为什么快了」</strong>——少扫了多少行、少回表多少次、少了哪次排序，否则无法判断这个结论能否迁移到生产。</p>
+<h3>10.3 加索引反而变慢的三种情形</h3>
+<ul><li><strong>选择性太低</strong>。给「性别」「状态」这类只有几个取值的列建索引，命中比例高，回表成本超过全表顺序扫描。</li><li><strong>写远多于读</strong>。每次写入都要维护索引页，索引越多写放大越明显，读的收益抵不过写的损失。</li><li><strong>回表太频繁</strong>。二级索引筛出大量主键后逐条回表，随机 I/O 抵消了索引的定位优势。此时应改造成覆盖索引，减少回表，而不是再加一个索引。</li></ul>
+<h2>十一、易错点</h2>
+<ol><li><strong>把「有索引」当成「会走索引」</strong>。结构可用、成本划算、统计准确，三者同时成立才会被选中。</li><li><strong>认为索引越多越好</strong>。每个索引都是一份额外的写成本与空间，且都可能被优化器误选。</li><li><strong>用 <code>SELECT *</code> 破坏覆盖索引</strong>，再抱怨「明明建了索引还是慢」。</li><li><strong>复合索引按业务重要性排序</strong>，而不是按等值条件与范围条件的组合排序。</li><li><strong>把范围列后面的列当成可用</strong>。<code>a = ? AND b &gt; ? AND c = ?</code> 中 <code>c</code> 不能用于定位。</li><li><strong>用前导通配符做前缀检索</strong>，<code>LIKE &#x27;%张&#x27;</code> 无法定位起点。</li><li><strong>在字符列上不加引号比较数字</strong>，隐式转换让索引失效。</li><li><strong>以为 <code>OR</code> 一定全表扫描</strong>，两侧都有索引时可能走索引合并。</li><li><strong>以为 <code>NOT IN</code> 与 <code>NOT EXISTS</code> 永远等价</strong>，子查询含空值时前者可能整体为空。</li><li><strong>只看 <code>type</code> 不看 <code>rows</code> 与 <code>filtered</code></strong>，<code>ref</code> 扫十万行不如 <code>range</code> 扫十行。</li><li><strong>把估算当实际</strong>，不跑 <code>EXPLAIN ANALYZE</code> 就下结论。</li><li><strong>忽略写入代价与索引体积</strong>，只测读不测写。</li></ol>
+<h2>十二、勘误与限定</h2>
+<table>
+<tr><th>序号</th><th>原料表述</th><th>问题</th><th>本文处理</th></tr>
+<tr><td>1</td><td>「标准 SQL 中唯一索引允许 1 个 NULL」</td><td>标准视空值互不相等，唯一约束下允许多个空值；只允许一个是 SQL Server 的实现</td><td>改为「MySQL 允许多个空值，SQL Server 只允许一个」</td></tr>
+<tr><td>2</td><td>「MySQL 可指定非主键列作为聚簇索引（仅 InnoDB 支持）」</td><td>InnoDB 不支持指定聚簇索引列，聚簇索引只能是主键或退化选择</td><td>保留原料自注的正确部分，删除示例中的错误结论，改指 SQL Server 的 <code>CREATE CLUSTERED INDEX</code></td></tr>
+<tr><td>3</td><td>「IN 遇到 NULL 会直接返回空结果」</td><td>仅当子查询含空值且外层值不命中任何非空元素时成立</td><td>补全条件，并给出合取式展开</td></tr>
+<tr><td>4</td><td>「EXISTS 是 NOT IN 的绝对上位替代」「大数据量下性能碾压」</td><td>优化器会把两者改写为半连接，计划可能相同；性能优劣取决于驱动顺序与索引</td><td>改为「空值安全上成立，性能上须看执行计划」</td></tr>
+<tr><td>5</td><td>「IN 会生成超大集合，内存爆炸」</td><td>半连接优化下不一定物化；是否物化由计划决定</td><td>改为「可能物化，也可能改写为半连接」</td></tr>
+<tr><td>6</td><td>「主查询小、子查询大就用 EXISTS」</td><td>结论方向大体成立，但未考虑索引与半连接改写</td><td>补一张按执行计划判断的选择表</td></tr>
+</table>
+<h2>十三、小结</h2>
+<table>
+<tr><th>知识块</th><th>必记结论</th></tr>
+<tr><td>结构</td><td>B+ 树非叶只存键、数据全在叶、叶间成链；扇出约千级，三层可覆盖千万行量级</td></tr>
+<tr><td>聚簇索引</td><td>叶子即整行，一表一个；InnoDB 用主键，缺失时退化为首个非空唯一索引或隐藏 rowid</td></tr>
+<tr><td>二级索引</td><td>叶子存主键，取整行需回表；回表是随机 I/O，行数多时可能不如全表扫描</td></tr>
+<tr><td>覆盖索引</td><td>查询列全在索引内，<code>Extra: Using index</code>；也能免除排序</td></tr>
+<tr><td>复合索引</td><td>按最左前缀匹配；范围列截断后续列；设计时等值在前、范围在后</td></tr>
+<tr><td>失效写法</td><td>列上函数、列参与运算、隐式转换、前导通配符、缺最左列、一侧无索引的 <code>OR</code></td></tr>
+<tr><td>IN 与 EXISTS</td><td>值匹配对存在判断；非相关对相关；<code>NOT IN</code> 遇空值整体为空，<code>NOT EXISTS</code> 免疫</td></tr>
+<tr><td>执行计划</td><td>先看 <code>rows</code> 与 <code>filtered</code>，再看 <code>type</code>；<code>Extra</code> 判断覆盖、下推、排序、临时表</td></tr>
+<tr><td>判断优化</td><td>假设、对照、重复、换数据分布、查副作用；必须能解释「为什么快了」</td></tr>
+</table>
+<p>把全文压成一条判断链：先问「这条查询要读哪些行、哪些列」，据此判断能否用索引定位（最左前缀）、能否不回表（覆盖）；再问「优化器会不会选它」，用执行计划核对 <code>key</code>、<code>rows</code>、<code>Extra</code>；最后问「快了是不是真的」，用对照实验与可解释的指标收尾。索引的物理结构决定了可能的上限，最左前缀决定了可用的范围，执行计划决定了实际的选择，三者层层收窄，任何一层跳过都会得到「看起来对、换数据就错」的结论。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · 聚簇索引与唯一索引辨析 / SQL 中 IN 与 EXISTS 的区别 / EXISTS 与 IN 查询对比 / Django 查询优化与执行计划</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

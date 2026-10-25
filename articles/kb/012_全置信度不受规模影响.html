@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>全置信度不受规模影响</h1>
@@ -41,7 +21,7 @@
 <p>你会有这个疑问非常正常，因为在数据挖掘和关联规则中，“规模”这个词很容易引起歧义。</p>
 <p><strong>直接回答你的问题：从数学定义上来说，全置信度（All_confidence）确实是不受数据集总规模（N）影响的。</strong></p>
 <p>我们可以从以下几个方面来详细拆解：</p>
-<p>PPT上的全置信度公式是： \[ All\_conf(A,B) = \frac{sup(A,B)}{\max(sup(A), sup(B))} \] 假设数据集的<strong>总事务数为 N</strong>，绝对计数分别为 count(A,B)、count(A)、count(B)。 因为 \(sup(X) = \frac{count(X)}{N}\)，代入公式： \[ All\_conf(A,B) = \frac{count(A,B)/N}{\max(count(A)/N, count(B)/N)} = \frac{count(A,B)}{\max(count(A), count(B))} \] <strong>你会发现，分母的 N 和分子的 N 直接约掉了。</strong></p>
+<p>PPT上的全置信度公式是： \[ All_conf(A,B) = \frac{sup(A,B)}{\max(sup(A), sup(B))} \] 假设数据集的<strong>总事务数为 N</strong>，绝对计数分别为 count(A,B)、count(A)、count(B)。 因为 \(sup(X) = \frac{count(X)}{N}\)，代入公式： \[ All_conf(A,B) = \frac{count(A,B)/N}{\max(count(A)/N, count(B)/N)} = \frac{count(A,B)}{\max(count(A), count(B))} \] <strong>你会发现，分母的 N 和分子的 N 直接约掉了。</strong></p>
 <p>因此，如果你把整个数据集复制一遍（总规模 N 翻倍），或者向数据集中加入大量与 A 和 B 完全无关的记录，全置信度的值<strong>不会发生任何改变</strong>。这就是PPT右侧红字“不受规模影响”的本意。</p>
 <p>你可能把以下几个概念混淆了：</p>
 <ul><li><strong>绝对支持度（频数）</strong>：绝对支持度（count）是强烈受规模影响的（数据越多，频数越大）。但全置信度使用的是<strong>相对支持度（概率 P）</strong>。</li><li><strong>受“项集不平衡”的影响</strong>：虽然不受总规模 N 的影响，但全置信度<strong>受 A 和 B 自身频率相对大小的影响</strong>（即 \(P(A)\) 和 \(P(B)\) 的差距）。如果 A 和 B 极度不平衡，全置信度可能会有偏差，但这属于“分布形态”的影响，不属于“数据集规模”的影响。</li><li><strong>零事务/零不变性</strong>：在数据挖掘中，有时候人们把“零事务”（同时不包含A和B的事务）也算作规模的一部分。加入大量零事务，绝对支持度计数不变，但总规模N变大。而全置信度因为约掉了N，所以对这种规模变化免疫。</li></ul>

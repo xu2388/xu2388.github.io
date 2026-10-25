@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>算法</h1>
@@ -78,7 +69,7 @@
 <p>优先队列作为内置容器，它是一种抽象数据类型的具体实现，为用户提供了方便的接口来操作具有优先级的元素集合。而在其内部实现中，通常采用堆这种数据结构来实现元素的存储和管理，以达到高效地插入、删除和获取优先级最高（或最低）元素的目的。所以，说堆是实现优先队列的首选数据结构，是从底层实现原理的角度来讲的，与优先队列是内置容器这一事实并不冲突。</p>
 <div class="record"><span class="tag">我问</span><p>你的意思是说，优先队列它的实现，它的底层是用堆实现的。那堆的底层是什么呀？</p></div>
 <p>堆通常是用数组来实现的。</p>
-<p>在这种实现方式中，堆中的元素按照一定的顺序存储在数组中。对于二叉堆（最常见的堆类型），可以通过数组下标来确定节点之间的父子关系。比如，对于一个具有$n$个元素的数组<code>heap</code>，如果节点<code>i</code>的左子节点存在，那么其左子节点的下标为<code>2 <em> i + 1</code>；右子节点下标为<code>2 </em> i + 2</code>；父节点下标为<code>(i - 1) / 2</code>。通过这种方式，数组可以有效地模拟二叉堆的树形结构，从而实现堆的各种操作，如插入、删除和调整堆等。所以可以说堆的底层是基于数组来实现的。</p>
+<p>在这种实现方式中，堆中的元素按照一定的顺序存储在数组中。对于二叉堆（最常见的堆类型），可以通过数组下标来确定节点之间的父子关系。比如，对于一个具有$n$个元素的数组<code>heap</code>，如果节点<code>i</code>的左子节点存在，那么其左子节点的下标为<code>2 * i + 1</code>；右子节点下标为<code>2 * i + 2</code>；父节点下标为<code>(i - 1) / 2</code>。通过这种方式，数组可以有效地模拟二叉堆的树形结构，从而实现堆的各种操作，如插入、删除和调整堆等。所以可以说堆的底层是基于数组来实现的。</p>
 <div class="record"><span class="tag">我问</span><p>I 的变化实际上就是数组的索引，对不对？</p></div>
 <p>在堆基于数组实现的情况下，<code>i</code>的变化通常就是数组的索引，用于定位堆中不同的元素。通过<code>i</code>以及相关的计算规则，可以方便地访问和操作堆中元素，如确定父子节点的位置等。所以可以说<code>i</code>的变化在这种情境下对应着数组的索引。</p>
 <div class="record"><span class="tag">我问</span><p>数组的索引其实是那个数组，然后那个中括号里面的那个东西，对吧？</p></div>

@@ -13,26 +13,6 @@
 <p class="site-subtitle">全部学习对话的问答存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>肾脏病理分割SOTA模型推荐</h1>
@@ -1914,7 +1894,7 @@ Output only the key-value pairs, one per line.</code></pre>
 <h2>💡 总结</h2>
 <ul><li><strong>训练时</strong>：用（源图像 + 文本）教会模型。</li><li><strong>推理时</strong>：只用文本（或文本 + 可选结构条件）就能生成新图像。</li><li>你的理解完全正确：微调之后，就是用文本描述来生成目标图像。</li></ul>
 <p>如果你准备好了微调后的测试提示词，或者想尝试结合ControlNet，随时告诉我！</p>
-<div class="record"><span class="tag">我问</span><p>stain: pas tissue: kidney mesangial\_matrix: moderate\_increase mesangial\_cell\_proliferation: mild gbm\_thickness: moderately\_increased tubular\_glycogen: moderate tubular\_glycogen\_distribution: diffuse nodular\_lesion: present hyalinosis: present quality: highly\_detailed, sharp\_focus, pathology\_slide翻译</p></div>
+<div class="record"><span class="tag">我问</span><p>stain: pas tissue: kidney mesangial_matrix: moderate_increase mesangial_cell_proliferation: mild gbm_thickness: moderately_increased tubular_glycogen: moderate tubular_glycogen_distribution: diffuse nodular_lesion: present hyalinosis: present quality: highly_detailed, sharp_focus, pathology_slide翻译</p></div>
 <h1>肾脏病理图像生成：染色描述结构化指南</h1>
 <p><strong>用于视觉语言模型生成精准描述及Stable Diffusion微调</strong> 版本 1.1（根据讨论更新）</p>
 <hr />
@@ -2198,7 +2178,7 @@ image.save(&quot;generated.png&quot;)</code></pre>
 玻璃样变: 存在
 图像质量: 高细节, 焦锐利, 病理切片</code></pre>
 <p>需要我用这段中文描述为你生成对应的病理图像吗？</p>
-<div class="record"><span class="tag">我问</span><p>stain: pasm tissue: kidney gbm\_thickness: moderately\_increased gbm\_spike: present gbm\_spike\_distribution: diffuse gbm\_tram\_track: present gbm\_tram\_track\_distribution: diffuse gbm\_break: present mesangial\_interposition: present mesangial\_matrix: moderate\_increase这个也是对吧</p></div>
+<div class="record"><span class="tag">我问</span><p>stain: pasm tissue: kidney gbm_thickness: moderately_increased gbm_spike: present gbm_spike_distribution: diffuse gbm_tram_track: present gbm_tram_track_distribution: diffuse gbm_break: present mesangial_interposition: present mesangial_matrix: moderate_increase这个也是对吧</p></div>
 <p>你说得完全对！这段描述确实<strong>缺少染色特征</strong>——它只说了“有什么病变”，但没说明 <strong>“在PAS染色下，这些病变看起来是什么样”</strong>。这对于让模型学习染色风格是不够的。</p>
 <p>让我帮你补充一下：</p>
 <hr />
@@ -2313,7 +2293,7 @@ quality: highly_detailed, sharp_focus, pathology_slide</code></pre>
 <tr><td><strong>PASM</strong></td><td>black, brown</td><td>linear, spike, tram_track</td><td><code>black_line</code>, <code>brown_matrix</code></td></tr>
 </table>
 <p>需要我帮你把Masson染色的结构化描述也按此方式完善吗？</p>
-<div class="record"><span class="tag">我问</span><p>stain: masson tissue: kidney glomerulus\_sclerosis: global glomerulus\_sclerosis\_distribution: focal mesangial\_matrix: normal mesangial\_cell\_proliferation: mild interstitial\_fibrosis: mild interstitial\_fibrosis\_distribution: focal tubular\_atrophy: mild vascular\_hyalinosis: present vascular\_sclerosis: mild这个是不是也没有啊</p></div>
+<div class="record"><span class="tag">我问</span><p>stain: masson tissue: kidney glomerulus_sclerosis: global glomerulus_sclerosis_distribution: focal mesangial_matrix: normal mesangial_cell_proliferation: mild interstitial_fibrosis: mild interstitial_fibrosis_distribution: focal tubular_atrophy: mild vascular_hyalinosis: present vascular_sclerosis: mild这个是不是也没有啊</p></div>
 <p>你的问题非常实际：<strong>是让LLaVA重新生成（修改提示词），还是在现有描述上用AI（如GPT）优化？</strong> 我们来分析一下两种方案的利弊，然后给你一个明确的建议。</p>
 <hr />
 <h2>🔍 两种方案对比</h2>
@@ -3108,7 +3088,7 @@ pipe = StableDiffusionControlNetPipeline.from_pretrained(
 <ul><li><strong>官方集合地址 (Hugging Face)</strong>：这里包含了几乎所有类型的 ControlNet 模型。</li><li><strong>集合仓库</strong>: <code>https://huggingface.co/lllyasviel/sd_control_collection</code> [citation:2]</li><li><strong>国内镜像 (hf-mirror)</strong>：</li><li>可以访问 <code>https://hf-mirror.com/lllyasviel/sd_control_collection/tree/main</code></li></ul>
 <p><strong>💡 下载小贴士</strong>：</p>
 <ul><li><strong>选择哪个模型？</strong> 你需要根据你用来控制结构的条件图类型（比如边缘图、分割图、涂鸦等）来选择对应的 ControlNet 模型。模型命名通常是 <strong><code>control_v11p_sd15_[条件类型].pth</code></strong> 这样的格式 [citation:3][citation:5]。例如，如果你准备用 Canny 边缘图，就选 <code>control_v11p_sd15_canny.pth</code>。</li><li><strong>在哪里下载？</strong> 在上面的集合仓库里，找到名称里带 <strong><code>sd15</code></strong> 的 <code>.pth</code> 文件下载即可 [citation:3]。</li></ul>
-<ol><li><strong>先下载 SD v1.5</strong>：这是基础，建议先把它下载好。</li><li><strong>明确你的条件图类型</strong>：你的掩码图最适合哪种 ControlNet 模型？是直接用分割图 (<code>seg</code>)，还是先提取边缘 (<code>canny</code>)？这需要你先做个小测试。</li><li><strong>下载对应的 ControlNet 模型</strong>：根据你的选择，从集合里下载对应的 <code><em>sd15</em>.pth</code> 文件。</li></ol>
+<ol><li><strong>先下载 SD v1.5</strong>：这是基础，建议先把它下载好。</li><li><strong>明确你的条件图类型</strong>：你的掩码图最适合哪种 ControlNet 模型？是直接用分割图 (<code>seg</code>)，还是先提取边缘 (<code>canny</code>)？这需要你先做个小测试。</li><li><strong>下载对应的 ControlNet 模型</strong>：根据你的选择，从集合里下载对应的 <code>*sd15*.pth</code> 文件。</li></ol>
 <p>祝你下载顺利！等模型准备好后，需要我帮你梳理如何用你的数据（图像、掩码、文本）来训练这个 ControlNet 吗？</p>
 <div class="record"><span class="tag">我问</span><p>那我微调SDv1.5需要用哪个模型啊</p></div>
 <p>完全理解，在国内网络环境下从 Hugging Face 直接拉取大模型确实很慢。我为你整理了专门针对 <strong>Stable Diffusion v1.5</strong> 和 <strong>ControlNet</strong> 的国内镜像及网盘资源，这些是目前社区里最主流的下载方式。</p>
@@ -3455,7 +3435,7 @@ pipe.text_encoder = CONCHTextEncoder(conch_text_encoder)</code></pre>
 </table>
 <p>所以，总结一下：你之前担心用错版本，这个顾虑很有必要。对于你接下来的工作，<strong><code>v1-5-pruned.ckpt</code> 就是你的最佳拍档</strong>。等你微调完成后，无论是用你微调出的新模型，还是用这个基础版进行推理测试，都可以换用轻量的 <code>v1-5-pruned-emaonly.ckpt</code> 版本来提高效率。</p>
 <p>下载好模型后，下一步就是准备开始训练了。考虑到你之前提到数据量可能有限，微调时有一些参数细节需要注意，需要我结合你手头的数据量，帮你梳理一个具体的训练参数清单（比如学习率、步数）吗？</p>
-<div class="record"><span class="tag">我问</span><p>stain: pasm tissue: kidney gbm\_thickness: 25 microns gbm\_spike: present gbm\_spike\_distribution: uniform gbm\_tram\_track: present gbm\_tram\_track\_distribution: uniform gbm\_break: present mesangial\_interposition: present mesangial\_matrix: 20% background\_color: light tan staining\_contrast: high staining\_uniformity: excellent 那这些是多少token</p></div>
+<div class="record"><span class="tag">我问</span><p>stain: pasm tissue: kidney gbm_thickness: 25 microns gbm_spike: present gbm_spike_distribution: uniform gbm_tram_track: present gbm_tram_track_distribution: uniform gbm_break: present mesangial_interposition: present mesangial_matrix: 20% background_color: light tan staining_contrast: high staining_uniformity: excellent 那这些是多少token</p></div>
 <p>你问到了一个非常关键的技术细节。关于CONCH文本编码器的“大小限制”和手动修改，我需要先帮你理清几个概念，然后给你具体的操作建议。</p>
 <hr />
 <h2>🎯 首先，你说的“大小限制”指的是什么？</h2>
@@ -5894,7 +5874,7 @@ scheduler = CosineAnnealingLR(optimizer, T_max=remaining_steps, eta_min=1e-6)</c
 <hr />
 <h2>🔍 问题根源推测</h2>
 <ol><li><strong>边缘损失权重不足</strong></li></ol>
-<p>当前您的权重组合大概是 <code>total = 1.0<em>noise + 1.0</em>ssim + 1.0<em>edge + 1.0</em>perc + 0.2*l1</code>(从日志反推)。在后期,<code>noise</code> 贡献已微乎其微(0.01),<code>edge</code> 实际贡献约 0.3,<code>ssim</code> 贡献约 0.9。<code>edge</code> 被 <code>ssim</code> 压制了。</p>
+<p>当前您的权重组合大概是 <code>total = 1.0*noise + 1.0*ssim + 1.0*edge + 1.0*perc + 0.2*l1</code>(从日志反推)。在后期,<code>noise</code> 贡献已微乎其微(0.01),<code>edge</code> 实际贡献约 0.3,<code>ssim</code> 贡献约 0.9。<code>edge</code> 被 <code>ssim</code> 压制了。</p>
 <ol><li><strong>边缘监督信号(预计算的 HED 图)可能过于复杂</strong></li></ol>
 <p>HED 提取的是软边缘,包含大量纹理细节。模型可能难以完美拟合这些细节,尤其是在生成图像分辨率固定的情况下。模型可能在“努力拟合”和“放弃抵抗”之间摇摆。</p>
 <ol><li><strong>SSIM 损失与边缘损失的竞争</strong></li></ol>
@@ -8125,7 +8105,7 @@ def edge_f1_score(img1, img2, threshold1=50, threshold2=150):
 <ul><li>检查数据、代码。</li><li>暂时降低异常损失的权重。</li><li>如果噪声损失不下降，可能是学习率太低或调度器错误。</li></ul>
 <hr />
 <h2>📌 总结</h2>
-<p>你的原始配置 <code>total = 1.0 <em> noise + 0.05 </em> edge + 0.05 * color</code> 本身在从零训练初期是合理的（辅助损失权重很低），但前提是噪声损失必须正常下降（初始值应在 1.0 以上）。你观察到的噪声损失 0.02 表明基础设置有问题，请务必先排查数据、噪声添加、模型初始化等。</p>
+<p>你的原始配置 <code>total = 1.0 * noise + 0.05 * edge + 0.05 * color</code> 本身在从零训练初期是合理的（辅助损失权重很低），但前提是噪声损失必须正常下降（初始值应在 1.0 以上）。你观察到的噪声损失 0.02 表明基础设置有问题，请务必先排查数据、噪声添加、模型初始化等。</p>
 <p>一旦基础正确，遵循上述两阶段策略，你就能稳定地从零训练出一个既能去噪又能学习结构和颜色的模型。如果需要更具体的代码示例或调试帮助，请提供你的训练脚本片段，我可以进一步分析。</p>
 <div class="record"><span class="tag">我问</span><p>如果不用SSIM，而是PSNR</p></div>
 <p>针对你正在进行的<strong>肾脏病理图像生成</strong>这一高度专业化的任务，以及你遇到的<strong>从零训练扩散模型损失异常</strong>这类非常具体的问题，我为你整理了最相关的几个社区和论坛。根据你的问题性质，我按<strong>可能获得帮助的效率</strong>从高到低排序：</p>
@@ -8164,7 +8144,7 @@ def edge_f1_score(img1, img2, threshold1=50, threshold2=150):
 <h2>从零训练用 PSNR 替代 SSIM 的分析</h2>
 <p>你问能不能用 PSNR 替代 SSIM，我的答案是：<strong>在从零训练的初期，可以用，但必须理解它的优缺点，并搭配正确的权重和策略。</strong></p>
 <p>PSNR（峰值信噪比）直接基于 <strong>MSE（均方误差）</strong> 计算[citation:9]：</p>
-<ul><li>PSNR 越大 → MSE 越小 → 像素级差异越小</li><li>公式：<code>PSNR = 20 <em> log10(MAX_I) - 10 </em> log10(MSE)</code></li></ul>
+<ul><li>PSNR 越大 → MSE 越小 → 像素级差异越小</li><li>公式：<code>PSNR = 20 * log10(MAX_I) - 10 * log10(MSE)</code></li></ul>
 <p><strong>核心结论：优化 PSNR 等价于优化 MSE。</strong></p>
 <p>在 PyTorch 中，如果你想要 <strong>最小化 PSNR 损失</strong>（即让生成图像和目标图像更相似），你需要最大化 PSNR 值。但损失函数通常是<strong>越小越好</strong>，所以常用的做法是：</p>
 <pre><code>psnr_loss = -psnr_value  # 或者 1/psnr_value</code></pre>
@@ -8331,9 +8311,9 @@ loss = ms_ssim_loss(pred, target)  # 返回 1 - MS-SSIM，越小越好</code></p
 <h2>一、这套损失函数的合理性分析</h2>
 <table>
 <tr><th>损失项</th><th>作用</th><th>设计意图</th></tr>
-<tr><td>\(\</td><td>\epsilon_\theta - \epsilon_t\</td><td>_2^2\)</td><td>噪声预测</td><td>保证去噪过程的基础准确性</td></tr>
-<tr><td>\(\</td><td>x_\theta - x_0\</td><td>_2^2\)</td><td>图像重建</td><td><strong>从像素级锁定组织结构</strong>，确保结构不变</td></tr>
-<tr><td>\(\</td><td>\mu_\theta - \tilde{\mu}_t\</td><td>_2^2\)</td><td>均值匹配</td><td>解决大时间步下噪声预测误差导致的强度/亮度不稳定问题</td></tr>
+<tr><td>\(\|\epsilon_\theta - \epsilon_t\|_2^2\)</td><td>噪声预测</td><td>保证去噪过程的基础准确性</td></tr>
+<tr><td>\(\|x_\theta - x_0\|_2^2\)</td><td>图像重建</td><td><strong>从像素级锁定组织结构</strong>，确保结构不变</td></tr>
+<tr><td>\(\|\mu_\theta - \tilde{\mu}_t\|_2^2\)</td><td>均值匹配</td><td>解决大时间步下噪声预测误差导致的强度/亮度不稳定问题</td></tr>
 </table>
 <p>这个设计是有道理的：</p>
 <ul><li><strong>L2重建损失</strong>直接监督生成图像与真实图像的像素差异，确实比间接的结构损失更直接。对于你的任务——源图像和目标图像结构一致、仅染色不同——直接回归目标图像是合理的做法。</li><li><strong>融合均值</strong>的设计也很巧妙：通过可学习的 \(r_\theta\) 动态平衡噪声预测和图像预测的贡献，理论上可以在不同时间步选择更优的路径。</li></ul>
@@ -8361,9 +8341,9 @@ loss = ms_ssim_loss(pred, target)  # 返回 1 - MS-SSIM，越小越好</code></p
 <p>如果你决定采用这套损失，建议的权重配置是：</p>
 <table>
 <tr><th>损失项</th><th>建议初始权重</th><th>说明</th></tr>
-<tr><td>\(\</td><td>\epsilon_\theta - \epsilon_t\</td><td>_2^2\)</td><td>1.0</td><td>核心损失</td></tr>
-<tr><td>\(\</td><td>x_\theta - x_0\</td><td>_2^2\)</td><td>0.2-0.5</td><td>结构保持，从低开始</td></tr>
-<tr><td>\(\</td><td>\mu_\theta - \tilde{\mu}_t\</td><td>_2^2\)</td><td>0.5-1.0</td><td>强度稳定</td></tr>
+<tr><td>\(\|\epsilon_\theta - \epsilon_t\|_2^2\)</td><td>1.0</td><td>核心损失</td></tr>
+<tr><td>\(\|x_\theta - x_0\|_2^2\)</td><td>0.2-0.5</td><td>结构保持，从低开始</td></tr>
+<tr><td>\(\|\mu_\theta - \tilde{\mu}_t\|_2^2\)</td><td>0.5-1.0</td><td>强度稳定</td></tr>
 </table>
 <p>能否分享一下这篇北大工作的论文标题？我可以用搜索功能帮你找到原文，看看他们的具体实现细节和权重设置建议，这样能更精准地应用到你的任务中。</p>
 <div class="record"><span class="tag">我问</span><p>他的模型不是SD十八</p></div>
@@ -8384,9 +8364,9 @@ loss = ms_ssim_loss(pred, target)  # 返回 1 - MS-SSIM，越小越好</code></p
 <p>你也有<strong>配对的染色图像</strong>（同一组织不同染色的连续切片），这正是论文设计这套损失的基础。对于配对数据，<strong>直接回归目标图像</strong>是合理且有效的。</p>
 <table>
 <tr><th>损失项</th><th>在你任务中的作用</th></tr>
-<tr><td>\(\</td><td>\epsilon_\theta - \epsilon_t\</td><td>_2^2\)</td><td>保证去噪基础能力</td></tr>
-<tr><td>\(\</td><td>x_\theta - x_0\</td><td>_2^2\)</td><td><strong>像素级强制结构保留</strong>——这正是你之前缺少的！</td></tr>
-<tr><td>\(\</td><td>\mu_\theta - \tilde{\mu}_t\</td><td>_2^2\)</td><td>解决强度不稳定问题，保证染色一致性</td></tr>
+<tr><td>\(\|\epsilon_\theta - \epsilon_t\|_2^2\)</td><td>保证去噪基础能力</td></tr>
+<tr><td>\(\|x_\theta - x_0\|_2^2\)</td><td><strong>像素级强制结构保留</strong>——这正是你之前缺少的！</td></tr>
+<tr><td>\(\|\mu_\theta - \tilde{\mu}_t\|_2^2\)</td><td>解决强度不稳定问题，保证染色一致性</td></tr>
 </table>
 <p>你之前的训练中，噪声损失已经饱和（0.02），但边缘损失停滞（0.35），说明模型没有收到足够的<strong>结构保留监督</strong>。论文中的 \(\|x_\theta - x_0\|_2^2\) 正是直接解决这个问题的——它告诉模型“最终图像必须与目标图像像素对齐”，而不是通过边缘损失间接学习。</p>
 <hr />
@@ -10034,7 +10014,7 @@ vae.save_pretrained(&quot;./finetuned_vae&quot;)</code></pre>
    pipe.vae = vae
    pipe.vae.requires_grad_(False)  # 冻结</code></pre>
 <ol><li><strong>加载预训练 SD 1.5 和 ControlNet</strong>（UNet 和 ControlNet 可训练）。</li><li><strong>数据</strong>：你的 900 对配对图像（源-目标）+ 边缘图 + 文本描述。</li><li><strong>训练</strong>：采用两阶段损失（先结构后纹理），学习率 1e-5，步数 5000-10000。</li></ol>
-<ul><li>阶段一（前 50%）：<code>total_loss = noise_loss + 1.0 * edge_loss</code></li><li>阶段二（后 50%）：<code>total_loss = noise_loss + 1.0 <em> edge_loss + 0.5 </em> perceptual_loss</code></li></ul>
+<ul><li>阶段一（前 50%）：<code>total_loss = noise_loss + 1.0 * edge_loss</code></li><li>阶段二（后 50%）：<code>total_loss = noise_loss + 1.0 * edge_loss + 0.5 * perceptual_loss</code></li></ul>
 <hr />
 <h2>三、为什么这个方案能解决你的问题？</h2>
 <ul><li><strong>直接解决 VAE 域差异</strong>：微调后的 VAE 能保留病理图像的细节，为 UNet 提供高质量的潜空间。</li><li><strong>利用预训练优势</strong>：UNet 和 ControlNet 仍然从 SD 1.5 的预训练权重开始，避免从零训练的塌陷。</li><li><strong>数据需求低</strong>：VAE 微调只需单张图像（900 张足够），UNet 微调也只需 900 对，完全可行。</li><li><strong>结构监督有效</strong>：在高质量的潜空间上，边缘损失才能发挥真正作用。</li></ul>
@@ -10079,7 +10059,7 @@ vae.save_pretrained(&quot;./finetuned_vae&quot;)</code></pre>
 <ol><li><strong>UNet 随机初始化</strong>：</li></ol>
 <pre><code>   unet = UNet2DConditionModel(...)  # 参数同 SD 1.5</code></pre>
 <ol><li><strong>训练数据</strong>：你的配对图像 + 边缘图 + 文本描述。</li><li><strong>损失</strong>：采用两阶段策略。</li></ol>
-<ul><li>阶段一（前 30% 步数）：<code>loss = noise_loss + 2.0 * edge_loss</code>（只用噪声和边缘，让结构先出来）。</li><li>阶段二（后 70%）：<code>loss = noise_loss + 1.0 <em> edge_loss + 0.5 </em> perceptual_loss</code>。</li></ul>
+<ul><li>阶段一（前 30% 步数）：<code>loss = noise_loss + 2.0 * edge_loss</code>（只用噪声和边缘，让结构先出来）。</li><li>阶段二（后 70%）：<code>loss = noise_loss + 1.0 * edge_loss + 0.5 * perceptual_loss</code>。</li></ul>
 <ol><li><strong>优化器</strong>：AdamW，lr=1e-4（UNet 从零训练需要较高学习率），batch size 4-8。</li><li><strong>训练步数</strong>：至少 20 万步（取决于数据量），并持续监控生成图像。</li></ol>
 <hr />
 <h2>四、如何利用 ControlNet 预训练权重？</h2>
@@ -11781,7 +11761,7 @@ edge_loss = F.mse_loss(sobel_edge(generated_img), sobel_edge(target_img))   # L2
 ssim_loss = 1 - ssim(generated_img_01, target_img_01, data_range=1.0, size_average=True)
 perc_loss = perceptual_fn(generated_img_01, target_img_01).mean()</code></pre>
 <p><strong>权重</strong>：</p>
-<ul><li>阶段一：<code>loss = noise_loss + 2.0 <em> edge_loss + 0.5 </em> ssim_loss</code></li><li>阶段二：<code>loss = noise_loss + 2.0 <em> edge_loss + 0.5 </em> ssim_loss + 1.0 * perc_loss</code></li></ul>
+<ul><li>阶段一：<code>loss = noise_loss + 2.0 * edge_loss + 0.5 * ssim_loss</code></li><li>阶段二：<code>loss = noise_loss + 2.0 * edge_loss + 0.5 * ssim_loss + 1.0 * perc_loss</code></li></ul>
 <hr />
 <h2>五、训练循环</h2>
 <pre><code>total_steps = 20000
@@ -13631,7 +13611,7 @@ else:
 <ul><li>训练中只用到编码后的潜码，无需解码，所以没有问题。</li></ul>
 <hr />
 <h2>✅ 其他细节</h2>
-<ul><li><strong>路径硬编码</strong>：脚本中的路径（如 <code>custom_vae_path</code>、<code>original_dir</code>）依赖用户环境，运行时需确保存在，否则会报错。建议通过命令行参数传入。</li><li><strong>数据集命名规则</strong>：假设文件名为 <code><em>_domainB.png</code> 和 <code></em>_domainC.png</code>，需保证实际文件名匹配。</li></ul>
+<ul><li><strong>路径硬编码</strong>：脚本中的路径（如 <code>custom_vae_path</code>、<code>original_dir</code>）依赖用户环境，运行时需确保存在，否则会报错。建议通过命令行参数传入。</li><li><strong>数据集命名规则</strong>：假设文件名为 <code>*_domainB.png</code> 和 <code>*_domainC.png</code>，需保证实际文件名匹配。</li></ul>
 <hr />
 <h2>📌 总结</h2>
 <p><strong>代码本身可以运行，但存在以下必须修复的风险点</strong>（按优先级排序）：</p>
@@ -13745,7 +13725,7 @@ else:
 <ul><li><strong>核心思想</strong>：利用训练免费的注意力操作，直接注入源图像的结构信息</li><li><strong>具体方法</strong>：</li></ul>
 <ol><li>使用 <strong>MasaCtrl</strong>（已开源）或 <strong>SkipInject</strong>（待开源）在推理时注入自注意力特征</li><li>结合 ControlNet 作为额外保障</li><li>用源图像的灰度图作为结构参考，去除颜色干扰</li></ol>
 <ul><li><strong>优势</strong>：无需再训练，立即见效；代码已开源，可直接集成到推理流程</li></ul>
-<ul><li><strong>核心思想</strong>：将“结构保持”和“风格迁移”解耦为两个独立的指导信号</li><li><strong>具体方法</strong>：参考北邮CVPR 2025的 [In-domain Generation Diffusion](https://github.com/PRIV-Creation/In-domain-Generation-Diffusion)</li><li>用你的配对图像（结构相同、染色不同）训练一个无文本UNet副本（领域指导）</li><li>冻结原始SD（保留文本控制）</li><li>推理时按权重融合：<code>指导 = 无条件指导 + α<em>(领域指导-无条件指导) + β</em>(文本指导-无条件指导)</code></li><li><strong>优势</strong>：专为结构保持设计，效果已被验证</li></ul>
+<ul><li><strong>核心思想</strong>：将“结构保持”和“风格迁移”解耦为两个独立的指导信号</li><li><strong>具体方法</strong>：参考北邮CVPR 2025的 [In-domain Generation Diffusion](https://github.com/PRIV-Creation/In-domain-Generation-Diffusion)</li><li>用你的配对图像（结构相同、染色不同）训练一个无文本UNet副本（领域指导）</li><li>冻结原始SD（保留文本控制）</li><li>推理时按权重融合：<code>指导 = 无条件指导 + α*(领域指导-无条件指导) + β*(文本指导-无条件指导)</code></li><li><strong>优势</strong>：专为结构保持设计，效果已被验证</li></ul>
 <ul><li><strong>核心思想</strong>：回到根本，全力提升数据质量和训练策略</li><li><strong>具体行动</strong>：</li></ul>
 <ol><li>重新检查数据配准，必要时用更先进的配准工具（如VALIS）重新配准</li><li>重新生成HED边缘图，确保连续、无噪点</li><li>采用两阶段训练：先纯结构训练（噪声+边缘+SSIM）2000步，再加入感知损失</li><li>提高边缘损失权重至3.0，降低感知损失至0.5</li><li>使用余弦退火学习率调度，初始学习率1e-4，最终1e-6</li></ol>
 <hr />

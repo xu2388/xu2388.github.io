@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>操作系统/Linux · 用户权限与 ACL</title>
+<link rel="stylesheet" href="../../assets/style.css" />
+<script id="meta" type="application/json">
+{"title":"操作系统/Linux · 用户权限与 ACL","date":"2026-10-24","tags":["课程笔记","操作系统/Linux"],"category":"课程笔记","summary":"从权限串解码出发，梳理 rwx 在文件与目录上的不同语义、属主/属组/其他三类身份的匹配顺序、chmod 的数字与符号写法、umask 的按位取反推导（含 033 与 027 的逐位复核）、SUID/SGID/粘滞位与四位八进制的换算、进程四类 ID 的取值规则，以及 getfacl 与 setfacl、mask 与默认 ACL 的继承条件，最后落到共享目录的最小权限配置与常见误判。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="container">
+<h1 class="site-title">我的个人博客</h1>
+<p class="site-subtitle">课程复习与科研 · 系统学习笔记</p>
+<nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
+<div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+</div></header>
+<article class="article">
+<h1>操作系统/Linux · 用户权限与 ACL</h1>
+<div class="meta">课程笔记 · 操作系统/Linux · 整理自豆包对话 豆包对话 · Linux权限、ACL及进程程序相关题目解答 / Linux用户与用户组知识点解答 / 远程控制桌面教程</div>
+<h1>操作系统/Linux · 用户权限与 ACL</h1>
+<h2>一、概述：权限模型回答的三个问题</h2>
+<p>权限系统只回答三件事：谁（身份）、对什么（对象类型）、能做哪一类操作（读、写、执行）。Linux 传统模型把身份压缩成三类——属主、属组、其他，把操作压缩成三位——r、w、x，因此表达力有限；ACL 是在不推翻这三类槽位的前提下，给单个用户或单个组加例外，并用 mask 给例外封顶。本文按「解码权限串 → 推导默认权限 → 特殊位与进程身份 → ACL → 继承与最小权限」的顺序展开。</p>
+<p>与已有笔记的分工需要先讲清。《操作系统与 Shell 脚本》给的是命令清单与题目层面的特殊位速算，重点在「会敲、会判」；本文补的是模型、匹配顺序与可复核的推导，重点在「为什么这样判」。《Linux 本地存储管理》讲磁盘、分区、LVM 到挂载，本文只讲挂载点之上的访问控制，不重复 inode、分区表与 fstab。</p>
+<p>先给一张总表，后文逐项展开：</p>
+<table>
+<tr><th>问题</th><th>传统权限的回答</th><th>ACL 的补充</th></tr>
+<tr><td>谁是属主</td><td>inode 中记录的 uid</td><td>不变</td></tr>
+<tr><td>属组是谁</td><td>inode 中记录的 gid</td><td>不变</td></tr>
+<tr><td>其他用户</td><td>不属于前两类者</td><td>具名用户、具名组可单独授权</td></tr>
+<tr><td>新对象默认权限</td><td>umask 收紧创建 mode</td><td>目录默认 ACL 提供继承模板</td></tr>
+<tr><td>例外如何封顶</td><td>无</td><td>mask 限制具名条目与属组条目</td></tr>
+</table>
+<h2>二、权限串怎么读</h2>
+<h3>2.1 十位不是十位</h3>
+<p><code>ls -l</code> 第一列是十个字符：一个类型位加三组三位。类型位 <code>-</code> 表示普通文件，<code>d</code> 表示目录，<code>l</code> 表示符号链接，<code>c</code> 表示字符设备，<code>b</code> 表示块设备，<code>s</code> 表示套接字，<code>p</code> 表示管道。类型位不参与八进制计算。第九位之后还可能出现一个字符：<code>.</code> 表示有 SELinux 安全上下文，<code>+</code> 表示有 ACL。两者都不是权限位，不能读进 rwx。</p>
+<pre><code>ls -ld 项目目录
+stat -c &#x27;%A %a %U %G %n&#x27; 项目目录
+getfacl 项目目录</code></pre>
+<p><code>stat</code> 的 <code>%A</code> 是人类可读权限串，<code>%a</code> 是八进制值。两者对照可以避免手读出错；权限题里最常见的错误不是不会算，而是把 <code>rws</code> 看成 <code>rwx</code>、把 <code>r-t</code> 看成 <code>r-x</code>。</p>
+<h3>2.2 rwx 对文件与目录的不同含义</h3>
+<p>同一个字母，作用在文件与目录上不是一回事。这是权限部分最该先记牢的一张表：</p>
+<table>
+<tr><th>位</th><th>对普通文件</th><th>对目录</th></tr>
+<tr><td>r</td><td>读文件内容，如 <code>cat</code>、<code>cp</code> 源文件</td><td>列目录项，如 <code>ls</code>，拿到文件名列表</td></tr>
+<tr><td>w</td><td>改文件内容，包括写入、截断、追加</td><td>在目录内创建、删除、重命名条目，即改目录项</td></tr>
+<tr><td>x</td><td>把文件交给内核执行，即 <code>execve</code></td><td>进入目录、访问目录内条目的 inode，如 <code>cd</code>、<code>cat 目录/文件</code></td></tr>
+</table>
+<p>三条推论必须记住。</p>
+<p>第一，目录的 <code>w</code> 不等于能改目录内文件的内容，它管的是目录项本身。删一个文件看的是父目录的 <code>w+x</code>，不是文件自己的 <code>w</code>。所以一个 444 的文件放在 777 的目录里，仍然可能被别人删掉。</p>
+<p>第二，目录的 <code>x</code> 是通行证。只有 <code>r</code> 没有 <code>x</code>，能列出名字但 <code>stat</code> 不到条目，也进不去；只有 <code>x</code> 没有 <code>r</code>，知道确切路径就能访问，但列不出目录。</p>
+<p>第三，文件的 <code>x</code> 只对可执行文件有意义。普通文本文件即使有 <code>x</code>，内核也要看文件头能否识别为可执行格式；脚本还要有可用的解释器。</p>
+<p>把常见目录权限与「能否 cd、能否 ls、能否删文件」列成表，比背结论可靠：</p>
+<table>
+<tr><th>目录权限</th><th>八进制</th><th>能否 cd</th><th>能否 ls</th><th>能否删/建条目</th></tr>
+<tr><td><code>rwx</code></td><td>7</td><td>能</td><td>能</td><td>能</td></tr>
+<tr><td><code>r-x</code></td><td>5</td><td>能</td><td>能</td><td>不能</td></tr>
+<tr><td><code>rw-</code></td><td>6</td><td>不能</td><td>能</td><td>不能</td></tr>
+<tr><td><code>--x</code></td><td>1</td><td>能</td><td>不能</td><td>不能</td></tr>
+<tr><td><code>r--</code></td><td>4</td><td>不能</td><td>能</td><td>不能</td></tr>
+<tr><td><code>---</code></td><td>0</td><td>不能</td><td>不能</td><td>不能</td></tr>
+</table>
+<h3>2.3 身份匹配是「首次命中」，不是「取并集」</h3>
+<p>判定顺序固定为：先比较进程的 EUID 与文件 uid；命中就用属主三位；否则比较进程的 EGID 以及附加组与文件 gid；命中就用属组三位；都不命中才用其他三位。一旦命中就停止，不会把属主、属组、其他的权限相加。</p>
+<p>这条规则解释了两个常见现象：</p>
+<ul><li>文件属主即使被属组位给了更多权限，也只看属主位；属主位是 <code>---</code> 时，属主本人也不能读写。</li><li>一个用户同时在多个附加组里，只有文件 gid 命中的那个组位生效；不存在「把多个组的权限并起来」的算法。</li></ul>
+<p>ACL 把这条规则扩展成：属主条目 → 具名用户条目 → 属组与具名组条目（受 mask 限制）→ 其他条目，同样是首次命中。详见第六节。</p>
+<h3>2.4 用一条实例走完判定</h3>
+<p>设文件 <code>项目目录/数据.csv</code> 属主为 <code>acct_a</code>、属组为 <code>lab</code>，权限 <code>-rw-r-----</code>，即 640。三个账户的组成员关系是：<code>acct_a</code> 主组 <code>lab</code>；<code>acct_b</code> 主组 <code>staff</code>，附加组含 <code>lab</code>；<code>acct_c</code> 主组 <code>staff</code>，不在 <code>lab</code>。逐个身份推：</p>
+<table>
+<tr><th>身份</th><th>进程 EUID / EGID</th><th>命中槽位</th><th>有效权限</th><th>能读</th><th>能写</th></tr>
+<tr><td><code>acct_a</code></td><td>自己的 uid / <code>lab</code></td><td>属主位 <code>rw-</code></td><td>rw-</td><td>能</td><td>能</td></tr>
+<tr><td><code>acct_b</code></td><td>自己的 uid / <code>staff</code>，附加组 <code>lab</code></td><td>属组位 <code>r--</code></td><td>r--</td><td>能</td><td>不能</td></tr>
+<tr><td><code>acct_c</code></td><td>自己的 uid / <code>staff</code></td><td>其他位 <code>---</code></td><td>---</td><td>不能</td><td>不能</td></tr>
+<tr><td>root</td><td>0 / 0</td><td>不适用</td><td>绕过读写在内的自主访问检查</td><td>能</td><td>能</td></tr>
+</table>
+<p><code>acct_b</code> 之所以走属组位，是因为判定看的是进程的 EGID 与附加组集合，而不是账户名是否出现在文件上。若给 <code>acct_b</code> 单独加一条 <code>u:acct_b:rwx</code> 的 ACL，他命中的就是具名用户条目，反而不再看 <code>lab</code> 的组位；这正是「首次命中」在多身份下的表现：具名条目更靠前，既可能给他更多，也可能给他更少。</p>
+<p>root 那一行要加限定：root 绕过 r、w 检查，但执行一个文件仍要求该文件至少有一个 x 位；对目录，root 可以进入任意目录，不需要 x。所以「root 什么都能做」在「执行无 x 位的文件」这一项上不成立。</p>
+<h3>2.5 身份从哪里来</h3>
+<p>权限判定用的三个量——uid、gid、附加组集合——都来自账户数据库。<code>/etc/passwd</code> 每行七个字段，依次是用户名、口令占位符、uid、主组 gid、注释、家目录、登录 Shell。口令并不在这个文件里，第二字段通常只是一个 <code>x</code>，真正的散列在 <code>/etc/shadow</code>，后者只有 root 可读。<code>/etc/group</code> 每行四个字段：组名、口令占位、gid、成员列表；成员列表记的是附加组，主组关系记在 <code>/etc/passwd</code> 的第四字段。</p>
+<pre><code>id
+id acct_b
+groups acct_b
+getent passwd acct_b
+getent group lab</code></pre>
+<p><code>id</code> 输出里的 <code>groups=</code> 是当前进程实际携带的组集合，这是判定时真正用的东西。把用户加入新组后，已登录的 Shell 不会自动获得新组，因为组集合在登录时确定；要么重新登录，要么用 <code>newgrp lab</code> 开一个带新组的新 Shell。排查「明明加了组还是没权限」时，先比 <code>id</code> 与 <code>getent group</code>，再看文件权限，顺序不要颠倒。</p>
+<p>提权有两条路。<code>su</code> 切换到另一个账户，需要目标账户的口令，并启动一个新的 Shell，环境变量默认也换成目标账户的；<code>su -</code> 还会模拟完整登录。<code>sudo</code> 不切换 Shell，只按 <code>/etc/sudoers</code> 的规则授权单条命令，默认要求输入自己的口令，因此可以做到「不给 root 口令也能干指定的活」。<code>sudo -u acct_b 命令</code> 以指定用户身份执行，<code>sudo -l</code> 列出当前账户被允许的命令。改 sudo 规则要用 <code>visudo</code>，它会在保存前做语法检查；直接编辑 <code>/etc/sudoers</code> 写坏一行，可能让所有提权入口失效。</p>
+<h2>三、chmod：数字与符号</h2>
+<h3>3.1 数字写法</h3>
+<p>三位数字分别对应属主、属组、其他，每位是 r=4、w=2、x=1 的和。四位数字时最高位是特殊位：SUID=4、SGID=2、粘滞位=1。</p>
+<table>
+<tr><th>权限串</th><th>八进制</th><th>说明</th></tr>
+<tr><td><code>rwxr-xr-x</code></td><td>755</td><td>属主全权，组与其他读加执行</td></tr>
+<tr><td><code>rw-r--r--</code></td><td>644</td><td>属主读写，其余只读</td></tr>
+<tr><td><code>rw-rw----</code></td><td>660</td><td>属主与属组读写，其他无</td></tr>
+<tr><td><code>rwxrwx---</code></td><td>770</td><td>属主与属组全权，其他无</td></tr>
+<tr><td><code>rwx--x--x</code></td><td>711</td><td>属主全权，其他只能进入</td></tr>
+<tr><td><code>rw-------</code></td><td>600</td><td>仅属主读写</td></tr>
+</table>
+<p>数字写法是整体赋值：<code>chmod 640 file</code> 会把特殊位一并清掉，除非写四位。所以对已有 SUID 的文件执行 <code>chmod 755</code>，SUID 会丢失。要保留特殊位，写 <code>chmod 4755</code>，或者先用符号写法只改普通位。</p>
+<h3>3.2 符号写法</h3>
+<p>符号写法是「谁 + 操作 + 权限」。谁取 <code>u</code>（属主）、<code>g</code>（属组）、<code>o</code>（其他）、<code>a</code>（全部）；操作取 <code>+</code>（增加）、<code>-</code>（删除）、<code>=</code>（赋值为给定集合）；权限取 <code>r</code>、<code>w</code>、<code>x</code>，还可写 <code>s</code>、<code>t</code> 与 <code>X</code>。</p>
+<pre><code>chmod u=rwx,g=rx,o= 项目目录/脚本.sh
+chmod g+w 项目目录/数据.csv
+chmod o-rwx 项目目录/配置.ini
+chmod a+x 项目目录/工具.sh
+chmod u+s 项目目录/程序
+chmod g+s 项目目录/共享
+chmod o+t 项目目录/共享</code></pre>
+<p><code>=</code> 的行为要单独记：<code>g=r</code> 表示把属组位设为只读，原来有的 w、x 都被清掉；<code>g+=r</code> 才是在原有基础上加 r。<code>o=</code> 后不写权限，等于把其他位清空。</p>
+<p><code>X</code> 是条件执行位：只有当对象是目录，或对象已有任一执行位时，才加 x。批量给目录树补执行位时，<code>chmod -R a+X 项目目录</code> 比 <code>a+x</code> 安全，后者会把普通数据文件也标成可执行。</p>
+<p><code>-R</code> 递归要谨慎，它会把目录与文件一视同仁。常见错误是 <code>chmod -R 600 项目目录</code>，目录失去 x 后谁都进不去。正确做法是分开处理：</p>
+<pre><code>find 项目目录 -type d -exec chmod 750 {} +
+find 项目目录 -type f -exec chmod 640 {} +</code></pre>
+<h3>3.3 特殊位的符号与大小写</h3>
+<table>
+<tr><th>特殊位</th><th>位置</th><th>有执行权限</th><th>无执行权限</th><th>八进制</th></tr>
+<tr><td>SUID</td><td>属主位第三位</td><td><code>s</code></td><td><code>S</code></td><td>4000</td></tr>
+<tr><td>SGID</td><td>属组位第三位</td><td><code>s</code></td><td><code>S</code></td><td>2000</td></tr>
+<tr><td>粘滞位</td><td>其他位第三位</td><td><code>t</code></td><td><code>T</code></td><td>1000</td></tr>
+</table>
+<p><code>s</code> 与 <code>S</code> 的区别是底下的 x 在不在：<code>rws</code> 是 rwx 加 SUID，<code>rwS</code> 是 rw- 加 SUID。<code>t</code> 与 <code>T</code> 同理。读权限串时先看字母大小写，再决定普通位该按 7 还是 6 算。</p>
+<h3>3.4 在创建时就把权限定下来</h3>
+<p>事后 <code>chmod</code> 会产生一个时间窗：从文件创建到改权限之间，文件按 umask 算出的权限存在。对私密文件更稳妥的做法是创建时就带 mode：</p>
+<pre><code>mkdir -m 2770 项目目录/共享
+install -d -m 750 项目目录/归档
+install -m 640 模板.csv 项目目录/数据.csv
+(umask 077; touch 项目目录/私密记录)</code></pre>
+<p><code>install</code> 与 <code>cp</code> 的差别值得记：<code>install -m</code> 直接给定目标权限，不受 umask 影响；<code>cp</code> 新建目标时用源文件 mode 与 <code>~umask</code> 相与，只有 <code>cp -p</code> 才保留源文件的权限与时间戳。<code>mkdir -m 2770</code> 一次把 SGID 与组权限都设好，比先 <code>mkdir</code> 再 <code>chmod</code> 少一个中间态。</p>
+<p><code>mktemp</code> 创建的临时文件默认只有属主可读写，这是一条有意的安全默认；自己拼一个 <code>/tmp/固定名</code> 再用 <code>&gt;</code> 重定向，既可能撞名，也可能被预先放好的符号链接利用。临时文件交给 <code>mktemp</code>，目录交给 <code>mktemp -d</code>。</p>
+<h2>四、umask：默认权限的按位推导</h2>
+<h3>4.1 规则不是减法</h3>
+<p>新建普通文件的基准是 666，不含 x；新建目录的基准是 777。内核的做法是基准位与 umask 的按位取反相与：</p>
+<p>$$ \text{mode}_{\text{new}}=\text{base}\ \&amp;\ \sim\text{umask}. $$</p>
+<p>八进制每一位独立做三位二进制运算。减法 <code>666-umask</code> 只在 umask 的每一位都落在基准位范围内时才碰巧相等；一旦 umask 含基准中不存在的位，例如文件基准 6 不含 x，而 umask=033 要掩 wx，减法就会多扣。</p>
+<h3>4.2 逐位复核</h3>
+<p>以 <code>umask=033</code> 为例，文件基准 666：</p>
+<p>$$ 6\ \&amp;\ \sim 3 = 110_2\ \&amp;\ 100_2 = 100_2 = 4, $$</p>
+<p>三位都是 6 与 3 运算，所以文件权限是 644。目录基准 777：</p>
+<p>$$ 7\ \&amp;\ \sim 3 = 111_2\ \&amp;\ 100_2 = 100_2 = 4, $$</p>
+<p>三位都是 7 与 3 运算，所以目录权限是 744。若用减法，会得到 633 与 744；文件那一项就错了。</p>
+<p>再以 <code>umask=027</code> 为例：</p>
+<table>
+<tr><th>位</th><th>文件 6 与 ~umask</th><th>目录 7 与 ~umask</th></tr>
+<tr><td>属主位，umask 0</td><td>6 &amp; 7 = 6</td><td>7 &amp; 7 = 7</td></tr>
+<tr><td>属组位，umask 2</td><td>6 &amp; 5 = 4</td><td>7 &amp; 5 = 5</td></tr>
+<tr><td>其他位，umask 7</td><td>6 &amp; 0 = 0</td><td>7 &amp; 0 = 0</td></tr>
+</table>
+<p>所以文件 640、目录 750。这个例子说明 027 的「其他位全掩」是有效的，减法在这里也恰好成立。</p>
+<h3>4.3 常见 umask 对照</h3>
+<table>
+<tr><th>umask</th><th>新文件</th><th>新目录</th><th>适用场景</th></tr>
+<tr><td>022</td><td>644</td><td>755</td><td>默认，团队可读</td></tr>
+<tr><td>027</td><td>640</td><td>750</td><td>同组可读、其他不可见</td></tr>
+<tr><td>077</td><td>600</td><td>700</td><td>个人私有</td></tr>
+<tr><td>002</td><td>664</td><td>775</td><td>协作目录，同组可写</td></tr>
+<tr><td>033</td><td>644</td><td>744</td><td>掩掉组与其他写、执行，文件仍是 644</td></tr>
+</table>
+<p><code>umask</code> 是 Shell 内建，设置后只影响当前进程及其子进程创建的新对象，不影响已存在文件。查看用 <code>umask</code>（数字）与 <code>umask -S</code>（符号）。要长期生效，写进 <code>~/.bashrc</code> 或 <code>/etc/profile</code>；要让某个目录下的新文件自动带 ACL，则用默认 ACL，而不是靠 umask。</p>
+<p>还有一个容易忽略的点：umask 只筛请求的 mode。程序调用 <code>open(..., 0666)</code> 时，内核再与 <code>~umask</code> 相与；如果程序请求 0600，umask 022 也不会把它放宽到 644。所以「umask 决定默认权限」的准确说法是「umask 只能收紧，不能放宽」。</p>
+<h3>4.4 umask 与默认 ACL 的分工</h3>
+<p>两者都影响新建对象，但作用范围不同，混用会互相抵消预期：</p>
+<table>
+<tr><th>需求</th><th>合适手段</th><th>原因</th></tr>
+<tr><td>整个账户新建的东西都收紧</td><td><code>umask 077</code></td><td>进程级开关，覆盖所有目录</td></tr>
+<tr><td>只让某个目录的新文件对组可写</td><td>目录默认 ACL</td><td>umask 是全局的，按目录区分只能靠 ACL</td></tr>
+<tr><td>给不同具名用户不同权限</td><td>目录默认 ACL</td><td>传统三位放不下第四个身份</td></tr>
+<tr><td>新文件默认带组继承</td><td>目录 SGID 加默认 ACL</td><td>SGID 管属组，ACL 管权限，各管一段</td></tr>
+</table>
+<p>有一处交互必须说清：目录存在默认 ACL 时，新建对象的权限由继承条目与创建 mode 共同决定，umask 不再参与这一步。也就是说，在设了默认 ACL 的共享目录里改 <code>umask</code> 不会改变新文件的组权限，真正起作用的是 <code>d:g::</code> 与 <code>d:m::</code> 两行。反过来，在没设默认 ACL 的目录里，<code>d:</code> 条目根本不存在，只能靠 umask。排查「共享目录新文件权限不对」时，先确认这个目录到底有没有默认 ACL，再决定改哪一处。</p>
+<h2>五、SUID、SGID 与进程的四类 ID</h2>
+<h3>5.1 三个特殊位各自做什么</h3>
+<table>
+<tr><th>位</th><th>作用对象</th><th>效果</th><th>典型</th></tr>
+<tr><td>SUID</td><td>可执行文件</td><td>执行时进程 EUID 变为文件属主 uid</td><td>改密程序需要临时读写口令库</td></tr>
+<tr><td>SGID</td><td>可执行文件</td><td>执行时进程 EGID 变为文件属组 gid</td><td>需要临时获得组权限的工具</td></tr>
+<tr><td>SGID</td><td>目录</td><td>目录内新建对象的 gid 继承目录 gid，而不是创建者主组</td><td>团队共享目录</td></tr>
+<tr><td>粘滞位</td><td>目录</td><td>目录内条目只有其属主、目录属主与 root 能删或改名</td><td><code>/tmp</code> 的 1777</td></tr>
+</table>
+<p>注意 SGID 在文件与目录上是两种不同效果，这是它最容易混的地方。粘滞位对普通文件的 x 位没有额外授权作用，它只限制删除与改名。</p>
+<h3>5.2 四位八进制的换算</h3>
+<p>把权限串拆成「类型位 + 三组三位」，逐组算普通位，再看每组第三位是否有 <code>s</code>、<code>S</code>、<code>t</code> 或 <code>T</code>：</p>
+<table>
+<tr><th>权限串</th><th>普通位</th><th>特殊位</th><th>八进制</th></tr>
+<tr><td><code>-rwsr-xr-x</code></td><td>755</td><td>SUID 4000</td><td>4755</td></tr>
+<tr><td><code>-rwxrwsr--</code></td><td>774</td><td>SGID 2000</td><td>2774</td></tr>
+<tr><td><code>drwsrw-r-t</code></td><td>765</td><td>SUID 4000 加粘滞 1000</td><td>5765</td></tr>
+<tr><td><code>-rwsrwsrwt</code></td><td>777</td><td>SUID、SGID 与粘滞共 7000</td><td>7777</td></tr>
+<tr><td><code>-rwSr--r--</code></td><td>644</td><td>SUID 4000，无 x</td><td>4644</td></tr>
+<tr><td><code>-rw-r-Sr--</code></td><td>644</td><td>SGID 2000，无 x</td><td>2644</td></tr>
+<tr><td><code>-rw-r--r-T</code></td><td>644</td><td>粘滞 1000，无 x</td><td>1644</td></tr>
+</table>
+<p>最后三行专门用来区分大小写：大写字母表示特殊位开了，但对应的 x 没开，普通位按 6 或 4 算，不能按 7 或 5 算。</p>
+<p>原料在「三个特殊位叠加」的例子中把 <code>-rwsrwsrwt</code> 算成 7775，这是错的：其他位的 <code>rwt</code> 是 r+w+x 再加粘滞位，普通位是 7，特殊位是 7，合计 7777。错误来源是把小写 <code>t</code> 当成「占用了 x 但不给 x」，而小写 <code>t</code> 恰恰表示 x 仍在。</p>
+<h3>5.3 进程的 RUID、EUID、RGID、EGID</h3>
+<p>进程有四类身份：真实 ID（RUID 与 RGID）记录谁启动的，有效 ID（EUID 与 EGID）是内核做权限检查时真正使用的身份。默认二者相等；执行带 SUID 的文件时 EUID 变为文件属主 uid，执行带 SGID 的文件时 EGID 变为文件属组 gid。另有一组保存型 ID（saved set-user-ID 与 saved set-group-ID），用于 <code>exec</code> 后还能切回原身份；它和权限串里的 SUID 位同名但不是一回事，答题时最好写全称，避免把「位」和「进程属性」混成一个概念。</p>
+<p>一个可复核的例子：文件属主 uid=1001、gid=1001，权限 <code>-rwxrws-w-</code>，即 2772；执行者 uid=500、gid=501。属主位是 <code>rwx</code>，没有 s，所以 EUID 不变，等于 500；属组位是 <code>rws</code>，有 SGID，所以 EGID 变为文件属组 1001；RUID 与 RGID 始终是 500 与 501。若权限改成 <code>-rwsrws-w-</code>，即 6772，EUID 才会变成 1001。</p>
+<p>还要区分文件访问判定与进程身份：执行者能否读这个文件，只看它命中属主、属组、其他的哪一段，SGID 不会让一个不属于属组的用户突然获得属组读权限。SGID 改变的是子进程的 EGID，以及目录新建对象的属组，不是当前用户的身份。</p>
+<h3>5.4 特殊位的安全边界</h3>
+<ul><li>对脚本设置 SUID 在 Linux 上通常不生效：内核不把 <code>#!</code> 脚本当作可保留特权的可执行体，脚本解释器会以调用者身份运行。需要提权应使用编译型程序或受控的 sudo 规则。</li><li>查找系统中的 SUID 与 SGID 文件：<code>find / -xdev -perm -4000 -type f</code> 与 <code>find / -xdev -perm -2000 -type f</code>。<code>-xdev</code> 避免跨文件系统扫描。</li><li>挂载选项 <code>nosuid</code> 可以忽略该挂载点上文件的 SUID 与 SGID 位；对用户可写的分区应默认加 <code>nosuid</code>。</li><li>共享目录用 SGID 加默认 ACL 实现「新建文件自动归组」，比把目录设成 777 安全得多。</li></ul>
+<h3>5.5 SGID 目录的连锁效果与粘滞位的边界</h3>
+<p>SGID 目录的效果是「新建对象的属组继承目录属组」，但继承的细节要分对象看：</p>
+<table>
+<tr><th>新建对象</th><th>是否继承属组</th><th>是否继承 SGID 位</th></tr>
+<tr><td>普通文件</td><td>是</td><td>否，新文件不带 SGID</td></tr>
+<tr><td>子目录</td><td>是</td><td>是，子目录自动带 SGID 继续往下传</td></tr>
+</table>
+<p>第二行意味着 SGID 会沿着新建的子目录自动延续，但不会追认已有的子目录。把一个旧目录改成 <code>2770</code> 后，它内部已经存在的子目录仍然是原来的属组与位；要让整棵树都归组，需要对已有目录补一次：<code>find 项目目录/共享 -type d -exec chmod g+s {} +</code>。只改顶层而不补子目录，是共享目录「有的文件归组、有的不归组」的典型原因。</p>
+<p>粘滞位只干一件事：限制目录内条目的删除与改名。判定删除时，内核要求调用者对目录有 <code>w+x</code>，并且满足三者之一——调用者是条目属主、调用者是目录属主、调用者是 root。它不限制读取，也不限制写入已有文件的内容。因此 1777 的目录仍然允许任何人读别人放进去的 644 文件，也允许任何人对别人放的 666 文件写入；粘滞位挡的是「删掉别人的文件」和「把别人的文件改名成自己的」，不是「碰别人的数据」。要真正隔离数据，得靠 700 的家目录、2770 的组目录，而不是 1777 加粘滞位。</p>
+<h2>六、ACL：给单用户开例外</h2>
+<h3>6.1 为什么需要</h3>
+<p>传统模型只有三个身份槽位。若一个项目目录要让属主读写、项目组读写、另一个组的审计员只读、某个临时协作者只读，三档权限无论怎么摆都摆不下：把审计员加进项目组会给他写权限，把目录放开成 755 又会让所有其他用户可读。ACL 的做法是保留三档作为骨架，再挂若干具名条目。</p>
+<table>
+<tr><th>类型</th><th>作用范围</th><th>是否被新建对象继承</th></tr>
+<tr><td>访问 ACL（access ACL）</td><td>单个文件或目录本身</td><td>否</td></tr>
+<tr><td>默认 ACL（default ACL）</td><td>只对目录有意义</td><td>是，目录内新建对象继承</td></tr>
+</table>
+<p>默认 ACL 不是目录自己的权限，它只是模板。给目录设默认 ACL 不会改变目录本身的访问权限；要同时控制目录本身，还要设访问 ACL。</p>
+<h3>6.2 getfacl 的字段</h3>
+<pre><code>getfacl 项目目录/数据.csv</code></pre>
+<p>输出大致是：</p>
+<pre><code># file: 项目目录/数据.csv
+# owner: acct_a
+# group: lab
+user::rw-
+user:acct_b:r--
+group::r--
+mask::r--
+other::---</code></pre>
+<p>逐行读：<code>user::</code> 是属主条目，<code>user:acct_b:</code> 是具名用户条目，<code>group::</code> 是属组条目，<code>mask::</code> 是权限上限，<code>other::</code> 是其他条目。<code># owner</code> 与 <code># group</code> 是注释，不是条目。</p>
+<p><code>ls -l</code> 末尾的 <code>+</code> 表示该文件有 ACL。没有 <code>+</code> 不代表一定没有 ACL：如果 ACL 条目与普通位完全一致，某些实现不会显示 <code>+</code>，所以判断应以 <code>getfacl</code> 为准。</p>
+<h3>6.3 mask 是上限，不是另一个身份</h3>
+<p>mask 只约束具名用户、具名组和属组条目，不约束属主条目与其他条目。一个条目的有效权限是条目权限与 mask 相与：</p>
+<p>$$ \text{effective}=\text{entry}\ \&amp;\ \text{mask}. $$</p>
+<p>例如 <code>user:acct_b:rwx</code> 而 <code>mask::r--</code>，acct_b 的有效权限只有 <code>r--</code>。<code>getfacl</code> 会在被 mask 削减的条目后打印 <code># effective:r--</code>，这是排查「明明给了 rwx 却写不进去」的第一线索。</p>
+<p>设置或修改 ACL 时，工具默认会重新计算 mask：只要存在具名条目或属组条目，mask 会取这些条目的并集，并受普通位约束。如果不想让工具自动改 mask，用 <code>-n</code>。手工把 mask 设小，是「给了一批条目但只放开一部分」的常用手法。</p>
+<h3>6.4 setfacl 的常用形式</h3>
+<pre><code>setfacl -m u:acct_b:rx 项目目录/数据.csv      # 具名用户
+setfacl -m g:lab:rwx 项目目录/共享             # 具名组
+setfacl -m o::- 项目目录/共享                  # 其他条目
+setfacl -m m:rx 项目目录/共享                  # 手工设 mask
+setfacl -x u:acct_b 项目目录/数据.csv          # 删除一条
+setfacl -b 项目目录/数据.csv                   # 清空访问 ACL
+setfacl -k 项目目录/共享                       # 只删默认 ACL
+setfacl -R -m u:acct_b:rx 项目目录             # 递归
+getfacl -R 项目目录 &gt; acl.bak                  # 备份
+setfacl --restore=acl.bak                      # 还原</code></pre>
+<p><code>-m</code> 是修改或新增，<code>-x</code> 是删除指定条目，<code>-b</code> 是清空全部（含默认 ACL），<code>-k</code> 只清默认 ACL。<code>--set</code> 是整体替换，<code>--set-file</code> 从文件读。递归时 <code>-R</code> 会同时作用于目录与文件，若只想给目录加默认 ACL，不要加 <code>-R</code>，或者用 <code>find</code> 分开处理。</p>
+<h3>6.5 默认 ACL 与继承</h3>
+<p>给目录设默认 ACL：</p>
+<pre><code>setfacl -m d:u::rwx,d:g::r-x,d:o::---,d:m::r-x,d:u:acct_b:r-x 项目目录/共享</code></pre>
+<p><code>d:</code> 前缀表示默认条目。一个完整的默认 ACL 必须包含 <code>d:u::</code>、<code>d:g::</code>、<code>d:o::</code>、<code>d:m::</code> 四类骨架，否则 <code>setfacl</code> 会报缺少必需条目。新建对象时：</p>
+<table>
+<tr><th>新对象</th><th>继承什么</th><th>最终权限怎么定</th></tr>
+<tr><td>普通文件</td><td>父目录的默认 ACL 作为访问 ACL</td><td>继承条目再与创建时请求的 mode 做约束；属主与其他条目被 mode 对应位收紧，mask 重新计算</td></tr>
+<tr><td>子目录</td><td>父目录的默认 ACL 同时作为访问 ACL 与默认 ACL</td><td>同上，且子目录继续把模板传给下一代</td></tr>
+<tr><td>已存在文件</td><td>不继承</td><td>默认 ACL 只影响设置之后新建的对象</td></tr>
+</table>
+<p>「文件继承后为什么没有 x」是常见疑问：默认 ACL 里即使写了 <code>d:u::rwx</code>，创建文件的程序通常请求 0666，属主条目的 x 会被 mode 的约束清掉；目录则通常请求 0777，x 得以保留。这不是 ACL 失效，而是默认 ACL 是模板、创建 mode 是第二道闸门。</p>
+<p>移动与复制：<code>mv</code> 在同一文件系统内只改目录项，ACL 原样保留；跨文件系统 <code>mv</code> 退化为复制加删除，ACL 是否保留取决于工具。<code>cp -p</code> 会保留权限与 ACL，<code>cp</code> 不带 <code>-p</code> 时新文件按目标目录的默认 ACL 与 umask 生成，不继承源文件 ACL。备份 ACL 用 <code>getfacl -R</code>，还原用 <code>setfacl --restore</code>，不要只备份 <code>ls -l</code> 的输出。</p>
+<h3>6.6 ACL 的判定顺序</h3>
+<ol><li>进程 EUID 等于文件属主：用 <code>user::</code> 条目，不受 mask 约束。</li><li>否则查具名用户条目：命中则用该条目，结果与 mask 相与。</li><li>否则查属组条目与具名组条目：只要进程的 EGID 或任一附加组命中，就取所有命中组条目的并集，再与 mask 相与。</li><li>都不命中：用 <code>other::</code> 条目，不受 mask 约束。</li></ol>
+<p>这张顺序表解释了为什么「给用户加了 rwx 但仍然不能写」：可能是命中了一个权限更小的具名组条目，或者 mask 把它压掉了。排查时先看 <code>getfacl</code> 的 <code>effective:</code> 注释，再看进程的实际 EUID 与 EGID（<code>id</code>），不要只看 <code>ls -l</code>。</p>
+<p>原料把 ACL 描述成「属主权限 + 属组权限 + 其他权限 + FACL 权限的叠加」，这是错的。传统位与 ACL 不是相加关系，而是同一套判定链上的不同槽位；ACL 条目的作用也不是「再多给一点」，而是「换一个更具体的槽位」。若真是叠加，任何 ACL 都只能加权限、不能减权限，这与 mask 的存在矛盾。</p>
+<h3>6.7 ACL 的读写、迁移与排错</h3>
+<p>有 ACL 的文件，<code>ls -l</code> 的属组三位显示的是 mask，不是 <code>group::</code> 条目。这一点会误导人：对一个有具名条目的文件执行 <code>chmod g-w</code>，改的是 mask，<code>group::</code> 条目原封不动；<code>getfacl</code> 里会看到 <code>mask::-w-</code> 而 <code>group::r-x</code> 仍是原值。要改属组条目本身，必须用 <code>setfacl -m g::r-x</code>，不能用 <code>chmod</code>。同理，<code>chmod 750</code> 会把 mask 设成 5，具名条目可能一起被压掉。</p>
+<p>ACL 存在扩展属性里，普通复制工具不一定带走：</p>
+<table>
+<tr><th>操作</th><th>ACL 是否保留</th><th>说明</th></tr>
+<tr><td><code>cp</code></td><td>否</td><td>新文件按目标目录的默认 ACL 与 umask 生成</td></tr>
+<tr><td><code>cp -p</code> 或 <code>cp -a</code></td><td>是</td><td>保留权限位与 ACL</td></tr>
+<tr><td><code>mv</code> 同一文件系统</td><td>是</td><td>只改目录项，inode 未动</td></tr>
+<tr><td><code>mv</code> 跨文件系统</td><td>取决于工具</td><td>退化为复制加删除，按复制规则处理</td></tr>
+<tr><td><code>tar</code></td><td>需 <code>--acls</code></td><td>默认不归档扩展属性</td></tr>
+<tr><td><code>rsync</code></td><td>需 <code>-A</code></td><td>与 <code>-p</code> 配合才完整</td></tr>
+</table>
+<p>备份与还原用 <code>getfacl -R 项目目录 &gt; acl.bak</code> 与 <code>setfacl --restore=acl.bak</code>。<code>--restore</code> 按备份文件里的相对路径定位对象，所以要在当初执行 <code>getfacl</code> 的同一层目录下还原；换一台机器、换一个挂载点，路径对不上就会整批失败。只想删掉某一条默认条目，用 <code>setfacl -x d:u:acct_b 项目目录/共享</code>；<code>-x</code> 不带 <code>d:</code> 删的是访问条目，两者不要混。</p>
+<p>常见报错有两类。<code>setfacl: 项目目录: Operation not supported</code> 表示底层文件系统没开 ACL 支持，本地文件系统通常默认开启，网络文件系统与某些容器挂载需要显式选项。<code>getfacl</code> 输出里条目后带 <code># effective:---</code> 则表示条目本身有权限、但被 mask 压成空，改 mask 而不是改条目。</p>
+<h2>七、权限继承与最小权限</h2>
+<h3>7.1 共享目录的标准配方</h3>
+<p>目标：项目组内可读写、组外不可见、新建文件自动归组、新文件默认可被组内修改。</p>
+<pre><code>groupadd lab
+usermod -aG lab acct_a
+usermod -aG lab acct_b
+mkdir -p 项目目录/共享
+chown :lab 项目目录/共享
+chmod 2770 项目目录/共享
+setfacl -m d:u::rwx,d:g::rwx,d:o::---,d:m::rwx 项目目录/共享</code></pre>
+<p><code>2770</code> 中的 2 是 SGID：目录内新建文件与子目录的属组继承 <code>lab</code>，而不是创建者的主组。<code>d:g::rwx</code> 让新文件默认对组可读写；<code>d:m::rwx</code> 给 mask 留出空间。若希望新文件默认对组只读，把 <code>d:g::</code> 改成 <code>r-x</code>、<code>d:m::</code> 改成 <code>r-x</code>。</p>
+<p>为什么不用 777：777 让任何用户都能进来创建、删除、替换文件，粘滞位只能防删除，防不了读取与替换。共享目录的正确边界是「组内 2770 加默认 ACL」，而不是「全世界 777 加粘滞位」。</p>
+<h3>7.2 最小权限的检查清单</h3>
+<table>
+<tr><th>检查项</th><th>命令</th><th>判据</th></tr>
+<tr><td>家目录是否可被他人读</td><td><code>ls -ld 家目录</code></td><td>应为 700 或 750</td></tr>
+<tr><td>私钥权限</td><td><code>ls -l ~/.ssh/id_*</code></td><td>私钥 600，公钥 644，<code>.ssh</code> 700</td></tr>
+<tr><td>是否有意外的 SUID</td><td><code>find / -xdev -perm -4000 -type f</code></td><td>只应出现系统自带程序</td></tr>
+<tr><td>共享目录是否过宽</td><td><code>ls -ld 项目目录/共享</code></td><td>2770 而非 777</td></tr>
+<tr><td>是否有 ACL 特例</td><td><code>getfacl -R 项目目录</code></td><td>具名条目有明确用途</td></tr>
+<tr><td>新文件默认权限</td><td><code>umask</code></td><td>协作环境 002 或 007，私有环境 077</td></tr>
+<tr><td>挂载点是否禁 SUID</td><td><code>findmnt -o TARGET,OPTIONS</code></td><td>用户可写分区应有 nosuid</td></tr>
+</table>
+<p><code>namei -l 路径</code> 可以逐级显示路径上每一层目录的权限与属主，是排查「文件权限对但就是进不去」的最快工具；<code>sudo -u acct_b test -r 文件</code> 可以以另一个身份做可读性测试，比肉眼推算可靠。</p>
+<h3>7.3 常见误判</h3>
+<ul><li>目录 755 所以别人不能写：对，但别人仍能读目录内所有可读文件。目录的 755 只挡写，不挡读。</li><li>文件 644 所以别人不能删：删除看父目录的 <code>w+x</code>。父目录 777 时，文件 444 也能被删。</li><li><code>chmod 777</code> 能解决所有权限问题：它同时放开了读、写、执行与目录项修改，是最小权限的反面。</li><li>ACL 会让权限只增不减：mask 可以削减具名条目，ACL 也可以用来收紧。</li><li>umask 能放宽权限：不能，它只能收紧创建 mode。</li></ul>
+<h3>7.4 报错信息对照</h3>
+<p>权限问题最好从报错反推，而不是凭感觉 <code>chmod 777</code>。下面这些提示各有明确指向：</p>
+<table>
+<tr><th>现象</th><th>常见原因</th><th>先查什么</th></tr>
+<tr><td><code>cd: Permission denied</code></td><td>路径上某一级目录缺 x</td><td><code>namei -l 路径</code></td></tr>
+<tr><td><code>ls: cannot open directory</code></td><td>目标目录缺 r</td><td><code>ls -ld</code> 该目录</td></tr>
+<tr><td>能读文件但删不掉</td><td>父目录缺 w 或 x</td><td><code>ls -ld 父目录</code></td></tr>
+<tr><td>文件权限正确但仍进不去</td><td>上级目录缺 x，ACL 或挂载选项</td><td><code>namei -l</code>、<code>getfacl</code></td></tr>
+<tr><td><code>Text file busy</code></td><td>文件正在被执行，内核拒绝写入</td><td><code>lsof 文件</code></td></tr>
+<tr><td><code>bad interpreter: Permission denied</code></td><td>脚本缺 x，或解释器路径不可执行</td><td><code>ls -l</code>、<code>head -1</code></td></tr>
+<tr><td>执行时报 <code>Permission denied</code> 但 x 位在</td><td>所在挂载点带 <code>noexec</code></td><td><code>findmnt -T 路径</code></td></tr>
+<tr><td><code>Operation not permitted</code></td><td>非 root 试图 <code>chown</code> 或设特殊位</td><td><code>id</code></td></tr>
+<tr><td><code>sudo: 命令: command not found</code></td><td>sudo 的 <code>secure_path</code> 不含该路径</td><td><code>sudo -l</code>、写绝对路径</td></tr>
+</table>
+<p><code>Text file busy</code> 值得单独说：它发生在程序正在运行时有人试图写这个可执行文件，内核用 ETXTBSY 阻止替换正在映射的映像。正确做法是停掉进程再更新，或者写新文件后用 <code>mv</code> 原子替换——<code>mv</code> 改的是目录项，不会碰正在执行的那个 inode。</p>
+<h2>八、原料勘误与概念澄清</h2>
+<table>
+<tr><th>序号</th><th>原料表述</th><th>问题</th><th>本文口径</th></tr>
+<tr><td>1</td><td>ACL 权限是属主、属组、其他与 FACL 的叠加</td><td>判定是首次命中，且受 mask 约束，不是相加</td><td>第六节</td></tr>
+<tr><td>2</td><td>ACL 分「标准 ACL 与扩展 ACL」</td><td>这是网络设备的术语；Linux 文件 ACL 分访问 ACL 与默认 ACL</td><td>6.1 节</td></tr>
+<tr><td>3</td><td><code>-rwsrwsrwt</code> 为 7775</td><td>其他位 <code>rwt</code> 含 x，普通位为 7，应为 7777</td><td>5.2 节</td></tr>
+<tr><td>4</td><td>保存型 ID 也叫 SUID 与 SGID</td><td>与权限位的 SUID、SGID 同名易混；应写 saved set-user-ID</td><td>5.3 节</td></tr>
+<tr><td>5</td><td>一个进程只对应一个程序</td><td><code>exec</code> 可以在同一进程内替换程序映像；一对多只在「同时」意义上成立</td><td>5.3 节</td></tr>
+<tr><td>6</td><td>特殊位只影响进程 ID，不影响文件访问</td><td>对文件访问判定成立；但 SGID 目录会改变新建对象的属组，这是另一条效果</td><td>5.1 节</td></tr>
+<tr><td>7</td><td><code>jobs</code> 能查看系统作业</td><td>只限当前 Shell 会话；系统级要看 <code>ps</code></td><td>另篇详述</td></tr>
+</table>
+<h2>九、总结</h2>
+<table>
+<tr><th>知识块</th><th>必记结论</th></tr>
+<tr><td>权限串</td><td>类型位加三组三位；末尾 <code>+</code> 是 ACL、<code>.</code> 是 SELinux；<code>s</code>、<code>S</code>、<code>t</code>、<code>T</code> 看大小写</td></tr>
+<tr><td>文件与目录</td><td>目录 w 管目录项增删改名，目录 x 是进入与访问 inode 的通行证</td></tr>
+<tr><td>身份匹配</td><td>属主 → 属组 → 其他，首次命中即停，不取并集</td></tr>
+<tr><td>chmod</td><td>数字是整体赋值，符号是增量或赋值；<code>X</code> 只给目录或已有 x 的对象</td></tr>
+<tr><td>umask</td><td>用 <code>base &amp; ~umask</code> 逐位算；033 的文件结果是 644 而非 633；只能收紧</td></tr>
+<tr><td>特殊位</td><td>SUID 改 EUID，SGID 改 EGID 或目录继承属组，粘滞位限制删除</td></tr>
+<tr><td>四位换算</td><td>特殊位在千位，普通位在百十个位；<code>-rwsrwsrwt</code> 是 7777</td></tr>
+<tr><td>ACL</td><td>访问与默认两类；mask 是具名条目的上限；默认 ACL 只对目录且只影响新建对象</td></tr>
+<tr><td>继承</td><td>SGID 管属组继承，默认 ACL 管权限继承，二者常配合使用</td></tr>
+<tr><td>最小权限</td><td>共享目录 2770 加默认 ACL；家目录 700 或 750；私钥 600；用户可写分区 nosuid</td></tr>
+</table>
+<p>权限系统的复杂度来自一个矛盾：既要让大多数情况用三个槽位快速判定，又要让少数例外能精确表达。传统三位是快路径，ACL 是慢路径，mask 是慢路径的保险丝；把这三层分开看，就不会再把叠加当成规则，也不会把 <code>s</code> 与 <code>S</code>、<code>t</code> 与 <code>T</code> 读错。</p>
+<p class="muted" style="margin-top:28px">原始对话：豆包对话 · Linux权限、ACL及进程程序相关题目解答 / Linux用户与用户组知识点解答 / 远程控制桌面教程</p>
+<a class="back-link" href="../notes-index.html">← 返回笔记索引</a>
+</article>
+<footer class="site-footer"><div class="container"><span>用 WorkBuddy 搭建 · 静态博客</span></div></footer>
+<script src="../../assets/blog.js" defer></script>
+</body>
+</html>

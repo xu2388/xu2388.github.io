@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>ODA-GAN论文查找</h1>
@@ -327,7 +318,7 @@ if dot(g_diff, g_aux) &lt; 0:
 <table>
 <tr><th>项</th><th>形式</th><th>能量减小意味着</th></tr>
 <tr><td>$E_d$（域独特）</td><td>$-\cos$</td><td>$\cos$ 变大 → 为什么？因为我们采样时要<strong>减能量</strong>……</td></tr>
-<tr><td>$E_c$（域无关）</td><td>$-\</td><td>f_c(x)-f_c(x_0)\</td><td>^2$</td><td>L2 距离变小 → <strong>内容靠近源图</strong> ✓</td></tr>
+<tr><td>$E_c$（域无关）</td><td>$-\|f_c(x)-f_c(x_0)\|^2$</td><td>L2 距离变小 → <strong>内容靠近源图</strong> ✓</td></tr>
 </table>
 <p>这里知乎笔记写得有点绕。<strong>直觉上</strong>你只要记住：</p>
 <ul><li><strong>域独特项</strong>：让 $x$ 和 $x_0$ 在判别特征上<strong>越来越不像</strong> → 脱掉猫味</li><li><strong>域无关项</strong>：让 $x$ 和 $x_0$ 在低频内容上<strong>越来越像</strong> → 保留姿势</li></ul>

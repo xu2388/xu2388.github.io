@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>大数据技术原理与应用和信号与系统</h1>
@@ -1000,7 +991,7 @@ HRegionServer → HRegion → HStore(MemStore+HFile)
 <div class="record"><span class="tag">我问</span><p>这里讲的给我讲解一下</p></div>
 <h1>逐行拆解这道卷积题：$\boldsymbol{tu(t) * u(t)}$</h1>
 <h2>1、基础公式回顾</h2>
-<p>连续卷积定义： $$ \boldsymbol{f(t)<em>h(t)=\int_{-\infty}^{+\infty} f(\tau)\,h(t-\tau)\,d\tau} $$ 卷积<strong>交换律</strong>：$f(t)</em>h(t)=h(t)<em>f(t)$ 所以 $tu(t)</em>u(t)=u(t)*tu(t)$，两个可以互换，计算结果一模一样。</p>
+<p>连续卷积定义： $$ \boldsymbol{f(t)*h(t)=\int_{-\infty}^{+\infty} f(\tau)\,h(t-\tau)\,d\tau} $$ 卷积<strong>交换律</strong>：$f(t)*h(t)=h(t)*f(t)$ 所以 $tu(t)*u(t)=u(t)*tu(t)$，两个可以互换，计算结果一模一样。</p>
 <hr />
 <h2>2、代入公式，写出积分式</h2>
 <p>我们取： $f(\tau)=\tau\,u(\tau)$，$\;h(t-\tau)=u(t-\tau)$</p>
@@ -1060,23 +1051,23 @@ HRegionServer → HRegion → HStore(MemStore+HFile)
 <ol><li>$e(t)=u(t)-u(t-t_0)$：<strong>矩形脉冲</strong>，$0&lt;t&lt;t_0$ 值为1，其余时间为0</li><li>$h(t)=e^{-t}u(t)$：单边衰减指数曲线，$t&gt;0$ 才存在</li></ol>
 <hr />
 <h2>第一步：带入卷积定义式</h2>
-<p>连续卷积公式： $$ r(t)=\int_{-\infty}^{+\infty} e(\tau)\,h(t-\tau)\,d\tau $$ 把 $e(\tau)=u(\tau)-u(\tau-t_0)$、$h(t-\tau)=e^{-(t-\tau)}u(t-\tau)$ 代入 $$ \begin{align<em>} r(t)&amp;=\int_{-\infty}^{+\infty}\big[u(\tau)-u(\tau-t_0)\big]\,e^{-(t-\tau)}u(t-\tau)\,d\tau\\ &amp;=\int_{-\infty}^{+\infty}u(\tau)\,e^{-(t-\tau)}u(t-\tau)\,d\tau -\int_{-\infty}^{+\infty}u(\tau-t_0)\,e^{-(t-\tau)}u(t-\tau)\,d\tau \end{align</em>} $$ 把常数 $e^{-t}$ 提出积分号（它不含积分变量$\tau$） $$ r(t)=\underbrace{e^{-t}\int_{-\infty}^{+\infty} e^{\tau}\,u(\tau)u(t-\tau)\,d\tau}_{r_1(t)} -\underbrace{e^{-t}\int_{-\infty}^{+\infty} e^{\tau}\,u(\tau-t_0)u(t-\tau)\,d\tau}_{r_2(t)} $$ 也就是 $ \boldsymbol{r(t)=r_1(t)-r_2(t)}$</p>
+<p>连续卷积公式： $$ r(t)=\int_{-\infty}^{+\infty} e(\tau)\,h(t-\tau)\,d\tau $$ 把 $e(\tau)=u(\tau)-u(\tau-t_0)$、$h(t-\tau)=e^{-(t-\tau)}u(t-\tau)$ 代入 $$ \begin{align*} r(t)&amp;=\int_{-\infty}^{+\infty}\big[u(\tau)-u(\tau-t_0)\big]\,e^{-(t-\tau)}u(t-\tau)\,d\tau\\ &amp;=\int_{-\infty}^{+\infty}u(\tau)\,e^{-(t-\tau)}u(t-\tau)\,d\tau -\int_{-\infty}^{+\infty}u(\tau-t_0)\,e^{-(t-\tau)}u(t-\tau)\,d\tau \end{align*} $$ 把常数 $e^{-t}$ 提出积分号（它不含积分变量$\tau$） $$ r(t)=\underbrace{e^{-t}\int_{-\infty}^{+\infty} e^{\tau}\,u(\tau)u(t-\tau)\,d\tau}_{r_1(t)} -\underbrace{e^{-t}\int_{-\infty}^{+\infty} e^{\tau}\,u(\tau-t_0)u(t-\tau)\,d\tau}_{r_2(t)} $$ 也就是 $ \boldsymbol{r(t)=r_1(t)-r_2(t)}$</p>
 <hr />
 <h2>第二步：先算第一项 $\boldsymbol{r_1(t)}$</h2>
 <p>$$ r_1(t)=e^{-t}\int_{-\infty}^{\infty} e^{\tau}\,u(\tau)\,u(t-\tau)\,d\tau $$</p>
 <p>阶跃乘积 $u(\tau)\cdot u(t-\tau)\neq 0$，必须同时满足 $$ \begin{cases} \tau&gt;0\\ t-\tau&gt;0 \Rightarrow \tau&lt;t \end{cases} \Rightarrow \boldsymbol{0&lt;\tau&lt;t} $$ &gt;⚠️区间 $0&lt;\tau&lt;t$ <strong>只有当 $t&gt;0$ 的时候才存在</strong>；$t&lt;0$，区间为空，积分等于0。</p>
-<p>于是改写积分上下限 $$ \begin{align<em>} r_1(t)&amp;=e^{-t}\int_{0}^{t} e^{\tau}\,d\tau,\quad t&gt;0\\ &amp;=e^{-t}\cdot\left[e^{\tau}\right]_{0}^{t}\\ &amp;=e^{-t}(e^{t}-e^{0})\\ &amp;=e^{-t}(e^{t}-1)\\ &amp;=\boldsymbol{(1-e^{-t})\,u(t)} \end{align</em>} $$ $u(t)$ 的作用：自动让 $t&lt;0$ 时，$r_1(t)=0$。</p>
+<p>于是改写积分上下限 $$ \begin{align*} r_1(t)&amp;=e^{-t}\int_{0}^{t} e^{\tau}\,d\tau,\quad t&gt;0\\ &amp;=e^{-t}\cdot\left[e^{\tau}\right]_{0}^{t}\\ &amp;=e^{-t}(e^{t}-e^{0})\\ &amp;=e^{-t}(e^{t}-1)\\ &amp;=\boldsymbol{(1-e^{-t})\,u(t)} \end{align*} $$ $u(t)$ 的作用：自动让 $t&lt;0$ 时，$r_1(t)=0$。</p>
 <hr />
 <h2>第三步：计算第二项 $\boldsymbol{r_2(t)}$</h2>
 <p>$$ r_2(t)=e^{-t}\int_{-\infty}^{\infty} e^{\tau}\,u(\tau-t_0)\,u(t-\tau)\,d\tau $$ 再次找阶跃乘积不为0的条件 $$ \begin{cases} \tau-t_0&gt;0\Rightarrow\tau&gt;t_0\\ t-\tau&gt;0\Rightarrow\tau&lt;t \end{cases} \Rightarrow \boldsymbol{t_0&lt;\tau&lt;t} $$ 👉这个区间<strong>只有 $t&gt;t_0$ 的时候，才成立</strong>。 当 $t&lt;t_0$：上下限 $t_0&lt;\tau&lt;t$ 不可能成立，积分直接=0。</p>
-<p>带入积分： $$ \begin{align<em>} r_2(t)&amp;=e^{-t}\int_{t_0}^{t}e^{\tau}d\tau,\quad t&gt;t_0\\ &amp;=e^{-t}\left[e^{\tau}\right]_{t_0}^{t}\\ &amp;=e^{-t}\big(e^{t}-e^{t_0}\big)\\ &amp;=\boldsymbol{\big[1-e^{-(t-t_0)}\big]\,u(t-t_0)} \end{align</em>} $$</p>
+<p>带入积分： $$ \begin{align*} r_2(t)&amp;=e^{-t}\int_{t_0}^{t}e^{\tau}d\tau,\quad t&gt;t_0\\ &amp;=e^{-t}\left[e^{\tau}\right]_{t_0}^{t}\\ &amp;=e^{-t}\big(e^{t}-e^{t_0}\big)\\ &amp;=\boldsymbol{\big[1-e^{-(t-t_0)}\big]\,u(t-t_0)} \end{align*} $$</p>
 <hr />
 <h2>第四步：合并最终结果 $\boldsymbol{r(t)=r_1(t)-r_2(t)}$</h2>
 <p>$$ \boldsymbol{r(t)=\big(1-e^{-t}\big)u(t)\;-\;\big[1-e^{-(t-t_0)}\big]u(t-t_0)} $$</p>
 <ol><li>$\boldsymbol{t&lt;0}$：$u(t)=0,\;u(t-t_0)=0 \implies \boldsymbol{r(t)=0}$</li><li>$\boldsymbol{0&lt;t&lt;t_0}$：$u(t)=1,\;u(t-t_0)=0$</li></ol>
 <p>$$ r(t)=1-e^{-t} $$</p>
 <ol><li>$\boldsymbol{t&gt;t_0}$：两个阶跃都等于1</li></ol>
-<p>$$ \begin{align<em>} r(t)&amp;=(1-e^{-t})-\big(1-e^{-(t-t_0)}\big)\\ &amp;=e^{-(t-t_0)}-e^{-t} \end{align</em>} $$</p>
+<p>$$ \begin{align*} r(t)&amp;=(1-e^{-t})-\big(1-e^{-(t-t_0)}\big)\\ &amp;=e^{-(t-t_0)}-e^{-t} \end{align*} $$</p>
 <hr />
 <h1>本题最核心、最容易踩坑的两个知识点</h1>
 <ol><li><strong>阶跃函数就是用来锁定积分$\boldsymbol{\tau}$的上下限</strong></li></ol>
@@ -1163,7 +1154,7 @@ HRegionServer → HRegion → HStore(MemStore+HFile)
 <p>时域卷积积分方程： $$ y(t)=\int_{-\infty}^{\infty} f(\tau)h(t-\tau)\,d\tau $$ 这是一个<strong>积分方程</strong>，要解出未知函数 $f(\tau)$。 时域求解非常困难，信号系统考试<strong>几乎不会时域硬解逆卷积</strong>。 工业图像去模糊（图片被卷积模糊了），用数值迭代算法求解。</p>
 <hr />
 <h1>情况3：你只看见卷积后的波形y(t)，h(t)也不知道（盲反卷积）</h1>
-<p>👉<strong>没有唯一解！！</strong> 举一个最简单例子： $$y(t)=f_1<em>h_1 = f_2</em>h_2$$ 完全可以出现<strong>两组完全不一样的f和h，卷积之后得到一模一样的输出波形</strong>。 光凭一张图像，你分不清到底是「信号A经过系统B」还是「信号C经过系统D」。 &gt;就像：$6=2\times3$，但是只给你结果6，你没法唯一确定原来两个乘数。 时域卷积本质也是一种乘法。</p>
+<p>👉<strong>没有唯一解！！</strong> 举一个最简单例子： $$y(t)=f_1*h_1 = f_2*h_2$$ 完全可以出现<strong>两组完全不一样的f和h，卷积之后得到一模一样的输出波形</strong>。 光凭一张图像，你分不清到底是「信号A经过系统B」还是「信号C经过系统D」。 &gt;就像：$6=2\times3$，但是只给你结果6，你没法唯一确定原来两个乘数。 时域卷积本质也是一种乘法。</p>
 <hr />
 <h1>回到你最开始的学习场景（信号与系统考试）</h1>
 <h2>考试常见题型：</h2>
@@ -1174,17 +1165,17 @@ HRegionServer → HRegion → HStore(MemStore+HFile)
 <div class="record"><span class="tag">我问</span><p>三个或者以上的信号卷积依旧满足交换律对吗</p></div>
 <h1>结论</h1>
 <p><strong>是的，3个以及更多信号卷积，交换律、结合律全都成立</strong></p>
-<p>对于连续卷积、离散卷积都成立： $$ \boldsymbol{f_1(t)<em>f_2(t)</em>f_3(t)} $$</p>
+<p>对于连续卷积、离散卷积都成立： $$ \boldsymbol{f_1(t)*f_2(t)*f_3(t)} $$</p>
 <h2>1、两条核心定律</h2>
-<p>$$ f_1<em>f_2 = f_2</em>f_1 $$ 三个信号： $$ f_1<em>f_2</em>f_3 = f_2<em>f_1</em>f_3 = f_3<em>f_1</em>f_2 =\dots $$ 👉<strong>任意两个信号，都可以互换先后位置，最终卷积结果不变</strong></p>
-<p>$$ (f_1<em>f_2)</em>f_3 = f_1<em>(f_2</em>f_3) $$ 你可以先算左边两个卷积，也可以先算右边两个卷积，结果一模一样。</p>
+<p>$$ f_1*f_2 = f_2*f_1 $$ 三个信号： $$ f_1*f_2*f_3 = f_2*f_1*f_3 = f_3*f_1*f_2 =\dots $$ 👉<strong>任意两个信号，都可以互换先后位置，最终卷积结果不变</strong></p>
+<p>$$ (f_1*f_2)*f_3 = f_1*(f_2*f_3) $$ 你可以先算左边两个卷积，也可以先算右边两个卷积，结果一模一样。</p>
 <blockquote>也就是说：<strong>一串信号连续卷积，顺序、括号位置完全不影响最终答案</strong></blockquote>
 <h2>2、物理含义（系统串联）</h2>
 <p>卷积代表<strong>LTI系统串联</strong></p>
-<ul><li>$f <em> h_1 </em> h_2$ = 信号先过系统1，再过系统2</li></ul>
-<p>交换后：$f <em> h_2 </em> h_1$ =信号先过系统2，再过系统1 👉<strong>LTI系统串联，调换系统先后顺序，输出完全一样</strong>。</p>
+<ul><li>$f * h_1 * h_2$ = 信号先过系统1，再过系统2</li></ul>
+<p>交换后：$f * h_2 * h_1$ =信号先过系统2，再过系统1 👉<strong>LTI系统串联，调换系统先后顺序，输出完全一样</strong>。</p>
 <h2>3、拓展：n个信号卷积</h2>
-<p>$$ f_1<em>f_2</em>f_3<em>\dots</em>f_n $$ 所有信号<strong>任意重排顺序</strong>，卷积结果不变。</p>
+<p>$$ f_1*f_2*f_3*\dots*f_n $$ 所有信号<strong>任意重排顺序</strong>，卷积结果不变。</p>
 <h2>⚠️唯一需要注意的大坑</h2>
 <p>交换律<strong>只适用于卷积运算本身</strong> <strong>不能把乘法和卷积混在一起！！</strong></p>
 <ul><li>$(f_1 \cdot f_2)*f_3$：先时域相乘，再卷积</li></ul>
@@ -1192,7 +1183,7 @@ HRegionServer → HRegion → HStore(MemStore+HFile)
 <ul><li>$f_1\cdot(f_2*f_3)$：先卷积，再时域相乘</li></ul>
 <blockquote>时域乘法<strong>不满足交换混合顺序</strong>，只有纯卷积链可以随便换顺序。</blockquote>
 <h2>例题验证</h2>
-<p>举个简单例子 $$ tu(t)<em>u(t)</em>e^{-t}u(t) $$ 你可以先算 $tu(t)<em>u(t)$，也可以先算 $u(t)</em>e^{-t}u(t)$，最后结果完全相同。</p>
+<p>举个简单例子 $$ tu(t)*u(t)*e^{-t}u(t) $$ 你可以先算 $tu(t)*u(t)$，也可以先算 $u(t)*e^{-t}u(t)$，最后结果完全相同。</p>
 <p>如果你需要，我可以拿一道三道信号卷积计算题给你演示两种不同计算顺序算出同一个结果。</p>
 <div class="record"><span class="tag">我问</span><p>其实三个函数以上的卷积使用交换率，本质上其实是结合律了</p></div>
 <h1>精准辨析你的观点</h1>
@@ -1200,22 +1191,22 @@ HRegionServer → HRegion → HStore(MemStore+HFile)
 <p>不完全准确；<strong>交换律和结合律是两条独立公理，调换顺序必须两条定律一起上场配合</strong></p>
 <h2>先回顾定义</h2>
 <ol><li><strong>交换律（二元）：只针对两个元素</strong></li></ol>
-<p>$$a<em>b = b</em>a$$ 含义：<strong>两个对象可以互换位置</strong>。它不能直接处理3个。</p>
+<p>$$a*b = b*a$$ 含义：<strong>两个对象可以互换位置</strong>。它不能直接处理3个。</p>
 <ol><li><strong>结合律</strong></li></ol>
-<p>$$(a<em>b)</em>c = a<em>(b</em>c)$$ 含义：<strong>改变计算先后（括号），不改变结果；但是元素的先后顺序完全不动！</strong> &gt;⚠️结合律<strong>没有交换、没有调换任何一个函数的左右位置</strong>！</p>
+<p>$$(a*b)*c = a*(b*c)$$ 含义：<strong>改变计算先后（括号），不改变结果；但是元素的先后顺序完全不动！</strong> &gt;⚠️结合律<strong>没有交换、没有调换任何一个函数的左右位置</strong>！</p>
 <hr />
-<h2>举例：把 $f_1<em>f_2</em>f_3$ 变成 $f_1<em>f_3</em>f_2$</h2>
-<p>目标：交换后两个 $f_2$ 和 $f_3$ 只靠结合律做不到！ 推演全过程： $$ \begin{align<em>} f_1</em>f_2<em>f_3 &amp;=(f_1</em>f_2)<em>f_3 \quad \text{（结合律，加括号）}\\ &amp;=f_3</em>(f_1<em>f_2) \quad \text{（❗交换律！把整块$(f_1</em>f_2)$和$f_3$互换）}\\ &amp;=f_3<em>(f_2</em>f_1) \quad \text{（交换律：$f_1<em>f_2$内部互换）}\\ &amp;=(f_3</em>f_2)<em>f_1 \quad \text{（结合律，拆掉括号）} \end{align</em>} $$ 👉<strong>调换元素位置，必须动用交换律；结合律只负责挪括号。</strong></p>
+<h2>举例：把 $f_1*f_2*f_3$ 变成 $f_1*f_3*f_2$</h2>
+<p>目标：交换后两个 $f_2$ 和 $f_3$ 只靠结合律做不到！ 推演全过程： $$ \begin{align<em>} f_1</em>f_2<em>f_3 &amp;=(f_1</em>f_2)<em>f_3 \quad \text{（结合律，加括号）}\\ &amp;=f_3</em>(f_1<em>f_2) \quad \text{（❗交换律！把整块$(f_1*f_2)$和$f_3$互换）}\\ &amp;=f_3</em>(f_2<em>f_1) \quad \text{（交换律：$f_1*f_2$内部互换）}\\ &amp;=(f_3</em>f_2)<em>f_1 \quad \text{（结合律，拆掉括号）} \end{align</em>} $$ 👉<strong>调换元素位置，必须动用交换律；结合律只负责挪括号。</strong></p>
 <ul><li><strong>结合律 = 你可以先算哪一对</strong>（括号搬家，排队顺序不变）</li></ul>
 <blockquote>排队：A‑B‑C，可以先算AB，再和C算；也可以先算BC，再和A算。队伍从头到尾顺序：A、B、C，从头到尾没变！</blockquote>
 <ul><li><strong>交换律 = 两个人互换站位</strong>（改变排队顺序）</li></ul>
 <blockquote>队伍A‑B‑C → A‑C‑B，B和C换位置，这一步必须交换律。</blockquote>
 <hr />
 <h2>那为什么很多人会产生你这个想法？</h2>
-<p>因为当运算同时满足<strong>交换律+结合律</strong>，一串连续卷积： $$f_1<em>f_2</em>f_3*f_4$$ 就变成了「完全自由运算」： 既可以随便加括号（结合律），<strong>又可以随便调换所有因子顺序（交换律）</strong>。</p>
-<p>做题的时候，你常常<strong>先用结合律分组，挑两个好算的函数先卷积</strong>。 比如： $$u(t)<em>tu(t)</em>e^{-t}u(t)$$ 你选择先算 $u(t)*e^{-t}u(t)$，<strong>这个操作只用到结合律，没有调换顺序！</strong></p>
-<blockquote>$u(t)<em>\big(tu(t)</em>e^{-t}u(t)\big)$，元素排队顺序没变。</blockquote>
-<p>如果你改成先算 $tu(t)<em>e^{-t}u(t)$，把 $u(t)$ 放到最后： $$tu(t)</em>e^{-t}u(t)*u(t)$$ 👉这里<strong>已经调换了顺序，必须交换律参与</strong>。</p>
+<p>因为当运算同时满足<strong>交换律+结合律</strong>，一串连续卷积： $$f_1*f_2*f_3*f_4$$ 就变成了「完全自由运算」： 既可以随便加括号（结合律），<strong>又可以随便调换所有因子顺序（交换律）</strong>。</p>
+<p>做题的时候，你常常<strong>先用结合律分组，挑两个好算的函数先卷积</strong>。 比如： $$u(t)*tu(t)*e^{-t}u(t)$$ 你选择先算 $u(t)*e^{-t}u(t)$，<strong>这个操作只用到结合律，没有调换顺序！</strong></p>
+<blockquote>$u(t)*\big(tu(t)*e^{-t}u(t)\big)$，元素排队顺序没变。</blockquote>
+<p>如果你改成先算 $tu(t)*e^{-t}u(t)$，把 $u(t)$ 放到最后： $$tu(t)*e^{-t}u(t)*u(t)$$ 👉这里<strong>已经调换了顺序，必须交换律参与</strong>。</p>
 <hr />
 <h1>一句话最终结论</h1>
 <ol><li><strong>只改变括号、不改变函数先后顺序：只用结合律。</strong></li><li><strong>只要你调换了任意两个函数的左右先后位置：必须使用交换律。</strong></li><li>多信号卷积自由重排顺序，<strong>是交换律 + 结合律共同生效的结果，不能说本质只是结合律</strong>。</li></ol>

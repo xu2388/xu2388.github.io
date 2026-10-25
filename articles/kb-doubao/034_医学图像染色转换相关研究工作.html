@@ -13,15 +13,6 @@
 <p class="site-subtitle">豆包学习与科研对话存档 · 一条不丢</p>
 <nav class="site-nav"><a href="../../index.html">首页</a><a href="../../index.html#research">科研<span class="n">20</span></a><a href="../../index.html#learning">学习<span class="n">8</span></a><a href="../../index.html#essays">随笔<span class="n">2</span></a><a href="../../index.html#about">关于</a></nav>
 <div class="side-foot"><a href="../../articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
-
-
-
-
-
-
-
-
-
 </div></header>
 <article class="article">
 <h1>医学图像染色转换相关研究工作</h1>
@@ -125,7 +116,7 @@
 <p>如果你需要，我还可以帮你把这段压缩到严格200词内的MICCAI标准摘要，或者配套写一句related work衔接，用来和ASP、PSPStain、CCPL做对比。</p>
 <div class="record"><span class="tag">我问</span><p>你这里提到的CUT GDC这个实现来说，他这个什么垂直梯度的思路，你这个垂直梯度是怎么求出来的啊，这个东西我在相同的位置，我只要是用不同的原理，比如我改成一个频域的损失，或者另一个这类的约束不是都成立吗，前提是在他的框架下，他的论文工作里有没有论述他的这个损失函数设计的冲突性问题</p></div>
 <h1>1. CUT-GDC 的水平/垂直梯度怎么求（原文精确写法）</h1>
-<p>算子就是标准 <strong>Sobel</strong>： $$ G_h = I <em> \begin{bmatrix} -1 &amp; 0 &amp; +1 \\ -2 &amp; 0 &amp; +2 \\ -1 &amp; 0 &amp; +1 \end{bmatrix},\quad G_v = I </em> \begin{bmatrix} -1 &amp; -2 &amp; -1 \\ 0 &amp; 0 &amp; 0 \\ +1 &amp; +2 &amp; +1 \end{bmatrix} $$</p>
+<p>算子就是标准 <strong>Sobel</strong>： $$ G_h = I * \begin{bmatrix} -1 &amp; 0 &amp; +1 \\ -2 &amp; 0 &amp; +2 \\ -1 &amp; 0 &amp; +1 \end{bmatrix},\quad G_v = I * \begin{bmatrix} -1 &amp; -2 &amp; -1 \\ 0 &amp; 0 &amp; 0 \\ +1 &amp; +2 &amp; +1 \end{bmatrix} $$</p>
 <ul><li>$G_h$：水平梯度（x方向，左右变化）</li><li>$G_v$：垂直梯度（y方向，上下变化）</li></ul>
 <p>梯度向量：$\vec g = (G_h,G_v)$</p>
 <p>然后拆成两项损失，多尺度（在不同下采样分辨率上都算一遍）：</p>
