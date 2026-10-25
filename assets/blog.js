@@ -217,7 +217,7 @@
   /* ---------- 滚动入场 ---------- */
   function initReveal() {
     if (reduce || !("IntersectionObserver" in window)) return;
-    var targets = document.querySelectorAll(".article-list li, .card, .block, .stat");
+    var targets = document.querySelectorAll(".article-list li, .spot-card, .card, .block, .stat");
     targets.forEach(function (el) { el.classList.add("reveal"); });
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {

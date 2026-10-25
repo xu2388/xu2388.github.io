@@ -278,10 +278,15 @@ def main():
         f.write(idx)
 
     # 4) 侧栏导航计数，供 fix_nav.py 读取
-    counts = {}
-    for gname, gid, gdesc, cats in GROUPS:
-        counts[gid] = sum(len(grouped.get(c, [])) for c in cats)
-    counts["archive"] = len(grouped.get("资料库", []))
+    # 导航徽标只显示真正的内容量：研究文章数、笔记+教程数、随笔数。
+    # （旧口径把「栏目入口页」当条目计数，学习标签只显示 8，严重低估 80+ 篇笔记。）
+    note_files = glob.glob(os.path.join(ROOT, "notes", "*.md"))
+    counts = {
+        "research": len(grouped.get("研究", [])),
+        "learning": len(note_files) + len(grouped.get("学习笔记", [])),
+        "essays": len(grouped.get("随笔", [])),
+        "archive": len(grouped.get("资料库", [])),
+    }
     os.makedirs(os.path.join(ROOT, "data"), exist_ok=True)
     with open(os.path.join(ROOT, "data", "nav_counts.json"), "w", encoding="utf-8") as f:
         json.dump(counts, f, ensure_ascii=False)

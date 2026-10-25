@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="assets/style.css" />
 <script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
-<body>
+<body class="home">
   <header class="site-header">
     <div class="container">
       <div class="side-brand">
@@ -18,8 +18,9 @@
           <p class="site-subtitle">H&amp;E→IHC 虚拟染色 · 从大一到现在</p>
         </div>
       </div>
-      <nav class="site-nav"><a class="active" href="index.html">首页</a><a href="index.html#research">科研<span class="n">20</span></a><a href="index.html#learning">学习<span class="n">8</span></a><a href="index.html#essays">随笔<span class="n">2</span></a><a href="index.html#about">关于</a></nav>
+      <nav class="site-nav"><a class="active" href="index.html">首页</a><a href="index.html#research">科研<span class="n">18</span></a><a href="index.html#learning">学习<span class="n">89</span></a><a href="index.html#essays">随笔<span class="n">2</span></a><a href="index.html#about">关于</a></nav>
 <div class="side-foot"><a href="articles/list-archive.html">资料库 · 审计与溯源</a><span class="fine">纯静态 · GitHub Pages</span></div>
+
 
 
 
@@ -43,20 +44,47 @@
   </header>
 
   <main class="container">
-    <section class="page-lead" id="top">
-      <p class="lead-label">PERSONAL BLOG · STUDY &amp; RESEARCH RECORD · 2024 — 2026</p>
-      <h1>我的个人博客：学习与科研记录</h1>
-      <p class="lead-text">
-        这里是我的个人博客，内容分两类：<strong>科研</strong>与<strong>学习</strong>。
-        科研以 <strong>H&amp;E → IHC 虚拟染色</strong>为主线，包括完整的研究文章、论文精读与整套调研档案；
-        学习包括课程笔记、系列教程，以及与 AI 助手全部学习对话的存档。
-      </p>
-      <p class="lead-text" style="margin-top:14px">
-        写作上有一条原则：<strong>过程不磨光</strong>。当初怎么想的、后来怎么被数据推翻、
-        哪些方案被否掉、为什么否，都按原样保留；每条结论尽量能溯源到具体对话。
-        文章按「科研」「学习」两类组织，可从左侧目录进入，也可从页面顶部的数据栏纵览全站规模。
-      </p>
-      <div class="stats">
+    <section class="hero" id="top">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="hero-eyebrow"><span class="dot"></span> RESEARCH &amp; STUDY ARCHIVE · 2024—2026</p>
+          <h1>把 H&amp;E <span class="arrow">→</span> <span class="hl">IHC</span> 这件事，<br />从头到尾记下来</h1>
+          <p class="hero-sub">
+            一名本科生的<strong>虚拟染色</strong>研究档案：完整的研究文章、论文精读与整套调研档案，
+            以及课程笔记、系列教程和全部学习对话。
+          </p>
+          <p class="hero-sub hero-principle">
+            原则只有一条——<strong>过程不磨光，结论可溯源</strong>。
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#mainline">从研究主线开始 <span aria-hidden="true">↓</span></a>
+            <a class="btn btn-ghost" href="articles/notes-index.html">浏览全部笔记 <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+        <aside class="hero-panel" aria-label="研究焦点">
+          <p class="panel-label">CURRENT FOCUS</p>
+          <div class="stain-compare">
+            <div class="stain-wrap">
+              <div class="stain he"></div>
+              <span class="stain-cap">H&amp;E · 输入</span>
+            </div>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <div class="stain-wrap">
+              <div class="stain ihc"></div>
+              <span class="stain-cap">IHC · 目标</span>
+            </div>
+          </div>
+          <p class="panel-title">H&amp;E → IHC 虚拟染色</p>
+          <ul class="hero-facts">
+            <li>扩散模型 · CUT · 浓度空间三条路线</li>
+            <li>逐像素跨图不可迁移的硬数据归因</li>
+            <li>结构控制、语义保真与可溯源评价</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <div class="stats">
       <!-- STATS_START -->
       <div class="stat"><span class="stat-num">18</span><span class="stat-label">篇 · 研究文章</span></div>
       <div class="stat"><span class="stat-num">80</span><span class="stat-label">份 · 调研档案</span></div>
@@ -64,6 +92,36 @@
       <div class="stat"><span class="stat-num">368</span><span class="stat-label">条 · 学习对话存档</span></div>
       <div class="stat"><span class="stat-num">27</span><span class="stat-label">篇 · 论文导读</span></div>
       <!-- STATS_END -->
+    </div>
+
+    <section class="spotlight" id="mainline" aria-labelledby="mainline-title">
+      <div class="spotlight-head">
+        <span class="sec-no">00</span>
+        <h2 id="mainline-title">研究主线</h2>
+        <p>三次转折，一条线：从扩散模型，到逐像素归因，再到浓度空间。</p>
+      </div>
+      <div class="spotlight-grid">
+        <a class="spot-card" href="articles/001-虚拟染色主线.html">
+          <span class="spot-no">01 / 起点</span>
+          <span class="spot-kicker">主线自述</span>
+          <h3>虚拟染色这一年：从扩散模型到 CUT</h3>
+          <p>从扩散模型起步，撞上「有色调、无结构」，因训练成本转投 CUT-GAN，再把问题带回浓度域。</p>
+          <span class="spot-more">阅读全文 →</span>
+        </a>
+        <a class="spot-card" href="articles/002-逐像素跨图不可迁移.html">
+          <span class="spot-no">02 / 归因</span>
+          <span class="spot-kicker">硬数据</span>
+          <h3>为什么逐像素预测做不出来</h3>
+          <p>8px 输给常数 −16.3%、625 个平移全救不回、跨图块级 r≈0：不是模型没调好，是数据里没这个规律。</p>
+          <span class="spot-more">阅读归因 →</span>
+        </a>
+        <a class="spot-card" href="articles/008-浓度空间Diffusion.html">
+          <span class="spot-no">03 / 路线</span>
+          <span class="spot-kicker">浓度空间</span>
+          <h3>把生成搬到浓度域</h3>
+          <p>从 RGB 转向 OD / 浓度空间，用物理可解释的染色分解约束生成，让结构控制有可落脚的量。</p>
+          <span class="spot-more">进入路线 →</span>
+        </a>
       </div>
     </section>
 
