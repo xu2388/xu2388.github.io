@@ -86,12 +86,12 @@ def main():
         slug = os.path.splitext(os.path.basename(p))[0] + ".html"
         # 正文开头的 "# 标题" 会和模板里的 <h1> 重复，去掉一行
         body_md = re.sub(r"^\s*#\s+" + re.escape(title) + r"\s*\n+", "", body, count=1)
-        active = "科研" if subject == RESEARCH_SUBJECT else "学习"
-        # 笔记页在 articles/notes/ 下，返回链接要上溯两级；科研类回到科研页
+        active = "研究" if subject == RESEARCH_SUBJECT else "笔记"
+        # 笔记页在 articles/notes/ 下，返回链接要上溯两级；研究类回到研究页
         if subject == RESEARCH_SUBJECT:
-            back_href, back_text = "../../research.html", "← 返回科研"
+            back_href, back_text = "../../research.html", "← 返回研究"
         else:
-            back_href, back_text = "../../study/%s.html" % subject_slug(subject), "← 返回 %s" % subject
+            back_href, back_text = "../../subject/%s.html" % subject_slug(subject), "← 返回 %s" % subject
         page = PAGE.format(
             title=htmlmod.escape(title), title_json=esc_json(title),
             cat=cat, subject=subject, summary_json=esc_json(summary),

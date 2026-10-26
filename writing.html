@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>写作 · hua</title>
+<meta name="description" content="随笔与教程：写给读者看的长文。" />
+<meta name="author" content="hua" />
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">hua</a>
+    <nav class="topnav"><a href="research.html">研究</a><a class="active" href="writing.html">写作</a><a href="notes.html">笔记</a><a href="archive.html">索引</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
+
+
+<main class="wrap">
+  <div class="crumbs"><a href="index.html">首页</a><span>/</span>写作</div>
+  <header class="page-head">
+    <h1>写作</h1>
+    <div>
+      <p class="lede">写给别人的东西，和写给自己的分开：这里是可以直接读的长文，
+        研究过程的底稿留在「研究」里。</p>
+      <p class="stat">2 篇随笔 · 5 篇教程</p>
+    </div>
+  </header>
+
+  <section class="wgroup">
+    <h2>随笔<b>2 篇</b></h2>
+    <p class="wdesc">讲本质，不堆术语。</p>
+    <ul class="article-list">
+<li><a href="articles/深度学习到底在干什么.html">深度学习到底在干什么（初稿）</a><span class="date">2026-10-23</span><span class="tag">科普</span><span class="tag">深度学习</span><span class="tag">随笔</span><span class="desc">作者 2026-10-23 写的第一版随笔：用大白话讲清深度学习本质在干什么，例子来自自己的虚拟染色踩坑。</span></li>
+<li><a href="articles/深度学习到底在干什么_第二版.html">深度学习到底在干什么（定稿）</a><span class="date">2026-10-23</span><span class="tag">科普</span><span class="tag">深度学习</span><span class="tag">随笔</span><span class="desc">作者偏好的定稿版本：一段一长句、逗号串到底的第一人称风格，讲清深度学习本质在干什么。</span></li>
+</ul>
+  </section>
+
+  <section class="wgroup">
+    <h2>教程<b>5 篇</b></h2>
+    <p class="wdesc">从一个具体困惑出发，把机制讲到能自己推一遍。</p>
+    <ul class="article-list">
+<li><a href="articles/004-扩散与FlowMatching教程.html">扩散模型与 Flow Matching 教程：从&quot;学习一个分布&quot;到手推速度场</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">扩散模型</span><span class="tag">Flow Matching</span><span class="tag">生成模型</span><span class="tag">学习笔记</span><span class="desc">本文整理自笔者学习扩散模型与 Flow Matching 的完整问答记录，从&quot;学习一个分布是什么意思&quot;这一原始困惑出发，依次讲清生成模型的训练目标、扩散模型的逐步去噪方案、Flow Matching 的直线路径与速度场回归、ODE 的存在唯一性保证与条件生成、欧拉方法的数值求解，并说明这些概念如何衔接到 H&amp;E→IHC 虚拟染色任务。为便于理解，文中保留了骰子、导航等类比，措辞均已按书面方式重新组织。</span></li>
+<li><a href="articles/005-VAE教程.html">VAE 教程：潜变量的形态、采样的含义与 Stable Diffusion 中的角色</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">VAE</span><span class="tag">变分自编码器</span><span class="tag">潜空间</span><span class="tag">Stable Diffusion</span><span class="desc">本文从两个具体问题入手讲解 VAE：其一，潜变量并非四维向量，而是 4 通道的空间特征图（SD1.5 中为 [4, 64, 64]）；其二，VAE 编码器输出的不是一个点而是一个分布，&quot;采样&quot;正是 VAE 与普通自编码器的全部差别所在。文章从自编码器出发，依次讲清采样与重参数化、KL 规整、SD VAE 的完整损失，及其在 Stable Diffusion 中&quot;翻译官&quot;式的角色，最后落到虚拟染色任务中冻结 VAE 的容量瓶颈与&quot;灰雾&quot;问题。</span></li>
+<li><a href="articles/006-注意力与CrossAttention教程.html">注意力与 Cross-Attention 机制解析：从&quot;软查表&quot;到 UNet 的条件注入</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">注意力机制</span><span class="tag">Cross-Attention</span><span class="tag">Transformer</span><span class="tag">条件注入</span><span class="desc">本文是继 VAE 与扩散/流匹配之后的第三篇基础机制笔记。文章先将注意力还原为其最朴素的形态——&#x27;带着查询去检索&#x27;，依次讲解自注意力的 Q/K/V 与多头设计，进而引出关键分野：交叉注意力。正是交叉注意力，使文本与结构条件得以注入扩散 UNet，也是针对虚拟染色&#x27;有色调、无结构&#x27;问题的对症机制。文末回到 HistDiST + Phikon 的改造实践。</span></li>
+<li><a href="articles/007-对比学习与CLIP教程.html">对比学习与 CLIP 机制解析：从&quot;拉近推开&quot;到虚拟染色的文本编码器选型</a><span class="date">2026-10-24</span><span class="tag">教程</span><span class="tag">对比学习</span><span class="tag">CLIP</span><span class="tag">Contrastive</span><span class="tag">文本编码器</span><span class="desc">对比学习是本文作者较晚掌握、却在项目中处处应用的方法：一半是 SD 中把文字转化为条件的 CLIP，一半是 001/002 中保持结构的 CUT/PatchNCE。本文从&#x27;把相似的拉近、把不相似的推开&#x27;这一最朴素的本质讲起，说明 CLIP 如何充当文本编码器、原生 CLIP 为何不适合病理场景、选择换用 CONCH 的依据，以及同一个思想如何同时约束&#x27;风格&#x27;与&#x27;结构&#x27;。</span></li>
+<li><a href="articles/javaweb-handwritten-notes.html">JavaWeb 手写笔记（课程学习存档）</a><span class="date">2026-10-24</span><span class="tag">JavaWeb</span><span class="tag">HTML</span><span class="tag">课程笔记</span><span class="desc">JavaWeb 课程手写笔记全文本，从 HTML 基础、标签、表单到后面的 Web 开发，按原样保留，一条未删。</span></li>
+</ul>
+  </section>
+
+  <section class="wgroup">
+    <h2>站外 · CSDN<b>10 篇</b></h2>
+    <p class="wdesc">发在 CSDN 上的文章，合计 2,641 阅读。
+      <a href="https://blog.csdn.net/2401_87978948" rel="noopener">去主页 →</a></p>
+    <ul class="csdn-list two"><li><a href="https://blog.csdn.net/2401_87978948/article/details/166740745" rel="noopener">StainBridge 论文精读</a><span>2026.09.27　360 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/166691514" rel="noopener">DGR 论文深度解读</a><span>2026.09.26　344 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/166642238" rel="noopener">Virtual Staining（虚拟染色）研究综述</a><span>2026.09.25　366 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/164885315" rel="noopener">白话扩散模型（Diffusion model）</a><span>2026.09.12　218 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/164450613" rel="noopener">一文你可能必须要看的计算视觉入门(从数据分布角度理解VAE)</a><span>2026.09.08　161 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/164400155" rel="noopener">LoRA微调--一文你一定可以看懂并且一定要看的LoRA</a><span>2026.09.06　246 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/164258965" rel="noopener">Mac(苹果笔记本）微软office激活指南，简单方便</a><span>2026.09.01　316 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/163761356" rel="noopener">FlowMatching模型入门（新手向）</a><span>2026.08.21　176 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/155910075" rel="noopener">Vision Mamba心得体会</a><span>2026.08.08　203 阅读</span></li><li><a href="https://blog.csdn.net/2401_87978948/article/details/155909945" rel="noopener">AI工具实战测评：30%理论+70%硬核数据</a><span>2025.12.14　251 阅读</span></li></ul>
+  </section>
+</main>
+
+
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
+<script src="assets/blog.js" defer></script>
+</body>
+</html>

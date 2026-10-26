@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -230,9 +230,9 @@ pool.shutdown();                    // 不再接收新任务，待已提交任�
 <ul><li>只认「<code>Stream</code> 结尾即字节、<code>Reader</code> / <code>Writer</code> 结尾即字符」，却忘了 <code>PrintStream</code> 是<strong>字节</strong>输出流、<code>System.in</code> 声明类型是 <code>InputStream</code> 而非 <code>PrintStream</code>。</li><li>以为处理流能直连文件；实则必须套在节点流上，<code>ObjectOutputStream</code> 直接 <code>new</code> 一个文件路径的用法不成立。</li><li>把 <code>RandomAccessFile</code> 当成 <code>InputStream</code> 的子类——它继承自 <code>Object</code>，独立成套读写方法。</li><li>混淆 <code>writeObject()</code>（写对象）与 <code>write()</code>（写字节）；序列化对象用前者。</li><li>混淆末尾哨兵：<code>InputStream.read()</code> 返回 -1 表示结束，<code>BufferedReader.readLine()</code> 返回 null 表示结束。</li><li>把 <code>read(byte[] b, int off, int len)</code> 的 <code>off</code> 当成「流的偏移量」——它是<strong>目标数组</strong>的起始下标；返回值是本次实际读到的字节数，可能小于 <code>len</code>，到末尾为 -1。具体读到多少取决于流实现与剩余数据，不必死记某个固定数字。</li><li>记不清键盘输入的字节构成：每按一次回车会产生一个行结束字节，故 <code>System.in</code> 读到的字节数随输入与数组长度而变，同样不宜记成某个固定值。</li><li>同步只锁写、把读与计算放在锁外，或误以为「加了 <code>synchronized</code> 就一定安全」而忽视锁对象是否为同一把。</li><li>以为 <code>sleep()</code> / <code>yield()</code> 会释放锁——不会；只有 <code>wait()</code>（及退出同步块 / <code>return</code> / 异常）才释放。</li><li>把 <code>start()</code> 写成 <code>run()</code>，结果并未启动新线程。</li><li>把 <code>Callable</code> 直接传给 <code>new Thread(...)</code>——须用 <code>FutureTask</code> 包装；<code>get()</code> 是阻塞取结果，不会立刻返回 null。</li><li>用 <code>String.length()</code> 去估字节大小：它数的是 <code>char</code> 个数，中英文都算 1，字节数须走 <code>getBytes(charset)</code>。</li></ul>
 <h2>五、总结要点</h2>
 <ol><li>IO 流按处理单元（字节 / 字符）、流向（输入 / 输出）、角色（节点 / 处理）三维分类；四个抽象基类是 <code>InputStream</code>、<code>OutputStream</code>、<code>Reader</code>、<code>Writer</code>。</li><li>节点流直连数据源，处理流包装节点流以增强；缓冲流靠减少设备交互次数提速，靠 <code>flush()</code> / <code>close()</code> 落盘；转换流 <code>InputStreamReader</code> / <code>OutputStreamWriter</code> 在指定字符集下打通字节与字符，是中文乱码的解法。</li><li><code>File</code> 只管路径不管内容；<code>SequenceInputStream</code> 顺序串联输入流；管道流用于线程间通信且不可同线程收发；<code>RandomAccessFile</code> 独立于流体系、靠指针随机读写，模式有 <code>r</code> / <code>rw</code> / <code>rws</code> 等；<code>PrintStream</code> 与 <code>System.setIn/setOut/setErr</code> 实现标准流重定向。</li><li>序列化靠 <code>Serializable</code>、<code>ObjectOutputStream.writeObject</code> / <code>ObjectInputStream.readObject</code>（返回 <code>Object</code> 需强转）；<code>transient</code> 跳过字段，<code>serialVersionUID</code> 标识版本，序列化不继承、同一对象靠句柄只存一份。</li><li>多线程两种创建方式中 <code>Runnable</code> 更解耦；务必 <code>start()</code> 非 <code>run()</code>；带返回值用 <code>Callable</code> + <code>FutureTask</code>，<code>get()</code> 阻塞取结果。</li><li>生命周期五态（新建 / 就绪 / 运行 / 阻塞 / 死亡）对应 JDK 的六枚举；<code>sleep</code> / <code>join</code> / <code>yield</code> / 优先级常量（<code>MIN</code>=1、<code>NORM</code>=5、<code>MAX</code>=10）控制调度，守护线程随前台线程耗尽而亡。</li><li><code>synchronized</code> 是线程安全核心：锁须共享同对象、读计算写整体入锁、同步方法锁 <code>this</code>；<code>wait</code> / <code>notify</code> / <code>notifyAll</code> 在同步区内通信；<code>sleep</code> / <code>yield</code> 不放锁，<code>wait</code> 放锁。线程池以复用线程降低开销，为通用补充。</li><li><code>StringBuffer</code> 因加锁线程安全而较慢，<code>StringBuilder</code> 无锁而快，单线程拼接优先后者。</li></ol>
-<a class="back-link" href="../../study/javaweb.html">← 返回 JavaWeb</a>
+<a class="back-link" href="../../subject/javaweb.html">← 返回 JavaWeb</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

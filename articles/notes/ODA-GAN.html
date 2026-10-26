@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a class="active" href="../../research.html">研究</a><a href="../../writing.html">写作</a><a href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -66,9 +66,9 @@
 <p>同时应记录其局限。其一，弱监督掩膜的质量受限于 UNI + MLP 的 patch 级分类精度与 Grad-CAM 的定位分辨率，若阳性区域面积很小（如散在膜染色），热力图易欠定位。其二，MMD 对齐的是特征分布，$\mathrm{MMD}\to 0$ 并不能证明生成图满足比尔-朗伯显色规律，也不能证明 DAB 浓度与真实蛋白表达之间具有正确的物理关系——分布一致弱于物理一致。其三，方法仍属 GAN 路线，训练稳定性与模式覆盖依赖对抗平衡。</p>
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>解耦对象的选择即创新定位</strong>。同样称&quot;解耦&quot;，解耦&quot;结构↔颜色风格&quot;与解耦&quot;结构↔蛋白表达&quot;在临床含义上并不等价；后者要求模型回答&quot;何种蛋白在何处表达&quot;，而非仅&quot;换成什么色调&quot;。</li><li><strong>正交约束需要语义锚点</strong>。仅施加 $\|F_s^{\top}F_p\|_F^2$ 会使分解退化（任意正交分解都满足），必须配合掩膜监督把两个子空间绑定到病理语义上。</li><li><strong>弱监督是低成本获取空间监督的可行路径</strong>。冻结基础模型 + 轻量分类头 + Grad-CAM，可在无像素级标注条件下得到可用的区域掩膜，这一套路可直接迁移至其他标志物。</li><li><strong>对比损失的正负样本定义应包含语义条件</strong>。DPNCE 的&quot;阳性—阳性为正、阳性—阴性为负&quot;使表征具备判别性；若仅按空间位置配对，模型无法区分&quot;该染&quot;与&quot;不该染&quot;。</li><li><strong>分布对齐应分层且分量为宜</strong>。在多层特征上做 MMD，并对阳性/阴性分量分别对齐，比在 RGB 上做全局对齐更能保住阳性信号。</li><li><strong>分布一致不等于物理一致</strong>。这是该方法与本课题路线的关键分野：若要保证生成 IHC 符合显色物理，需在浓度空间施加约束（如解混后 DAB 浓度的像素级一致性），而非仅对齐特征分布。</li><li><strong>可借鉴的组合方式</strong>：以 ODA-GAN 的弱监督掩膜与 DPNCE 提供蛋白侧监督，以正交分解提供结构/蛋白分离，再把生成骨架替换为浓度场扩散并以比尔-朗伯层渲染，可形成&quot;解耦 + 扩散 + 真实分布 + 物理渲染&quot;的完整链条；此时须注意 O-MLP 的正交约束与扩散噪声预测损失之间可能存在梯度冲突，需以梯度投影一类门控手段协调。</li></ol>
-<a class="back-link" href="../../research.html">← 返回科研</a>
+<a class="back-link" href="../../research.html">← 返回研究</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

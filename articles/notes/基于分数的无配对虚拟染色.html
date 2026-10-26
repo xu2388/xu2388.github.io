@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a class="active" href="../../research.html">研究</a><a href="../../writing.html">写作</a><a href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -70,9 +70,9 @@
 <p>方法的局限亦应记录：其一，MI 估计依赖对比下界，负样本数量与温度系数会显著影响解耦质量，而摘要未给出敏感性分析；其二，能量引导在采样阶段引入额外梯度计算，推理成本高于纯条件扩散；其三，隐式解耦缺乏显式的结构/染色分量输出，可解释性弱于双分支方案——后者可直接可视化 style 编码，前者只能通过消融间接验证。</p>
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>解耦存在层级差异，写作须限定</strong>。显式解耦（网络拆为 content/style 双分支）与隐式解耦（以损失或能量函数约束表征）在实现、可解释性与可复现性上完全不同，不可笼统称为&quot;解耦扩散&quot;。</li><li><strong>能量引导是&quot;不改主干&quot;的约束接口</strong>。把任务约束写成能量项并取其负梯度加入采样分数，可在冻结预训练模型的前提下注入领域知识，代价是每步额外的梯度开销。</li><li><strong>互信息可作为解耦的可微准则</strong>。以 $I(s;c)$ 最小化替代&quot;两支特征正交&quot;的手工约束，理论上更贴近&quot;信息不重叠&quot;的本意；但估计质量决定实际效果。</li><li><strong>时间步是可控性的天然旋钮</strong>。扩散的分阶段特性使&quot;早期定结构、后期定表观&quot;成为可实现的控制策略，无需额外的条件分支。</li><li><strong>非对齐数据的结构约束应作用于局部语义而非像素</strong>。局部 MI 对比与自适应加权 PatchNCE 是同一问题的两种解法，前者放宽配对假设，后者保留配对但降权。</li><li><strong>无配对是该方法相对显式双分支方案的主要优势</strong>。StainBridge、StainDiffuser 均依赖配对数据，而临床中严格配对的 H&amp;E–IHC 极难获取，这一差异在方法选型时权重很高。</li><li><strong>对本课题的启示</strong>：若拟在扩散框架内做&quot;结构—蛋白&quot;解耦，可借鉴其&quot;全局约束管分离、局部约束管对应&quot;的双层结构；但若目标是把染色侧表征落到可解释的物理量（如 DAB 浓度场），仍需在能量项中引入光密度域约束，因为互信息只能保证&quot;分离&quot;，不能保证&quot;符合比尔-朗伯显色规律&quot;。</li></ol>
-<a class="back-link" href="../../research.html">← 返回科研</a>
+<a class="back-link" href="../../research.html">← 返回研究</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

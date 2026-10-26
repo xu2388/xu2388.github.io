@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -192,9 +192,9 @@ return y                            # 送线性层 + Softmax</code></pre>
 <ol><li>Transformer 每层由&quot;注意力混合位置信息 + FFN 逐位置加工 + 残差与层归一化稳住数值&quot;三件事构成，组件职责互不重叠。</li><li>FFN 的公式为 $\mathrm{FFN}(x)=\max(0,\,xW_1+b_1)W_2+b_2$，形状沿 $d_{model}\rightarrow d_{ff}\rightarrow d_{model}$ 走一圈，参数在位置间共享。</li><li>缩放点积注意力先投影再匹配，除以 $\sqrt{d_k}$ 是为压制高维点积的方差、避免 Softmax 梯度消失；多头即多组独立投影后拼接再经 $W^{O}$ 融合。</li><li>掩码自注意力把分数矩阵严格上三角置 $-\infty$，Softmax 后被屏蔽位置权重恰为 0，其必要性在于让训练与推理的可见信息集合一致。</li><li>交叉注意力取 $\text{MultiHead}(Q=\tilde{S},K=H,V=H)$，与自注意力唯一区别是 Query（与 Key/Value）的来路，去掉编码器它便整体消失。</li><li>残差连接与层归一化在每个子层后各出现一次，材料给出的是&quot;相加之后再归一化&quot;的次序；pre-LN 变体未见于材料，故本文不作对照。</li><li>Base 与 Big 的差异集中在 $d_{model}$、$h$ 与 $d_{ff}$ 三项，单头维度 64 与层数 6 保持不变，$d_{ff}$ 恒为 $d_{model}$ 的 4 倍（2048 与 4096）。</li></ol>
 <h2>参考文献</h2>
 <ol><li>Vaswani A., Shazeer N., Parmar N., et al. Attention Is All You Need. NeurIPS 2017. 表 3 给出 Base 与 Big 两种配置的 $N$、$d_{model}$、$d_{ff}$、$h$、$d_k$ 与参数量。裸链接：https://arxiv.org/abs/1706.03762 ；会议版 PDF：https://papers.neurips.cc/paper/7181-attention-is-all-you-need.pdf</li><li>课程幻灯片《Components of Neural Networks / Feed-Forward Layer / Attention / Transformer》逐页讲解记录，本文公式、结构说明与配置数值均取自该记录的文字部分；幻灯片图像不可得，依赖图示的内容未予收录。</li></ol>
-<a class="back-link" href="../../study/deep-learning.html">← 返回 深度学习/神经网络</a>
+<a class="back-link" href="../../subject/deep-learning.html">← 返回 深度学习/神经网络</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

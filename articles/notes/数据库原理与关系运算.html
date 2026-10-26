@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -183,9 +183,9 @@ REVOKE UPDATE ON TABLE Student FROM U2 CASCADE;</code></pre>
 <ol><li><strong>把「交」或「连接」当基本运算</strong>。基本运算只有并、差、笛卡尔积、选择、投影五个：交由差导出，连接由笛卡尔积与选择组合，自然连接还多一步去重列的投影。</li><li><strong>除法按「相交」判定</strong>。象集与除数投影的关系是包含而非相交，否则部分匹配的元素会被误入选。</li><li><strong>投影时丢掉连接属性</strong>。为减少列数而投掉公共属性，后续自然连接在定义上不成立。</li><li><strong>把书写顺序当成执行顺序</strong>。先连接再选择投影便于书写且不易出错，优化策略却要求尽早选择；差别在逻辑计划与物理计划两个层面。</li><li><strong>行级条件写进 HAVING</strong>。<code>Grade &gt;= 60</code> 须逐行判断，只能放 <code>WHERE</code>；放进 <code>HAVING</code> 既易报错，又让不及格记录进入统计。</li><li><strong>DELETE 与 DROP 混用、误写星号或省略条件</strong>。删除列要走 <code>ALTER TABLE ... DROP COLUMN</code>；<code>DELETE</code> 后直接跟 <code>FROM</code>，且不可省略 <code>WHERE</code>。</li><li><strong>认为主码就是主属性，或用主码判定范式</strong>。主码是属性集合，主属性是其中单个属性；范式判定以全部候选码为准。</li><li><strong>混淆安全性与完整性的防范对象</strong>，或把强制存取控制的读写方向记反，或以为 <code>SELECT</code> 会激活触发器。前者防非法用户与非法操作、后者防不合语义的数据；密级规则是下读上写；触发器只响应数据修改。</li></ol>
 <h2>六、总结要点</h2>
 <ol><li>关系模型以「关系是元组的集合」为出发点，术语围绕元组、属性、域、目与四组「码」展开；码默认指候选码，主码只是人为选定的代表，范式判定只认候选码。</li><li>完整性由实体（主码非空且唯一）、参照（外码取空或等于已存在主码值）、用户定义（业务规则）三类保证，违约处理为拒绝执行、级联、置空；参照表与被参照表可为同一张表。</li><li>关系代数以集合运算为基础，五种基本运算构成完备集；并、交、差要求同目且对应属性同域；优化的首要策略是尽早做选择。</li><li>连接构成式为 $R \bowtie_{\theta} S = \sigma_{\theta}(R \times S)$；除法判据是象集包含，$\{C1,C2,C3\}$、$\{C1,C2\}$、$\{C1\}$ 对 $S = \{C1,C2\}$ 的包含判定给出 $R \div S = \{201,202\}$，结果为 1 目 2 个元组。</li><li>SQL 侧与代数一一对应：等值连接把关系并列于 <code>FROM</code>、条件写全于 <code>WHERE</code>；<code>WHERE</code> 过滤行、<code>HAVING</code> 过滤分组，聚集条件只能进 <code>HAVING</code>。</li><li><code>DELETE</code>、<code>DROP</code>、<code>TRUNCATE</code> 按五项（删除对象、表是否保留、能否恢复、自增列、权限级别）区分，口诀「DELETE 删行不删表，DROP 删表全干掉」；<code>TRUNCATE</code> 更快、重置自增且不可带条件。</li><li>权限粒度由库、表、列、行逐级变细，越小越灵活而开销越大；<code>WITH GRANT OPTION</code> 决定能否转授，<code>CASCADE</code> 与 <code>RESTRICT</code> 决定回收方式；自主存取控制灵活，强制存取控制按密级下读上写，叠加为两级防线。</li><li>原理性结论：视图承担安全、简化查询与逻辑独立性；聚簇索引一表仅一个且命中即得整行；触发器只响应数据修改，与声明式外键级联二选一，跨表全局约束须落到断言。</li></ol>
-<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../subject/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

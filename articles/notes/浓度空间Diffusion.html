@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a class="active" href="../../research.html">研究</a><a href="../../writing.html">写作</a><a href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -113,9 +113,9 @@ C_DAB,0 → 加噪 → C_DAB,t ─┘                                        │
 <p>若条件扩散优于无条件扩散，后续演进即具依据：H 多尺度注入 → Protein Estimator A → Real-IHC Score Model B。该顺序使研究路线被逐层验证，而非一次性堆叠后被整体调参掩盖。</p>
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>建模坐标的选择比网络结构更根本。</strong> 浓度域使物理规律成为先验而非待学习项，单通道生成的自由度收敛，失败模式可枚举、可归因，该思路可迁移至任何多染料混合的成像问题。</li><li><strong>单通道条件扩散的关键在&quot;条件不加噪&quot;。</strong> 只有目标变量进入前向过程，所学才是条件分布，消融才具解释力。</li><li><strong>物理回投是免费的重建先验。</strong> 由 $[C_H,\hat C_{DAB}]$ 经 $OD=MC$、$I=I_0e^{-OD}$ 回 RGB，不需额外解码器或对抗损失，且输出必落物理可行域。</li><li><strong>门禁式实验设计优于一次性大规模训练。</strong> 重建自检、八步 sanity check、tiny-set 过拟合、三级 baseline 构成四道闸门，把调试成本从&quot;训练数天后发现不对&quot;压缩到&quot;数分钟内定位&quot;。</li><li><strong>反退化诊断须显式设计。</strong> 条件复制检查与方差塌缩检查回答&quot;是否真学到目标&quot;，而非&quot;是否好看&quot;；在错位配对与强条件输入下，二者比 PSNR 更能揭示真实能力。</li><li><strong>novelty 落在组合而非单点。</strong> OD/浓度域扩散已有先例，可主张的空白是&quot;单染料通道条件扩散 + H/E 浓度固定条件 + 比尔-朗伯物理回投&quot;的端到端解耦流水线；引用时须区分三者任务边界，避免被读作重复。</li></ol>
-<a class="back-link" href="../../research.html">← 返回科研</a>
+<a class="back-link" href="../../research.html">← 返回研究</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

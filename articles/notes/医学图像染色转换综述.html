@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a class="active" href="../../research.html">研究</a><a href="../../writing.html">写作</a><a href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -108,9 +108,9 @@
 <p>综合可得三点结论。第一，<strong>监督信号的粒度设计比生成器架构更能决定上限</strong>：从像素到 patch 到层到原型与浓度，每一次粒度上移都对应一次对错位与语义鸿沟的实质缓解。第二，<strong>像素指标不足以作为主判据</strong>：PSPStain 揭示的虚高、DGR 的人因实验、StainBridge 的反直觉发现，共同指向&quot;评测体系本身是瓶颈&quot;。第三，<strong>物理先验的引入尚处早期</strong>：浓度域已被用于归一化与域适配，但尚未用于端到端跨染料条件生成。</p>
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>以监督粒度作为综述的组织轴。</strong> 像素 → patch → 层 → 原型/浓度，这条轴同时刻画&quot;如何应对错位&quot;与&quot;如何逼近临床语义&quot;，比按网络类型分类更具解释力。</li><li><strong>对齐度的评估量必须与染色信号解耦。</strong> ASP 用生成 IHC 与真实 IHC 的特征相似度评估对齐，会被阳性强度污染；Li 2024 改用 H&amp;E 与连续 IHC 的 Pearson 相关，因 H&amp;E 不含 DAB 而更干净。该&quot;用什么量做可信度打分&quot;的选择可迁移至其他弱监督场景。</li><li><strong>域内关系约束优于跨域逐点约束。</strong> WPCC 匹配 IHC 内部 patch 的相对相似分布而非跨域特征距离，这类关系级约束对错位天然免疫，值得复用。</li><li><strong>外挂约束需正视目标冲突。</strong> CUT-GDC 以固定 $\lambda$ 平衡特征对比与像素梯度，未分析二者梯度可能相互抵消；若在自有方法中引入多类约束，冲突检测与调和是可主张的创新点。</li><li><strong>浓度域的价值在于线性化。</strong> TT-SaD 迁至 OD 是为把非线性逆问题变为线性以支持投影式一致性；该动机与&quot;在浓度域做生成&quot;不同，引用时须区分。</li><li><strong>文献编号需逐条核实。</strong> 已知错误：Jeong 2023 被误标为 arXiv:2505.10993（该号为综述），真实出处为 <em>Comput Biol Med</em> 152:106335；arXiv:2403.09302 实为 StainFuser；Li Yueheng 的 MICCAI 2024 论文曾被误记为 Jiahan Li、Yicong Li。此类错误在 related work 中代价极高，宜建立独立核对表。</li><li><strong>可主张的研究空位。</strong> 现有工作或止于归一化、或止于分类域适配、或以浓度损失作辅助正则，尚无&quot;仅对单染料通道做条件扩散、H/E 浓度保持干净、经比尔-朗伯回投重建 RGB&quot;的端到端解耦方案；该组合可作为方法主张的立足点，其成立与否可由最小基线实验先行判定。</li></ol>
-<a class="back-link" href="../../research.html">← 返回科研</a>
+<a class="back-link" href="../../research.html">← 返回研究</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

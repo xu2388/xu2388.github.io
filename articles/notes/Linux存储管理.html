@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -276,9 +276,9 @@ repquota -augv             # 全文件系统配额汇总</code></pre>
 <ol><li><strong>逻辑分区编号</strong>：主分区占 1–4，第一个逻辑分区从 <strong>5</strong> 开始，写作 <code>/dev/sda5</code>，不存在 sda1–4 之外的第四主分区编号竞争。</li><li><strong>扩展分区不能直接格式化</strong>：它只是容纳逻辑分区的外壳，且最多一个。</li><li><strong>lvextend 之后忘记 resize2fs</strong>：逻辑卷变大而文件系统未刷新，<code>df</code> 容量不变，扩容视为未完成。</li><li><strong>缩容顺序与卸载</strong>：必须先 umount、再缩文件系统、最后缩 LV；XFS 根本不支持缩容。</li><li><strong>/boot 与 LVM</strong>：引导程序不识别逻辑卷，/boot 不能放 LVM；装机必须单独划分的是根分区与交换分区。</li><li><strong>fstab 改完直接重启</strong>：应先 <code>mount -a</code> 验证，字段顺序为设备、挂载点、类型、选项、dump、fsck 顺序，后两位常写 0 0 但要明白其含义。</li><li><strong>umount 报 busy</strong>：问题在占用进程而非设备，<code>fuser -cu</code> 查看、<code>fuser -ck</code> 清除，或 <code>lsof</code> 定位后再卸载。</li><li><strong>chmod 与 chown 混淆</strong>：chmod 管权限，chown 管属主属组；「chown 可修改文件的所有者和所属组」正确，「chmod 可修改所有者」错误。</li><li><strong>权限串判型</strong>：<code>drwxrw-r--</code> 首字符 d 表示目录，所有者权限看第 2–4 位（rwx），八进制转换按 r=4、w=2、x=1 逐段求和。</li><li><strong>umask 减法陷阱</strong>：<code>umask=033</code> 时新建文件默认权限实测为 644，而非按减法得到的 633；减法只在掩码位包含于基准位时成立，通则永远是按位与掩码取反。</li><li><strong>硬链接边界</strong>：硬链接共用 inode、不能跨分区、不能对目录创建；删除原文件后仍有效的链接是硬链接，软链接删除原文件即失效。</li><li><strong>quota 阈值倒置</strong>：软限额必须低于硬限额，否则告警逻辑失去意义；fstab 未加 usrquota/grpquota 并 remount 时，quotacheck 无从生效。</li><li><strong>脚本没加执行权限</strong>：<code>Permission denied</code> 时先 <code>chmod +x</code>；用 <code>bash script.sh</code> 方式运行则无需执行位，同时 Shebang 不生效。</li><li><strong>备份目录忘用 -a</strong>：普通 <code>cp -r</code> 会丢失权限与属主信息并跟穿软链接，含属性的整目录备份应使用 <code>cp -a</code>。</li></ol>
 <h2>十二、总结要点</h2>
 <p>存储管理知识链可以压缩为四句话。<strong>分区层</strong>：MBR 首扇区 446+64+2 的结构决定 4 个主分区上限，GPT 以备份分区表和 LBA 寻址突破限制；fdisk 对 MBR、gdisk 对 GPT、parted 通用。<strong>卷管理层</strong>：PV→VG→LV 三层加默认 4 MB 的 PE 是在线扩缩容的基础，扩容两条命令 <code>lvextend</code> 与 <code>resize2fs</code> 缺一不可，缩容则须卸载在先、文件系统先缩。<strong>挂载层</strong>：手动 mount/umount，开机靠 fstab 六字段并以 <code>mount -a</code> 当场验证，busy 时 <code>fuser -ck</code> 解占用；查看容量 df 管分区、du 管目录。<strong>权限与运维层</strong>：八进制与符号两套写法分别对应 chmod 与整体赋值、增量调整，chown 管归属，umask 决定新对象默认权限但减法有边界、以按位取反为准；quota 以「软告警、硬封顶、宽限 7 天」约束用量；备份链条上 tar 打包压缩、cp -a 保属性、dd 到扇区、crontab 定时驱动脚本，构成日常运维的完整闭环。</p>
-<a class="back-link" href="../../study/os-linux.html">← 返回 操作系统/Linux</a>
+<a class="back-link" href="../../subject/os-linux.html">← 返回 操作系统/Linux</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

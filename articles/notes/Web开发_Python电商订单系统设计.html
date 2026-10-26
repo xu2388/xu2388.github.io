@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -129,9 +129,9 @@ COMMIT;</code></pre>
 <p>来自原料、可直接溯源的内容包括：以 Order 类为核心的内存订单模型，即订单号、客户、商品字典（名称映射到&quot;单价、数量&quot;列表）、总金额，以及 calculate_total 按单价乘以数量求和的实现；将订单列表写入 orders.json 与读回的 save/load 逻辑，及其对文件权限、文件不存在、JSON 格式错误的异常处理；输入校验与 try-except 的讲解；用 datetime 在程序起止输出时间；以及&quot;数据库设计重要性&quot;对话中以事务、外键、第三范式、复合索引、分库分表、唯一约束为例说明数据库设计价值的若干论述。</p>
 <p>原料覆盖薄弱、由本文基于通用工程经验补全的部分包括：从 ER 关系到四张具体表（users、products、orders、order_items）的结构设计；主键、外键与状态字段的取舍细节；订单号生成与幂等设计；库存并发超卖的行锁、乐观锁与事务边界；分页查询与复合索引策略；后端路由—服务—数据访问三层架构，以及文件存储与配置管理。原料对这些主题基本没有涉及，本文的相应结论属于面向该系统的合理补全，而非原料既有内容。</p>
 <p>原料中需要勘误的自相矛盾之处：订单 001 的 JSON 示例把商品明细（apple 单价 90、数量 98，pinapple 单价 12、数量 223）与总金额 3636.0 放在一起，而按求和逻辑正确值应为 11496.0；同一原料另有一处仅含 apple 却标注 total_amount 8820.0 的片段，与各明细齐全的示例并不统一。二者说明示例数据前后不一致，本文以&quot;单价×数量求和&quot;的推导结论为准。</p>
-<a class="back-link" href="../../study/web-frontend.html">← 返回 Web开发/前端</a>
+<a class="back-link" href="../../subject/web-frontend.html">← 返回 Web开发/前端</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a class="active" href="../../research.html">科研</a><a href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a class="active" href="../../research.html">研究</a><a href="../../writing.html">写作</a><a href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -62,9 +62,9 @@
 <p>消融实验给出五条关键技术结论：双独立编码器优于 CUT 单共享编码器，域差距大时提升明显；循环一致性损失冗余甚至有害，会限制几何变换能力；对偶双向学习能稳定训练并获得更好的特征嵌入；PatchNCE 移除底层 RGB 像素层后指标全面提升；额外引入外部负样本会轻微改善 FID，但视觉上物体容易粘连，故不推荐。</p>
 <h2>四、要点小结与可借鉴之处</h2>
 <ol><li><strong>约束粒度决定能力边界</strong>。全局像素级循环约束保证可逆性，代价是禁止形变；局部块级对比约束只要求语义块对应，因而容纳形变。选择哪一种，取决于任务是否需要改变几何结构。</li><li><strong>&quot;解耦&quot;一词需限定层级</strong>。DCLGAN 解耦的是两个域的特征提取器，而非单图的内容与风格。写作时若混用 MUNIT 式表述，会造成方法定位错误。</li><li><strong>共享编码器的适用条件</strong>。当两域差异有限（如不同染色强度）时共享参数可提供正则；当两域差异巨大（照片↔标签、H&amp;E↔IHC）时，共享嵌入会成为瓶颈，独立编码器更稳。</li><li><strong>投影头不是可有可无的细节</strong>。对比学习作用于投影后的嵌入空间而非编码器原始输出，这一层可学习变换直接决定正负样本的可分性。</li><li><strong>底层像素层应剔除</strong>。$1\times1$ RGB 层携带的噪声大于信息，纳入对比会拖慢收敛；这一结论对任何以特征块为单位的对比损失都具参考价值。</li><li><strong>模式崩溃可由分布层面的损失缓解</strong>。SimDCL 的域内 L1 相似约束本质上是在要求生成分布覆盖真实分布，思路可迁移至扩散模型的多样性诊断。</li><li><strong>对本课题的迁移价值</strong>。若在病理 H&amp;E→IHC 中沿用双编码器思路，可把 X 域嵌入用于提取 H&amp;E 的组织形态、Y 域嵌入用于提取 IHC 的染色与蛋白表达；但需注意 DCLGAN 的 PatchNCE 只保证结构与纹理对应，不约束染料浓度，染色正确性仍须由光密度域的浓度监督补足。</li></ol>
-<a class="back-link" href="../../research.html">← 返回科研</a>
+<a class="back-link" href="../../research.html">← 返回研究</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

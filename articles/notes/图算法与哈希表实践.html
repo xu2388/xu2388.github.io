@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -565,9 +565,9 @@ int evaluatePostfix(const std::string&amp; postfix) {
 <p>三种矩阵型算法共享同一套&quot;放开中间点&quot;的动态规划思想，差别只在代数结构与循环次序：Dijkstra 以贪心把中间点限制逐步外推为最终答案，代价是必须非负权；Floyd 用 $O(n^3)$ 换取全点对最短路，并能容纳负权边、检出负权回路；Warshall 把&quot;取小&quot;换成&quot;或&quot;、&quot;相加&quot;换成&quot;且&quot;，只求可达性。手算时 Dijkstra 看 <code>dist</code> 与 <code>path</code> 两个数组的逐轮变化，Floyd 与 Warshall 看矩阵快照逐 $k$ 的变化，两者的不变式都是&quot;内部顶点不超过当前 $k$&quot;。</p>
 <p>哈希表的三条主线是散列函数、冲突处理与性能度量：链地址法与公共溢出区法在代码上分别是&quot;链表摘挂&quot;与&quot;两段查找 + 前移整理&quot;，开放定址法在删除上必须用逻辑删除；性能用装填因子 $\alpha$ 而非 $n$ 来刻画，$\alpha$ 越接近 1，线性探测的 ASL 增长越剧烈，这也是实践中设定阈值扩容的理由。</p>
 <p>栈与队列的要点集中在两处判据与两类应用。判据是循环队列的满空区分（牺牲一个单元、<code>size</code>、<code>tag</code> 三选一），应用是括号匹配与表达式求值（中缀转后缀用运算符栈，求值用操作数栈），它们的共同结构特征是&quot;最近打开的最先闭合&quot;，因此必须用栈；凡是&quot;先进来的先处理&quot;就应交给队列。原料中三处 ASL 与一处表达式结果的偏差均已按算法重跑并逐处标注，其余表格与原对话保持一致。</p>
-<a class="back-link" href="../../study/data-structures.html">← 返回 数据结构与算法</a>
+<a class="back-link" href="../../subject/data-structures.html">← 返回 数据结构与算法</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

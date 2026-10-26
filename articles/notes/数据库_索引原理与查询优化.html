@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -276,9 +276,9 @@ WHERE EXISTS (SELECT 1 FROM SC WHERE SC.Sno = s.Sno AND SC.Cno = &#x27;1&#x27;);
 <tr><td>判断优化</td><td>假设、对照、重复、换数据分布、查副作用；必须能解释「为什么快了」</td></tr>
 </table>
 <p>把全文压成一条判断链：先问「这条查询要读哪些行、哪些列」，据此判断能否用索引定位（最左前缀）、能否不回表（覆盖）；再问「优化器会不会选它」，用执行计划核对 <code>key</code>、<code>rows</code>、<code>Extra</code>；最后问「快了是不是真的」，用对照实验与可解释的指标收尾。索引的物理结构决定了可能的上限，最左前缀决定了可用的范围，执行计划决定了实际的选择，三者层层收窄，任何一层跳过都会得到「看起来对、换数据就错」的结论。</p>
-<a class="back-link" href="../../study/database.html">← 返回 数据库/MySQL</a>
+<a class="back-link" href="../../subject/database.html">← 返回 数据库/MySQL</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

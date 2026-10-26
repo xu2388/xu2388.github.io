@@ -17,6 +17,10 @@ fi
 
 if [ "$DO_BUILD" = 1 ]; then
   echo "==> [1/3] 构建"
+  # 站外文章：me.json 里填了 csdn.user 就先刷新一次；断网或接口变了不阻断发布
+  if python3 -c "import json,sys;d=json.load(open('me.json'));sys.exit(0 if (d.get('csdn') or {}).get('user') else 1)" 2>/dev/null; then
+    python3 fetch_csdn.py || echo "    CSDN 抓取失败，沿用上次的 data/csdn.json"
+  fi
   python3 build_articles.py
   python3 build_notes.py
   python3 build_site.py

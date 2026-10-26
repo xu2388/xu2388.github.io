@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -283,9 +283,9 @@
 <p>从傅里叶到短时傅里叶再到小波，问题链只有一句：<strong>想要频率，就失去位置；想要位置，就失去频率分辨率</strong>。STFT 用固定窗做折中，小波用随尺度伸缩的窗把折中变成「分频段定制」。连续小波给出尺度-平移平面上的冗余表示，离散二进小波用滤波器组把它变成 $O(N)$ 的正交变换；多分辨率分析用嵌套子空间 $V_j$ 与细节空间 $W_j$ 解释「近似 + 细节」的分解，双尺度方程把这一切落到一对低通/高通滤波器上。</p>
 <p>Haar 的 4 点算例说明分解只是换基：$[4,6,10,12]\to[16,-6,-1.4142,-1.4142]$，能量 296 不变，重构逐点还原。二维可分离变换把图像拆成 LL、LH、HL、HH 四个子带，$4\times4$ 斜坡图的算例给出 $HH=0$、$LH=-2$、$HL=-4$，直观展示「线性结构被压缩成常数」。阈值去噪利用稀疏性，在系数域杀小留大，硬阈值保幅、软阈值保连续，通用阈值 $T=\sigma\sqrt{2\ln N}$ 给出一个可复现的起点。</p>
 <p>小波卷积把 DWT/IDWT 塞进分割网络，用可逆下采样换掉池化，用子带卷积换更大的有效感受野。实验报告显示它在充分微调后带来约 0.6 个百分点的 Dice 提升、参数量几乎不变，但收敛慢、对插入方式敏感，且小数据上的优势需要更多重复实验支撑。把这条工程线索放回经典框架，会发现它与高斯/拉普拉斯金字塔、UNet 的跳跃连接是同一件事的不同实现：都在回答「如何在缩小尺寸的同时，不丢掉边缘与位置」。</p>
-<a class="back-link" href="../../study/image-processing.html">← 返回 数字图像处理</a>
+<a class="back-link" href="../../subject/image-processing.html">← 返回 数字图像处理</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

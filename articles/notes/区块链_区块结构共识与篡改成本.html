@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -232,9 +232,9 @@ reward   = 50 / (2 ** halvings)   # 以 BTC 计</code></pre>
 <p>区块头的六个字段构成一条自洽的因果链：默克尔根压缩区块体，父哈希绑定历史，时间戳给出时序，Bits 与 Nonce 承载工作量。区块哈希对整个头部做双重 SHA256，任何字段改动都会改变它，而子区块又引用它，于是「改一笔交易」必然升级为「重挖后续所有区块」。</p>
 <p>共识层用累计工作量最大链处理自然分叉，用确认数把概率风险量化。第六节的赌徒破产模型给出核心结论：落后 $k$ 块被追平的概率是 $(\alpha/\beta)^k$，算力越接近一半，衰减越慢；51% 不是「瞬间成功」，而是「期望时间有限」。第七节把攻击成本拆成硬件、电力、机会成本三块，说明算力控制的是历史选择权，不是签名伪造权。</p>
 <p>发行层用 210000 块的计数规则把减半与时间解耦，用等比级数把总量锁在 2100 万，用整数聪截断把实际发行压到 20 999 999.9769。难度调整每 2016 块把出块速率拉回 10 分钟，但只能锚定长期均值，且自身带有约 2.23% 的统计噪声。最后，轻节点用默克尔路径与区块头换来轻量验证，代价是把交易合法性的判断外包给算力多数——理解这一点，才能正确使用「SPV 已验证」这句话。</p>
-<a class="back-link" href="../../study/blockchain.html">← 返回 区块链/分布式</a>
+<a class="back-link" href="../../subject/blockchain.html">← 返回 区块链/分布式</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

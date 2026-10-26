@@ -88,12 +88,12 @@ def main():
         slug = os.path.splitext(os.path.basename(p))[0] + ".html"
 
         CAT_LIST = {
-            "研究": ("list-research.html", "研究文章", "科研"),
-            "学习笔记": ("list-tutorials.html", "教程", "学习"),
-            "随笔": ("list-essays.html", "随笔", "随笔"),
-            "课程笔记": ("list-courses.html", "课程笔记", "学习"),
+            "研究": ("list-research.html", "研究记录", "研究"),
+            "学习笔记": ("../writing.html", "写作", "写作"),
+            "随笔": ("../writing.html", "写作", "写作"),
+            "课程笔记": ("../notes.html", "笔记", "笔记"),
         }
-        list_href, cat_label, active = CAT_LIST.get(cat, ("list-research.html", "研究文章", "科研"))
+        list_href, cat_label, active = CAT_LIST.get(cat, ("list-research.html", "研究记录", "研究"))
         # 带「论文精读」标签的归到精读清单
         if cat == "研究" and "论文精读" in tags:
             list_href, cat_label = "list-readings.html", "论文精读"

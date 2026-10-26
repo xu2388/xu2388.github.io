@@ -1,39 +1,90 @@
-# 科研与学习档案
+# 个人主页：一页简历 + 研究档案
 
-一个本科生的科研记录与课程笔记。纯静态 HTML + CSS，**零依赖、无框架、无追踪**，
-可以直接托管在 GitHub Pages / Vercel / 任意静态空间。
+一个本科生的个人主页。首页是**简历**，其余页面是简历的**证据**。
+纯静态 HTML + CSS，零依赖、无框架、无追踪，可直接托管在 GitHub Pages。
+
+面向的读者是面试官，不是同行：先看简历，再决定要不要点进去。
 
 ## 信息架构
 
-三层，越点越具体：**首页 → 板块 → 学科/主题 → 文章**。
-
 ```
-首页 index.html
-├── 科研 research.html
-│   ├── 研究文章     articles/list-research.html        17 篇
-│   ├── 论文精读     articles/list-readings.html        10 篇
-│   ├── 研究笔记     articles/list-research-notes.html  15 篇
-│   ├── 调研档案     articles/survey-catalog.html       80 份
-│   └── 论文导读     articles/papers-index.html         27 篇
-├── 学习 study.html
-│   ├── study/<学科>.html   20 门学科，每门一页（共 75 篇笔记）
-│   └── 教程         articles/list-tutorials.html       5 篇
-├── 随笔 essays.html
-└── 搜索 search.html        按标题即时筛选（索引 data/search-index.js）
+index.html      简历：自述 / 研究经历 / 学习经历 / 技能 / 写作 / 站外 / 全部内容
+├── research.html      研究：研究记录、论文精读、研究笔记、调研档案、论文导读
+│     └── articles/list-*.html
+├── writing.html       写作：随笔、教程、站外 CSDN 文章
+├── notes.html         笔记：20 门学科，每门一页 → subject/<slug>.html
+└── archive.html       索引：全站可搜索的目录
 ```
 
-首页只有三件事：一句话说清这是谁的什么档案、一个标题搜索框、一份目录（科研 / 学习，
-带篇数与学科分组）。不放统计条、不放轮播、不放「最新动态」。
+首页不按「科研 / 学习」这种身份分栏，因为任何本科生都能这么分，没有信息量。
+简历只回答三件事：**在追什么问题、为此做了什么、做出来的东西在哪**。
+
+首页中段是四块并列的版面（研究经历 / 学习经历 / 技能 / 写作，另加一格站外）：
+研究经历最长，跨两行，右侧叠学习经历与技能，写作与站外并排。这样四块的底边
+落在同一水平线上，不会出现一大块空洞——严格 2×2 会空出 230px。
+
+每条研究经历都写「做了什么」+「产出了什么」——没有论文时，产出就是证据：
+
+```
+2025 — 2026
+失败归因：结构是在哪一层丢的
+生成图有色调、无结构。把问题定位到条件注入路径与结构约束的层级……
+产出  归因报告一份 · 方法精读 5 篇
+```
+
+## 改简历只改一个文件
+
+`me.json` 是全站唯一手填的文件，模板里不写死任何个人信息：
+
+| 字段 | 作用 |
+|---|---|
+| `name` / `role` / `field` | 首屏大字、身份行、顶栏品牌、`<title>` |
+| `org` / `place` / `email` / `github` | 联系方式；**留空则不渲染**，页面不会出现空行 |
+| `statement` | 自述两段：第一段是主张（20px 衬线），第二段是旁注（13px 无衬线） |
+| `timeline` | 研究经历；每项含 `when` / `title` / `note` / `out` / `url` |
+| `skills` | 技能表，`[标签, 内容]` 数组 |
+| `csdn.user` | CSDN 用户名；填了才会抓文章，留空则首页「站外」一格显示占位 |
+
+填了 `org` 会自动多出一节「教育」。改完跑一次 `python3 build_site.py && python3 fix_nav.py` 即可。
+
+## 站外文章（CSDN）
+
+`fetch_csdn.py` 走 CSDN 前台用的公开接口，抓标题、链接、日期、阅读量，写成
+`data/csdn.json`；`build_site.py` 读它渲染首页「站外」一格（最近 5 篇）和
+写作页的「站外 · CSDN」整节。
+
+```bash
+# 1) 把账号名填进 me.json 的 csdn.user（blog.csdn.net/ 后面那段）
+python3 fetch_csdn.py                # 或 python3 fetch_csdn.py 你的账号
+python3 build_site.py && python3 fix_nav.py
+```
+
+> **昵称不是账号名。** 接口只认地址栏里那串（本站是 `2401_87978948`），
+> 不认昵称（「不想生孩子」）。把主页链接或任意一篇文章的链接当参数传进去也行，
+> 脚本会从 URL 里解析出账号。
+
+`./publish.sh` 会在构建前自动刷新一次；断网或接口改版时沿用上次的
+`data/csdn.json`，不会阻断发布。抓取失败也不会把旧文件写坏。
+
+## 打印成 PDF
+
+首页带 `@media print`：面试时按 `⌘P` 直接出**一页** A4 黑白简历，
+顶栏、页脚、搜索、跳转链接全部隐藏，链接不显示下划线。
+
+- 纸上点不了链接，所以联系方式的网址本身会印出来（`github.com/xu2388 · blog.csdn.net/...`）；
+- 站外文章在纸面只留 3 条，其余靠「CSDN 全部 N 篇」；
+- 打印宽度约 695px，会落进 860px 的窄屏断点，所以打印样式里把两栏显式写了回来。
 
 ## 设计约定
 
-视觉概念是**一本编好的册子**（edited volume），不是产品落地页：
+视觉概念是**一本编好的册子**，不是产品落地页：
 
+- 左侧 116px 窄栏只放小标签，正文一律对齐在同一条竖线上——这是简历与博客的分界；
 - 标题与正文用衬线（Noto Serif SC / 宋体），界面与元信息用无衬线；
 - 近白纸底 `#f8f7f4` + 墨色字，唯一强调色是钢笔墨蓝 `#1f4e79`；
 - 层级靠字号、留白与发丝线，不用卡片、投影、渐变光斑；
 - 圆角只出现在代码与标签上（2–3px），其余一律直角；
-- 交互克制：只有明暗主题、`/` 唤起搜索、文章页右侧目录与阅读进度。
+- 交互克制：明暗主题、`/` 唤起索引、文章页右侧目录与阅读进度。
 
 刻意不做：粒子背景、滚动入场动画、卡片悬停位移、编号 01/02/03 的分节标记。
 
@@ -41,13 +92,16 @@
 
 ```
 科研博客/
-├── index.html  research.html  study.html  essays.html  search.html   五个入口页（自动生成）
-├── study/                      每门学科一页（自动生成）
+├── index.html  research.html  writing.html  notes.html  archive.html   五个入口页（自动生成）
+├── subject/                    每门学科一页（自动生成）
 ├── assets/
-│   ├── style.css               全站样式（明暗双主题，单强调色）
+│   ├── style.css               全站样式（明暗双主题 + 打印样式）
 │   └── blog.js                 主题切换、移动导航、标题搜索、右侧目录、KaTeX 按需加载
+├── me.json                     个人信息与简历内容（唯一手填）
+├── me.py                       读取 me.json
+├── fetch_csdn.py               抓 CSDN 文章清单 → data/csdn.json
 ├── site_model.py               学科注册表（学科名 → slug / 分组 / 一句话说明）
-├── build_site.py               站点生成器：入口页、学科页、清单页、搜索索引
+├── build_site.py               站点生成器：简历首页、板块页、学科页、清单页、索引
 ├── build_notes.py              notes/*.md → articles/notes/*.html
 ├── build_articles.py           articles_src/*.md → articles/*.html
 ├── fix_nav.py                  统一全站顶栏 / 页脚，按页面归属高亮板块
@@ -55,14 +109,14 @@
 ├── notes/                      笔记的 Markdown 源（frontmatter 的 subject 决定归到哪门学科）
 ├── articles_src/               长研究文章的 Markdown 源
 ├── survey/                     调研档案原始文件（80 份）
-└── data/                       search-index.js + nav_counts.json
+└── data/                       search-index.js、csdn.json（抓取结果）
 ```
 
-已停用、不再参与构建：`build_index.py`、`build_doubao_kb.py`、`ingest_doubao_local.py`。
+已停用：`build_index.py`、`build_doubao_kb.py`、`ingest_doubao_local.py`。
 `build_knowledge_base.py` 仅作为 Markdown 渲染器被引用（`render_md`）。
 
 **与 AI 助手的对话存档不进入站点**：`articles/kb/`、`articles/kb-doubao/`、`raw_exports/`
-已从仓库移除，并写进 `.gitignore`，不会再被构建或推送。
+已从仓库移除并写进 `.gitignore`。
 
 ## 本地预览
 
@@ -71,7 +125,7 @@ cd 科研博客
 python3 -m http.server 8000     # 浏览器打开 http://localhost:8000
 ```
 
-直接双击 `index.html` 也能看，搜索索引是 `.js` 而不是 `.json`，`file://` 下同样可用。
+直接双击 `index.html` 也能看：搜索索引是 `.js` 而不是 `.json`，`file://` 下同样可用。
 
 ## 构建
 
@@ -84,13 +138,13 @@ python3 -m http.server 8000     # 浏览器打开 http://localhost:8000
 ```bash
 python3 build_articles.py       # 如有新的 articles_src/*.md
 python3 build_notes.py          # 如有新的 notes/*.md
-python3 build_site.py           # 入口页 / 学科页 / 清单页 / 搜索索引
+python3 build_site.py           # 简历首页 / 板块页 / 学科页 / 清单页 / 索引
 python3 fix_nav.py              # 统一顶栏（必须在 build_site 之后跑）
 ```
 
 ## 新增一篇内容
 
-**学科笔记**（会同时出现在「学习 → 某学科」页和搜索里）：
+**学科笔记**（会出现在「笔记 → 某学科」页和索引里）：
 
 ```bash
 # 在 notes/ 下新建 .md，frontmatter 写 title / subject / category / summary
@@ -105,8 +159,8 @@ python3 md_to_html.py <你的.md> <分类:研究/随笔/学习笔记> "<标题>"
 python3 build_site.py && python3 fix_nav.py
 ```
 
-> 分类决定归属：`研究` → 科研，`学习笔记` → 学习，`随笔` → 随笔；
-> 带 `论文精读` 标签的自动进「科研 → 论文精读」。
+> 分类决定归属：`研究` → 研究页，`学习笔记` / `随笔` → 写作页；
+> 带 `论文精读` 标签的自动进「研究 → 论文精读」。
 
 ## 部署到 GitHub Pages
 

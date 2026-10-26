@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -104,9 +104,9 @@
 <p>就本文关注的医学图像翻译与虚拟染色这类图像到图像任务，流匹配的落地方式可作如下刻画。此类任务给定一张源图像（例如 H&amp;E 病理切片），目标是生成对应的目标染色（例如免疫组化切片），二者在结构上严格对齐、仅在染色表观上不同。实现上把源图像作为条件 $c$ 并入速度网络（常通过通道拼接或交叉注意力注入），训练仍采用配对数据与线性插值路径，让网络在从噪声到目标染色的流动中始终「看见」源结构，从而保留形态学内容而只改变染色外观。为进一步保内容，部分方法在条件路径设计上让起点向源图像偏移，使传输轨迹更短、内容一致性更强。评估时除分布层面指标外，更依赖结构相似性、峰值信噪比与学习感知相似度来确认生成切片既忠实于源形态又具备目标染色特征。这一框架与虚拟染色研究中已有的浓度域扩散路线同属「以源结构为条件、向目标外观映射」的范式，可互为参照，但具体实验指标不在本篇讨论范围。</p>
 <h2>八、素材边界</h2>
 <p>本篇在以下方面原料支撑相对薄弱，特此说明。第一，条件流匹配梯度等式与边缘化定理的完整证明在原料中仅以结论形式出现，本文给出的「损失展开后仅差一个与参数无关项」的论证是依据方法本身补写的推演，未逐行核对原论文引理。第二，原料中关于语音合成显存门槛、参数规模与采样步数的大量数据来自一段带有个人设备与练手项目背景的对话，其中涉及的具体显卡型号与可训练性结论存在较强时效性与设备依赖性，本文仅保留了「条件流匹配语音模型采样步数约为扩散的一半」这一方法层面的定性结论，具体数值未予采纳。第三，医学图像翻译与虚拟染色部分的落地方式是依据流匹配通用条件建模逻辑给出的方法级描述，原料并未提供该方向的专属实验数据或超参，相关论断属于可泛化的框架说明而非结果报告。第四，第七节列举的诸多前沿方法带有 2025 至 2026 年的时间标注，属快速演进方向，部分命名与归属可能随后续发表而调整。第五，原料提及的离散归一化流分支（如双向归一化流）与流匹配仅在数学框架上同源，本文未展开其可逆约束与单步生成细节，相关内容可作为独立主题另篇讨论。</p>
-<a class="back-link" href="../../study/deep-learning.html">← 返回 深度学习/神经网络</a>
+<a class="back-link" href="../../subject/deep-learning.html">← 返回 深度学习/神经网络</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

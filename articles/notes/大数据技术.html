@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -108,9 +108,9 @@ hdfs dfs -ls -har hdfs:///path/xxx.har</code></pre>
 <p><strong>例 10（简答）</strong> 简述 MapReduce 的完整运行流程。 答：作业提交（Client 打包 JAR 至 HDFS 并提交 JobTracker）→ 全局调度（拆分 Map/Reduce Task，按心跳上报的空闲 slot 派发）→ Map 并行计算（InputFormat 解析 → <code>map()</code> → partition → 溢写排序 → 本地有序文件）→ Shuffle（Copy 拉取 + Sort 归并分组）→ Reduce 聚合（<code>reduce()</code> → OutputFormat 写 HDFS）→ JobTracker 标记作业完成。</p>
 <h2>四、小结</h2>
 <p>Hadoop 以&quot;廉价机器 + 多副本 + 并行计算&quot;实现高可靠、高扩展、高容错、低成本的大数据处理。HDFS 用 NameNode 管元数据、DataNode 存数据块、三副本跨机架保可靠、心跳与块报告保可运维；MapReduce 用 JobTracker 统一调度、TaskTracker 分节点执行、slot 量化资源，并以 Shuffle 完成&quot;按 key 分拣、汇聚、排序、分组&quot;的关键衔接。理解&quot;谁是主、谁是从、数据在哪、按什么规则流动&quot;这四条线索，即可串起全部考点。</p>
-<a class="back-link" href="../../study/big-data.html">← 返回 大数据技术</a>
+<a class="back-link" href="../../subject/big-data.html">← 返回 大数据技术</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

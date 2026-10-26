@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -176,9 +176,9 @@ reward   = 50 / (2 ** halvings)</code></pre>
 <ol><li><strong>把父区块哈希画反</strong>：前一区块哈希存放在<strong>当前</strong>区块头，而非父区块里。</li><li><strong>把默克尔根当区块哈希</strong>：区块哈希是对整个区块头做双重 SHA256，默克尔根只是头中一个字段。</li><li><strong>以为改完交易再改后面的数字就能篡改成功</strong>：被改动的每个区块都要重做工作量证明、找到合法 Nonce，且仍需让恶意链成为最长链。</li><li><strong>把补齐当成&quot;只看交易笔数奇偶&quot;</strong>：Coinbase 永远是第一笔交易、对应最左叶子；但复制补齐是按层进行的——任何一层节点数为奇就要复制该层末节点，6 笔交易在父层（3 个节点）同样需要补齐。</li><li><strong>认为 Bits 越大越难</strong>：关系是反向的，Bits 越小、目标哈希越小、难度越高。</li><li><strong>把时间戳当成严格有序保证</strong>：时间戳只作区间校验，不保证父块严格小于子块。</li><li><strong>把&quot;四年减半&quot;当精确周期</strong>：协议规定的是 210000 个区块，4 年由 10 分钟理想间隔换算而来，会随实际出块速度偏离。</li><li><strong>把 2140 年当成可精确到某一天的预言</strong>：它由&quot;恒定 10 分钟出块 + 奖励低于 1 聪即停&quot;的理想模型严格推得（33 轮、约 131.8 年），但真实年份会随算力与难度调整浮动；把对数解错成 36 轮则会得到 2153 年，那一步的根因是把 1 聪取成了 $10^{-9}$ BTC。</li><li><strong>高估脚本能力、错认账本原语</strong>：脚本图灵不完备，不能承担通用智能合约；链上也没有余额字段，可花费资产是 UTXO 集合。</li></ol>
 <h2>十一、总结要点</h2>
 <p>区块头六个字段构成一条自洽的因果链：默克尔根压缩校验区块体交易，父哈希向前绑定上一个区块，时间戳赋予区块时序烙印，Bits 与 Nonce 共同承载工作量证明。把&quot;改动即改哈希、哈希被子区块引用&quot;两句连起来，即可推出不可篡改的成因，以及篡改必然演化为整链重算与算力竞争的原因。UTXO 与脚本系统回答的是&quot;这笔钱在什么条件下可以被花&quot;，栈式、图灵不完备的执行模型把校验能力限制在可判定、可审计的范围内。发行机制则把总量约束交给代码：210000 块一次减半、每轮理想时长约 3.9954 年、等比级数收敛到 2100 万上限，第 33 轮后每块奖励不足 1 聪，理想模型下的终点即教科书里的 2140 年；而&quot;四年&quot;与&quot;2140&quot;都依赖恒定出块速率这一前提，真实年份会随难度调整浮动。</p>
-<a class="back-link" href="../../study/blockchain.html">← 返回 区块链/分布式</a>
+<a class="back-link" href="../../subject/blockchain.html">← 返回 区块链/分布式</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

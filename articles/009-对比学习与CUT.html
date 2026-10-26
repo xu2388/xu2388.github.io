@@ -17,14 +17,14 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../index.html">科研与学习档案</a>
-    <nav class="topnav"><a class="active" href="../research.html">科研</a><a href="../study.html">学习</a><a href="../essays.html">随笔</a><a href="../search.html">搜索</a></nav>
+    <a class="brand" href="../index.html">hua</a>
+    <nav class="topnav"><a class="active" href="../research.html">研究</a><a href="../writing.html">写作</a><a href="../notes.html">笔记</a><a href="../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
 <article class="article">
 <h1>对比学习与 CUT：无配对染色翻译中的结构保持机制研究</h1>
-<div class="meta">写于 2026-10-24 · 研究文章</div>
+<div class="meta">写于 2026-10-24 · 研究记录</div>
 <h2>摘要</h2>
 <p>虚拟染色以计算方法将 H&amp;E 切片映射为 IHC 切片，可绕开抗体成本、24–48 小时周转周期与连续切片的组织损耗。但同一组织的两域图像取自相邻切片并经独立染色、独立扫描，无法像素级配准，任务只能建模为无配对翻译，其核心难题是&quot;内容保持&quot;缺少可操作定义。循环一致性以双射假设换取像素可逆性，代价是压制几何形变；CUT 放弃反向生成器，改用块级对比学习（PatchNCE）约束输入块与生成结果对应块的互信息，把内容保持的粒度由全局像素降为局部语义块。本文由 InfoNCE 的互信息下界推导其优化目标与温度作用，将 PatchNCE 展开为可复现的网络结构、特征层选择、正负样本构造与训练流程，并与 CycleGAN、DCLGAN、MUNIT 在约束信息量与失效模式上对比。结合病理任务的信息不对称——H&amp;E 可直接观测的低频架构应严格保持，细胞膜等高频边界不可见而属&quot;待生成&quot;成分——本文指出块级对比的约束面严格限于结构形态，对颜色与 DAB 浓度不作约束，须由光密度域浓度损失与梯度加权边界损失补足。MIST 乳腺癌 HER2/ER 数据上的代表性工作报告 FID 由 57.8 降至 49.6 并改善边界梯度误差，为该分工提供了初步实证。</p>
 <h2>一、问题与背景：无配对染色翻译为何需要结构保持</h2>
@@ -138,9 +138,9 @@
 <p>无配对染色翻译的核心困难不在网络容量，而在&quot;内容保持&quot;缺少可操作定义。循环一致性以双射假设换取像素可逆性，代价是压制几何形变并在染料组分不对应时产生系统性染色泄漏。CUT 的 PatchNCE 提供另一条路径：以特征空间中逐位置块的互信息下界替代全局像素可逆性，把内容保持的粒度由整幅图像降为局部语义块。这一转换带来三重收益——约束对配准误差具有内禀鲁棒性，映射不再被强制为双射因而可丢弃源域中无对应物的染料信息，单图负样本使训练摆脱大 batch 依赖；其代价是约束强度下降、缺乏反向校验、幻觉风险上升。</p>
 <p>病理任务的信息不对称使这一取舍更为尖锐。H&amp;E 中可直接观测的低频组织架构应严格保持，而细胞膜等高频边界不可见、只能由核排布推断，属于&quot;待生成&quot;而非&quot;待保持&quot;的成分。块级对比恰能约束前者而不能约束后者，也不能约束颜色与 DAB 浓度。因此完整的虚拟染色框架必然是分工式的：对比损失回答&quot;什么在哪里&quot;，对抗与梯度损失回答&quot;边缘多锐&quot;，光密度域浓度损失回答&quot;染多深&quot;。在 MIST 数据上，这一分工将 FID 由 57.8 降至 49.6 并改善边界梯度误差，为设计提供了初步实证。</p>
 <p>监督信号与生成骨架可以分离。同一组结构、浓度、边界监督既可置于渐进式 GAN，亦可置于光密度域扩散；后者可省去分阶段冻结，但需处理辅助损失与去噪损失在不同噪声水平上的梯度冲突。该迁移路径的可行性已由光密度域扩散在染色归一化与测试时适配中的独立进展所支持，但将其与块级结构对比、DAB 浓度正则合并为单一框架的工作尚未出现，构成后续研究的直接切入点。</p>
-<a class="back-link" href="list-research.html">← 返回研究文章</a>
+<a class="back-link" href="list-research.html">← 返回研究记录</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../assets/blog.js" defer></script>
 </body>
 </html>

@@ -171,124 +171,313 @@ code {
 }
 .read-progress .bar { height: 100%; width: 0; background: var(--accent); opacity: .8; }
 
-/* ---------------------------------------------------------- 首页 */
-.home-hero {
+/* ---------------------------------------------------------- 简历首页
+   两栏版面：左侧 128px 的窄栏只放小标签，正文一律对齐在 168px 处。
+   这是简历与博客的分界——博客居中一条竖栏，简历有一条可对齐的栏位。 */
+.cv {
+  --rail: 116px;
+  --rail-gap: 38px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+
+.cv-hero {
   display: grid;
-  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
-  gap: 72px;
-  padding: 92px 0 0;
-  align-items: start;
-}
-.home-hero h1 {
-  font-family: var(--serif);
-  font-size: clamp(30px, 3.6vw, 44px);
-  line-height: 1.3;
-  font-weight: 600;
-  letter-spacing: -.01em;
-  margin: 0;
-}
-.home-lede {
-  margin: 22px 0 0;
-  padding-bottom: 44px;
-  max-width: 24em;
-  font-size: 15px;
-  line-height: 1.95;
-  color: var(--ink-2);
-}
-.home-lede b { color: var(--ink); font-weight: 600; }
-
-/* 左栏拉满行高，搜索框贴齐右栏目录的底边 */
-.home-hero > div:first-child { display: flex; flex-direction: column; }
-
-.home-search {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 360px;
-  border-bottom: 1px solid var(--rule-2);
-  transition: border-color .16s ease;
-}
-.home-search:focus-within { border-bottom-color: var(--ink); }
-.home-search input {
-  flex: 1; min-width: 0;
-  border: none; background: transparent; outline: none;
-  font-family: var(--sans);
-  font-size: 14px;
-  color: var(--ink);
-  padding: 9px 0;
-}
-.home-search input::placeholder { color: var(--faint); }
-.home-search button {
-  border: none; background: transparent; cursor: pointer;
-  color: var(--faint); font-size: 13px; padding: 4px 0 4px 6px;
-}
-.home-search button:hover { color: var(--accent); }
-
-/* 目录（首页右侧） */
-.toc-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .18em;
-  color: var(--faint);
-  padding-bottom: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 48px;
+  align-items: end;
+  padding: 84px 0 38px;
   border-bottom: 1px solid var(--ink);
 }
-.toc-list { border-top: 0; }
-.toc-item {
-  display: block;
-  padding: 26px 0 24px;
-  border-bottom: 1px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-}
-.toc-item-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 20px;
-}
-.toc-item h2 {
+.cv-name {
   font-family: var(--serif);
-  font-size: 27px;
+  font-size: clamp(42px, 6.2vw, 72px);
   font-weight: 600;
-  letter-spacing: .01em;
+  line-height: 1.02;
+  letter-spacing: -.02em;
   margin: 0;
-  transition: color .14s ease;
 }
-.toc-item .n {
-  font-size: 12px;
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
+.cv-role {
+  margin: 16px 0 0;
+  font-size: 14px;
+  letter-spacing: .02em;
+  color: var(--ink-2);
+}
+.cv-contact {
+  text-align: right;
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: var(--muted);
+  padding-bottom: 4px;
   white-space: nowrap;
 }
-.toc-item p {
-  margin: 9px 0 0;
+.cv-contact i {
+  font-style: normal;
+  color: var(--rule-2);
+  margin: 0 9px;
+}
+.cv-contact a {
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--rule-2);
+  padding-bottom: 1px;
+  transition: color .14s ease, border-color .14s ease;
+}
+.cv-contact a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+.cv-statement { max-width: 40em; padding: 2px 0 4px; }
+.cv-statement p {
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.95;
+  color: var(--ink);
+  margin: 0 0 1.05em;
+  text-wrap: pretty;
+}
+.cv-statement p:first-child { font-size: 20px; line-height: 1.8; letter-spacing: -.005em; }
+.cv-statement p + p {
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.95;
+  color: var(--muted);
+  margin: 22px 0 0;
+}
+
+.cv-sec {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: var(--rail-gap);
+  padding: 26px 0 42px;
+  border-top: 1px solid var(--ink);
+}
+.cv-sec-first { border-top: 0; padding-top: 34px; }
+.cv-sec-last { padding-bottom: 100px; }
+.cv-more, .cv-note { grid-column: 2; }
+.cv-label {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: var(--muted);
+  margin: 5px 0 0;
+}
+
+/* 研究经历：日期一列，条目一列 */
+.log { list-style: none; margin: 0; padding: 0; }
+.log li { padding-bottom: 28px; }
+.log li:last-child { padding-bottom: 0; }
+.log .when {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 7px;
+}
+.log h3 {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: -.005em;
+  margin: 0 0 7px;
+}
+.log h3 a { color: var(--ink); }
+.log h3 a:hover { color: var(--accent); }
+.log p {
+  margin: 0;
   font-size: 13.5px;
   line-height: 1.85;
   color: var(--muted);
-  max-width: 34em;
+  max-width: 36em;
 }
-.toc-item .sub {
+
+/* 技能：定义列表，行间发丝线 */
+.kv { margin: 0; }
+.kv > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 24px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.kv dt { font-size: 12px; color: var(--faint); letter-spacing: .04em; padding-top: 2px; }
+.kv dd { margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.8; }
+.kv dd .sj { display: inline-block; white-space: nowrap; margin-right: 16px; }
+.kv dd .sj a { color: var(--ink-2); border-bottom: 1px solid transparent; }
+.kv dd .sj a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.kv dd .sj i { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 3px; }
+
+/* 每条经历末尾的产出：简历看的是这个 */
+.log .out {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+.log .out span {
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  margin-right: 9px;
+}
+
+/* 写作 */
+.wlist { list-style: none; margin: 0; padding: 0; }
+.wlist li { padding: 15px 0; border-bottom: 1px solid var(--rule); }
+
+.wlist a { font-family: var(--serif); font-size: 16.5px; color: var(--ink); }
+.wlist a:hover { color: var(--accent); }
+.wlist .k { font-size: 11px; color: var(--faint); margin-left: 12px; letter-spacing: .08em; }
+.wlist p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.75; color: var(--muted); max-width: 40em; }
+
+/* 档案：数字当排版元素 */
+.figs { display: flex; flex-wrap: wrap; gap: 12px 48px; margin: 0; padding: 0; list-style: none; }
+.figs a { display: flex; align-items: baseline; gap: 9px; color: var(--ink); }
+.figs b {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color .14s ease;
+}
+.figs span { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.figs a:hover b { color: var(--accent); }
+
+.cv-more { margin: 22px 0 0; font-size: 12.5px; }
+.cv-more a { color: var(--muted); border-bottom: 1px solid var(--rule-2); padding-bottom: 2px; }
+.cv-more a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.cv-note { margin: 22px 0 0; font-size: 12px; color: var(--faint); line-height: 1.9; }
+.cv-note kbd { border: 1px solid var(--rule-2); border-radius: 2px; padding: 0 4px; font-size: 11px; }
+
+/* ---------------------------------------------------------- 四块并列
+   研究经历 / 学习经历 / 技能 / 写作 排成 2×2。每块自带一条上发丝线，
+   同一行的两条线在同一个 y 上，中间留出栏距的缺口——读起来是表格的框线，
+   不是四张卡片。标签从左侧栏移到块内顶部：栏宽只剩 400px 时侧栏会把正文挤死。 */
+.grid4 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  column-gap: 62px;
+  align-items: start;
+  padding-bottom: 10px;
+}
+.gcell {
+  padding: 28px 0 44px;
+  border-top: 1px solid var(--ink);
+}
+.gcell > .cv-label { margin: 0 0 22px; }
+/* 研究经历内容最长，跨两行；右侧两格（学习经历 / 技能）叠起来正好同高，
+   四块的底边因此落在同一水平线上，不会出现一大块空洞。 */
+.gcell-tall { grid-row: span 2; }
+.gcell-fill { align-self: stretch; display: flex; flex-direction: column; }
+
+/* 块内一律收一档：标题 17px，说明 13px */
+.gcell .log li { padding-bottom: 20px; }
+.gcell .log h3 { font-size: 17px; margin-bottom: 5px; }
+.gcell .log p { font-size: 13px; line-height: 1.8; }
+.gcell .log .out { font-size: 11.5px; margin-top: 6px; }
+.gcell .kv > div { grid-template-columns: 78px minmax(0, 1fr); gap: 14px; padding: 10px 0; }
+.gcell .kv dt { font-size: 11.5px; }
+.gcell .kv dd { font-size: 12.5px; line-height: 1.85; }
+.gcell .wlist li { padding: 12px 0; }
+.gcell .wlist a { font-size: 15.5px; }
+.gcell .wlist p { font-size: 12px; line-height: 1.7; }
+.gcell .cv-more { grid-column: auto; margin-top: 18px; }
+
+/* 站外：CSDN 文章清单（两栏索引，右列是日期与阅读量） */
+.csdn-list { list-style: none; margin: 2px 0 0; padding: 0; }
+.csdn-list.two { columns: 2; column-gap: 52px; }
+.csdn-list.two li { break-inside: avoid; }
+.csdn-list li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.csdn-list a { display: block; font-size: 13px; line-height: 1.65; color: var(--ink); }
+.csdn-list a:hover { color: var(--accent); }
+.csdn-list span {
+  display: block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: var(--faint);
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+}
+/* 未接入 CSDN 时的占位：画出「将要出现的行」的骨架，而不是一个空框 */
+.csdn-empty {
+  flex: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 4px;
-  row-gap: 1px;
-  margin-top: 12px;
-  font-size: 12.5px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 0 0;
+}
+.csdn-empty .sk {
+  display: block;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--rule);   /* 明暗两套里都刚好可见，用 paper-2 在暗色下会消失 */
+  margin-bottom: 17px;
+}
+.csdn-empty p {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-size: 12px;
   line-height: 1.95;
   color: var(--faint);
-  letter-spacing: .01em;
 }
-/* 每个分组是一个不可拆的 flex 项，分隔符挂在下一项前面 */
-.toc-item .sub span { white-space: nowrap; }
-.toc-item .sub span + span::before {
-  content: "·";
-  color: var(--rule-2);
-  margin-right: 8px;
+.csdn-empty code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  background: var(--paper-2);
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: var(--ink-2);
 }
-.toc-item:hover h2 { color: var(--accent); }
+
+/* ---------------------------------------------------------- 索引页 */
+.archive { max-width: 860px; margin: 0 auto; padding: 72px 0 40px; }
+.archive h1 {
+  font-family: var(--serif);
+  font-size: clamp(30px, 3.6vw, 42px);
+  font-weight: 600;
+  letter-spacing: -.015em;
+  margin: 0 0 12px;
+}
+.archive .lede { margin: 0 0 30px; font-size: 14px; color: var(--ink-2); line-height: 1.9; }
+.ix-group { margin-top: 56px; }
+.ix-group > h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: var(--muted);
+  margin: 0 0 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ink);
+}
+.ix-group > h2 b { font-weight: 400; letter-spacing: .04em; color: var(--faint); }
+.ix { list-style: none; margin: 0; padding: 0; }
+.ix li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.ix a { font-size: 13.5px; color: var(--ink); }
+.ix a:hover { color: var(--accent); }
+.ix span {
+  font-size: 11.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.ix.two { columns: 2; column-gap: 44px; }
+.ix.two li { break-inside: avoid; }
 
 /* 索引式列表（首页最近更新 / 板块页条目 / 清单页） */
 .rows { margin: 0; padding: 0; list-style: none; }
@@ -823,16 +1012,38 @@ code {
   line-height: 2.6;
   font-variant-numeric: tabular-nums;
 }
+/* 标签不做成按钮，只当元信息：小字 + 间隔点 */
 .article-list .tag {
   display: inline-block;
-  margin: 10px 8px 0 0;
+  margin: 8px 0 0 10px;
   font-size: 11px;
-  color: var(--muted);
-  border: 1px solid var(--rule);
-  padding: 1px 7px;
-  border-radius: 2px;
-  letter-spacing: .02em;
+  color: var(--faint);
+  letter-spacing: .04em;
 }
+.article-list .tag + .tag::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--rule-2);
+}
+/* 写作页的两个分组 */
+.wgroup { margin-top: 54px; }
+.wgroup > h2 {
+  font-family: var(--serif);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  margin: 0 0 6px;
+}
+.wgroup > h2 b {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: .12em;
+  color: var(--faint);
+  margin-left: 12px;
+}
+.wgroup .wdesc { margin: 0 0 20px; font-size: 13px; color: var(--muted); }
+
 .article-list .desc {
   display: block;
   clear: both;
@@ -902,9 +1113,9 @@ code {
   background: transparent;
   outline: none;
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 17px;
   color: var(--ink);
-  padding: 6px 0;
+  padding: 8px 0;
   -webkit-appearance: none;
   appearance: none;
 }
@@ -1058,4 +1269,96 @@ kbd {
   margin: 0 0 30px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--ink);
+}
+
+
+/* ---------------------------------------------------------- 简历窄屏 */
+@media (max-width: 860px) {
+  .cv { padding: 0 22px; }
+  .cv-hero { grid-template-columns: 1fr; gap: 20px; align-items: start; padding: 56px 0 28px; }
+  .cv-contact { text-align: left; }
+  .cv-statement { padding-left: 0; }
+  .cv-sec { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 22px 0 32px; }
+  .cv-more, .cv-note { grid-column: 1; }
+  .cv-label { margin: 0; }
+  .log li { padding-bottom: 22px; }
+  .kv > div { grid-template-columns: 1fr; gap: 3px; }
+  .ix.two { columns: 1; }
+  .grid4 { grid-template-columns: minmax(0, 1fr); column-gap: 0; padding-bottom: 0; }
+  .gcell { padding: 24px 0 30px; }
+  .gcell > .cv-label { margin-bottom: 16px; }
+  .gcell .log h3 { font-size: 16.5px; }
+  .gcell .kv > div { grid-template-columns: 74px minmax(0, 1fr); }
+  .archive { padding-top: 50px; }
+  .figs { gap: 12px 32px; }
+  .figs b { font-size: 26px; }
+}
+
+/* ---------------------------------------------------------- 打印（简历存 PDF）
+   目标是一页 A4：面试时直接给一份纸，不必现场开网页。 */
+@media print {
+  :root {
+    --paper: #fff; --paper-2: #fff; --ink: #000; --ink-2: #1a1a1a;
+    --muted: #3d3d3d; --faint: #5a5a5a; --rule: #c4c4c4; --rule-2: #999;
+    --accent: #000; --rail: 104px; --rail-gap: 26px;
+  }
+  .topbar, .site-footer, .read-progress, .back-top, .toc,
+  .theme-btn, .nav-btn, .no-print, .cv-more, .cv-note { display: none !important; }
+  body { background: #fff; color: #000; font-size: 9.5pt; animation: none; }
+  a { color: #000 !important; text-decoration: none !important; }
+  .cv { max-width: none; padding: 0; }
+  .cv-hero { grid-template-columns: minmax(0, 1fr) auto; align-items: end; padding: 0 0 10px; gap: 24px; }
+  .cv-contact { text-align: right; }
+  .cv-name { font-size: 24pt; line-height: 1; }
+  .cv-role { margin-top: 8px; font-size: 9.5pt; }
+  .cv-contact { font-size: 8.5pt; }
+  .cv-contact i { display: none; }
+  /* 纸上点不了链接，所以把地址本身印出来：GitHub → github.com/xu2388 */
+  .cv-contact a[href^="http"] { font-size: 0; }
+  .cv-contact a[href^="http"]::after { content: attr(href); font-size: 7.5pt; }
+  /* 分隔点被 display:none 了，两个网址会粘在一起，用 ::after 补回来 */
+  /* 中间还夹着被 display:none 的 <i>，相邻选择器 + 匹配不到，必须用 ~ */
+  .cv-contact a[href^="http"] ~ a[href^="http"]::after { content: "　·　" attr(href); }
+  .cv-sec, .cv-sec-first { padding: 5px 0 7px; break-inside: avoid; }
+  .kv > div, .log li, .wlist li { break-inside: avoid; }
+  .cv-label { font-size: 7.5pt; margin-top: 1px; }
+  .cv-statement { padding: 0; }
+  .cv-statement p:first-child { font-size: 9.5pt; line-height: 1.6; }
+  .cv-statement p + p { font-size: 8.5pt; line-height: 1.55; margin-top: 4px; }
+  .log li { padding-bottom: 4px; }
+  .log .when { font-size: 7.5pt; margin-bottom: 2px; }
+  .log h3 { font-size: 10pt; margin-bottom: 2px; }
+  .log p, .kv dd { font-size: 8.5pt; line-height: 1.45; }
+  .log .out { font-size: 8pt; margin-top: 2px; }
+  .kv > div { padding: 2px 0; grid-template-columns: 74px minmax(0, 1fr); gap: 16px; }
+  .kv dt { font-size: 7.5pt; }
+  .wlist li { padding: 3px 0; }
+  .wlist a { font-size: 9.5pt; }
+  .wlist p { display: none; }
+  .figs { gap: 6px 30px; }
+  .figs b { font-size: 14pt; }
+  .figs span { font-size: 8pt; }
+  /* 块内字号在正文里用 .gcell 提了权重，打印必须同样带前缀，否则压不下来 */
+  /* 打印宽度约 695px，会落进 860px 的窄屏断点，必须把两栏显式写回来 */
+  .grid4 { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 34px; padding-bottom: 0; }
+  .gcell { padding: 5px 0 7px; break-inside: avoid; }
+  .gcell > .cv-label { margin: 0 0 6px; }
+  .gcell .log li { padding-bottom: 5px; }
+  .gcell .log h3 { font-size: 9.5pt; margin-bottom: 2px; }
+  .gcell .log p { font-size: 8pt; line-height: 1.45; }
+  .gcell .log .out { font-size: 7.5pt; margin-top: 2px; }
+  .gcell .kv > div { padding: 2px 0; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; }
+  .gcell .kv dt { font-size: 7.5pt; }
+  .gcell .kv dd { font-size: 8pt; line-height: 1.5; }
+  .gcell .wlist li { padding: 2px 0; }
+  .gcell .wlist a { font-size: 9pt; }
+  .gcell .wlist p { display: none; }
+  .gcell .cv-more { margin-top: 6px; font-size: 7.5pt; }
+  .ix.two { column-gap: 24px; }
+  .csdn-list li { padding: 2px 0; }
+  .csdn-list a { font-size: 7.5pt; line-height: 1.4; }
+  .csdn-list span { font-size: 6.5pt; margin-top: 1px; }
+  .csdn-list li:nth-child(n+4) { display: none; }   /* 纸面只留 3 条，其余靠链接 */
+  .gcell.is-empty { display: none; }   /* 没接入 CSDN 时，这一格不进纸面 */
+  @page { margin: 14mm 13mm; }
 }

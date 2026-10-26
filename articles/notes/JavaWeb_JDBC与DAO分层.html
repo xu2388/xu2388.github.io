@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -431,9 +431,9 @@ Integer ageOrNull = rs.wasNull() ? null : age;</code></pre>
 <h3>9.1 一条可执行的练习路径</h3>
 <p>先脱离 Web 容器，在 <code>main</code> 方法里跑通「建表 → 插入 → 查询 → 更新 → 删除」，确认驱动、连接串、字符集都正确。然后引入 <code>PreparedStatement</code>，用一段故意构造的注入输入对比 <code>Statement</code> 与占位符的结果差异，理解「数据与结构分离」不是口号。接着把连接获取抽到 <code>DataSource</code>，观察池的借出与归还；再用两个 DAO 方法模拟转账，故意在中间抛异常，验证 <code>rollback</code> 确实把两边都恢复。最后把这段代码搬进 Servlet 或 Controller，用浏览器触发，观察一次请求从 HTTP 到 SQL 的完整路径。</p>
 <p>每一步都只引入一个新变量：先证明「能连」，再证明「能防注入」，再证明「事务能回滚」，最后才谈分层。顺序反过来，一旦出错就很难判断是驱动、SQL、事务还是分层的问题。练习时不要求一次写全，能把每一步的失败现象与原因对应起来，比背下 API 签名更具参考价值；能把失败复现出来，才算真正掌握。</p>
-<a class="back-link" href="../../study/javaweb.html">← 返回 JavaWeb</a>
+<a class="back-link" href="../../subject/javaweb.html">← 返回 JavaWeb</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

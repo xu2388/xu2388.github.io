@@ -16,8 +16,8 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="../../index.html">科研与学习档案</a>
-    <nav class="topnav"><a href="../../research.html">科研</a><a class="active" href="../../study.html">学习</a><a href="../../essays.html">随笔</a><a href="../../search.html">搜索</a></nav>
+    <a class="brand" href="../../index.html">hua</a>
+    <nav class="topnav"><a href="../../research.html">研究</a><a href="../../writing.html">写作</a><a class="active" href="../../notes.html">笔记</a><a href="../../archive.html">索引</a></nav>
     <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
   </div>
 </header>
@@ -111,9 +111,9 @@ optimizer.step()</code></pre>
 <ol><li><strong>把门当成 0/1 开关</strong>。sigmoid 输出的是连续放行比例，实际门值多为 0.3、0.7 一类中间值，门控是对记忆逐维度的精细比例控制，不存在「整条记忆全忘或全留」。</li><li><strong>认为遗忘门置 0 就退化为 RNN</strong>。方向恰好相反：$f_t=0$ 是完全丢弃旧细胞状态；且即便固定 $f_t$，LSTM 仍有输入门与输出门两次筛选和 $c$/$h$ 双状态，结构上不会变成无门控的 $h_t=\tanh(Wh_{t-1}+Ux_t+b)$。只有彻底移除门并合并状态才退化。</li><li><strong>以为权重固定意味着门的强度固定</strong>。固定的是筛选规则（权重），门控值每个时间步由当前输入与上步隐藏状态重新计算，是动态量。</li><li><strong>指望梯度裁剪治好梯度消失</strong>。裁剪只对爆炸有效；消失是连乘结构的问题，须靠细胞状态加法通路或更现代的结构解决，且裁剪阈值过小时训练同样会不稳定。</li><li><strong>把 GRU 理解为「砍掉两个门的 LSTM」</strong>。GRU 对遗忘/输入门做的是带约束的合并（比例和恒为 1），重置门的作用位置在候选状态计算而非状态更新，与 LSTM 的门并不一一对应。</li><li><strong>认为连续数值时序也要离散嵌入</strong>。整数 ID 的文本 token 必须查表嵌入；股票一类连续数值只需线性投影对齐维度并先做标准化，单变量数据可直接输入循环层。</li><li><strong>混淆架构与生成模式</strong>。RNN/LSTM 是循环架构，自回归是推理时以自身输出为输入的生成模式；教师强制训练与双向编码任务都不是自回归，二者不应混为一谈。</li></ol>
 <h2>九、总结要点</h2>
 <ol><li>LSTM 用拼接输入分四路算出 $f_t,i_t,\tilde{c}_t,o_t$，再以 $c_t=f_t\odot c_{t-1}+i_t\odot\tilde{c}_t$、$h_t=o_t\odot\tanh(c_t)$ 完成更新；$\odot$ 的逐元素性质决定了门控是逐维度的比例控制。</li><li>细胞状态的加法通路使梯度回传主要乘以遗忘门而非反复矩阵连乘，从结构上缓解梯度消失；朴素 RNN 的消失/爆炸分界取决于循环权重 $W$ 的特征值。</li><li>GRU 以更新门绑定新旧记忆、以重置门调节历史依赖、去掉输出门与独立细胞状态，参数约省 1/3，适合小数据快速基线，LSTM 在长窗口场景上限更高。</li><li>BPTT 的本质是共享权重下各时间步梯度的累加：$T=3$ 的例子里 $V$ 的梯度是三项直接贡献之和，$W$ 的梯度则含层层回传的三项，连乘次数随序列长度线性增长。</li><li><code>clip_grad_norm_</code> 按范数上限等比缩放梯度，只治爆炸不治消失；实操中需配合梯度范数监控、教师强制、dropout、早停与困惑度/bpc 评估。</li><li>实测日志说明结构层面的改进不自动等于好结果：学习率调度缺陷、过大词表与过拟合仍会使门控模型的实际产出严重劣化，训练记录的每个数值都应回看核对。</li></ol>
-<a class="back-link" href="../../study/deep-learning.html">← 返回 深度学习/神经网络</a>
+<a class="back-link" href="../../subject/deep-learning.html">← 返回 深度学习/神经网络</a>
 </article>
-<footer class="site-footer"><div class="wrap"><span>2024—2026 · 科研与学习记录</span><span><a href="../../index.html">首页</a> · 纯静态 · GitHub Pages</span></div></footer>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
 <script src="../../assets/blog.js" defer></script>
 </body>
 </html>

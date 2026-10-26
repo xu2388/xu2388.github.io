@@ -190,7 +190,7 @@
       if (cnt) cnt.textContent = hits.length ? hits.length + " 条" : "无结果";
       if (!hits.length) {
         list.innerHTML = '<li class="search-empty">没有标题包含「' + esc(raw.trim()) +
-          '」的内容。换个关键词，或到 <a href="research.html">科研</a>、<a href="study.html">学习</a> 里逐层浏览。</li>';
+          '」的内容。换个关键词，或到 <a href="research.html">研究</a>、<a href="notes.html">笔记</a> 里逐层浏览。</li>';
         return;
       }
       list.innerHTML = hits.map(function (it) {
@@ -230,7 +230,7 @@
       var t = e.target;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       e.preventDefault();
-      location.href = navPrefix() + "search.html";
+      location.href = navPrefix() + "archive.html";
     });
   }
 
