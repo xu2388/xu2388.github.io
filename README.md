@@ -100,6 +100,7 @@ python3 build_site.py && python3 fix_nav.py
 ├── me.json                     个人信息与简历内容（唯一手填）
 ├── me.py                       读取 me.json
 ├── fetch_csdn.py               抓 CSDN 文章清单 → data/csdn.json
+├── ingest_chatgpt.py           ChatGPT 导出 → raw_exports/chatgpt_export/dump/（一条对话一个 txt）
 ├── site_model.py               学科注册表（学科名 → slug / 分组 / 一句话说明）
 ├── build_site.py               站点生成器：简历首页、板块页、学科页、清单页、索引
 ├── build_notes.py              notes/*.md → articles/notes/*.html
@@ -117,6 +118,24 @@ python3 build_site.py && python3 fix_nav.py
 
 **与 AI 助手的对话存档不进入站点**：`articles/kb/`、`articles/kb-doubao/`、`raw_exports/`
 已从仓库移除并写进 `.gitignore`。
+
+## 对话素材 → 文章
+
+与 AI 助手的原始对话**不进站点**（`raw_exports/` 已 gitignore），只作为写文章的原料。
+怎么从上千条对话里挑题、怎么改写成文章、哪些内容绝对不能出现，写在两份交接文档里：
+
+| 文档 | 覆盖 |
+|---|---|
+| `HANDOVER-豆包对话成文交接文档.md` | 豆包 1813 条对话；文章 frontmatter、文风、去尴尬规则、构建流水线 |
+| `HANDOVER-ChatGPT对话成文交接文档.md` | ChatGPT 30 条科研对话；以「判断」为单位成文、研究路径页、现状批评 |
+
+ChatGPT 侧语料已拆好，直接读：
+
+```bash
+python3 ingest_chatgpt.py                       # 首次或换了导出文件时跑
+cat raw_exports/chatgpt_export/INDEX.md         # 86 条会话清单
+ls raw_exports/chatgpt_export/dump/ | grep 频域  # 按标题找
+```
 
 ## 本地预览
 

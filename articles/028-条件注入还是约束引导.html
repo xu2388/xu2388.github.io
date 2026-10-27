@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>条件注入还是约束引导：扩散结构保持的两条路</title>
+<meta name="description" content="扩散主干学的是噪声预测 ε，在含噪状态上挂辅助损失会与主损失抢梯度——这个判断把结构保持的方案推向条件注入；但随后又被自己推翻：条件注入只能带进信息、带不进约束，结构保持可能需要 restrict / guidance。中间夹着一次多层条件注入实验的完败（六项指标全线变差）。本文完整记录这个「支持 → 否定 → 未收敛」的反复，不抹平，也不假装有结论。" />
+<link rel="stylesheet" href="../assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
+<script id="meta" type="application/json">
+{"title":"条件注入还是约束引导：扩散结构保持的两条路","date":"2026-10-27","tags":["虚拟染色", "扩散模型", "条件注入", "约束引导", "未收敛"],"category":"研究","summary":"扩散主干学的是噪声预测 ε，在含噪状态上挂辅助损失会与主损失抢梯度——这个判断把结构保持的方案推向条件注入；但随后又被自己推翻：条件注入只能带进信息、带不进约束，结构保持可能需要 restrict / guidance。中间夹着一次多层条件注入实验的完败（六项指标全线变差）。本文完整记录这个「支持 → 否定 → 未收敛」的反复，不抹平，也不假装有结论。"}
+</script>
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html">hua</a>
+    <nav class="topnav"><a class="active" href="../research.html">研究</a><a href="../writing.html">写作</a><a href="../notes.html">笔记</a><a href="../archive.html">索引</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
+<article class="article">
+<h1>条件注入还是约束引导：扩散结构保持的两条路</h1>
+<div class="meta">写于 2026-10-27 · 研究记录</div>
+<blockquote>一句话结论：「辅助损失抢梯度 → 改走条件注入」这条推理链在当时成立，但条件注入解决不了结构保持——它能告诉模型「这是什么」，不能强制「必须保持这个」。截至本文，注入与引导之间没有定论。素材出处：会话《扩散生成染色浓度》第 9 轮、《逐像素扩散解释》第 6 轮（笔者自我推翻处）。</blockquote>
+<h2>一、问题</h2>
+<p>在扩散模型上做 H&amp;E→IHC 虚拟染色，结构保持（生成图的腺体、核形态忠于输入）是核心难题之一。可选的技术路线有三条：辅助损失、条件注入（condition injection）、约束引导（restriction / guidance）。走哪条，取决于对一个机制问题的回答：辅助损失会不会和扩散的噪声预测目标打架？</p>
+<h2>二、当时的判断</h2>
+<p><strong>第一判断（2026-10-01，出处：会话《扩散生成染色浓度》第 9 轮，笔者原话要点转写）</strong>：</p>
+<blockquote>扩散模型本质是对噪声的预测，如果添加辅助损失，就会影响主损失。很多情况下它们更新的方向相反或夹角很大，两个损失就会冲突。这种冲突是由损失类型决定的，还是由别的什么决定的？</blockquote>
+<p>这个判断把方案推向：<strong>蛋白/结构约束不走损失叠加，而走条件注入或引导</strong>。含噪的 RGB 状态上统计蛋白量本身也不可靠——噪声污染统计量。</p>
+<p><strong>第二判断（2026-10-03 至 07，出处：会话《浓度图到 IHC 生成》）</strong>：沿着注入路线具体化——H 通道图在多个尺度注入 UNet、并在输入端拼接；同时自己提出了两个保留意见：其一，若条件来自 RGB 图像编码，条件特征难免携带颜色信息，需要的是 morphology feature（组织形态特征）而非颜色特征；其二，H 通道的共享实际是<strong>块级</strong>的（128 px 块相关 0.407、高于真值的 0.271，而像素级仅 0.061），块级共享意味着多尺度注入的形态约束力有限，输入端拼接或低频分量可能更重要。</p>
+<p><strong>第三判断（2026-10-10/11，出处：会话《逐像素扩散解释》第 6 轮）——自我推翻</strong>：</p>
+<blockquote>关于扩散模型虚拟染色的结构保持，采用条件注入（condition injection）的方式肯定是不行的，而是需要采取约束限制（restrict）或者引导（guide）的方式。</blockquote>
+<p>理由当时说得很直白：注入只能带进信息，带不进约束。随后按此让 agent 做了专题调研：结构保持这件事，条件注入与约束引导哪种更可靠、各自的归因是什么。</p>
+<p><strong>参照系：TT-SaD</strong>（出处：同会话第 3–5 轮）。TT-SaD（test-time stain adaptation with diffusion，Tsai et al.）的思路被当时认为「理念很好，可以借鉴」：在测试时求解非线性逆问题，<strong>锁定原始结构、映射目标染色</strong>。但借不过来，理由也如实记录：论文未提供源码；在预测干净 $x_0$ 之后施加约束，测试时间昂贵；且锚定方案对 H 通道可行（染色矩阵真实存在，可做统计级复染），对 DAB 通道不可行——DAB 需要生成新语义，没有可锚定的物理对应。</p>
+<h2>三、怎么验证的</h2>
+<p>注入路线的唯一一次完整实验以失败告终（出处：会话《频域》第 3 轮所附 E1 实验报告，2026-09-28；注：E1 早于上述判断链条，发生在更早的扩散基线上，是「注入可行吗」这个问题的直接检验）。</p>
+<p>E1：在纯扩散基线 base_v@7000（FID 109.75 / DAB corr 0.439 / HER2 一致率 0.500）之上，将 $z_{he}$ 经零初始化 1×1 conv 适配器（仅 1.9K 参数）注入 UNet down_blocks[0]/[1]，适配器用独立学习率 1e-3（骨干 1e-4）：</p>
+<table>
+<tr><th>指标</th><th>base_v@7000</th><th>E1@9300</th><th>变化</th></tr>
+<tr><td>FID</td><td>109.75</td><td>125.96</td><td>+16.2，变差</td></tr>
+<tr><td>DAB MAE</td><td>0.0387</td><td>0.0510</td><td>变差</td></tr>
+<tr><td>DAB corr</td><td>0.439</td><td>0.244</td><td>腰斩</td></tr>
+<tr><td>128px 块相关</td><td>0.280</td><td>0.146</td><td>大幅变差</td></tr>
+<tr><td>32px 块相关</td><td>0.174</td><td>0.111</td><td>变差</td></tr>
+<tr><td>HER2 一致率</td><td>0.500</td><td>0.400</td><td>变差</td></tr>
+</table>
+<p>失败机理（当时记录）：独立学习率 1e-3 过强，适配器范数指数式增长（500 步翻倍、1000 步翻 4 倍，无饱和），注入从「补充定位信息」退化为「扰动骨干分布」；noise loss 全程稳定（0.39–0.43），但评估崩盘——<strong>聚合 MSE 测不出空间定位类退化，训练 loss 不能替代中期评估</strong>。</p>
+<p>这条负结果直接影响了后续判断：E1 之后，「注入太弱/太强都不行」成为共识，向 restrict / guidance 的探索由此启动。</p>
+<h2>四、结果</h2>
+<p>三个判断各自的证据状态：</p>
+<table>
+<tr><th>判断</th><th>证据</th><th>状态</th></tr>
+<tr><td>辅助损失抢梯度</td><td>机制分析 + 含噪状态统计不可靠</td><td>保留为设计原则</td></tr>
+<tr><td>条件注入可承担结构保持</td><td>E1 完败 + 块级共享证据</td><td><strong>被自己推翻</strong></td></tr>
+<tr><td>restrict / guide 更可靠</td><td>只有 TT-SaD 式测试时逆问题的间接参照</td><td>未验证</td></tr>
+</table>
+<h2>五、这条判断后来怎么了（仍未收敛）</h2>
+<p>如实写后事，不假装有结论：</p>
+<ul><li><strong>E1 的遗产</strong>是两条纪律：小适配器配独立学习率时必须监控范数增长；任何注入实验必须带中期评估，不能只看训练 loss。这两条在 2026 年秋批次的全部实验中沿用。</li><li><strong>restrict / guide 路线</strong>：TT-SaD 借鉴被具体障碍挡住（无源码、测试昂贵、DAB 无可锚定对应）；转向特征空间对齐的构想（IHC 的 H 与 DAB 都重建、在特征空间做对齐，DeReStainer 式）停留在方案层，未跑成实验。当时还确认了一个硬约束：真实世界几乎不存在像素级配对的 H&amp;E–IHC，配准数据的 H 相关性只有零点零几，因此「直接复用 H 通道」从数据层面就不成立。</li><li><strong>截至本文，该问题仍未解决。</strong> 注入与引导之间没有定论，辅助损失也没有被彻底放弃（2026 年秋 GAN 批次仍在使用统计损失，且其坍缩问题见 025）。三条路线各背着各自的失败记录。</li></ul>
+<h2>六、留下的东西</h2>
+<ol><li>一条没有定论但边界清晰的开放问题：结构保持的约束施加点（损失 / 注入 / 引导）至今仍无可靠判据；</li><li>两个可复用的失败教训（适配器范数监控、中期评估纪律）；</li><li>一个被反复确认的数据事实：无像素级配对是这条研究线的硬约束，任何方案必须先回答「如何在无配对条件下施加结构约束」。</li></ol>
+<a class="back-link" href="list-research.html">← 返回研究记录</a>
+</article>
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="../archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
+<script src="../assets/blog.js" defer></script>
+</body>
+</html>

@@ -261,24 +261,21 @@ def page_home(arts, notes, survey_n, paper_n):
             f'<p>{esc(t.get("note", ""))}</p>{out_html}</div></li>'
         )
 
-    # 学习经历：按学科分组，每组一行，可点进单科
+    # 学习经历：课程 → 产出的映射，只留能指到具体笔记的行（简历要证据，不要课表）
     by_subject = {}
     for n in course_notes:
         by_subject.setdefault(n["subject"], []).append(n)
     study_rows = []
-    for g in GROUP_ORDER:
-        subs = sorted([x for x in by_subject if subject_group(x) == g], key=subject_sort_key)
-        if not subs:
-            continue
-        items = "".join(
-            f'<span class="sj"><a href="subject/{subject_slug(x)}.html">{esc(x)}</a>'
-            f'<i>{len(by_subject[x])}</i></span>' for x in subs
+    for course, output, subject in get("study_map", []):
+        study_rows.append(
+            f'<div><dt><a href="subject/{subject_slug(subject)}.html">{esc(course)}</a></dt>'
+            f'<dd>{esc(output)}</dd></div>'
         )
-        study_rows.append(f"<div><dt>{esc(g)}</dt><dd>{items}</dd></div>")
 
-    # 技能
-    kv = "".join(f"<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>"
-                 for k, v in get("skills", []))
+    # 技能：一行内联，不占整块（四块变三块 + 一行，版面才松得开）
+    skills_inline = "　·　".join(
+        f'<b>{esc(k)}</b>　{esc(v)}' for k, v in get("skills", [])
+    )
 
     # 教育（org 留空则整段不出现）
     edu = ""
@@ -309,10 +306,16 @@ def page_home(arts, notes, survey_n, paper_n):
     )
     total = len(arts) + len(notes)
 
-    # 站外：CSDN（没接入时留一个占位格，打印时不出现）
+    # 站外：CSDN（没接入时不渲染这一格——骨架占位是开发态，访客看到只会以为页面坏了）
     csdn = load_csdn()
-    csdn_html = csdn_block(csdn)
-    csdn_cls = "gcell gcell-fill" + ("" if csdn.get("articles") else " is-empty")
+    csdn_cell = ""
+    if csdn.get("articles"):
+        # no-print：纸面简历不需要文章列表，联系方式里已印出 CSDN 地址
+        csdn_cell = f"""
+    <section class="gcell gcell-fill no-print">
+      <h2 class="cv-label">站外</h2>
+      {csdn_block(csdn)}
+    </section>"""
 
     body = f"""
 <main class="cv">
@@ -337,18 +340,14 @@ def page_home(arts, notes, survey_n, paper_n):
       <ol class="log">
         {"".join(log)}
       </ol>
+      <p class="cv-more"><a href="process.html">六条改变过方向的判断，附当时的依据与后来的结果</a></p>
       <p class="cv-more"><a href="research.html">全部研究记录、论文精读与调研档案</a></p>
     </section>
 
     <section class="gcell">
       <h2 class="cv-label">学习经历</h2>
-      <dl class="kv">{''.join(study_rows)}</dl>
+      <dl class="kv kv-study">{''.join(study_rows)}</dl>
       <p class="cv-more"><a href="notes.html">{len(course_notes)} 篇课程笔记，按 {len(by_subject)} 门学科成册</a></p>
-    </section>
-
-    <section class="gcell">
-      <h2 class="cv-label">技能</h2>
-      <dl class="kv">{kv}</dl>
     </section>
 
     <section class="gcell">
@@ -358,12 +357,13 @@ def page_home(arts, notes, survey_n, paper_n):
       </ul>
       <p class="cv-more"><a href="writing.html">全部写作</a></p>
     </section>
-
-    <section class="{csdn_cls}">
-      <h2 class="cv-label">站外</h2>
-      {csdn_html}
-    </section>
+{csdn_cell}
   </div>
+
+  <section class="cv-sec cv-skills">
+    <h2 class="cv-label">技能</h2>
+    <p class="skills-line">{skills_inline}</p>
+  </section>
 
   <section class="cv-sec cv-sec-last">
     <h2 class="cv-label">全部内容</h2>
@@ -405,6 +405,9 @@ def page_research(arts, notes, survey_n, paper_n):
     </div>
   </header>
 
+{cat("研究路径", 6, "条",
+     "改变过研究方向的判断：当时的依据、验证方式，以及后来是否成立。失败的一并保留。",
+     "process.html", [])}
 {cat("研究记录", len(research), "篇",
      "完整的过程记录：问题、方法、实验与自我推翻，保留原始数据与当时的判断。",
      "articles/list-research.html", [a["title"] for a in (core or research)[:2]])}
@@ -424,6 +427,70 @@ def page_research(arts, notes, survey_n, paper_n):
 """
     return shell(f"研究 · {SITE_TITLE}", body, "", "研究", "",
                  "研究记录、论文精读、研究笔记、调研档案与论文导读。")
+
+
+# ------------------------------------------------------------------ 研究路径
+def page_process(arts):
+    """研究路径：六条判断的索引页。内容硬编码在此，不依赖 me.json。"""
+    JUDGE = [
+        # (主张, 依据, 文章编号, 文章 slug, 会话出处)
+        ("用下游分割证明「生成得像」不可信",
+         "分割器各有泛化差异，换一个模型结论就翻转；评价应转向基础模型对生成图的认证程度与蛋白表达统计。"
+         "后改为 FID、SSIM、DAB 相关性与 H-score 分级四类口径。",
+         "022", "虚拟染色问题地图", "医学图像风格迁移与虚拟染色区别"),
+        ("换数据域必须重标定阈值，否则损失「在编不在岗」",
+         "MLPA 的两个硬阈值（0.15 / 0.68，含 ^1.8 锐化）在 RGB 域标定；输入改成 H / DAB 双通道后数据域变了、"
+         "阈值没变，监督项落在浓度分布尾部，几乎不激活。",
+         "023", "换域阈值失效", "扩散生成染色浓度"),
+        ("竖纹不是数据问题，是 4 像素上采样网格",
+         "常量输入条纹归零、输入各向同性（方向比 0.84–1.00）、第一层竖/横增益逐位相同，"
+         "而列残差主频恒为 0.25 cycles/px、块周期恒 4.00 px——根因是解码器两次 2× 上采样。",
+         "024", "4像素网格伪影归因", "棋盘格伪影成因分析 · 扩散生成染色浓度"),
+        ("PSNR 上升可能只是「变淡」，模型在输出平均 IHC",
+         "PSNR +3.26 dB 的代价是 D/H 从 0.976 掉到 0.339；全量 796 张上真值 D/H 的 IQR 宽 0.767，"
+         "模型只有 0.037——输出与输入无关，坍缩成同一种「平均染色」。",
+         "025", "平均IHC表达坍缩", "扩散生成染色浓度"),
+        ("频域能约束纹理尺度，不能约束空间位置",
+         "「伊红能量在低频、DAB 能量在高频所以存在能量搬迁」不成立——两张图各自统计，只说明各有频率特点；"
+         "且幅度谱对平移几乎不敏感，约束位置必须引入相位或空间域手段。",
+         "026", "频域约束的边界", "频域 · 频域科研思路"),
+        ("辅助损失会和噪声损失抢梯度，蛋白约束应走条件注入",
+         "扩散主干学的是 ε，辅助损失与主损失梯度方向可能相反而互相抵消；含噪 RGB 上统计蛋白量本身不可靠。"
+         "注：此条后来又被自己部分推翻（条件注入只能带进信息、带不进约束），至今未收敛。",
+         "028", "条件注入还是约束引导", "扩散生成染色浓度 · 逐像素扩散解释"),
+    ]
+    lis = []
+    for claim, why, art, slug, src in JUDGE:
+        lis.append(f"""<li>
+  <div>
+    <h2>{esc(claim)}</h2>
+    <p class="why">{esc(why)}</p>
+    <p class="to">→ <a href="articles/{art}-{slug}.html">文章 {art}</a>　出处：会话《{esc(src)}》</p>
+  </div>
+</li>""")
+    body = f"""
+<main class="wrap">
+  <div class="crumbs"><a href="index.html">首页</a><span>/</span>研究路径</div>
+  <header class="page-head">
+    <h1>研究路径</h1>
+    <div>
+      <p class="lede">这条线走了两年，下面六条是途中真正改变方向的判断。
+        每条都注明了当时的依据，以及后来它是否成立。</p>
+      <p class="stat">六条判断 · 三份归因报告留档</p>
+    </div>
+  </header>
+
+  <ol class="judge">
+    {"".join(lis)}
+  </ol>
+
+  <p class="judge-side">旁支：曾考虑把 MBTI 当作评价体系做人格空间的连续建模，
+    找到 MIRT 与 Q 矩阵一类心理测量学工具后搁置——与本方向无关，不影响主线。</p>
+  <p class="judge-note">以上判断均来自当时的实验记录，失败的同样保留。</p>
+</main>
+"""
+    return shell(f"研究路径 · {SITE_TITLE}", body, "", "研究", "",
+                 "六条改变研究方向的判断，附当时的依据与后来的结果。")
 
 
 # ------------------------------------------------------------------ 笔记
@@ -642,6 +709,7 @@ def main():
 
     write(os.path.join(ROOT, "index.html"), page_home(arts, notes, survey_n, paper_n))
     write(os.path.join(ROOT, "research.html"), page_research(arts, notes, survey_n, paper_n))
+    write(os.path.join(ROOT, "process.html"), page_process(arts))
     write(os.path.join(ROOT, "notes.html"), page_notes(arts, notes))
     write(os.path.join(ROOT, "writing.html"), page_writing(essays, tutorials, load_csdn()))
     write(os.path.join(ROOT, "archive.html"),

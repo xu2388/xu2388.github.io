@@ -387,6 +387,66 @@ code {
 .gcell .wlist p { font-size: 12px; line-height: 1.7; }
 .gcell .cv-more { grid-column: auto; margin-top: 18px; }
 
+/* 技能：一行内联，标签小而重，内容跟随 */
+.skills-line { margin: 0; font-size: 13.5px; line-height: 2; color: var(--ink-2); }
+.skills-line b {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .05em;
+  color: var(--ink);
+  margin-right: 2px;
+}
+/* 学习经历：课程 → 产出，dt 变成链接。课程名最长七个字，侧栏加宽防折行 */
+.kv-study dt a { color: var(--ink); border-bottom: 1px solid transparent; }
+.kv-study dt a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.gcell .kv-study > div { grid-template-columns: 96px minmax(0, 1fr); }
+
+/* ---------------------------------------------------------- 研究路径
+   六条判断的索引页。--rail / --rail-gap 只定义在 .cv 上，这里不套 .cv，
+   必须重新声明，否则栅格塌成单列。 */
+.judge {
+  --rail: 116px;
+  --rail-gap: 38px;
+  list-style: none; margin: 0; padding: 0; counter-reset: j;
+}
+.judge > li {
+  counter-increment: j;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: var(--rail-gap);
+  padding: 30px 0;
+  border-top: 1px solid var(--rule);
+}
+.judge > li:first-child { border-top: 1px solid var(--ink); }
+.judge > li::before {
+  content: counter(j, decimal-leading-zero);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .1em;
+  color: var(--faint);
+  padding-top: 6px;
+}
+.judge h2 {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.55;
+  margin: 0 0 10px;
+}
+.judge p { margin: 0 0 8px; font-size: 13px; line-height: 1.85; color: var(--ink-2); }
+.judge .why { font-size: 12.5px; color: var(--muted); }
+.judge .to { font-size: 12px; color: var(--muted); }
+.judge .to a { border-bottom: 1px solid var(--rule-2); }
+.judge-side {
+  margin: 26px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: var(--muted);
+}
+.judge-note { margin: 10px 0 0; font-size: 12px; color: var(--faint); }
+
 /* 站外：CSDN 文章清单（两栏索引，右列是日期与阅读量） */
 .csdn-list { list-style: none; margin: 2px 0 0; padding: 0; }
 .csdn-list.two { columns: 2; column-gap: 52px; }
@@ -1285,6 +1345,7 @@ kbd {
   .kv > div { grid-template-columns: 1fr; gap: 3px; }
   .ix.two { columns: 1; }
   .grid4 { grid-template-columns: minmax(0, 1fr); column-gap: 0; padding-bottom: 0; }
+  .judge > li { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .gcell { padding: 24px 0 30px; }
   .gcell > .cv-label { margin-bottom: 16px; }
   .gcell .log h3 { font-size: 16.5px; }
@@ -1360,5 +1421,7 @@ kbd {
   .csdn-list span { font-size: 6.5pt; margin-top: 1px; }
   .csdn-list li:nth-child(n+4) { display: none; }   /* 纸面只留 3 条，其余靠链接 */
   .gcell.is-empty { display: none; }   /* 没接入 CSDN 时，这一格不进纸面 */
+  .judge > li { padding: 12px 0; }
+  .judge h2 { font-size: 11pt; }
   @page { margin: 14mm 13mm; }
 }

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>研究路径 · hua</title>
+<meta name="description" content="六条改变研究方向的判断，附当时的依据与后来的结果。" />
+<meta name="author" content="hua" />
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" />
+<script id="theme-init">try{var t=localStorage.getItem("theme");if(!t)t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</head>
+<body class="">
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">hua</a>
+    <nav class="topnav"><a href="research.html">研究</a><a href="writing.html">写作</a><a href="notes.html">笔记</a><a href="archive.html">索引</a></nav>
+    <button class="nav-btn" type="button" aria-label="打开导航" aria-expanded="false">目录</button>
+  </div>
+</header>
+
+
+<main class="wrap">
+  <div class="crumbs"><a href="index.html">首页</a><span>/</span>研究路径</div>
+  <header class="page-head">
+    <h1>研究路径</h1>
+    <div>
+      <p class="lede">这条线走了两年，下面六条是途中真正改变方向的判断。
+        每条都注明了当时的依据，以及后来它是否成立。</p>
+      <p class="stat">六条判断 · 三份归因报告留档</p>
+    </div>
+  </header>
+
+  <ol class="judge">
+    <li>
+  <div>
+    <h2>用下游分割证明「生成得像」不可信</h2>
+    <p class="why">分割器各有泛化差异，换一个模型结论就翻转；评价应转向基础模型对生成图的认证程度与蛋白表达统计。后改为 FID、SSIM、DAB 相关性与 H-score 分级四类口径。</p>
+    <p class="to">→ <a href="articles/022-虚拟染色问题地图.html">文章 022</a>　出处：会话《医学图像风格迁移与虚拟染色区别》</p>
+  </div>
+</li><li>
+  <div>
+    <h2>换数据域必须重标定阈值，否则损失「在编不在岗」</h2>
+    <p class="why">MLPA 的两个硬阈值（0.15 / 0.68，含 ^1.8 锐化）在 RGB 域标定；输入改成 H / DAB 双通道后数据域变了、阈值没变，监督项落在浓度分布尾部，几乎不激活。</p>
+    <p class="to">→ <a href="articles/023-换域阈值失效.html">文章 023</a>　出处：会话《扩散生成染色浓度》</p>
+  </div>
+</li><li>
+  <div>
+    <h2>竖纹不是数据问题，是 4 像素上采样网格</h2>
+    <p class="why">常量输入条纹归零、输入各向同性（方向比 0.84–1.00）、第一层竖/横增益逐位相同，而列残差主频恒为 0.25 cycles/px、块周期恒 4.00 px——根因是解码器两次 2× 上采样。</p>
+    <p class="to">→ <a href="articles/024-4像素网格伪影归因.html">文章 024</a>　出处：会话《棋盘格伪影成因分析 · 扩散生成染色浓度》</p>
+  </div>
+</li><li>
+  <div>
+    <h2>PSNR 上升可能只是「变淡」，模型在输出平均 IHC</h2>
+    <p class="why">PSNR +3.26 dB 的代价是 D/H 从 0.976 掉到 0.339；全量 796 张上真值 D/H 的 IQR 宽 0.767，模型只有 0.037——输出与输入无关，坍缩成同一种「平均染色」。</p>
+    <p class="to">→ <a href="articles/025-平均IHC表达坍缩.html">文章 025</a>　出处：会话《扩散生成染色浓度》</p>
+  </div>
+</li><li>
+  <div>
+    <h2>频域能约束纹理尺度，不能约束空间位置</h2>
+    <p class="why">「伊红能量在低频、DAB 能量在高频所以存在能量搬迁」不成立——两张图各自统计，只说明各有频率特点；且幅度谱对平移几乎不敏感，约束位置必须引入相位或空间域手段。</p>
+    <p class="to">→ <a href="articles/026-频域约束的边界.html">文章 026</a>　出处：会话《频域 · 频域科研思路》</p>
+  </div>
+</li><li>
+  <div>
+    <h2>辅助损失会和噪声损失抢梯度，蛋白约束应走条件注入</h2>
+    <p class="why">扩散主干学的是 ε，辅助损失与主损失梯度方向可能相反而互相抵消；含噪 RGB 上统计蛋白量本身不可靠。注：此条后来又被自己部分推翻（条件注入只能带进信息、带不进约束），至今未收敛。</p>
+    <p class="to">→ <a href="articles/028-条件注入还是约束引导.html">文章 028</a>　出处：会话《扩散生成染色浓度 · 逐像素扩散解释》</p>
+  </div>
+</li>
+  </ol>
+
+  <p class="judge-side">旁支：曾考虑把 MBTI 当作评价体系做人格空间的连续建模，
+    找到 MIRT 与 Q 矩阵一类心理测量学工具后搁置——与本方向无关，不影响主线。</p>
+  <p class="judge-note">以上判断均来自当时的实验记录，失败的同样保留。</p>
+</main>
+
+
+<footer class="site-footer"><div class="wrap"><span>hua · 2024—2026 · 研究档案</span><span><a href="archive.html">索引</a> · 纯静态 · GitHub Pages</span></div></footer>
+<script src="assets/blog.js" defer></script>
+</body>
+</html>
