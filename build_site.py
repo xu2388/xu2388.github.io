@@ -306,15 +306,25 @@ def page_home(arts, notes, survey_n, paper_n):
     )
     total = len(arts) + len(notes)
 
-    # 站外：CSDN（没接入时不渲染这一格——骨架占位是开发态，访客看到只会以为页面坏了）
+    # 站外：CSDN 代表作（手写清单，未完结的明确标注）+ 最近文章（抓取的清单）
     csdn = load_csdn()
+    works_html = ""
+    works = get("csdn_works", [])
+    if works:
+        lis = "".join(
+            f'<li><a href="{esc(w.get("url", ""))}" rel="noopener">{esc(w.get("title", ""))}</a>'
+            + ('' if w.get("done") else '<span class="st">未完结</span>')
+            for w in works
+        )
+        works_html = f'<p class="cv-label csdn-works-label">CSDN 在写与已完成</p><ul class="csdn-works">{lis}</ul>'
     csdn_cell = ""
-    if csdn.get("articles"):
+    if csdn.get("articles") or works_html:
         # no-print：纸面简历不需要文章列表，联系方式里已印出 CSDN 地址
         csdn_cell = f"""
     <section class="gcell gcell-fill no-print">
       <h2 class="cv-label">站外</h2>
-      {csdn_block(csdn)}
+      {works_html}
+      {csdn_block(csdn) if csdn.get("articles") else ""}
     </section>"""
 
     body = f"""

@@ -447,6 +447,25 @@ code {
 }
 .judge-note { margin: 10px 0 0; font-size: 12px; color: var(--faint); }
 
+/* 站外：手写代表作清单（未完结明确标注） */
+.csdn-works-label { font-size: 10.5px; margin: 0 0 4px; }
+.csdn-works { list-style: none; margin: 0 0 18px; padding: 0; }
+.csdn-works li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.csdn-works a { font-size: 13px; line-height: 1.6; color: var(--ink); }
+.csdn-works a:hover { color: var(--accent); }
+.csdn-works .st {
+  font-size: 10.5px;
+  color: var(--faint);
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+
 /* 站外：CSDN 文章清单（两栏索引，右列是日期与阅读量） */
 .csdn-list { list-style: none; margin: 2px 0 0; padding: 0; }
 .csdn-list.two { columns: 2; column-gap: 52px; }
@@ -1368,9 +1387,9 @@ kbd {
   body { background: #fff; color: #000; font-size: 9.5pt; animation: none; }
   a { color: #000 !important; text-decoration: none !important; }
   .cv { max-width: none; padding: 0; }
-  .cv-hero { grid-template-columns: minmax(0, 1fr) auto; align-items: end; padding: 0 0 10px; gap: 24px; }
+  .cv-hero { grid-template-columns: minmax(0, 1fr) auto; align-items: end; padding: 0 0 6px; gap: 24px; }
   .cv-contact { text-align: right; }
-  .cv-name { font-size: 24pt; line-height: 1; }
+  .cv-name { font-size: 20pt; line-height: 1; }
   .cv-role { margin-top: 8px; font-size: 9.5pt; }
   .cv-contact { font-size: 8.5pt; }
   .cv-contact i { display: none; }
@@ -1380,41 +1399,41 @@ kbd {
   /* 分隔点被 display:none 了，两个网址会粘在一起，用 ::after 补回来 */
   /* 中间还夹着被 display:none 的 <i>，相邻选择器 + 匹配不到，必须用 ~ */
   .cv-contact a[href^="http"] ~ a[href^="http"]::after { content: "　·　" attr(href); }
-  .cv-sec, .cv-sec-first { padding: 5px 0 7px; break-inside: avoid; }
+  .cv-sec, .cv-sec-first { padding: 4px 0 5px; break-inside: avoid; }
   .kv > div, .log li, .wlist li { break-inside: avoid; }
   .cv-label { font-size: 7.5pt; margin-top: 1px; }
   .cv-statement { padding: 0; }
-  .cv-statement p:first-child { font-size: 9.5pt; line-height: 1.6; }
-  .cv-statement p + p { font-size: 8.5pt; line-height: 1.55; margin-top: 4px; }
-  .log li { padding-bottom: 4px; }
+  .cv-statement p:first-child { font-size: 9pt; line-height: 1.5; }
+  .cv-statement p + p { font-size: 8pt; line-height: 1.45; margin-top: 3px; }
+  .log li { padding-bottom: 3px; }
   .log .when { font-size: 7.5pt; margin-bottom: 2px; }
-  .log h3 { font-size: 10pt; margin-bottom: 2px; }
-  .log p, .kv dd { font-size: 8.5pt; line-height: 1.45; }
-  .log .out { font-size: 8pt; margin-top: 2px; }
+  .log h3 { font-size: 9.5pt; margin-bottom: 2px; }
+  .log p, .kv dd { font-size: 8pt; line-height: 1.4; }
+  .log .out { font-size: 7.5pt; margin-top: 2px; }
   .kv > div { padding: 2px 0; grid-template-columns: 74px minmax(0, 1fr); gap: 16px; }
   .kv dt { font-size: 7.5pt; }
   .wlist li { padding: 3px 0; }
   .wlist a { font-size: 9.5pt; }
   .wlist p { display: none; }
-  .figs { gap: 6px 30px; }
-  .figs b { font-size: 14pt; }
-  .figs span { font-size: 8pt; }
+  .figs { gap: 4px 26px; }
+  .figs b { font-size: 12pt; }
+  .figs span { font-size: 7.5pt; }
   /* 块内字号在正文里用 .gcell 提了权重，打印必须同样带前缀，否则压不下来 */
   /* 打印宽度约 695px，会落进 860px 的窄屏断点，必须把两栏显式写回来 */
   .grid4 { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 34px; padding-bottom: 0; }
-  .gcell { padding: 5px 0 7px; break-inside: avoid; }
-  .gcell > .cv-label { margin: 0 0 6px; }
-  .gcell .log li { padding-bottom: 5px; }
-  .gcell .log h3 { font-size: 9.5pt; margin-bottom: 2px; }
-  .gcell .log p { font-size: 8pt; line-height: 1.45; }
-  .gcell .log .out { font-size: 7.5pt; margin-top: 2px; }
-  .gcell .kv > div { padding: 2px 0; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; }
-  .gcell .kv dt { font-size: 7.5pt; }
-  .gcell .kv dd { font-size: 8pt; line-height: 1.5; }
-  .gcell .wlist li { padding: 2px 0; }
-  .gcell .wlist a { font-size: 9pt; }
+  .gcell { padding: 4px 0 5px; break-inside: avoid; }
+  .gcell > .cv-label { margin: 0 0 5px; }
+  .gcell .log li { padding-bottom: 4px; }
+  .gcell .log h3 { font-size: 9pt; margin-bottom: 2px; }
+  .gcell .log p { font-size: 7.5pt; line-height: 1.4; }
+  .gcell .log .out { font-size: 7pt; margin-top: 2px; }
+  .gcell .kv > div { padding: 1.5px 0; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; }
+  .gcell .kv dt { font-size: 7pt; }
+  .gcell .kv dd { font-size: 7.5pt; line-height: 1.45; }
+  .gcell .wlist li { padding: 1.5px 0; }
+  .gcell .wlist a { font-size: 8.5pt; }
   .gcell .wlist p { display: none; }
-  .gcell .cv-more { margin-top: 6px; font-size: 7.5pt; }
+  .gcell .cv-more { margin-top: 5px; font-size: 7pt; }
   .ix.two { column-gap: 24px; }
   .csdn-list li { padding: 2px 0; }
   .csdn-list a { font-size: 7.5pt; line-height: 1.4; }
@@ -1423,5 +1442,5 @@ kbd {
   .gcell.is-empty { display: none; }   /* 没接入 CSDN 时，这一格不进纸面 */
   .judge > li { padding: 12px 0; }
   .judge h2 { font-size: 11pt; }
-  @page { margin: 14mm 13mm; }
+  @page { margin: 11mm 13mm; }
 }
