@@ -26,9 +26,10 @@
   <div class="crumbs"><a href="../index.html">首页</a><span>/</span><a href="../research.html">研究</a><span>/</span>研究记录</div>
   <header class="list-head">
     <h1>研究记录</h1>
-    <p class="lede">完整的过程记录：问题、方法、实验与自我推翻。　共 26 篇</p>
+    <p class="lede">完整的过程记录：问题、方法、实验与自我推翻。　共 27 篇</p>
   </header>
   <ul class="article-list">
+<li><a href="../articles/031-大创结题-缺失染色模态生成.html">大创结题：知识引导的缺失染色模态生成</a><span class="date">2026-10-30</span><span class="tag">病理图像</span><span class="tag">虚拟染色</span><span class="tag">扩散模型</span><span class="tag">大创</span><span class="tag">结题</span><span class="desc">校级大创「基于缺失染色模态生成的肾脏病理图像分割系统」结题留档：问题背景、「文本描述生成 → 特征解耦学习 → 扩散生成」技术路线、关键实验数字，以及数据稀缺与生成速度两个未解决的问题——后者正是 2026 年 9 月之后虚拟染色主线的起点。</span></li>
 <li><a href="../articles/022-虚拟染色问题地图.html">虚拟染色要解决的到底是什么：一份问题地图与评价口径的自我审查</a><span class="date">2026-10-27</span><span class="tag">虚拟染色</span><span class="tag">问题定义</span><span class="tag">评价口径</span><span class="tag">H&amp;E→IHC</span><span class="desc">在进入方法迭代之前，先把「虚拟染色」与「风格迁移」的边界划清，把任务拆成六个可分别攻关的子问题，并质疑当时主流的下游分割评价口径——分割器各有泛化差异，换一个模型结论就翻转。评价最终改为 FID、SSIM、DAB 相关性与 H-score 分级四类口径，这张问题地图直接决定了其后三次归因（023–025）的走向。</span></li>
 <li><a href="../articles/023-换域阈值失效.html">换域之后阈值失效：一次「在编不在岗」的损失诊断</a><span class="date">2026-10-27</span><span class="tag">虚拟染色</span><span class="tag">PSPStain</span><span class="tag">MLPA</span><span class="tag">silent failure</span><span class="tag">损失诊断</span><span class="desc">把 PSPStain 的输入从 RGB 改成 H / DAB 双通道浓度后，MLPA 损失的两个硬阈值（0.15 / 0.68，FOD 含 ^1.8 锐化）仍标定在旧数据域：换算后实际要求 DAB 浓度超过 0.57 / 0.86，而真实分布 p99 只有 0.295。损失没有报错、总量在动，但监督是死的。修复分两步：先还原被归一化破坏的浓度语义，再按旧版激活比例重标定阈值。本文记录怎么发现的、怎么修的，以及这类「沉默失败」的识别方法。</span></li>
 <li><a href="../articles/024-4像素网格伪影归因.html">4 像素网格：一条伪影的完整归因链</a><span class="date">2026-10-27</span><span class="tag">虚拟染色</span><span class="tag">GAN</span><span class="tag">伪影归因</span><span class="tag">频域分析</span><span class="tag">PSPStain</span><span class="desc">生成图上的竖向条纹，经七步排除实验归因于解码器两次 2× 上采样叠加产生的固定 4×4 块：主频恒为 0.25 cycles/px，块周期在 128/256/512/1024 输入下恒为 4.00 px。常量输入无条纹、输入各向同性（方向比 0.84–1.00）、第一层竖横增益逐位相同（1.144/1.144）、三图列残差相关 0.773/0.787/0.787。根因钉死之后，修复方案（resize-convolution 上采样）与统计纪律（占比 ≠ 绝对能量）也已就位，对照续训验证进行中。</span></li>
